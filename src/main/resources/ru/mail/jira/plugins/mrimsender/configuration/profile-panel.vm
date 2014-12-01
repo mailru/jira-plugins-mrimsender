@@ -1,0 +1,58 @@
+<div class="module">
+    <div class="mod-header">
+        <ul class="ops">
+            <li>
+                <a href="#" id="mrimsender-edit" class="icon icon-edit-sml" title="$i18n.getText( "common.words.edit" )">
+                    <span>$i18n.getText( "common.words.edit" )</span>
+                </a>
+            </li>
+        </ul>
+        <h3>$i18n.getText( "ru.mail.jira.plugins.mrimsender.title" )</h3>
+    </div>
+    <div class="mod-content">
+        <div id="mrimsender-notification" class="aui-message aui-message-success hidden">
+            <span class="aui-icon icon-success"></span>
+            <p>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.updated" )</p>
+        </div>
+        <ul class="item-details">
+            <li>
+                <dl>
+                    <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.mrimLogin" ):</dt>
+                    <dd>
+                        <img src="https://status.mail.ru/?$!mrimLogin" id="mrimsender-mrim-login-icon" #if( !$mrimLogin )class="hidden"#end>
+                        <span id="mrimsender-mrim-login">$!mrimLogin</span>
+                    </dd>
+                </dl>
+                <dl>
+                    <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications" ):</dt>
+                    <dd id="mrimsender-enabled" data-enabled="$enabled">
+                        #if( $enabled )
+                            $i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.enabled" )
+                        #else
+                            $i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.disabled" )
+                        #end
+                    </dd>
+                </dl>
+            </li>
+        </ul>
+    </div>
+    <form id="mrimsender-dialog-form" class="aui hidden">
+        <div id="mrimsender-dialog-error" class="aui-message aui-message-error hidden">
+            <span class="aui-icon icon-error"></span>
+            <p></p>
+        </div>
+        <div class="field-group">
+            <label for="mrimsender-dialog-mrim-login">$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.mrimLogin" )</label>
+            <input type="text" id="mrimsender-dialog-mrim-login" class="text" maxlength="254" />
+        </div>
+        <div class="field-group">
+            <label for="mrimsender-dialog-enabled">$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications" )</label>
+            <select id="mrimsender-dialog-enabled" class="select">
+                <option value="true">$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.enabled" )</option>
+                <option value="false">$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.disabled" )</option>
+            </select>
+            <div class="description">$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.description" )</div>
+        </div>
+        <input type="submit" class="hidden" />
+    </form>
+</div>
