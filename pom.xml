@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>mrimsender</artifactId>
-    <version>3.4.3</version>
+    <version>3.5</version>
 
     <organization>
         <name>Andrey Molchanov | Mail.Ru Group</name>
@@ -14,7 +14,7 @@
     </organization>
 
     <name>Mail.Ru Agent Notifications</name>
-    <description>Sends notifications on issue changes to Mail.Ru Agent users.</description>
+    <description>Send notifications on issue changes and work with issues using Mail.Ru Agent instant messenger</description>
     <packaging>atlassian-plugin</packaging>
 
     <dependencies>

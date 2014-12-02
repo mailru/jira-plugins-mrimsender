@@ -4,7 +4,6 @@
         <description>${project.description}</description>
         <version>${project.version}</version>
         <vendor name="${project.organization.name}" url="${project.organization.url}"/>
-        <param name="plugin-icon">/ru/mail/jira/plugins/mrimsender/images/plugin-icon.png</param>
     </plugin-info>
 
     <resource type="i18n" name="i18n" location="/ru/mail/jira/plugins/mrimsender/mrimsender" />
