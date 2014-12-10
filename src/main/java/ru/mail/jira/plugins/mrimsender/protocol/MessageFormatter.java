@@ -7,6 +7,7 @@ import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.event.issue.IssueEvent;
+import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.event.type.EventType;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.attachment.Attachment;
@@ -161,7 +162,7 @@ public class MessageFormatter {
         return sb.toString();
     }
 
-    public String formatIssueEvent(IssueEvent issueEvent) {
+    public String formatEvent(IssueEvent issueEvent) {
         Issue issue = issueEvent.getIssue();
         User user = issueEvent.getUser();
         String issueLink = String.format("%s/browse/%s", ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL), issue.getKey());
@@ -200,7 +201,7 @@ public class MessageFormatter {
         } else if (EventType.ISSUE_WORKLOG_DELETED_ID.equals(eventTypeId)) {
             sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.worklogDeleted", user.getDisplayName(), issueLink));
         } else
-            throw new IllegalArgumentException(String.format("Unknown issue event type (%d)", eventTypeId));
+            return null;
 
         sb.append("\n").append(issue.getSummary());
 
@@ -214,6 +215,21 @@ public class MessageFormatter {
 
         if (issueEvent.getComment() != null && !StringUtils.isBlank(issueEvent.getComment().getBody()))
             sb.append("\n\n").append(issueEvent.getComment().getBody());
+
+        return sb.toString();
+    }
+
+    public String formatEvent(MentionIssueEvent mentionIssueEvent) {
+        Issue issue = mentionIssueEvent.getIssue();
+        User user = mentionIssueEvent.getFromUser();
+        String issueLink = String.format("%s/browse/%s", ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL), issue.getKey());
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.mentioned", user.getDisplayName(), issueLink));
+        sb.append("\n").append(issue.getSummary());
+
+        if (!StringUtils.isBlank(mentionIssueEvent.getMentionText()))
+            sb.append("\n\n").append(mentionIssueEvent.getMentionText());
 
         return sb.toString();
     }
