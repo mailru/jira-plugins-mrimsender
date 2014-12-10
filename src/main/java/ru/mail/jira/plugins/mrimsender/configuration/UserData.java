@@ -8,6 +8,7 @@ public class UserData {
     public static final String MRIM_LOGIN_USER_PROPERTY = "USER_MRIM_LOGIN";
     public static final String IS_ENABLED_USER_PROPERTY = "USER_MRIM_STATUS";
 
+    private final PluginData pluginData = ComponentAccessor.getOSGiComponentInstanceOfType(PluginData.class);
     private final UserPropertyManager userPropertyManager = ComponentAccessor.getUserPropertyManager();
 
     public String getMrimLogin(ApplicationUser user) {
@@ -23,7 +24,9 @@ public class UserData {
 
     public boolean isEnabled(ApplicationUser user) {
         String enabled = userPropertyManager.getPropertySet(user).getString(IS_ENABLED_USER_PROPERTY);
-        return enabled != null && Boolean.parseBoolean(enabled);
+        if (enabled == null)
+            return pluginData.isEnabledByDefault();
+        return Boolean.parseBoolean(enabled);
     }
 
     public void setEnabled(ApplicationUser user, boolean enabled) {

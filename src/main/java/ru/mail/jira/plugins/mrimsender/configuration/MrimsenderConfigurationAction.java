@@ -17,6 +17,7 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
     private String port;
     private String login;
     private String password;
+    private boolean enabledByDefault;
     private String notifiedUsers;
 
     private Integer portParsed;
@@ -32,6 +33,7 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
         port = pluginData.getPort() == null ? null : pluginData.getPort().toString();
         login = pluginData.getLogin();
         password = pluginData.getPassword();
+        enabledByDefault = pluginData.isEnabledByDefault();
         notifiedUsers = CommonUtils.convertUserKeysToJoinedString(pluginData.getNotifiedUserKeys());
         return INPUT;
     }
@@ -43,6 +45,7 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
         pluginData.setPort(portParsed);
         pluginData.setLogin(login);
         pluginData.setPassword(password);
+        pluginData.setEnabledByDefault(enabledByDefault);
         pluginData.setNotifiedUserKeys(notifiedUserKeys);
         MrimsenderThread.relogin();
 
@@ -138,6 +141,16 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
     @SuppressWarnings("UnusedDeclaration")
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public boolean isEnabledByDefault() {
+        return enabledByDefault;
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public void setEnabledByDefault(boolean enabledByDefault) {
+        this.enabledByDefault = enabledByDefault;
     }
 
     @SuppressWarnings("UnusedDeclaration")

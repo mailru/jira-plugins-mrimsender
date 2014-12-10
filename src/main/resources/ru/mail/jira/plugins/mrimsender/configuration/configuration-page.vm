@@ -2,8 +2,8 @@
 <head>
     <title>$i18n.getText("ru.mail.jira.plugins.mrimsender.title")</title>
     <meta name="decorator" content="admin" />
-    <meta name="admin.active.section" content="admin_plugins_menu/top_plugins_section">
-    <meta name="admin.active.tab" content="ru.mail.jira.plugins.mrimsender:configuration-link">
+    <meta name="admin.active.section" content="admin_plugins_menu/top_plugins_section" />
+    <meta name="admin.active.tab" content="configuration-link" />
     $webResourceManager.requireResource( "jira.webresources:autocomplete" ) ## User picker
 </head>
 <body>
@@ -49,6 +49,15 @@
         <label for="password">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.password" )<span class="aui-icon icon-required"></span></label>
         <input type="password" class="password" id="password" name="password" value="$!password" />
         #fieldError( "password" )
+    </div>
+    <div class="field-group">
+        <label for="enabledByDefault">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.enabledByDefault" )</label>
+        <select class="select" id="enabledByDefault" name="enabledByDefault">
+            <option value="true"#if( $enabledByDefault ) selected="selected"#end>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.enabled" )</option>
+            <option value="false"#if( !$enabledByDefault ) selected="selected"#end>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.disabled" )</option>
+        </select>
+        <div class="description">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.enabledByDefaultDescription" )</div>
+        #fieldError( "enabledByDefault" )
     </div>
     <div class="field-group">
         <label for="notifiedUsers">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.notifiedUsers" )</label>

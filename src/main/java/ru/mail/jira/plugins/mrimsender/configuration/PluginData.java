@@ -15,6 +15,9 @@ public interface PluginData {
     String getPassword();
     void setPassword(String password);
 
+    boolean isEnabledByDefault();
+    void setEnabledByDefault(boolean enabledByDefault);
+
     List<String> getNotifiedUserKeys();
     void setNotifiedUserKeys(List<String> notifiedUserKeys);
 }

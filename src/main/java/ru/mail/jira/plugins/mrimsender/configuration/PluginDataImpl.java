@@ -10,6 +10,7 @@ public class PluginDataImpl implements PluginData {
     private static final String PORT = PLUGIN_PREFIX + "port";
     private static final String LOGIN = PLUGIN_PREFIX + "login";
     private static final String PASSWORD = PLUGIN_PREFIX + "password";
+    private static final String ENABLED_BY_DEFAULT = PLUGIN_PREFIX + "enabledByDefault";
     private static final String NOTIFIED_USER_KEYS = PLUGIN_PREFIX + "notifiedUserKeys";
 
     private final PluginSettingsFactory pluginSettingsFactory;
@@ -60,6 +61,16 @@ public class PluginDataImpl implements PluginData {
     @Override
     public void setPassword(String password) {
         pluginSettingsFactory.createGlobalSettings().put(PASSWORD, password);
+    }
+
+    @Override
+    public boolean isEnabledByDefault() {
+        return Boolean.parseBoolean((String) pluginSettingsFactory.createGlobalSettings().get(ENABLED_BY_DEFAULT));
+    }
+
+    @Override
+    public void setEnabledByDefault(boolean enabledByDefault) {
+        pluginSettingsFactory.createGlobalSettings().put(ENABLED_BY_DEFAULT, String.valueOf(enabledByDefault));
     }
 
     @Override
