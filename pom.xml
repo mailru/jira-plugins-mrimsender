@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>ru.mail.jira.plugins</groupId>
+    <artifactId>mailrucal</artifactId>
+    <version>1.5.34</version>
+
+    <organization>
+        <name>Mail.Ru Group</name>
+        <url>http://mail.ru</url>
+    </organization>
+
+    <name>Mail.Ru Calendar</name>
+    <description>Calendar from Mail.Ru Company</description>
+    <packaging>atlassian-plugin</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.atlassian.jira</groupId>
+            <artifactId>jira-api</artifactId>
+            <version>${jira.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.jira</groupId>
+            <artifactId>jira-core</artifactId>
+            <version>${jira.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugins.rest</groupId>
+            <artifactId>atlassian-rest-common</artifactId>
+            <version>1.0.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.activeobjects</groupId>
+            <artifactId>activeobjects-plugin</artifactId>
+            <version>${ao.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>ru.mail.jira.plugins</groupId>
+            <artifactId>commons</artifactId>
+            <version>1.0</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.atlassian.maven.plugins</groupId>
+                <artifactId>maven-jira-plugin</artifactId>
+                <version>${amps.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <productVersion>${jira.version}</productVersion>
+                    <productDataVersion>${jira.version}</productDataVersion>
+                    <jvmArgs>-Duser.timezone=GMT+3</jvmArgs>
+                    <systemPropertyVariables>
+                        <atlassian.mail.senddisabled>false</atlassian.mail.senddisabled>
+                        <fastdev.mvn.command>${fastdev.mvn.command}</fastdev.mvn.command>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.atlassian.maven.plugins</groupId>
+                <artifactId>maven-amps-plugin</artifactId>
+                <version>${amps.version}</version>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <properties>
+        <jira.version>6.4.1</jira.version>
+        <amps.version>5.0.4</amps.version>
+        <ao.version>0.19.7</ao.version>
+        <fastdev.mvn.command>/usr/share/atlassian-plugin-sdk-5.0.13/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>
+        <useFastdevCli>false</useFastdevCli>
+    </properties>
+</project>

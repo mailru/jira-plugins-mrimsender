@@ -1,2 +1,0 @@
-# mailrucal
-Mail.Ru Calendar

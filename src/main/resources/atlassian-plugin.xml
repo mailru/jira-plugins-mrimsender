@@ -1,0 +1,64 @@
+<atlassian-plugin key="${project.groupId}.${project.artifactId}" name="Mail.Ru Calendar" plugins-version="2">
+
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="${project.organization.url}" />
+        <param name="atlassian-data-center-compatible">true</param>
+    </plugin-info>
+
+    <resource type="i18n" name="i18n" location="ru.mail.jira.plugins.calendar.mailrucalendar"/>
+
+    <rest key="mailrucalendar-rest" path="/mailrucalendar" version="1.0" />
+
+    <component-import key="ao" interface="com.atlassian.activeobjects.external.ActiveObjects" />
+    <ao key="ao-entities">
+        <entity>ru.mail.jira.plugins.calendar.model.Calendar</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.UserData</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.Share</entity>
+    </ao>
+
+    <component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
+    <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
+
+    <component key="calendar-manager" class="ru.mail.jira.plugins.calendar.CalendarManager" />
+    <component key="calendar-migrator" class="ru.mail.jira.plugins.calendar.CalendarMigrator" />
+    <component key="user-preferences-migrator" class="ru.mail.jira.plugins.calendar.UserPreferenceMigrator" />
+    <component key="all-data-migrator" class="ru.mail.jira.plugins.calendar.Migrator" />
+
+    <webwork1 key="calendar-action" class="java.lang.Object" roles-required="use">
+        <actions>
+            <action name="ru.mail.jira.plugins.calendar.MailRuCalendarAction" alias="MailRuCalendar">
+                <view name="success">/ru/mail/jira/plugins/calendar/calendar-view.vm</view>
+            </action>
+        </actions>
+    </webwork1>
+
+    <web-resource key="calendar-resources">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <dependency>com.atlassian.auiplugin:aui-sidebar</dependency>
+        <dependency>com.atlassian.auiplugin:aui-dropdown2</dependency>
+        <dependency>com.atlassian.auiplugin:dialog2</dependency>
+        <dependency>com.atlassian.auiplugin:aui-inline-dialog2</dependency>
+        <dependency>com.atlassian.auiplugin:aui-select2</dependency>
+        <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/third-party-libs/moment.js"/>
+        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/third-party-libs/fullcalendar.css"/>
+        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/third-party-libs/fullcalendar.js"/>
+        <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
+        <resource type="download" name="calendar-view.css" location="ru/mail/jira/plugins/calendar/calendar-view.css"/>
+    </web-resource>
+
+    <web-item key="calendar-link" name="Calendar Link" section="system.top.navigation.bar" weight="47">
+        <condition class="com.atlassian.jira.plugin.webfragment.conditions.UserLoggedInCondition"/>
+        <label key="ru.mail.jira.plugins.calendar.linkTitle"/>
+        <link linkId="amplugin-simple-cal-link-section">/secure/MailRuCalendar.jspa</link>
+    </web-item>
+
+    <servlet key="calendar-view-sevlet" class="ru.mail.jira.plugins.calendar.MailRuCalendarServlet">
+        <url-pattern>/mailrucal/view</url-pattern>
+    </servlet>
+
+</atlassian-plugin>

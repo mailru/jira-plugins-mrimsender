@@ -1,0 +1,95 @@
+<section role="dialog" id="calendar-dialog" class="aui-layer aui-dialog2" aria-hidden="true">
+    <input type="hidden" id="calendar-dialog-id">
+    <header class="aui-dialog2-header">
+        <h2 id="calendar-dialog-header" class="aui-dialog2-header-main"></h2>
+    </header>
+    <div class="aui-dialog2-content">
+        <form id="calendar-dialog-form" class="aui ajs-dirty-warning-exempt">
+            <div id="calendar-dialog-common-fields">
+                <div id="calendar-dialog-error-panel" class="aui-message aui-message-error hidden"></div>
+                <input type="hidden" id="calendar-dialog-calendar-id">
+                <div class="field-group" id="calendar-dialog-owner-block">
+                    <label>
+                        $i18n.getText( "common.concepts.owner" )
+                    </label>
+                </div>
+                <div class="field-group">
+                    <label for="calendar-dialog-name">
+                        <span class="aui-icon icon-required"></span>
+                        $i18n.getText( "common.words.name" )
+                    </label>
+                    <input class="text long-field" type="text" id="calendar-dialog-name" maxlength="254">
+                    <div id="calendar-dialog-name-error" class="error hidden"></div>
+                </div>
+                <div class="field-group">
+                    <label for="calendar-dialog-color">
+                        <span class="aui-icon icon-required"></span>
+                        $i18n.getText( "admin.common.words.color" )
+                    </label>
+                    <select class="select short-field calendar-dialog-color calendar-dialog-select" id="calendar-dialog-color">
+                        #foreach( $color in $action.colors)
+                            <option value="$color">$color</option>
+                        #end
+                    </select>
+                    <div id="calendar-dialog-color-error" class="error hidden"></div>
+                </div>
+                <div class="field-group">
+                    <label for="calendar-dialog-source">
+                        <span class="aui-icon icon-required"></span>
+                        $i18n.getText( "ru.mail.jira.plugins.calendar.dialog.source" )
+                    </label>
+                    <input type="hidden" id="calendar-dialog-source" class="long-field" />
+                    <div id="calendar-dialog-source-error" class="error hidden"></div>
+                </div>
+                <div class="field-group">
+                    <label for="calendar-dialog-event-start">
+                        <span class="aui-icon icon-required"></span>
+                        $i18n.getText( "ru.mail.jira.plugins.calendar.dialog.eventStart" )
+                    </label>
+                    <select id="calendar-dialog-event-start" class="long-field calendar-dialog-select">
+                        #foreach( $dateField in $action.dateFields )
+                            <option value="$dateField.id">$dateField.name</option>
+                        #end
+                    </select>
+                    <div id="calendar-dialog-event-start-error" class="error hidden"></div>
+                </div>
+                <div class="field-group">
+                    <label for="calendar-dialog-event-end">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.eventEnd" )</label>
+                    <select id="calendar-dialog-event-end" class="long-field calendar-dialog-select">
+                        <option id="0" selected="selected"> </option>
+                        #foreach( $dateField in $action.dateFields )
+                            <option temp="" value="$dateField.id">$dateField.name</option>
+                        #end
+                    </select>
+                    <div id="calendar-dialog-event-end-error" class="error hidden"></div>
+                </div>
+                <div class="field-group">
+                    <label for="calendar-dialog-displayed-fields">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.fields" )</label>
+                    <input type="hidden" id="calendar-dialog-displayed-fields" class="long-field calendar-dialog-select">
+                    <div id="calendar-dialog-displayed-fields-error" class="error hidden"></div>
+                </div>
+            </div>
+
+            <div class="field-group" id="calendar-dialog-shares">
+                <label>$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.sharesFor" )</label>
+                <a href="#" id="calendar-dialog-shared-to" aria-owns="calendar-dialog-shares-dropdown" aria-haspopup="true" class="aui-button aui-style-default aui-dropdown2-trigger">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.shareTo" )</a>
+                <div id="calendar-dialog-shares-dropdown" class="aui-style-default aui-dropdown2">
+                    <ul class="aui-list-truncate">
+                        <li><a href="#" id="calendar-dialog-shares-group">$i18n.getText( "admin.common.words.group" )</a></li>
+                        <li><a href="#" id="calendar-dialog-shares-project-role">$i18n.getText( "admin.common.words.projectrole" )</a></li>
+                    </ul>
+                </div>
+
+##              Don't delete this empty div
+                <div></div>
+            </div>
+            <input class="hidden" type="submit" />
+        </form>
+    </div>
+    <footer class="aui-dialog2-footer" style="width: 100%">
+        <div class="aui-dialog2-footer-actions">
+            <button id="calendar-dialog-ok" class="aui-button aui-button-primary"></button>
+            <button id="calendar-dialog-cancel" class="aui-button aui-button-link">$i18n.getText( "common.words.cancel" )</button>
+        </div>
+    </footer>
+</section>

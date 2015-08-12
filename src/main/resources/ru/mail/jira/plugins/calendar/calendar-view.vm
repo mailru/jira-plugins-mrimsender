@@ -1,0 +1,67 @@
+<html>
+<head>
+    <title>$i18n.getText("ru.mail.jira.plugins.calendar.linkTitle")</title>
+    <meta name="decorator" content="atl.general"/>
+    $webResourceManager.requireResource( "jira.webresources:global-static" )
+    $webResourceManager.requireResource( "jira.webresources:jira-global" )
+    $webResourceManager.requireResource( "ru.mail.jira.plugins.mailrucal:calendar-resources" )
+</head>
+<body>
+<header class="aui-page-header">
+    <div class="aui-page-header-inner">
+        <div class="aui-page-header-main">
+            <h1>$i18n.getText( "ru.mail.jira.plugins.calendar.view.header" )</h1>
+        </div>
+        <div class="aui-page-header-actions">
+            <div class="aui-buttons">
+                #if ( $action.hideWeekends )
+                    <button id="calendar-weekends-visibility" class="aui-button calendar-weekends-are-hided">
+                        <span class="aui-icon aui-icon-small aui-iconfont-calendar"></span>
+                        $i18n.getText( "ru.mail.jira.plugins.calendar.showWeekends" )
+                    </button>
+                #else
+                    <button id="calendar-weekends-visibility" class="aui-button">
+                        <span class="aui-icon aui-icon-small aui-iconfont-calendar"></span>
+                        $i18n.getText( "ru.mail.jira.plugins.calendar.hideWeekends" )
+                    </button>
+                #end
+            </div>
+            <div class="aui-buttons">
+                <button id="calendar-add" class="aui-button">
+                    <span class="aui-icon aui-icon-small aui-iconfont-list-add"></span>
+                    $i18n.getText( "ru.mail.jira.plugins.calendar.addCalendar" )
+                </button>
+            </div>
+        </div>
+    </div>
+    <ol class="aui-nav aui-nav-breadcrumbs"></ol>
+</header>
+<div class="aui-page-panel calendar-view-page-panel">
+    <div class="aui-page-panel-inner">
+        <section class="aui-page-panel-content">
+            <div id="calendar-full-calendar"></div>
+        </section>
+        <div class="aui-page-panel-nav">
+            <nav class="aui-navgroup aui-navgroup-vertical">
+                <div class="aui-navgroup-inner" id="calendar-my-calendar-list">
+                    <div id="calendar-my-calendar-list-header" class="aui-nav-heading">
+                        <strong>$i18n.getText( "ru.mail.jira.plugins.calendar.myCalendars" )</strong>
+                    </div>
+                </div>
+                <div class="aui-navgroup-inner" id="calendar-shared-calendar-list">
+                    <div id="calendar-shared-calendar-list-header" class="aui-nav-heading">
+                        <strong>$i18n.getText( "ru.mail.jira.plugins.calendar.sharedCalendars" )</strong>
+                    </div>
+                </div>
+                <div class="aui-navgroup-inner" id="calendar-other-calendar-list">
+                    <div id="calendar-other-calendar-list-header" class="aui-nav-heading">
+                        <strong>$i18n.getText( "ru.mail.jira.plugins.calendar.otherCalendars" )</strong>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+</div>
+#parse("ru/mail/jira/plugins/calendar/calendar-dialog.vm")
+</body>
+</html>
