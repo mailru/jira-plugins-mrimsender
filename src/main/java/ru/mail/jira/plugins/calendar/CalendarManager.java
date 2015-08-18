@@ -5,13 +5,12 @@ import com.atlassian.jira.bc.JiraServiceContext;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.issue.search.SearchRequestManager;
-import com.atlassian.jira.permission.GlobalPermissionKey;
-import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.PermissionManager;
+import com.atlassian.jira.security.Permissions;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
@@ -225,7 +224,7 @@ public class CalendarManager {
                     if (project == null)
                         throw new RestFieldException("Can not find project with id => " + projectId, "source");
 
-                    if (!permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false))
+                    if (!permissionManager.hasPermission(Permissions.BROWSE, project, user, false))
                         throw new RestFieldException("No Permission to browse project " + project.getName(), "source");
                 }
             } else if (source.startsWith("filter_")) {
@@ -257,7 +256,7 @@ public class CalendarManager {
                 if (groupFromShare != null) {
                     if (!groupManager.groupExists(groupFromShare.groupName))
                         throw new RestFieldException(i18nHelper.getText("admin.viewgroup.group.does.not.exist"), "group_" + groupFromShare.groupName);
-                    if (!fromMigrate && !isUserAdmin && !groupManager.isUserInGroup(user.getDirectoryUser(), groupFromShare.groupName))
+                    if (!fromMigrate && !isUserAdmin && !groupManager.isUserInGroup(user.getDirectoryUser().getName(), groupFromShare.groupName))
                         throw new RestFieldException(i18nHelper.getText("common.sharing.exception.not.in.group", groupFromShare.groupName), "group_" + groupFromShare.groupName);
                 } else if (projectRoleFromShare != null) {
                     Project project = projectManager.getProjectObj(projectRoleFromShare.projectId);
@@ -265,7 +264,7 @@ public class CalendarManager {
                         throw new RestFieldException(i18nHelper.getText("common.sharing.exception.project.does.not.exist"), "project_" + projectRoleFromShare.projectId);
 
                     if (!fromMigrate) {
-                        if (!isUserAdmin && !permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false))
+                        if (!isUserAdmin && !permissionManager.hasPermission(Permissions.BROWSE, project, user, false))
                             throw new RestFieldException(i18nHelper.getText("common.sharing.exception.no.permission.project", project.getName()),
                                     "project_" + projectRoleFromShare.projectId);
 
@@ -363,7 +362,7 @@ public class CalendarManager {
         return ao.executeInTransaction(new TransactionCallback<UserData>() {
             @Override
             public UserData doInTransaction() {
-                UserData[] userDatas = ao.find(UserData.class, Query.select().where("user_key = ?", jiraAuthenticationContext.getUser().getKey()));
+                UserData[] userDatas = ao.find(UserData.class,  Query.select().where("USER_KEY = ?", jiraAuthenticationContext.getUser().getKey()));
                 if (userDatas.length == 0)
                     return null;
                 return userDatas[0];
@@ -376,7 +375,7 @@ public class CalendarManager {
         return ao.executeInTransaction(new TransactionCallback<UserData>() {
             @Override
             public UserData doInTransaction() {
-                UserData[] userDatas = ao.find(UserData.class, Query.select().where("user_key = ?", userKey));
+                UserData[] userDatas = ao.find(UserData.class, Query.select().where("USER_KEY = ?", userKey));
                 if (userDatas.length == 0)
                     return null;
                 return userDatas[0];
@@ -448,7 +447,7 @@ public class CalendarManager {
     }
 
     private boolean isUserAdmin(ApplicationUser user) {
-        return globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, user);
+        return globalPermissionManager.hasPermission(Permissions.ADMINISTER, user);
     }
 
     private List<LocalShare> getLocalShares(String shares) {
@@ -491,7 +490,7 @@ public class CalendarManager {
             Project project = projectManager.getProjectObj(projectId);
             if (project == null)
                 throw new IllegalArgumentException("Bad project id in shares => " + projectId);
-            if (!permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, jiraAuthenticationContext.getUser(), false))
+            if (!permissionManager.hasPermission(Permissions.BROWSE, project, jiraAuthenticationContext.getUser(), false))
                 throw new IllegalArgumentException("No permission to view project in shares => " + project.getName());
 
             String roleIdStr = matcher.group(3);
@@ -508,7 +507,7 @@ public class CalendarManager {
     }
 
     private void deleteOldShareDate(int calendarId) {
-        Share[] shares = ao.find(Share.class, Query.select().where("calendar_id = ?", calendarId));
+        Share[] shares = ao.find(Share.class, Query.select().where("CALENDAR_ID = ?", calendarId));
         for (Share share: shares)
             ao.delete(share);
     }
@@ -545,7 +544,7 @@ public class CalendarManager {
     }
 
     private UserData findUserData() {
-        UserData[] userDatas = ao.find(UserData.class, Query.select().where("user_key = ?", jiraAuthenticationContext.getUser().getKey()));
+        UserData[] userDatas = ao.find(UserData.class, Query.select().where("USER_KEY = ?", jiraAuthenticationContext.getUser().getKey()));
         if (userDatas.length > 0)
             return userDatas[0];
         return null;

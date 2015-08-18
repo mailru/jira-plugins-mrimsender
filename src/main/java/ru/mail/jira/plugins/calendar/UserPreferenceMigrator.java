@@ -1,12 +1,11 @@
 package ru.mail.jira.plugins.calendar;
 
 import com.atlassian.crowd.embedded.api.Group;
-import com.atlassian.jira.permission.GlobalPermissionKey;
-import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.PermissionManager;
+import com.atlassian.jira.security.Permissions;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
@@ -77,7 +76,7 @@ public class UserPreferenceMigrator {
 
                 MigratedUserPreferences oldUserPreferences = readUserPreferences(xml, dbf);
                 final String userKey = user.getKey();
-                final boolean isUserAdmin = globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, user);
+                final boolean isUserAdmin = globalPermissionManager.hasPermission(Permissions.ADMINISTER, user);
 
                 List<Integer> showedCalendars = new ArrayList<Integer>();
                 Set<Long> shadowCalendars = oldUserPreferences.shadowCalendars;
@@ -111,7 +110,7 @@ public class UserPreferenceMigrator {
                                             break;
                                         }
                                     } else {
-                                        if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false)) {
+                                        if (permissionManager.hasPermission(Permissions.BROWSE, project, user, false)) {
                                             showedCalendars.add(calendar.getID());
                                             break;
                                         }

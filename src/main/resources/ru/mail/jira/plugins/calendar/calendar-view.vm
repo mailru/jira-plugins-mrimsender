@@ -28,7 +28,7 @@
             </div>
             <div class="aui-buttons">
                 <button id="calendar-add" class="aui-button">
-                    <span class="aui-icon aui-icon-small aui-iconfont-list-add"></span>
+                    <span class="aui-icon aui-icon-small aui-iconfont-add"></span>
                     $i18n.getText( "ru.mail.jira.plugins.calendar.addCalendar" )
                 </button>
             </div>
