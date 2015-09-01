@@ -28,6 +28,7 @@ import com.opensymphony.workflow.loader.StepDescriptor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.mail.jira.plugins.commons.CommonUtils;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -122,7 +123,7 @@ public class CommandProcessor extends Thread {
 
                     ProjectService.GetProjectResult getProjectResult = projectService.getProjectByKey(fromUser, projectKey.toUpperCase());
                     if (!getProjectResult.isValid())
-                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.unableToAccessProject", projectKey, formatErrorCollection(getProjectResult.getErrorCollection())));
+                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.unableToAccessProject", projectKey, CommonUtils.formatErrorCollection(getProjectResult.getErrorCollection())));
                     Project project = getProjectResult.getProject();
 
                     IssueType issueType = null;
@@ -160,11 +161,11 @@ public class CommandProcessor extends Thread {
 
                     IssueService.CreateValidationResult createValidationResult = issueService.validateCreate(fromUser.getDirectoryUser(), issueInputParameters);
                     if (!createValidationResult.isValid())
-                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.error", formatErrorCollection(createValidationResult.getErrorCollection())));
+                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.error", CommonUtils.formatErrorCollection(createValidationResult.getErrorCollection())));
 
                     IssueService.IssueResult issueResult = issueService.create(fromUser.getDirectoryUser(), createValidationResult);
                     if (!issueResult.isValid())
-                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.error", formatErrorCollection(issueResult.getErrorCollection())));
+                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.error", CommonUtils.formatErrorCollection(issueResult.getErrorCollection())));
 
                     MrimsenderThread.sendMessage(fromEmail, i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.success", issueResult.getIssue().getKey()));
                     return;
@@ -194,15 +195,6 @@ public class CommandProcessor extends Thread {
             log.warn(String.format("Error processing command <%s> from <%s>", message, fromEmail), e);
             MrimsenderThread.sendMessage(fromEmail, e.getMessage());
         }
-    }
-
-    private String formatErrorCollection(ErrorCollection errorCollection) {
-        Collection<String> lines = new ArrayList<String>();
-        if (errorCollection.getErrorMessages() != null)
-            lines.addAll(errorCollection.getErrorMessages());
-        if (errorCollection.getErrors() != null)
-            lines.addAll(errorCollection.getErrors().values());
-        return StringUtils.join(lines, "\n");
     }
 
     private List<ActionDescriptor> getAvailableActions(Issue issue) {
@@ -237,7 +229,7 @@ public class CommandProcessor extends Thread {
         for (String issueKey : issueKeys) {
             IssueService.IssueResult issueResult = issueService.getIssue(fromUser.getDirectoryUser(), issueKey);
             if (!issueResult.isValid())
-                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.unableToAccessIssue", issueKey, formatErrorCollection(issueResult.getErrorCollection())));
+                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.unableToAccessIssue", issueKey, CommonUtils.formatErrorCollection(issueResult.getErrorCollection())));
             issues.add(issueResult.getIssue());
         }
 
@@ -348,17 +340,17 @@ public class CommandProcessor extends Thread {
             if (validation) {
                 commentService.hasPermissionToCreate(fromUser, issue, errorCollection);
                 if (errorCollection.hasAnyErrors())
-                    throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.commentCommand.error", issue.getKey(), formatErrorCollection(errorCollection)));
+                    throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.commentCommand.error", issue.getKey(), CommonUtils.formatErrorCollection(errorCollection)));
 
                 commentService.isValidCommentBody(commentText, errorCollection);
                 if (errorCollection.hasAnyErrors())
-                    throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.commentCommand.error", issue.getKey(), formatErrorCollection(errorCollection)));
+                    throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.commentCommand.error", issue.getKey(), CommonUtils.formatErrorCollection(errorCollection)));
 
                 return null;
             } else {
                 commentService.create(fromUser, issue, commentText, true, errorCollection);
                 if (errorCollection.hasAnyErrors())
-                    throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.commentCommand.error", issue.getKey(), formatErrorCollection(errorCollection)));
+                    throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.commentCommand.error", issue.getKey(), CommonUtils.formatErrorCollection(errorCollection)));
 
                 return i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.commentCommand.success", issue.getKey());
             }
@@ -381,14 +373,14 @@ public class CommandProcessor extends Thread {
 
             IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(fromUser.getDirectoryUser(), issue.getId(), issueInputParameters);
             if (!updateValidationResult.isValid())
-                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.assignCommand.error", issue.getKey(), assignee.getDisplayName(), formatErrorCollection(updateValidationResult.getErrorCollection())));
+                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.assignCommand.error", issue.getKey(), assignee.getDisplayName(), CommonUtils.formatErrorCollection(updateValidationResult.getErrorCollection())));
 
             if (validation)
                 return null;
 
             IssueService.IssueResult issueResult = issueService.update(fromUser.getDirectoryUser(), updateValidationResult);
             if (!issueResult.isValid())
-                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.assignCommand.error", issue.getKey(), assignee.getDisplayName(), formatErrorCollection(issueResult.getErrorCollection())));
+                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.assignCommand.error", issue.getKey(), assignee.getDisplayName(), CommonUtils.formatErrorCollection(issueResult.getErrorCollection())));
 
             return i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.assignCommand.success", issue.getKey(), assignee.getDisplayName());
         }
@@ -446,14 +438,14 @@ public class CommandProcessor extends Thread {
 
             IssueService.TransitionValidationResult transitionValidationResult = issueService.validateTransition(fromUser.getDirectoryUser(), issue.getId(), actionDescriptor.getId(), issueInputParameters);
             if (!transitionValidationResult.isValid())
-                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.workflowCommand.error", issue.getKey(), actionDescriptor.getName(), formatErrorCollection(transitionValidationResult.getErrorCollection())));
+                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.workflowCommand.error", issue.getKey(), actionDescriptor.getName(), CommonUtils.formatErrorCollection(transitionValidationResult.getErrorCollection())));
 
             if (validation)
                 return null;
 
             IssueService.IssueResult issueResult = issueService.transition(fromUser.getDirectoryUser(), transitionValidationResult);
             if (!issueResult.isValid())
-                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.workflowCommand.error", issue.getKey(), actionDescriptor.getName(), formatErrorCollection(issueResult.getErrorCollection())));
+                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.workflowCommand.error", issue.getKey(), actionDescriptor.getName(), CommonUtils.formatErrorCollection(issueResult.getErrorCollection())));
 
             return i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.workflowCommand.success", issue.getKey(), actionDescriptor.getName());
         }
