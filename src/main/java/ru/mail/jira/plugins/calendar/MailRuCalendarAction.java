@@ -683,23 +683,26 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
 
         String dateFormat = getApplicationProperties().getDefaultBackedString(APKeys.JIRA_DATE_PICKER_JAVA_FORMAT);
         String dateTimeFormat = getApplicationProperties().getDefaultBackedString(APKeys.JIRA_DATE_TIME_PICKER_JAVA_FORMAT);
+        Locale locale = getJiraServiceContext().getI18nBean().getLocale();
+
+        log.info("getLocale from authCTX => " + locale);
 
         if (eventStartIsDueDate) {
             Timestamp newDueDate = getNewTimestamp(issue.getDueDate(), dayDelta, millisDelta);
-            issueInputParams.setDueDate(new SimpleDateFormat(dateFormat, getLocale()).format(newDueDate));
+            issueInputParams.setDueDate(new SimpleDateFormat(dateFormat, locale).format(newDueDate));
         } else if (eventStartCFValue != null) {
-            String keyForDateFormat = eventStartCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimeFormat : dateFormat;
             Timestamp value = getNewTimestamp(eventStartCFValue, dayDelta, millisDelta);
-            issueInputParams.addCustomFieldValue(eventStartCF.getIdAsLong(), new SimpleDateFormat(keyForDateFormat, getLocale()).format(value));
+            String keyForDateFormat = eventStartCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimeFormat : dateFormat;
+            issueInputParams.addCustomFieldValue(eventStartCF.getIdAsLong(), new SimpleDateFormat(keyForDateFormat, locale).format(value));
         }
 
         if (eventEndIsDueDate) {
             Timestamp newDueDate = getNewTimestamp(issue.getDueDate(), dayDelta, millisDelta);
-            issueInputParams.setDueDate(new SimpleDateFormat(dateFormat, getLocale()).format(newDueDate));
+            issueInputParams.setDueDate(new SimpleDateFormat(dateFormat, locale).format(newDueDate));
         } else if (eventEndCF != null && eventEndCFValue != null) {
-            String keyForDateFormat = eventEndCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimeFormat : dateFormat;
             Timestamp value = getNewTimestamp(eventEndCFValue, dayDelta, millisDelta);
-            issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), new SimpleDateFormat(keyForDateFormat, getLocale()).format(value));
+            String keyForDateFormat = eventEndCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimeFormat : dateFormat;
+            issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), new SimpleDateFormat(keyForDateFormat, locale).format(value));
         }
 
         IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(ApplicationUsers.toDirectoryUser(user), issue.getId(), issueInputParams);
@@ -752,14 +755,15 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
 
         String dateFormat = getApplicationProperties().getDefaultBackedString(APKeys.JIRA_DATE_PICKER_JAVA_FORMAT);
         String dateTimeFormat = getApplicationProperties().getDefaultBackedString(APKeys.JIRA_DATE_TIME_PICKER_JAVA_FORMAT);
+        Locale locale = getJiraServiceContext().getI18nBean().getLocale();
 
         if (eventEndIsDueDate) {
             Timestamp newDueDate = getNewTimestamp(issue.getDueDate(), dayDelta, millisDelta);
-            issueInputParams.setDueDate(new SimpleDateFormat(dateFormat, getLocale()).format(newDueDate));
+            issueInputParams.setDueDate(new SimpleDateFormat(dateFormat, locale).format(newDueDate));
         } else {
             String keyForDateFormat = eventEndCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimeFormat : dateFormat;
             Timestamp value = getNewTimestamp(eventEndDateValue, dayDelta, millisDelta);
-            issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), new SimpleDateFormat(keyForDateFormat, getLocale()).format(value));
+            issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), new SimpleDateFormat(keyForDateFormat, locale).format(value));
         }
 
         IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(ApplicationUsers.toDirectoryUser(user), issue.getId(), issueInputParams);
