@@ -2,6 +2,8 @@ package ru.mail.jira.plugins.calendar.model;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
@@ -44,13 +46,12 @@ public class IssueInfo {
     private String created;
     @XmlElement
     private String updated;
+    @XmlElement
+    private Map<String,String> customFields = new LinkedHashMap<String, String>();
 
-    public IssueInfo(String key, String summary, String description, String assignee, String reporter) {
+    public IssueInfo(String key, String summary) {
         this.key = key;
         this.summary = summary;
-        this.description = description;
-        this.assignee = assignee;
-        this.reporter = reporter;
     }
 
     public String getType() {
@@ -59,6 +60,22 @@ public class IssueInfo {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getAssignee() {
+        return assignee;
+    }
+
+    public void setAssignee(String assignee) {
+        this.assignee = assignee;
+    }
+
+    public String getReporter() {
+        return reporter;
+    }
+
+    public void setReporter(String reporter) {
+        this.reporter = reporter;
     }
 
     public String getStatus() {
@@ -163,5 +180,13 @@ public class IssueInfo {
 
     public void setUpdated(String updated) {
         this.updated = updated;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void addCustomField(String name, String view) {
+        this.customFields.put(name, view);
     }
 }

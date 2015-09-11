@@ -66,7 +66,7 @@
                 <div class="field-group">
                     <label for="calendar-dialog-displayed-fields">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.fields" )</label>
                     <input type="hidden" id="calendar-dialog-displayed-fields" class="long-field calendar-dialog-select">
-                    <div id="calendar-dialog-displayed-fields-error" class="error hidden"></div>
+                    <div id="calendar-dialog-fields-error" class="error hidden"></div>
                 </div>
             </div>
 

@@ -522,15 +522,12 @@
             var html = '';
             html += '<div>';
             html += '<div class="calenar-issue-popup-key-header">';
-            html += '<a target="_blank" href="' + AJS.contextPath() + '/browse/' + issue.key + '">' + issue.key + '</a>';
-            html += '</div>';
-            html += '<div>';
-            html += '<span class="calenar-issue-popup-label">' + AJS.I18n.getText('common.words.summary') + ':&nbsp; </span>';
-            html += '<div class="calenar-issue-popup-field-value">' + issue.summary + '</div>';
+            html += '<a target="_blank" href="' + AJS.contextPath() + '/browse/' + issue.key + '"><strong>' + issue.summary + '</strong>';
+            html += '<span class="aui-icon aui-icon-small aui-iconfont-share"></span>';
+            html += '</a>';
             html += '</div>';
             html += buildField(issue.assignee, AJS.I18n.getText('issue.field.assignee'));
             html += buildField(issue.reporter, AJS.I18n.getText('issue.field.reporter'));
-            html += buildField(issue.description, AJS.I18n.getText('common.concepts.description'));
             html += buildStatusField(issue.status, issue.statusColor, AJS.I18n.getText('common.words.status'));
             html += buildField(issue.labels, AJS.I18n.getText('common.concepts.labels'));
             html += buildField(issue.components, AJS.I18n.getText('common.concepts.components'));
@@ -541,47 +538,70 @@
             html += buildField(issue.affect, AJS.I18n.getText('issue.field.version'));
             html += buildField(issue.created, AJS.I18n.getText('issue.field.created'));
             html += buildField(issue.updated, AJS.I18n.getText('issue.field.updated'));
+            html += buildCustomFieldsBlock(issue);
+            html += buildDescription(issue.description);
+
             html += '</div>';
             return html;
         }
 
         function buildField(field, label) {
-            var result = '';
+            var html = '';
             if (field) {
-                result += '<div>';
-                result += '<span class="calenar-issue-popup-label">' + label + ':&nbsp; </span>';
-                result += '<div class="calenar-issue-popup-field-value">' + field + '</div>';
-                result += '</div>';
+                html += '<dl>';
+                html += '<dt>' + label + ':</dt>';
+                html += '<dd>' + field + '</dd>';
+                html += '</dl>';
             }
-            return result;
+            return html;
+        }
+
+        function buildDescription(description) {
+            var html = '';
+            if (description && description.trim())
+                html = '<div class="calendar-event-info-popup-description">' + description + '</div>';
+            return html;
         }
 
         function buildStatusField(status, statusColor, label) {
-            var result = '';
+            var html = '';
             if (status) {
-                result += '<div>';
-                result += '<span class="calenar-issue-popup-label">' + label + ':&nbsp; </span>';
-                result += '<div class="calenar-issue-popup-field-value">';
-                result += '<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + statusColor + '">' + status + '</span>';
-                result += '</div>';
-                result += '</div>';
+                html += '<dl>';
+                html += '<dt>' + label + ':</dt>';
+                html += '<dd>';
+                html += '<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + statusColor + '">' + status + '</span>';
+                html += '</dd>';
+                html += '</dl>';
             }
-            return result;
+            return html;
         }
 
         function buildPriorityField(priority, imageUrl, label) {
-            var result = '';
+            var html = '';
             if (priority) {
-                result += '<div>';
-                result += '<span class="calenar-issue-popup-label">' + label + ':&nbsp; </span>';
-                result += '<div class="calenar-issue-popup-field-value">';
-                result += '<span>';
-                result += '<img class="calendar-priority-image-url" alt="" height="16" src="' + AJS.contextPath() + imageUrl + '">' + priority;
-                result += '</span>';
-                result += '</div>';
-                result += '</div>';
+                html += '<dl>';
+                html += '<dt>' + label + ':</dt>';
+                html += '<dd>';
+                html += '<img class="calendar-priority-image-url" height="16" src="' + AJS.contextPath() + imageUrl + '">' + priority;
+                html += '</dd>';
+                html += '</dl>';
             }
-            return result;
+            return html;
+        }
+
+        function buildCustomFieldsBlock(issue) {
+            var html = '';
+            if (issue.customFields) {
+                Object.keys(issue.customFields).map(function (item) {
+                    html += '<dl>';
+                    html += '<dt>' + item + ':</dt>';
+                    html += '<dd>';
+                    html += issue.customFields[item];
+                    html += '</dd>';
+                    html += '</dl>';
+                });
+            }
+            return html;
         }
 
         /* Dialog */

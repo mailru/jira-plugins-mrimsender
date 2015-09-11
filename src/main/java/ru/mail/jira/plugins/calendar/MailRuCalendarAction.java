@@ -12,13 +12,14 @@ import com.atlassian.jira.bc.project.ProjectService;
 import com.atlassian.jira.bc.project.component.ProjectComponent;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.datetime.DateTimeFormatter;
-import com.atlassian.jira.issue.CustomFieldManager;
-import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.issue.IssueInputParameters;
-import com.atlassian.jira.issue.MutableIssue;
+import com.atlassian.jira.issue.*;
 import com.atlassian.jira.issue.customfields.impl.DateTimeCFType;
+import com.atlassian.jira.issue.fields.AssigneeSystemField;
 import com.atlassian.jira.issue.fields.CustomField;
-import com.atlassian.jira.issue.label.Label;
+import com.atlassian.jira.issue.fields.LabelsSystemField;
+import com.atlassian.jira.issue.fields.ReporterSystemField;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.jql.builder.JqlClauseBuilder;
@@ -82,6 +83,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
     private final AvatarService avatarService;
     private final DateTimeFormatter dateTimeFormatter;
     private final CustomFieldManager customFieldManager;
+    private final FieldLayoutManager fieldLayoutManager;
     private final GlobalPermissionManager globalPermissionManager;
     private final GroupManager groupManager;
     private final I18nHelper i18nHelper;
@@ -92,14 +94,16 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
     private final ProjectManager projectManager;
     private final ProjectService projectService;
     private final ProjectRoleManager projectRoleManager;
+    private final RendererManager rendererManager;
     private final SearchRequestService searchRequestService;
     private final SearchService searchService;
 
-    public MailRuCalendarAction(CalendarManager calendarManager, AvatarService avatarService, DateTimeFormatter dateTimeFormatter, CustomFieldManager customFieldManager, GlobalPermissionManager globalPermissionManager, GroupManager groupManager, I18nHelper i18nHelper, IssueService issueService, Migrator migrator, PermissionManager permissionManager, PluginSettingsFactory pluginSettingsFactory, ProjectManager projectManager, ProjectService projectService, ProjectRoleManager projectRoleManager,SearchRequestService searchRequestService, SearchService searchService) {
+    public MailRuCalendarAction(CalendarManager calendarManager, AvatarService avatarService, DateTimeFormatter dateTimeFormatter, CustomFieldManager customFieldManager, FieldLayoutManager fieldLayoutManager, GlobalPermissionManager globalPermissionManager, GroupManager groupManager, I18nHelper i18nHelper, IssueService issueService, Migrator migrator, PermissionManager permissionManager, PluginSettingsFactory pluginSettingsFactory, ProjectManager projectManager, ProjectService projectService, ProjectRoleManager projectRoleManager, RendererManager rendererManager, SearchRequestService searchRequestService, SearchService searchService) {
         this.calendarManager = calendarManager;
         this.avatarService = avatarService;
         this.dateTimeFormatter = dateTimeFormatter;
         this.customFieldManager = customFieldManager;
+        this.fieldLayoutManager = fieldLayoutManager;
         this.globalPermissionManager = globalPermissionManager;
         this.groupManager = groupManager;
         this.i18nHelper = i18nHelper;
@@ -110,6 +114,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         this.projectManager = projectManager;
         this.projectService = projectService;
         this.projectRoleManager = projectRoleManager;
+        this.rendererManager = rendererManager;
         this.searchRequestService = searchRequestService;
         this.searchService = searchService;
     }
@@ -576,14 +581,11 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                 ApplicationUser user = getLoggedInApplicationUser();
                 Calendar calendar = calendarManager.getCalendar(calendarId);
                 IssueService.IssueResult issueResult = issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId);
-                MutableIssue issue = issueResult.getIssue();
 
-                IssueInfo result = new IssueInfo(eventId,
-                        issue.getSummary(),
-                        StringUtils.isBlank(issue.getDescription()) ? null : issue.getDescription(),
-                        issue.getAssignee() == null ? null : issue.getAssignee().getDisplayName(),
-                        issue.getReporter() == null ? null : issue.getReporter().getDisplayName());
+                MutableIssue issue = issueResult.getIssue();
+                IssueInfo result = new IssueInfo(eventId, issue.getSummary());
                 result.setStatusColor(issue.getStatusObject().getStatusCategory().getColorName());
+
                 if (StringUtils.isNotEmpty(calendar.getDisplayedFields()))
                     fillDisplayedFields(result, calendar.getDisplayedFields().split(","), issue);
 
@@ -594,13 +596,34 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
 
     private void fillDisplayedFields(IssueInfo issueInfo, String[] extraFields, Issue issue) {
         for (String extraField: extraFields) {
-            if (extraField.equals(CalendarManager.STATUS))
+            if (extraField.startsWith("customfield_")) {
+                CustomField customField = customFieldManager.getCustomFieldObject(extraField);
+                FieldLayoutItem fieldLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem(customField);
+                String columnViewHtml = customField.getColumnViewHtml(fieldLayoutItem, new HashMap(), issue);
+                if (StringUtils.isNotEmpty(columnViewHtml))
+                    issueInfo.addCustomField(customField.getName(), columnViewHtml);
+            } else if (extraField.equals(CalendarManager.REPORTER)) {
+                if (issue.getReporter() != null) {
+                    FieldLayoutItem reporterLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("reporter");
+
+
+                    String columnViewHtml = ((ReporterSystemField) reporterLayoutItem.getOrderableField()).getColumnViewHtml(reporterLayoutItem, new HashMap(), issue);
+                    issueInfo.setReporter(columnViewHtml);
+                }
+            } else if (extraField.equals(CalendarManager.ASSIGNEE)) {
+                if (issue.getAssignee() != null) {
+                    FieldLayoutItem assigneeLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("assignee");
+                    String columnViewHtml = ((AssigneeSystemField) assigneeLayoutItem.getOrderableField()).getColumnViewHtml(assigneeLayoutItem, new HashMap(), issue);
+                    issueInfo.setAssignee(columnViewHtml);
+                }
+            } else if (extraField.equals(CalendarManager.STATUS))
                 issueInfo.setStatus(issue.getStatusObject().getName());
-            else if (extraField.equals(CalendarManager.LABELS) && issue.getLabels() != null && !issue.getLabels().isEmpty()) {
-                List<String> labelList = new ArrayList<String>();
-                for (Label label : issue.getLabels())
-                    labelList.add(label.getLabel());
-                issueInfo.setLabels(labelList.toString());
+            else if (extraField.equals(CalendarManager.LABELS)) {
+                if (issue.getLabels() != null && !issue.getLabels().isEmpty()) {
+                    FieldLayoutItem labelsLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("labels");
+                    String columnViewHtml = ((LabelsSystemField) labelsLayoutItem.getOrderableField()).getColumnViewHtml(labelsLayoutItem, new HashMap(), issue);
+                    issueInfo.setLabels(columnViewHtml);
+                }
             } else if (extraField.equals(CalendarManager.COMPONENTS) && issue.getComponentObjects() != null && !issue.getComponentObjects().isEmpty()) {
                 List<String> components = new ArrayList<String>();
                 for (ProjectComponent pc : issue.getComponentObjects())
@@ -624,6 +647,12 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                 issueInfo.setCreated(dateTimeFormatter.forLoggedInUser().format(issue.getCreated()));
             else if (extraField.equals(CalendarManager.UPDATED))
                 issueInfo.setUpdated(dateTimeFormatter.forLoggedInUser().format(issue.getUpdated()));
+            else if (extraField.equals(CalendarManager.DESCRIPTION)) {
+                if (StringUtils.isNotEmpty(issue.getDescription())) {
+                    String renderedDescription = rendererManager.getRendererForType("atlassian-wiki-renderer").render(issue.getDescription(), null);
+                    issueInfo.setDescription(renderedDescription);
+                }
+            }
         }
     }
 
@@ -684,8 +713,6 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         String dateFormat = getApplicationProperties().getDefaultBackedString(APKeys.JIRA_DATE_PICKER_JAVA_FORMAT);
         String dateTimeFormat = getApplicationProperties().getDefaultBackedString(APKeys.JIRA_DATE_TIME_PICKER_JAVA_FORMAT);
         Locale locale = getJiraServiceContext().getI18nBean().getLocale();
-
-        log.info("getLocale from authCTX => " + locale);
 
         if (eventStartIsDueDate) {
             Timestamp newDueDate = getNewTimestamp(issue.getDueDate(), dayDelta, millisDelta);
@@ -1029,6 +1056,8 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         Map<String,String> result = new LinkedHashMap<String, String>(CalendarManager.DISPLAYED_FIELDS.size());
         for (String field: CalendarManager.DISPLAYED_FIELDS)
             result.put(field, i18nHelper.getText(field));
+        for (CustomField customField: customFieldManager.getCustomFieldObjects())
+            result.put(customField.getId(), customField.getName());
         return result;
     }
 

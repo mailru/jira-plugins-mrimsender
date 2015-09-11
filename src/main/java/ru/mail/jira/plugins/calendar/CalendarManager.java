@@ -4,6 +4,7 @@ import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.jira.bc.JiraServiceContext;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
+import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.search.SearchRequestManager;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
@@ -40,6 +41,7 @@ public class CalendarManager {
     private final Logger log = LoggerFactory.getLogger(CalendarManager.class);
 
     private final ActiveObjects ao;
+    private final CustomFieldManager customFieldManager;
     private final GlobalPermissionManager globalPermissionManager;
     private final GroupManager groupManager;
     private final JiraAuthenticationContext jiraAuthenticationContext;
@@ -52,8 +54,9 @@ public class CalendarManager {
 
     public static List<String> DISPLAYED_FIELDS;
 
-    public CalendarManager(ActiveObjects ao, GlobalPermissionManager globalPermissionManager, GroupManager groupManager, JiraAuthenticationContext jiraAuthenticationContext, I18nHelper i18nHelper, PermissionManager permissionManager, ProjectManager projectManager, ProjectRoleManager projectRoleManager, SearchRequestManager searchRequestManager, SearchRequestService searchRequestService) {
+    public CalendarManager(ActiveObjects ao, CustomFieldManager customFieldManager, GlobalPermissionManager globalPermissionManager, GroupManager groupManager, JiraAuthenticationContext jiraAuthenticationContext, I18nHelper i18nHelper, PermissionManager permissionManager, ProjectManager projectManager, ProjectRoleManager projectRoleManager, SearchRequestManager searchRequestManager, SearchRequestService searchRequestService) {
         this.ao = ao;
+        this.customFieldManager = customFieldManager;
         this.globalPermissionManager = globalPermissionManager;
         this.groupManager = groupManager;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
@@ -66,29 +69,35 @@ public class CalendarManager {
         initFields();
     }
 
+    public static final String DESCRIPTION = "common.words.description";
     public static final String STATUS = "common.words.status";
-    public static final String LABELS ="common.concepts.labels";
-    public static final String COMPONENTS ="common.concepts.components";
-    public static final String DUEDATE ="issue.field.duedate";
-    public static final String ENVIRONMENT ="common.words.env";
-    public static final String PRIORITY ="issue.field.priority";
-    public static final String RESOLUTION ="issue.field.resolution";
-    public static final String AFFECT ="issue.field.version";
-    public static final String CREATED ="issue.field.created";
-    public static final String UPDATED ="issue.field.updated";
+    public static final String LABELS = "common.concepts.labels";
+    public static final String COMPONENTS = "common.concepts.components";
+    public static final String DUEDATE = "issue.field.duedate";
+    public static final String ENVIRONMENT = "common.words.env";
+    public static final String PRIORITY = "issue.field.priority";
+    public static final String RESOLUTION = "issue.field.resolution";
+    public static final String AFFECT = "issue.field.version";
+    public static final String CREATED = "issue.field.created";
+    public static final String UPDATED = "issue.field.updated";
+    public static final String REPORTER = "issue.field.reporter";
+    public static final String ASSIGNEE = "issue.field.assignee";
 
     private void initFields() {
         DISPLAYED_FIELDS = new ArrayList<String>();
+        DISPLAYED_FIELDS.add(DESCRIPTION);
         DISPLAYED_FIELDS.add(STATUS);
-        DISPLAYED_FIELDS.add(LABELS);
-        DISPLAYED_FIELDS.add(COMPONENTS);
-        DISPLAYED_FIELDS.add(DUEDATE);
-        DISPLAYED_FIELDS.add(ENVIRONMENT);
+        DISPLAYED_FIELDS.add(ASSIGNEE);
+        DISPLAYED_FIELDS.add(REPORTER);
         DISPLAYED_FIELDS.add(PRIORITY);
-        DISPLAYED_FIELDS.add(RESOLUTION);
-        DISPLAYED_FIELDS.add(AFFECT);
         DISPLAYED_FIELDS.add(CREATED);
         DISPLAYED_FIELDS.add(UPDATED);
+        DISPLAYED_FIELDS.add(DUEDATE);
+        DISPLAYED_FIELDS.add(COMPONENTS);
+        DISPLAYED_FIELDS.add(ENVIRONMENT);
+        DISPLAYED_FIELDS.add(LABELS);
+        DISPLAYED_FIELDS.add(RESOLUTION);
+        DISPLAYED_FIELDS.add(AFFECT);
     }
 
     public Calendar getCalendar(final int id) {
@@ -243,10 +252,16 @@ public class CalendarManager {
             throw new IllegalArgumentException("Bad source => " + source);
         }
 
-        if (StringUtils.isNotBlank(displayedFields))
-            for (String field : displayedFields.split(","))
-                if (!DISPLAYED_FIELDS.contains(field))
+        if (StringUtils.isNotBlank(displayedFields)) {
+            for (String field : displayedFields.split(",")) {
+                if (field.startsWith("customfield_")) {
+                    if (customFieldManager.getCustomFieldObject(field) == null)
+                        throw new RestFieldException("Can not find custom field with id => " + field, "fields");
+                } else if (!DISPLAYED_FIELDS.contains(field)) {
                     throw new RestFieldException(String.format("Can not find field %s among standart fields", field), "fields");
+                }
+            }
+        }
 
         if (StringUtils.isNotBlank(shares)) {
             for (String shareExpr : shares.split(";")) {
@@ -285,10 +300,7 @@ public class CalendarManager {
 
     private void setCalendarFields(Calendar calendar, String name, String source, String color, String eventStart, String eventEnd, String displayedFields) {
         calendar.setName(name);
-
-        if (!source.startsWith("filter_-") && !source.startsWith("project_-"))
-            calendar.setSource(source);
-
+        calendar.setSource(source);
         calendar.setColor(color);
         calendar.setEventStart(eventStart);
         calendar.setEventEnd(eventEnd);

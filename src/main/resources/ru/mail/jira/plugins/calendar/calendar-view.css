@@ -103,7 +103,6 @@
 #calendar-dialog-common-fields {
     border-bottom: 1px solid #ddd;
     margin-bottom: 10px;
-    /*padding-bottom: 4px;*/
 }
 
 #calendar-dialog-form .short-field {
@@ -190,7 +189,15 @@
 /* Issue Info Popup*/
 
 .calenar-issue-popup-key-header {
-    margin-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.calenar-issue-popup-key-header a {
+    font-weight: bold;
+}
+
+.calenar-issue-popup-key-header span {
+    margin-left: 5px;
 }
 
 .calenar-issue-popup-label {
@@ -216,6 +223,29 @@
 
 .aui-inline-dialog .aui-inline-dialog-contents.calendar-event-info-popup {
     padding: 20px !important;
+}
+
+.calendar-event-info-popup dl {
+    padding-left: 150px;
+    margin-top: 2px;
+}
+
+.calendar-event-info-popup dt {
+    display: inline-block;
+    width: 140px;
+    margin-left: -150px;
+    color: #707070;
+}
+
+.calendar-event-info-popup dd {
+    display: inline-block;
+    padding-left: 10px;
+    -webkit-margin-start: 0;
+    vertical-align: top;
+}
+
+.calendar-event-info-popup-description {
+    margin-top: 10px;
 }
 
 a.calendar-name .aui-iconfont-error {
