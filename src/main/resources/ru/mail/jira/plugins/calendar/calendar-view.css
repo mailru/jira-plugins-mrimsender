@@ -188,8 +188,8 @@
 
 /* Issue Info Popup*/
 
-.calenar-issue-popup-key-header {
-    margin-bottom: 10px;
+.calendar-event-info-popup dl:first-of-type  {
+    margin-top: 10px !important;
 }
 
 .calenar-issue-popup-key-header a {
