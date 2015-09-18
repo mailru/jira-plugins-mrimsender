@@ -605,8 +605,6 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
             } else if (extraField.equals(CalendarManager.REPORTER)) {
                 if (issue.getReporter() != null) {
                     FieldLayoutItem reporterLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("reporter");
-
-
                     String columnViewHtml = ((ReporterSystemField) reporterLayoutItem.getOrderableField()).getColumnViewHtml(reporterLayoutItem, new HashMap(), issue);
                     issueInfo.setReporter(columnViewHtml);
                 }
