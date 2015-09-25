@@ -34,13 +34,4 @@ public class SourceField {
     public long getAvatarId() {
         return avatarId;
     }
-
-    @Override
-    public String toString() {
-        return "SourceField{" +
-                "id='" + id + '\'' +
-                ", text='" + text + '\'' +
-                ", avatarId=" + avatarId +
-                '}';
-    }
 }

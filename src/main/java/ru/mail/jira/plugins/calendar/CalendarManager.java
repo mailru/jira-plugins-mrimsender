@@ -142,11 +142,11 @@ public class CalendarManager {
                                    final String shares,
                                    final boolean visible,
                                    final boolean fromMigration) {
-        validateCalendar(user, name, source, color, eventStart, displayedFields, shares, true, fromMigration);
-        final List<LocalShare> calendarShares = getLocalShares(shares);
         return ao.executeInTransaction(new TransactionCallback<Calendar>() {
             @Override
             public Calendar doInTransaction() {
+                validateCalendar(user, name, source, color, eventStart, displayedFields, shares, true, fromMigration);
+                final List<LocalShare> calendarShares = getLocalShares(shares);
                 Calendar calendar = ao.create(Calendar.class);
                 calendar.setAuthorKey(user.getKey());
                 setCalendarFields(calendar, name, source, color, eventStart, eventEnd, displayedFields);
@@ -155,24 +155,6 @@ public class CalendarManager {
                 if (visible)
                     addCalendarToShowed(calendar, user);
                 return calendar;
-            }
-        });
-    }
-
-    private List<String> clearNotExistedCalendars(List<String> allCalendars) {
-        List<String> result = new ArrayList<String>(allCalendars);
-        Iterator<String> iterator = result.iterator();
-        while (iterator.hasNext())
-            if (isCalendarNotExist(Integer.parseInt(iterator.next())))
-                iterator.remove();
-        return result;
-    }
-
-    private boolean isCalendarNotExist(final int calendarId) {
-        return ao.executeInTransaction(new TransactionCallback<Boolean>() {
-            @Override
-            public Boolean doInTransaction() {
-                return ao.get(Calendar.class, calendarId) == null;
             }
         });
     }
@@ -371,15 +353,7 @@ public class CalendarManager {
 
     @Nullable
     public UserData getUserData() {
-        return ao.executeInTransaction(new TransactionCallback<UserData>() {
-            @Override
-            public UserData doInTransaction() {
-                UserData[] userDatas = ao.find(UserData.class,  Query.select().where("USER_KEY = ?", jiraAuthenticationContext.getUser().getKey()));
-                if (userDatas.length == 0)
-                    return null;
-                return userDatas[0];
-            }
-        });
+        return getUserData(jiraAuthenticationContext.getUser().getKey());
     }
 
     @Nullable
@@ -467,9 +441,8 @@ public class CalendarManager {
         if (StringUtils.isNotBlank(shares)) {
             Set<String> uniqueShares = new HashSet<String>();
             for (String shareExpr : shares.split(";")) {
-                if (uniqueShares.contains(shareExpr))
+                if (uniqueShares.add(shareExpr))
                     continue;
-                uniqueShares.add(shareExpr);
 
                 LocalShare localShare;
                 if ((localShare = getGroupFromExpr(shareExpr)) != null)
@@ -533,7 +506,13 @@ public class CalendarManager {
                 if (!calendarIds.contains(calendarIdStr))
                     calendarIds.add(calendarIdStr);
 
-                userData.setShowedCalendars(StringUtils.join(clearNotExistedCalendars(calendarIds), ";"));
+                List<String> showedCalendars = new ArrayList<String>(calendarIds);
+                Iterator<String> iterator = showedCalendars.iterator();
+                while (iterator.hasNext())
+                    if (ao.get(Calendar.class, Integer.parseInt(iterator.next())) == null)
+                        iterator.remove();
+
+                userData.setShowedCalendars(StringUtils.join(showedCalendars, ";"));
             } else
                 userData.setShowedCalendars(String.valueOf(calendar.getID()));
         } else {

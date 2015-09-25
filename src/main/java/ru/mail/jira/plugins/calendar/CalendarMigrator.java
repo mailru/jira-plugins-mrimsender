@@ -91,17 +91,8 @@ public class CalendarMigrator {
                     shares.deleteCharAt(shares.length() - 1);
 
                 String color = getColors().get(random.nextInt(6));
-                Calendar createdCalendar = calendarManager.createCalendar(user,
-                        oldCalendar.name,
-                        source,
-                        color,
-                        eventStart,
-                        eventEnd,
-                        StringUtils.join(oldCalendar.extraFields, ","),
-                        shares.toString(),
-                        false,
-                        true);
-                log.info("create calenar => " + oldCalendar.name);
+                Calendar createdCalendar = calendarManager.createCalendar(user, oldCalendar.name, source, color, eventStart, eventEnd, StringUtils.join(oldCalendar.extraFields, ","), shares.toString(), false, true);
+                log.info("Create calenar => " + oldCalendar.name);
                 result.put(oldCalendarId, createdCalendar.getID());
                 pluginSettings.remove(calendarPluginSettgingKey);
                 iterator.remove();

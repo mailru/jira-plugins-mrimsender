@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>$i18n.getText("ru.mail.jira.plugins.calendar.linkTitle")</title>
+    <title>$i18n.getText( "ru.mail.jira.plugins.calendar.linkTitle" )</title>
     <meta name="decorator" content="atl.general"/>
     $webResourceManager.requireResource( "jira.webresources:global-static" )
     $webResourceManager.requireResource( "jira.webresources:jira-global" )
@@ -62,6 +62,6 @@
         </div>
     </div>
 </div>
-#parse("ru/mail/jira/plugins/calendar/calendar-dialog.vm")
+#parse( "ru/mail/jira/plugins/calendar/calendar-dialog.vm" )
 </body>
 </html>

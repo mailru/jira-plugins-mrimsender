@@ -78,11 +78,10 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
 
     private final static Logger log = LoggerFactory.getLogger(MailRuCalendarAction.class);
 
-    private final CalendarManager calendarManager;
-
     private final AvatarService avatarService;
-    private final DateTimeFormatter dateTimeFormatter;
+    private final CalendarManager calendarManager;
     private final CustomFieldManager customFieldManager;
+    private final DateTimeFormatter dateTimeFormatter;
     private final FieldLayoutManager fieldLayoutManager;
     private final GlobalPermissionManager globalPermissionManager;
     private final GroupManager groupManager;
@@ -98,11 +97,11 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
     private final SearchRequestService searchRequestService;
     private final SearchService searchService;
 
-    public MailRuCalendarAction(CalendarManager calendarManager, AvatarService avatarService, DateTimeFormatter dateTimeFormatter, CustomFieldManager customFieldManager, FieldLayoutManager fieldLayoutManager, GlobalPermissionManager globalPermissionManager, GroupManager groupManager, I18nHelper i18nHelper, IssueService issueService, Migrator migrator, PermissionManager permissionManager, PluginSettingsFactory pluginSettingsFactory, ProjectManager projectManager, ProjectService projectService, ProjectRoleManager projectRoleManager, RendererManager rendererManager, SearchRequestService searchRequestService, SearchService searchService) {
-        this.calendarManager = calendarManager;
+    public MailRuCalendarAction(AvatarService avatarService, CalendarManager calendarManager, CustomFieldManager customFieldManager, DateTimeFormatter dateTimeFormatter, FieldLayoutManager fieldLayoutManager, GlobalPermissionManager globalPermissionManager, GroupManager groupManager, I18nHelper i18nHelper, IssueService issueService, Migrator migrator, PermissionManager permissionManager, PluginSettingsFactory pluginSettingsFactory, ProjectManager projectManager, ProjectService projectService, ProjectRoleManager projectRoleManager, RendererManager rendererManager, SearchRequestService searchRequestService, SearchService searchService) {
         this.avatarService = avatarService;
-        this.dateTimeFormatter = dateTimeFormatter;
+        this.calendarManager = calendarManager;
         this.customFieldManager = customFieldManager;
+        this.dateTimeFormatter = dateTimeFormatter;
         this.fieldLayoutManager = fieldLayoutManager;
         this.globalPermissionManager = globalPermissionManager;
         this.groupManager = groupManager;
@@ -122,11 +121,6 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
     @Override
     public String execute() throws Exception {
         return SUCCESS;
-    }
-
-    @GET
-    public Response getCalendarOutput() {
-        return Response.ok().build();
     }
 
     @GET
@@ -605,6 +599,8 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
             } else if (extraField.equals(CalendarManager.REPORTER)) {
                 if (issue.getReporter() != null) {
                     FieldLayoutItem reporterLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("reporter");
+
+
                     String columnViewHtml = ((ReporterSystemField) reporterLayoutItem.getOrderableField()).getColumnViewHtml(reporterLayoutItem, new HashMap(), issue);
                     issueInfo.setReporter(columnViewHtml);
                 }
@@ -809,21 +805,20 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         return StringUtils.join(lines, ", ");
     }
 
-    private boolean isDateFieldsNotDraggable(String startField, String endField) {
-        return isDateFieldNotDraggable(startField) && isDateFieldNotDraggable(endField);
+    private boolean isDateFieldDraggable(String field) {
+        return !CREATED_DATE_KEY.equals(field) && !UPDATED_DATE_KEY.equals(field) && !RESOLVED_DATE_KEY.equals(field);
     }
 
     private boolean isDateFieldNotDraggable(String field) {
         return !isDateFieldDraggable(field);
     }
 
-    private boolean isDateFieldDraggable(String field) {
-        return !CREATED_DATE_KEY.equals(field) && !UPDATED_DATE_KEY.equals(field) && !RESOLVED_DATE_KEY.equals(field);
+    private boolean isDateFieldsDraggable(String startField, String endField) {
+        return isDateFieldDraggable(startField) && isDateFieldDraggable(endField);
     }
 
-    private boolean isDateFieldsDraggable(String startField, String endField) {
-        return (!startField.equals(CREATED_DATE_KEY) && !startField.equals(UPDATED_DATE_KEY) && !startField.equals(RESOLVED_DATE_KEY))
-                && (endField == null || (!endField.equals(CREATED_DATE_KEY) && !endField.equals(UPDATED_DATE_KEY) && !endField.equals(RESOLVED_DATE_KEY)));
+    private boolean isDateFieldsNotDraggable(String startField, String endField) {
+        return !isDateFieldsDraggable(startField, endField);
     }
 
     private Timestamp getNewTimestamp(Date source, int dayDelta, int millisDelta) {
@@ -939,13 +934,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
             throw new IllegalArgumentException("Bad field => " + field);
     }
 
-    private List<Event> getProjectEvents(Calendar calendar,
-                                  long projectId,
-                                  String startField,
-                                  String endField,
-                                  Date startTime,
-                                  Date endTime) throws SearchException {
-
+    private List<Event> getProjectEvents(Calendar calendar, long projectId, String startField, String endField, Date startTime, Date endTime) throws SearchException {
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder();
         jqlBuilder.project(projectId);
         return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime);

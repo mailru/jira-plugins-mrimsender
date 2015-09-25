@@ -380,16 +380,7 @@
             $('#calendar-dialog-header').text(AJS.I18n.getText('ru.mail.jira.plugins.calendar.addCalendar'));
             $('#calendar-dialog-ok').text(AJS.I18n.getText('common.words.create'));
 
-            $.ajax({
-                type: 'GET',
-                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar',
-                success: function () {
-                    AJS.dialog2('#calendar-dialog').show();
-                },
-                error: function (request) {
-                    alert(request.responseText);
-                }
-            });
+            AJS.dialog2('#calendar-dialog').show();
         });
 
         $(document).on('click', '.calendar-edit', function (e) {
