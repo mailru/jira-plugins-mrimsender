@@ -29,12 +29,4 @@ public class DateField {
     public static DateField of(String id, String name) {
         return new DateField(id, name);
     }
-
-    @Override
-    public String toString() {
-        return "DateField{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                '}';
-    }
 }

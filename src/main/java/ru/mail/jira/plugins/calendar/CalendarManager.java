@@ -322,14 +322,14 @@ public class CalendarManager {
                     for (UserData userData: ao.find(UserData.class)) {
                         boolean userDataChanged = false;
                         String showedCalendarsStr = userData.getShowedCalendars();
-                        if (StringUtils.isEmpty(showedCalendarsStr))
+                        if (StringUtils.isEmpty(showedCalendarsStr) || !showedCalendarsStr.contains(String.valueOf(calendarId)))
                             continue;
 
                         List<Integer> showedCalendars = new ArrayList<Integer>();
-                        for (String showedCalendarIdStr: StringUtils.split(showedCalendarsStr, ";")) {
+                        for (String showedCalendarIdStr: showedCalendarsStr.split(";")) {
                             try {
                                 int showedCalendarId = Integer.parseInt(showedCalendarIdStr);
-                                if (showedCalendarId == calendarId || ao.get(Calendar.class, calendarId) == null)
+                                if (showedCalendarId == calendarId || ao.get(Calendar.class, showedCalendarId) == null)
                                     userDataChanged = true;
                                 else
                                     showedCalendars.add(showedCalendarId);
@@ -338,8 +338,11 @@ public class CalendarManager {
                             }
                         }
 
-                        if (userDataChanged)
+
+                        if (userDataChanged) {
                             userData.setShowedCalendars(StringUtils.join(showedCalendars, ";"));
+                            userData.save();
+                        }
                     }
                 } catch (Exception e) {
                     log.error("Error while trying to delete all calendar id from user data", e);
@@ -441,7 +444,7 @@ public class CalendarManager {
         if (StringUtils.isNotBlank(shares)) {
             Set<String> uniqueShares = new HashSet<String>();
             for (String shareExpr : shares.split(";")) {
-                if (uniqueShares.add(shareExpr))
+                if (!uniqueShares.add(shareExpr))
                     continue;
 
                 LocalShare localShare;
