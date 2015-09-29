@@ -54,4 +54,8 @@
     <component-import key="event-publisher" interface="com.atlassian.event.api.EventPublisher" />
     <component key="mrimsender-event-listener" class="ru.mail.jira.plugins.mrimsender.protocol.MrimsenderEventListener" />
 
+    <component key="mrim-service-module" class="ru.mail.jira.plugins.mrimsender.protocol.MrimServiceImpl" public="true">
+        <interface>ru.mail.jira.plugins.mrimsender.protocol.MrimService</interface>
+    </component>
+
 </atlassian-plugin>
