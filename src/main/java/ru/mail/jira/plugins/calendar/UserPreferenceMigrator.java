@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.calendar;
 
 import com.atlassian.crowd.embedded.api.Group;
+import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.GlobalPermissionManager;
@@ -10,7 +11,6 @@ import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.ApplicationUsers;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
@@ -30,8 +30,6 @@ import java.util.*;
 
 public class UserPreferenceMigrator {
     private final static Logger log = LoggerFactory.getLogger(UserPreferenceMigrator.class);
-
-    private final String PLUGIN_KEY = "SimpleCalendar";
 
     private final CalendarManager calendarManager;
     private final GlobalPermissionManager globalPermissionManager;
@@ -54,6 +52,7 @@ public class UserPreferenceMigrator {
     }
 
     public synchronized void migrate(Map<Long,Integer> oldToNewCalendar) {
+        String PLUGIN_KEY = "SimpleCalendar";
         if (oldToNewCalendar == null || oldToNewCalendar.isEmpty())
             return;
 
@@ -76,7 +75,7 @@ public class UserPreferenceMigrator {
 
                 MigratedUserPreferences oldUserPreferences = readUserPreferences(xml, dbf);
                 final String userKey = user.getKey();
-                final boolean isUserAdmin = globalPermissionManager.hasPermission(Permissions.ADMINISTER, user);
+                final boolean isUserAdmin = globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, user);
 
                 List<Integer> showedCalendars = new ArrayList<Integer>();
                 Set<Long> shadowCalendars = oldUserPreferences.shadowCalendars;
@@ -96,7 +95,7 @@ public class UserPreferenceMigrator {
                         for (Share share : shares) {
                             if (share.getGroup() != null) {
                                 Group group = groupManager.getGroup(share.getGroup());
-                                if (group != null && groupManager.isUserInGroup(ApplicationUsers.toDirectoryUser(user), group)) {
+                                if (group != null && groupManager.isUserInGroup(user, group)) {
                                     showedCalendars.add(calendar.getID());
                                     break;
                                 }

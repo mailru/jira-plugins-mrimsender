@@ -57,11 +57,6 @@
                 <configuration>
                     <productVersion>${jira.version}</productVersion>
                     <productDataVersion>${jira.version}</productDataVersion>
-                    <jvmArgs>-Duser.timezone=GMT+3</jvmArgs>
-                    <systemPropertyVariables>
-                        <atlassian.mail.senddisabled>false</atlassian.mail.senddisabled>
-                        <fastdev.mvn.command>${fastdev.mvn.command}</fastdev.mvn.command>
-                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>
@@ -80,10 +75,8 @@
         </plugins>
     </build>
     <properties>
-        <jira.version>6.4.1</jira.version>
-        <amps.version>5.0.4</amps.version>
+        <jira.version>7.0.0</jira.version>
+        <amps.version>5.1.18</amps.version>
         <ao.version>0.19.7</ao.version>
-        <fastdev.mvn.command>/usr/share/atlassian-plugin-sdk-5.0.13/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>
-        <useFastdevCli>false</useFastdevCli>
     </properties>
 </project>

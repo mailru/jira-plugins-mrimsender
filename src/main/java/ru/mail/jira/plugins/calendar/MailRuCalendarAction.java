@@ -24,6 +24,7 @@ import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.jql.builder.JqlClauseBuilder;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
+import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.project.version.Version;
@@ -39,7 +40,6 @@ import com.atlassian.jira.sharing.search.SharedEntitySearchParameters;
 import com.atlassian.jira.sharing.search.SharedEntitySearchParametersBuilder;
 import com.atlassian.jira.sharing.search.SharedEntitySearchResult;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.ApplicationUsers;
 import com.atlassian.jira.util.ErrorCollection;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
@@ -188,7 +188,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
 
                 fillSelectedSourceFields(user, result, calendar);
 
-                ApplicationUser currentUser = getLoggedInApplicationUser();
+                ApplicationUser currentUser = getLoggedInUser();
                 Share[] shares = calendar.getShares();
                 if (shares.length > 0) {
                     List<SelectedShare> selectedShares = getSelectedShares(currentUser, shares);
@@ -224,7 +224,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
             }
         } else if (source.startsWith("filter_")) {
             long filterId = Long.parseLong(source.substring("filter_".length()));
-            JiraServiceContext serviceContext = new JiraServiceContextImpl(getLoggedInApplicationUser());
+            JiraServiceContext serviceContext = new JiraServiceContextImpl(getLoggedInUser());
             SearchRequest filter = searchRequestService.getFilter(serviceContext, filterId);
             if (filter == null) {
                 output.setSelectedSourceIsUnavailable(true);
@@ -248,7 +248,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                     calendarManager.deleteShare(share);
                     continue;
                 }
-                if (!isAdministrator && !groupManager.isUserInGroup(user.getName(), share.getGroup()))
+                if (!isAdministrator && !groupManager.isUserInGroup(user, share.getGroup()))
                     selectedShare.setError(i18nHelper.getText("common.sharing.exception.not.in.group", share.getGroup()));
             } else {
                 Project project = projectManager.getProjectObj(share.getProject());
@@ -332,7 +332,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                         StringUtils.trimToNull(eventEnd),
                         StringUtils.trimToNull(displayedFields),
                         StringUtils.trimToNull(shares));
-                ApplicationUser user = getLoggedInApplicationUser();
+                ApplicationUser user = getLoggedInUser();
                 CalendarOutput output = new CalendarOutput(calendar);
                 String filterHasNotAvailableError = checkThatFilterHasAvailable(user, calendar);
                 if (filterHasNotAvailableError != null) {
@@ -365,9 +365,9 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
             @Override
             protected List<CalendarOutput> doAction() throws Exception {
                 List<CalendarOutput> result = new ArrayList<CalendarOutput>();
-                final ApplicationUser user = getLoggedInApplicationUser();
+                final ApplicationUser user = getLoggedInUser();
                 final String userKey = user.getKey();
-                final boolean isUserAdmin = globalPermissionManager.hasPermission(Permissions.ADMINISTER, user);
+                final boolean isUserAdmin = globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, user);
 
                 Set<Integer> showedCalendars = getShowedCalendars();
                 for (Calendar calendar: calendarManager.getAllCalendars()) {
@@ -383,7 +383,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                         for (Share share : shares) {
                             if (share.getGroup() != null) {
                                 Group group = groupManager.getGroup(share.getGroup());
-                                if (group != null && groupManager.isUserInGroup(ApplicationUsers.toDirectoryUser(user), group)) {
+                                if (group != null && groupManager.isUserInGroup(user, group)) {
                                     result.add(buildCalendarOutput(user, calendar, isUserAdmin, isShowedCalendar, false, false));
                                     sharedToUser = true;
                                     break;
@@ -483,7 +483,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
     private List<String> getUserGroups() {
         Collection<Group> groups = isAdministrator()
                 ? groupManager.getAllGroups()
-                : groupManager.getGroupsForUser(getLoggedInApplicationUser().getName());
+                : groupManager.getGroupsForUser(getLoggedInUser().getName());
         List<String> result = new ArrayList<String>(groups.size());
         for (Group group: groups)
             result.add(group.getName());
@@ -516,7 +516,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         Map<Long,String> result = new LinkedHashMap<Long, String>();
         List<Project> allProjects = isAdministrator()
                 ? projectManager.getProjectObjects()
-                : projectService.getAllProjects(getLoggedInApplicationUser()).get();
+                : projectService.getAllProjects(getLoggedInUser()).get();
 
         for (Project project : allProjects)
             result.put(project.getId(), project.getName());
@@ -531,7 +531,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
             projectRoles = projectRoleManager.getProjectRoles();
         } else {
             Project project = projectManager.getProjectObj(projectId);
-            projectRoles = projectRoleManager.getProjectRoles(getLoggedInApplicationUser(), project);
+            projectRoles = projectRoleManager.getProjectRoles(getLoggedInUser(), project);    
         }
 
         for (ProjectRole role: projectRoles)
@@ -572,13 +572,13 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         return new RestExecutor<IssueInfo>() {
             @Override
             protected IssueInfo doAction() throws Exception {
-                ApplicationUser user = getLoggedInApplicationUser();
+                ApplicationUser user = getLoggedInUser();
                 Calendar calendar = calendarManager.getCalendar(calendarId);
-                IssueService.IssueResult issueResult = issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId);
+                IssueService.IssueResult issueResult = issueService.getIssue(user, eventId);
 
                 MutableIssue issue = issueResult.getIssue();
                 IssueInfo result = new IssueInfo(eventId, issue.getSummary());
-                result.setStatusColor(issue.getStatusObject().getStatusCategory().getColorName());
+                result.setStatusColor(issue.getStatus().getStatusCategory().getColorName());
 
                 if (StringUtils.isNotEmpty(calendar.getDisplayedFields()))
                     fillDisplayedFields(result, calendar.getDisplayedFields().split(","), issue);
@@ -593,7 +593,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
             if (extraField.startsWith("customfield_")) {
                 CustomField customField = customFieldManager.getCustomFieldObject(extraField);
                 FieldLayoutItem fieldLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem(customField);
-                String columnViewHtml = customField.getColumnViewHtml(fieldLayoutItem, new HashMap(), issue);
+                String columnViewHtml = customField.getColumnViewHtml(fieldLayoutItem, new HashMap<String,Object>(), issue);
                 if (StringUtils.isNotEmpty(columnViewHtml))
                     issueInfo.addCustomField(customField.getName(), columnViewHtml);
             } else if (extraField.equals(CalendarManager.REPORTER)) {
@@ -611,27 +611,27 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                     issueInfo.setAssignee(columnViewHtml);
                 }
             } else if (extraField.equals(CalendarManager.STATUS))
-                issueInfo.setStatus(issue.getStatusObject().getName());
+                issueInfo.setStatus(issue.getStatus().getName());
             else if (extraField.equals(CalendarManager.LABELS)) {
                 if (issue.getLabels() != null && !issue.getLabels().isEmpty()) {
                     FieldLayoutItem labelsLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("labels");
                     String columnViewHtml = ((LabelsSystemField) labelsLayoutItem.getOrderableField()).getColumnViewHtml(labelsLayoutItem, new HashMap(), issue);
                     issueInfo.setLabels(columnViewHtml);
                 }
-            } else if (extraField.equals(CalendarManager.COMPONENTS) && issue.getComponentObjects() != null && !issue.getComponentObjects().isEmpty()) {
+            } else if (extraField.equals(CalendarManager.COMPONENTS) && issue.getComponents() != null && !issue.getComponents().isEmpty()) {
                 List<String> components = new ArrayList<String>();
-                for (ProjectComponent pc : issue.getComponentObjects())
+                for (ProjectComponent pc : issue.getComponents())
                     components.add(pc.getName());
                 issueInfo.setComponents(components.toString());
             } else if (extraField.equals(CalendarManager.DUEDATE) && issue.getDueDate() != null)
                 issueInfo.setDueDate(dateTimeFormatter.forLoggedInUser().format(issue.getDueDate()));
             else if (extraField.equals(CalendarManager.ENVIRONMENT) && issue.getEnvironment() != null)
                 issueInfo.setEnvirounment(issue.getEnvironment());
-            else if (extraField.equals(CalendarManager.PRIORITY) && issue.getPriorityObject() != null) {
-                issueInfo.setPriority(issue.getPriorityObject().getName());
-                issueInfo.setPriorityIconUrl(issue.getPriorityObject().getIconUrl());
-            } else if (extraField.equals(CalendarManager.RESOLUTION) && issue.getResolutionObject() != null)
-                issueInfo.setResolution(issue.getResolutionObject().getName());
+            else if (extraField.equals(CalendarManager.PRIORITY) && issue.getPriority() != null) {
+                issueInfo.setPriority(issue.getPriority().getName());
+                issueInfo.setPriorityIconUrl(issue.getPriority().getIconUrl());
+            } else if (extraField.equals(CalendarManager.RESOLUTION) && issue.getResolution() != null)
+                issueInfo.setResolution(issue.getResolution().getName());
             else if (extraField.equals(CalendarManager.AFFECT) && issue.getAffectedVersions() != null && !issue.getAffectedVersions().isEmpty()) {
                 List<String> affectVersions = new ArrayList<String>();
                 for (Version ver : issue.getAffectedVersions())
@@ -656,11 +656,11 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         return new RestExecutor<Void>() {
             @Override
             protected Void doAction() throws Exception {
-                ApplicationUser user = getLoggedInApplicationUser();
-                IssueService.IssueResult issueResult = issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId);
+                ApplicationUser user = getLoggedInUser();
+                IssueService.IssueResult issueResult = issueService.getIssue(user, eventId);
                 MutableIssue issue = issueResult.getIssue();
 
-                if (!issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)))
+                if (!issueService.isEditable(issue, user))
                     throw new IllegalArgumentException("Can not edit issue with key => " + eventId);
 
                 Calendar calendar = calendarManager.getCalendar(calendarId);
@@ -726,11 +726,11 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
             issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), new SimpleDateFormat(keyForDateFormat, locale).format(value));
         }
 
-        IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(ApplicationUsers.toDirectoryUser(user), issue.getId(), issueInputParams);
+        IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(user, issue.getId(), issueInputParams);
         if (!updateValidationResult.isValid())
             throw new Exception(formatErrorCollection(updateValidationResult.getErrorCollection()));
 
-        IssueService.IssueResult updateResult = issueService.update(ApplicationUsers.toDirectoryUser(user), updateValidationResult);
+        IssueService.IssueResult updateResult = issueService.update(user, updateValidationResult);
         if (!updateResult.isValid())
             throw new Exception(formatErrorCollection(updateResult.getErrorCollection()));
     }
@@ -787,11 +787,11 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
             issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), new SimpleDateFormat(keyForDateFormat, locale).format(value));
         }
 
-        IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(ApplicationUsers.toDirectoryUser(user), issue.getId(), issueInputParams);
+        IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(user, issue.getId(), issueInputParams);
         if (!updateValidationResult.isValid())
             throw new Exception(formatErrorCollection(updateValidationResult.getErrorCollection()));
 
-        IssueService.IssueResult updateResult = issueService.update(ApplicationUsers.toDirectoryUser(user), updateValidationResult);
+        IssueService.IssueResult updateResult = issueService.update(user, updateValidationResult);
         if (!updateResult.isValid())
             throw new Exception(formatErrorCollection(updateResult.getErrorCollection()));
     }
@@ -866,10 +866,10 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
         jqlBuilder.and().sub();
-        addDateCondition(startField, startTime, endTime, jqlBuilder, simpleDateFormat, false);
+        addDateCondition(startField, startTime, endTime, jqlBuilder, simpleDateFormat);
         if (StringUtils.isNotEmpty(endField)) {
             jqlBuilder.or();
-            addDateCondition(endField, startTime, endTime, jqlBuilder, simpleDateFormat, true);
+            addDateCondition(endField, startTime, endTime, jqlBuilder, simpleDateFormat);
         }
         jqlBuilder.endsub();
         boolean dateFieldsIsDraggable = isDateFieldsDraggable(startField, endField);
@@ -916,7 +916,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         return result;
     }
 
-    private void addDateCondition(String field, Date startTime, Date endTime, JqlClauseBuilder jcb, SimpleDateFormat simpleDateFormat, boolean nullable) {
+    private void addDateCondition(String field, Date startTime, Date endTime, JqlClauseBuilder jcb, SimpleDateFormat simpleDateFormat) {
         if (field.equals(DUE_DATE_KEY))
             jcb.dueBetween(simpleDateFormat.format(startTime), simpleDateFormat.format(endTime));
         else if (field.equals(CREATED_DATE_KEY))
@@ -946,7 +946,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                                          String endField,
                                          Date startTime,
                                          Date endTime) throws SearchException {
-        JiraServiceContext jsCtx = new JiraServiceContextImpl(getLoggedInApplicationUser());
+        JiraServiceContext jsCtx = new JiraServiceContextImpl(getLoggedInUser());
         SearchRequest filter = searchRequestService.getFilter(jsCtx, filterId);
 
         if (filter == null) {
@@ -1013,7 +1013,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
     }
 
     public String getUserAvatarSrc(String userKey) {
-        return avatarService.getAvatarURL(getLoggedInApplicationUser(), getUserManager().getUserByKey(userKey), Avatar.Size.SMALL).toString();
+        return avatarService.getAvatarURL(getLoggedInUser(), getUserManager().getUserByKey(userKey), Avatar.Size.SMALL).toString();
     }
 
     @SuppressWarnings("unused")
@@ -1063,7 +1063,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         List<SourceField> result = new ArrayList<SourceField>();
         filter = filter.trim().toLowerCase();
         int length = 0;
-        List<Project> allProjects = projectService.getAllProjects(getLoggedInApplicationUser()).get();
+        List<Project> allProjects = projectService.getAllProjects(getLoggedInUser()).get();
         for (Project project: allProjects) {
             if (project.getName().toLowerCase().contains(filter) || project.getKey().toLowerCase().contains(filter)) {
                 result.add(new SourceField("project_" + project.getId(), formatProject(project), project.getAvatar().getId()));
@@ -1096,7 +1096,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         builder.setEntitySearchContext(SharedEntitySearchContext.USE);
 
         SharedEntitySearchResult<SearchRequest> searchResults
-                = searchRequestService.search(new JiraServiceContextImpl(getLoggedInApplicationUser()), builder.toSearchParameters(), 0, 10);
+                = searchRequestService.search(new JiraServiceContextImpl(getLoggedInUser()), builder.toSearchParameters(), 0, 10);
 
         for (SearchRequest search: searchResults.getResults())
             result.add(new SourceField("filter_" + search.getId(), search.getName(), 0));
@@ -1105,10 +1105,10 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
     }
 
     private boolean isAdministrator() {
-        return isAdministrator(getLoggedInApplicationUser());
+        return isAdministrator(getLoggedInUser());
     }
 
     private boolean isAdministrator(ApplicationUser user) {
-        return globalPermissionManager.hasPermission(Permissions.ADMINISTER, user);
+        return globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, user);
     }
 }
