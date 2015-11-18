@@ -15,6 +15,7 @@ import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.NavigableField;
 import com.atlassian.jira.issue.label.Label;
 import com.atlassian.jira.issue.priority.Priority;
+import com.atlassian.jira.issue.resolution.Resolution;
 import com.atlassian.jira.issue.security.IssueSecurityLevel;
 import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
 import com.atlassian.jira.project.ProjectConstant;
@@ -181,9 +182,11 @@ public class MessageFormatter {
         } else if (EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId)) {
             sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.assigned", formatUser(user), issueLink, formatAssignee(issue.getAssignee())));
         } else if (EventType.ISSUE_RESOLVED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.resolved", formatUser(user), issueLink, issue.getResolutionObject().getNameTranslation(i18nHelper)));
+            Resolution resolution = issue.getResolutionObject();
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.resolved", formatUser(user), issueLink, resolution != null ? resolution.getNameTranslation(i18nHelper) : i18nHelper.getText("common.resolution.unresolved")));
         } else if (EventType.ISSUE_CLOSED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.closed", formatUser(user), issueLink, issue.getResolutionObject().getNameTranslation(i18nHelper)));
+            Resolution resolution = issue.getResolutionObject();
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.closed", formatUser(user), issueLink, resolution != null ? resolution.getNameTranslation(i18nHelper) : i18nHelper.getText("common.resolution.unresolved")));
         } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)) {
             sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.commented", formatUser(user), issueLink));
         } else if (EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
