@@ -84,7 +84,7 @@ public class MrimsenderThread extends Thread {
                 if (doClose)
                     break;
             } catch (Exception e) {
-                log.error(e);
+                log.error(e.getMessage(), e);
 
                 // Try to recover the state
                 resetWorker();
@@ -115,7 +115,7 @@ public class MrimsenderThread extends Thread {
                 CommonUtils.sendEmail(recipient, i18nHelper.getText("ru.mail.jira.plugins.mrimsender.email.subject"), message);
             }
         } catch (Exception e) {
-            log.error(e);
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -135,7 +135,7 @@ public class MrimsenderThread extends Thread {
             if (!worker.login(login, password))
                 throw new Exception(String.format("Unable to authenticate using specified login (%s) and password", login));
         } catch (Exception e) {
-            log.error(e);
+            log.error(e.getMessage(), e);
             closeWorker();
         }
     }
@@ -145,7 +145,7 @@ public class MrimsenderThread extends Thread {
             try {
                 worker.close();
             } catch (Exception e) {
-                log.error(e);
+                log.error(e.getMessage(), e);
             } finally {
                 worker = null;
             }

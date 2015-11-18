@@ -15,6 +15,7 @@ import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.NavigableField;
 import com.atlassian.jira.issue.label.Label;
 import com.atlassian.jira.issue.priority.Priority;
+import com.atlassian.jira.issue.resolution.Resolution;
 import com.atlassian.jira.issue.security.IssueSecurityLevel;
 import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
 import com.atlassian.jira.project.ProjectConstant;
@@ -40,18 +41,11 @@ public class MessageFormatter {
         this.recipient = recipient;
     }
 
-    private String formatAssignee(User assignee) {
-        if (assignee != null)
-            return assignee.getDisplayName();
+    private String formatUser(User user, String messageKey) {
+        if (user != null)
+            return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
         else
-            return i18nHelper.getText("common.concepts.unassigned");
-    }
-
-    private String formatReporter(User reporter) {
-        if (reporter != null)
-            return reporter.getDisplayName();
-        else
-            return i18nHelper.getText("common.concepts.no.reporter");
+            return i18nHelper.getText(messageKey);
     }
 
     private String formatPriority(Priority priority) {
@@ -95,7 +89,7 @@ public class MessageFormatter {
             appendField(sb, i18nHelper.getText("issue.field.issuetype"), issue.getIssueTypeObject().getNameTranslation(i18nHelper), false);
 
         appendField(sb, i18nHelper.getText("issue.field.affectsversions"), issue.getAffectedVersions());
-        appendField(sb, i18nHelper.getText("issue.field.assignee"), formatAssignee(issue.getAssignee()), false);
+        appendField(sb, i18nHelper.getText("issue.field.assignee"), formatUser(issue.getAssignee(), "common.concepts.unassigned"), false);
         appendField(sb, i18nHelper.getText("issue.field.attachment"), issue.getAttachments());
         appendField(sb, i18nHelper.getText("issue.field.components"), issue.getComponentObjects());
 
@@ -109,7 +103,7 @@ public class MessageFormatter {
         appendField(sb, i18nHelper.getText("issue.field.fixversions"), issue.getFixVersions());
         appendField(sb, i18nHelper.getText("issue.field.labels"), issue.getLabels());
         appendField(sb, i18nHelper.getText("issue.field.priority"), formatPriority(issue.getPriorityObject()), false);
-        appendField(sb, i18nHelper.getText("issue.field.reporter"), formatReporter(issue.getReporter()), false);
+        appendField(sb, i18nHelper.getText("issue.field.reporter"), formatUser(issue.getReporter(), "common.concepts.no.reporter"), false);
 
         if (issue.getSecurityLevelId() != null) {
             IssueSecurityLevel issueSecurityLevel = issueSecurityLevelManager.getSecurityLevel(issue.getSecurityLevelId());
@@ -171,35 +165,37 @@ public class MessageFormatter {
 
         Long eventTypeId = issueEvent.getEventTypeId();
         if (EventType.ISSUE_CREATED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.created", user.getDisplayName(), issueLink));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.created", formatUser(user, "common.words.anonymous"), issueLink));
         } else if (EventType.ISSUE_UPDATED_ID.equals(eventTypeId) || EventType.ISSUE_COMMENT_DELETED_ID.equals(eventTypeId) || EventType.ISSUE_GENERICEVENT_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.updated", user.getDisplayName(), issueLink));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.updated", formatUser(user, "common.words.anonymous"), issueLink));
         } else if (EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.assigned", user.getDisplayName(), issueLink, formatAssignee(issue.getAssignee())));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.assigned", formatUser(user, "common.words.anonymous"), issueLink, formatUser(issue.getAssignee(), "common.concepts.unassigned")));
         } else if (EventType.ISSUE_RESOLVED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.resolved", user.getDisplayName(), issueLink, issue.getResolutionObject().getNameTranslation(i18nHelper)));
+            Resolution resolution = issue.getResolutionObject();
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.resolved", formatUser(user, "common.words.anonymous"), issueLink, resolution != null ? resolution.getNameTranslation(i18nHelper) : i18nHelper.getText("common.resolution.unresolved")));
         } else if (EventType.ISSUE_CLOSED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.closed", user.getDisplayName(), issueLink, issue.getResolutionObject().getNameTranslation(i18nHelper)));
+            Resolution resolution = issue.getResolutionObject();
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.closed", formatUser(user, "common.words.anonymous"), issueLink, resolution != null ? resolution.getNameTranslation(i18nHelper) : i18nHelper.getText("common.resolution.unresolved")));
         } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.commented", user.getDisplayName(), issueLink));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.commented", formatUser(user, "common.words.anonymous"), issueLink));
         } else if (EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.commentEdited", user.getDisplayName(), issueLink));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.commentEdited", formatUser(user, "common.words.anonymous"), issueLink));
         } else if (EventType.ISSUE_REOPENED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.reopened", user.getDisplayName(), issueLink));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.reopened", formatUser(user, "common.words.anonymous"), issueLink));
         } else if (EventType.ISSUE_DELETED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.deleted", user.getDisplayName(), issueLink));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.deleted", formatUser(user, "common.words.anonymous"), issueLink));
         } else if (EventType.ISSUE_MOVED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.moved", user.getDisplayName(), issueLink));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.moved", formatUser(user, "common.words.anonymous"), issueLink));
         } else if (EventType.ISSUE_WORKLOGGED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.worklogged", user.getDisplayName(), issueLink));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.worklogged", formatUser(user, "common.words.anonymous"), issueLink));
         } else if (EventType.ISSUE_WORKSTARTED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.workStarted", user.getDisplayName(), issueLink));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.workStarted", formatUser(user, "common.words.anonymous"), issueLink));
         } else if (EventType.ISSUE_WORKSTOPPED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.workStopped", user.getDisplayName(), issueLink));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.workStopped", formatUser(user, "common.words.anonymous"), issueLink));
         } else if (EventType.ISSUE_WORKLOG_UPDATED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.worklogUpdated", user.getDisplayName(), issueLink));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.worklogUpdated", formatUser(user, "common.words.anonymous"), issueLink));
         } else if (EventType.ISSUE_WORKLOG_DELETED_ID.equals(eventTypeId)) {
-            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.worklogDeleted", user.getDisplayName(), issueLink));
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.worklogDeleted", formatUser(user, "common.words.anonymous"), issueLink));
         } else
             return null;
 
@@ -225,7 +221,7 @@ public class MessageFormatter {
         String issueLink = String.format("%s/browse/%s", ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL), issue.getKey());
 
         StringBuilder sb = new StringBuilder();
-        sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.mentioned", user.getDisplayName(), issueLink));
+        sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.mentioned", formatUser(user, "common.words.anonymous"), issueLink));
         sb.append("\n").append(issue.getSummary());
 
         if (!StringUtils.isBlank(mentionIssueEvent.getMentionText()))

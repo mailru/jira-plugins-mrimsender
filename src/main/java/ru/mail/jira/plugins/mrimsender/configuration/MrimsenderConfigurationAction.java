@@ -84,7 +84,7 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
                     worker.close();
                 }
             } catch (Exception e) {
-                log.error(e);
+                log.error(e.getMessage(), e);
                 if (StringUtils.isEmpty(host) && portParsed == null)
                     addErrorMessage(getText("ru.mail.jira.plugins.mrimsender.configuration.invalidHostAndPort"));
                 else

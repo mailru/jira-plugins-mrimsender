@@ -90,7 +90,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                 sendMessage(recipients, issueEvent);
             }
         } catch (Exception e) {
-            log.error(e);
+            log.error(e.getMessage(), e);
         }
     }
 
@@ -120,7 +120,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
             }
             sendMessage(recipients, mentionIssueEvent);
         } catch (Exception e) {
-            log.error(e);
+            log.error(e.getMessage(), e);
         }
     }
 }
