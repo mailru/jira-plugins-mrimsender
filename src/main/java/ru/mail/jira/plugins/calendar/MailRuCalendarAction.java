@@ -7,9 +7,9 @@ import com.atlassian.jira.bc.JiraServiceContext;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.bc.issue.IssueService;
-import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.bc.project.ProjectService;
 import com.atlassian.jira.bc.project.component.ProjectComponent;
+import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.issue.*;
@@ -21,6 +21,7 @@ import com.atlassian.jira.issue.fields.ReporterSystemField;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
 import com.atlassian.jira.issue.search.SearchException;
+import com.atlassian.jira.issue.search.SearchProvider;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.jql.builder.JqlClauseBuilder;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
@@ -44,13 +45,26 @@ import com.atlassian.jira.util.ErrorCollection;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import com.atlassian.jira.web.bean.PagerFilter;
+import com.atlassian.plugins.rest.common.security.AnonymousAllowed;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import net.fortuna.ical4j.data.CalendarOutputter;
+import net.fortuna.ical4j.model.*;
+import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.property.CalScale;
+import net.fortuna.ical4j.model.property.ProdId;
+import net.fortuna.ical4j.model.property.Uid;
+import net.fortuna.ical4j.model.property.Url;
+import net.fortuna.ical4j.util.Uris;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.*;
 import ru.mail.jira.plugins.calendar.model.Calendar;
+import ru.mail.jira.plugins.calendar.model.dto.CalendarFeedDto;
+import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.annotation.Nullable;
@@ -58,10 +72,15 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 
 @Path("/calendar")
 @Produces(MediaType.APPLICATION_JSON)
@@ -95,9 +114,17 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
     private final ProjectRoleManager projectRoleManager;
     private final RendererManager rendererManager;
     private final SearchRequestService searchRequestService;
-    private final SearchService searchService;
+    private final SearchProvider searchProvider;
 
-    public MailRuCalendarAction(AvatarService avatarService, CalendarManager calendarManager, CustomFieldManager customFieldManager, DateTimeFormatter dateTimeFormatter, FieldLayoutManager fieldLayoutManager, GlobalPermissionManager globalPermissionManager, GroupManager groupManager, I18nHelper i18nHelper, IssueService issueService, Migrator migrator, PermissionManager permissionManager, PluginSettingsFactory pluginSettingsFactory, ProjectManager projectManager, ProjectService projectService, ProjectRoleManager projectRoleManager, RendererManager rendererManager, SearchRequestService searchRequestService, SearchService searchService) {
+    public MailRuCalendarAction(AvatarService avatarService, CalendarManager calendarManager,
+                                CustomFieldManager customFieldManager, DateTimeFormatter dateTimeFormatter,
+                                FieldLayoutManager fieldLayoutManager, GlobalPermissionManager globalPermissionManager,
+                                GroupManager groupManager, I18nHelper i18nHelper, IssueService issueService,
+                                Migrator migrator, PermissionManager permissionManager,
+                                PluginSettingsFactory pluginSettingsFactory, ProjectManager projectManager,
+                                ProjectService projectService, ProjectRoleManager projectRoleManager,
+                                RendererManager rendererManager,
+                                SearchRequestService searchRequestService, SearchProvider searchProvider) {
         this.avatarService = avatarService;
         this.calendarManager = calendarManager;
         this.customFieldManager = customFieldManager;
@@ -115,7 +142,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         this.projectRoleManager = projectRoleManager;
         this.rendererManager = rendererManager;
         this.searchRequestService = searchRequestService;
-        this.searchService = searchService;
+        this.searchProvider = searchProvider;
     }
 
     @Override
@@ -546,20 +573,12 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                               @QueryParam("start") final String start,
                               @QueryParam("end") final String end) {
         try {
-            List<Event> result = new ArrayList<Event>();
-            Calendar calendar = calendarManager.getCalendar(calendarId);
-            DateFormat dateFormat = new SimpleDateFormat(DATE_RANGE_FORMAT);
-            String source = calendar.getSource();
-            if (source.startsWith("project_"))
-                result = getProjectEvents(calendar, Long.parseLong(source.substring("project_".length())), calendar.getEventStart(), calendar.getEventEnd(), dateFormat.parse(start), dateFormat.parse(end));
-            else if (source.startsWith("filter_"))
-                result = getFilterEvents(calendar, Long.parseLong(source.substring("filter_".length())), calendar.getEventStart(), calendar.getEventEnd(), dateFormat.parse(start), dateFormat.parse(end));
-
-            CacheControl casheControl = new CacheControl();
-            casheControl.setNoCache(true);
-            casheControl.setNoStore(true);
-            casheControl.setMaxAge(0);
-            return Response.ok(result).cacheControl(casheControl).build();
+            List<Event> result = findEvents(calendarId, start, end, getLoggedInApplicationUser());
+            CacheControl cacheControl = new CacheControl();
+            cacheControl.setNoCache(true);
+            cacheControl.setNoStore(true);
+            cacheControl.setMaxAge(0);
+            return Response.ok(result).cacheControl(cacheControl).build();
         } catch (Exception e) {
             log.error("Error while trying to get events", e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
@@ -845,7 +864,8 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                                   String startField,
                                   String endField,
                                   Date startTime,
-                                  Date endTime) throws SearchException {
+                                  Date endTime,
+                                  ApplicationUser user) throws SearchException {
         List<Event> result = new ArrayList<Event>();
         SimpleDateFormat clientDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
@@ -874,8 +894,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         jqlBuilder.endsub();
         boolean dateFieldsIsDraggable = isDateFieldsDraggable(startField, endField);
 
-        @SuppressWarnings("deprecation")
-        List<Issue> issues = searchService.search(getLoggedInUser(), jqlBuilder.buildQuery(), PagerFilter.getUnlimitedFilter()).getIssues();
+        List<Issue> issues = searchProvider.search(jqlBuilder.buildQuery(), user, PagerFilter.getUnlimitedFilter()).getIssues();
         for (Issue issue: issues) {
             try {
                 Date startDate = startCF == null ? retrieveDateByField(issue, startField) : retrieveDateByField(issue, startCF);
@@ -905,8 +924,8 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                     event.setStart(clientDateFormat.format(endDate));
                 }
 
-                event.setStartEditable(dateFieldsIsDraggable && issueService.isEditable(issue, getLoggedInUser()));
-                event.setDurationEditable(isDateFieldDraggable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, getLoggedInUser()));
+                event.setStartEditable(dateFieldsIsDraggable && issueService.isEditable(issue, user));
+                event.setDurationEditable(isDateFieldDraggable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, user));
 
                 result.add(event);
             } catch (Exception e) {
@@ -934,10 +953,13 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
             throw new IllegalArgumentException("Bad field => " + field);
     }
 
-    private List<Event> getProjectEvents(Calendar calendar, long projectId, String startField, String endField, Date startTime, Date endTime) throws SearchException {
+    private List<Event> getProjectEvents(Calendar calendar, long projectId,
+                                         String startField, String endField,
+                                         Date startTime, Date endTime,
+                                         ApplicationUser user) throws SearchException {
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder();
         jqlBuilder.project(projectId);
-        return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime);
+        return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user);
     }
 
     private List<Event> getFilterEvents(Calendar calendar,
@@ -945,7 +967,8 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                                          String startField,
                                          String endField,
                                          Date startTime,
-                                         Date endTime) throws SearchException {
+                                         Date endTime,
+                                        ApplicationUser user) throws SearchException {
         JiraServiceContext jsCtx = new JiraServiceContextImpl(getLoggedInApplicationUser());
         SearchRequest filter = searchRequestService.getFilter(jsCtx, filterId);
 
@@ -955,7 +978,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
         }
 
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder(filter.getQuery());
-        return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime);
+        return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user);
     }
 
     private boolean isAllDayEvent(@Nullable CustomField startCF, @Nullable CustomField endCF,
@@ -1110,5 +1133,112 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
 
     private boolean isAdministrator(ApplicationUser user) {
         return globalPermissionManager.hasPermission(Permissions.ADMINISTER, user);
+    }
+
+    private List<Event> findEvents(final int calendarId,
+                                   final String start,
+                                   final String end,
+                                   final ApplicationUser user) throws ParseException, SearchException {
+        Calendar calendarModel = calendarManager.getCalendar(calendarId);
+        DateFormat dateFormat = new SimpleDateFormat(DATE_RANGE_FORMAT);
+        String source = calendarModel.getSource();
+        if (source.startsWith("project_"))
+            return getProjectEvents(calendarModel, Long.parseLong(source.substring("project_".length())),
+                    calendarModel.getEventStart(), calendarModel.getEventEnd(), dateFormat.parse(start), dateFormat.parse(end), user);
+        else if (source.startsWith("filter_"))
+            return getFilterEvents(calendarModel, Long.parseLong(source.substring("filter_".length())),
+                    calendarModel.getEventStart(), calendarModel.getEventEnd(), dateFormat.parse(start), dateFormat.parse(end), user);
+        else {
+            return Collections.emptyList();
+        }
+    }
+
+    @GET
+    @Path("/ics/feed")
+    public Response getCalendarFeedUrl() {
+        return new RestExecutor<CalendarFeedDto>() {
+            @Override
+            protected CalendarFeedDto doAction() throws Exception {
+                CalendarFeed feed = calendarManager.getCalendarFeed(getLoggedInApplicationUser());
+                if(feed == null) {
+                    feed = calendarManager.createCalendarFeed(getLoggedInApplicationUser());
+                }
+
+                return feed != null ? new CalendarFeedDto(feed) : null;
+            }
+        }.getResponse();
+    }
+
+    @DELETE
+    @Path("/ics/feed")
+    public Response deleteCalendarFeedUrl() {
+        return new RestExecutor<Void>() {
+            @Override
+            protected Void doAction() throws Exception {
+                calendarManager.deleteCalendarFeed(getLoggedInApplicationUser());
+                return null;
+            }
+        }.getResponse();
+    }
+
+    @GET
+    @Produces("text/calendar")
+    @Path("{userKey}/{feedUid}/{calendars: .*}/ics")
+    @AnonymousAllowed
+    public Response getIcsCalendar(@PathParam("userKey") final String userKey,
+                                   @PathParam("feedUid") final String feedUid,
+                                   @PathParam("calendars") final String calendars) {
+        return new RestExecutor<StreamingOutput>() {
+            @Override
+            protected StreamingOutput doAction() throws Exception {
+                String[] calendarIds = calendars.split("/");
+
+                CalendarFeed calendarFeed = calendarManager.getCalendarFeed(userKey, feedUid);
+
+                if (calendarFeed == null) {
+                    return null;
+                }
+
+                final net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
+                calendar.getProperties().add(new ProdId("-//MailRu Calendar/" + userKey + "/" + feedUid + "/iCal4j 1.0//EN"));
+                calendar.getProperties().add(net.fortuna.ical4j.model.property.Version.VERSION_2_0);
+                calendar.getProperties().add(CalScale.GREGORIAN);
+
+                LocalDate startSearch = LocalDate.now().minusMonths(3);
+                LocalDate endSearch = LocalDate.now().plusMonths(1);
+
+                for (String calendarId : calendarIds) {
+                    List<Event> events = findEvents(Integer.parseInt(calendarId),
+                            startSearch.toString("yyyy-MM-dd"),
+                            endSearch.toString("yyyy-MM-dd"),
+                            getUserManager().getUserByKey(calendarFeed.getUserKey()));
+
+                    org.joda.time.format.DateTimeFormatter clientDateFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss");
+                    for (Event event : events) {
+                        DateTime start = new DateTime(clientDateFormat.parseMillis(event.getStart()));
+                        DateTime end = event.getEnd() != null ? new DateTime(clientDateFormat.parseMillis(event.getEnd())) : null;
+                        VEvent vEvent = end != null ? new VEvent(start, end, event.getTitle()) : new VEvent(start, event.getTitle());
+                        vEvent.getProperties().add(new Uid(event.getId()));
+                        vEvent.getProperties().add(new Url(Uris.create(
+                                ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/"
+                                        + event.getId())));
+
+                        calendar.getComponents().add(vEvent);
+                    }
+                }
+
+
+                return new StreamingOutput() {
+                    @Override
+                    public void write(OutputStream output) throws IOException, WebApplicationException {
+                        try {
+                            new CalendarOutputter().output(calendar, output);
+                        } catch (ValidationException e) {
+                            throw new IOException(e);
+                        }
+                    }
+                };
+            }
+        }.getResponse();
     }
 }

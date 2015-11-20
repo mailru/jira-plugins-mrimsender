@@ -18,11 +18,13 @@ import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.sal.api.transaction.TransactionCallback;
+import net.java.ao.DBParam;
 import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.Calendar;
+import ru.mail.jira.plugins.calendar.model.CalendarFeed;
 import ru.mail.jira.plugins.calendar.model.Share;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.commons.RestFieldException;
@@ -588,6 +590,51 @@ public class CalendarManager {
             @Override
             public Void doInTransaction() {
                 ao.delete(share);
+                return null;
+            }
+        });
+    }
+
+    public CalendarFeed createCalendarFeed(final ApplicationUser user) {
+        final CalendarFeed calendarFeed = getCalendarFeed(user);
+        if(calendarFeed != null) {
+            return calendarFeed;
+        }
+
+        return ao.executeInTransaction(new TransactionCallback<CalendarFeed>() {
+            @Override
+            public CalendarFeed doInTransaction() {
+                validateCalendarFeed(user);
+
+                DBParam userKey = new DBParam("USER_KEY", user.getKey());
+                DBParam uid = new DBParam("UID", UUID.randomUUID().toString().substring(0, 8));
+                return ao.create(CalendarFeed.class, userKey, uid);
+            }
+        });
+    }
+
+    private void validateCalendarFeed(ApplicationUser user) {
+        if (user == null)
+            throw new IllegalArgumentException("User doesn't exist");
+    }
+
+    public CalendarFeed getCalendarFeed(String userKey, String feedUid) {
+        CalendarFeed[] feeds = ao.find(CalendarFeed.class, Query.select().where("USER_KEY = ? AND UID = ?", userKey, feedUid));
+        return feeds.length > 0 ? feeds[0] : null;
+    }
+
+    public CalendarFeed getCalendarFeed(ApplicationUser user) {
+        CalendarFeed[] feeds = ao.find(CalendarFeed.class, Query.select().where("USER_KEY = ?", user.getKey()));
+        return feeds.length > 0 ? feeds[0] : null;
+    }
+
+    public void deleteCalendarFeed(final ApplicationUser user) {
+        ao.executeInTransaction(new TransactionCallback<Void>() {
+            @Override
+            public Void doInTransaction() {
+                CalendarFeed feed = getCalendarFeed(user);
+                if(feed != null)
+                    ao.delete(feed);
                 return null;
             }
         });

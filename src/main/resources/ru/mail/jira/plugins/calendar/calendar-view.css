@@ -70,7 +70,7 @@
     float: right;
 }
 
-.calendar-edit, .calendar-delete {
+.calendar-edit, .calendar-delete, .calendar-feed {
     margin-top: -5px;
     margin-bottom: -5px;
     margin-left: 0 !important;
@@ -92,11 +92,11 @@
 
 /* Dialog */
 
-#calendar-dialog {
+#calendar-dialog, #calendar-feed-dialog {
     width: 630px;
 }
 
-#calendar-dialog form {
+#calendar-dialog form, #calendar-feed-dialog form {
     margin: 0;
 }
 
@@ -150,6 +150,14 @@
 .calendar-dialog-share-delete {
     margin-left: 4px !important;
     vertical-align: top !important;
+}
+
+#calendar-feed-dialog-url-field {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-all;
+    vertical-align: -webkit-baseline-middle;
+    vertical-align: -moz-middle-with-baseline;
 }
 
 /* Full Calendar */

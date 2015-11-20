@@ -16,6 +16,7 @@
         <entity>ru.mail.jira.plugins.calendar.model.Calendar</entity>
         <entity>ru.mail.jira.plugins.calendar.model.UserData</entity>
         <entity>ru.mail.jira.plugins.calendar.model.Share</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.CalendarFeed</entity>
     </ao>
 
     <component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>

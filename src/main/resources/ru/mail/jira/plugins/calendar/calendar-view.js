@@ -13,6 +13,7 @@
         createSourceField();
         createDateFields();
         createDisplayedFields();
+        createCalendarsSelect();
 
         function createColorField() {
             $('#calendar-dialog-color').auiSelect2({
@@ -99,6 +100,30 @@
                     alert(msg);
                 }
             });
+        }
+
+        function createCalendarsSelect() {
+            var $calendarSelect = $('#calendar-feed-dialog-calendars');
+            $calendarSelect.auiSelect2({
+                allowClear: true,
+                multiple: true,
+                ajax: {
+                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/all',
+                    delay: 250,
+                    results: function(result) {
+                        var data = [];
+                        var length = result.length;
+                        for(var i = 0; i < length; i++) {
+                            var calendar = result[i];
+                            data[i] = {id: calendar.id, text: calendar.name}
+                        }
+
+                        return {results: data};
+                    }
+                }
+            });
+
+            $calendarSelect.on("change", function (e) { updateCalendarFeedUrl() });
         }
 
         /* END OF CREATING FIELDS IN DIALOG */
@@ -439,6 +464,7 @@
                             }
                         }
                     }
+
                     AJS.dialog2('#calendar-dialog').show();
                 },
                 error: function (request) {
@@ -965,6 +991,74 @@
             return [allProjectRoleEl].concat(keys.map(function (key) {
                 return { id: key, text: roles[key] };
             }));
+        }
+
+        //Calendar Feed Dialog
+        $('#calendar-create-feed').click(function (e) {
+            e.preventDefault();
+            getCalendarFeedUrl();
+
+            AJS.dialog2('#calendar-feed-dialog').show();
+        });
+
+        $('#calendar-feed-dialog-ok').click(function () {
+            AJS.dialog2('#calendar-feed-dialog').hide();
+        });
+
+        $('#calendar-feed-dialog-delete').click(function () {
+            $.ajax({
+                type: 'DELETE',
+                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/ics/feed',
+                success: function () {
+                    getCalendarFeedUrl();
+                },
+                error: function (request) {
+                    alert(request.responseText);
+                }
+            });
+        });
+
+        function getCalendarFeedUrl() {
+            $.ajax({
+                type: 'GET',
+                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/ics/feed',
+                success: function (result) {
+                    if(result) {
+                        $('#calendar-feed-dialog-uid').val(result.feedUid || '');
+                        $('#calendar-feed-dialog-userkey').val(result.userKey || '');
+                    }
+
+                    updateCalendarFeedUrl();
+                },
+                error: function (request) {
+                    alert(request.responseText);
+                }
+            });
+        }
+
+        function updateCalendarFeedUrl() {
+            var $urlField = $('#calendar-feed-dialog-url-field');
+            var calendars = $('#calendar-feed-dialog-calendars').val();
+            var calUrl = '';
+            if (calendars) {
+                calendars = calendars.split(',');
+                for (var i = 0; i < calendars.length; i++)
+                    calUrl += '/' + calendars[i];
+            }
+            var feedUid = $('#calendar-feed-dialog-uid').val();
+            var userKey = $('#calendar-feed-dialog-userkey').val();
+
+            $urlField.text('');
+            if(!feedUid || !userKey) {
+                getCalendarFeedUrl();
+                return;
+            }
+
+            if(calUrl) {
+                $urlField.text(window.location.origin + AJS.contextPath()  + '/rest/mailrucalendar/1.0/calendar/'
+                    + userKey + '/' + feedUid + calUrl + '/ics');
+            }
+
         }
     });
 })(AJS.$);
