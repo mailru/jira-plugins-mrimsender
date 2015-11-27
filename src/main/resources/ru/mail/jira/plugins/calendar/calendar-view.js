@@ -103,27 +103,28 @@
         }
 
         function createCalendarsSelect() {
-            var $calendarSelect = $('#calendar-feed-dialog-calendars');
-            $calendarSelect.auiSelect2({
-                allowClear: true,
-                multiple: true,
-                ajax: {
-                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/all',
-                    delay: 250,
-                    results: function(result) {
-                        var data = [];
-                        var length = result.length;
-                        for(var i = 0; i < length; i++) {
-                            var calendar = result[i];
-                            data[i] = {id: calendar.id, text: calendar.name}
-                        }
-
-                        return {results: data};
+            $.ajax({
+                type: 'GET',
+                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/all',
+                success: function (result) {
+                    var data = [];
+                    var length = result.length;
+                    for (var i = 0; i < length; i++) {
+                        var calendar = result[i];
+                        data[i] = {id: calendar.id, text: calendar.name}
                     }
+                    var $calendarSelect = $('#calendar-feed-dialog-calendars');
+
+                    $calendarSelect.auiSelect2({
+                        allowClear: true,
+                        multiple: true,
+                        data: data
+                    });
+                    $calendarSelect.on("change", function () { updateCalendarFeedUrl() });
+
+                    setCalendarsForIcalSelect();
                 }
             });
-
-            $calendarSelect.on("change", function (e) { updateCalendarFeedUrl() });
         }
 
         /* END OF CREATING FIELDS IN DIALOG */
@@ -998,6 +999,8 @@
             e.preventDefault();
             getCalendarFeedUrl();
 
+            setCalendarsForIcalSelect();
+
             AJS.dialog2('#calendar-feed-dialog').show();
         });
 
@@ -1036,6 +1039,15 @@
             });
         }
 
+        function setCalendarsForIcalSelect() {
+            var visibleCals = $('.calendar-visible');
+            var calIds = [];
+            for(var i = 0; i < visibleCals.length; i++) {
+                calIds[calIds.length] = visibleCals[i].getAttribute('data-id');
+            }
+            $('#calendar-feed-dialog-calendars').auiSelect2('val', calIds);
+        }
+
         function updateCalendarFeedUrl() {
             var $urlField = $('#calendar-feed-dialog-url-field');
             var calendars = $('#calendar-feed-dialog-calendars').val();
@@ -1048,13 +1060,14 @@
             var feedUid = $('#calendar-feed-dialog-uid').val();
             var userKey = $('#calendar-feed-dialog-userkey').val();
 
-            $urlField.text('');
+            $urlField.hide();
             if(!feedUid || !userKey) {
                 getCalendarFeedUrl();
                 return;
             }
 
             if(calUrl) {
+                $urlField.fadeIn();
                 $urlField.text(window.location.origin + AJS.contextPath()  + '/rest/mailrucalendar/1.0/calendar/'
                     + userKey + '/' + feedUid + calUrl + '/ics');
             }
