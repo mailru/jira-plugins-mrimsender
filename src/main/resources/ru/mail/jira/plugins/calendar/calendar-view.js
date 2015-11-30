@@ -13,7 +13,6 @@
         createSourceField();
         createDateFields();
         createDisplayedFields();
-        createCalendarsSelect();
 
         function createColorField() {
             $('#calendar-dialog-color').auiSelect2({
@@ -98,31 +97,6 @@
                     if (xhr.responseText)
                         msg += xhr.responseText;
                     alert(msg);
-                }
-            });
-        }
-
-        function createCalendarsSelect() {
-            $.ajax({
-                type: 'GET',
-                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/all',
-                success: function (result) {
-                    var data = [];
-                    var length = result.length;
-                    for (var i = 0; i < length; i++) {
-                        var calendar = result[i];
-                        data[i] = {id: calendar.id, text: calendar.name}
-                    }
-                    var $calendarSelect = $('#calendar-feed-dialog-calendars');
-
-                    $calendarSelect.auiSelect2({
-                        allowClear: true,
-                        multiple: true,
-                        data: data
-                    });
-                    $calendarSelect.on("change", function () { updateCalendarFeedUrl() });
-
-                    setCalendarsForIcalSelect();
                 }
             });
         }
@@ -760,7 +734,7 @@
                         $('#calendar-full-calendar').fullCalendar('addEventSource', {
                             url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendar.id + '/events',
                             success: function () {
-                                changeEventSourceCallback(calendar.id, true);
+                                changeEventSourceCallback(calendar.id, calendar.visible);
                             }
                         });
                     },
@@ -999,7 +973,7 @@
             e.preventDefault();
             getCalendarFeedUrl();
 
-            setCalendarsForIcalSelect();
+            createCalendarsSelect();
 
             AJS.dialog2('#calendar-feed-dialog').show();
         });
@@ -1010,10 +984,10 @@
 
         $('#calendar-feed-dialog-delete').click(function () {
             $.ajax({
-                type: 'DELETE',
+                type: 'POST',
                 url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/ics/feed',
-                success: function () {
-                    getCalendarFeedUrl();
+                success: function (result) {
+                    updateCalendarFeedUrl(result);
                 },
                 error: function (request) {
                     alert(request.responseText);
@@ -1021,20 +995,43 @@
             });
         });
 
+        function createCalendarsSelect() {
+            $.ajax({
+                type: 'GET',
+                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/all',
+                success: function (result) {
+                    var data = [];
+                    var length = result.length;
+                    for (var i = 0; i < length; i++) {
+                        var calendar = result[i];
+                        data[i] = {id: calendar.id, text: calendar.name}
+                    }
+                    var $calendarSelect = $('#calendar-feed-dialog-calendars');
+
+                    $calendarSelect.auiSelect2({
+                        allowClear: true,
+                        multiple: true,
+                        data: data
+                    });
+                    $calendarSelect.on("change", function () { updateCalendarFeedUrl() });
+
+                    setCalendarsForIcalSelect();
+                }
+            });
+        }
+
         function getCalendarFeedUrl() {
             $.ajax({
                 type: 'GET',
-                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/ics/feed',
+                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference',
                 success: function (result) {
-                    if(result) {
-                        $('#calendar-feed-dialog-uid').val(result.feedUid || '');
-                        $('#calendar-feed-dialog-userkey').val(result.userKey || '');
-                    }
-
-                    updateCalendarFeedUrl();
+                    updateCalendarFeedUrl(result);
                 },
-                error: function (request) {
-                    alert(request.responseText);
+                error: function (xhr) {
+                    var msg = "Error while trying to load user preferences.";
+                    if (xhr.responseText)
+                        msg += xhr.responseText;
+                    alert(msg);
                 }
             });
         }
@@ -1048,7 +1045,20 @@
             $('#calendar-feed-dialog-calendars').auiSelect2('val', calIds);
         }
 
-        function updateCalendarFeedUrl() {
+        function updateCalendarFeedUrl(data) {
+            if (data) {
+                $('#calendar-feed-dialog-uid').val(data.icalHashUrl || '');
+                $('#calendar-feed-dialog-userkey').val(data.userKey || '');
+            } else {
+                data = {
+                    icalHashUrl: $('#calendar-feed-dialog-uid').val(),
+                    userKey: $('#calendar-feed-dialog-userkey').val()
+                };
+            }
+
+            var feedUid = data.icalHashUrl;
+            var userKey = data.userKey;
+
             var $urlField = $('#calendar-feed-dialog-url-field');
             var calendars = $('#calendar-feed-dialog-calendars').val();
             var calUrl = '';
@@ -1057,8 +1067,6 @@
                 for (var i = 0; i < calendars.length; i++)
                     calUrl += '/' + calendars[i];
             }
-            var feedUid = $('#calendar-feed-dialog-uid').val();
-            var userKey = $('#calendar-feed-dialog-userkey').val();
 
             $urlField.hide();
             if(!feedUid || !userKey) {

@@ -63,8 +63,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.*;
 import ru.mail.jira.plugins.calendar.model.Calendar;
-import ru.mail.jira.plugins.calendar.model.dto.CalendarFeedDto;
-import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.annotation.Nullable;
@@ -182,6 +180,17 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                 UserData userData = calendarManager.getUserData();
                 calendarManager.updateUserData(null, !(userData != null && userData.isHideWeekends()));
                 return null;
+            }
+        }.getResponse();
+    }
+
+    @POST
+    @Path("/ics/feed")
+    public Response updateCalendarFeedUrl() {
+        return new RestExecutor<UserPreferences>() {
+            @Override
+            protected UserPreferences doAction() throws Exception {
+                return new UserPreferences(calendarManager.updateIcalUid());
             }
         }.getResponse();
     }
@@ -332,7 +341,7 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                 result.setChangable(true);
                 result.setIsMy(true);
                 result.setFromOthers(false);
-                result.setVisible(false);
+                result.setVisible(true);
                 return result;
             }
         }.getResponse();
@@ -1154,34 +1163,6 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
     }
 
     @GET
-    @Path("/ics/feed")
-    public Response getCalendarFeedUrl() {
-        return new RestExecutor<CalendarFeedDto>() {
-            @Override
-            protected CalendarFeedDto doAction() throws Exception {
-                CalendarFeed feed = calendarManager.getCalendarFeed(getLoggedInApplicationUser());
-                if(feed == null) {
-                    feed = calendarManager.createCalendarFeed(getLoggedInApplicationUser());
-                }
-
-                return feed != null ? new CalendarFeedDto(feed) : null;
-            }
-        }.getResponse();
-    }
-
-    @DELETE
-    @Path("/ics/feed")
-    public Response deleteCalendarFeedUrl() {
-        return new RestExecutor<Void>() {
-            @Override
-            protected Void doAction() throws Exception {
-                calendarManager.deleteCalendarFeed(getLoggedInApplicationUser());
-                return null;
-            }
-        }.getResponse();
-    }
-
-    @GET
     @Produces("text/calendar")
     @Path("{userKey}/{feedUid}/{calendars: .*}/ics")
     @AnonymousAllowed
@@ -1193,9 +1174,9 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
             protected StreamingOutput doAction() throws Exception {
                 String[] calendarIds = calendars.split("/");
 
-                CalendarFeed calendarFeed = calendarManager.getCalendarFeed(userKey, feedUid);
+                UserData userData = calendarManager.getUserDataByIcalUid(userKey, feedUid);
 
-                if (calendarFeed == null) {
+                if (userData == null) {
                     return null;
                 }
 
@@ -1211,14 +1192,14 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
                     List<Event> events = findEvents(Integer.parseInt(calendarId),
                             startSearch.toString("yyyy-MM-dd"),
                             endSearch.toString("yyyy-MM-dd"),
-                            getUserManager().getUserByKey(calendarFeed.getUserKey()));
+                            getUserManager().getUserByKey(userData.getUserKey()));
 
                     org.joda.time.format.DateTimeFormatter clientDateFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss");
                     for (Event event : events) {
                         DateTime start = new DateTime(clientDateFormat.parseMillis(event.getStart()));
                         DateTime end = event.getEnd() != null ? new DateTime(clientDateFormat.parseMillis(event.getEnd())) : null;
                         VEvent vEvent = end != null ? new VEvent(start, end, event.getTitle()) : new VEvent(start, event.getTitle());
-                        vEvent.getProperties().add(new Uid(event.getId()));
+                        vEvent.getProperties().add(new Uid(calendarId + "_" + event.getId()));
                         vEvent.getProperties().add(new Url(Uris.create(
                                 ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/"
                                         + event.getId())));
