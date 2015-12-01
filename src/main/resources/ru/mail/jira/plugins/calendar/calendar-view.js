@@ -1016,6 +1016,8 @@
                     $calendarSelect.on("change", function () { updateCalendarFeedUrl() });
 
                     setCalendarsForIcalSelect();
+
+                    updateCalendarFeedUrl();
                 }
             });
         }
