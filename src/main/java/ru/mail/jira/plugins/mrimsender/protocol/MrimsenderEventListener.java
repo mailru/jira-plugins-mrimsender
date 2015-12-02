@@ -19,12 +19,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 
 import java.util.*;
 
 public class MrimsenderEventListener implements InitializingBean, DisposableBean {
+    private static final long COMPONENT_WATCHER_CF_ID = 10000; // todo: create this field on production instance
+
     private static final Logger log = Logger.getLogger(MrimsenderEventListener.class);
 
     private final EventPublisher eventPublisher;
@@ -81,6 +84,11 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
 
                 for (NotificationRecipient notificationRecipient : notificationSchemeManager.getRecipients(issueEvent))
                     recipients.add(notificationRecipient.getUser());
+
+                List<ApplicationUser> componentWatchers = (List<ApplicationUser>) issueEvent.getIssue().getCustomFieldValue(CommonUtils.getCustomField(COMPONENT_WATCHER_CF_ID));
+                for (ApplicationUser componentWatcher : componentWatchers) {
+                    recipients.add(componentWatcher);
+                }
 
                 if (issueEvent.getWorklog() != null)
                     recipients = getFilteredRecipients(recipients, issueEvent.getWorklog().getRoleLevel(), issueEvent.getWorklog().getGroupLevel(), issueEvent.getIssue());
