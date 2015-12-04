@@ -1164,24 +1164,21 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
 
     @GET
     @Produces("text/calendar")
-    @Path("{userKey}/{feedUid}/{calendars: .*}/ics")
+    @Path("{icalUid}/{calendars}.ics")
     @AnonymousAllowed
-    public Response getIcsCalendar(@PathParam("userKey") final String userKey,
-                                   @PathParam("feedUid") final String feedUid,
+    public Response getIcsCalendar(@PathParam("icalUid") final String icalUid,
                                    @PathParam("calendars") final String calendars) {
         return new RestExecutor<StreamingOutput>() {
             @Override
             protected StreamingOutput doAction() throws Exception {
-                String[] calendarIds = calendars.split("/");
+                String[] calendarIds = StringUtils.split(calendars, "-");
 
-                UserData userData = calendarManager.getUserDataByIcalUid(userKey, feedUid);
-
-                if (userData == null) {
+                UserData userData = calendarManager.getUserDataByIcalUid(icalUid);
+                if (userData == null)
                     return null;
-                }
 
                 final net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
-                calendar.getProperties().add(new ProdId("-//MailRu Calendar/" + userKey + "/" + feedUid + "/iCal4j 1.0//EN"));
+                calendar.getProperties().add(new ProdId("-//MailRu Calendar/" + icalUid + "/iCal4j 1.0//EN"));
                 calendar.getProperties().add(net.fortuna.ical4j.model.property.Version.VERSION_2_0);
                 calendar.getProperties().add(CalScale.GREGORIAN);
 
@@ -1190,24 +1187,22 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
 
                 for (String calendarId : calendarIds) {
                     List<Event> events = findEvents(Integer.parseInt(calendarId),
-                            startSearch.toString("yyyy-MM-dd"),
-                            endSearch.toString("yyyy-MM-dd"),
-                            getUserManager().getUserByKey(userData.getUserKey()));
+                                                    startSearch.toString("yyyy-MM-dd"),
+                                                    endSearch.toString("yyyy-MM-dd"),
+                                                    getUserManager().getUserByKey(userData.getUserKey()));
 
                     org.joda.time.format.DateTimeFormatter clientDateFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss");
                     for (Event event : events) {
                         DateTime start = new DateTime(clientDateFormat.parseMillis(event.getStart()));
                         DateTime end = event.getEnd() != null ? new DateTime(clientDateFormat.parseMillis(event.getEnd())) : null;
+
                         VEvent vEvent = end != null ? new VEvent(start, end, event.getTitle()) : new VEvent(start, event.getTitle());
                         vEvent.getProperties().add(new Uid(calendarId + "_" + event.getId()));
-                        vEvent.getProperties().add(new Url(Uris.create(
-                                ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/"
-                                        + event.getId())));
+                        vEvent.getProperties().add(new Url(Uris.create(ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/" + event.getId())));
 
                         calendar.getComponents().add(vEvent);
                     }
                 }
-
 
                 return new StreamingOutput() {
                     @Override

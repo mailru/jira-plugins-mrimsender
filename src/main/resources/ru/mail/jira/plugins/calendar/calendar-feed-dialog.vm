@@ -3,9 +3,16 @@
     <input type="hidden" id="calendar-feed-dialog-userkey">
     <header class="aui-dialog2-header">
         <h2 id="calendar-feed-dialog-header" class="aui-dialog2-header-main">$i18n.getText("ru.mail.jira.plugins.calendar.feedCalendar")</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
     </header>
     <div class="aui-dialog2-content">
         <div id="calendar-feed-dialog-content">
+            <div id="calendar-feed-dialog-message" class="aui-message aui-message-generic">
+                <p>$i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.info.warning')</p>
+                <button id="calendar-feed-dialog-delete" class="aui-button aui-button-link">$i18n.getText("ru.mail.jira.plugins.calendar.feed.dialog.disable")</button>
+            </div>
             <p>$i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.intro')</p>
             <form class="aui top-label">
                 <div class="field-group">
@@ -14,15 +21,12 @@
                 </div>
                 <div id="calendar-feed-dialog-url" class="field-group">
                     <label>2. $i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.useurl')</label>
-                    <p>
-                        <span id="calendar-feed-dialog-url-field" class="url-field"></span>
-                    </p>
+                    <input class="text long-field url-field" type="text" readonly></input>
+                    <span id="url-field-copy" class="aui-button aui-button-subtle" data-clipboard-target=".url-field">
+                        <span class="aui-icon aui-icon-small aui-iconfont-copy-clipboard"/>
+                    </span>
                 </div>
             </form>
-            <div id="calendar-feed-dialog-message" class="aui-message aui-message-generic">
-                $i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.info.warning')
-                <button id="calendar-feed-dialog-delete" class="aui-button aui-button-subtle">$i18n.getText("ru.mail.jira.plugins.calendar.feed.dialog.disable")</button>
-            </div>
             <p>$i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.more')</p>
             <p>
                 <ul>
@@ -36,7 +40,7 @@
     </div>
     <footer class="aui-dialog2-footer" style="width: 100%">
         <div class="aui-dialog2-footer-actions">
-            <button id="calendar-feed-dialog-ok" class="aui-button aui-button-link">$i18n.getText("admin.common.words.ok" )</button>
+            <button id="calendar-feed-dialog-ok" class="aui-button aui-button-link">$i18n.getText("admin.common.words.close" )</button>
         </div>
     </footer>
 </section>

@@ -152,14 +152,6 @@
     vertical-align: top !important;
 }
 
-#calendar-feed-dialog-url-field {
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    word-break: break-all;
-    vertical-align: -webkit-baseline-middle;
-    vertical-align: -moz-middle-with-baseline;
-}
-
 /* Full Calendar */
 
 #calendar-full-calendar {

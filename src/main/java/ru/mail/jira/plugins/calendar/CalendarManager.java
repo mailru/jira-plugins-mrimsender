@@ -18,6 +18,7 @@ import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.sal.api.transaction.TransactionCallback;
+import net.java.ao.ActiveObjectsException;
 import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -369,7 +370,7 @@ public class CalendarManager {
                     return null;
 
                 UserData userData = userDatas[0];
-                if(userData.getIcalUid() == null) {
+                if (userData.getIcalUid() == null) {
                     userData.setICalUid(UUID.randomUUID().toString().substring(0, 8));
                     userData.save();
                 }
@@ -423,12 +424,17 @@ public class CalendarManager {
         });
     }
 
-    public UserData getUserDataByIcalUid(final String userKey, final String feedUid) {
+    public UserData getUserDataByIcalUid(final String icalUid) {
         return ao.executeInTransaction(new TransactionCallback<UserData>() {
             @Override
             public UserData doInTransaction() {
-                UserData[] userDatas = ao.find(UserData.class, Query.select().where("USER_KEY = ? AND ICAL_UID = ?", userKey, feedUid));
-                return userDatas.length > 0 ? userDatas[0] : null;
+                UserData[] userDatas = ao.find(UserData.class, Query.select().where("ICAL_UID = ?", icalUid));
+                if (userDatas.length == 0)
+                    return null;
+                else if (userDatas.length == 1)
+                    return userDatas[0];
+                else
+                    throw new ActiveObjectsException("Found more that one object of type UserData for uid" + icalUid);
             }
         });
     }

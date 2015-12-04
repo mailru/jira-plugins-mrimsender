@@ -13,9 +13,7 @@ public class UserPreferences {
     @XmlElement
     private boolean hideWeekends;
     @XmlElement
-    private String icalHashUrl;
-    @XmlElement
-    private String userKey;
+    private String icalUid;
 
     public UserPreferences() { }
 
@@ -24,8 +22,7 @@ public class UserPreferences {
             this.calendarView = userData.getDefaultView();
             this.hideWeekends = userData.isHideWeekends();
             this.showTimeInDates = userData.isShowTime();
-            this.icalHashUrl = userData.getIcalUid();
-            this.userKey = userData.getUserKey();
+            this.icalUid = userData.getIcalUid();
         }
     }
 }
