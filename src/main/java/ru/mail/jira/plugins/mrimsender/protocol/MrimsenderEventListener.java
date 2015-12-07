@@ -6,41 +6,42 @@ import com.atlassian.event.api.EventPublisher;
 import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.notification.NotificationRecipient;
-import com.atlassian.jira.notification.NotificationSchemeManager;
+import com.atlassian.jira.notification.*;
 import com.atlassian.jira.permission.ProjectPermissions;
+import com.atlassian.jira.scheme.SchemeEntity;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.ApplicationUsers;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 
 import java.util.*;
 
 public class MrimsenderEventListener implements InitializingBean, DisposableBean {
-    private static final long COMPONENT_WATCHER_CF_ID = 10000; // todo: create this field on production instance
 
     private static final Logger log = Logger.getLogger(MrimsenderEventListener.class);
 
     private final EventPublisher eventPublisher;
     private final GroupManager groupManager;
+    private final NotificationFilterManager notificationFilterManager;
     private final NotificationSchemeManager notificationSchemeManager;
     private final PermissionManager permissionManager;
     private final PluginData pluginData;
     private final ProjectRoleManager projectRoleManager;
     private final UserData userData = new UserData();
 
-    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, PluginData pluginData, ProjectRoleManager projectRoleManager) {
+    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager,  NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, PluginData pluginData, ProjectRoleManager projectRoleManager) {
         this.eventPublisher = eventPublisher;
         this.groupManager = groupManager;
+        this.notificationFilterManager = notificationFilterManager;
         this.notificationSchemeManager = notificationSchemeManager;
         this.permissionManager = permissionManager;
         this.pluginData = pluginData;
@@ -52,7 +53,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
         MrimsenderThread.startInstance();
         eventPublisher.register(this);
     }
- 
+
     @Override
     public void destroy() throws Exception {
         MrimsenderThread.stopInstance();
@@ -82,13 +83,17 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
             if (issueEvent.isSendMail()) {
                 Set<ApplicationUser> recipients = new HashSet<ApplicationUser>();
 
-                for (NotificationRecipient notificationRecipient : notificationSchemeManager.getRecipients(issueEvent))
-                    recipients.add(notificationRecipient.getUser());
-
-                List<ApplicationUser> componentWatchers = (List<ApplicationUser>) issueEvent.getIssue().getCustomFieldValue(CommonUtils.getCustomField(COMPONENT_WATCHER_CF_ID));
-                for (ApplicationUser componentWatcher : componentWatchers) {
-                    recipients.add(componentWatcher);
+                Set<NotificationRecipient> notificationRecipients = notificationSchemeManager.getRecipients(issueEvent);
+                NotificationFilterContext context = notificationFilterManager.makeContextFrom(JiraNotificationReason.ISSUE_EVENT, issueEvent);
+                for (SchemeEntity schemeEntity: notificationSchemeManager.getNotificationSchemeEntities(issueEvent.getProject(), issueEvent.getEventTypeId())) {
+                    context = notificationFilterManager.makeContextFrom(context, com.atlassian.jira.notification.type.NotificationType.from(schemeEntity.getType()));
+                    Set<NotificationRecipient> recipientsFromScheme = notificationSchemeManager.getRecipients(issueEvent, schemeEntity);
+                    recipientsFromScheme = Sets.newHashSet(notificationFilterManager.recomputeRecipients(recipientsFromScheme, context));
+                    notificationRecipients.addAll(recipientsFromScheme);
                 }
+
+                for (NotificationRecipient notificationRecipient : notificationRecipients)
+                    recipients.add(notificationRecipient.getUser());
 
                 if (issueEvent.getWorklog() != null)
                     recipients = getFilteredRecipients(recipients, issueEvent.getWorklog().getRoleLevel(), issueEvent.getWorklog().getGroupLevel(), issueEvent.getIssue());
