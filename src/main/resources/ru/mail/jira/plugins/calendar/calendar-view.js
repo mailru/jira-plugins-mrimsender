@@ -124,6 +124,7 @@
         function loadFullCalendar(view, hideWeekends) {
             var viewRenderFirstTime = true;
             fullCalendarInstance = $calendar.fullCalendar({
+                schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
                 contentHeight: 'auto',
                 defaultView: view,
                 header: {

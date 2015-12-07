@@ -44,9 +44,11 @@
         <dependency>com.atlassian.auiplugin:dialog2</dependency>
         <dependency>com.atlassian.auiplugin:aui-inline-dialog2</dependency>
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
-        <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/third-party-libs/moment.js"/>
+        <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/third-party-libs/moment.min.js"/>
         <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/third-party-libs/fullcalendar.css"/>
         <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/third-party-libs/fullcalendar.js"/>
+        <resource type="download" name="scheduler.css" location="ru/mail/jira/plugins/calendar/third-party-libs/scheduler.css"/>
+        <resource type="download" name="scheduler.js" location="ru/mail/jira/plugins/calendar/third-party-libs/scheduler.js"/>
         <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/third-party-libs/clipboard.min.js"/>
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="calendar-view.css" location="ru/mail/jira/plugins/calendar/calendar-view.css"/>
