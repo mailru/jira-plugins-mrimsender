@@ -1,6 +1,5 @@
 <section role="dialog" id="calendar-feed-dialog" class="aui-layer aui-dialog2" aria-hidden="true">
     <input type="hidden" id="calendar-feed-dialog-uid">
-    <input type="hidden" id="calendar-feed-dialog-userkey">
     <header class="aui-dialog2-header">
         <h2 id="calendar-feed-dialog-header" class="aui-dialog2-header-main">$i18n.getText("ru.mail.jira.plugins.calendar.feedCalendar")</h2>
         <a class="aui-dialog2-header-close">
@@ -8,34 +7,33 @@
         </a>
     </header>
     <div class="aui-dialog2-content">
-        <div id="calendar-feed-dialog-content">
-            <div id="calendar-feed-dialog-message" class="aui-message aui-message-generic">
-                <p>$i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.info.warning')</p>
-                <button id="calendar-feed-dialog-delete" class="aui-button aui-button-link">$i18n.getText("ru.mail.jira.plugins.calendar.feed.dialog.disable")</button>
+        <div>
+            <div class="aui-message aui-message-generic">
+                <p>$i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.intro')</p>
+                <p>$i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.info.warning') <a href="#" id="calendar-feed-dialog-delete">$i18n.getText("ru.mail.jira.plugins.calendar.feed.dialog.disable")</a>.</p>
             </div>
-            <p>$i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.intro')</p>
-            <form class="aui top-label">
+            <form class="aui top-label ajs-dirty-warning-exempt">
                 <div class="field-group">
                     <label for="calendar-feed-dialog-calendars">1. $i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.choose')</label>
-                    <input type="hidden" id="calendar-feed-dialog-calendars" class="long-field calendar-feed-dialog-select">
+                    <input type="hidden" id="calendar-feed-dialog-calendars" class="long-field calendar-feed-dialog-select" autofocus>
                 </div>
-                <div id="calendar-feed-dialog-url" class="field-group">
+                <div class="field-group">
                     <label>2. $i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.useurl')</label>
-                    <input class="text long-field url-field" type="text" readonly></input>
+                    <input class="text long-field url-field working" type="text" readonly></input>
                     <span id="url-field-copy" class="aui-button aui-button-subtle" data-clipboard-target=".url-field">
                         <span class="aui-icon aui-icon-small aui-iconfont-copy-clipboard"/>
                     </span>
                 </div>
             </form>
             <p>$i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.more')</p>
-            <p>
+
                 <ul>
                     <li><a href="https://www.calendarwiz.com/knowledgebase/entry/71/">Outlook</a></li>
-                    <li><a href="https://support.apple.com/ru-ru/HT202361">ICalendar</a></li>
-                    <li><a href="https://www.carrollwooddayschool.org/uploaded/documents/CalendarFeed.pdf">IOS Calendar</a></li>
+                    <li><a href="https://support.apple.com/ru-ru/HT202361">iCalendar</a></li>
+                    <li><a href="https://www.carrollwooddayschool.org/uploaded/documents/CalendarFeed.pdf">iOS Calendar</a></li>
                     <li><a href="https://support.google.com/calendar/answer/37100?hl=ru">Google Calendar</a></li>
                 </ul>
-            </p>
+
         </div>
     </div>
     <footer class="aui-dialog2-footer" style="width: 100%">

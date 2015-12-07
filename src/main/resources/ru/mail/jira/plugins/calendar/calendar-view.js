@@ -986,16 +986,18 @@
         });
 
         $('#calendar-feed-dialog-delete').click(function() {
-            $.ajax({
-                type: 'POST',
-                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/ics/feed',
-                success: function(result) {
-                    updateCalendarFeedUrl(result);
-                },
-                error: function(request) {
-                    alert(request.responseText);
-                }
-            });
+            if (confirm(AJS.I18n.getText("ru.mail.jira.plugins.calendar.feed.dialog.reset.confirm"))) {
+                $.ajax({
+                    type: 'POST',
+                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/ics/feed',
+                    success: function(result) {
+                        updateCalendarFeedUrl(result);
+                    },
+                    error: function(request) {
+                        alert(request.responseText);
+                    }
+                });
+            }
         });
 
         function createCalendarsSelect() {
@@ -1061,8 +1063,8 @@
             } else
                 icalUid = $('#calendar-feed-dialog-uid').val();
 
-            $urlField.hide();
             if (!icalUid) {
+                $urlField.val('');
                 getIcalUid();
                 return;
             }
@@ -1070,7 +1072,6 @@
             var calendars = $('#calendar-feed-dialog-calendars').val();
             if (calendars) {
                 var calUrl = calendars.split(',').join('-');
-                $urlField.fadeIn();
                 $urlField.val(window.location.origin + AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/'
                     + icalUid + '/' + calUrl + '.ics');
 

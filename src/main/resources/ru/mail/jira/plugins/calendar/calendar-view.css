@@ -96,7 +96,7 @@
     width: 630px;
 }
 
-#calendar-dialog form, #calendar-feed-dialog form {
+#calendar-dialog form {
     margin: 0;
 }
 
