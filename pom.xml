@@ -99,12 +99,37 @@
                 <artifactId>maven-amps-plugin</artifactId>
                 <version>${amps.version}</version>
                 <extensions>true</extensions>
+                <configuration>
+                    <compressJs>false</compressJs>
+                    <compressCss>false</compressCss>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>net.sf.alchim</groupId>
+                <artifactId>yuicompressor-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compress</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- Everything on one line -->
+                    <linebreakpos>-1</linebreakpos>
+                    <!-- Don't really care about warning messages. They're fairly useless -->
+                    <jswarn>false</jswarn>
+                    <excludes>
+                        <exclude>**/*.xml</exclude>
+                        <exclude>**/*-min*</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>

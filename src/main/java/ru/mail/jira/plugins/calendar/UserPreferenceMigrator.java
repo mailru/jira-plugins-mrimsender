@@ -22,18 +22,26 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.Share;
+import ru.mail.jira.plugins.calendar.service.CalendarService;
+import ru.mail.jira.plugins.calendar.service.UserDataService;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class UserPreferenceMigrator {
     private final static Logger log = LoggerFactory.getLogger(UserPreferenceMigrator.class);
 
     private final String PLUGIN_KEY = "SimpleCalendar";
 
-    private final CalendarManager calendarManager;
+    private final CalendarService calendarService;
+    private final UserDataService updateUserData;
+
     private final GlobalPermissionManager globalPermissionManager;
     private final GroupManager groupManager;
     private final PermissionManager permissionManager;
@@ -42,8 +50,17 @@ public class UserPreferenceMigrator {
     private final ProjectRoleManager projectRoleManager;
     private final UserManager userManager;
 
-    public UserPreferenceMigrator(CalendarManager calendarManager, GlobalPermissionManager globalPermissionManager, GroupManager groupManager, PermissionManager permissionManager, PluginSettingsFactory pluginSettingsFactory, ProjectManager projectManager, ProjectRoleManager projectRoleManager, UserManager userManager) {
-        this.calendarManager = calendarManager;
+    public UserPreferenceMigrator(CalendarService calendarService,
+                                  UserDataService updateUserData,
+                                  GlobalPermissionManager globalPermissionManager,
+                                  GroupManager groupManager,
+                                  PermissionManager permissionManager,
+                                  PluginSettingsFactory pluginSettingsFactory,
+                                  ProjectManager projectManager,
+                                  ProjectRoleManager projectRoleManager,
+                                  UserManager userManager) {
+        this.calendarService = calendarService;
+        this.updateUserData = updateUserData;
         this.globalPermissionManager = globalPermissionManager;
         this.groupManager = groupManager;
         this.permissionManager = permissionManager;
@@ -53,7 +70,7 @@ public class UserPreferenceMigrator {
         this.userManager = userManager;
     }
 
-    public synchronized void migrate(Map<Long,Integer> oldToNewCalendar) {
+    public synchronized void migrate(Map<Long, Integer> oldToNewCalendar) {
         if (oldToNewCalendar == null || oldToNewCalendar.isEmpty())
             return;
 
@@ -61,7 +78,7 @@ public class UserPreferenceMigrator {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
         log.info("Migrate user preferense");
-        for (ApplicationUser user: userManager.getAllApplicationUsers()) {
+        for (ApplicationUser user : userManager.getAllApplicationUsers()) {
             if (!user.isActive())
                 continue;
 
@@ -84,7 +101,7 @@ public class UserPreferenceMigrator {
                     if (shadowCalendars != null && shadowCalendars.contains(oldCalendarId))
                         continue;
 
-                    Calendar calendar = calendarManager.getCalendar(oldToNewCalendar.get(oldCalendarId));
+                    Calendar calendar = calendarService.getCalendar(oldToNewCalendar.get(oldCalendarId));
                     if (calendar.getAuthorKey().equals(userKey)) {
                         showedCalendars.add(calendar.getID());
                     } else if (calendar.getShares() != null && calendar.getShares().length > 0) {
@@ -122,7 +139,7 @@ public class UserPreferenceMigrator {
                 }
 
                 log.info("showedCalendars => " + showedCalendars);
-                calendarManager.updateUserData(userKey, oldUserPreferences.defaultView, oldUserPreferences.hideWeekend, showedCalendars);
+                updateUserData.updateUserData(userKey, oldUserPreferences.defaultView, oldUserPreferences.hideWeekend, showedCalendars);
                 pluginSettings.remove(prefKey(user.getName()));
             } catch (Exception e) {
                 log.error("Error while trying to migrate user preferences for user => " + user.getName(), e);
@@ -130,7 +147,7 @@ public class UserPreferenceMigrator {
         }
     }
 
-    private MigratedUserPreferences readUserPreferences(String xml, DocumentBuilderFactory dbf) throws Exception{
+    private MigratedUserPreferences readUserPreferences(String xml, DocumentBuilderFactory dbf) throws Exception {
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document dom = db.parse(new ByteArrayInputStream(xml.getBytes("utf-8")));
         NodeList userPreferencesNodeList = dom.getDocumentElement().getChildNodes();

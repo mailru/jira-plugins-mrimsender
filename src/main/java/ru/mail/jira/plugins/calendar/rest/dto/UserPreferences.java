@@ -1,4 +1,6 @@
-package ru.mail.jira.plugins.calendar.model;
+package ru.mail.jira.plugins.calendar.rest.dto;
+
+import ru.mail.jira.plugins.calendar.model.UserData;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;

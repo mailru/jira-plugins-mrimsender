@@ -30,7 +30,7 @@
             $('#calendar-dialog-source').auiSelect2({
                 minimumInputLength: 0,
                 ajax: {
-                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/eventSources',
+                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/config/eventSources',
                     dataType: 'json',
                     quietMillis: 100,
                     data: function (term) {
@@ -80,7 +80,7 @@
         function createDisplayedFields() {
             $.ajax({
                 type: 'GET',
-                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/displayedFields',
+                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/config/displayedFields',
                 success: function (result) {
                     $('#calendar-dialog-displayed-fields').auiSelect2({
                         allowClear: true,
@@ -161,7 +161,7 @@
                     AJS.InlineDialog($element, "eventDialog", function(content, trigger, showPopup) {
                         $.ajax({
                             type: 'GET',
-                            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + event.calendarId + '/event/' + event.id + '/info',
+                            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.id + '/info',
                             success: function (issue) {
                                 content.html(buildMainInfoPopup(issue)).addClass('calendar-event-info-popup');
                                 showPopup();
@@ -214,7 +214,7 @@
             function eventMove(event, duration, isDrag) {
                 $.ajax({
                     type: 'PUT',
-                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + event.calendarId + '/event/' + event.id + '?dayDelta=' + duration._days + '&millisDelta=' + duration._milliseconds + '&isDrag=' + isDrag,
+                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.id + '?dayDelta=' + duration._days + '&millisDelta=' + duration._milliseconds + '&isDrag=' + isDrag,
                     error: function (xhr) {
                         var msg = "Error while trying to drag event. Issue key => " + event.id;
                         if (xhr.responseText)
@@ -251,7 +251,7 @@
                             htmlSharedCalendars += buildCalendarLink(calendar);
 
                         if (visible)
-                            eventSources.push(AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendar.id + '/events');
+                            eventSources.push(AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + calendar.id);
                     }
 
                     if (htmlMyCalendars != '') {
@@ -341,13 +341,13 @@
 
                     if (visible) {
                         $calendar.fullCalendar('addEventSource', {
-                            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendarId + '/events',
+                            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + calendarId,
                             success: function () {
                                 changeEventSourceCallback(calendarId, visible);
                             }
                         })
                     } else {
-                        $calendar.fullCalendar('removeEventSource', AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendarId + '/events');
+                        $calendar.fullCalendar('removeEventSource', AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + calendarId);
                         changeEventSourceCallback(calendarId, false);
                     }
                 },
@@ -469,7 +469,7 @@
                     },
                     success: function() {
                         $('#calendar-list-item-block-' + calendarId).remove();
-                        $('#calendar-full-calendar').fullCalendar('removeEventSource', AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendarId + '/events');
+                        $('#calendar-full-calendar').fullCalendar('removeEventSource', AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + calendarId);
                     }
                 });
             }
@@ -701,7 +701,7 @@
                             startLoadingCalendarsCallback();
 
                             var $calendar = $('#calendar-full-calendar');
-                            var eventSource = AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendarId + '/events';
+                            var eventSource = AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + calendarId;
 
                             $calendar.fullCalendar('removeEventSource', eventSource);
                             startLoadingCalendarsCallback(); //todo:bad
@@ -733,7 +733,7 @@
                         startLoadingCalendarsCallback();
 
                         $('#calendar-full-calendar').fullCalendar('addEventSource', {
-                            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendar.id + '/events',
+                            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + calendar.id,
                             success: function () {
                                 changeEventSourceCallback(calendar.id, calendar.visible);
                             }
@@ -789,7 +789,7 @@
             e.preventDefault();
             $.ajax({
                 type: 'GET',
-                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/groups',
+                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/groups',
                 success: function (groups) {
                     createShareToGroupSelect(groups);
                 },
@@ -855,7 +855,7 @@
             e.preventDefault();
             $.ajax({
                 type: 'GET',
-                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/projects',
+                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/projects',
                 success: function (projects) {
                     createShareToProjectRole(projects);
                 },
@@ -915,7 +915,7 @@
                 } else {
                     $.ajax({
                         type: 'GET',
-                        url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/project/' + projectid + '/roles',
+                        url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/project/' + projectid + '/roles',
                         success: function (roles) {
                             $projectRoleSelect.auiSelect2({
                                 data: getProjectRoleData(roles),
@@ -990,7 +990,7 @@
             if (confirm(AJS.I18n.getText("ru.mail.jira.plugins.calendar.feed.dialog.reset.confirm"))) {
                 $.ajax({
                     type: 'POST',
-                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/ics/feed',
+                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/ics/feed',
                     success: function(result) {
                         updateCalendarFeedUrl(result);
                     },

@@ -21,7 +21,10 @@
     <component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
     <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
 
-    <component key="calendar-manager" class="ru.mail.jira.plugins.calendar.CalendarManager" />
+    <component key="calendar-event-service" class="ru.mail.jira.plugins.calendar.service.CalendarEventService" />
+    <component key="calendar-service" class="ru.mail.jira.plugins.calendar.service.CalendarService" />
+    <component key="userData-service" class="ru.mail.jira.plugins.calendar.service.UserDataService" />
+
     <component key="calendar-migrator" class="ru.mail.jira.plugins.calendar.CalendarMigrator" />
     <component key="user-preferences-migrator" class="ru.mail.jira.plugins.calendar.UserPreferenceMigrator" />
     <component key="all-data-migrator" class="ru.mail.jira.plugins.calendar.Migrator" />
@@ -44,12 +47,12 @@
         <dependency>com.atlassian.auiplugin:dialog2</dependency>
         <dependency>com.atlassian.auiplugin:aui-inline-dialog2</dependency>
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
-        <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/third-party-libs/moment.min.js"/>
-        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/third-party-libs/fullcalendar.css"/>
-        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/third-party-libs/fullcalendar.js"/>
-        <resource type="download" name="scheduler.css" location="ru/mail/jira/plugins/calendar/third-party-libs/scheduler.css"/>
-        <resource type="download" name="scheduler.js" location="ru/mail/jira/plugins/calendar/third-party-libs/scheduler.js"/>
-        <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/third-party-libs/clipboard.min.js"/>
+        <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/libs/moment.js"/>
+        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/libs/fullcalendar.css"/>
+        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/libs/fullcalendar.js"/>
+        <resource type="download" name="scheduler.css" location="ru/mail/jira/plugins/calendar/libs/scheduler.css"/>
+        <resource type="download" name="scheduler.js" location="ru/mail/jira/plugins/calendar/libs/scheduler.js"/>
+        <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/libs/clipboard-min.js"/>
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="calendar-view.css" location="ru/mail/jira/plugins/calendar/calendar-view.css"/>
     </web-resource>

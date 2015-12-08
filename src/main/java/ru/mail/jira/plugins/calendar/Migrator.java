@@ -7,10 +7,10 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 public class Migrator {
+    private final static Logger log = LoggerFactory.getLogger(Migrator.class);
+
     private final CalendarMigrator calendarMigrator;
     private final UserPreferenceMigrator userPreferenceMigrator;
-
-    private final static Logger log = LoggerFactory.getLogger(Migrator.class);
 
     public Migrator(CalendarMigrator calendarMigrator, UserPreferenceMigrator userPreferenceMigrator) {
         this.calendarMigrator = calendarMigrator;
@@ -19,7 +19,7 @@ public class Migrator {
 
     public void migrate() throws Exception {
         log.info("Migration has been started");
-        Map<Long,Integer> oldToNewCalendarIds = calendarMigrator.migrateCalendars();
+        Map<Long, Integer> oldToNewCalendarIds = calendarMigrator.migrateCalendars();
         userPreferenceMigrator.migrate(oldToNewCalendarIds);
     }
 }

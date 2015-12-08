@@ -12,11 +12,19 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import ru.mail.jira.plugins.calendar.model.Calendar;
+import ru.mail.jira.plugins.calendar.service.CalendarEventService;
+import ru.mail.jira.plugins.calendar.service.CalendarService;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 public class CalendarMigrator {
     private final static Logger log = LoggerFactory.getLogger(CalendarMigrator.class);
@@ -24,12 +32,14 @@ public class CalendarMigrator {
     private final String PLUGIN_KEY = "SimpleCalendar";
     private final String CALENDARS = "calendars";
 
-    private final CalendarManager calendarManager;
+    private final CalendarService calendarService;
     private final PluginSettingsFactory pluginSettingsFactory;
     private final UserManager userManager;
 
-    public CalendarMigrator(CalendarManager calendarManager, PluginSettingsFactory pluginSettingsFactory, UserManager userManager) {
-        this.calendarManager = calendarManager;
+    public CalendarMigrator(CalendarService calendarService,
+                            PluginSettingsFactory pluginSettingsFactory,
+                            UserManager userManager) {
+        this.calendarService = calendarService;
         this.pluginSettingsFactory = pluginSettingsFactory;
         this.userManager = userManager;
     }
@@ -70,17 +80,17 @@ public class CalendarMigrator {
                 String eventStart, eventEnd = null;
 
                 if (oldCalendar.startField == null && oldCalendar.endField == null) {
-                    eventStart = MailRuCalendarAction.DUE_DATE_KEY;
+                    eventStart = CalendarEventService.DUE_DATE_KEY;
                 } else {
                     eventStart = oldCalendar.startField;
                     eventEnd = oldCalendar.endField;
                 }
 
                 StringBuilder shares = new StringBuilder();
-                for (String sharedGroup: oldCalendar.sharedGroups)
+                for (String sharedGroup : oldCalendar.sharedGroups)
                     shares.append("group=").append(sharedGroup).append(';');
 
-                for (Pair<Long, Long> projectRole: oldCalendar.projectRoles) {
+                for (Pair<Long, Long> projectRole : oldCalendar.projectRoles) {
                     shares.append("project=").append(projectRole.getLeft());
                     if (projectRole.getRight() != null && projectRole.getRight() > 0)
                         shares.append(" role=").append(projectRole.getRight());
@@ -91,7 +101,7 @@ public class CalendarMigrator {
                     shares.deleteCharAt(shares.length() - 1);
 
                 String color = getColors().get(random.nextInt(6));
-                Calendar createdCalendar = calendarManager.createCalendar(user, oldCalendar.name, source, color, eventStart, eventEnd, StringUtils.join(oldCalendar.extraFields, ","), shares.toString(), false, true);
+                Calendar createdCalendar = calendarService.createCalendar(user, oldCalendar.name, source, color, eventStart, eventEnd, StringUtils.join(oldCalendar.extraFields, ","), shares.toString(), false, true);
                 log.info("Create calenar => " + oldCalendar.name);
                 result.put(oldCalendarId, createdCalendar.getID());
                 pluginSettings.remove(calendarPluginSettgingKey);
@@ -119,7 +129,7 @@ public class CalendarMigrator {
 
     private List<String> getColors() {
         return Arrays.asList("#5dab3e", "#d7ad43", "#3e6894", "#c9dad8", "#588e87", "#e18434",
-                "#83382A", "#D04A32", "#3C2B28", "#87A4C0", "#A89B95");
+                             "#83382A", "#D04A32", "#3C2B28", "#87A4C0", "#A89B95");
     }
 
     private List<Long> getCalendarIdList() {
@@ -190,25 +200,25 @@ public class CalendarMigrator {
                     if ("string".equals(extraField.getNodeName()) && StringUtils.isNotBlank(extraField.getTextContent())) {
                         String extraFieldName = extraField.getTextContent();
                         if ("issuestatus".equals(extraFieldName)) {
-                            extraFields.add(CalendarManager.STATUS);
+                            extraFields.add(CalendarService.STATUS);
                         } else if ("labels".equals(extraFieldName)) {
-                            extraFields.add(CalendarManager.LABELS);
+                            extraFields.add(CalendarService.LABELS);
                         } else if ("components".equals(extraFieldName)) {
-                            extraFields.add(CalendarManager.COMPONENTS);
+                            extraFields.add(CalendarService.COMPONENTS);
                         } else if ("duedate".equals(extraFieldName)) {
-                            extraFields.add(CalendarManager.DUEDATE);
+                            extraFields.add(CalendarService.DUEDATE);
                         } else if ("environment".equals(extraFieldName)) {
-                            extraFields.add(CalendarManager.ENVIRONMENT);
+                            extraFields.add(CalendarService.ENVIRONMENT);
                         } else if ("priority".equals(extraFieldName)) {
-                            extraFields.add(CalendarManager.PRIORITY);
+                            extraFields.add(CalendarService.PRIORITY);
                         } else if ("resolution".equals(extraFieldName)) {
-                            extraFields.add(CalendarManager.RESOLUTION);
+                            extraFields.add(CalendarService.RESOLUTION);
                         } else if ("affect".equals(extraFieldName)) {
-                            extraFields.add(CalendarManager.AFFECT);
+                            extraFields.add(CalendarService.AFFECT);
                         } else if ("created".equals(extraFieldName)) {
-                            extraFields.add(CalendarManager.CREATED);
+                            extraFields.add(CalendarService.CREATED);
                         } else if ("updated".equals(extraFieldName)) {
-                            extraFields.add(CalendarManager.UPDATED);
+                            extraFields.add(CalendarService.UPDATED);
                         }
                     }
                 }
@@ -227,7 +237,7 @@ public class CalendarMigrator {
         if (StringUtils.isEmpty(source))
             return list;
 
-        for (String str: source.split("&")) {
+        for (String str : source.split("&")) {
             try {
                 list.add(Long.valueOf(str));
             } catch (NumberFormatException ignored) {
