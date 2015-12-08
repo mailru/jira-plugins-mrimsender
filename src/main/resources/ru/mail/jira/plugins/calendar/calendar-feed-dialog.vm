@@ -28,10 +28,9 @@
             <p>$i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.more')</p>
 
                 <ul>
-                    <li><a href="https://www.calendarwiz.com/knowledgebase/entry/71/">Outlook</a></li>
-                    <li><a href="https://support.apple.com/ru-ru/HT202361">iCalendar</a></li>
-                    <li><a href="https://www.carrollwooddayschool.org/uploaded/documents/CalendarFeed.pdf">iOS Calendar</a></li>
-                    <li><a href="https://support.google.com/calendar/answer/37100?hl=ru">Google Calendar</a></li>
+                    <li><a href="https://support.office.com/article/View-and-subscribe-to-Internet-Calendars-f6248506-e144-4508-b658-c838b6067597">Outlook</a></li>
+                    <li><a href="https://support.apple.com/HT202361">iCalendar, iOS Calendar</a></li>
+                    <li><a href="https://support.google.com/calendar/answer/37100">Google Calendar</a></li>
                 </ul>
 
         </div>
