@@ -12,6 +12,8 @@ public class UserPreferences {
     private boolean showTimeInDates;
     @XmlElement
     private boolean hideWeekends;
+    @XmlElement
+    private String icalUid;
 
     public UserPreferences() { }
 
@@ -20,6 +22,7 @@ public class UserPreferences {
             this.calendarView = userData.getDefaultView();
             this.hideWeekends = userData.isHideWeekends();
             this.showTimeInDates = userData.isShowTime();
+            this.icalUid = userData.getIcalUid();
         }
     }
 }
