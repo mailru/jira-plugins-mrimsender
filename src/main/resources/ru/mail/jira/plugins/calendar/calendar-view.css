@@ -70,7 +70,7 @@
     float: right;
 }
 
-.calendar-edit, .calendar-delete {
+.calendar-edit, .calendar-delete, .calendar-feed {
     margin-top: -5px;
     margin-bottom: -5px;
     margin-left: 0 !important;
@@ -92,7 +92,7 @@
 
 /* Dialog */
 
-#calendar-dialog {
+#calendar-dialog, #calendar-feed-dialog {
     width: 630px;
 }
 

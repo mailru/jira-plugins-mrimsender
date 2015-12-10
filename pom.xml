@@ -46,6 +46,36 @@
             <version>1.0</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugins.rest</groupId>
+            <artifactId>atlassian-rest-common</artifactId>
+            <version>1.0.2</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mnode.ical4j</groupId>
+            <artifactId>ical4j</artifactId>
+            <version>2.0-beta1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>groovy-all</artifactId>
+                    <groupId>org.codehaus.groovy</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>bndlib</artifactId>
+                    <groupId>biz.aQute.bnd</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>commons-lang3</artifactId>
+                    <groupId>org.apache.commons</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

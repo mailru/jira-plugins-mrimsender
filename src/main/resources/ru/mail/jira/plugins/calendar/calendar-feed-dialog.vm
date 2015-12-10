@@ -1,0 +1,43 @@
+<section role="dialog" id="calendar-feed-dialog" class="aui-layer aui-dialog2" aria-hidden="true">
+    <input type="hidden" id="calendar-feed-dialog-uid">
+    <header class="aui-dialog2-header">
+        <h2 id="calendar-feed-dialog-header" class="aui-dialog2-header-main">$i18n.getText("ru.mail.jira.plugins.calendar.feedCalendar")</h2>
+        <a class="aui-dialog2-header-close">
+            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
+        </a>
+    </header>
+    <div class="aui-dialog2-content">
+        <div>
+            <div class="aui-message aui-message-generic">
+                <p>$i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.intro')</p>
+                <p>$i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.info.warning') <a href="#" id="calendar-feed-dialog-delete">$i18n.getText("ru.mail.jira.plugins.calendar.feed.dialog.disable")</a>.</p>
+            </div>
+            <form class="aui top-label ajs-dirty-warning-exempt">
+                <div class="field-group">
+                    <label for="calendar-feed-dialog-calendars">1. $i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.choose')</label>
+                    <input type="hidden" id="calendar-feed-dialog-calendars" class="long-field calendar-feed-dialog-select" autofocus>
+                </div>
+                <div class="field-group">
+                    <label>2. $i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.useurl')</label>
+                    <input class="text long-field url-field working" type="text" readonly></input>
+                    <span id="url-field-copy" class="aui-button aui-button-subtle" data-clipboard-target=".url-field">
+                        <span class="aui-icon aui-icon-small aui-iconfont-copy-clipboard"/>
+                    </span>
+                </div>
+            </form>
+            <p>$i18n.getText('ru.mail.jira.plugins.calendar.feed.dialog.text.more')</p>
+
+                <ul>
+                    <li><a href="https://support.office.com/article/View-and-subscribe-to-Internet-Calendars-f6248506-e144-4508-b658-c838b6067597">Outlook</a></li>
+                    <li><a href="https://support.apple.com/HT202361">iCalendar, iOS Calendar</a></li>
+                    <li><a href="https://support.google.com/calendar/answer/37100">Google Calendar</a></li>
+                </ul>
+
+        </div>
+    </div>
+    <footer class="aui-dialog2-footer" style="width: 100%">
+        <div class="aui-dialog2-footer-actions">
+            <button id="calendar-feed-dialog-ok" class="aui-button aui-button-link">$i18n.getText("admin.common.words.close" )</button>
+        </div>
+    </footer>
+</section>

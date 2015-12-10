@@ -14,6 +14,12 @@
         </div>
         <div class="aui-page-header-actions">
             <div class="aui-buttons">
+                <button id="calendar-create-feed" class="aui-button">
+                    <span class="aui-icon aui-icon-small aui-iconfont-blogroll"></span>
+                    $i18n.getText( "ru.mail.jira.plugins.calendar.feedCalendar" )
+                </button>
+            </div>
+            <div class="aui-buttons">
                 #if ( $action.hideWeekends )
                     <button id="calendar-weekends-visibility" class="aui-button calendar-weekends-are-hided">
                         <span class="aui-icon aui-icon-small aui-iconfont-calendar"></span>
@@ -63,5 +69,6 @@
     </div>
 </div>
 #parse( "ru/mail/jira/plugins/calendar/calendar-dialog.vm" )
+#parse( "ru/mail/jira/plugins/calendar/calendar-feed-dialog.vm" )
 </body>
 </html>
