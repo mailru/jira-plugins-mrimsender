@@ -55,6 +55,8 @@
         <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/libs/clipboard-min.js"/>
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="calendar-view.css" location="ru/mail/jira/plugins/calendar/calendar-view.css"/>
+        <resource type="download" name="calendar-dialog.js" location="ru/mail/jira/plugins/calendar/calendar-dialog.js"/>
+        <resource type="download" name="calendar-feed-dialog.js" location="ru/mail/jira/plugins/calendar/calendar-feed-dialog.js"/>
     </web-resource>
 
     <web-item key="calendar-link" name="Calendar Link" section="system.top.navigation.bar" weight="47">
