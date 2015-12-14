@@ -1,8 +1,9 @@
-package ru.mail.jira.plugins.calendar.model;
+package ru.mail.jira.plugins.calendar.rest.dto;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement

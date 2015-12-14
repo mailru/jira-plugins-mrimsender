@@ -39,20 +39,23 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px;
+    max-width: 190px;
     vertical-align: bottom;
 }
 
-.calendar-name:hover {
-    background-color: #e6e6e6 !important;
-    text-decoration: none !important;
+a.calendar-name {
+    text-decoration: none;
+}
+
+a.calendar-name:hover {
+    background-color: #e6e6e6;
 }
 
 .calendar-name .aui-button.aui-button-compact {
     height: 2em;
 }
 
-.calendar-name:hover .calendar-vews-buttons-block {
+a.calendar-name:hover .calendar-vews-buttons-block {
     display: inline-block;
 }
 

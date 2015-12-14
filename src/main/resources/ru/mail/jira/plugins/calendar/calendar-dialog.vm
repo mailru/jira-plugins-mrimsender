@@ -1,5 +1,35 @@
 <section role="dialog" id="calendar-dialog" class="aui-layer aui-dialog2" aria-hidden="true">
-    <input type="hidden" id="calendar-dialog-id">
+    <script type="text/template" id="owner-link-template">
+        <% if (owner) { %>
+        <span rel="<%= owner %>" class="user-hover user-avatar calendar-dialog-owner">
+            <span class="aui-avatar aui-avatar-xsmall">
+                <span class="aui-avatar-inner">
+                    <img src="<%= ownerAvatarUrl %>" />
+                </span>
+            </span>
+            <%= ownerFullName %>
+        </span>
+        <% } else %>
+        <span class="calendar-dialog-owner"><%= ownerFullName %></span>
+    </script>
+    <script type="text/template" id="source-field-template">
+        <% if (item.unavailable) { %>
+        <span class="calendar-dialog-source-unavailable-source"><%= item.text %></span>
+        <% } else if (item.id && item.id.lastIndexOf('project_') == 0) {
+            var projectId = item.id.substring('project_'.length);
+            var projectItemHtml = ''; %>
+            <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
+                <span class="aui-avatar-inner">
+                    <img src="projectavatar?pid=<%= projectId %>&avatarId=<%= item.avatarId %>&size=xxmall" />
+                </span>
+            </span>
+        &nbsp;<%= item.text %>
+        <% } else %>
+            <%= item.text %>
+    </script>
+    <script type="text/template" id="color-field-template">
+        <div class="calendar-dialog-color-option" style="background:<%= data.id %>"></div>
+    </script>
     <header class="aui-dialog2-header">
         <h2 id="calendar-dialog-header" class="aui-dialog2-header-main"></h2>
     </header>
