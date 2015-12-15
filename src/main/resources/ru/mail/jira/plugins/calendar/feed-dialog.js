@@ -4,8 +4,8 @@
             el: '#calendar-feed-dialog',
             events: {
                 'click #calendar-feed-dialog-ok': 'hide',
-                'click #calendar-feed-dialog-delete': 'resetLink',
-                'change #calendar-feed-dialog-calendars': 'updateCalendarFeedUrl'
+                'click #calendar-feed-dialog-delete': '_resetLink',
+                'change #calendar-feed-dialog-calendars': '_updateCalendarFeedUrl'
             },
             initialize: function() {
                 this.clipboard = new Clipboard('#url-field-copy');
@@ -13,8 +13,8 @@
                 this.$calendarSelect = this.$('#calendar-feed-dialog-calendars');
                 this.$urlField = this.$('.url-field');
 
-                this.listenTo(this.model, 'change:icalUid', this.updateCalendarFeedUrl);
-                this.listenTo(this.collection, 'change', this.initCalendarsSelect);
+                this.listenTo(this.model, 'change:icalUid', this._updateCalendarFeedUrl);
+                this.listenTo(this.collection, 'change', this._initCalendarsSelect);
                 this.dialog.on('hide', $.proxy(this.destroy, this));
             },
             destroy: function() {
@@ -29,10 +29,10 @@
             },
             show: function() {
                 this.dialog.show();
-                this.initCalendarsSelect();
+                this._initCalendarsSelect();
             },
             /* Private methods */
-            resetLink: function() {
+            _resetLink: function() {
                 if (confirm(AJS.I18n.getText("ru.mail.jira.plugins.calendar.feed.dialog.reset.confirm")))
                     $.ajax({
                         type: 'POST',
@@ -43,7 +43,7 @@
                         }
                     });
             },
-            initCalendarsSelect: function() {
+            _initCalendarsSelect: function() {
                 var data = this.collection.map(function(calendar) {
                     return {id: calendar.get('id'), text: calendar.get('name')};
                 });
@@ -60,9 +60,9 @@
                 }, 'id');
                 this.$calendarSelect.auiSelect2('val', selectedIds);
 
-                this.updateCalendarFeedUrl();
+                this._updateCalendarFeedUrl();
             },
-            updateCalendarFeedUrl: function() {
+            _updateCalendarFeedUrl: function() {
                 this.$urlField.val('');
                 if (!this.model.has('icalUid')) {
                     this.model.fetch();

@@ -1,9 +1,10 @@
 (function ($) {
     AJS.toInit(function () {
+        var SHARED_ELEMENT_INDEX_PREFIX = 'calendar-dialog-shared-';
+
         var ownerLinkTpl = _.template($('#owner-link-template').html());
         var sourceFieldTpl = _.template($('#source-field-template').html());
         var colorFieldTpl = _.template($('#color-field-template').html());
-        var SHARED_ELEMENT_INDEX_PREFIX = 'calendar-dialog-shared-';
 
         (function() {
             $.ajax({
@@ -44,9 +45,9 @@
         Backbone.View.CalendarDialogView = Backbone.View.extend({
             el: '#calendar-dialog',
             events: {
-                'click #calendar-dialog-ok': 'submit',
+                'click #calendar-dialog-ok': '_submit',
                 'click #calendar-dialog-cancel': 'hide',
-                'click .calendar-dialog-share-delete': 'onShareDeleteClick'
+                'click .calendar-dialog-share-delete': '_onShareDeleteClick'
             },
             initialize: function() {
                 this.dialog = AJS.dialog2('#calendar-dialog');
@@ -54,15 +55,15 @@
                 this.$cancelButton = this.$('#calendar-dialog-cancel');
                 this.sharedCounter = 0;
 
-                this.initSourceField();
-                this.initColorField();
-                this.initDateFields();
-                this.fillForm();
+                this._initSourceField();
+                this._initColorField();
+                this._initDateFields();
+                this._fillForm();
 
                 this.dialog.on('hide', $.proxy(this.destroy, this));
-                this.$('form').submit($.proxy(this.onFormSubmit, this));
-                this.$('#calendar-dialog-shares-group').click($.proxy(this.onSharesGroupClick, this));
-                this.$('#calendar-dialog-shares-project-role').click($.proxy(this.onSharesProjectRoleClick, this));
+                this.$('form').submit($.proxy(this._onFormSubmit, this));
+                this.$('#calendar-dialog-shares-group').click($.proxy(this._onSharesGroupClick, this));
+                this.$('#calendar-dialog-shares-project-role').click($.proxy(this._onSharesProjectRoleClick, this));
             },
             destroy: function() {
                 this.stopListening();
@@ -99,7 +100,7 @@
                 this.dialog.hide();
             },
             /* Private methods */
-            initSourceField: function() {
+            _initSourceField: function() {
                 this.$('#calendar-dialog-source').auiSelect2({
                     minimumInputLength: 0,
                     ajax: {
@@ -136,7 +137,7 @@
                     return sourceFieldTpl({item : item});
                 }
             },
-            initColorField: function() {
+            _initColorField: function() {
                 this.$('#calendar-dialog-color').auiSelect2({
                     minimumResultsForSearch: Infinity,
                     formatResult: format,
@@ -147,11 +148,11 @@
                     return colorFieldTpl({data: data});
                 }
             },
-            initDateFields: function() {
+            _initDateFields: function() {
                 this.$('#calendar-dialog-event-start').auiSelect2();
                 this.$('#calendar-dialog-event-end').auiSelect2({ allowClear: true });
             },
-            fillForm: function() {
+            _fillForm: function() {
                 if (this.model.id) {
                     this.$('.aui-dialog2-header-main').text(AJS.I18n.getText('ru.mail.jira.plugins.calendar.editCalendar'));
                     this.$okButton.text(AJS.I18n.getText('ru.mail.jira.plugins.calendar.common.edit'));
@@ -183,11 +184,11 @@
                         for (var i = 0; i < selectedShares.length; i++) {
                             var selectedShare = selectedShares[i];
                             if (selectedShare.group) {
-                                this.createShareToGroupSelect(this.model.get('groups'), selectedShare.group, selectedShare.error);
+                                this._createShareToGroupSelect(this.model.get('groups'), selectedShare.group, selectedShare.error);
                             } else {
                                 var projectRoleText = selectedShare.roleId == 0 ? AJS.I18n.getText('common.words.all') : selectedShare.roleName;
                                 var roles = this.model.get('projectRolesForShare')[selectedShare.projectId];
-                                this.createShareToProjectRole(this.model.get('projectsForShare'), true, roles,
+                                this._createShareToProjectRole(this.model.get('projectsForShare'), true, roles,
                                     selectedShare.projectId, selectedShare.projectName, selectedShare.roleId, projectRoleText, selectedShare.error);
                             }
                         }
@@ -198,36 +199,36 @@
                     this.$okButton.text(AJS.I18n.getText('common.words.create'));
                 }
             },
-            onSharesGroupClick: function(e) {
+            _onSharesGroupClick: function(e) {
                 e.preventDefault();
                 $.ajax({
                     type: 'GET',
                     url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/groups',
-                    success: $.proxy(function(groups) { this.createShareToGroupSelect(groups); }, this),
-                    error: this.defaultAjaxErrorHandler
+                    success: $.proxy(function(groups) { this._createShareToGroupSelect(groups); }, this),
+                    error: this._defaultAjaxErrorHandler
                 });
             },
-            onSharesProjectRoleClick: function(e) {
+            _onSharesProjectRoleClick: function(e) {
                 e.preventDefault();
                 $.ajax({
                     type: 'GET',
                     url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/projects',
-                    success: $.proxy(function(projects) { this.createShareToProjectRole(projects); }, this),
-                    error: this.defaultAjaxErrorHandler
+                    success: $.proxy(function(projects) { this._createShareToProjectRole(projects); }, this),
+                    error: this._defaultAjaxErrorHandler
                 });
             },
-            onShareDeleteClick: function(e) {
+            _onShareDeleteClick: function(e) {
                 e.preventDefault();
                 var index = $(e.currentTarget).data('shareIndex');
                 this.$('#' + SHARED_ELEMENT_INDEX_PREFIX + 'block-' + index).remove();
                 this.$('#' + SHARED_ELEMENT_INDEX_PREFIX + 'block-' + index + '-error').remove();
                 this.$('#' + SHARED_ELEMENT_INDEX_PREFIX + 'label-' + index).remove();
             },
-            onFormSubmit: function (e) {
+            _onFormSubmit: function (e) {
                 e.preventDefault();
-                this.$('#calendar-dialog-ok').click();
+                this.$okButton.click();
             },
-            serialize: function() {
+            _serialize: function() {
                 var shares = '';
                 this.$('.calendar-shared-block').each(function (index, el) {
                     var $el = $(el);
@@ -269,7 +270,7 @@
                     shares: shares
                 };
             },
-            submit: function(e) {
+            _submit: function(e) {
                 e.preventDefault();
 
                 this.$okButton.attr('disabled', 'disabled');
@@ -277,35 +278,35 @@
                 this.$('#calendar-dialog-error-panel').addClass('hidden').text('');
                 this.$('div.error').addClass('hidden').text('');
 
-                var ajaxData = this.serialize();
+                var ajaxData = this._serialize();
                 if (this.model.id) {
                     $.ajax({
                         type: 'PUT',
                         url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + this.model.id,
                         data: ajaxData,
-                        success: $.proxy(this.ajaxSuccessHandler, this),
-                        error: $.proxy(this.ajaxErrorHandler, this)
+                        success: $.proxy(this._ajaxSuccessHandler, this),
+                        error: $.proxy(this._ajaxErrorHandler, this)
                     });
                 } else {
                     $.ajax({
                         type: 'POST',
                         url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar',
                         data: ajaxData,
-                        success: $.proxy(this.ajaxSuccessHandler, this),
-                        error: $.proxy(this.ajaxErrorHandler, this)
+                        success: $.proxy(this._ajaxSuccessHandler, this),
+                        error: $.proxy(this._ajaxErrorHandler, this)
                     });
                 }
             },
-            ajaxSuccessHandler: function(calendar) {
+            _ajaxSuccessHandler: function(calendar) {
                 this.collection.add(calendar, {merge: true});
                 this.$okButton.removeAttr('disabled');
                 this.$cancelButton.removeAttr('disabled');
                 this.hide();
             },
-            defaultAjaxErrorHandler: function(response) {
+            _defaultAjaxErrorHandler: function(response) {
                 alert(response.responseText);
             },
-            ajaxErrorHandler: function(request) {
+            _ajaxErrorHandler: function(request) {
                 var field = request.getResponseHeader('X-Atlassian-Rest-Exception-Field');
                 if (field) {
                     if (field.indexOf('group_') == 0) {
@@ -341,7 +342,7 @@
                 this.$okButton.removeAttr('disabled');
                 this.$cancelButton.removeAttr('disabled');
             },
-            createShareToGroupSelect: function(groups, selectedGroup, error) {
+            _createShareToGroupSelect: function(groups, selectedGroup, error) {
                 var $shareToBtn = this.$('#calendar-dialog-shared-to');
 
                 this.sharedCounter++;
@@ -388,7 +389,7 @@
 
                 return $sharedGroup;
             },
-            createShareToProjectRole: function(projects, fillProjectRoles, roles, selectedProjectId, selectedProjectName, selectedRoleId, selectedRoleText, error) {
+            _createShareToProjectRole: function(projects, fillProjectRoles, roles, selectedProjectId, selectedProjectName, selectedRoleId, selectedRoleText, error) {
                 var $shareTo = this.$('#calendar-dialog-shared-to');
 
                 this.sharedCounter++;

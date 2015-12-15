@@ -1,4 +1,5 @@
 <section role="dialog" id="calendar-dialog" class="aui-layer aui-dialog2" aria-hidden="true">
+
     <script type="text/template" id="owner-link-template">
         <% if (owner) { %>
         <span rel="<%= owner %>" class="user-hover user-avatar calendar-dialog-owner">
@@ -12,6 +13,7 @@
         <% } else %>
         <span class="calendar-dialog-owner"><%= ownerFullName %></span>
     </script>
+
     <script type="text/template" id="source-field-template">
         <% if (item.unavailable) { %>
         <span class="calendar-dialog-source-unavailable-source"><%= item.text %></span>
@@ -27,9 +29,11 @@
         <% } else %>
             <%= item.text %>
     </script>
+
     <script type="text/template" id="color-field-template">
         <div class="calendar-dialog-color-option" style="background:<%= data.id %>"></div>
     </script>
+
     <header class="aui-dialog2-header">
         <h2 id="calendar-dialog-header" class="aui-dialog2-header-main"></h2>
     </header>

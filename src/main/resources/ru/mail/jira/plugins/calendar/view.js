@@ -1,6 +1,6 @@
 (function ($) {
     AJS.toInit(function () {
-        runTopMailScript();
+        collectTopMailCounterScript();
         /* Models */
         var UserData = Backbone.Model.extend({url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference'});
         var Calendar = Backbone.Model.extend();
@@ -46,7 +46,7 @@
             if (calendar.get('visible')) {
                 mainView.addEventSource(calendar);
             } else {
-                mainView.changeEventSourceCallback(calendar.id, false);
+                mainView._changeEventSourceCallback(calendar.id, false);
             }
         });
 
@@ -118,7 +118,7 @@
                 'click .calendar-name': 'toggleCalendarVisibility',
                 'click .calendar-delete': 'deleteCalendar',
                 'click .calendar-edit': 'editCalendar',
-                'click #calendar-add': 'addCalendar',
+                'click #calendar-add': 'addCalendar'
             },
             initialize: function() {
                 this.$fullCalendar = $('#calendar-full-calendar');
@@ -130,7 +130,7 @@
                 this.startLoadingCalendarsCallback();
                 this.$fullCalendar.fullCalendar('addEventSource', {
                     url: this.eventSource(calendar.id),
-                    success: $.proxy(function () { this.changeEventSourceCallback(calendar.id, true, calendar.get('error')); }, this)
+                    success: $.proxy(function () { this._changeEventSourceCallback(calendar.id, true, calendar.get('error')); }, this)
                 });
             },
             startLoadingCalendarsCallback: function() {
@@ -149,30 +149,6 @@
             showCalendarFeedView: function(e) {
                 e.preventDefault();
                 new Backbone.View.CalendarFeedView({model: userData, collection: calendarCollection}).show();
-            },
-            changeEventSourceCallback: function(calendarId, visible, error) {
-                var $calendarBlock = this.$('#calendar-list-item-block-' + calendarId);
-                var $calendarLink = $calendarBlock.find('a.calendar-name');
-                $calendarLink.removeClass('not-active');
-
-                var calendarColor = $calendarBlock.data('color');
-                $calendarLink.find('.calendar-view-color-box').remove();
-
-                if (error) {
-                    if (!$calendarLink.hasClass('not-working')) {
-                        $calendarLink.addClass('not-working');
-                        $calendarLink.find('.calendar-view-color-box').remove();
-                        $calendarLink.prepend('<span class="aui-icon aui-icon-small aui-iconfont-error" title="' + error + '"></span>')
-                    }
-                } else {
-                    if ($calendarLink.hasClass('not-working'))
-                        $calendarLink.removeClass('not-working').find('span.aui-iconfont-error').remove();
-
-                    if (visible)
-                        $calendarLink.prepend('<div class="calendar-view-color-box" style="background-color: ' + calendarColor + ';"></div>');
-                    else
-                        $calendarLink.prepend('<div class="calendar-view-color-box" style="border: 2px solid ' + calendarColor + ';"></div>');
-                }
             },
             loadFullCalendar: function(view, hideWeekends) {
                 var viewRenderFirstTime = true;
@@ -351,25 +327,50 @@
                         type: "DELETE",
                         error: $.proxy(function(xhr) {
                             this.finishLoadingCalendarsCallback();
-                            if (xhr.responseText) {
-                                alert(xhr.responseText);
-                            } else {
-                                alert("Internal error");
-                            }
+                            alert(xhr.responseText || "Internal error");
                         }, this),
                         success: function() {
                             calendarCollection.fetch();
                         }
                     });
                 }
-            }
+            },
+            _changeEventSourceCallback: function(calendarId, visible, error) {
+                var $calendarBlock = this.$('#calendar-list-item-block-' + calendarId);
+                var $calendarLink = $calendarBlock.find('a.calendar-name');
+                $calendarLink.removeClass('not-active');
+
+                var calendarColor = $calendarBlock.data('color');
+                $calendarLink.find('.calendar-view-color-box').remove();
+
+                if (error) {
+                    if (!$calendarLink.hasClass('not-working')) {
+                        $calendarLink.addClass('not-working');
+                        $calendarLink.find('.calendar-view-color-box').remove();
+                        $calendarLink.prepend('<span class="aui-icon aui-icon-small aui-iconfont-error" title="' + error + '"></span>')
+                    }
+                } else {
+                    if ($calendarLink.hasClass('not-working'))
+                        $calendarLink.removeClass('not-working').find('span.aui-iconfont-error').remove();
+
+                    if (visible)
+                        $calendarLink.prepend('<div class="calendar-view-color-box" style="background-color: ' + calendarColor + ';"></div>');
+                    else
+                        $calendarLink.prepend('<div class="calendar-view-color-box" style="border: 2px solid ' + calendarColor + ';"></div>');
+                }
+            },
         });
 
         var mainView = new MainView();
     });
 })(AJS.$);
 
-function runTopMailScript() {
+/**
+ * Run statistic counter - like Google Analytics.
+ * Surely, it doesn't collect any personal data or private information.
+ * All information you can check on top.mail.ru.
+ */
+function collectTopMailCounterScript() {
     var _tmr = window._tmr || (window._tmr = []);
     _tmr.push({id: "2706504", type: "pageView", start: (new Date()).getTime()});
     (function (d, w, id) {
