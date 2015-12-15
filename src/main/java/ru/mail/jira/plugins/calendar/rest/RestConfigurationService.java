@@ -16,7 +16,9 @@ import com.atlassian.jira.sharing.search.SharedEntitySearchResult;
 import com.atlassian.jira.util.I18nHelper;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.calendar.rest.dto.AllSources;
+import ru.mail.jira.plugins.calendar.rest.dto.DateField;
 import ru.mail.jira.plugins.calendar.rest.dto.SourceField;
+import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.CalendarService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
@@ -63,6 +65,22 @@ public class RestConfigurationService {
         for (CustomField customField : customFieldManager.getCustomFieldObjects())
             result.put(customField.getId(), customField.getName());
         return result;
+    }
+
+    @GET
+    @Path("/dateFields")
+    public List<DateField> getDateFields() {
+        List<DateField> dateFields = new ArrayList<DateField>();
+        dateFields.add(DateField.of(CalendarEventService.CREATED_DATE_KEY, i18nHelper.getText("issue.field.created")));
+        dateFields.add(DateField.of(CalendarEventService.UPDATED_DATE_KEY, i18nHelper.getText("issue.field.updated")));
+        dateFields.add(DateField.of(CalendarEventService.RESOLVED_DATE_KEY, i18nHelper.getText("common.concepts.resolved")));
+        dateFields.add(DateField.of(CalendarEventService.DUE_DATE_KEY, i18nHelper.getText("issue.field.duedate")));
+
+        for (CustomField customField : customFieldManager.getCustomFieldObjects())
+            if (customField.getCustomFieldType() instanceof com.atlassian.jira.issue.fields.DateField)
+                dateFields.add(DateField.of(customField.getId(), customField.getName()));
+
+        return dateFields;
     }
 
     @GET

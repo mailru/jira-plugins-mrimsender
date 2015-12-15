@@ -115,23 +115,15 @@
         </div>
         <div class="aui-page-header-actions">
             <div class="aui-buttons">
+                <button id="calendar-period-btn" class="aui-button aui-dropdown2-trigger" aria-owns="calendar-period-dropdown" aria-haspopup="true">
+                    <span class="aui-icon aui-icon-small aui-iconfont-calendar"></span>
+                </button>
+            </div>
+            <div class="aui-buttons">
                 <button id="calendar-create-feed" class="aui-button">
                     <span class="aui-icon aui-icon-small aui-iconfont-blogroll"></span>
                     $i18n.getText( "ru.mail.jira.plugins.calendar.feedCalendar" )
                 </button>
-            </div>
-            <div class="aui-buttons">
-                #if ( $action.hideWeekends )
-                    <button id="calendar-weekends-visibility" class="aui-button calendar-weekends-are-hided">
-                        <span class="aui-icon aui-icon-small aui-iconfont-calendar"></span>
-                        $i18n.getText( "ru.mail.jira.plugins.calendar.showWeekends" )
-                    </button>
-                #else
-                    <button id="calendar-weekends-visibility" class="aui-button">
-                        <span class="aui-icon aui-icon-small aui-iconfont-calendar"></span>
-                        $i18n.getText( "ru.mail.jira.plugins.calendar.hideWeekends" )
-                    </button>
-                #end
             </div>
             <div class="aui-buttons">
                 <button id="calendar-add" class="aui-button">
@@ -139,6 +131,15 @@
                     $i18n.getText( "ru.mail.jira.plugins.calendar.addCalendar" )
                 </button>
             </div>
+        </div>
+        <div id="calendar-period-dropdown" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
+            <ul class="aui-list-truncate">
+                <li><a href="#period/quarter" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.quarter" )</a></li>
+                <li><a href="#period/month" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.month" )</a></li>
+                <li><a href="#period/basicWeek" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.week" )</a></li>
+                <li><a href="#period/agendaDay" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.day" )</a></li>
+                <li><a href="#period/timelineWeek" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.timeline" )</a></li>
+            </ul>
         </div>
     </div>
     <ol class="aui-nav aui-nav-breadcrumbs"></ol>

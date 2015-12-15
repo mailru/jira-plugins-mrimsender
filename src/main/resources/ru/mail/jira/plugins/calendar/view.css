@@ -1,3 +1,14 @@
+/* Header */
+#calendar-period-btn {
+    width: 110px;
+    text-align: left;
+}
+
+#calendar-period-dropdown {
+    min-width: 100px;
+    max-width: 100px;
+}
+
 /* Right Panel */
 
 .calendar-view-page-panel .aui-page-panel-nav {

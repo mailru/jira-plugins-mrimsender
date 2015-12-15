@@ -9,24 +9,24 @@ public class DateField {
     @XmlElement
     private String id;
     @XmlElement
-    private String name;
+    private String text;
 
     public DateField() { }
 
-    private DateField(String id, String name) {
+    private DateField(String id, String text) {
         this.id = id;
-        this.name = name;
+        this.text = text;
     }
 
     public String getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public String getText() {
+        return text;
     }
 
-    public static DateField of(String id, String name) {
-        return new DateField(id, name);
+    public static DateField of(String id, String text) {
+        return new DateField(id, text);
     }
 }
