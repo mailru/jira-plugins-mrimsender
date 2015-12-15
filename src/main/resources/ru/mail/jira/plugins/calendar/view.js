@@ -303,13 +303,11 @@
             },
             updatePeriodButton: function(view) {
                 var $periodItem = this.$('#calendar-period-dropdown a[href$="' + view + '"]');
-                var $periodBtn = this.$('#calendar-period-btn');
-                var icon = $periodBtn.find('span');
 
                 this.$('#calendar-period-dropdown a').removeClass('aui-dropdown2-checked');
                 this.$('#calendar-period-dropdown a').removeClass('checked');
                 $periodItem.addClass('aui-dropdown2-checked');
-                $periodBtn.html(icon[0].outerHTML + ' ' + $periodItem.text());
+                this.$('#calendar-period-btn .trigger-label').text($periodItem.text());
             },
             addCalendar: function (e) {
                 e.preventDefault();

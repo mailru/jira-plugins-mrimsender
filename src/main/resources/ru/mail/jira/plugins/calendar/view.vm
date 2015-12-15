@@ -117,6 +117,7 @@
             <div class="aui-buttons">
                 <button id="calendar-period-btn" class="aui-button aui-dropdown2-trigger" aria-owns="calendar-period-dropdown" aria-haspopup="true">
                     <span class="aui-icon aui-icon-small aui-iconfont-calendar"></span>
+                    <span class="trigger-label"></span>
                 </button>
             </div>
             <div class="aui-buttons">
