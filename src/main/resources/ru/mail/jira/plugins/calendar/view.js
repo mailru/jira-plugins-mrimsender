@@ -76,12 +76,13 @@
                     mainView.startLoadingCalendarsCallback();
 
                 collection.each(function(calendar) {
+                    var json = calendar.toJSON();
                     if (calendar.get('isMy'))
-                        htmlMyCalendars += calendarLinkTpl({calendar: calendar.toJSON()});
+                        htmlMyCalendars += calendarLinkTpl({calendar: json});
                     else if (calendar.get('fromOthers'))
-                        htmlOtherCalendars += calendarLinkTpl({calendar: calendar.toJSON()});
+                        htmlOtherCalendars += calendarLinkTpl({calendar: json});
                     else
-                        htmlSharedCalendars += calendarLinkTpl({calendar: calendar.toJSON()});
+                        htmlSharedCalendars += calendarLinkTpl({calendar: json});
 
                     if (calendar.get('visible'))
                         eventSources.push(AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + calendar.id);
@@ -114,7 +115,6 @@
             el: 'body',
             events: {
                 'click #calendar-create-feed': 'showCalendarFeedView',
-                'click #calendar-weekends-visibility': 'toggleWeekendsVisibility',
                 'click .calendar-name': 'toggleCalendarVisibility',
                 'click .calendar-delete': 'deleteCalendar',
                 'click .calendar-edit': 'editCalendar',
@@ -151,6 +151,7 @@
                 new Backbone.View.CalendarFeedView({model: userData, collection: calendarCollection}).show();
             },
             loadFullCalendar: function(view, hideWeekends) {
+                this.updatePeriodButton(view);
                 var viewRenderFirstTime = true;
                 this.$fullCalendar.fullCalendar({
                     schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
@@ -159,13 +160,19 @@
                     header: {
                         left: 'prev,next today',
                         center: 'title',
-                        right: 'quarter,month,basicWeek,agendaDay timelineWeek'
+                        right: 'weekend'
                     },
                     views: {
                         quarter: {
                             type: 'basic',
                             duration: { months: 3 },
                             buttonText: AJS.I18n.getText('ru.mail.jira.plugins.calendar.quarter')
+                        }
+                    },
+                    customButtons: {
+                        weekend: {
+                            text: hideWeekends ? AJS.I18n.getText('ru.mail.jira.plugins.calendar.showWeekends') : AJS.I18n.getText('ru.mail.jira.plugins.calendar.hideWeekends'),
+                            click: $.proxy(this.toggleWeekendsVisibility, this)
                         }
                     },
                     timeFormat: 'HH:mm',
@@ -178,11 +185,7 @@
                     dayNames: [ AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sunday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Monday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Tuesday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Wednesday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Thursday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Friday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Saturday')],
                     dayNamesShort: [ AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sun'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Mon'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Tue'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Wed'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Thu'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Fri'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sat')],
                     buttonText: {
-                        today: AJS.I18n.getText('ru.mail.jira.plugins.calendar.today'),
-                        month: AJS.I18n.getText('ru.mail.jira.plugins.calendar.month'),
-                        week: AJS.I18n.getText('ru.mail.jira.plugins.calendar.week'),
-                        day: AJS.I18n.getText('ru.mail.jira.plugins.calendar.day'),
-                        timelineWeek: AJS.I18n.getText('ru.mail.jira.plugins.calendar.timeline')
+                        today: AJS.I18n.getText('ru.mail.jira.plugins.calendar.today')
                     },
                     weekends: !hideWeekends,
                     weekMode: 'liquid',
@@ -294,6 +297,18 @@
                     }
                 });
             },
+            setCalendarView: function(view) {
+                this.updatePeriodButton(view);
+                this.$fullCalendar.fullCalendar('changeView', view);
+            },
+            updatePeriodButton: function(view) {
+                var $periodItem = this.$('#calendar-period-dropdown a[href$="' + view + '"]');
+
+                this.$('#calendar-period-dropdown a').removeClass('aui-dropdown2-checked');
+                this.$('#calendar-period-dropdown a').removeClass('checked');
+                $periodItem.addClass('aui-dropdown2-checked');
+                this.$('#calendar-period-btn .trigger-label').text($periodItem.text());
+            },
             addCalendar: function (e) {
                 e.preventDefault();
                 var calendarDialogView = new Backbone.View.CalendarDialogView({model: new CalendarDetail(), collection: calendarCollection});
@@ -358,10 +373,22 @@
                     else
                         $calendarLink.prepend('<div class="calendar-view-color-box" style="border: 2px solid ' + calendarColor + ';"></div>');
                 }
-            },
+            }
         });
 
         var mainView = new MainView();
+
+        /* Router */
+        var ViewRouter = Backbone.Router.extend({
+            routes: {
+                "period/:view": 'switchPeriod'
+            },
+            switchPeriod: function(view) {
+                mainView.setCalendarView(view);
+            }
+        });
+        var router = new ViewRouter();
+        Backbone.history.start();
     });
 })(AJS.$);
 

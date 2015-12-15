@@ -30,6 +30,22 @@
                 }
             });
         })();
+        (function() {
+            $.ajax({
+                type: 'GET',
+                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/config/dateFields',
+                success: function(result) {
+                    $('#calendar-dialog-event-start').auiSelect2({data: result});
+                    $('#calendar-dialog-event-end').auiSelect2({allowClear: true, data: [{id: '', text: ' '}].concat(result)});
+                },
+                error: function(xhr) {
+                    var msg = "Error while trying to load date fields.";
+                    if (xhr.responseText)
+                        msg += xhr.responseText;
+                    alert(msg);
+                }
+            });
+        })();
 
         function getProjectRoleData(roles) {
             var keys = Object.keys(roles);
@@ -57,7 +73,6 @@
 
                 this._initSourceField();
                 this._initColorField();
-                this._initDateFields();
                 this._fillForm();
 
                 this.dialog.on('hide', $.proxy(this.destroy, this));
@@ -147,10 +162,6 @@
                 function format(data) {
                     return colorFieldTpl({data: data});
                 }
-            },
-            _initDateFields: function() {
-                this.$('#calendar-dialog-event-start').auiSelect2();
-                this.$('#calendar-dialog-event-end').auiSelect2({ allowClear: true });
             },
             _fillForm: function() {
                 if (this.model.id) {
