@@ -1,6 +1,13 @@
 (function ($) {
     AJS.toInit(function () {
         collectTopMailCounterScript();
+
+        var oldCollectionFetch = Backbone.Collection.prototype.fetch;
+        Backbone.Collection.prototype.fetch = function(options) {
+            this.trigger("fetch:started");
+            oldCollectionFetch.call(this, options);
+        }
+
         /* Models */
         var UserData = Backbone.Model.extend({url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference'});
         var Calendar = Backbone.Model.extend();
@@ -24,8 +31,11 @@
             var view = model.get('calendarView') || "month";
             $('#calendar-full-calendar').fullCalendar('changeView', view);
         });
+        userData.on('fetch:started', function() {
+            mainView.startLoadingCalendarsCallback();
+        });
 
-        calendarCollection.on("add", function(calendar) {
+        calendarCollection.on('add', function(calendar) {
             $('#calendar-my-calendar-list-header').css('display', 'block');
             $('#calendar-my-calendar-list').append(calendarLinkTpl({calendar: calendar.toJSON()}));
 
@@ -35,7 +45,7 @@
             $('#calendar-list-item-block-' + calendar.id).remove();
             mainView.removeEventSource(calendar);
         });
-        calendarCollection.on("change", function(calendar) {
+        calendarCollection.on('change', function(calendar) {
             var $calendarBlock = $('#calendar-list-item-block-' + calendar.id);
 
             $calendarBlock.find('span.aui-nav-item-label').text(calendar.get('name'));
@@ -49,66 +59,8 @@
                 mainView._changeEventSourceCallback(calendar.id, false);
             }
         });
-
-        /* Fetch data */
-        userData.fetch({
-            success: function (model) {
-                var view = model.get('calendarView') || "month";
-                mainView.loadFullCalendar(view, model.get('hideWeekends'));
-            },
-            error: function (model, response) {
-                var msg = "Error while trying to load user preferences.";
-                if (response.responseText)
-                    msg += response.responseText;
-                alert(msg);
-                mainView.loadFullCalendar("month", false);
-            }
-        });
-        calendarCollection.fetch({
-            silent: true,
-            success: function (collection) {
-                var htmlSharedCalendars = '';
-                var htmlMyCalendars = '';
-                var htmlOtherCalendars = '';
-                var eventSources = [];
-
-                if (!!collection.findWhere({visible: true}))
-                    mainView.startLoadingCalendarsCallback();
-
-                collection.each(function(calendar) {
-                    var json = calendar.toJSON();
-                    if (calendar.get('isMy'))
-                        htmlMyCalendars += calendarLinkTpl({calendar: json});
-                    else if (calendar.get('fromOthers'))
-                        htmlOtherCalendars += calendarLinkTpl({calendar: json});
-                    else
-                        htmlSharedCalendars += calendarLinkTpl({calendar: json});
-
-                    if (calendar.get('visible'))
-                        eventSources.push(AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + calendar.id);
-                });
-
-                if (htmlMyCalendars != '') {
-                    $('#calendar-my-calendar-list-header').css('display', 'block');
-                    $('#calendar-my-calendar-list').append(htmlMyCalendars);
-                }
-
-                if (htmlSharedCalendars != '') {
-                    $('#calendar-shared-calendar-list-header').css('display', 'block');
-                    $('#calendar-shared-calendar-list').append(htmlSharedCalendars);
-                }
-
-                if (htmlOtherCalendars != '') {
-                    $('#calendar-other-calendar-list-header').css('display', 'block');
-                    $('#calendar-other-calendar-list').append(htmlOtherCalendars);
-                }
-
-                for (var a = 0; a < eventSources.length; a++)
-                    $('#calendar-full-calendar').fullCalendar('addEventSource', eventSources[a]);
-            },
-            error: function (request) {
-                alert(request.responseText);
-            }
+        calendarCollection.on('fetch:started', function() {
+            mainView.startLoadingCalendarsCallback();
         });
 
         var MainView = Backbone.View.extend({
@@ -160,26 +112,39 @@
                     header: {
                         left: 'prev,next today',
                         center: 'title',
-                        right: 'weekend'
+                        right: 'weekend zoom-out,zoom-in'
                     },
                     views: {
                         quarter: {
                             type: 'basic',
-                            duration: { months: 3 },
-                            buttonText: AJS.I18n.getText('ru.mail.jira.plugins.calendar.quarter')
+                            duration: { months: 3 }
                         }
                     },
                     customButtons: {
                         weekend: {
                             text: hideWeekends ? AJS.I18n.getText('ru.mail.jira.plugins.calendar.showWeekends') : AJS.I18n.getText('ru.mail.jira.plugins.calendar.hideWeekends'),
                             click: $.proxy(this.toggleWeekendsVisibility, this)
+                        },
+                        'zoom-out': {
+                            icon: 'zoom-out',
+                            click: $.proxy(this.zoomOutTimeline, this)
+                        },
+                        'zoom-in': {
+                            icon: 'zoom-in',
+                            click: $.proxy(this.zoomInTimeline, this)
                         }
                     },
+                    businessHours: {
+                        start: '10:00',
+                        end: '19:00'
+                    },
                     timeFormat: 'HH:mm',
-                    lazyFetching: false,
+                    slotLabelFormat: 'HH:mm',
+                    lazyFetching: true,
                     editable: true,
                     draggable: true,
                     firstDay: 1,
+                    allDayText: AJS.I18n.getText('ru.mail.jira.plugins.calendar.allDay'),
                     monthNames: [ AJS.I18n.getText('ru.mail.jira.plugins.calendar.January'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.February'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.March'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.April'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.May'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.June'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.July'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.August'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.September'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.October'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.November'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.December')],
                     monthNamesShort: [ AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jan'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Feb'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Mar'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Apr'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.May'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jun'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jul'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Aug'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sep'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Oct'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Nov'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Dec')],
                     dayNames: [ AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sunday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Monday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Tuesday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Wednesday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Thursday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Friday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Saturday')],
@@ -217,22 +182,14 @@
                         });
                     },
                     viewRender: function(view) {
+                        mainView.updatePeriodButton(view.name);
+                        mainView.updateButtonsVisibility(view);
                         if (viewRenderFirstTime)
                             viewRenderFirstTime = false;
                         else {
                             var $visibleCalendars = $('.calendar-visible');
                             mainView.startLoadingCalendarsCallback();
                             $visibleCalendars.find('a.calendar-name').addClass('not-active');
-                            $.ajax({
-                                type: 'PUT',
-                                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/view?value=' + view.name,
-                                error: function (xhr) {
-                                    var msg = "Error while trying to update user default view to => " + view;
-                                    if (xhr.responseText)
-                                        msg += xhr.responseText;
-                                    alert(msg);
-                                }
-                            });
                         }
                     },
                     eventAfterAllRender: function () {
@@ -297,12 +254,44 @@
                     }
                 });
             },
-            setCalendarView: function(view) {
-                this.updatePeriodButton(view);
-                this.$fullCalendar.fullCalendar('changeView', view);
+            setCalendarView: function(viewName) {
+                this.$fullCalendar.fullCalendar('changeView', viewName);
+                $.ajax({
+                    type: 'PUT',
+                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/view?value=' + viewName,
+                    error: function (xhr) {
+                        var msg = "Error while trying to update user default view to => " + viewName;
+                        if (xhr.responseText)
+                            msg += xhr.responseText;
+                        alert(msg);
+                    }
+                });
             },
-            updatePeriodButton: function(view) {
-                var $periodItem = this.$('#calendar-period-dropdown a[href$="' + view + '"]');
+            zoomOutTimeline: function() {
+                this.$fullCalendar.fullCalendar('getView').zoomOut();
+                this.$('.fc-zoom-out-button').blur();
+            },
+            zoomInTimeline: function() {
+                this.$fullCalendar.fullCalendar('getView').zoomIn();
+                this.$('.fc-zoom-in-button').blur();
+            },
+            updateButtonsVisibility: function(view) {
+                // Not public API
+                var header = view.calendar.header;
+                if (view.name === 'timeline') {
+                    header.showButton('zoom-out');
+                    header.showButton('zoom-in');
+                } else {
+                    header.hideButton('zoom-out');
+                    header.hideButton('zoom-in');
+                }
+                if (view.name === 'quarter' || view.name === 'month')
+                    header.showButton('weekend');
+                else
+                    header.hideButton('weekend');
+            },
+            updatePeriodButton: function(viewName) {
+                var $periodItem = this.$('#calendar-period-dropdown a[href$="' + viewName + '"]');
 
                 this.$('#calendar-period-dropdown a').removeClass('aui-dropdown2-checked');
                 this.$('#calendar-period-dropdown a').removeClass('checked');
@@ -376,8 +365,6 @@
             }
         });
 
-        var mainView = new MainView();
-
         /* Router */
         var ViewRouter = Backbone.Router.extend({
             routes: {
@@ -387,8 +374,71 @@
                 mainView.setCalendarView(view);
             }
         });
+
+        var mainView = new MainView();
         var router = new ViewRouter();
         Backbone.history.start();
+
+        /* Fetch data */
+        userData.fetch({
+            success: function (model) {
+                var view = model.get('calendarView') || "month";
+                mainView.loadFullCalendar(view, model.get('hideWeekends'));
+            },
+            error: function (model, response) {
+                var msg = "Error while trying to load user preferences.";
+                if (response.responseText)
+                    msg += response.responseText;
+                alert(msg);
+                mainView.loadFullCalendar("month", false);
+            }
+        });
+        calendarCollection.fetch({
+            silent: true,
+            success: function (collection) {
+                var htmlSharedCalendars = '';
+                var htmlMyCalendars = '';
+                var htmlOtherCalendars = '';
+                var eventSources = [];
+
+                if (!!collection.findWhere({visible: true}))
+                    mainView.startLoadingCalendarsCallback();
+
+                collection.each(function(calendar) {
+                    var json = calendar.toJSON();
+                    if (calendar.get('isMy'))
+                        htmlMyCalendars += calendarLinkTpl({calendar: json});
+                    else if (calendar.get('fromOthers'))
+                        htmlOtherCalendars += calendarLinkTpl({calendar: json});
+                    else
+                        htmlSharedCalendars += calendarLinkTpl({calendar: json});
+
+                    if (calendar.get('visible'))
+                        eventSources.push(AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + calendar.id);
+                });
+
+                if (htmlMyCalendars != '') {
+                    $('#calendar-my-calendar-list-header').css('display', 'block');
+                    $('#calendar-my-calendar-list').append(htmlMyCalendars);
+                }
+
+                if (htmlSharedCalendars != '') {
+                    $('#calendar-shared-calendar-list-header').css('display', 'block');
+                    $('#calendar-shared-calendar-list').append(htmlSharedCalendars);
+                }
+
+                if (htmlOtherCalendars != '') {
+                    $('#calendar-other-calendar-list-header').css('display', 'block');
+                    $('#calendar-other-calendar-list').append(htmlOtherCalendars);
+                }
+
+                for (var a = 0; a < eventSources.length; a++)
+                    $('#calendar-full-calendar').fullCalendar('addEventSource', eventSources[a]);
+            },
+            error: function (request) {
+                alert(request.responseText);
+            }
+        });
     });
 })(AJS.$);
 

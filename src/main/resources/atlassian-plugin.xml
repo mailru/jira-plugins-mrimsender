@@ -47,14 +47,20 @@
         <dependency>com.atlassian.auiplugin:dialog2</dependency>
         <dependency>com.atlassian.auiplugin:aui-inline-dialog2</dependency>
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
-        <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/libs/moment.js"/>
-        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/libs/fullcalendar.css"/>
-        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/libs/fullcalendar.js"/>
-        <resource type="download" name="scheduler.css" location="ru/mail/jira/plugins/calendar/libs/scheduler.css"/>
-        <resource type="download" name="scheduler.js" location="ru/mail/jira/plugins/calendar/libs/scheduler.js"/>
+
+        <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>
+        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
+        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
+
+        <resource type="download" name="timeline.css" location="ru/mail/jira/plugins/calendar/timeline/timeline.css"/>
+        <resource type="download" name="timeline.js" location="ru/mail/jira/plugins/calendar/timeline/timeline.js"/>
+        <resource type="download" name="img/" location="ru/mail/jira/plugins/calendar/timeline/img"/>
+
         <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/libs/clipboard-min.js"/>
+
         <resource type="download" name="view.js" location="ru/mail/jira/plugins/calendar/view.js"/>
-        <resource type="download" name="calendar-view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
+        <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
+        <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>
         <resource type="download" name="calendar-dialog.js" location="ru/mail/jira/plugins/calendar/calendar-dialog.js"/>
         <resource type="download" name="feed-dialog.js" location="ru/mail/jira/plugins/calendar/feed-dialog.js"/>
     </web-resource>

@@ -139,7 +139,7 @@
                 <li><a href="#period/month" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.month" )</a></li>
                 <li><a href="#period/basicWeek" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.week" )</a></li>
                 <li><a href="#period/agendaDay" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.day" )</a></li>
-                <li><a href="#period/timelineWeek" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.timeline" )</a></li>
+                <li><a href="#period/timeline" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.timeline" )</a></li>
             </ul>
         </div>
     </div>

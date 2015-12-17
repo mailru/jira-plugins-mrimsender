@@ -8279,6 +8279,11 @@ function Calendar_constructor(element, overrides) {
 	t.getView = getView;
 	t.option = option;
 	t.trigger = trigger;
+	/* Start Custom Modification */
+	t.updateHeaderTitle = updateHeaderTitle;
+	t.updateTodayButton = updateTodayButton;
+	t.getAndRenderEvents = getAndRenderEvents;
+	/* End Custom Modification */
 
 
 
@@ -9252,7 +9257,10 @@ function Header(calendar, options) {
 	t.disableButton = disableButton;
 	t.enableButton = enableButton;
 	t.getViewsWithButtons = getViewsWithButtons;
-	
+	/* Start Custom Modification */
+	t.hideButton = hideButton;
+	t.showButton = showButton;
+	/* End Custom Modification */
 	// locals
 	var el = $();
 	var viewsWithButtons = [];
@@ -9479,6 +9487,17 @@ function Header(calendar, options) {
 		return viewsWithButtons;
 	}
 
+
+	/* Start Custom Modification */
+	function hideButton(buttonName) {
+		el.find('.fc-' + buttonName + '-button').hide();
+	}
+
+
+	function showButton(buttonName) {
+		el.find('.fc-' + buttonName + '-button').show();
+	}
+	/* End Custom Modification */
 }
 
 ;;
