@@ -310,6 +310,7 @@
             },
             _ajaxSuccessHandler: function(calendar) {
                 this.collection.add(calendar, {merge: true});
+                this.model.trigger('change', this.model);
                 this.$okButton.removeAttr('disabled');
                 this.$cancelButton.removeAttr('disabled');
                 this.hide();

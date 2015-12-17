@@ -9,6 +9,22 @@
     max-width: 100px;
 }
 
+.fc-icon-zoom-out:after {
+    content: "\02212";
+    font-weight: bold;
+    font-size: 150%;
+}
+
+.fc-icon-zoom-in:after {
+    content: "\002b";
+    font-weight: bold;
+    font-size: 150%;
+}
+
+.fc-ltr .fc-axis {
+    text-align: center;
+}
+
 /* Right Panel */
 
 .calendar-view-page-panel .aui-page-panel-nav {
@@ -268,4 +284,28 @@ a.calendar-name .aui-iconfont-error {
 
 #calendar-dialog-common-fields .long-field.aui-select2-container .select2-choices {
     max-width: 400px;
+}
+
+/* Timeline */
+div.timeline-event {
+    cursor: pointer;
+    -moz-box-sizing: border-box;
+    background-color: #d5ddf6;
+    border-color: #97b0f8;
+    box-sizing: border-box;
+    display: inline-block;
+}
+div.timeline-event-content {
+    color: #fff;
+    font-family: "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;
+    font-size: .85em;
+    font-weight: normal;
+}
+
+div.timeline-event-box {
+    -moz-border-radius: 3px; /* For Firefox 3.6 and older */
+    border-radius: 3px;
+    border-style: solid;
+    border-width: 1px;
+    text-align: center;
 }
