@@ -21,7 +21,7 @@
         <% } %>
             <span class="aui-nav-item-label" title="<%= calendar.name %>"><%= calendar.name %></span>
             <% if (calendar.changable) { %>
-            <div class="calendar-vews-buttons-block">
+            <div class="calendar-vews-buttons-block aui-buttons">
                 <button class="aui-button aui-button-subtle aui-button-compact calendar-edit">
                     <span class="aui-icon aui-icon-small aui-iconfont-edit"/>
                 </button>
@@ -172,6 +172,6 @@
     </div>
 </div>
 #parse( "ru/mail/jira/plugins/calendar/calendar-dialog.vm" )
-#parse( "ru/mail/jira/plugins/calendar/calendar-feed-dialog.vm" )
+#parse( "ru/mail/jira/plugins/calendar/feed-dialog.vm" )
 </body>
 </html>

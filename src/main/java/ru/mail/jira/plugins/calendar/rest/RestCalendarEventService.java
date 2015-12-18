@@ -99,9 +99,9 @@ public class RestCalendarEventService {
             @Override
             protected Void doAction() throws Exception {
                 ApplicationUser user = jiraAuthenticationContext.getUser();
-                IssueService.IssueResult issueResult = issueService.getIssue(user, eventId);
+                IssueService.IssueResult issueResult = issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId);
                 MutableIssue issue = issueResult.getIssue();
-                if (!issueService.isEditable(issue, user))
+                if (!issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)))
                     throw new IllegalArgumentException("Can not edit issue with key => " + eventId);
 
                 Calendar calendar = calendarService.getCalendar(calendarId);

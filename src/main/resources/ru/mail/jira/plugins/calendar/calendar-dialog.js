@@ -110,6 +110,7 @@
             /* Public methods */
             show: function() {
                 this.dialog.show();
+                this.$('#calendar-dialog-name').focus();
             },
             hide: function() {
                 this.dialog.hide();
