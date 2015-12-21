@@ -31,6 +31,9 @@
             var view = model.get('calendarView') || "month";
             $('#calendar-full-calendar').fullCalendar('changeView', view);
         });
+        userData.on('change:hideWeekends', function(model) {
+            mainView.onHideWeekendsHandler(model.get('hideWeekends'));
+        });
         userData.on('fetch:started', function() {
             mainView.startLoadingCalendarsCallback();
         });
@@ -218,11 +221,12 @@
             },
             toggleWeekendsVisibility: function (e) {
                 e.preventDefault();
+                e.currentTarget.blur();
                 $.ajax({
                     type: 'PUT',
                     url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/hideWeekends',
                     success: function () {
-                        window.location.reload();
+                        userData.fetch();
                     },
                     error: function (xhr) {
                         var msg = "Error while trying to update user hide weekends option. ";
@@ -231,6 +235,10 @@
                         alert(msg);
                     }
                 });
+            },
+            onHideWeekendsHandler: function(hideWeekends) {
+                this.getCalendarHeaderButton('weekend').text(hideWeekends ? AJS.I18n.getText('ru.mail.jira.plugins.calendar.showWeekends') : AJS.I18n.getText('ru.mail.jira.plugins.calendar.hideWeekends'));
+                this.$fullCalendar.fullCalendar('option', 'weekends', !hideWeekends);
             },
             toggleCalendarVisibility: function (e) {
                 e.preventDefault();
@@ -275,20 +283,22 @@
                 this.$fullCalendar.fullCalendar('getView').zoomIn();
                 this.$('.fc-zoom-in-button').blur();
             },
+            getCalendarHeaderButton: function(buttonName) {
+                return this.$fullCalendar.find('.fc-' + buttonName + '-button');
+            },
             updateButtonsVisibility: function(view) {
-                // Not public API
-                var header = view.calendar.header;
                 if (view.name === 'timeline') {
-                    header.showButton('zoom-out');
-                    header.showButton('zoom-in');
+                    this.getCalendarHeaderButton('zoom-out').show();
+                    this.getCalendarHeaderButton('zoom-in').show();
                 } else {
-                    header.hideButton('zoom-out');
-                    header.hideButton('zoom-in');
+                    this.getCalendarHeaderButton('zoom-out').hide();
+                    this.getCalendarHeaderButton('zoom-in').hide();
                 }
-                if (view.name === 'quarter' || view.name === 'month')
-                    header.showButton('weekend');
-                else
-                    header.hideButton('weekend');
+                if (view.name === 'quarter' || view.name === 'month' || view.name === 'basicWeek')
+                    this.getCalendarHeaderButton('weekend').show();
+                else {
+                    this.getCalendarHeaderButton('weekend').hide();
+                }
             },
             updatePeriodButton: function(viewName) {
                 var $periodItem = this.$('#calendar-period-dropdown a[href$="' + viewName + '"]');

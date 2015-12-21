@@ -203,8 +203,8 @@ public class CalendarEventService {
                     event.setStart(clientDateFormat.format(endDate));
                 }
 
-                event.setStartEditable(dateFieldsIsDraggable && issueService.isEditable(issue, user));
-                event.setDurationEditable(isDateFieldDraggable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, user));
+                event.setStartEditable(dateFieldsIsDraggable && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
+                event.setDurationEditable(isDateFieldDraggable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
 
                 result.add(event);
             } catch (Exception e) {

@@ -309,3 +309,11 @@ div.timeline-event-box {
     border-width: 1px;
     text-align: center;
 }
+
+div.timeline-event-box:hover {
+    border-color: #ff7b08 !important;
+}
+
+div.timeline-event.timeline-event-selected {
+    border-color: #ff7b08 !important;
+}

@@ -8560,7 +8560,14 @@ function Calendar_constructor(element, overrides) {
 		return element.is(':visible');
 	}
 	
-	
+
+	function rerender() {
+		var currentViewType = currentView.type;
+		freezeContentHeight(); // prevent a scroll jump when view element is removed
+		currentView.removeElement();
+		currentView = t.view = null;
+		renderView(currentViewType);
+	}
 
 	// View Rendering
 	// -----------------------------------------------------------------------------------
@@ -8715,7 +8722,7 @@ function Calendar_constructor(element, overrides) {
 	}
 	
 
-	function getAndRenderEvents() {
+	function 	getAndRenderEvents() {
 		if (!options.lazyFetching || isFetchNeeded(currentView.start, currentView.end)) {
 			fetchAndRenderEvents();
 		}
@@ -8901,6 +8908,15 @@ function Calendar_constructor(element, overrides) {
 		if (name == 'height' || name == 'contentHeight' || name == 'aspectRatio') {
 			options[name] = value;
 			updateSize(true); // true = allow recalculation of height
+		}
+		if(name == 'weekends') {
+			this.overrides[name] = value;
+			options[name] = value;
+			$.each(viewsByType, function(type, view) {
+				view.options.weekends = value;
+				view.initHiddenDays();
+			});
+			rerender();
 		}
 	}
 	
@@ -9257,10 +9273,6 @@ function Header(calendar, options) {
 	t.disableButton = disableButton;
 	t.enableButton = enableButton;
 	t.getViewsWithButtons = getViewsWithButtons;
-	/* Start Custom Modification */
-	t.hideButton = hideButton;
-	t.showButton = showButton;
-	/* End Custom Modification */
 	// locals
 	var el = $();
 	var viewsWithButtons = [];
@@ -9486,18 +9498,6 @@ function Header(calendar, options) {
 	function getViewsWithButtons() {
 		return viewsWithButtons;
 	}
-
-
-	/* Start Custom Modification */
-	function hideButton(buttonName) {
-		el.find('.fc-' + buttonName + '-button').hide();
-	}
-
-
-	function showButton(buttonName) {
-		el.find('.fc-' + buttonName + '-button').show();
-	}
-	/* End Custom Modification */
 }
 
 ;;
@@ -11042,6 +11042,12 @@ var AgendaView = FC.AgendaView = View.extend({
 		if (this.opt('allDaySlot')) { // should we display the "all-day" area?
 			this.dayGrid = this.instantiateDayGrid(); // the all-day subcomponent of this view
 		}
+	},
+
+
+	initHiddenDays: function() {
+		this.options.weekends = true;
+		View.prototype.initHiddenDays.call(this);
 	},
 
 
