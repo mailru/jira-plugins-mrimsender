@@ -197,34 +197,34 @@ public class IssueInfo {
     public String toFormatString(I18nHelper i18n) {
         StringBuilder str = new StringBuilder();
         if (StringUtils.isNotBlank(assignee))
-            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.assignee"), HTMLUtils.stripTags(assignee).trim()));
+            str.append(String.format("%s: %s\n", i18n.getText("issue.field.assignee"), HTMLUtils.stripTags(assignee).trim()));
         if (StringUtils.isNotBlank(reporter))
-            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.reporter"), HTMLUtils.stripTags(reporter).trim()));
+            str.append(String.format("%s: %s\n", i18n.getText("issue.field.reporter"), HTMLUtils.stripTags(reporter).trim()));
         if (StringUtils.isNotBlank(status))
-            str.append(String.format("%s:\t%s\n", i18n.getText("common.words.status"), HTMLUtils.stripTags(status).trim()));
+            str.append(String.format("%s: %s\n", i18n.getText("common.words.status"), HTMLUtils.stripTags(status).trim()));
         if (StringUtils.isNotBlank(labels))
-            str.append(String.format("%s:\t%s\n", i18n.getText("common.concepts.labels"), HTMLUtils.stripTags(labels).trim()));
+            str.append(String.format("%s: %s\n", i18n.getText("common.concepts.labels"), HTMLUtils.stripTags(labels).trim()));
         if (StringUtils.isNotBlank(components))
-            str.append(String.format("%s:\t%s\n", i18n.getText("common.concepts.components"), HTMLUtils.stripTags(components).trim()));
+            str.append(String.format("%s: %s\n", i18n.getText("common.concepts.components"), HTMLUtils.stripTags(components).trim()));
         if (StringUtils.isNotBlank(dueDate))
-            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.duedate"), HTMLUtils.stripTags(dueDate).trim()));
+            str.append(String.format("%s: %s\n", i18n.getText("issue.field.duedate"), HTMLUtils.stripTags(dueDate).trim()));
         if (StringUtils.isNotBlank(environment))
-            str.append(String.format("%s:\t%s\n", i18n.getText("common.words.env"), HTMLUtils.stripTags(environment).trim()));
+            str.append(String.format("%s: %s\n", i18n.getText("common.words.env"), HTMLUtils.stripTags(environment).trim()));
         if (StringUtils.isNotBlank(priority))
-            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.priority"), HTMLUtils.stripTags(priority).trim()));
+            str.append(String.format("%s: %s\n", i18n.getText("issue.field.priority"), HTMLUtils.stripTags(priority).trim()));
         if (StringUtils.isNotBlank(resolution))
-            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.resolution"), HTMLUtils.stripTags(resolution).trim()));
+            str.append(String.format("%s: %s\n", i18n.getText("issue.field.resolution"), HTMLUtils.stripTags(resolution).trim()));
         if (StringUtils.isNotBlank(affect))
-            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.version"), HTMLUtils.stripTags(affect).trim()));
+            str.append(String.format("%s: %s\n", i18n.getText("issue.field.version"), HTMLUtils.stripTags(affect).trim()));
         if (StringUtils.isNotBlank(created))
-            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.created"), HTMLUtils.stripTags(created).trim()));
+            str.append(String.format("%s: %s\n", i18n.getText("issue.field.created"), HTMLUtils.stripTags(created).trim()));
         if (StringUtils.isNotBlank(updated))
-            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.updated"), HTMLUtils.stripTags(updated).trim()));
+            str.append(String.format("%s: %s\n", i18n.getText("issue.field.updated"), HTMLUtils.stripTags(updated).trim()));
         if (customFields != null)
             for (Map.Entry<String, String> entry : customFields.entrySet())
-                str.append(String.format("%s:\t%s\n", entry.getKey(), HTMLUtils.stripTags(entry.getValue()).trim()));
+                str.append(String.format("%s: %s\n", entry.getKey(), HTMLUtils.stripTags(entry.getValue()).trim()));
         if (StringUtils.isNotBlank(description))
-            str.append(HTMLUtils.stripTags(description).trim());
+            str.append("\n").append(HTMLUtils.stripTags(description).trim());
         return str.toString();
     }
 }
