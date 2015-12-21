@@ -26,6 +26,10 @@ public interface UserData extends Entity {
     String getShowedCalendars();
     void setShowedCalendars(String showedCalendars);
 
+    /** Ids of favorite calendars */
+    String getFavoriteCalendars();
+    void setFavoriteCalendars(String favoriteCalendars);
+
     /** Hash for ical url */
     String getIcalUid();
     void setICalUid(String uid);

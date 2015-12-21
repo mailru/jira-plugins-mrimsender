@@ -2,6 +2,7 @@ package ru.mail.jira.plugins.calendar.service;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.crowd.embedded.api.Group;
+import com.atlassian.crowd.embedded.api.User;
 import com.atlassian.jira.bc.project.ProjectService;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.project.Project;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,8 +60,7 @@ public class UserDataService {
         return getUserData(user.getKey());
     }
 
-    public Set<Integer> getShowedCalendars(final ApplicationUser user) {
-        UserData userData = getUserData(user);
+    public Set<Integer> getShowedCalendars(final UserData userData) {
         if (userData != null) {
             String showedCalendars = userData.getShowedCalendars();
             if (StringUtils.isNotEmpty(showedCalendars)) {
@@ -71,6 +72,46 @@ public class UserDataService {
             }
         }
         return new HashSet<Integer>(0);
+    }
+
+    public Set<Integer> getShowedCalendars(final ApplicationUser user) {
+        return getShowedCalendars(getUserData(user));
+    }
+
+    public Set<Integer> getFavoriteCalendars(UserData userData) {
+        if (userData != null) {
+            String favoriteCalendars = userData.getFavoriteCalendars();
+            String[] splittedFavoriteCalendars = StringUtils.split(favoriteCalendars, ";");
+            if (splittedFavoriteCalendars != null) {
+                Set<Integer> result = new HashSet<Integer>(splittedFavoriteCalendars.length);
+                for (String calendarIdStr : splittedFavoriteCalendars)
+                    result.add(Integer.parseInt(calendarIdStr));
+                return result;
+            }
+        }
+        return new HashSet<Integer>(0);
+    }
+
+    public Set<Integer> getFavoriteCalendars(ApplicationUser user) {
+        return getFavoriteCalendars(getUserData(user));
+    }
+
+    public int getUsersCount(final Calendar calendar) {
+        return ao.executeInTransaction(new TransactionCallback<Integer>() {
+            @Override
+            public Integer doInTransaction() {
+                int calenderId = calendar.getID();
+                UserData[] result = ao.find(UserData.class, Query.select().where("FAVORITE_CALENDARS = ? " +
+                                                                                         "OR FAVORITE_CALENDARS LIKE ? " +
+                                                                                         "OR FAVORITE_CALENDARS LIKE ? " +
+                                                                                         "OR FAVORITE_CALENDARS LIKE ?",
+                                                                                 calenderId,
+                                                                                 calenderId + ";%",
+                                                                                 "%;" + calenderId + ";%",
+                                                                                 "%;" + calenderId));
+                return result.length + 1;
+            }
+        });
     }
 
     @Nullable
@@ -88,6 +129,15 @@ public class UserDataService {
                     userData.save();
                 }
                 return userData;
+            }
+        });
+    }
+
+    public UserData[] getUserData() {
+        return ao.executeInTransaction(new TransactionCallback<UserData[]>() {
+            @Override
+            public UserData[] doInTransaction() {
+                return ao.find(UserData.class);
             }
         });
     }
@@ -113,7 +163,9 @@ public class UserDataService {
             public Void doInTransaction() {
                 UserData userData = notTransactionalUpdateUserData(userKey, view, hideWeekends);
                 if (extraShowedCalendars.size() > 0) {
-                    if (userData.getShowedCalendars() != null) {
+                    if (userData.getShowedCalendars() == null)
+                        userData.setShowedCalendars(StringUtils.join(extraShowedCalendars, ";"));
+                    else {
                         String[] split = StringUtils.split(userData.getShowedCalendars(), ';');
                         List<Integer> showedCalendarIds = new ArrayList<Integer>();
 
@@ -125,8 +177,7 @@ public class UserDataService {
                                 showedCalendarIds.add(extraCalendarId);
                         }
                         userData.setShowedCalendars(StringUtils.join(showedCalendarIds, ";"));
-                    } else
-                        userData.setShowedCalendars(StringUtils.join(extraShowedCalendars, ";"));
+                    }
                 }
                 userData.save();
                 return null;
@@ -159,6 +210,57 @@ public class UserDataService {
                     userData.save();
                 }
                 return userData;
+            }
+        });
+    }
+
+    public void updateFavorites(final ApplicationUser user, final List<Integer> calendarIds) {
+        ao.executeInTransaction(new TransactionCallback<Void>() {
+            @Override
+            public Void doInTransaction() {
+                UserData userData = getUserData(user);
+                if (userData == null)
+                    throw new IllegalArgumentException(String.format("UserData for user %s not found.", user.getKey()));
+
+                Set<Integer> showed = getShowedCalendars(userData);
+                Set<Integer> favorite = getFavoriteCalendars(userData);
+                showed.addAll(calendarIds);
+                favorite.addAll(calendarIds);
+                userData.setShowedCalendars(StringUtils.join(showed, ";"));
+                userData.setFavoriteCalendars(StringUtils.join(favorite, ";"));
+                userData.save();
+                return null;
+            }
+        });
+    }
+
+    public void updateFavorites(final UserData userData, final Collection<Integer> calendarIds) {
+        ao.executeInTransaction(new TransactionCallback<Void>() {
+            @Override
+            public Void doInTransaction() {
+                userData.setFavoriteCalendars(StringUtils.join(calendarIds, ";"));
+                userData.save();
+                return null;
+            }
+        });
+    }
+
+    public void removeFavorite(final ApplicationUser user, final Integer calendarId) {
+        ao.executeInTransaction(new TransactionCallback<Void>() {
+            @Override
+            public Void doInTransaction() {
+                UserData userData = getUserData(user);
+                if (userData == null)
+                    throw new IllegalArgumentException(String.format("UserData for user %s not found.", user.getKey()));
+
+                Set<Integer> showed = getShowedCalendars(userData);
+                Set<Integer> favorites = getFavoriteCalendars(userData);
+                showed.remove(calendarId);
+                favorites.remove(calendarId);
+                userData.setFavoriteCalendars(StringUtils.join(favorites, ";"));
+                userData.setShowedCalendars(StringUtils.join(showed, ";"));
+                userData.save();
+                return null;
             }
         });
     }

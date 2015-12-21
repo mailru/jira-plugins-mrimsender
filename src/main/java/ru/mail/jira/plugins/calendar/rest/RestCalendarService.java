@@ -25,8 +25,6 @@ import com.atlassian.jira.user.ApplicationUsers;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugins.rest.common.security.AnonymousAllowed;
-import com.atlassian.sal.api.pluginsettings.PluginSettings;
-import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.ValidationException;
@@ -42,7 +40,6 @@ import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.mail.jira.plugins.calendar.Migrator;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.Share;
 import ru.mail.jira.plugins.calendar.model.UserData;
@@ -83,9 +80,6 @@ import java.util.Set;
 public class RestCalendarService {
     private final static Logger log = LoggerFactory.getLogger(RestCalendarService.class);
 
-    private final static String PLUGIN_KEY = "SimpleCalendar";
-    private static final String CALENDARS_HAVE_BEEN_MIGRATED_KEY = "chbm";
-
     private final CalendarService calendarService;
     private final CalendarEventService calendarEventService;
 
@@ -94,9 +88,7 @@ public class RestCalendarService {
     private final GroupManager groupManager;
     private final I18nHelper i18nHelper;
     private final JiraAuthenticationContext jiraAuthenticationContext;
-    private final Migrator migrator;
     private final PermissionManager permissionManager;
-    private final PluginSettingsFactory pluginSettingsFactory;
     private final ProjectManager projectManager;
     private final ProjectRoleManager projectRoleManager;
     private final SearchRequestService searchRequestService;
@@ -110,9 +102,7 @@ public class RestCalendarService {
                                GroupManager groupManager,
                                I18nHelper i18nHelper,
                                JiraAuthenticationContext jiraAuthenticationContext,
-                               Migrator migrator,
                                UserManager userManager,
-                               PluginSettingsFactory pluginSettingsFactory,
                                ProjectManager projectManager,
                                ProjectRoleManager projectRoleManager,
                                PermissionManager permissionManager,
@@ -125,9 +115,7 @@ public class RestCalendarService {
         this.groupManager = groupManager;
         this.i18nHelper = i18nHelper;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
-        this.migrator = migrator;
         this.userManager = userManager;
-        this.pluginSettingsFactory = pluginSettingsFactory;
         this.projectManager = projectManager;
         this.projectRoleManager = projectRoleManager;
         this.permissionManager = permissionManager;
@@ -137,22 +125,6 @@ public class RestCalendarService {
 
     private String getUserAvatarSrc(String userKey) {
         return avatarService.getAvatarURL(jiraAuthenticationContext.getUser(), userManager.getUserByKey(userKey), Avatar.Size.SMALL).toString();
-    }
-
-    //todo need refactoring
-    private synchronized void checkOldCalendars() {
-        try {
-            PluginSettings pluginSettings = pluginSettingsFactory.createSettingsForKey(PLUGIN_KEY);
-            if (pluginSettings.get(CALENDARS_HAVE_BEEN_MIGRATED_KEY) == null) {
-                log.info("Calendar have not been migrated");
-                migrator.migrate();
-                pluginSettings.put(CALENDARS_HAVE_BEEN_MIGRATED_KEY, "migrated");
-            } else {
-                log.info("Calendar have been migrated earlier");
-            }
-        } catch (Exception e) {
-            log.error("Error while trying to check old calendars", e);
-        }
     }
 
     private void fillSelectedSourceFields(ApplicationUser user, CalendarFieldsOutput output, Calendar calendar) {
@@ -238,12 +210,23 @@ public class RestCalendarService {
                                                boolean changable,
                                                boolean visible,
                                                boolean isMy,
-                                               boolean fromOthers) {
+                                               boolean favorite,
+                                               int usersCount) {
         CalendarOutput output = new CalendarOutput(calendar);
         output.setChangable(changable);
         output.setVisible(visible);
         output.setIsMy(isMy);
-        output.setFromOthers(fromOthers);
+        output.setFavorite(favorite);
+        output.setUsersCount(usersCount);
+
+        ApplicationUser calendarOwner = userManager.getUserByKey(calendar.getAuthorKey());
+        if (calendarOwner == null) {
+            output.setOwnerFullName("Deleted");
+        } else {
+            output.setOwner(calendar.getAuthorKey());
+            output.setOwnerFullName(calendarOwner.getDisplayName());
+            output.setOwnerAvatarUrl(getUserAvatarSrc(calendar.getAuthorKey()));
+        }
 
         String filterHasNotAvailableError = checkThatFilterHasAvailable(user, calendar);
         if (filterHasNotAvailableError != null) {
@@ -251,6 +234,58 @@ public class RestCalendarService {
             output.setError(filterHasNotAvailableError);
         }
         return output;
+    }
+
+    private List<CalendarOutput> fillVisibleCalendars(Calendar[] calendars) {
+        List<CalendarOutput> result = new ArrayList<CalendarOutput>();
+        final ApplicationUser user = jiraAuthenticationContext.getUser();
+        final String userKey = user.getKey();
+        final boolean isUserAdmin = globalPermissionManager.hasPermission(Permissions.ADMINISTER, user);
+
+        Set<Integer> showedCalendars = userDataService.getShowedCalendars(user);
+        Set<Integer> favoriteCalendars = userDataService.getFavoriteCalendars(user);
+        for (Calendar calendar : calendars) {
+            boolean isShowedCalendar = showedCalendars.contains(calendar.getID());
+            boolean isFavoriteCalendar = favoriteCalendars.contains(calendar.getID());
+            boolean isCalendarVisible = isCalendarVisibleByUser(calendar, user);
+
+            if (calendar.getAuthorKey().equals(userKey))
+                result.add(buildCalendarOutput(user, calendar, true, isShowedCalendar, true, false, userDataService.getUsersCount(calendar)));
+            else if(isUserAdmin || isCalendarVisible || isFavoriteCalendar) {
+                CalendarOutput output = buildCalendarOutput(user, calendar, isUserAdmin, isShowedCalendar, false, isFavoriteCalendar, userDataService.getUsersCount(calendar));
+                if(!isUserAdmin && !isCalendarVisible) {
+                    output.setHasError(true);
+                    output.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
+                }
+                result.add(output);
+            }
+        }
+        return result;
+    }
+
+    private boolean isCalendarVisibleByUser(Calendar calendar, ApplicationUser user) {
+        Share[] shares = calendar.getShares();
+        if (shares != null) {
+            for (Share share : shares) {
+                if (share.getGroup() != null) {
+                    Group group = groupManager.getGroup(share.getGroup());
+                    if (group != null && groupManager.isUserInGroup(ApplicationUsers.toDirectoryUser(user), group)) {
+                        return true;
+                    }
+                } else {
+                    Project project = projectManager.getProjectObj(share.getProject());
+                    if (share.getRole() != 0) {
+                        ProjectRole projectRole = projectRoleManager.getProjectRole(share.getRole());
+                        if (projectRole != null && projectRoleManager.isUserInProjectRole(user, projectRole, project)) {
+                            return true;
+                        }
+                    } else if (permissionManager.hasPermission(Permissions.BROWSE, project, user, false)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     @Nullable
@@ -367,14 +402,14 @@ public class RestCalendarService {
                                                                    StringUtils.trimToNull(eventEnd),
                                                                    StringUtils.trimToNull(displayedFields),
                                                                    StringUtils.trimToNull(shares));
-                CalendarOutput output = new CalendarOutput(calendar);
-                String filterHasNotAvailableError = checkThatFilterHasAvailable(user, calendar);
-                if (filterHasNotAvailableError != null) {
-                    output.setHasError(true);
-                    output.setError(filterHasNotAvailableError);
-                }
-                output.setVisible(userDataService.isCalendarShowedForCurrentUser(user, calendar));
-                return output;
+
+                boolean isShowedCalendar = userDataService.getShowedCalendars(user).contains(calendar.getID());
+                boolean isFavoriteCalendar = userDataService.getFavoriteCalendars(user).contains(calendar.getID());
+
+                if (calendar.getAuthorKey().equals(user.getKey()))
+                    return buildCalendarOutput(user, calendar, true, isShowedCalendar, true, false, userDataService.getUsersCount(calendar));
+                else
+                    return buildCalendarOutput(user, calendar, true, isShowedCalendar, false, isFavoriteCalendar, userDataService.getUsersCount(calendar));
             }
         }.getResponse();
     }
@@ -394,56 +429,10 @@ public class RestCalendarService {
     @GET
     @Path("all")
     public Response getAllCalendars() {
-        checkOldCalendars();
         return new RestExecutor<List<CalendarOutput>>() {
             @Override
             protected List<CalendarOutput> doAction() throws Exception {
-                List<CalendarOutput> result = new ArrayList<CalendarOutput>();
-                final ApplicationUser user = jiraAuthenticationContext.getUser();
-                final String userKey = user.getKey();
-                final boolean isUserAdmin = globalPermissionManager.hasPermission(Permissions.ADMINISTER, user);
-
-                Set<Integer> showedCalendars = userDataService.getShowedCalendars(user);
-                for (Calendar calendar : calendarService.getAllCalendars()) {
-                    boolean isShowedCalendar = showedCalendars.contains(calendar.getID());
-                    if (calendar.getAuthorKey().equals(userKey)) {
-                        result.add(buildCalendarOutput(user, calendar, true, isShowedCalendar, true, false));
-                        continue;
-                    }
-
-                    boolean sharedToUser = false;
-                    Share[] shares = calendar.getShares();
-                    if (shares != null) {
-                        for (Share share : shares) {
-                            if (share.getGroup() != null) {
-                                Group group = groupManager.getGroup(share.getGroup());
-                                if (group != null && groupManager.isUserInGroup(ApplicationUsers.toDirectoryUser(user), group)) {
-                                    result.add(buildCalendarOutput(user, calendar, isUserAdmin, isShowedCalendar, false, false));
-                                    sharedToUser = true;
-                                    break;
-                                }
-                            } else {
-                                Project project = projectManager.getProjectObj(share.getProject());
-                                if (share.getRole() != 0) {
-                                    ProjectRole projectRole = projectRoleManager.getProjectRole(share.getRole());
-                                    if (projectRole != null && projectRoleManager.isUserInProjectRole(user, projectRole, project)) {
-                                        result.add(buildCalendarOutput(user, calendar, isUserAdmin, isShowedCalendar, false, false));
-                                        sharedToUser = true;
-                                        break;
-                                    }
-                                } else if (permissionManager.hasPermission(Permissions.BROWSE, project, user, false)) {
-                                    result.add(buildCalendarOutput(user, calendar, isUserAdmin, isShowedCalendar, false, false));
-                                    sharedToUser = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (isUserAdmin && !sharedToUser)
-                        result.add(buildCalendarOutput(user, calendar, true, isShowedCalendar, false, true));
-                }
-                return result;
+                return fillVisibleCalendars(calendarService.getAllCalendars());
             }
         }.getResponse();
     }

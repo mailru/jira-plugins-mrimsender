@@ -6,6 +6,9 @@ import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.search.SearchRequestManager;
+import com.atlassian.jira.jql.builder.JqlClauseBuilder;
+import com.atlassian.jira.jql.builder.JqlClauseBuilderFactory;
+import com.atlassian.jira.jql.builder.JqlQueryBuilder;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
@@ -178,10 +181,7 @@ public class CalendarService {
         return ao.executeInTransaction(new TransactionCallback<Calendar>() {
             @Override
             public Calendar doInTransaction() {
-                Calendar calendar = ao.get(Calendar.class, id);
-                if (calendar == null)
-                    throw new IllegalArgumentException("Can not find calendar with id => " + id);
-                return calendar;
+                return ao.get(Calendar.class, id);
             }
         });
     }
@@ -280,7 +280,7 @@ public class CalendarService {
                             continue;
 
                         List<Integer> showedCalendars = new ArrayList<Integer>();
-                        for (String showedCalendarIdStr : showedCalendarsStr.split(";")) {
+                        for (String showedCalendarIdStr : showedCalendarsStr.split(";"))
                             try {
                                 int showedCalendarId = Integer.parseInt(showedCalendarIdStr);
                                 if (showedCalendarId == calendarId || ao.get(Calendar.class, showedCalendarId) == null)
@@ -290,11 +290,14 @@ public class CalendarService {
                             } catch (NumberFormatException e) {
                                 userDataChanged = true;
                             }
-                        }
 
+                        Set<Integer> favoriteCalendars = userDataService.getFavoriteCalendars(userData);
+                        if (favoriteCalendars.remove(calendarId))
+                            userDataChanged = true;
 
                         if (userDataChanged) {
                             userData.setShowedCalendars(StringUtils.join(showedCalendars, ";"));
+                            userData.setFavoriteCalendars(StringUtils.join(favoriteCalendars, ";"));
                             userData.save();
                         }
                     }

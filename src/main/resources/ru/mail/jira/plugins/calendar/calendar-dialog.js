@@ -167,7 +167,7 @@
             _fillForm: function() {
                 if (this.model.id) {
                     this.$('.aui-dialog2-header-main').text(AJS.I18n.getText('ru.mail.jira.plugins.calendar.editCalendar'));
-                    this.$okButton.text(AJS.I18n.getText('ru.mail.jira.plugins.calendar.common.edit'));
+                    this.$okButton.text(AJS.I18n.getText('common.forms.update'));
 
                     var ownerLink = ownerLinkTpl({
                         owner: this.model.get('owner'),
@@ -207,7 +207,7 @@
                     }
                 } else {
                     this.$('#calendar-dialog-owner-block').addClass('hidden');
-                    this.$('.aui-dialog2-header-main').text(AJS.I18n.getText('ru.mail.jira.plugins.calendar.addCalendar'));
+                    this.$('.aui-dialog2-header-main').text(AJS.I18n.getText('ru.mail.jira.plugins.calendar.createCalendar'));
                     this.$okButton.text(AJS.I18n.getText('common.words.create'));
                 }
             },
@@ -413,7 +413,7 @@
                 html += '<div id="' + blockIndex + '" class="calendar-shared-block">';
                 html += '<input type="hidden" class="calendar-dialog-shared-project" id="' + projectInputId + '" value="' + (selectedProjectId ? selectedProjectId : "") + '" >';
                 html += '<input type="hidden" class="calendar-dialog-shared-role" value="' + (selectedRoleId != null ? selectedRoleId : "") + '">';
-                html += '<a data-share-index="' + this.sharedCounter + '" class="aui-button aui-button-subtle calendar-dialog-share-delete">';
+                html += '<a data-share-index="' + this.sharedCounter + '" class="aui-button aui-button-subtle calendar-dialog-share-delete" tabindex="-1">';
                 html += '<span class="aui-icon aui-icon-small aui-iconfont-delete"></span>';
                 html += '</a>';
                 html += '</div>';
