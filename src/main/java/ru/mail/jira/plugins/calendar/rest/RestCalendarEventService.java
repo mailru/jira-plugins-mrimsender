@@ -54,18 +54,7 @@ public class RestCalendarEventService {
         return new RestExecutor<IssueInfo>() {
             @Override
             protected IssueInfo doAction() throws Exception {
-                ApplicationUser user = jiraAuthenticationContext.getUser();
-                Calendar calendar = calendarService.getCalendar(calendarId);
-                IssueService.IssueResult issueResult = issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId);
-
-                MutableIssue issue = issueResult.getIssue();
-                IssueInfo result = new IssueInfo(eventId, issue.getSummary());
-                result.setStatusColor(issue.getStatusObject().getStatusCategory().getColorName());
-
-                if (StringUtils.isNotEmpty(calendar.getDisplayedFields()))
-                    calendarEventService.fillDisplayedFields(result, calendar.getDisplayedFields().split(","), issue);
-
-                return result;
+                return calendarEventService.getEventInfo(jiraAuthenticationContext.getUser(), calendarId, eventId);
             }
         }.getResponse();
     }

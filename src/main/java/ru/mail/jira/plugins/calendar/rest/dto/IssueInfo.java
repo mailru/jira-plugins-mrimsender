@@ -1,5 +1,9 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
+import com.atlassian.core.util.HTMLUtils;
+import com.atlassian.jira.util.I18nHelper;
+import org.apache.commons.lang3.StringUtils;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.LinkedHashMap;
@@ -31,7 +35,7 @@ public class IssueInfo {
     @XmlElement
     private String dueDate;
     @XmlElement
-    private String envirounment;
+    private String environment;
     @XmlElement
     private String priority;
     @XmlElement
@@ -47,7 +51,7 @@ public class IssueInfo {
     @XmlElement
     private String updated;
     @XmlElement
-    private Map<String,String> customFields = new LinkedHashMap<String, String>();
+    private Map<String, String> customFields = new LinkedHashMap<String, String>();
 
     public IssueInfo(String key, String summary) {
         this.key = key;
@@ -118,12 +122,12 @@ public class IssueInfo {
         this.dueDate = dueDate;
     }
 
-    public String getEnvirounment() {
-        return envirounment;
+    public String getEnvironment() {
+        return environment;
     }
 
-    public void setEnvirounment(String envirounment) {
-        this.envirounment = envirounment;
+    public void setEnvironment(String environment) {
+        this.environment = environment;
     }
 
     public String getPriority() {
@@ -188,5 +192,39 @@ public class IssueInfo {
 
     public void addCustomField(String name, String view) {
         this.customFields.put(name, view);
+    }
+
+    public String toFormatString(I18nHelper i18n) {
+        StringBuilder str = new StringBuilder();
+        if (StringUtils.isNotBlank(assignee))
+            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.assignee"), HTMLUtils.stripTags(assignee).trim()));
+        if (StringUtils.isNotBlank(reporter))
+            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.reporter"), HTMLUtils.stripTags(reporter).trim()));
+        if (StringUtils.isNotBlank(status))
+            str.append(String.format("%s:\t%s\n", i18n.getText("common.words.status"), HTMLUtils.stripTags(status).trim()));
+        if (StringUtils.isNotBlank(labels))
+            str.append(String.format("%s:\t%s\n", i18n.getText("common.concepts.labels"), HTMLUtils.stripTags(labels).trim()));
+        if (StringUtils.isNotBlank(components))
+            str.append(String.format("%s:\t%s\n", i18n.getText("common.concepts.components"), HTMLUtils.stripTags(components).trim()));
+        if (StringUtils.isNotBlank(dueDate))
+            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.duedate"), HTMLUtils.stripTags(dueDate).trim()));
+        if (StringUtils.isNotBlank(environment))
+            str.append(String.format("%s:\t%s\n", i18n.getText("common.words.env"), HTMLUtils.stripTags(environment).trim()));
+        if (StringUtils.isNotBlank(priority))
+            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.priority"), HTMLUtils.stripTags(priority).trim()));
+        if (StringUtils.isNotBlank(resolution))
+            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.resolution"), HTMLUtils.stripTags(resolution).trim()));
+        if (StringUtils.isNotBlank(affect))
+            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.version"), HTMLUtils.stripTags(affect).trim()));
+        if (StringUtils.isNotBlank(created))
+            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.created"), HTMLUtils.stripTags(created).trim()));
+        if (StringUtils.isNotBlank(updated))
+            str.append(String.format("%s:\t%s\n", i18n.getText("issue.field.updated"), HTMLUtils.stripTags(updated).trim()));
+        if (customFields != null)
+            for (Map.Entry<String, String> entry : customFields.entrySet())
+                str.append(String.format("%s:\t%s\n", entry.getKey(), HTMLUtils.stripTags(entry.getValue()).trim()));
+        if (StringUtils.isNotBlank(description))
+            str.append(HTMLUtils.stripTags(description).trim());
+        return str.toString();
     }
 }

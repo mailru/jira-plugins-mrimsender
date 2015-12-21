@@ -10,7 +10,6 @@ import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.permission.GlobalPermissionKey;
-import com.atlassian.jira.permission.ProjectPermission;
 import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
@@ -19,7 +18,6 @@ import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.security.Permissions;
 import com.atlassian.jira.security.groups.GroupManager;
-import com.atlassian.jira.security.plugin.ProjectPermissionKey;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
@@ -34,6 +32,7 @@ import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.property.CalScale;
+import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Url;
@@ -487,7 +486,8 @@ public class RestCalendarService {
                     List<Event> events = calendarEventService.findEvents(Integer.parseInt(calendarId),
                                                                          startSearch.toString("yyyy-MM-dd"),
                                                                          endSearch.toString("yyyy-MM-dd"),
-                                                                         userManager.getUserByKey(userData.getUserKey()));
+                                                                         userManager.getUserByKey(userData.getUserKey()),
+                                                                         true);
 
                     org.joda.time.format.DateTimeFormatter clientDateFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss");
                     for (Event event : events) {
@@ -497,7 +497,8 @@ public class RestCalendarService {
                         VEvent vEvent = end != null ? new VEvent(start, end, event.getTitle()) : new VEvent(start, event.getTitle());
                         vEvent.getProperties().add(new Uid(calendarId + "_" + event.getId()));
                         vEvent.getProperties().add(new Url(Uris.create(ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/" + event.getId())));
-
+                        if(event.getIssueInfo() != null)
+                            vEvent.getProperties().add(new Description(event.getIssueInfo().toFormatString(i18nHelper)));
                         calendar.getComponents().add(vEvent);
                     }
                 }

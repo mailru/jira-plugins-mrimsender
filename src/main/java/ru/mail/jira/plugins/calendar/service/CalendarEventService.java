@@ -12,6 +12,7 @@ import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueInputParameters;
+import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.RendererManager;
 import com.atlassian.jira.issue.customfields.impl.DateTimeCFType;
 import com.atlassian.jira.issue.fields.AssigneeSystemField;
@@ -96,27 +97,42 @@ public class CalendarEventService {
                                   final String start,
                                   final String end,
                                   final ApplicationUser user) throws ParseException, SearchException {
+        return findEvents(calendarId, start, end, user, false);
+    }
+
+    public List<Event> findEvents(final int calendarId,
+                                  final String start,
+                                  final String end,
+                                  final ApplicationUser user,
+                                  final boolean includeIssueInfo) throws ParseException, SearchException {
         Calendar calendarModel = calendarService.getCalendar(calendarId);
         DateFormat dateFormat = new SimpleDateFormat(DATE_RANGE_FORMAT);
         String source = calendarModel.getSource();
         if (source.startsWith("project_"))
             return getProjectEvents(calendarModel, Long.parseLong(source.substring("project_".length())),
-                                    calendarModel.getEventStart(), calendarModel.getEventEnd(), dateFormat.parse(start), dateFormat.parse(end), user);
+                                    calendarModel.getEventStart(), calendarModel.getEventEnd(), dateFormat.parse(start), dateFormat.parse(end), user, includeIssueInfo);
         else if (source.startsWith("filter_"))
             return getFilterEvents(calendarModel, Long.parseLong(source.substring("filter_".length())),
-                                   calendarModel.getEventStart(), calendarModel.getEventEnd(), dateFormat.parse(start), dateFormat.parse(end), user);
+                                   calendarModel.getEventStart(), calendarModel.getEventEnd(), dateFormat.parse(start), dateFormat.parse(end), user, includeIssueInfo);
         else {
             return Collections.emptyList();
         }
     }
 
+    public IssueInfo getEventInfo(ApplicationUser user, int calendarId, String eventId) {
+        Calendar calendar = calendarService.getCalendar(calendarId);
+        IssueService.IssueResult issueResult = issueService.getIssue(user, eventId);
+        MutableIssue issue = issueResult.getIssue();
+        return getEventInfo(calendar, issue);
+    }
+
     private List<Event> getProjectEvents(Calendar calendar, long projectId,
                                          String startField, String endField,
                                          Date startTime, Date endTime,
-                                         ApplicationUser user) throws SearchException {
+                                         ApplicationUser user, boolean includeIssueInfo) throws SearchException {
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder();
         jqlBuilder.project(projectId);
-        return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user);
+        return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo);
     }
 
     private List<Event> getFilterEvents(Calendar calendar,
@@ -125,7 +141,7 @@ public class CalendarEventService {
                                         String endField,
                                         Date startTime,
                                         Date endTime,
-                                        ApplicationUser user) throws SearchException {
+                                        ApplicationUser user, boolean includeIssueInfo) throws SearchException {
         JiraServiceContext jsCtx = new JiraServiceContextImpl(user);
         SearchRequest filter = searchRequestService.getFilter(jsCtx, filterId);
 
@@ -135,7 +151,7 @@ public class CalendarEventService {
         }
 
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder(filter.getQuery());
-        return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user);
+        return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo);
     }
 
     private List<Event> getEvents(Calendar calendar,
@@ -144,7 +160,7 @@ public class CalendarEventService {
                                   String endField,
                                   Date startTime,
                                   Date endTime,
-                                  ApplicationUser user) throws SearchException {
+                                  ApplicationUser user, boolean includeIssueInfo) throws SearchException {
         List<Event> result = new ArrayList<Event>();
         SimpleDateFormat clientDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
@@ -206,11 +222,23 @@ public class CalendarEventService {
                 event.setStartEditable(dateFieldsIsDraggable && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
                 event.setDurationEditable(isDateFieldDraggable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
 
+                if(includeIssueInfo)
+                    event.setIssueInfo(getEventInfo(calendar, issue));
+
                 result.add(event);
             } catch (Exception e) {
                 log.error(String.format("Error while trying to translate issue => %s to event", issue.getKey()), e);
             }
         }
+        return result;
+    }
+
+    private IssueInfo getEventInfo(Calendar calendar, Issue issue) {
+        IssueInfo result = new IssueInfo(issue.getKey(), issue.getSummary());
+        result.setStatusColor(issue.getStatusObject().getStatusCategory().getColorName());
+
+        if (StringUtils.isNotEmpty(calendar.getDisplayedFields()))
+            fillDisplayedFields(result, calendar.getDisplayedFields().split(","), issue);
         return result;
     }
 
@@ -426,7 +454,7 @@ public class CalendarEventService {
         return !isDateFieldsDraggable(startField, endField);
     }
 
-    public void fillDisplayedFields(IssueInfo issueInfo, String[] extraFields, Issue issue) {
+    private void fillDisplayedFields(IssueInfo issueInfo, String[] extraFields, Issue issue) {
         for (String extraField : extraFields) {
             if (extraField.startsWith("customfield_")) {
                 CustomField customField = customFieldManager.getCustomFieldObject(extraField);
@@ -464,7 +492,7 @@ public class CalendarEventService {
             } else if (extraField.equals(CalendarService.DUEDATE) && issue.getDueDate() != null)
                 issueInfo.setDueDate(dateTimeFormatter.forLoggedInUser().format(issue.getDueDate()));
             else if (extraField.equals(CalendarService.ENVIRONMENT) && issue.getEnvironment() != null)
-                issueInfo.setEnvirounment(issue.getEnvironment());
+                issueInfo.setEnvironment(issue.getEnvironment());
             else if (extraField.equals(CalendarService.PRIORITY) && issue.getPriorityObject() != null) {
                 issueInfo.setPriority(issue.getPriorityObject().getName());
                 issueInfo.setPriorityIconUrl(issue.getPriorityObject().getIconUrl());

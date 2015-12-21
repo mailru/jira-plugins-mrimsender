@@ -51,7 +51,7 @@
         <% if(issue.assignee)
             buildField(issue.assignee, '$i18n.getText('issue.field.assignee')')
         %>
-        <% if(issue.assignee)
+        <% if(issue.reporter)
             buildField(issue.reporter, '$i18n.getText('issue.field.reporter')')
         %>
         <% if (issue.status) { %>

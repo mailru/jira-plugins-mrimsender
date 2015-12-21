@@ -26,6 +26,8 @@ public class Event {
     private boolean durationEditable;
     @XmlElement
     private boolean startEditable;
+    @XmlElement
+    private IssueInfo issueInfo;
 
     public String getId() {
         return id;
@@ -105,5 +107,13 @@ public class Event {
 
     public void setStartEditable(boolean startEditable) {
         this.startEditable = startEditable;
+    }
+
+    public IssueInfo getIssueInfo() {
+        return issueInfo;
+    }
+
+    public void setIssueInfo(IssueInfo issueInfo) {
+        this.issueInfo = issueInfo;
     }
 }
