@@ -215,6 +215,10 @@ a.calendar-name:hover .calendar-vews-buttons-block {
     margin-bottom: 10px;
 }
 
+.fc-button {
+    font-family: inherit;
+}
+
 
 /* Issue Info Popup*/
 
@@ -287,33 +291,33 @@ a.calendar-name .aui-iconfont-error {
 }
 
 /* Timeline */
-div.timeline-event {
-    cursor: pointer;
-    -moz-box-sizing: border-box;
-    background-color: #d5ddf6;
-    border-color: #97b0f8;
-    box-sizing: border-box;
-    display: inline-block;
+div.vis-timeline {
+    background-color: #fff;
+    font-family: inherit;
 }
-div.timeline-event-content {
+
+div.vis-item {
+    cursor: pointer;
+    font-size: 14px;
+}
+
+div.vis-item-content {
     color: #fff;
     font-family: "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;
     font-size: .85em;
     font-weight: normal;
 }
 
-div.timeline-event-box {
-    -moz-border-radius: 3px; /* For Firefox 3.6 and older */
-    border-radius: 3px;
-    border-style: solid;
-    border-width: 1px;
+div.vis-item.vis-box {
     text-align: center;
+    border-style: solid;
+    border-radius: 3px;
+    -moz-border-radius: 3px; /* For Firefox 3.6 and older */
+    border-width: 1px;
 }
 
-div.timeline-event-box:hover {
-    border-color: #ff7b08 !important;
-}
-
-div.timeline-event.timeline-event-selected {
-    border-color: #ff7b08 !important;
+.vis-time-axis .vis-grid.vis-saturday,
+.vis-time-axis .vis-grid.vis-sunday {
+    background: #d7d7d7;
+    opacity: .3;
 }

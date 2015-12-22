@@ -129,6 +129,7 @@
                     <excludes>
                         <exclude>**/*.xml</exclude>
                         <exclude>**/*-min*</exclude>
+                        <exclude>**/vis-timeline.js</exclude>
                     </excludes>
                 </configuration>
             </plugin>

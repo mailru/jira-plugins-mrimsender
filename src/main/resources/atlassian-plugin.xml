@@ -52,8 +52,8 @@
         <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
         <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
 
-        <resource type="download" name="timeline.css" location="ru/mail/jira/plugins/calendar/timeline/timeline.css"/>
-        <resource type="download" name="timeline.js" location="ru/mail/jira/plugins/calendar/timeline/timeline.js"/>
+        <resource type="download" name="vis.css" location="ru/mail/jira/plugins/calendar/timeline/vis.css"/>
+        <resource type="download" name="vis-timeline.js" location="ru/mail/jira/plugins/calendar/timeline/vis-timeline.js"/>
         <resource type="download" name="img/" location="ru/mail/jira/plugins/calendar/timeline/img"/>
 
         <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/libs/clipboard-min.js"/>
