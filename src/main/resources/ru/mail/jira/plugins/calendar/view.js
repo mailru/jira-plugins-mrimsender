@@ -6,7 +6,7 @@
         Backbone.Collection.prototype.fetch = function(options) {
             this.trigger("fetch:started");
             oldCollectionFetch.call(this, options);
-        }
+        };
 
         /* Models */
         var UserData = Backbone.Model.extend({url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference'});
@@ -276,12 +276,18 @@
                 });
             },
             zoomOutTimeline: function() {
-                this.$fullCalendar.fullCalendar('getView').zoomOut();
+                var view = this.$fullCalendar.fullCalendar('getView');
+                var canZoomOut =  view.zoomOut();
                 this.$('.fc-zoom-out-button').blur();
+                !canZoomOut && view.calendar.header.disableButton('zoom-out');
+                view.calendar.header.enableButton('zoom-in');
             },
             zoomInTimeline: function() {
-                this.$fullCalendar.fullCalendar('getView').zoomIn();
+                var view = this.$fullCalendar.fullCalendar('getView');
+                var canZoomIn = view.zoomIn();
                 this.$('.fc-zoom-in-button').blur();
+                !canZoomIn && view.calendar.header.disableButton('zoom-in');
+                view.calendar.header.enableButton('zoom-out');
             },
             getCalendarHeaderButton: function(buttonName) {
                 return this.$fullCalendar.find('.fc-' + buttonName + '-button');
@@ -310,12 +316,15 @@
             },
             addCalendar: function (e) {
                 e.preventDefault();
+                this.$('.aui-page-panel-nav').click();
+
                 var calendarDialogView = new Backbone.View.CalendarDialogView({model: new CalendarDetail(), collection: calendarCollection});
                 calendarDialogView.show();
             },
             editCalendar: function (e) {
                 e.preventDefault();
                 e.stopPropagation();
+                this.$('.aui-page-panel-nav').click();
 
                 var calendarId = $(e.currentTarget).closest('div.calendar-list-item-block').data('id');
                 var calendarDetail = new CalendarDetail({id: calendarId});
@@ -332,6 +341,7 @@
             deleteCalendar: function (e) {
                 e.preventDefault();
                 e.stopPropagation();
+                this.$('.aui-page-panel-nav').click();
 
                 var calendarId = $(e.currentTarget).closest('div.calendar-list-item-block').data('id');
                 if (confirm(AJS.I18n.getText("ru.mail.jira.plugins.calendar.confirmDelete"))) {

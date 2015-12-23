@@ -1,3 +1,59 @@
+/* Event Coloring */
+.mailrucalendar-green {
+    background-color: #5dab3e;
+    border-color: #5dab3e;
+}
+
+.mailrucalendar-sand {
+    background-color: #d7ad43;
+    border-color: #d7ad43;
+}
+
+.mailrucalendar-blue {
+    background-color: #3e6894;
+    border-color: #3e6894;
+}
+
+.mailrucalendar-lightgrey {
+    background-color: #c9dad8;
+    border-color: #c9dad8;
+}
+
+.mailrucalendar-bluegreen {
+    background-color: #588e87;
+    border-color: #588e87;
+}
+
+.mailrucalendar-orange {
+    background-color: #e18434;
+    border-color: #e18434;
+}
+
+.mailrucalendar-darkred {
+    background-color: #83382A;
+    border-color: #83382A;
+}
+
+.mailrucalendar-red {
+    background-color: #D04A32;
+    border-color: #D04A32;
+}
+
+.mailrucalendar-brown {
+    background-color: #3C2B28;
+    border-color: #3C2B28;
+}
+
+.mailrucalendar-lightblue {
+    background-color: #87A4C0;
+    border-color: #87A4C0;
+}
+
+.mailrucalendar-lightbrown {
+    background-color: #A89B95;
+    border-color: #A89B95;
+}
+
 /* Header */
 #calendar-period-btn {
     width: 110px;
@@ -193,7 +249,7 @@ a.calendar-name:hover .calendar-vews-buttons-block {
 }
 
 .fc-event-container {
-    font-family: "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;
+    font-family: inherit;
     font-size: 14px;
 }
 
@@ -303,7 +359,7 @@ div.vis-item {
 
 div.vis-item-content {
     color: #fff;
-    font-family: "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;
+    font-family: inherit;
     font-size: .85em;
     font-weight: normal;
 }
@@ -320,4 +376,7 @@ div.vis-item.vis-box {
 .vis-time-axis .vis-grid.vis-sunday {
     background: #d7d7d7;
     opacity: .3;
+}
+.vis-time-axis .vis-grid.vis-today {
+    background: #fcf8e3;
 }

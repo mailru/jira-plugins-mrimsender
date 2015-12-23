@@ -225,6 +225,6 @@ public class IssueInfo {
                 str.append(String.format("%s: %s\n", entry.getKey(), HTMLUtils.stripTags(entry.getValue()).trim()));
         if (StringUtils.isNotBlank(description))
             str.append("\n").append(HTMLUtils.stripTags(description).trim());
-        return str.toString();
+        return str.toString().trim();
     }
 }

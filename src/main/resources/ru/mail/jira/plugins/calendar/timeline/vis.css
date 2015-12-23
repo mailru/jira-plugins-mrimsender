@@ -471,7 +471,7 @@ input.vis-configuration.vis-config-range:focus::-ms-fill-upper {
 
 .vis-item.vis-selected {
   border-color: #FFC200;
-  background-color: #FFF785;
+  /*background-color: #FFF785;*/
 
   /* z-index must be higher than the z-index of custom time bar and current time bar */
   z-index: 2;

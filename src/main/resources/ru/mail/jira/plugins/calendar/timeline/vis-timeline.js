@@ -3,8 +3,9 @@
 
 exports.DataSet = require('./lib/DataSet');
 exports.Timeline = require('./lib/timeline/Timeline');
+exports.TimeStep = require('./lib/timeline/TimeStep');
 
-},{"./lib/DataSet":2,"./lib/timeline/Timeline":18}],2:[function(require,module,exports){
+},{"./lib/DataSet":2,"./lib/timeline/TimeStep":17,"./lib/timeline/Timeline":18}],2:[function(require,module,exports){
 'use strict';
 
 var util = require('./util');
@@ -5770,10 +5771,7 @@ function getPointer(touch, element) {
 }
 
 /**
- * Zoom the
- *
- *
- * the given scale in or out. Start and end date will
+ * Zoom the range the given scale in or out. Start and end date will
  * be adjusted, and the timeline will be redrawn. You can optionally give a
  * date around which to zoom.
  * For example, try scale = 0.9 or 1.1
