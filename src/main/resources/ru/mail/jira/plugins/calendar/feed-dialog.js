@@ -16,12 +16,14 @@
                 this.listenTo(this.model, 'change:icalUid', this._updateCalendarFeedUrl);
                 this.listenTo(this.collection, 'change', this._initCalendarsSelect);
                 this.dialog.on('hide', $.proxy(this.destroy, this));
+                this.$('form').submit($.proxy(this._onFormSubmit, this));
             },
             destroy: function() {
                 this.clipboard.destroy();
                 this.stopListening();
                 this.undelegateEvents();
                 this.dialog.off();
+                this.$('form').off();
             },
             /* Public methods */
             hide: function() {
@@ -30,18 +32,32 @@
             show: function() {
                 this.dialog.show();
                 this._initCalendarsSelect();
+                this.$calendarSelect.focus();
             },
             /* Private methods */
+            _onFormSubmit: function(e) {
+                e.preventDefault();
+            },
             _resetLink: function() {
-                if (confirm(AJS.I18n.getText("ru.mail.jira.plugins.calendar.feed.dialog.reset.confirm")))
-                    $.ajax({
-                        type: 'POST',
-                        url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/ics/feed',
-                        success: $.proxy(function() {this.model.unset('icalUid');}, this),
-                        error: function(request) {
-                            alert(request.responseText);
-                        }
-                    });
+                var confirmText = '<p>' + AJS.I18n.getText("ru.mail.jira.plugins.calendar.feed.dialog.reset.confirm1") + '</p>' +
+                    '<p>' + AJS.I18n.getText("ru.mail.jira.plugins.calendar.feed.dialog.reset.confirm2") + '</p>';
+                var confirmDialog = new Backbone.View.ConfirmDialog({
+                    okText: AJS.I18n.getText("admin.common.words.reset"),
+                    header: AJS.I18n.getText("ru.mail.jira.plugins.calendar.feed.dialog.reset.confirmHeader"),
+                    text: confirmText,
+                    okHandler: $.proxy(function() {
+                        $.ajax({
+                            type: 'POST',
+                            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/ics/feed',
+                            success: $.proxy(function() {this.model.unset('icalUid');}, this),
+                            error: function(request) {
+                                alert(request.responseText);
+                            }
+                        });
+                    }, this)
+                });
+
+                confirmDialog.show();
             },
             _initCalendarsSelect: function() {
                 var data = this.collection.map(function(calendar) {

@@ -1,4 +1,4 @@
-package ru.mail.jira.plugins.calendar;
+package ru.mail.jira.plugins.calendar.migrator;
 
 import com.atlassian.crowd.embedded.api.Group;
 import com.atlassian.jira.project.Project;

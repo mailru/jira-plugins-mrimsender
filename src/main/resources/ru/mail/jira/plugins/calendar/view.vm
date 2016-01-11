@@ -20,17 +20,29 @@
             <div class="calendar-view-color-box" style="border: 2px solid <%= calendar.color %>;"/>
         <% } %>
             <span class="aui-nav-item-label" title="<%= calendar.name %>"><%= calendar.name %></span>
+        </a>
+        <div class="calendar-vews-buttons-block aui-buttons">
+            <button class="aui-button aui-button-subtle aui-button-compact aui-dropdown2-trigger aui-dropdown2-trigger-arrowless calendar-buttons-dropdown" aria-owns="calendar-buttons-dropdown-<%= calendar.id %>" aria-haspopup="true">
+                <span class="aui-icon aui-icon-small aui-iconfont-more"/>
+            </button>
+        </div>
+        <div id="calendar-buttons-dropdown-<%= calendar.id %>" data-id="<%= calendar.id %>" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
             <% if (calendar.changable) { %>
-            <div class="calendar-vews-buttons-block">
-                <button class="aui-button aui-button-subtle aui-button-compact calendar-edit">
-                    <span class="aui-icon aui-icon-small aui-iconfont-edit"/>
-                </button>
-                <button class="aui-button aui-button-subtle aui-button-compact calendar-delete">
-                    <span class="aui-icon aui-icon-small aui-iconfont-delete calendar-view-delete-button"/>
-                </button>
+            <div class="aui-dropdown2-section">
+                <ul>
+                    <li><a class="calendar-edit" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.edit" )</a></li>
+                    <li><a class="calendar-delete" href="#">$i18n.getText( "common.words.delete" )</a></li>
+                </ul>
             </div>
             <% } %>
-        </a>
+            <% if (!calendar.isMy && (calendar.favorite || calendar.visible)) { %>
+            <div class="aui-dropdown2-section">
+                <ul>
+                    <li><a class="calendar-remove" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.removeFavorite" )</a></li>
+                </ul>
+            </div>
+            <% } %>
+        </div>
     </div>
 </script>
 
@@ -44,7 +56,8 @@
 
     <div>
         <div class="calenar-issue-popup-key-header">
-            <a target="_blank" href="<%= AJS.contextPath() %>/browse/<%= issue.key %>"><strong><%= issue.summary %></strong>
+            <a target="_blank" href="<%= AJS.contextPath() %>/browse/<%= issue.key %>">
+                <strong><%= issue.summary.trim() %></strong>
                 <span class="aui-icon aui-icon-small aui-iconfont-share"/>
             </a>
         </div>
@@ -127,7 +140,7 @@
                 </button>
             </div>
             <div class="aui-buttons">
-                <button id="calendar-add" class="aui-button">
+                <button class="aui-button aui-dropdown2-trigger" aria-owns="calendar-add-dropdown" aria-haspopup="true">
                     <span class="aui-icon aui-icon-small aui-iconfont-add"></span>
                     $i18n.getText( "ru.mail.jira.plugins.calendar.addCalendar" )
                 </button>
@@ -142,6 +155,12 @@
                 <li><a href="#period/timeline" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.timeline" )</a></li>
             </ul>
         </div>
+        <div id="calendar-add-dropdown" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
+            <ul class="aui-list-truncate">
+                <li><a id="calendar-create" href="#">$i18n.getText( "common.words.create" )</a></li>
+                <li><a id="calendar-import" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.add" )</a></li>
+            </ul>
+        </div>
     </div>
     <ol class="aui-nav aui-nav-breadcrumbs"></ol>
 </header>
@@ -152,19 +171,17 @@
         </section>
         <div class="aui-page-panel-nav">
             <nav class="aui-navgroup aui-navgroup-vertical">
+                <div class="aui-navgroup-inner" id="mailrucalendar-empty-calendar-list" hidden>
+                    $i18n.getText( "ru.mail.jira.plugins.calendar.emptyCalendarList" )
+                </div>
                 <div class="aui-navgroup-inner" id="calendar-my-calendar-list">
                     <div id="calendar-my-calendar-list-header" class="aui-nav-heading">
                         <strong>$i18n.getText( "ru.mail.jira.plugins.calendar.myCalendars" )</strong>
                     </div>
                 </div>
-                <div class="aui-navgroup-inner" id="calendar-shared-calendar-list">
-                    <div id="calendar-shared-calendar-list-header" class="aui-nav-heading">
+                <div class="aui-navgroup-inner" id="calendar-favorite-calendar-list">
+                    <div id="calendar-favorite-calendar-list-header" class="aui-nav-heading">
                         <strong>$i18n.getText( "ru.mail.jira.plugins.calendar.sharedCalendars" )</strong>
-                    </div>
-                </div>
-                <div class="aui-navgroup-inner" id="calendar-other-calendar-list">
-                    <div id="calendar-other-calendar-list-header" class="aui-nav-heading">
-                        <strong>$i18n.getText( "ru.mail.jira.plugins.calendar.otherCalendars" )</strong>
                     </div>
                 </div>
             </nav>
@@ -173,5 +190,7 @@
 </div>
 #parse( "ru/mail/jira/plugins/calendar/calendar-dialog.vm" )
 #parse( "ru/mail/jira/plugins/calendar/feed-dialog.vm" )
+#parse( "ru/mail/jira/plugins/calendar/import-dialog.vm" )
+#parse( "ru/mail/jira/plugins/calendar/confirm-dialog.vm" )
 </body>
 </html>

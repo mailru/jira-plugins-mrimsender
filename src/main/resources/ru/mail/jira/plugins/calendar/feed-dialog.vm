@@ -1,9 +1,6 @@
 <section role="dialog" id="calendar-feed-dialog" class="aui-layer aui-dialog2" aria-hidden="true">
     <header class="aui-dialog2-header">
         <h2 id="calendar-feed-dialog-header" class="aui-dialog2-header-main">$i18n.getText( "ru.mail.jira.plugins.calendar.feedCalendar" )</h2>
-        <a class="aui-dialog2-header-close">
-            <span class="aui-icon aui-icon-small aui-iconfont-close-dialog">Close</span>
-        </a>
     </header>
     <div class="aui-dialog2-content">
         <div>
@@ -19,9 +16,9 @@
                 <div class="field-group">
                     <label>2. $i18n.getText( "ru.mail.jira.plugins.calendar.feed.dialog.text.useurl" )</label>
                     <input class="text long-field url-field working" type="text" readonly></input>
-                    <span id="url-field-copy" class="aui-button aui-button-subtle" data-clipboard-target=".url-field">
+                    <button id="url-field-copy" class="aui-button aui-button-subtle" data-clipboard-target=".url-field" tabindex="0">
                         <span class="aui-icon aui-icon-small aui-iconfont-copy-clipboard"/>
-                    </span>
+                    </button>
                 </div>
             </form>
             <p>$i18n.getText( "ru.mail.jira.plugins.calendar.feed.dialog.text.more" )</p>

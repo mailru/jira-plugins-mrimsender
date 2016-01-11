@@ -271,7 +271,7 @@ DataSet.prototype.update = function (data, senderId) {
       if (data[i] instanceof Object) {
         addOrUpdate(data[i]);
       } else {
-        console.warn("Ignoring input item, which is not an object at index" + i);
+        console.warn('Ignoring input item, which is not an object at index ' + i);
       }
     }
   } else if (data instanceof Object) {
@@ -2007,6 +2007,7 @@ var ColorPicker = (function () {
 
     // bound by
     this.updateCallback = function () {};
+    this.closeCallback = function () {};
 
     // create all DOM elements
     this._create();
@@ -2036,12 +2037,26 @@ var ColorPicker = (function () {
      * @param callback
      */
   }, {
-    key: 'setCallback',
-    value: function setCallback(callback) {
+    key: 'setUpdateCallback',
+    value: function setUpdateCallback(callback) {
       if (typeof callback === 'function') {
         this.updateCallback = callback;
       } else {
-        throw new Error("Function attempted to set as colorPicker callback is not a function.");
+        throw new Error("Function attempted to set as colorPicker update callback is not a function.");
+      }
+    }
+
+    /**
+     * the callback is executed on apply and save. Bind it to the application
+     * @param callback
+     */
+  }, {
+    key: 'setCloseCallback',
+    value: function setCloseCallback(callback) {
+      if (typeof callback === 'function') {
+        this.closeCallback = callback;
+      } else {
+        throw new Error("Function attempted to set as colorPicker closing callback is not a function.");
       }
     }
   }, {
@@ -2112,17 +2127,19 @@ var ColorPicker = (function () {
     }
 
     /**
-     * this shows the color picker at a location. The hue circle is constructed once and stored.
-     * @param x
-     * @param y
+     * this shows the color picker.
+     * The hue circle is constructed once and stored.
      */
   }, {
     key: 'show',
-    value: function show(x, y) {
+    value: function show() {
+      if (this.closeCallback !== undefined) {
+        this.closeCallback();
+        this.closeCallback = undefined;
+      }
+
       this.applied = false;
       this.frame.style.display = 'block';
-      this.frame.style.top = y + 'px';
-      this.frame.style.left = x + 'px';
       this._generateHueCircle();
     }
 
@@ -2149,6 +2166,12 @@ var ColorPicker = (function () {
       }
 
       this.frame.style.display = 'none';
+
+      // call the closing callback, restoring the onclick method.
+      if (this.closeCallback !== undefined) {
+        this.closeCallback();
+        this.closeCallback = undefined;
+      }
     }
 
     /**
@@ -2248,7 +2271,7 @@ var ColorPicker = (function () {
     }
 
     /**
-     * update the colorpicker. A black circle overlays the hue circle to mimic the brightness decreasing.
+     * update the color picker. A black circle overlays the hue circle to mimic the brightness decreasing.
      * @param rgba
      * @private
      */
@@ -2717,7 +2740,7 @@ var Configurator = (function () {
             // a header for the category
             this._makeHeader(option);
 
-            // get the suboptions
+            // get the sub options
             this._handleObject(this.configureOptions[option], [option]);
           }
           counter++;
@@ -2748,7 +2771,7 @@ var Configurator = (function () {
       }
 
       this._push();
-      this.colorPicker.insertTo(this.container);
+      //~ this.colorPicker.insertTo(this.container);
     }
 
     /**
@@ -3162,16 +3185,24 @@ var Configurator = (function () {
     value: function _showColorPicker(value, div, path) {
       var _this6 = this;
 
-      var rect = div.getBoundingClientRect();
-      var bodyRect = document.body.getBoundingClientRect();
-      var pickerX = rect.left + rect.width + 5;
-      var pickerY = rect.top - bodyRect.top + rect.height + 2;
-      this.colorPicker.show(pickerX, pickerY);
+      // clear the callback from this div
+      div.onclick = function () {};
+
+      this.colorPicker.insertTo(div);
+      this.colorPicker.show();
+
       this.colorPicker.setColor(value);
-      this.colorPicker.setCallback(function (color) {
+      this.colorPicker.setUpdateCallback(function (color) {
         var colorString = 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + color.a + ')';
         div.style.backgroundColor = colorString;
         _this6._update(colorString, path);
+      });
+
+      // on close of the colorpicker, restore the callback.
+      this.colorPicker.setCloseCallback(function () {
+        div.onclick = function () {
+          _this6._showColorPicker(value, div, path);
+        };
       });
     }
 
@@ -7056,8 +7087,8 @@ Timeline.prototype.getItemRange = function () {
 
   // get a rough approximation for the range based on the items start and end dates
   var range = this.getDataRange();
-  var min = range.min.valueOf();
-  var max = range.max.valueOf();
+  var min = range.min !== null ? range.min.valueOf() : null;
+  var max = range.max !== null ? range.max.valueOf() : null;
   var minItem = null;
   var maxItem = null;
 
@@ -10028,8 +10059,6 @@ ItemSet.prototype._onAddItem = function (event) {
   var me = this;
   var snap = this.options.snap || null;
   var item = this.itemFromTarget(event);
-
-  event.stopPropagation();
 
   if (item) {
     // update item
@@ -13482,7 +13511,6 @@ exports.insertSort = function (a, compare) {
  * @param [object] mergeTarget | this is either this.options or the options used for the groups.
  * @param [object] options     | options
  * @param [String] option      | this is the option key in the options argument
- * @private
  */
 exports.mergeOptions = function (mergeTarget, options, option) {
   var allowDeletion = arguments.length <= 3 || arguments[3] === undefined ? false : arguments[3];

@@ -1,4 +1,4 @@
-package ru.mail.jira.plugins.calendar;
+package ru.mail.jira.plugins.calendar.migrator;
 
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
