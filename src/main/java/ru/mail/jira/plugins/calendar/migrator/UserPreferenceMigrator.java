@@ -37,6 +37,8 @@ import java.util.Set;
 public class UserPreferenceMigrator {
     private final static Logger log = LoggerFactory.getLogger(UserPreferenceMigrator.class);
 
+    private final String PLUGIN_KEY = "SimpleCalendar";
+
     private final CalendarService calendarService;
     private final UserDataService updateUserData;
 

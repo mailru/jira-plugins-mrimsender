@@ -99,6 +99,10 @@ public class Migrator implements LifecycleAware, InitializingBean, DisposableBea
     }
 
     @Override
+    public void onStop() {
+    }
+
+    @Override
     public void destroy() throws Exception {
         unregisterListener();
     }

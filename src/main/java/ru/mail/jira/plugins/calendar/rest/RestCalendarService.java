@@ -269,7 +269,7 @@ public class RestCalendarService {
             for (Share share : shares) {
                 if (share.getGroup() != null) {
                     Group group = groupManager.getGroup(share.getGroup());
-                    if (group != null && groupManager.isUserInGroup(ApplicationUsers.toDirectoryUser(user), group)) {
+                    if (group != null && groupManager.isUserInGroup(user, group)) {
                         return true;
                     }
                 } else {

@@ -219,8 +219,8 @@ public class CalendarEventService {
                     event.setStart(clientDateFormat.format(endDate));
                 }
 
-                event.setStartEditable(dateFieldsIsDraggable && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
-                event.setDurationEditable(isDateFieldDraggable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
+                event.setStartEditable(dateFieldsIsDraggable && issueService.isEditable(issue, user));
+                event.setDurationEditable(isDateFieldDraggable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, user));
 
                 if(includeIssueInfo)
                     event.setIssueInfo(getEventInfo(calendar, issue));
@@ -334,11 +334,11 @@ public class CalendarEventService {
             issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), new SimpleDateFormat(keyForDateFormat, locale).format(value));
         }
 
-        IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(ApplicationUsers.toDirectoryUser(user), issue.getId(), issueInputParams);
+        IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(user, issue.getId(), issueInputParams);
         if (!updateValidationResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateValidationResult.getErrorCollection()));
 
-        IssueService.IssueResult updateResult = issueService.update(ApplicationUsers.toDirectoryUser(user), updateValidationResult);
+        IssueService.IssueResult updateResult = issueService.update(user, updateValidationResult);
         if (!updateResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
     }
@@ -403,11 +403,11 @@ public class CalendarEventService {
             issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), new SimpleDateFormat(keyForDateFormat, locale).format(value));
         }
 
-        IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(ApplicationUsers.toDirectoryUser(user), issue.getId(), issueInputParams);
+        IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(user, issue.getId(), issueInputParams);
         if (!updateValidationResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateValidationResult.getErrorCollection()));
 
-        IssueService.IssueResult updateResult = issueService.update(ApplicationUsers.toDirectoryUser(user), updateValidationResult);
+        IssueService.IssueResult updateResult = issueService.update(user, updateValidationResult);
         if (!updateResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
     }
