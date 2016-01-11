@@ -1,5 +1,39 @@
 <section role="dialog" id="calendar-dialog" class="aui-layer aui-dialog2" aria-hidden="true">
-    <input type="hidden" id="calendar-dialog-id">
+
+    <script type="text/template" id="owner-link-template">
+        <% if (owner) { %>
+        <span rel="<%= owner %>" class="user-hover user-avatar calendar-dialog-owner">
+            <span class="aui-avatar aui-avatar-xsmall">
+                <span class="aui-avatar-inner">
+                    <img src="<%= ownerAvatarUrl %>" />
+                </span>
+            </span>
+            <%= ownerFullName %>
+        </span>
+        <% } else %>
+        <span class="calendar-dialog-owner"><%= ownerFullName %></span>
+    </script>
+
+    <script type="text/template" id="source-field-template">
+        <% if (item.unavailable) { %>
+        <span class="calendar-dialog-source-unavailable-source"><%= item.text %></span>
+        <% } else if (item.id && item.id.lastIndexOf('project_') == 0) {
+            var projectId = item.id.substring('project_'.length);
+            var projectItemHtml = ''; %>
+            <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
+                <span class="aui-avatar-inner">
+                    <img src="projectavatar?pid=<%= projectId %>&avatarId=<%= item.avatarId %>&size=xxmall" />
+                </span>
+            </span>
+        &nbsp;<%= item.text %>
+        <% } else %>
+            <%= item.text %>
+    </script>
+
+    <script type="text/template" id="color-field-template">
+        <div class="calendar-dialog-color-option" style="background:<%= data.id %>"></div>
+    </script>
+
     <header class="aui-dialog2-header">
         <h2 id="calendar-dialog-header" class="aui-dialog2-header-main"></h2>
     </header>
@@ -27,9 +61,17 @@
                         $i18n.getText( "admin.common.words.color" )
                     </label>
                     <select class="select short-field calendar-dialog-color calendar-dialog-select" id="calendar-dialog-color">
-                        #foreach( $color in $action.colors)
-                            <option value="$color">$color</option>
-                        #end
+                        <option value="#5dab3e">#5dab3e</option>
+                        <option value="#d7ad43">#d7ad43</option>
+                        <option value="#3e6894">#3e6894</option>
+                        <option value="#c9dad8">#c9dad8</option>
+                        <option value="#588e87">#588e87</option>
+                        <option value="#e18434">#e18434</option>
+                        <option value="#83382A">#83382A</option>
+                        <option value="#D04A32">#D04A32</option>
+                        <option value="#3C2B28">#3C2B28</option>
+                        <option value="#87A4C0">#87A4C0</option>
+                        <option value="#A89B95">#A89B95</option>
                     </select>
                     <div id="calendar-dialog-color-error" class="error hidden"></div>
                 </div>
@@ -46,21 +88,12 @@
                         <span class="aui-icon icon-required"></span>
                         $i18n.getText( "ru.mail.jira.plugins.calendar.dialog.eventStart" )
                     </label>
-                    <select id="calendar-dialog-event-start" class="long-field calendar-dialog-select">
-                        #foreach( $dateField in $action.dateFields )
-                            <option value="$dateField.id">$dateField.name</option>
-                        #end
-                    </select>
+                    <input type="hidden" id="calendar-dialog-event-start" class="long-field calendar-dialog-select">
                     <div id="calendar-dialog-event-start-error" class="error hidden"></div>
                 </div>
                 <div class="field-group">
                     <label for="calendar-dialog-event-end">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.eventEnd" )</label>
-                    <select id="calendar-dialog-event-end" class="long-field calendar-dialog-select">
-                        <option id="0" selected="selected"> </option>
-                        #foreach( $dateField in $action.dateFields )
-                            <option temp="" value="$dateField.id">$dateField.name</option>
-                        #end
-                    </select>
+                    <input type="hidden" id="calendar-dialog-event-end" class="long-field calendar-dialog-select">
                     <div id="calendar-dialog-event-end-error" class="error hidden"></div>
                 </div>
                 <div class="field-group">
