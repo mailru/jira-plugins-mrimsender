@@ -218,10 +218,7 @@ public class UserDataService {
         ao.executeInTransaction(new TransactionCallback<Void>() {
             @Override
             public Void doInTransaction() {
-                UserData userData = getUserData(user);
-                if (userData == null)
-                    throw new IllegalArgumentException(String.format("UserData for user %s not found.", user.getKey()));
-
+                UserData userData = notTransactionalUpdateUserData(user.getKey(), null, null);
                 Set<Integer> showed = getShowedCalendars(userData);
                 Set<Integer> favorite = getFavoriteCalendars(userData);
                 showed.addAll(calendarIds);
@@ -249,10 +246,7 @@ public class UserDataService {
         ao.executeInTransaction(new TransactionCallback<Void>() {
             @Override
             public Void doInTransaction() {
-                UserData userData = getUserData(user);
-                if (userData == null)
-                    throw new IllegalArgumentException(String.format("UserData for user %s not found.", user.getKey()));
-
+                UserData userData = notTransactionalUpdateUserData(user.getKey(), null, null);
                 Set<Integer> showed = getShowedCalendars(userData);
                 Set<Integer> favorites = getFavoriteCalendars(userData);
                 showed.remove(calendarId);
