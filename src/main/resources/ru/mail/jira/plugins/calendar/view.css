@@ -191,7 +191,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     border-radius: 4px;
 }
 
-.calendar-name.not-working span {
+.calendar-name.not-working span.aui-icon {
     margin-right: 7px;
 }
 
