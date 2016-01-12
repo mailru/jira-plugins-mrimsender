@@ -100,7 +100,7 @@ public class UserDataService {
         return ao.executeInTransaction(new TransactionCallback<Integer>() {
             @Override
             public Integer doInTransaction() {
-                int calenderId = calendar.getID();
+                String calenderId = String.valueOf(calendar.getID());
                 UserData[] result = ao.find(UserData.class, Query.select().where("FAVORITE_CALENDARS = ? " +
                                                                                          "OR FAVORITE_CALENDARS LIKE ? " +
                                                                                          "OR FAVORITE_CALENDARS LIKE ? " +

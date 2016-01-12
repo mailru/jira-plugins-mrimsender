@@ -105,7 +105,7 @@
                         || owner && owner.toLowerCase().indexOf(q) != -1
                         || ownerFullName && ownerFullName.toLowerCase().indexOf(q) != -1);
                 });
-                if(this._equalsDataArray(this.tableData, result))
+                if(result.length && this._equalsDataArray(this.tableData, result))
                     return;
 
                 this._onStartSearch();
