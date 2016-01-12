@@ -121,7 +121,7 @@ public class CalendarEventService {
 
     public IssueInfo getEventInfo(ApplicationUser user, int calendarId, String eventId) {
         Calendar calendar = calendarService.getCalendar(calendarId);
-        IssueService.IssueResult issueResult = issueService.getIssue(user, eventId);
+        IssueService.IssueResult issueResult = issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId);
         MutableIssue issue = issueResult.getIssue();
         return getEventInfo(calendar, issue);
     }
