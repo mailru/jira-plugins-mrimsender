@@ -8,6 +8,8 @@ import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.properties.APKeys;
+import com.atlassian.jira.datetime.DateTimeFormatter;
+import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.permission.ProjectPermissions;
@@ -21,7 +23,6 @@ import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.ApplicationUsers;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugins.rest.common.security.AnonymousAllowed;
@@ -34,10 +35,10 @@ import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Url;
+import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.util.Uris;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDate;
-import org.joda.time.format.DateTimeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.Calendar;
@@ -84,6 +85,7 @@ public class RestCalendarService {
     private final CalendarEventService calendarEventService;
 
     private final AvatarService avatarService;
+    private final DateTimeFormatter dateTimeFormatter;
     private final GlobalPermissionManager globalPermissionManager;
     private final GroupManager groupManager;
     private final I18nHelper i18nHelper;
@@ -98,6 +100,7 @@ public class RestCalendarService {
     public RestCalendarService(CalendarService calendarService,
                                CalendarEventService calendarEventService,
                                AvatarService avatarService,
+                               DateTimeFormatter dateTimeFormatter,
                                GlobalPermissionManager globalPermissionManager,
                                GroupManager groupManager,
                                I18nHelper i18nHelper,
@@ -111,6 +114,7 @@ public class RestCalendarService {
         this.calendarService = calendarService;
         this.calendarEventService = calendarEventService;
         this.avatarService = avatarService;
+        this.dateTimeFormatter = dateTimeFormatter;
         this.globalPermissionManager = globalPermissionManager;
         this.groupManager = groupManager;
         this.i18nHelper = i18nHelper;
@@ -251,9 +255,9 @@ public class RestCalendarService {
 
             if (calendar.getAuthorKey().equals(userKey))
                 result.add(buildCalendarOutput(user, calendar, true, isShowedCalendar, true, false, userDataService.getUsersCount(calendar)));
-            else if(isUserAdmin || isCalendarVisible || isFavoriteCalendar) {
+            else if (isUserAdmin || isCalendarVisible || isFavoriteCalendar) {
                 CalendarOutput output = buildCalendarOutput(user, calendar, isUserAdmin, isShowedCalendar, false, isFavoriteCalendar, userDataService.getUsersCount(calendar));
-                if(!isUserAdmin && !isCalendarVisible) {
+                if (!isUserAdmin && !isCalendarVisible) {
                     output.setHasError(true);
                     output.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
                 }
@@ -462,10 +466,14 @@ public class RestCalendarService {
                 UserData userData = userDataService.getUserDataByIcalUid(icalUid);
                 if (userData == null)
                     return null;
+                ApplicationUser user = userManager.getUserByKey(userData.getUserKey());
+                if (user == null || !user.isActive())
+                    return null;
 
+                DateTimeFormatter userDateTimeFormat = dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
                 final net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
                 calendar.getProperties().add(new ProdId("-//MailRu Calendar/" + icalUid + "/iCal4j 1.0//EN"));
-                calendar.getProperties().add(net.fortuna.ical4j.model.property.Version.VERSION_2_0);
+                calendar.getProperties().add(Version.VERSION_2_0);
                 calendar.getProperties().add(CalScale.GREGORIAN);
 
                 LocalDate startSearch = LocalDate.now().minusMonths(3);
@@ -478,15 +486,14 @@ public class RestCalendarService {
                                                                          userManager.getUserByKey(userData.getUserKey()),
                                                                          true);
 
-                    org.joda.time.format.DateTimeFormatter clientDateFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss");
                     for (Event event : events) {
-                        DateTime start = new DateTime(clientDateFormat.parseMillis(event.getStart()));
-                        DateTime end = event.getEnd() != null ? new DateTime(clientDateFormat.parseMillis(event.getEnd())) : null;
+                        DateTime start = new DateTime(userDateTimeFormat.parse(event.getStart()));
+                        DateTime end = event.getEnd() != null ? new DateTime(userDateTimeFormat.parse(event.getEnd())) : null;
 
                         VEvent vEvent = end != null ? new VEvent(start, end, event.getTitle()) : new VEvent(start, event.getTitle());
                         vEvent.getProperties().add(new Uid(calendarId + "_" + event.getId()));
                         vEvent.getProperties().add(new Url(Uris.create(ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/" + event.getId())));
-                        if(event.getIssueInfo() != null)
+                        if (event.getIssueInfo() != null)
                             vEvent.getProperties().add(new Description(event.getIssueInfo().toFormatString(i18nHelper)));
                         calendar.getComponents().add(vEvent);
                     }
