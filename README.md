@@ -2,7 +2,7 @@
 
 The plugin displays issues from any project or filter in calendar format. Custom field values are used as event data.
 
-- Quarter, Month, Week and Day views
+- Quarter, Month, Week, Day and Timeline views
 - Optional weekends hiding
 - Additional fields displaying
 - Sharing configured calendars with other users
