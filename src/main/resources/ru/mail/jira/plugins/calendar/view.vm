@@ -62,10 +62,10 @@
             </a>
         </div>
         <% if(issue.assignee)
-            buildField(issue.assignee, '$i18n.getText('issue.field.assignee')')
+            buildField(issue.assignee, "$i18n.getText('issue.field.assignee')")
         %>
         <% if(issue.reporter)
-            buildField(issue.reporter, '$i18n.getText('issue.field.reporter')')
+            buildField(issue.reporter, "$i18n.getText('issue.field.reporter')")
         %>
         <% if (issue.status) { %>
         <dl>
@@ -76,16 +76,16 @@
         </dl>
         <% } %>
         <% if(issue.labels)
-            buildField(issue.labels, '$i18n.getText('common.concepts.labels')')
+            buildField(issue.labels, "$i18n.getText('common.concepts.labels')")
         %>
         <% if(issue.components)
-            buildField(issue.components, '$i18n.getText('common.concepts.components')')
+            buildField(issue.components, "$i18n.getText('common.concepts.components')")
         %>
         <% if(issue.dueDate)
-            buildField(issue.dueDate, '$i18n.getText('issue.field.duedate')')
+            buildField(issue.dueDate, "$i18n.getText('issue.field.duedate')")
         %>
         <% if(issue.environment)
-            buildField(issue.environment, '$i18n.getText('common.words.env')')
+            buildField(issue.environment, "$i18n.getText('common.words.env')")
         %>
         <% if (issue.priority) { %>
         <dl>
@@ -96,16 +96,16 @@
         </dl>
         <% } %>
         <% if(issue.resolution)
-            buildField(issue.resolution, '$i18n.getText('issue.field.resolution')')
+            buildField(issue.resolution, "$i18n.getText('issue.field.resolution')")
         %>
         <% if(issue.affect)
-            buildField(issue.affect, '$i18n.getText('issue.field.version')')
+            buildField(issue.affect, "$i18n.getText('issue.field.version')")
         %>
         <% if(issue.created)
-            buildField(issue.created, '$i18n.getText('issue.field.created')')
+            buildField(issue.created, "$i18n.getText('issue.field.created')")
         %>
         <% if(issue.updated)
-            buildField(issue.updated, '$i18n.getText('issue.field.updated')')
+            buildField(issue.updated, "$i18n.getText('issue.field.updated')")
         %>
         <% if (issue.customFields) {
             Object.keys(issue.customFields).map(function (item) {
