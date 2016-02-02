@@ -159,7 +159,16 @@
                 this.$('#mailrucalendar-empty-calendar-list').css('display', 'none');
                 var listBlock = this.$('#calendar-' + type + '-calendar-list');
                 listBlock.css('display', 'block');
-                listBlock.append(calendarLinkTpl({calendar: calendar.toJSON()}));
+
+                var sorted = this.collection.sortBy(function(cal) {
+                    return cal.get('name')
+                });
+                var indexPrior = _.indexOf(sorted, calendar) - 1;
+                if (indexPrior > -1) {
+                    var calendarPrior = sorted[indexPrior];
+                    this.$('.calendar-list-item-block[data-id="' + calendarPrior.id + '"]').after(calendarLinkTpl({calendar: calendar.toJSON()}));
+                } else
+                    listBlock.append(calendarLinkTpl({calendar: calendar.toJSON()}));
 
                 AJS.$("#calendar-buttons-dropdown-" + calendar.id).on({
                     "aui-dropdown2-show": mainView.calendarDropdownShow,
@@ -549,7 +558,10 @@
                 if (!!collection.findWhere({visible: true}))
                     mainView.startLoadingCalendarsCallback();
 
-                collection.each(function(calendar) {
+                var sorted = collection.sortBy(function(calendar) {
+                    return calendar.get('name')
+                });
+                _.each(sorted, function(calendar) {
                     var json = calendar.toJSON();
                     if (calendar.get('isMy'))
                         htmlMyCalendars += calendarLinkTpl({calendar: json});
