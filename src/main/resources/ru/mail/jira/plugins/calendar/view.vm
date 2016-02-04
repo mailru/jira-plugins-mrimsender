@@ -57,7 +57,7 @@
     <div>
         <div class="calenar-issue-popup-key-header">
             <a target="_blank" href="<%= AJS.contextPath() %>/browse/<%= issue.key %>">
-                <strong><%= issue.summary.trim() %></strong>
+                <strong><%= issue.key + ' ' + issue.summary.trim() %></strong>
                 <span class="aui-icon aui-icon-small aui-iconfont-share"/>
             </a>
         </div>

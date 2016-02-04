@@ -244,6 +244,7 @@
                     slotDuration: '01:00',
                     eventRender: function(event, $element) {
                         $element.addClass('calendar-event-object');
+                        $element.find('.fc-title').prepend(event.id + ' ');
                         AJS.InlineDialog($element, "eventDialog", function(content, trigger, showPopup) {
                             $.ajax({
                                 type: 'GET',
