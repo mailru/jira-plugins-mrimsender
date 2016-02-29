@@ -75,6 +75,12 @@
         <link linkId="amplugin-simple-cal-link-section">/secure/MailRuCalendar.jspa</link>
     </web-item>
 
+    <web-item key="set-my-jira-home-mailru-calendar" name="Set my JIRA home Calendar" i18n-name-key="ru.mail.jira.plugins.calendar.linkTitle" section="system.user.options/set_my_jira_home" weight="77">
+        <description key="ru.mail.jira.plugins.calendar.linkDescription">Set JIRA home to the Mail.Ru Calendar.</description>
+        <label key="ru.mail.jira.plugins.calendar.linkTitle" />
+        <link linkId="set-my-jira-home-mailru-calendar-link">/secure/MailRuCalendar.jspa</link>
+    </web-item>
+
     <servlet key="calendar-view-sevlet" class="ru.mail.jira.plugins.calendar.MailRuCalendarServlet">
         <url-pattern>/mailrucal/view</url-pattern>
     </servlet>

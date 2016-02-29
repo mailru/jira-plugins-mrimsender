@@ -137,7 +137,7 @@
     </build>
     <properties>
         <!-- Check compilation for version 6.3.4 -->
-        <jira.version>6.4.1</jira.version>
+        <jira.version>6.4.11</jira.version>
         <amps.version>5.0.4</amps.version>
         <ao.version>0.19.7</ao.version>
         <fastdev.mvn.command>/usr/share/atlassian-plugin-sdk-5.0.13/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>
