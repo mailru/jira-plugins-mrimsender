@@ -27,6 +27,11 @@
             </button>
         </div>
         <div id="calendar-buttons-dropdown-<%= calendar.id %>" data-id="<%= calendar.id %>" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
+            <div class="aui-dropdown2-section">
+                <ul>
+                    <li><a class="calendar-issue-navigator" href="<%= AJS.contextPath() %>/issues/?<%= calendar.source.split('_')[0] == 'project' ? 'jql=project%3D' + calendar.source.split('_')[1] : 'filter=' + calendar.source.split('_')[1] %>" target="_blank">$i18n.getText( "navigator.title" )</a></li>
+                </ul>
+            </div>
             <% if (calendar.changable) { %>
             <div class="aui-dropdown2-section">
                 <ul>

@@ -21,6 +21,8 @@ public class CalendarOutput {
     @XmlElement
     private String ownerAvatarUrl;
     @XmlElement
+    private String source;
+    @XmlElement
     private boolean changable;
     @XmlElement
     private boolean visible;
@@ -55,6 +57,10 @@ public class CalendarOutput {
 
     public void setOwnerAvatarUrl(String ownerAvatarUrl) {
         this.ownerAvatarUrl = ownerAvatarUrl;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 
     public void setChangable(boolean changable) {

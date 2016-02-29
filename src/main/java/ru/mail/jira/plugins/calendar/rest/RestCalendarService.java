@@ -218,6 +218,7 @@ public class RestCalendarService {
                                                boolean favorite,
                                                int usersCount) {
         CalendarOutput output = new CalendarOutput(calendar);
+        output.setSource(calendar.getSource());
         output.setChangable(changable);
         output.setVisible(visible);
         output.setIsMy(isMy);
