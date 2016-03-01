@@ -298,10 +298,9 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     font-family: inherit;
 }
 
-
 /* Issue Info Popup*/
 
-.calendar-event-info-popup dl:first-of-type  {
+.calendar-event-info-popup dl:first-of-type {
     margin-top: 10px !important;
 }
 
@@ -471,4 +470,14 @@ div.vis-item.vis-box {
 
 .aui-dialog2-small .aui-dialog2-header-main {
     max-width: 350px;
+}
+
+/* Like flag */
+
+.mailrucalendar-like-flag .aui-message {
+    min-height: 100px;
+}
+
+.mailrucalendar-like-flag-container {
+    margin-top: 10px;
 }

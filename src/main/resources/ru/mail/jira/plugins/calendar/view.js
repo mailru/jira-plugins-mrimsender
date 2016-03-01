@@ -1,4 +1,4 @@
-(function($) {
+require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
     AJS.toInit(function() {
         collectTopMailCounterScript();
 
@@ -538,6 +538,8 @@
                 mainView.loadFullCalendar(view, model.get('hideWeekends'));
 
                 Backbone.history.start();
+                if (model.has('lastLikeFlagShown') && moment(model.get('lastLikeFlagShown')).add(3, 'M').isBefore(moment()))
+                    new LikeFlag();
             },
             error: function(model, response) {
                 var msg = "Error while trying to load user preferences.";
@@ -601,7 +603,7 @@
             }
         });
     });
-})(AJS.$);
+});
 
 /**
  * Run statistic counter - like Google Analytics.

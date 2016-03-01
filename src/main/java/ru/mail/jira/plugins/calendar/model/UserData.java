@@ -33,4 +33,8 @@ public interface UserData extends Entity {
     /** Hash for ical url */
     String getIcalUid();
     void setICalUid(String uid);
+
+    /** Last like flag shown */
+    long getLastLikeFlagShown();
+    void setLastLikeFlagShown(long timestamp);
 }

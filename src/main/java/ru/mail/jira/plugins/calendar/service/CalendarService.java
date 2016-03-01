@@ -149,7 +149,7 @@ public class CalendarService {
     }
 
     private void addCalendarToShowed(Calendar calendar, ApplicationUser user) {
-        UserData userData = userDataService.findUserData(user);
+        UserData userData = userDataService.getUserData(user);
         if (userData != null) {
             if (StringUtils.isNotEmpty(userData.getShowedCalendars())) {
                 List<String> calendarIds = new ArrayList<String>(Arrays.asList(userData.getShowedCalendars().split(";")));
@@ -417,7 +417,7 @@ public class CalendarService {
             @Override
             public Boolean doInTransaction() {
                 Calendar calendar = getCalendar(calendarId);
-                UserData userData = userDataService.findUserData(user);
+                UserData userData = userDataService.getUserData(user);
                 if (userData == null) {
                     userData = ao.create(UserData.class);
                     userData.setHideWeekends(false);

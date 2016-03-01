@@ -40,7 +40,12 @@ public class RestUserPreferenceService {
         return new RestExecutor<UserPreferences>() {
             @Override
             protected UserPreferences doAction() throws Exception {
-                return new UserPreferences(userDataService.getUserData(jiraAuthenticationContext.getUser()));
+                ApplicationUser user = jiraAuthenticationContext.getUser();
+                UserData userData = userDataService.getUserData(user);
+                UserPreferences userPreferences = new UserPreferences(userData);
+                if (userDataService.isAdministrator(user))
+                    userPreferences.setLastLikeFlagShown(userData.getLastLikeFlagShown());
+                return userPreferences;
             }
         }.getResponse();
     }
@@ -78,6 +83,19 @@ public class RestUserPreferenceService {
             @Override
             protected Void doAction() throws Exception {
                 userDataService.updateFavorites(jiraAuthenticationContext.getUser(), calendars);
+                return null;
+            }
+        }.getResponse();
+    }
+
+    @PUT
+    @Path("likeFlagShown")
+    public Response updateLastLikeFlagShown() {
+        return new RestExecutor<Void>() {
+            @Override
+            protected Void doAction() throws Exception {
+                ApplicationUser user = jiraAuthenticationContext.getUser();
+                userDataService.updateUserDataLastLikeFlagShown(user);
                 return null;
             }
         }.getResponse();

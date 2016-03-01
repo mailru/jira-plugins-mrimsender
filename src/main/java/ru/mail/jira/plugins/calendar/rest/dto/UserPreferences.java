@@ -16,8 +16,11 @@ public class UserPreferences {
     private boolean hideWeekends;
     @XmlElement
     private String icalUid;
+    @XmlElement
+    private Long lastLikeFlagShown;
 
-    public UserPreferences() { }
+    public UserPreferences() {
+    }
 
     public UserPreferences(UserData userData) {
         if (userData != null) {
@@ -26,5 +29,9 @@ public class UserPreferences {
             this.showTimeInDates = userData.isShowTime();
             this.icalUid = userData.getIcalUid();
         }
+    }
+
+    public void setLastLikeFlagShown(Long lastLikeFlagShown) {
+        this.lastLikeFlagShown = lastLikeFlagShown;
     }
 }

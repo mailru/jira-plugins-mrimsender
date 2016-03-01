@@ -162,7 +162,7 @@
         </div>
         <div id="calendar-add-dropdown" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
             <ul class="aui-list-truncate">
-                <li><a id="calendar-create" href="#">$i18n.getText( "common.words.create" )</a></li>
+                <li><a id="calendar-create" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.create" )</a></li>
                 <li><a id="calendar-import" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.add" )</a></li>
             </ul>
         </div>

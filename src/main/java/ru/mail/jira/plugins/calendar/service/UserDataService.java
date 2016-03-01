@@ -22,6 +22,7 @@ import ru.mail.jira.plugins.calendar.model.UserData;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,7 +56,6 @@ public class UserDataService {
         this.projectRoleManager = projectRoleManager;
     }
 
-    @Nullable
     public UserData getUserData(final ApplicationUser user) {
         return getUserData(user.getKey());
     }
@@ -114,16 +114,20 @@ public class UserDataService {
         });
     }
 
-    @Nullable
     public UserData getUserData(final String userKey) {
         return ao.executeInTransaction(new TransactionCallback<UserData>() {
             @Override
             public UserData doInTransaction() {
                 UserData[] userDatas = ao.find(UserData.class, Query.select().where("USER_KEY = ?", userKey));
-                if (userDatas.length == 0)
-                    return null;
+                UserData userData;
+                if (userDatas.length == 0) {
+                    userData = ao.create(UserData.class);
+                    userData.setUserKey(userKey);
+                    userData.setHideWeekends(false);
+                    userData.setShowTime(false);
+                } else
+                    userData = userDatas[0];
 
-                UserData userData = userDatas[0];
                 if (userData.getIcalUid() == null) {
                     userData.setICalUid(UUID.randomUUID().toString().substring(0, 8));
                     userData.save();
@@ -214,6 +218,20 @@ public class UserDataService {
         });
     }
 
+    public void updateUserDataLastLikeFlagShown(final ApplicationUser user) {
+        ao.executeInTransaction(new TransactionCallback<Void>() {
+            @Override
+            public Void doInTransaction() {
+                UserData userData = getUserData(user);
+                if (userData != null) {
+                    userData.setLastLikeFlagShown(System.currentTimeMillis());
+                    userData.save();
+                }
+                return null;
+            }
+        });
+    }
+
     public void updateFavorites(final ApplicationUser user, final List<Integer> calendarIds) {
         ao.executeInTransaction(new TransactionCallback<Void>() {
             @Override
@@ -261,32 +279,11 @@ public class UserDataService {
 
     private UserData notTransactionalUpdateUserData(String userKey, String view, Boolean hideWeekedns) {
         UserData userData = getUserData(userKey);
-        if (userData == null) {
-            userData = ao.create(UserData.class);
-            userData.setUserKey(userKey);
-            userData.setHideWeekends(false);
-            userData.setShowTime(false);
-            userData.setICalUid(UUID.randomUUID().toString().substring(0, 8));
-        }
         if (view != null)
             userData.setDefaultView(view);
         if (hideWeekedns != null)
             userData.setHideWeekends(hideWeekedns);
         return userData;
-    }
-
-    public boolean isCalendarShowedForCurrentUser(final ApplicationUser user, Calendar calendar) {
-        UserData userData = findUserData(user);
-        if (userData == null || StringUtils.isBlank(userData.getShowedCalendars()))
-            return false;
-        return Arrays.asList(userData.getShowedCalendars().split(";")).contains(String.valueOf(calendar.getID()));
-    }
-
-    public UserData findUserData(final ApplicationUser user) {
-        UserData[] userDatas = ao.find(UserData.class, Query.select().where("USER_KEY = ?", user.getKey()));
-        if (userDatas.length > 0)
-            return userDatas[0];
-        return null;
     }
 
     public List<String> getUserGroups(ApplicationUser user) {
@@ -327,7 +324,7 @@ public class UserDataService {
         return result;
     }
 
-    private boolean isAdministrator(ApplicationUser user) {
+    public boolean isAdministrator(ApplicationUser user) {
         return globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, user);
     }
 }
