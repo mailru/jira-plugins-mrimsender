@@ -45,7 +45,7 @@
                 this.noResult.hide();
                 this.addBtn.attr('disabled', 'disabled');
                 this.dialog.show();
-                if(this.collection.findWhere({isMy: false, favorite: false}))
+                if (this.collection.findWhere({favorite: false}))
                     this._fillSearchResultTable();
                 else {
                     this.adminMessage.hide();
@@ -54,16 +54,13 @@
                 }
             },
             save: function() {
-                $.ajax({
-                    type: 'PUT',
-                    data: {calendars: this.selectedIds},
-                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/favorite',
+                this.model.save({calendars: this.selectedIds}, {
                     success: $.proxy(function() {
                         this.dialog.hide();
                         this.collection.fetch();
                     }, this),
-                    error: function(request) {
-                        alert(request.responseText);
+                    error: function(model, response) {
+                        alert(response.responseText);
                     }
                 });
             },
@@ -72,12 +69,12 @@
                 var checkbox = row.find('input');
                 var selected = checkbox.prop("checked");
                 checkbox.prop('checked', !selected);
-                if(!selected)
+                if (!selected)
                     this.selectedIds.push(checkbox.data('id'));
                 else
                     this.selectedIds = _.without(this.selectedIds, checkbox.data('id'));
 
-                if(this.selectedIds.length)
+                if (this.selectedIds.length)
                     this.addBtn.removeAttr('disabled');
                 else
                     this.addBtn.attr('disabled', 'disabled');
@@ -100,12 +97,12 @@
                     var ownerFullName = calendar.get('ownerFullName');
                     var q = query.toLowerCase();
 
-                    return !calendar.get('isMy') && !calendar.get('favorite') &&
+                    return !calendar.get('hasError') && !calendar.get('favorite') &&
                         (name && name.toLowerCase().indexOf(q) != -1
                         || owner && owner.toLowerCase().indexOf(q) != -1
                         || ownerFullName && ownerFullName.toLowerCase().indexOf(q) != -1);
                 });
-                if(result.length && this._equalsDataArray(this.tableData, result))
+                if (result.length && this._equalsDataArray(this.tableData, result))
                     return;
 
                 this._onStartSearch();
@@ -123,9 +120,9 @@
                 this.tableData = result;
             },
             _equalsDataArray: function(a, b) {
-                if(!a || !b || a.length != b.length)
+                if (!a || !b || a.length != b.length)
                     return false;
-                for(var i = 0; i < a.length; i++)
+                for (var i = 0; i < a.length; i++)
                     if (a[i].id != b[i].id)
                         return false;
                 return true;

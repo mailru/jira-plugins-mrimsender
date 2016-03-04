@@ -5,21 +5,36 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
-public class SourceField {
+public class SelectItemDto {
     @XmlElement
     private String id;
     @XmlElement
     private String text;
     @XmlElement
+    private String type;
+    @XmlElement
     private long avatarId;
 
-    public SourceField(String id, String text) {
+    public SelectItemDto(String id, String text) {
         this(id, text, 0);
     }
 
-    public SourceField(String id, String text, long avatarId) {
+    public SelectItemDto(String id, String text, long avatarId) {
         this.id = id;
         this.text = text;
+        this.avatarId = avatarId;
+    }
+
+    public SelectItemDto(String id, String text, String type) {
+        this.id = id;
+        this.text = text;
+        this.type = type;
+    }
+
+    public SelectItemDto(String id, String text, String type, long avatarId) {
+        this.id = id;
+        this.text = text;
+        this.type = type;
         this.avatarId = avatarId;
     }
 
@@ -29,6 +44,10 @@ public class SourceField {
 
     public String getText() {
         return text;
+    }
+
+    public String getType() {
+        return type;
     }
 
     public long getAvatarId() {

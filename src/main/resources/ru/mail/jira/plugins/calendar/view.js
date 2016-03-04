@@ -1,4 +1,4 @@
-require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
+require(['jquery', 'calendar/like-flag', 'calendar/CalendarDialogView'], function($, LikeFlag, CalendarDialogView) {
     AJS.toInit(function() {
         collectTopMailCounterScript();
 
@@ -62,20 +62,19 @@ require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
             $calendarBlock.toggleClass('calendar-visible', calendar.get('visible'));
 
             mainView.removeEventSource(calendar);
-            if ((calendar.get('isMy') || calendar.get('favorite')) && calendar.get('visible') && !calendar.get('hasError')) {
+            if (calendar.get('favorite') && calendar.get('visible') && !calendar.get('hasError')) {
                 mainView.addEventSource(calendar);
             } else {
                 mainView.changeEventSourceCallback(calendar.id, false, calendar.get('error'));
 
-                if (!calendar.get('isMy') && !calendar.get('favorite')) {
+                if (!calendar.get('favorite'))
                     mainView.removeCalendarFromList(calendar);
-                }
             }
         });
         calendarCollection.on('change:favorite', function(calendar) {
-            if (calendar.get('favorite')) {
+            if (calendar.get('favorite'))
                 mainView.addCalendarToList(calendar);
-            } else if (!calendar.get('isMy'))
+            else
                 mainView.removeCalendarFromList(calendar);
         });
         calendarCollection.on('request', function() {
@@ -155,20 +154,22 @@ require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
                 }
             },
             addCalendarToList: function(calendar) {
-                var type = calendar.get('isMy') ? 'my' : 'favorite';
                 this.$('#mailrucalendar-empty-calendar-list').css('display', 'none');
-                var listBlock = this.$('#calendar-' + type + '-calendar-list');
+                var listBlock = this.$('#calendar-favorite-calendar-list');
                 listBlock.css('display', 'block');
 
-                var sorted = this.collection.sortBy(function(cal) {
-                    return cal.get('name')
+                var sorted = _.sortBy(this.collection.filter(function(cal) {
+                    return cal.get('favorite');
+                }), function(cal) {
+                    return cal.get('name');
                 });
-                var indexPrior = _.indexOf(sorted, calendar) - 1;
-                if (indexPrior > -1) {
-                    var calendarPrior = sorted[indexPrior];
-                    this.$('.calendar-list-item-block[data-id="' + calendarPrior.id + '"]').after(calendarLinkTpl({calendar: calendar.toJSON()}));
-                } else
+                var index = _.indexOf(sorted, calendar);
+                if (sorted.length - 1 == index)
                     listBlock.append(calendarLinkTpl({calendar: calendar.toJSON()}));
+                else {
+                    var calendarNext = sorted[index + 1];
+                    this.$('.calendar-list-item-block[data-id="' + calendarNext.id + '"]').before(calendarLinkTpl({calendar: calendar.toJSON()}));
+                }
 
                 AJS.$("#calendar-buttons-dropdown-" + calendar.id).on({
                     "aui-dropdown2-show": mainView.calendarDropdownShow,
@@ -185,7 +186,7 @@ require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
                     blockContainer.css('display', 'none');
 
                 var calendarListEmpty = !this.collection.find(function(calendar) {
-                    return calendar.get('isMy') || calendar.get('favorite');
+                    return calendar.get('favorite');
                 });
                 calendarListEmpty && $('#mailrucalendar-empty-calendar-list').css('display', 'block');
             },
@@ -311,7 +312,7 @@ require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
                 e.preventDefault();
                 this.$('.aui-page-panel-nav').click();
 
-                var calendarDialogView = new Backbone.View.CalendarDialogView({
+                var calendarDialogView = new CalendarDialogView({
                     model: new CalendarDetail(),
                     collection: this.collection
                 });
@@ -321,7 +322,10 @@ require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
                 e.preventDefault();
                 this.$('.aui-page-panel-nav').click();
 
-                var importView = new Backbone.View.CalendarImportView({collection: calendarCollection});
+                var importView = new Backbone.View.CalendarImportView({
+                    model: userData,
+                    collection: calendarCollection
+                });
                 importView.show();
             },
             editCalendar: function(e) {
@@ -333,7 +337,7 @@ require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
                 var calendarDetail = new CalendarDetail({id: calendarId});
                 calendarDetail.fetch({
                     success: $.proxy(function(model) {
-                        var calendarDialogView = new Backbone.View.CalendarDialogView({
+                        var calendarDialogView = new CalendarDialogView({
                             model: model,
                             collection: this.collection
                         });
@@ -348,11 +352,8 @@ require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
                 e.preventDefault();
                 e.currentTarget.blur();
                 this.startLoadingCalendarsCallback();
-                $.ajax({
-                    type: 'PUT',
-                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/hideWeekends',
+                userData.save({hideWeekends: !userData.get('hideWeekends')}, {
                     success: function() {
-                        userData.set('hideWeekends', !userData.get('hideWeekends'));
                         mainView.finishLoadingCalendarsCallback();
                     },
                     error: function(xhr) {
@@ -375,15 +376,15 @@ require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
                     return;
 
                 var calendarId = $calendarNameLink.closest('div.calendar-list-item-block').data('id');
+                var calendar = calendarCollection.get(calendarId);
 
                 this.startLoadingCalendarsCallback();
                 $calendarNameLink.addClass('not-active');
 
                 $.ajax({
                     type: 'PUT',
-                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendarId + '/visibility',
+                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendarId + '/visibility/' + !calendar.get('visible'),
                     success: function() {
-                        var calendar = calendarCollection.get(calendarId);
                         calendar.set('visible', !calendar.get('visible'));
                     },
                     error: function(request) {
@@ -393,9 +394,7 @@ require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
             },
             setCalendarView: function(viewName) {
                 this.$fullCalendar.fullCalendar('changeView', viewName);
-                $.ajax({
-                    type: 'PUT',
-                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/view?value=' + viewName,
+                userData.save({calendarView: viewName}, {
                     error: function(xhr) {
                         var msg = "Error while trying to update user default view to => " + viewName;
                         if (xhr.responseText)
@@ -538,7 +537,7 @@ require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
                 mainView.loadFullCalendar(view, model.get('hideWeekends'));
 
                 Backbone.history.start();
-                if (model.has('lastLikeFlagShown') && moment(model.get('lastLikeFlagShown')).add(3, 'M').isBefore(moment()))
+                //if (model.has('lastLikeFlagShown') && moment(model.get('lastLikeFlagShown')).add(3, 'M').isBefore(moment()))
                     new LikeFlag();
             },
             error: function(model, response) {
@@ -555,7 +554,6 @@ require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
             silent: true,
             success: function(collection) {
                 var htmlFavoriteCalendars = '';
-                var htmlMyCalendars = '';
                 var eventSources = [];
 
                 if (!!collection.findWhere({visible: true}))
@@ -566,29 +564,22 @@ require(['jquery', 'calendar/like-flag'], function($, LikeFlag) {
                 });
                 _.each(sorted, function(calendar) {
                     var json = calendar.toJSON();
-                    if (calendar.get('isMy'))
-                        htmlMyCalendars += calendarLinkTpl({calendar: json});
-                    else if (calendar.get('visible') || calendar.get('favorite'))
+                    if (calendar.get('visible') || calendar.get('favorite'))
                         htmlFavoriteCalendars += calendarLinkTpl({calendar: json});
                     if (calendar.get('visible') && !calendar.get('hasError'))
                         eventSources.push(AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + calendar.id);
                 });
-
-                if (htmlMyCalendars) {
-                    $('#calendar-my-calendar-list').css('display', 'block');
-                    $('#calendar-my-calendar-list').append(htmlMyCalendars);
-                }
 
                 if (htmlFavoriteCalendars) {
                     $('#calendar-favorite-calendar-list').css('display', 'block');
                     $('#calendar-favorite-calendar-list').append(htmlFavoriteCalendars);
                 }
 
-                if (!htmlFavoriteCalendars && !htmlMyCalendars)
+                if (!htmlFavoriteCalendars)
                     $('#mailrucalendar-empty-calendar-list').css('display', 'block');
 
                 collection.each(function(calendar) {
-                    if (calendar.get('isMy') || calendar.get('visible') || calendar.get('favorite'))
+                    if (calendar.get('visible') || calendar.get('favorite'))
                         AJS.$("#calendar-buttons-dropdown-" + calendar.id).on({
                             "aui-dropdown2-show": mainView.calendarDropdownShow,
                             "aui-dropdown2-hide": mainView.calendarDropdownHide

@@ -7,6 +7,7 @@ import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.project.component.ProjectComponent;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
+import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueInputParameters;
@@ -57,38 +58,51 @@ public class CalendarEventService {
     public static final String RESOLVED_DATE_KEY = "resolved";
     public static final String DUE_DATE_KEY = "due_date";
 
-    private final CalendarService calendarService;
+    private CalendarService calendarService;
+    private CustomFieldManager customFieldManager;
+    private DateTimeFormatter dateTimeFormatter;
+    private FieldLayoutManager fieldLayoutManager;
+    private IssueService issueService;
+    private RendererManager rendererManager;
+    private SearchRequestService searchRequestService;
+    private SearchProvider searchProvider;
 
-    private final CustomFieldManager customFieldManager;
-    private final DateTimeFormatter dateTimeFormatter;
-    private final FieldLayoutManager fieldLayoutManager;
-    private final IssueService issueService;
-    private final RendererManager rendererManager;
-    private final SearchRequestService searchRequestService;
-    private final SearchProvider searchProvider;
-
-    public CalendarEventService(CalendarService calendarService,
-                                CustomFieldManager customFieldManager,
-                                DateTimeFormatter dateTimeFormatter,
-                                FieldLayoutManager fieldLayoutManager,
-                                IssueService issueService,
-                                RendererManager rendererManager,
-                                SearchRequestService searchRequestService,
-                                SearchProvider searchProvider) {
+    public void setCalendarService(CalendarService calendarService) {
         this.calendarService = calendarService;
+    }
+
+    public void setCustomFieldManager(CustomFieldManager customFieldManager) {
         this.customFieldManager = customFieldManager;
+    }
+
+    public void setDateTimeFormatter(DateTimeFormatter dateTimeFormatter) {
         this.dateTimeFormatter = dateTimeFormatter;
+    }
+
+    public void setFieldLayoutManager(FieldLayoutManager fieldLayoutManager) {
         this.fieldLayoutManager = fieldLayoutManager;
+    }
+
+    public void setIssueService(IssueService issueService) {
         this.issueService = issueService;
+    }
+
+    public void setRendererManager(RendererManager rendererManager) {
         this.rendererManager = rendererManager;
+    }
+
+    public void setSearchRequestService(SearchRequestService searchRequestService) {
         this.searchRequestService = searchRequestService;
+    }
+
+    public void setSearchProvider(SearchProvider searchProvider) {
         this.searchProvider = searchProvider;
     }
 
     public List<Event> findEvents(final int calendarId,
                                   final String start,
                                   final String end,
-                                  final ApplicationUser user) throws ParseException, SearchException {
+                                  final ApplicationUser user) throws ParseException, SearchException, GetException {
         return findEvents(calendarId, start, end, user, false);
     }
 
@@ -96,7 +110,7 @@ public class CalendarEventService {
                                   final String start,
                                   final String end,
                                   final ApplicationUser user,
-                                  final boolean includeIssueInfo) throws ParseException, SearchException {
+                                  final boolean includeIssueInfo) throws ParseException, SearchException, GetException {
         Calendar calendarModel = calendarService.getCalendar(calendarId);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String source = calendarModel.getSource();
@@ -111,7 +125,7 @@ public class CalendarEventService {
         }
     }
 
-    public IssueInfo getEventInfo(ApplicationUser user, int calendarId, String eventId) {
+    public IssueInfo getEventInfo(ApplicationUser user, int calendarId, String eventId) throws GetException {
         Calendar calendar = calendarService.getCalendar(calendarId);
         IssueService.IssueResult issueResult = issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId);
         MutableIssue issue = issueResult.getIssue();
@@ -452,12 +466,12 @@ public class CalendarEventService {
             if (extraField.startsWith("customfield_")) {
                 CustomField customField = customFieldManager.getCustomFieldObject(extraField);
                 FieldLayoutItem fieldLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem(customField);
-                if(customField != null) {
+                if (customField != null) {
                     String columnViewHtml = customField.getColumnViewHtml(fieldLayoutItem, new HashMap<String, Object>(), issue);
                     if (StringUtils.isNotEmpty(columnViewHtml))
                         issueInfo.addCustomField(customField.getName(), columnViewHtml);
                 }
-            } else if (extraField.equals(CalendarService.REPORTER)) {
+            } else if (extraField.equals(CalendarServiceImpl.REPORTER)) {
                 if (issue.getReporter() != null) {
                     FieldLayoutItem reporterLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("reporter");
 
@@ -465,44 +479,44 @@ public class CalendarEventService {
                     String columnViewHtml = ((ReporterSystemField) reporterLayoutItem.getOrderableField()).getColumnViewHtml(reporterLayoutItem, new HashMap(), issue);
                     issueInfo.setReporter(columnViewHtml);
                 }
-            } else if (extraField.equals(CalendarService.ASSIGNEE)) {
+            } else if (extraField.equals(CalendarServiceImpl.ASSIGNEE)) {
                 if (issue.getAssignee() != null) {
                     FieldLayoutItem assigneeLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("assignee");
                     String columnViewHtml = ((AssigneeSystemField) assigneeLayoutItem.getOrderableField()).getColumnViewHtml(assigneeLayoutItem, new HashMap(), issue);
                     issueInfo.setAssignee(columnViewHtml);
                 }
-            } else if (extraField.equals(CalendarService.STATUS))
+            } else if (extraField.equals(CalendarServiceImpl.STATUS))
                 issueInfo.setStatus(issue.getStatusObject().getName());
-            else if (extraField.equals(CalendarService.LABELS)) {
+            else if (extraField.equals(CalendarServiceImpl.LABELS)) {
                 if (issue.getLabels() != null && !issue.getLabels().isEmpty()) {
                     FieldLayoutItem labelsLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("labels");
                     String columnViewHtml = ((LabelsSystemField) labelsLayoutItem.getOrderableField()).getColumnViewHtml(labelsLayoutItem, new HashMap(), issue);
                     issueInfo.setLabels(columnViewHtml);
                 }
-            } else if (extraField.equals(CalendarService.COMPONENTS) && issue.getComponentObjects() != null && !issue.getComponentObjects().isEmpty()) {
+            } else if (extraField.equals(CalendarServiceImpl.COMPONENTS) && issue.getComponentObjects() != null && !issue.getComponentObjects().isEmpty()) {
                 List<String> components = new ArrayList<String>();
                 for (ProjectComponent pc : issue.getComponentObjects())
                     components.add(pc.getName());
                 issueInfo.setComponents(components.toString());
-            } else if (extraField.equals(CalendarService.DUEDATE) && issue.getDueDate() != null)
+            } else if (extraField.equals(CalendarServiceImpl.DUEDATE) && issue.getDueDate() != null)
                 issueInfo.setDueDate(userDateTimeFormatter.format(issue.getDueDate()));
-            else if (extraField.equals(CalendarService.ENVIRONMENT) && issue.getEnvironment() != null)
+            else if (extraField.equals(CalendarServiceImpl.ENVIRONMENT) && issue.getEnvironment() != null)
                 issueInfo.setEnvironment(issue.getEnvironment());
-            else if (extraField.equals(CalendarService.PRIORITY) && issue.getPriorityObject() != null) {
+            else if (extraField.equals(CalendarServiceImpl.PRIORITY) && issue.getPriorityObject() != null) {
                 issueInfo.setPriority(issue.getPriorityObject().getName());
                 issueInfo.setPriorityIconUrl(issue.getPriorityObject().getIconUrl());
-            } else if (extraField.equals(CalendarService.RESOLUTION) && issue.getResolutionObject() != null)
+            } else if (extraField.equals(CalendarServiceImpl.RESOLUTION) && issue.getResolutionObject() != null)
                 issueInfo.setResolution(issue.getResolutionObject().getName());
-            else if (extraField.equals(CalendarService.AFFECT) && issue.getAffectedVersions() != null && !issue.getAffectedVersions().isEmpty()) {
+            else if (extraField.equals(CalendarServiceImpl.AFFECT) && issue.getAffectedVersions() != null && !issue.getAffectedVersions().isEmpty()) {
                 List<String> affectVersions = new ArrayList<String>();
                 for (Version ver : issue.getAffectedVersions())
                     affectVersions.add(ver.getName());
                 issueInfo.setAffect(affectVersions.toString());
-            } else if (extraField.equals(CalendarService.CREATED))
+            } else if (extraField.equals(CalendarServiceImpl.CREATED))
                 issueInfo.setCreated(userDateTimeFormatter.format(issue.getCreated()));
-            else if (extraField.equals(CalendarService.UPDATED))
+            else if (extraField.equals(CalendarServiceImpl.UPDATED))
                 issueInfo.setUpdated(userDateTimeFormatter.format(issue.getUpdated()));
-            else if (extraField.equals(CalendarService.DESCRIPTION)) {
+            else if (extraField.equals(CalendarServiceImpl.DESCRIPTION)) {
                 if (StringUtils.isNotEmpty(issue.getDescription())) {
                     String renderedDescription = rendererManager.getRendererForType("atlassian-wiki-renderer").render(issue.getDescription(), null);
                     issueInfo.setDescription(renderedDescription);

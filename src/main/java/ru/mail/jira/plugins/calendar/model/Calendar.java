@@ -1,7 +1,9 @@
 package ru.mail.jira.plugins.calendar.model;
 
 import net.java.ao.Entity;
+import net.java.ao.ManyToMany;
 import net.java.ao.OneToMany;
+import ru.mail.jira.plugins.calendar.model.archive.Share;
 
 public interface Calendar extends Entity {
     String getName();
@@ -17,6 +19,7 @@ public interface Calendar extends Entity {
     void setSource(String source);
 
     @OneToMany
+    @Deprecated
     Share[] getShares();
 
     String getEventStart();
@@ -27,4 +30,7 @@ public interface Calendar extends Entity {
 
     String getDisplayedFields();
     void setDisplayedFields(String displayedFields);
+
+    @OneToMany
+    Permission[] getPermissions();
 }

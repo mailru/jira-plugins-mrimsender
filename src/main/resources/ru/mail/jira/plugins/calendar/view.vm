@@ -27,25 +27,27 @@
             </button>
         </div>
         <div id="calendar-buttons-dropdown-<%= calendar.id %>" data-id="<%= calendar.id %>" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
-            <div class="aui-dropdown2-section">
-                <ul>
-                    <li><a class="calendar-issue-navigator" href="<%= AJS.contextPath() %>/issues/?<%= calendar.source.split('_')[0] == 'project' ? 'jql=project%3D' + calendar.source.split('_')[1] : 'filter=' + calendar.source.split('_')[1] %>" target="_blank">$i18n.getText( "navigator.title" )</a></li>
-                </ul>
-            </div>
-            <% if (calendar.changable) { %>
-            <div class="aui-dropdown2-section">
-                <ul>
-                    <li><a class="calendar-edit" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.edit" )</a></li>
-                    <li><a class="calendar-delete" href="#">$i18n.getText( "common.words.delete" )</a></li>
-                </ul>
-            </div>
+            <% if (calendar.source) { %>
+                <div class="aui-dropdown2-section">
+                    <ul>
+                        <li><a class="calendar-issue-navigator" href="<%= AJS.contextPath() %>/issues/?<%= calendar.source.split('_')[0] == 'project' ? 'jql=project%3D' + calendar.source.split('_')[1] : 'filter=' + calendar.source.split('_')[1] %>" target="_blank">$i18n.getText( "navigator.title" )</a></li>
+                    </ul>
+                </div>
             <% } %>
-            <% if (!calendar.isMy && (calendar.favorite || calendar.visible)) { %>
-            <div class="aui-dropdown2-section">
-                <ul>
-                    <li><a class="calendar-remove" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.removeFavorite" )</a></li>
-                </ul>
-            </div>
+            <% if (calendar.changable) { %>
+                <div class="aui-dropdown2-section">
+                    <ul>
+                        <li><a class="calendar-edit" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.edit" )</a></li>
+                        <li><a class="calendar-delete" href="#">$i18n.getText( "common.words.delete" )</a></li>
+                    </ul>
+                </div>
+            <% } %>
+            <% if (calendar.favorite || calendar.visible) { %>
+                <div class="aui-dropdown2-section">
+                    <ul>
+                        <li><a class="calendar-remove" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.removeFavorite" )</a></li>
+                    </ul>
+                </div>
             <% } %>
         </div>
     </div>
@@ -179,15 +181,7 @@
                 <div class="aui-navgroup-inner" id="mailrucalendar-empty-calendar-list" hidden>
                     $i18n.getText( "ru.mail.jira.plugins.calendar.emptyCalendarList" )
                 </div>
-                <div class="aui-navgroup-inner" id="calendar-my-calendar-list">
-                    <div id="calendar-my-calendar-list-header" class="aui-nav-heading">
-                        <strong>$i18n.getText( "ru.mail.jira.plugins.calendar.myCalendars" )</strong>
-                    </div>
-                </div>
                 <div class="aui-navgroup-inner" id="calendar-favorite-calendar-list">
-                    <div id="calendar-favorite-calendar-list-header" class="aui-nav-heading">
-                        <strong>$i18n.getText( "ru.mail.jira.plugins.calendar.sharedCalendars" )</strong>
-                    </div>
                 </div>
             </nav>
         </div>

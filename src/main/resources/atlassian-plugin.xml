@@ -14,22 +14,26 @@
     <component-import key="ao" interface="com.atlassian.activeobjects.external.ActiveObjects" />
     <ao key="ao-entities">
         <entity>ru.mail.jira.plugins.calendar.model.Calendar</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.UserCalendar</entity>
         <entity>ru.mail.jira.plugins.calendar.model.UserData</entity>
-        <entity>ru.mail.jira.plugins.calendar.model.Share</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.Permission</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.archive.Share</entity>
+
+        <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v2.Version2UpgradeTask</upgradeTask>
+        <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v3.Version3UpgradeTask</upgradeTask>
     </ao>
+    <component key="tx-processor" name="Transactional Annotation Processor" class="com.atlassian.activeobjects.external.TransactionalAnnotationProcessor">
+        <decription>Processes @Transactional annotations.</decription>
+    </component>
 
     <component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
     <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
 
     <component key="calendar-event-service" class="ru.mail.jira.plugins.calendar.service.CalendarEventService" />
-    <component key="calendar-service" class="ru.mail.jira.plugins.calendar.service.CalendarService" />
+    <component key="calendar-service" class="ru.mail.jira.plugins.calendar.service.CalendarServiceImpl" />
     <component key="userData-service" class="ru.mail.jira.plugins.calendar.service.UserDataService" />
-
-    <component key="calendar-migrator" class="ru.mail.jira.plugins.calendar.migrator.CalendarMigrator" />
-    <component key="user-preferences-migrator" class="ru.mail.jira.plugins.calendar.migrator.UserPreferenceMigrator" />
-    <component key="all-data-migrator" class="ru.mail.jira.plugins.calendar.migrator.Migrator" public="true">
-        <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
-    </component>
+    <component key="userCalendar-service" class="ru.mail.jira.plugins.calendar.service.UserCalendarServiceImpl" />
+    <component key="permission-service" class="ru.mail.jira.plugins.calendar.service.PermissionServiceImpl" />
 
     <webwork1 key="calendar-action" class="java.lang.Object" roles-required="use">
         <actions>
@@ -50,8 +54,6 @@
         <dependency>com.atlassian.auiplugin:aui-inline-dialog2</dependency>
         <dependency>com.atlassian.auiplugin:aui-flag</dependency>
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
-
-
 
         <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>
         <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>

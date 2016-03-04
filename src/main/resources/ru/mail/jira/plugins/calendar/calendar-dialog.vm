@@ -1,19 +1,5 @@
 <section role="dialog" id="calendar-dialog" class="aui-layer aui-dialog2" aria-hidden="true">
 
-    <script type="text/template" id="owner-link-template">
-        <% if (owner) { %>
-        <span rel="<%= owner %>" class="user-hover user-avatar calendar-dialog-owner">
-            <span class="aui-avatar aui-avatar-xsmall">
-                <span class="aui-avatar-inner">
-                    <img src="<%= ownerAvatarUrl %>" />
-                </span>
-            </span>
-            <%= ownerFullName %>
-        </span>
-        <% } else %>
-        <span class="calendar-dialog-owner"><%= ownerFullName %></span>
-    </script>
-
     <script type="text/template" id="source-field-template">
         <% if (item.unavailable) { %>
         <span class="calendar-dialog-source-unavailable-source"><%= item.text %></span>
@@ -30,6 +16,58 @@
             <%= item.text %>
     </script>
 
+    <script type="text/template" id="permission-field-template">
+        <% if(item.type == 'USER' || item.type == 'PROJECT_ROLE') { %>
+            <span class="aui-avatar aui-avatar-xsmall">
+                <span class="aui-avatar-inner">
+                    <img src="<%= item.avatarUrl %>" />
+                </span>
+            </span>
+
+        <% } else if(item.type == 'GROUP') { %>
+            <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
+        <% } %>
+        <% if(item.type == 'PROJECT_ROLE') { %>
+            <%= item.text.replace(' - ', '<span class="calendar-dialog-permission-project-role-separator">/</span>') %>
+        <% } else { %>
+            <%= item.text %>
+        <% } %>
+    </script>
+
+    <script type="text/template" id="permission-row-template">
+        <tr data-id="<%= subjectId %>" data-subject-type="<%= subjectType %>">
+            <td class="calendar-dialog-permission-table-subject">
+                <% if(subjectType == 'USER') { %>
+                    <span class="aui-avatar aui-avatar-xsmall">
+                        <span class="aui-avatar-inner">
+                            <img src="<%= avatarUrl %>" />
+                        </span>
+                    </span>
+                    <%= subject %>
+                <% } else if(subjectType == 'GROUP') { %>
+                    <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
+                    <%= subject %>
+                <% } else if(subjectType == 'PROJECT_ROLE') { %>
+                    <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
+                        <span class="aui-avatar-inner">
+                            <img src="<%= avatarUrl %>" />
+                        </span>
+                    </span>
+                    <%= subject.replace(' - ', '<span class="calendar-dialog-permission-project-role-separator">/</span>') %>
+                <% } %>
+            </td>
+            <td class="calendar-dialog-permission-table-access-type">
+                <ul>
+                    <li class="aui-lozenge <%= accessType == 'USE' ? 'aui-lozenge-complete selected' : 'aui-lozenge-subtle' %>" data-access-type="USE">Use</li>
+                    <li class="aui-lozenge <%= accessType == 'ADMIN' ? 'aui-lozenge-complete selected' : 'aui-lozenge-subtle' %>" data-access-type="ADMIN">Admin</li>
+                </ul>
+            </td>
+            <td class="calendar-dialog-permission-table-action">
+                <span class="aui-icon aui-icon-small aui-iconfont-remove">$i18n.getText( "common.words.delete" )</span>
+            </td>
+        </tr>
+    </script>
+
     <script type="text/template" id="color-field-template">
         <div class="calendar-dialog-color-option" style="background:<%= data.id %>"></div>
     </script>
@@ -38,21 +76,28 @@
         <h2 id="calendar-dialog-header" class="aui-dialog2-header-main"></h2>
     </header>
     <div class="aui-dialog2-content">
-        <form id="calendar-dialog-form" class="aui ajs-dirty-warning-exempt">
-            <div id="calendar-dialog-common-fields">
+        <nav class="aui-navgroup aui-navgroup-vertical">
+            <div class="aui-navgroup-inner">
+                <ul class="aui-nav">
+                    <li class="aui-nav-selected">
+                        <a href="#calendar-dialog-common-tab">$i18n.getText( "ru.mail.jira.plugins.calendar.common.general" )</a>
+                    </li>
+                    <li>
+                        <a href="#calendar-dialog-permissions-tab">$i18n.getText( "admin.common.words.permissions" )</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div id="calendar-dialog-common-tab">
+            <form id="calendar-dialog-form" class="aui unsectioned ajs-dirty-warning-exempt">
+                <input class="hidden" type="submit"/>
                 <div id="calendar-dialog-error-panel" class="aui-message aui-message-error hidden"></div>
-                <input type="hidden" id="calendar-dialog-calendar-id">
-                <div class="field-group" id="calendar-dialog-owner-block">
-                    <label>
-                        $i18n.getText( "common.concepts.owner" )
-                    </label>
-                </div>
                 <div class="field-group">
                     <label for="calendar-dialog-name">
                         <span class="aui-icon icon-required"></span>
                         $i18n.getText( "common.words.name" )
                     </label>
-                    <input class="text long-field" type="text" id="calendar-dialog-name" maxlength="254">
+                    <input class="text full-width-field" type="text" id="calendar-dialog-name" maxlength="254">
                     <div id="calendar-dialog-name-error" class="error hidden"></div>
                 </div>
                 <div class="field-group">
@@ -80,7 +125,7 @@
                         <span class="aui-icon icon-required"></span>
                         $i18n.getText( "ru.mail.jira.plugins.calendar.dialog.source" )
                     </label>
-                    <input type="hidden" id="calendar-dialog-source" class="long-field" />
+                    <input type="hidden" id="calendar-dialog-source" class="full-width-field"/>
                     <div id="calendar-dialog-source-error" class="error hidden"></div>
                 </div>
                 <div class="field-group">
@@ -88,41 +133,66 @@
                         <span class="aui-icon icon-required"></span>
                         $i18n.getText( "ru.mail.jira.plugins.calendar.dialog.eventStart" )
                     </label>
-                    <input type="hidden" id="calendar-dialog-event-start" class="long-field calendar-dialog-select">
+                    <input type="hidden" id="calendar-dialog-event-start" class="full-width-field calendar-dialog-select">
                     <div id="calendar-dialog-event-start-error" class="error hidden"></div>
                 </div>
                 <div class="field-group">
                     <label for="calendar-dialog-event-end">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.eventEnd" )</label>
-                    <input type="hidden" id="calendar-dialog-event-end" class="long-field calendar-dialog-select">
+                    <input type="hidden" id="calendar-dialog-event-end" class="full-width-field calendar-dialog-select">
                     <div id="calendar-dialog-event-end-error" class="error hidden"></div>
                 </div>
                 <div class="field-group">
                     <label for="calendar-dialog-displayed-fields">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.fields" )</label>
-                    <input type="hidden" id="calendar-dialog-displayed-fields" class="long-field calendar-dialog-select">
+                    <input type="hidden" id="calendar-dialog-displayed-fields" class="full-width-field calendar-dialog-select">
                     <div id="calendar-dialog-fields-error" class="error hidden"></div>
                 </div>
-            </div>
-
-            <div class="field-group" id="calendar-dialog-shares">
-                <label>$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.sharesFor" )</label>
-                <a href="#" id="calendar-dialog-shared-to" aria-owns="calendar-dialog-shares-dropdown" aria-haspopup="true" class="aui-button aui-style-default aui-dropdown2-trigger">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.shareTo" )</a>
-                <div id="calendar-dialog-shares-dropdown" class="aui-style-default aui-dropdown2">
+            </form>
+        </div>
+        <div id="calendar-dialog-permissions-tab">
+            <form id="calendar-dialog-form" class="aui unsectioned ajs-dirty-warning-exempt">
+                <div id="calendar-dialog-permission-table-error-panel" class="aui-message aui-message-error hidden"></div>
+                <table id="calendar-dialog-permission-table" class="aui aui-table-rowhover">
+                    <thead>
+                        <tr>
+                            <th class="calendar-dialog-permission-table-subject">
+                                <input type="hidden" class="full-width-field" id="calendar-dialog-permission-table-subject" data-placeholder="$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.users.groups.roles" )"/>
+                            </th>
+                            <th class="calendar-dialog-permission-table-access-type">
+                                <button id="calendar-dialog-permission-table-access-type" class="aui-button aui-dropdown2-trigger" aria-owns="calendar-dialog-permission-table-access-type-dropdown" aria-haspopup="true">$i18n.getText( "ru.mail.jira.plugins.calendar.common.use" )</button>
+                            </th>
+                            <th class="calendar-dialog-permission-table-action">
+                                <button id="calendar-dialog-permission-table-add" class="aui-button">$i18n.getText( "common.words.add" )</button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><i>$i18n.getText( "admin.global.permissions.administer" )</i></td>
+                            <td>
+                                <ul>
+                                    <li class="aui-lozenge aui-lozenge-subtle" disabled>$i18n.getText( "ru.mail.jira.plugins.calendar.common.use" )</li>
+                                    <li class="aui-lozenge aui-lozenge-complete" disabled>$i18n.getText( "ru.mail.jira.plugins.calendar.common.admin" )</li>
+                                </ul>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div id="calendar-dialog-permission-table-access-type-dropdown" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
                     <ul class="aui-list-truncate">
-                        <li><a href="#" id="calendar-dialog-shares-group">$i18n.getText( "admin.common.words.group" )</a></li>
-                        <li><a href="#" id="calendar-dialog-shares-project-role">$i18n.getText( "admin.common.words.projectrole" )</a></li>
+                        <li><a data-access-type="USE">$i18n.getText( "ru.mail.jira.plugins.calendar.common.use" )</a></li>
+                        <li><a data-access-type="ADMIN">$i18n.getText( "ru.mail.jira.plugins.calendar.common.admin" )</a></li>
                     </ul>
                 </div>
-
-##              Don't delete this empty div
-                <div></div>
-            </div>
-            <input class="hidden" type="submit" />
-        </form>
+                <input class="hidden" type="submit"/>
+            </form>
+        </div>
     </div>
     <footer class="aui-dialog2-footer" style="width: 100%">
         <div class="aui-dialog2-footer-actions">
             <button id="calendar-dialog-ok" class="aui-button aui-button-primary"></button>
             <button id="calendar-dialog-cancel" class="aui-button aui-button-link">$i18n.getText( "common.words.cancel" )</button>
         </div>
+        <div class="aui-dialog2-footer-hint"></div>
     </footer>
 </section>

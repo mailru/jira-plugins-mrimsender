@@ -1,13 +1,14 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
 import ru.mail.jira.plugins.calendar.model.Calendar;
+import ru.mail.jira.plugins.calendar.model.UserCalendar;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
-public class CalendarOutput {
+public class CalendarDto {
     @XmlElement
     private int id;
     @XmlElement
@@ -27,10 +28,6 @@ public class CalendarOutput {
     @XmlElement
     private boolean visible;
     @XmlElement
-    private boolean isMy;
-    @XmlElement
-    private boolean fromOthers;
-    @XmlElement
     private boolean favorite;
     @XmlElement
     private boolean hasError;
@@ -39,12 +36,22 @@ public class CalendarOutput {
     @XmlElement
     private Integer usersCount;
 
-    public CalendarOutput() { }
+    public CalendarDto() {
+    }
 
-    public CalendarOutput(Calendar calendar) {
-        this.id = calendar.getID();
-        this.name = calendar.getName();
-        this.color = calendar.getColor();
+    public CalendarDto(UserCalendar userCalendar, Calendar calendar) {
+        if (userCalendar != null) {
+            this.id = userCalendar.getCalendarId();
+            this.name = userCalendar.getName();
+            this.color = userCalendar.getColor();
+            if (calendar != null)
+                this.source = calendar.getSource();
+        } else {
+            this.id = calendar.getID();
+            this.name = calendar.getName();
+            this.color = calendar.getColor();
+            this.source = calendar.getSource();
+        }
     }
 
     public void setOwner(String owner) {
@@ -69,14 +76,6 @@ public class CalendarOutput {
 
     public void setVisible(boolean visible) {
         this.visible = visible;
-    }
-
-    public void setIsMy(boolean isMy) {
-        this.isMy = isMy;
-    }
-
-    public void setFromOthers(boolean fromOthers) {
-        this.fromOthers = fromOthers;
     }
 
     public void setFavorite(boolean favorite) {

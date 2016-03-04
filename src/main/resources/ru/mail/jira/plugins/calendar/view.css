@@ -87,10 +87,6 @@
     color: #707070;
 }
 
-#calendar-my-calendar-list {
-    margin-bottom: 10px;
-}
-
 .calendar-view-page-panel .aui-page-panel-nav {
     width: 350px;
     border-left: 1px solid #cccccc;
@@ -107,18 +103,6 @@
 
 #calendar-favorite-calendar-list {
     display: none;
-}
-
-#calendar-favorite-calendar-list-header {
-    padding-left: 7px !important;
-}
-
-#calendar-my-calendar-list {
-    display: none;
-}
-
-#calendar-my-calendar-list-header {
-    padding-left: 7px !important;
 }
 
 .aui-nav-item-label {
@@ -197,25 +181,24 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 
 /* Dialog */
 
-#calendar-dialog, #calendar-feed-dialog {
+#calendar-feed-dialog {
     width: 630px;
+}
+
+#calendar-dialog {
+    width: 780px;
+}
+
+#calendar-dialog .aui-dialog2-content {
+    min-height: 350px;
 }
 
 #calendar-dialog form {
     margin: 0;
-}
-
-#calendar-dialog-common-fields {
-    border-bottom: 1px solid #ddd;
-    margin-bottom: 10px;
-}
-
-#calendar-dialog-form .short-field {
-    width: 75px;
-}
-
-#calendar-dialog .long-field {
-    width: 400px !important;
+    max-height: 300px;
+    padding: 10px 20px 20px 20px;
+    overflow: hidden;
+    overflow-y: scroll;
 }
 
 .calendar-dialog-color-option {
@@ -226,39 +209,105 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     height: 11px;
 }
 
-#calendar-dialog-shares-dropdown {
-    z-index: 9999;
-}
-
-.calendar-dialog-shares-header {
-    margin-top: 0 !important;
-}
-
 .calendar-dialog-source-unavailable-filter,
 .calendar-dialog-source-unavailable-project,
 .calendar-dialog-source-unavailable-source {
     font-style: italic;
 }
 
-.calendar-dialog-shared-project {
-    margin-bottom: 10px;
-    max-width: 200px !important;
-}
-
-.calendar-dialog-shared-role {
-    margin-bottom: 10px;
-    margin-left: 10px;
-    max-width: 190px !important;
-    width: 190px !important;
-}
-
-.calendar-dialog-share-delete {
-    margin-left: 4px !important;
-    vertical-align: top !important;
-}
-
 .select2-container-multi .select2-choices .select2-search-field input {
     padding: 0;
+}
+
+#calendar-dialog .aui-dialog2-content {
+    display: table;
+    padding: 0;
+}
+
+#calendar-dialog .aui-navgroup {
+    border-right: 1px solid #ccc;
+    box-sizing: border-box;
+    display: table-cell;
+    width: 25%;
+    padding: 10px 10px 20px 10px;
+    vertical-align: top;
+}
+
+#calendar-dialog-common-tab,
+#calendar-dialog-permissions-tab {
+    display: table-cell;
+    width: 600px;
+}
+
+#calendar-dialog-permission-table thead tr:first-child {
+    background-color: #f0f0f0;
+}
+
+#calendar-dialog-permission-table tbody > tr:hover .calendar-dialog-permission-table-action .aui-icon {
+    visibility: visible;
+}
+
+#calendar-dialog-permission-table tbody > tr .calendar-dialog-permission-table-action .aui-icon {
+    visibility: hidden;
+}
+
+#calendar-dialog-permission-table .calendar-dialog-permission-table-subject {
+    width: 360px;
+}
+
+.calendar-dialog-permission-project-role-separator {
+    padding: 0 5px;
+    color: #999;
+}
+
+#calendar-dialog-permission-table-access-type {
+    width: 90px;
+}
+
+#calendar-dialog-permission-table .calendar-dialog-permission-table-access-type {
+    width: 90px;
+}
+
+#calendar-dialog-permission-table-access-type-dropdown ul {
+    list-style-type: none;
+}
+
+#calendar-dialog-permission-table li.aui-lozenge {
+    cursor: pointer;
+}
+
+#calendar-dialog-permission-table li.aui-lozenge[disabled] {
+    opacity: 0.5;
+    cursor: default;
+}
+
+#calendar-dialog-permission-table-access-type-dropdown {
+    z-index: 9999;
+}
+
+#calendar-dialog-permission-table td > ul {
+    padding-left: 0;
+}
+
+#calendar-dialog-permission-table .calendar-dialog-permission-table-action {
+    text-align: right;
+}
+
+#calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon {
+    cursor: pointer;
+    color: #bbb;
+}
+
+#calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon:hover {
+    color: #505050;
+}
+
+#calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon[disabled] {
+    background: #f5f5f5;
+    border-color: #dddddd;
+    box-shadow: none;
+    color: #999;
+    cursor: default;
 }
 
 /* Full Calendar */
@@ -283,15 +332,6 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 .calendar-dialog-owner {
     vertical-align: -webkit-baseline-middle;
     vertical-align: -moz-middle-with-baseline;
-}
-
-#calendar-dialog-shares .error {
-    margin-top: 0 !important;
-}
-
-#calendar-dialog-shares .calendar-dialog-shared-group,
-#calendar-dialog-shares .error {
-    margin-bottom: 10px;
 }
 
 .fc-button {
@@ -369,7 +409,7 @@ a.calendar-name .aui-iconfont-error {
     color: #707070;
 }
 
-#calendar-dialog-common-fields .long-field.aui-select2-container .select2-choices {
+#calendar-dialog-form .long-field.aui-select2-container .select2-choices {
     max-width: 400px;
 }
 
@@ -480,4 +520,52 @@ div.vis-item.vis-box {
 
 .mailrucalendar-like-flag-container {
     margin-top: 10px;
+}
+
+.mailrucalendar-like-flag-rating {
+    width: 135px;
+    height: 33px;
+    margin: 5px 0;
+}
+
+/* :not(:checked) is a filter, so that browsers that don’t support :checked don’t
+   follow these rules. Every browser that supports :checked also supports :not(), so
+   it doesn’t make the test unnecessarily selective */
+.mailrucalendar-like-flag-rating:not(:checked) > input {
+    position: absolute;
+    top: -9999px;
+    clip: rect(0, 0, 0, 0);
+}
+
+.mailrucalendar-like-flag-rating:not(:checked) > label {
+    float: right;
+    width: 1em;
+    padding: 0 .1em;
+    overflow: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+    font-size: 2em;
+    line-height: 1.2;
+    color: #ddd;
+}
+
+.mailrucalendar-like-flag-rating:not(:checked) > label:before {
+    content: '\2605';
+}
+
+.mailrucalendar-like-flag-rating > input:checked ~ label {
+    color: gold;
+}
+
+.mailrucalendar-like-flag-rating:not(:checked) > label:hover,
+.mailrucalendar-like-flag-rating:not(:checked) > label:hover ~ label {
+    color: gold;
+}
+
+.mailrucalendar-like-flag-rating > input:checked + label:hover,
+.mailrucalendar-like-flag-rating > input:checked + label:hover ~ label,
+.mailrucalendar-like-flag-rating > input:checked ~ label:hover,
+.mailrucalendar-like-flag-rating > input:checked ~ label:hover ~ label,
+.mailrucalendar-like-flag-rating > label:hover ~ input:checked ~ label {
+    color: gold;
 }
