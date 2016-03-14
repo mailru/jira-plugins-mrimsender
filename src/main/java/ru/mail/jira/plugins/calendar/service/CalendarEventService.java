@@ -48,6 +48,8 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.atlassian.jira.issue.search.constants.SystemSearchConstants.forUpdatedDate;
+
 public class CalendarEventService {
     private final static Logger log = LoggerFactory.getLogger(CalendarEventService.class);
 
@@ -260,7 +262,7 @@ public class CalendarEventService {
             CustomField customField = customFieldManager.getCustomFieldObject(field);
             if (customField == null)
                 throw new IllegalArgumentException("Bad custom field id => " + field);
-            jcb.addDateRangeCondition("cf[" + customField.getIdAsLong() + "]", startTime, endTime);
+            jcb.addStringRangeCondition("cf[" + customField.getIdAsLong() + "]", dateTimeFormatter.format(startTime), dateTimeFormatter.format(endTime));
         } else
             throw new IllegalArgumentException("Bad field => " + field);
     }

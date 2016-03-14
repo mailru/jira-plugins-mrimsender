@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+    <ModulePrefs title="__MSG_gadget.days.left.title__"
+                 directory_title="__MSG_gadget.days.left.title__"
+                 description="__MSG_gadget.days.left.description__">
+        <Require feature="dynamic-height"/>
+        <Require feature="oauthpopup"/>
+        <Require feature="setprefs"/>
+        <Require feature="settitle"/>
+        <Optional feature="atlassian.util"/>
+        <Optional feature="gadget-directory">
+            <Param name="categories">
+                JIRA           
+            </Param>
+        </Optional>
+        #oauth
+    </ModulePrefs>
+    <UserPref name="calendar" datatype="" default_value="false"/>
+    <UserPref name="projectId" datatype="hidden"/>
+    <UserPref name="version" datatype="hidden" default_value="auto"/>
+    <Content type="html">
+        <![CDATA[
+            <p>Hello world</p>
+        ]]>
+    </Content>
+</Module>

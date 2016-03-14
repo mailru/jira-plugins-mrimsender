@@ -7,6 +7,8 @@
         <param name="atlassian-data-center-compatible">true</param>
     </plugin-info>
 
+    <gadget key="mailru-calendar-gadget" location="ru/mail/jira/plugins/calendar/gadget/calendar-gadget.xml"/>
+
     <resource type="i18n" name="i18n" location="ru.mail.jira.plugins.calendar.mailrucalendar"/>
 
     <rest key="mailrucalendar-rest" path="/mailrucalendar" version="1.0" />
