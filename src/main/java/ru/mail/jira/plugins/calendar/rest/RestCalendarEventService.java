@@ -65,6 +65,8 @@ public class RestCalendarEventService {
                               @QueryParam("start") final String start,
                               @QueryParam("end") final String end) {
         try {
+            if (log.isDebugEnabled())
+                log.debug("getEvents with params. calendarId={}, start={}, end={}", calendarId, start, end);
             List<Event> result = calendarEventService.findEvents(calendarId, start, end, jiraAuthenticationContext.getUser());
             CacheControl cacheControl = new CacheControl();
             cacheControl.setNoCache(true);
