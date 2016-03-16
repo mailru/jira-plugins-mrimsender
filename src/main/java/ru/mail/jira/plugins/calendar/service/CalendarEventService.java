@@ -48,8 +48,6 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.atlassian.jira.issue.search.constants.SystemSearchConstants.forUpdatedDate;
-
 public class CalendarEventService {
     private final static Logger log = LoggerFactory.getLogger(CalendarEventService.class);
 

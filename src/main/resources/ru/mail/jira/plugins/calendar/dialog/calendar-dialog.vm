@@ -16,50 +16,36 @@
             <%= item.text %>
     </script>
 
-    <script type="text/template" id="permission-field-template">
-        <% if(item.type == 'USER' || item.type == 'PROJECT_ROLE') { %>
-            <span class="aui-avatar aui-avatar-xsmall">
-                <span class="aui-avatar-inner">
-                    <img src="<%= item.avatarUrl %>" />
-                </span>
-            </span>
-
-        <% } else if(item.type == 'GROUP') { %>
-            <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
-        <% } %>
-        <% if(item.type == 'PROJECT_ROLE') { %>
-            <%= item.text.replace(' - ', '<span class="calendar-dialog-permission-project-role-separator">/</span>') %>
-        <% } else { %>
-            <%= item.text %>
-        <% } %>
-    </script>
-
     <script type="text/template" id="permission-row-template">
         <tr data-id="<%= subjectId %>" data-subject-type="<%= subjectType %>">
             <td class="calendar-dialog-permission-table-subject">
-                <% if(subjectType == 'USER') { %>
-                    <span class="aui-avatar aui-avatar-xsmall">
-                        <span class="aui-avatar-inner">
-                            <img src="<%= avatarUrl %>" />
+                <div class="mailrucalendar-table-icon-column">
+                    <% if(subjectType == 'USER') { %>
+                        <div rel="<%= subjectId %>" class="user-hover">
+                            <span class="aui-avatar aui-avatar-xsmall mailrucalendar-table-icon">
+                                <span class="aui-avatar-inner">
+                                    <img src="<%= avatarUrl %>" />
+                                </span>
+                            </span>
+                            <%= subject %>
+                        </div>
+                    <% } else if(subjectType == 'GROUP') { %>
+                        <span class="aui-icon aui-icon-small aui-iconfont-group icon-default mailrucalendar-table-icon"></span>
+                        <%= subject %>
+                    <% } else if(subjectType == 'PROJECT_ROLE') { %>
+                        <span class="aui-avatar aui-avatar-project aui-avatar-xsmall mailrucalendar-table-icon">
+                            <span class="aui-avatar-inner">
+                                <img src="<%= avatarUrl %>" />
+                            </span>
                         </span>
-                    </span>
-                    <%= subject %>
-                <% } else if(subjectType == 'GROUP') { %>
-                    <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
-                    <%= subject %>
-                <% } else if(subjectType == 'PROJECT_ROLE') { %>
-                    <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
-                        <span class="aui-avatar-inner">
-                            <img src="<%= avatarUrl %>" />
-                        </span>
-                    </span>
-                    <%= subject.replace(' - ', '<span class="calendar-dialog-permission-project-role-separator">/</span>') %>
-                <% } %>
+                        <%= subject.replace(' - ', '<span class="calendar-dialog-permission-project-role-separator">/</span>') %>
+                    <% } %>
+                </div>
             </td>
             <td class="calendar-dialog-permission-table-access-type">
                 <ul>
-                    <li class="aui-lozenge <%= accessType == 'USE' ? 'aui-lozenge-complete selected' : 'aui-lozenge-subtle' %>" data-access-type="USE">Use</li>
-                    <li class="aui-lozenge <%= accessType == 'ADMIN' ? 'aui-lozenge-complete selected' : 'aui-lozenge-subtle' %>" data-access-type="ADMIN">Admin</li>
+                    <li class="aui-lozenge <%= accessType == 'USE' ? 'aui-lozenge-complete selected' : 'aui-lozenge-subtle' %>" data-access-type="USE">$i18n.getText( "ru.mail.jira.plugins.calendar.common.use" )</li>
+                    <li class="aui-lozenge <%= accessType == 'ADMIN' ? 'aui-lozenge-complete selected' : 'aui-lozenge-subtle' %>" data-access-type="ADMIN">$i18n.getText( "ru.mail.jira.plugins.calendar.common.admin" )</li>
                 </ul>
             </td>
             <td class="calendar-dialog-permission-table-action">
@@ -160,7 +146,7 @@
                             <th class="calendar-dialog-permission-table-access-type">
                                 <button id="calendar-dialog-permission-table-access-type" class="aui-button aui-dropdown2-trigger" aria-owns="calendar-dialog-permission-table-access-type-dropdown" aria-haspopup="true">$i18n.getText( "ru.mail.jira.plugins.calendar.common.use" )</button>
                             </th>
-                            <th class="calendar-dialog-permission-table-action">
+                            <th>
                                 <button id="calendar-dialog-permission-table-add" class="aui-button">$i18n.getText( "common.words.add" )</button>
                             </th>
                         </tr>
@@ -180,8 +166,8 @@
                 </table>
                 <div id="calendar-dialog-permission-table-access-type-dropdown" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
                     <ul class="aui-list-truncate">
-                        <li><a data-access-type="USE">$i18n.getText( "ru.mail.jira.plugins.calendar.common.use" )</a></li>
-                        <li><a data-access-type="ADMIN">$i18n.getText( "ru.mail.jira.plugins.calendar.common.admin" )</a></li>
+                        <li><a href="#" class="aui-dropdown2-radio checked" data-access-type="USE">$i18n.getText( "ru.mail.jira.plugins.calendar.common.use" )</a></li>
+                        <li><a href="#" class="aui-dropdown2-radio" data-access-type="ADMIN">$i18n.getText( "ru.mail.jira.plugins.calendar.common.admin" )</a></li>
                     </ul>
                 </div>
                 <input class="hidden" type="submit"/>

@@ -1523,22 +1523,13 @@ var Hammer = require('./module/hammer');
  */
 exports.onTouch = function (hammer, callback) {
   callback.inputHandler = function (event) {
-    if (event.isFirst && !isTouching) {
+    if (event.isFirst) {
       callback(event);
-
-      isTouching = true;
-      setTimeout(function () {
-        isTouching = false;
-      }, 0);
     }
   };
 
   hammer.on('hammer.input', callback.inputHandler);
 };
-
-// isTouching is true while a touch action is being emitted
-// this is a hack to prevent `touch` from being fired twice
-var isTouching = false;
 
 /**
  * Register a release event, taking place after a gesture
@@ -1547,22 +1538,13 @@ var isTouching = false;
  */
 exports.onRelease = function (hammer, callback) {
   callback.inputHandler = function (event) {
-    if (event.isFinal && !isReleasing) {
+    if (event.isFinal) {
       callback(event);
-
-      isReleasing = true;
-      setTimeout(function () {
-        isReleasing = false;
-      }, 0);
     }
   };
 
   return hammer.on('hammer.input', callback.inputHandler);
 };
-
-// isReleasing is true while a release action is being emitted
-// this is a hack to prevent `release` from being fired twice
-var isReleasing = false;
 
 /**
  * Unregister a touch event, taking place before a gesture
@@ -1579,6 +1561,26 @@ exports.offTouch = function (hammer, callback) {
  * @param {function} callback   Callback, called as callback(event)
  */
 exports.offRelease = exports.offTouch;
+
+/**
+ * Hack the PinchRecognizer such that it doesn't prevent default behavior
+ * for vertical panning.
+ *
+ * Yeah ... this is quite a hack ... see https://github.com/hammerjs/hammer.js/issues/932
+ *
+ * @param {Hammer.Pinch} pinchRecognizer
+ * @return {Hammer.Pinch} returns the pinchRecognizer
+ */
+exports.disablePreventDefaultVertically = function (pinchRecognizer) {
+  var TOUCH_ACTION_PAN_Y = 'pan-y';
+
+  pinchRecognizer.getTouchAction = function () {
+    // default method returns [TOUCH_ACTION_NONE]
+    return [TOUCH_ACTION_PAN_Y];
+  };
+
+  return pinchRecognizer;
+};
 
 },{"./module/hammer":6}],6:[function(require,module,exports){
 // Only load hammer.js when in a browser environment
@@ -2154,6 +2156,8 @@ var ColorPicker = (function () {
   }, {
     key: '_hide',
     value: function _hide() {
+      var _this = this;
+
       var storePrevious = arguments.length <= 0 || arguments[0] === undefined ? true : arguments[0];
 
       // store the previous color for next time;
@@ -2168,10 +2172,13 @@ var ColorPicker = (function () {
       this.frame.style.display = 'none';
 
       // call the closing callback, restoring the onclick method.
-      if (this.closeCallback !== undefined) {
-        this.closeCallback();
-        this.closeCallback = undefined;
-      }
+      // this is in a setTimeout because it will trigger the show again before the click is done.
+      setTimeout(function () {
+        if (_this.closeCallback !== undefined) {
+          _this.closeCallback();
+          _this.closeCallback = undefined;
+        }
+      }, 0);
     }
 
     /**
@@ -2455,7 +2462,7 @@ var ColorPicker = (function () {
   }, {
     key: '_bindHammer',
     value: function _bindHammer() {
-      var _this = this;
+      var _this2 = this;
 
       this.drag = {};
       this.pinch = {};
@@ -2463,19 +2470,19 @@ var ColorPicker = (function () {
       this.hammer.get('pinch').set({ enable: true });
 
       hammerUtil.onTouch(this.hammer, function (event) {
-        _this._moveSelector(event);
+        _this2._moveSelector(event);
       });
       this.hammer.on('tap', function (event) {
-        _this._moveSelector(event);
+        _this2._moveSelector(event);
       });
       this.hammer.on('panstart', function (event) {
-        _this._moveSelector(event);
+        _this2._moveSelector(event);
       });
       this.hammer.on('panmove', function (event) {
-        _this._moveSelector(event);
+        _this2._moveSelector(event);
       });
       this.hammer.on('panend', function (event) {
-        _this._moveSelector(event);
+        _this2._moveSelector(event);
       });
     }
 
@@ -3788,13 +3795,15 @@ Core.prototype._create = function (container) {
   this.dom.rightContainer.appendChild(this.dom.shadowBottomRight);
 
   this.on('rangechange', (function () {
-    this._redraw(); // this allows overriding the _redraw method
+    if (this.initialDrawDone === true) {
+      this._redraw(); // this allows overriding the _redraw method
+    }
   }).bind(this));
   this.on('touch', this._onTouch.bind(this));
   this.on('pan', this._onDrag.bind(this));
 
   var me = this;
-  this.on('change', function (properties) {
+  this.on('_change', function (properties) {
     if (properties && properties.queue == true) {
       // redraw once on next tick
       if (!me._redrawTimer) {
@@ -3812,8 +3821,9 @@ Core.prototype._create = function (container) {
   // create event listeners for all interesting events, these events will be
   // emitted via emitter
   this.hammer = new Hammer(this.dom.root);
-  this.hammer.get('pinch').set({ enable: true });
-  this.hammer.get('pan').set({ threshold: 5, direction: 30 }); // 30 is ALL_DIRECTIONS in hammer.
+  var pinchRecognizer = this.hammer.get('pinch').set({ enable: true });
+  hammerUtil.disablePreventDefaultVertically(pinchRecognizer);
+  this.hammer.get('pan').set({ threshold: 5, direction: Hammer.DIRECTION_HORIZONTAL });
   this.listeners = {};
 
   var events = ['tap', 'doubletap', 'press', 'pinch', 'pan', 'panstart', 'panmove', 'panend'
@@ -3874,6 +3884,7 @@ Core.prototype._create = function (container) {
   this.touch = {};
 
   this.redrawCount = 0;
+  this.initialDrawDone = false;
 
   // attach the root panel to the provided container
   if (!container) throw new Error('No container provided');
@@ -3911,6 +3922,7 @@ Core.prototype.setOptions = function (options) {
     var fields = ['width', 'height', 'minHeight', 'maxHeight', 'autoResize', 'start', 'end', 'clickToUse', 'dataAttributes', 'hiddenDates', 'locale', 'locales', 'moment', 'throttleRedraw'];
     util.selectiveExtend(fields, this.options, options);
 
+    this.options.orientation = { item: undefined, axis: undefined };
     if ('orientation' in options) {
       if (typeof options.orientation === 'string') {
         this.options.orientation = {
@@ -4004,11 +4016,11 @@ Core.prototype.setOptions = function (options) {
   // override redraw with a throttled version
   if (!this._origRedraw) {
     this._origRedraw = this._redraw.bind(this);
+    this._redraw = util.throttle(this._origRedraw, this.options.throttleRedraw);
+  } else {
+    // Not the initial run: redraw everything
+    this._redraw();
   }
-  this._redraw = util.throttle(this._origRedraw, this.options.throttleRedraw);
-
-  // redraw everything
-  this._redraw();
 };
 
 /**
@@ -4305,12 +4317,13 @@ Core.prototype.redraw = function () {
  * @protected
  */
 Core.prototype._redraw = function () {
+  this.redrawCount++;
   var resized = false;
   var options = this.options;
   var props = this.props;
   var dom = this.dom;
 
-  if (!dom) return; // when destroyed
+  if (!dom || !dom.container || dom.container.clientWidth == 0) return; // when destroyed, or invisible
 
   DateUtil.updateHiddenDates(this.options.moment, this.body, this.options.hiddenDates);
 
@@ -4442,21 +4455,31 @@ Core.prototype._redraw = function () {
   dom.shadowTopRight.style.visibility = visibilityTop;
   dom.shadowBottomRight.style.visibility = visibilityBottom;
 
+  // enable/disable vertical panning
+  var contentsOverflow = this.props.center.height > this.props.centerContainer.height;
+  this.hammer.get('pan').set({
+    direction: contentsOverflow ? Hammer.DIRECTION_ALL : Hammer.DIRECTION_HORIZONTAL
+  });
+
   // redraw all components
   this.components.forEach(function (component) {
     resized = component.redraw() || resized;
   });
+  var MAX_REDRAW = 5;
   if (resized) {
-    // keep repainting until all sizes are settled
-    var MAX_REDRAWS = 3; // maximum number of consecutive redraws
-    if (this.redrawCount < MAX_REDRAWS) {
-      this.redrawCount++;
-      this._redraw();
+    if (this.redrawCount < MAX_REDRAW) {
+      this.body.emitter.emit('_change');
+      return;
     } else {
       console.log('WARNING: infinite loop in redraw?');
     }
+  } else {
     this.redrawCount = 0;
   }
+  this.initialDrawDone = true;
+
+  //Emit public 'changed' event for UI updates, see issue #1592
+  this.body.emitter.emit("changed");
 };
 
 // TODO: deprecated since version 1.1.0, remove some day
@@ -4581,13 +4604,19 @@ Core.prototype._startAutoResize = function () {
         me.props.lastWidth = me.dom.root.offsetWidth;
         me.props.lastHeight = me.dom.root.offsetHeight;
 
-        me.emit('change');
+        me.body.emitter.emit('_change');
       }
     }
   };
 
   // add event listener to window resize
   util.addEventListener(window, 'resize', this._onResize);
+
+  //Prevent initial unnecessary redraw
+  if (me.dom.root) {
+    me.props.lastWidth = me.dom.root.offsetWidth;
+    me.props.lastHeight = me.dom.root.offsetHeight;
+  }
 
   this.watchTimer = setInterval(this._onResize, 1000);
 };
@@ -4644,7 +4673,6 @@ Core.prototype._onDrag = function (event) {
   var newScrollTop = this._setScrollTop(this.touch.initialScrollTop + delta);
 
   if (newScrollTop != oldScrollTop) {
-    this._redraw(); // TODO: this causes two redraws when dragging, the other is triggered by rangechange already
     this.emit("verticalDrag");
   }
 };
@@ -5598,10 +5626,13 @@ Range.prototype._onDrag = function (event) {
   this.previousDelta = delta;
   this._applyRange(newStart, newEnd);
 
+  var startDate = new Date(this.start);
+  var endDate = new Date(this.end);
+
   // fire a rangechange event
   this.body.emitter.emit('rangechange', {
-    start: new Date(this.start),
-    end: new Date(this.end),
+    start: startDate,
+    end: endDate,
     byUser: true
   });
 };
@@ -6710,6 +6741,25 @@ module.exports = TimeStep;
 },{"../module/moment":7,"../util":33,"./DateUtil":14}],18:[function(require,module,exports){
 'use strict';
 
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _sharedConfigurator = require('../shared/Configurator');
+
+var _sharedConfigurator2 = _interopRequireDefault(_sharedConfigurator);
+
+var _sharedValidator = require('../shared/Validator');
+
+var _sharedValidator2 = _interopRequireDefault(_sharedValidator);
+
+/**
+ * Create a timeline visualization
+ * @param {HTMLElement} container
+ * @param {vis.DataSet | vis.DataView | Array} [items]
+ * @param {vis.DataSet | vis.DataView | Array} [groups]
+ * @param {Object} [options]  See Timeline.setOptions for the available options.
+ * @constructor
+ * @extends Core
+ */
 var Emitter = require('emitter-component');
 var Hammer = require('../module/hammer');
 var moment = require('../module/moment');
@@ -6723,21 +6773,10 @@ var CurrentTime = require('./component/CurrentTime');
 var CustomTime = require('./component/CustomTime');
 var ItemSet = require('./component/ItemSet');
 
-var Configurator = require('../shared/Configurator');
-var Validator = require('../shared/Validator')['default'];
 var printStyle = require('../shared/Validator').printStyle;
 var allOptions = require('./optionsTimeline').allOptions;
 var configureOptions = require('./optionsTimeline').configureOptions;
 
-/**
- * Create a timeline visualization
- * @param {HTMLElement} container
- * @param {vis.DataSet | vis.DataView | Array} [items]
- * @param {vis.DataSet | vis.DataView | Array} [groups]
- * @param {Object} [options]  See Timeline.setOptions for the available options.
- * @constructor
- * @extends Core
- */
 function Timeline(container, items, groups, options) {
   if (!(this instanceof Timeline)) {
     throw new SyntaxError('Constructor must be called with the new operator');
@@ -6833,6 +6872,27 @@ function Timeline(container, items, groups, options) {
     me.emit('contextmenu', me.getEventProperties(event));
   };
 
+  //Single time autoscale/fit
+  this.fitDone = false;
+  this.on('changed', function () {
+    if (this.itemsData == null) return;
+    if (!me.fitDone) {
+      me.fitDone = true;
+      if (me.options.start != undefined || me.options.end != undefined) {
+        if (me.options.start == undefined || me.options.end == undefined) {
+          var range = me.getItemRange();
+        }
+
+        var start = me.options.start != undefined ? me.options.start : range.min;
+        var end = me.options.end != undefined ? me.options.end : range.max;
+
+        me.setWindow(start, end, { animation: false });
+      } else {
+        me.fit({ animation: false });
+      }
+    }
+  });
+
   // apply options
   if (options) {
     this.setOptions(options);
@@ -6846,9 +6906,10 @@ function Timeline(container, items, groups, options) {
   // create itemset
   if (items) {
     this.setItems(items);
-  } else {
-    this._redraw();
   }
+
+  // draw for the first time
+  this._redraw();
 }
 
 // Extend the functionality from Core
@@ -6860,7 +6921,7 @@ Timeline.prototype = new Core();
  * @private
  */
 Timeline.prototype._createConfigurator = function () {
-  return new Configurator(this, this.dom.container, configureOptions);
+  return new _sharedConfigurator2['default'](this, this.dom.container, configureOptions);
 };
 
 /**
@@ -6877,7 +6938,7 @@ Timeline.prototype.redraw = function () {
 
 Timeline.prototype.setOptions = function (options) {
   // validate options
-  var errorFound = Validator.validate(options, allOptions);
+  var errorFound = _sharedValidator2['default'].validate(options, allOptions);
   if (errorFound === true) {
     console.log('%cErrors have been found in the supplied options object.', printStyle);
   }
@@ -6905,8 +6966,6 @@ Timeline.prototype.setOptions = function (options) {
  * @param {vis.DataSet | Array | null} items
  */
 Timeline.prototype.setItems = function (items) {
-  var initialLoad = this.itemsData == null;
-
   // convert to type DataSet when needed
   var newDataSet;
   if (!items) {
@@ -6926,21 +6985,6 @@ Timeline.prototype.setItems = function (items) {
   // set items
   this.itemsData = newDataSet;
   this.itemSet && this.itemSet.setItems(newDataSet);
-
-  if (initialLoad) {
-    if (this.options.start != undefined || this.options.end != undefined) {
-      if (this.options.start == undefined || this.options.end == undefined) {
-        var range = this.getItemRange();
-      }
-
-      var start = this.options.start != undefined ? this.options.start : range.min;
-      var end = this.options.end != undefined ? this.options.end : range.max;
-
-      this.setWindow(start, end, { animation: false });
-    } else {
-      this.fit({ animation: false });
-    }
-  }
 };
 
 /**
@@ -7120,6 +7164,7 @@ Timeline.prototype.getItemRange = function () {
       factor = interval / _this.props.center.width;
       util.forEach(_this.itemSet.items, (function (item) {
         item.show();
+        item.repositionX();
 
         var start = getStart(item);
         var end = getEnd(item);
@@ -7492,6 +7537,7 @@ CurrentTime.prototype.start = function () {
     if (interval > 1000) interval = 1000;
 
     me.redraw();
+    me.body.emitter.emit('currentTimeTick');
 
     // start a renderTimer to adjust for the new time
     me.currentTimeTimer = setTimeout(update, interval);
@@ -7622,7 +7668,7 @@ CustomTime.prototype._create = function () {
   this.hammer.on('panstart', this._onDragStart.bind(this));
   this.hammer.on('panmove', this._onDrag.bind(this));
   this.hammer.on('panend', this._onDragEnd.bind(this));
-  this.hammer.get('pan').set({ threshold: 5, direction: 30 }); // 30 is ALL_DIRECTIONS in hammer.
+  this.hammer.get('pan').set({ threshold: 5, direction: Hammer.DIRECTION_HORIZONTAL });
 };
 
 /**
@@ -8627,7 +8673,7 @@ ItemSet.prototype._create = function () {
   this.hammer.on('panstart', this._onDragStart.bind(this));
   this.hammer.on('panmove', this._onDrag.bind(this));
   this.hammer.on('panend', this._onDragEnd.bind(this));
-  this.hammer.get('pan').set({ threshold: 5, direction: 30 }); // 30 is ALL_DIRECTIONS in hammer.
+  this.hammer.get('pan').set({ threshold: 5, direction: Hammer.DIRECTION_HORIZONTAL });
 
   // single select (or unselect) when tapping an item
   this.hammer.on('tap', this._onSelectItem.bind(this));
@@ -8642,7 +8688,7 @@ ItemSet.prototype._create = function () {
   this.groupHammer.on('panstart', this._onGroupDragStart.bind(this));
   this.groupHammer.on('panmove', this._onGroupDrag.bind(this));
   this.groupHammer.on('panend', this._onGroupDragEnd.bind(this));
-  this.groupHammer.get('pan').set({ threshold: 5, direction: 30 });
+  this.groupHammer.get('pan').set({ threshold: 5, direction: Hammer.DIRECTION_HORIZONTAL });
 
   // attach to the DOM
   this.show();
@@ -9124,6 +9170,8 @@ ItemSet.prototype.setItems = function (items) {
     // update the group holding all ungrouped items
     this._updateUngrouped();
   }
+
+  this.body.emitter.emit('_change', { queue: true });
 };
 
 /**
@@ -9181,7 +9229,7 @@ ItemSet.prototype.setGroups = function (groups) {
   // update the order of all items in each group
   this._order();
 
-  this.body.emitter.emit('change', { queue: true });
+  this.body.emitter.emit('_change', { queue: true });
 };
 
 /**
@@ -9286,7 +9334,7 @@ ItemSet.prototype._onUpdate = function (ids) {
 
   this._order();
   this.stackDirty = true; // force re-stacking of all items next redraw
-  this.body.emitter.emit('change', { queue: true });
+  this.body.emitter.emit('_change', { queue: true });
 };
 
 /**
@@ -9316,7 +9364,7 @@ ItemSet.prototype._onRemove = function (ids) {
     // update order
     this._order();
     this.stackDirty = true; // force re-stacking of all items next redraw
-    this.body.emitter.emit('change', { queue: true });
+    this.body.emitter.emit('_change', { queue: true });
   }
 };
 
@@ -9385,7 +9433,7 @@ ItemSet.prototype._onAddGroups = function (ids) {
     }
   });
 
-  this.body.emitter.emit('change', { queue: true });
+  this.body.emitter.emit('_change', { queue: true });
 };
 
 /**
@@ -9406,7 +9454,7 @@ ItemSet.prototype._onRemoveGroups = function (ids) {
 
   this.markDirty();
 
-  this.body.emitter.emit('change', { queue: true });
+  this.body.emitter.emit('_change', { queue: true });
 };
 
 /**
@@ -9769,7 +9817,7 @@ ItemSet.prototype._onDrag = function (event) {
     }).bind(this));
 
     this.stackDirty = true; // force re-stacking of all items next redraw
-    this.body.emitter.emit('change');
+    this.body.emitter.emit('_change');
   }
 };
 
@@ -9820,7 +9868,7 @@ ItemSet.prototype._onDragEnd = function (event) {
 
           // force re-stacking of all items next redraw
           me.stackDirty = true;
-          me.body.emitter.emit('change');
+          me.body.emitter.emit('_change');
         });
       } else {
         // update existing item
@@ -9835,7 +9883,7 @@ ItemSet.prototype._onDragEnd = function (event) {
             props.item.setData(props.data);
 
             me.stackDirty = true; // force re-stacking of all items next redraw
-            me.body.emitter.emit('change');
+            me.body.emitter.emit('_change');
           }
         });
       }
@@ -11167,26 +11215,31 @@ BoxItem.prototype.hide = function () {
 BoxItem.prototype.repositionX = function () {
   var start = this.conversion.toScreen(this.data.start);
   var align = this.options.align;
-  var left;
 
   // calculate left position of the box
   if (align == 'right') {
     this.left = start - this.width;
+
+    // reposition box, line, and dot
+    this.dom.box.style.left = this.left + 'px';
+    this.dom.line.style.left = start - this.props.line.width + 'px';
+    this.dom.dot.style.left = start - this.props.line.width / 2 - this.props.dot.width / 2 + 'px';
   } else if (align == 'left') {
     this.left = start;
+
+    // reposition box, line, and dot
+    this.dom.box.style.left = this.left + 'px';
+    this.dom.line.style.left = start + 'px';
+    this.dom.dot.style.left = start + this.props.line.width / 2 - this.props.dot.width / 2 + 'px';
   } else {
     // default or 'center'
     this.left = start - this.width / 2;
+
+    // reposition box, line, and dot
+    this.dom.box.style.left = this.left + 'px';
+    this.dom.line.style.left = start - this.props.line.width / 2 + 'px';
+    this.dom.dot.style.left = start - this.props.dot.width / 2 + 'px';
   }
-
-  // reposition box
-  this.dom.box.style.left = this.left + 'px';
-
-  // reposition line
-  this.dom.line.style.left = start - this.props.line.width / 2 + 'px';
-
-  // reposition dot
-  this.dom.dot.style.left = start - this.props.dot.width / 2 + 'px';
 };
 
 /**
@@ -13541,13 +13594,13 @@ exports.mergeOptions = function (mergeTarget, options, option) {
  * this function will then iterate in both directions over this sorted list to find all visible items.
  *
  * @param {Item[]} orderedItems       | Items ordered by start
- * @param {function} searchFunction   | -1 is lower, 0 is found, 1 is higher
+ * @param {function} comparator       | -1 is lower, 0 is equal, 1 is higher
  * @param {String} field
  * @param {String} field2
  * @returns {number}
  * @private
  */
-exports.binarySearchCustom = function (orderedItems, searchFunction, field, field2) {
+exports.binarySearchCustom = function (orderedItems, comparator, field, field2) {
   var maxIterations = 10000;
   var iteration = 0;
   var low = 0;
@@ -13559,7 +13612,7 @@ exports.binarySearchCustom = function (orderedItems, searchFunction, field, fiel
     var item = orderedItems[middle];
     var value = field2 === undefined ? item[field] : item[field][field2];
 
-    var searchResult = searchFunction(value);
+    var searchResult = comparator(value);
     if (searchResult == 0) {
       // jihaa, found a visible item!
       return middle;
@@ -13586,15 +13639,20 @@ exports.binarySearchCustom = function (orderedItems, searchFunction, field, fiel
  * @param {{start: number, end: number}} target
  * @param {String} field
  * @param {String} sidePreference   'before' or 'after'
+ * @param {function} comparator an optional comparator, returning -1,0,1 for <,==,>.
  * @returns {number}
  * @private
  */
-exports.binarySearchValue = function (orderedItems, target, field, sidePreference) {
+exports.binarySearchValue = function (orderedItems, target, field, sidePreference, comparator) {
   var maxIterations = 10000;
   var iteration = 0;
   var low = 0;
   var high = orderedItems.length - 1;
   var prevValue, value, nextValue, middle;
+
+  var comparator = comparator != undefined ? comparator : function (a, b) {
+    return a == b ? 0 : a < b ? -1 : 1;
+  };
 
   while (low <= high && iteration < maxIterations) {
     // get a new guess
@@ -13603,18 +13661,18 @@ exports.binarySearchValue = function (orderedItems, target, field, sidePreferenc
     value = orderedItems[middle][field];
     nextValue = orderedItems[Math.min(orderedItems.length - 1, middle + 1)][field];
 
-    if (value == target) {
+    if (comparator(value, target) == 0) {
       // we found the target
       return middle;
-    } else if (prevValue < target && value > target) {
+    } else if (comparator(prevValue, target) < 0 && comparator(value, target) > 0) {
       // target is in between of the previous and the current
       return sidePreference == 'before' ? Math.max(0, middle - 1) : middle;
-    } else if (value < target && nextValue > target) {
+    } else if (comparator(value, target) < 0 && comparator(nextValue, target) > 0) {
       // target is in between of the current and the next
       return sidePreference == 'before' ? middle : Math.min(orderedItems.length - 1, middle + 1);
     } else {
       // didnt find the target, we need to change our boundaries.
-      if (value < target) {
+      if (comparator(value, target) < 0) {
         // it is too small --> increase low
         low = middle + 1;
       } else {

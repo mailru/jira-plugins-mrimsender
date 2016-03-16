@@ -12,7 +12,6 @@ import ru.mail.jira.plugins.calendar.rest.dto.Event;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
 import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.CalendarService;
-import ru.mail.jira.plugins.calendar.service.CalendarServiceImpl;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.GET;

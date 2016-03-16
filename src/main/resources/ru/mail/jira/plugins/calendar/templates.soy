@@ -1,0 +1,148 @@
+{namespace JIRA.Templates.Plugins.MailRuCalendar}
+
+/**
+ * Build common output for issue field
+ * @param label name
+ * @param value value
+ */
+{template .issueInfoBuildField private="true" autoescape="false"}
+    <dl>
+        <dt>{$label}:</dt>
+        <dd>{$value}</dd>
+    </dl>
+{/template}
+
+/**
+ * Issue info for popup in calendar
+ * @param contextPath AJS.contextPath()
+ * @param issue json object containing field values
+ */
+{template .issueInfo}
+    <div>
+        <div class="calenar-issue-popup-key-header">
+            <a target="_blank" href="{$contextPath}/browse/{$issue.key}">
+                <strong>{$issue.key}{sp}{$issue.summary}</strong>
+                <span class="aui-icon aui-icon-small aui-iconfont-share"/>
+            </a>
+        </div>
+        {if $issue.assignee}
+            {call .issueInfoBuildField}
+                {param value: $issue.assignee /}
+                {param label: getText('issue.field.assignee') /}
+            {/call}
+        {/if}
+        {if $issue.reporter}
+            {call .issueInfoBuildField}
+                {param value: $issue.reporter /}
+                {param label: getText('issue.field.reporter') /}
+            {/call}
+        {/if}
+        {if $issue.status}
+            <dl>
+                <dt>{getText('common.words.status')}:</dt>
+                <dd>
+                    <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-{$issue.statusColor}">{$issue.status}</span>
+                </dd>
+            </dl>
+        {/if}
+        {if $issue.labels}
+            {call .issueInfoBuildField}
+                {param value: $issue.labels /}
+                {param label: getText('common.concepts.labels') /}
+            {/call}
+        {/if}
+        {if $issue.components}
+            {call .issueInfoBuildField}
+                {param value: $issue.components /}
+                {param label: getText('common.concepts.components') /}
+            {/call}
+        {/if}
+        {if $issue.dueDate}
+            {call .issueInfoBuildField}
+                {param value: $issue.dueDate /}
+                {param label: getText('issue.field.duedate') /}
+            {/call}
+        {/if}
+        {if $issue.environment}
+            {call .issueInfoBuildField}
+                {param value: $issue.environment /}
+                {param label: getText('common.words.env') /}
+            {/call}
+        {/if}
+        {if $issue.priority}
+            <dl>
+                <dt>{getText('issue.field.priority')}:</dt>
+                <dd>
+                    <img class="calendar-priority-image-url" height="16" src="{$contextPath}{$issue.priorityIconUrl}"/>{$issue.priority}
+                </dd>
+            </dl>
+        {/if}
+        {if $issue.resolution}
+            {call .issueInfoBuildField}
+                {param value: $issue.resolution /}
+                {param label: getText('issue.field.resolution') /}
+            {/call}
+        {/if}
+        {if $issue.affect}
+            {call .issueInfoBuildField}
+                {param value: $issue.affect /}
+                {param label: getText('issue.field.version') /}
+            {/call}
+        {/if}
+        {if $issue.created}
+            {call .issueInfoBuildField}
+                {param value: $issue.created /}
+                {param label: getText('issue.field.created') /}
+            {/call}
+        {/if}
+        {if $issue.updated}
+            {call .issueInfoBuildField}
+                {param value: $issue.updated /}
+                {param label: getText('issue.field.updated') /}
+            {/call}
+        {/if}
+        {if $issue.customFields}
+            {foreach $key in keys($issue.customFields)}
+                <dl>
+                    <dt>{$key}:</dt>
+                    <dd>{$issue.customFields[$key]}</dd>
+                </dl>
+            {/foreach}
+        {/if}
+        {if $issue.description}
+            <div class="calendar-event-info-popup-description">{$issue.description}</div>
+        {/if}
+      </div>
+{/template}
+
+/**
+ * Text format for permission select2 field
+ * @param id
+ * @param type
+ * @param text
+ * @param avatarUrl
+ */
+{template .permissionField autoescape="false"}
+    {if $type == 'USER'}
+        <div rel="{$id}" class="user-hover">
+            <span class="aui-avatar aui-avatar-xsmall">
+                <span class="aui-avatar-inner">
+                    <img src="{$avatarUrl}" />
+                </span>
+            </span>
+            {sp}{$text}
+        </div>
+    {elseif $type == 'PROJECT_ROLE'}
+        <span class="aui-avatar aui-avatar-xsmall">
+            <span class="aui-avatar-inner">
+                <img src="{$avatarUrl}" />
+            </span>
+        </span>
+        {sp}{$text}
+    {elseif $type == 'GROUP'}
+        <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
+        {sp}{$text}
+    {else}
+        {$text}
+    {/if}
+{/template}

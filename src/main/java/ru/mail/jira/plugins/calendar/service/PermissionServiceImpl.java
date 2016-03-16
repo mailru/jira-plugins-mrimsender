@@ -21,7 +21,6 @@ import net.java.ao.Query;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.Permission;
 import ru.mail.jira.plugins.calendar.model.SubjectType;
-import ru.mail.jira.plugins.calendar.model.UserCalendar;
 import ru.mail.jira.plugins.calendar.rest.dto.PermissionItemDto;
 
 import java.util.HashMap;

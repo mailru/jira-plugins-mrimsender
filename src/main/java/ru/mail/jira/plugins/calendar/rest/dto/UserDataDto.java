@@ -12,6 +12,10 @@ public class UserDataDto {
     @XmlElement
     private String id;
     @XmlElement
+    private String displayName;
+    @XmlElement
+    private String avatarUrl;
+    @XmlElement
     private String calendarView;
     @XmlElement
     private boolean hideWeekends;
@@ -72,5 +76,21 @@ public class UserDataDto {
 
     public void setLastLikeFlagShown(Long lastLikeFlagShown) {
         this.lastLikeFlagShown = lastLikeFlagShown;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 }

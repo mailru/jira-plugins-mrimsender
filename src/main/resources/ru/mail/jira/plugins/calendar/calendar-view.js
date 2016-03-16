@@ -1,0 +1,194 @@
+define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/timeline-view'], function($, _, Backbone) {
+
+    return Backbone.View.extend({
+        el: '#calendar-full-calendar',
+        initialize: function(options) {
+            this.eventSources = {};
+            this.contextPath = options && _.has(options, 'contextPath') ? options.contextPath : AJS.contextPath();
+        },
+        _eventSource: function(id) {
+            return this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + id;
+        },
+        _getCalendarHeaderButton: function(buttonName) {
+            return this.$el.find('.fc-' + buttonName + '-button');
+        },
+        _onClickWeekendsVisibility: function(e) {
+            e.preventDefault();
+            e.currentTarget.blur();
+            this.trigger('changeWeekendsVisibility');
+        },
+        updateButtonsVisibility: function(view) {
+            if (view.name === 'timeline')
+                this._getCalendarHeaderButton('zoom-out').parent('.fc-button-group').show();
+            else
+                this._getCalendarHeaderButton('zoom-out').parent('.fc-button-group').hide();
+            if (view.name === 'quarter' || view.name === 'month' || view.name === 'basicWeek')
+                this._getCalendarHeaderButton('weekend').show();
+            else
+                this._getCalendarHeaderButton('weekend').hide();
+        },
+        zoomOutTimeline: function() {
+            var view = this.$el.fullCalendar('getView');
+            var canZoomOut = view.zoomOut();
+            this._getCalendarHeaderButton('zoom-out').blur();
+            !canZoomOut && view.calendar.header.disableButton('zoom-out');
+            view.calendar.header.enableButton('zoom-in');
+        },
+        zoomInTimeline: function() {
+            var view = this.$el.fullCalendar('getView');
+            var canZoomIn = view.zoomIn();
+            this._getCalendarHeaderButton('zoom-in').blur();
+            !canZoomIn && view.calendar.header.disableButton('zoom-in');
+            view.calendar.header.enableButton('zoom-out');
+        },
+        init: function(view, hideWeekends) {
+            var viewRenderFirstTime = true;
+            var contextPath = this.contextPath;
+            this.$el.fullCalendar({
+                contentHeight: 'auto',
+                defaultView: view,
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'weekend zoom-out,zoom-in'
+                },
+                views: {
+                    quarter: {
+                        type: 'basic',
+                        duration: {months: 3}
+                    },
+                    timeline: {
+                        contextPath: contextPath
+                    }
+                },
+                customButtons: {
+                    weekend: {
+                        text: hideWeekends ? AJS.I18n.getText('ru.mail.jira.plugins.calendar.showWeekends') : AJS.I18n.getText('ru.mail.jira.plugins.calendar.hideWeekends'),
+                        click: $.proxy(this._onClickWeekendsVisibility, this)
+                    },
+                    'zoom-out': {
+                        icon: 'zoom-out',
+                        click: $.proxy(this.zoomOutTimeline, this)
+                    },
+                    'zoom-in': {
+                        icon: 'zoom-in',
+                        click: $.proxy(this.zoomInTimeline, this)
+                    }
+                },
+                businessHours: {
+                    start: '10:00',
+                    end: '19:00'
+                },
+                timeFormat: $("meta[name='ajs-date-time']").attr('content'),
+                slotLabelFormat: $("meta[name='ajs-date-time']").attr('content'),
+                lazyFetching: true,
+                editable: true,
+                draggable: true,
+                firstDay: 1,
+                allDayText: AJS.I18n.getText('ru.mail.jira.plugins.calendar.allDay'),
+                monthNames: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.January'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.February'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.March'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.April'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.May'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.June'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.July'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.August'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.September'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.October'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.November'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.December')],
+                monthNamesShort: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jan'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Feb'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Mar'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Apr'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.May'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jun'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jul'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Aug'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sep'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Oct'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Nov'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Dec')],
+                dayNames: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sunday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Monday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Tuesday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Wednesday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Thursday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Friday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Saturday')],
+                dayNamesShort: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sun'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Mon'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Tue'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Wed'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Thu'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Fri'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sat')],
+                buttonText: {
+                    today: AJS.I18n.getText('ru.mail.jira.plugins.calendar.today')
+                },
+                weekends: !hideWeekends,
+                weekMode: 'liquid',
+                slotWidth: 100,
+                slotDuration: '01:00',
+                eventRender: function(event, $element) {
+                    $element.addClass('calendar-event-object');
+                    $element.find('.fc-title').prepend(event.id + ' ');
+                    AJS.InlineDialog($element, "eventDialog", function(content, trigger, showPopup) {
+                        $.ajax({
+                            type: 'GET',
+                            url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.id),
+                            success: function(issue) {
+                                content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({issue: issue, contextPath: AJS.contextPath()})).addClass('calendar-event-info-popup');
+                                showPopup();
+                            },
+                            error: function(xhr) {
+                                var msg = "Error while trying to view info about issue => " + event.id;
+                                if (xhr.responseText)
+                                    msg += xhr.responseText;
+                                alert(msg);
+                            }
+                        });
+                        return false;
+                    }, {
+                        hideDelay: null,
+                        onTop: true,
+                        closeOnTriggerClick: true,
+                        userLiveEvents: true
+                    });
+                },
+                viewRender: $.proxy(function(view) {
+                    this.updateButtonsVisibility(view);
+                    if (viewRenderFirstTime)
+                        viewRenderFirstTime = false;
+                    else {
+                        var $visibleCalendars = $('.calendar-visible');
+                        this.trigger('render', view.name);
+                        $visibleCalendars.find('a.calendar-name').addClass('not-active');
+                    }
+                }, this),
+                eventAfterAllRender: $.proxy(function() {
+                    this.trigger('renderComplete');
+                }, this),
+                eventDrop: function(event, duration) {
+                    eventMove(event, duration, true);
+                },
+                eventResize: function(event, duration) {
+                    eventMove(event, duration, false);
+                }
+            });
+
+            function eventMove(event, duration, isDrag) {
+                $.ajax({
+                    type: 'PUT',
+                    url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.id + '?dayDelta=' + duration._days + '&millisDelta=' + duration._milliseconds + '&isDrag=' + isDrag,
+                    error: function(xhr) {
+                        var msg = "Error while trying to drag event. Issue key => " + event.id;
+                        if (xhr.responseText)
+                            msg += xhr.responseText;
+                        alert(msg);
+                    }
+                });
+            }
+        },
+        addEventSource: function(calendarId, silent) {
+            !silent && this.trigger('addSource', calendarId);
+            this.$el.fullCalendar('addEventSource', {
+                url: this._eventSource(calendarId),
+                success: $.proxy(function() {
+                    !silent && this.trigger('addSourceSuccess', calendarId, true);
+                }, this)
+            });
+            this.eventSources[calendarId] = this._eventSource(calendarId);
+        },
+        removeEventSource: function(calendarId) {
+            this.$el.fullCalendar('removeEventSource', this._eventSource(calendarId));
+            this.trigger('removeSource', calendarId);
+            this.eventSources = _.omit(this.eventSources, calendarId);
+        },
+        removeAllEventSource: function() {
+            _.each(this.eventSources, function(sourceUrl, calendarId) {
+                this.$el.fullCalendar('removeEventSource', sourceUrl);
+                this.trigger('removeSource', calendarId);
+            }, this);
+            this.eventSources = {};
+        },
+        setView: function(viewName) {
+            this.$el.fullCalendar('changeView', viewName);
+        },
+        getViewType: function() {
+            return this.$el.fullCalendar('getView').type;
+        },
+        toggleWeekends: function(hideWeekends) {
+            this._getCalendarHeaderButton('weekend').text(hideWeekends ? AJS.I18n.getText('ru.mail.jira.plugins.calendar.showWeekends') : AJS.I18n.getText('ru.mail.jira.plugins.calendar.hideWeekends'));
+            this.$el.fullCalendar('option', 'weekends', !hideWeekends);
+        }
+    });
+});
+

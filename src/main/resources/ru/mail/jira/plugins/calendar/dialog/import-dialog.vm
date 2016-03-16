@@ -11,20 +11,6 @@
                     <%= calendar.name %>
                 </div>
             </td>
-            <td>
-                <% if (calendar.owner) { %>
-                <div rel="<%= calendar.owner %>" class="mailrucalendar-table-icon-column user-hover">
-                    <span class="aui-avatar aui-avatar-xsmall mailrucalendar-table-icon">
-                        <span class="aui-avatar-inner">
-                            <img src="<%= calendar.ownerAvatarUrl %>" />
-                        </span>
-                    </span>
-                    <%= calendar.ownerFullName %>
-                </div>
-                <% } else { %>
-                <span><%= calendar.ownerFullName %></span>
-                <% } %>
-            </td>
             <td><%= calendar.usersCount || 0 %></td>
         </tr>
     </script>
@@ -34,11 +20,6 @@
     </header>
     <div class="aui-dialog2-content">
         <form class="aui top-label ajs-dirty-warning-exempt" autocomplete="off">
-            #if( $action.isAdmin )
-                <div id="mailrucalendar-admin-message" class="aui-message aui-message-generic">
-                    $i18n.getText( "ru.mail.jira.plugins.calendar.import.dialog.admin.message" ) <span></span>
-                </div>
-            #end
             <div class="field-group">
                 <div class="mailrucalendar-search-field">
                     <span class="aui-icon aui-icon-small aui-iconfont-search-small"></span>
@@ -54,7 +35,6 @@
             <tr>
                 <th class="mailrucalendar-table-select-column"></th>
                 <th>$i18n.getText( "ru.mail.jira.plugins.calendar.linkTitle" )</th>
-                <th>$i18n.getText( "common.concepts.owner" )</th>
                 <th>$i18n.getText( "admin.common.words.users" )</th>
             </tr>
             </thead>

@@ -1,21 +1,12 @@
 (function(factory) {
-    if (typeof define === 'function' && define.amd) {
-        define(['jquery', 'moment'], factory);
-    }
-    else if (typeof exports === 'object') { // Node/CommonJS
-        module.exports = factory(require('jquery'), require('moment'));
-    }
-    else {
-        factory(jQuery, moment);
-    }
-})(function($, moment) {
-    AJS.toInit(function() {
+    factory(moment);
+})(function(moment) {
+    define('calendar/timeline-view', ['jquery', 'underscore'], function($, _) {
         var FC = $.fullCalendar;
         var View = FC.View;
         var TimelineView;
-        var issueInfoTpl = _.template($('#issue-info-template').html());
 
-        moment.locale('mailru', {
+        moment().locale('mailru', {
             months: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.January'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.February'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.March'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.April'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.May'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.June'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.July'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.August'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.September'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.October'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.November'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.December')],
             monthsShort: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jan'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Feb'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Mar'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Apr'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.May'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jun'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jul'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Aug'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sep'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Oct'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Nov'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Dec')],
             weekdays: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sunday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Monday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Tuesday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Wednesday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Thursday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Friday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Saturday')],
@@ -131,7 +122,7 @@
                 return this.timelineOptions.zoomMax > this.getRangeInterval();
             },
             zoomIn: function() {
-                this.timeline.range.zoom(1/1.5);
+                this.timeline.range.zoom(1 / 1.5);
                 return this.timelineOptions.zoomMin < this.getRangeInterval();
             },
 
@@ -162,15 +153,19 @@
                     return;
                 }
                 var target = e.event.target;
+                var contextPath = this.options.contextPath;
                 this.currentSelectedId = event.id;
                 $('#inline-dialog-eventTimelineDialog').remove();
 
                 this.eventDialog = AJS.InlineDialog(target, "eventTimelineDialog", function(content, trigger, showPopup) {
                     $.ajax({
                         type: 'GET',
-                        url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.eventId + '/info',
+                        url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.eventId),
                         success: function(issue) {
-                            content.html(issueInfoTpl({issue: issue})).addClass('calendar-event-info-popup');
+                            content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
+                                issue: issue,
+                                contextPath: AJS.contextPath()
+                            })).addClass('calendar-event-info-popup');
                             showPopup();
                         },
                         error: function(xhr) {
@@ -235,6 +230,5 @@
         FC.views.timeline = {
             'class': TimelineView
         };
-
     });
 });

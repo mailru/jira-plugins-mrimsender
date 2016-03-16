@@ -22,8 +22,6 @@ import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.util.Uris;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarSettingDto;

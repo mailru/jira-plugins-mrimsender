@@ -1,26 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Module>
-    <ModulePrefs title="__MSG_gadget.days.left.title__"
-                 directory_title="__MSG_gadget.days.left.title__"
+    <ModulePrefs title="__MSG_ru.mail.jira.plugins.calendar.linkTitle__"
+                 directory_title="__MSG_ru.mail.jira.plugins.calendar.linkTitle__"
                  description="__MSG_gadget.days.left.description__">
         <Require feature="dynamic-height"/>
+        <Optional feature="auth-refresh"/>
         <Require feature="oauthpopup"/>
         <Require feature="setprefs"/>
         <Require feature="settitle"/>
+        <Require feature="views"/>
         <Optional feature="atlassian.util"/>
         <Optional feature="gadget-directory">
-            <Param name="categories">
-                JIRA           
-            </Param>
+            <Param name="categories">Other</Param>
         </Optional>
         #oauth
+        #supportedLocales("gadget.common,ru.mail.jira.plugins.calendar")
     </ModulePrefs>
-    <UserPref name="calendar" datatype="" default_value="false"/>
-    <UserPref name="projectId" datatype="hidden"/>
-    <UserPref name="version" datatype="hidden" default_value="auto"/>
+    <UserPref name="isConfigured" datatype="hidden" default_value="false"/>
+    <UserPref name="calendars" datatype="hidden" default_value=""/>
+    <UserPref name="view" datatype="hidden" default_value="week"/>
+    <UserPref name="hideWeekends" datatype="hidden" default_value="true"/>
+    <UserPref name="refresh" datatype="hidden" default_value="false"/>
     <Content type="html">
         <![CDATA[
-            <p>Hello world</p>
+            #requireResource("com.atlassian.gadgets.publisher:ajs-gadgets")
+            #requireResource("jira.webresources:global-static")
+            #requireResource("jira.webresources:jira-global")
+            #requireResource("ru.mail.jira.plugins.mailrucal:calendar-gadget-resources")
+            #includeResources()
         ]]>
     </Content>
 </Module>

@@ -13,12 +13,6 @@ public class CalendarSettingDto {
     @XmlElement
     private String selectedName;
     @XmlElement
-    private String owner;
-    @XmlElement
-    private String ownerFullName;
-    @XmlElement
-    private String ownerAvatarUrl;
-    @XmlElement
     private String selectedColor;
     @XmlElement
     private String selectedSourceId;
@@ -61,30 +55,6 @@ public class CalendarSettingDto {
 
     public void setSelectedName(String selectedName) {
         this.selectedName = selectedName;
-    }
-
-    public String getOwner() {
-        return owner;
-    }
-
-    public void setOwner(String owner) {
-        this.owner = owner;
-    }
-
-    public String getOwnerFullName() {
-        return ownerFullName;
-    }
-
-    public void setOwnerFullName(String ownerFullName) {
-        this.ownerFullName = ownerFullName;
-    }
-
-    public String getOwnerAvatarUrl() {
-        return ownerAvatarUrl;
-    }
-
-    public void setOwnerAvatarUrl(String ownerAvatarUrl) {
-        this.ownerAvatarUrl = ownerAvatarUrl;
     }
 
     public String getSelectedColor() {

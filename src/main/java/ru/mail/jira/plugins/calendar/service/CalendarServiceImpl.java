@@ -1,9 +1,6 @@
 package ru.mail.jira.plugins.calendar.service;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
-import com.atlassian.crowd.embedded.api.Group;
-import com.atlassian.jira.avatar.Avatar;
-import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.bc.JiraServiceContext;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
@@ -15,9 +12,7 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.security.Permissions;
-import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -26,11 +21,9 @@ import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.Permission;
 import ru.mail.jira.plugins.calendar.model.SubjectType;
 import ru.mail.jira.plugins.calendar.model.UserCalendar;
-import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarSettingDto;
 import ru.mail.jira.plugins.calendar.rest.dto.PermissionItemDto;
-import ru.mail.jira.plugins.calendar.rest.dto.PermissionSubjectDto;
 import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.commons.RestFieldException;
 
@@ -77,7 +70,6 @@ public class CalendarServiceImpl implements CalendarService {
     }};
 
     private ActiveObjects ao;
-    private AvatarService avatarService;
     private CustomFieldManager customFieldManager;
     private I18nHelper i18nHelper;
     private PermissionManager permissionManager;
@@ -86,14 +78,9 @@ public class CalendarServiceImpl implements CalendarService {
     private SearchRequestService searchRequestService;
     private SearchRequestManager searchRequestManager;
     private UserCalendarService userCalendarService;
-    private UserManager userManager;
 
     public void setAo(ActiveObjects ao) {
         this.ao = ao;
-    }
-
-    public void setAvatarService(AvatarService avatarService) {
-        this.avatarService = avatarService;
     }
 
     public void setCustomFieldManager(CustomFieldManager customFieldManager) {
@@ -128,10 +115,6 @@ public class CalendarServiceImpl implements CalendarService {
         this.userCalendarService = userCalendarService;
     }
 
-    public void setUserManager(UserManager userManager) {
-        this.userManager = userManager;
-    }
-
     public Calendar getCalendar(final int id) throws GetException {
         Calendar calendar = ao.get(Calendar.class, id);
         if (calendar == null)
@@ -142,16 +125,6 @@ public class CalendarServiceImpl implements CalendarService {
     public CalendarSettingDto getCalendarSettingDto(ApplicationUser user, int id) throws GetException {
         CalendarSettingDto result = new CalendarSettingDto();
         Calendar calendar = getCalendar(id);
-        ApplicationUser owner = userManager.getUserByKey(calendar.getAuthorKey());
-
-        if (owner == null)
-            result.setOwnerFullName("Deleted");
-        else {
-            result.setOwner(calendar.getAuthorKey());
-            result.setOwnerFullName(owner.getDisplayName());
-            result.setOwnerAvatarUrl(getUserAvatarSrc(owner));
-        }
-
         result.setSelectedName(calendar.getName());
         result.setSelectedColor(calendar.getColor());
         result.setSelectedEventStartId(calendar.getEventStart());
@@ -235,7 +208,7 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setColor(calendarSettingDto.getSelectedColor());
         calendar.setEventStart(calendarSettingDto.getSelectedEventStartId());
         calendar.setEventEnd(calendarSettingDto.getSelectedEventEndId());
-        calendar.setDisplayedFields(CommonUtils.join(calendarSettingDto.getSelectedDisplayedFields()));
+        calendar.setDisplayedFields(StringUtils.join(calendarSettingDto.getSelectedDisplayedFields(), ","));
         calendar.save();
     }
 
@@ -276,21 +249,12 @@ public class CalendarServiceImpl implements CalendarService {
         output.setUsersCount(usersCount);
 
         if (calendar != null) {
-            ApplicationUser calendarOwner = userManager.getUserByKey(calendar.getAuthorKey());
-            if (calendarOwner == null) {
-                output.setOwnerFullName("Deleted");
-            } else {
-                output.setOwner(calendar.getAuthorKey());
-                output.setOwnerFullName(calendarOwner.getDisplayName());
-                output.setOwnerAvatarUrl(getUserAvatarSrc(calendarOwner));
-            }
             String filterHasNotAvailableError = checkThatFilterHasAvailable(user, calendar);
             if (filterHasNotAvailableError != null) {
                 output.setHasError(true);
                 output.setError(filterHasNotAvailableError);
             }
-        } else
-            output.setOwnerFullName("Deleted");
+        }
         return output;
     }
 
@@ -329,10 +293,6 @@ public class CalendarServiceImpl implements CalendarService {
         } else { // theoretically it isn't possible
             dto.setSelectedSourceName("Unknown source");
         }
-    }
-
-    private String getUserAvatarSrc(ApplicationUser user) {
-        return avatarService.getAvatarURL(user, userManager.getUserByKey(user.getKey()), Avatar.Size.SMALL).toString();
     }
 
     private void validateCalendar(ApplicationUser user, CalendarSettingDto calendarSettingDto, boolean isCreate) {

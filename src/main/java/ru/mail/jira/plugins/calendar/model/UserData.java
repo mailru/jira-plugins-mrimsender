@@ -1,8 +1,6 @@
 package ru.mail.jira.plugins.calendar.model;
 
 import net.java.ao.Entity;
-import net.java.ao.ManyToMany;
-import net.java.ao.OneToMany;
 
 /**
  * User preferences

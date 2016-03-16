@@ -16,12 +16,6 @@ public class CalendarDto {
     @XmlElement
     private String color;
     @XmlElement
-    private String owner;
-    @XmlElement
-    private String ownerFullName;
-    @XmlElement
-    private String ownerAvatarUrl;
-    @XmlElement
     private String source;
     @XmlElement
     private boolean changable;
@@ -40,30 +34,16 @@ public class CalendarDto {
     }
 
     public CalendarDto(UserCalendar userCalendar, Calendar calendar) {
-        if (userCalendar != null) {
+        if (calendar == null) {
             this.id = userCalendar.getCalendarId();
             this.name = userCalendar.getName();
             this.color = userCalendar.getColor();
-            if (calendar != null)
-                this.source = calendar.getSource();
         } else {
             this.id = calendar.getID();
             this.name = calendar.getName();
             this.color = calendar.getColor();
             this.source = calendar.getSource();
         }
-    }
-
-    public void setOwner(String owner) {
-        this.owner = owner;
-    }
-
-    public void setOwnerFullName(String ownerFullName) {
-        this.ownerFullName = ownerFullName;
-    }
-
-    public void setOwnerAvatarUrl(String ownerAvatarUrl) {
-        this.ownerAvatarUrl = ownerAvatarUrl;
     }
 
     public void setSource(String source) {

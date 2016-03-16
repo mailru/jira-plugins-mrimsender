@@ -13,6 +13,8 @@ public class PermissionSubjectDto {
     private List<PermissionItemDto> groups;
     @XmlElement
     private List<PermissionItemDto> projectRoles;
+    @XmlElement
+    private boolean more = true;
 
     public PermissionSubjectDto(List<PermissionItemDto> users, List<PermissionItemDto> groups, List<PermissionItemDto> projectRoles) {
         this.users = users;

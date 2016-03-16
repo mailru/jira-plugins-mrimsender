@@ -1,4 +1,4 @@
-define('calendar/like-flag', ['jquery', 'aui/flag'], function($, flag) {
+define('calendar/like-flag', ['jquery', 'underscore', 'backbone', 'aui/flag'], function($, _, Backbone, flag) {
     var likeFlagLike = '' +
         '<p>Может еще оставите отзыв?</p>' +
         '<ul class="aui-nav-actions-list">' +
@@ -33,7 +33,6 @@ define('calendar/like-flag', ['jquery', 'aui/flag'], function($, flag) {
             this.setElement(flag({
                 type: 'info',
                 title: 'Нравится Mail.Ru Calendar?',
-                persistent: false,
                 body: '' +
                 '<div class="mailrucalendar-like-flag-container">' +
                 '   <p>Оцените нас на Atlassian Marketplace:</p>' +

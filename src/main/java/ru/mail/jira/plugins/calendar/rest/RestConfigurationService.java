@@ -14,6 +14,7 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
+import com.atlassian.jira.security.Permissions;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
@@ -26,7 +27,6 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import org.apache.commons.lang3.StringUtils;
-import ru.mail.jira.plugins.calendar.model.Permission;
 import ru.mail.jira.plugins.calendar.model.SubjectType;
 import ru.mail.jira.plugins.calendar.rest.dto.DateField;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueSourceDto;
@@ -178,7 +178,11 @@ public class RestConfigurationService {
             if (StringUtils.containsIgnoreCase(user.getDisplayName(), filter)
                     || StringUtils.containsIgnoreCase(user.getKey(), filter)
                     || StringUtils.containsIgnoreCase(user.getName(), filter))
-                result.add(new PermissionItemDto(user.getKey(), user.getDisplayName(), SubjectType.USER.name(), null, getUserAvatarSrc(user)));
+                result.add(new PermissionItemDto(user.getKey(),
+                                                 String.format("%s - %s (%s)", user.getDisplayName(), user.getEmailAddress(), user.getKey()),
+                                                 SubjectType.USER.name(),
+                                                 null,
+                                                 getUserAvatarSrc(user)));
             if (result.size() == 10)
                 break;
         }

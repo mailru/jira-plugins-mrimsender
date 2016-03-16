@@ -2,10 +2,8 @@ package ru.mail.jira.plugins.calendar.service;
 
 import com.atlassian.activeobjects.tx.Transactional;
 import com.atlassian.jira.exception.GetException;
-import com.atlassian.jira.user.ApplicationUser;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.UserCalendar;
-import ru.mail.jira.plugins.calendar.model.UserData;
 
 @Transactional
 public interface UserCalendarService {

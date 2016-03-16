@@ -190,12 +190,12 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 }
 
 #calendar-dialog .aui-dialog2-content {
-    min-height: 350px;
+    min-height: 280px;
 }
 
 #calendar-dialog form {
     margin: 0;
-    max-height: 300px;
+    max-height: 250px;
     padding: 10px 20px 20px 20px;
     overflow: hidden;
     overflow-y: scroll;
@@ -239,6 +239,10 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     width: 600px;
 }
 
+#calendar-dialog-permission-table tbody > tr > td {
+    vertical-align: middle;
+}
+
 #calendar-dialog-permission-table thead tr:first-child {
     background-color: #f0f0f0;
 }
@@ -255,21 +259,30 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     width: 360px;
 }
 
+.mailrucalendar-table-icon-column {
+    padding-left: 22px;
+    box-sizing: border-box;
+    display: inline-block;
+    position: relative;
+}
+
+.mailrucalendar-table-icon-column .mailrucalendar-table-icon {
+    left: 0;
+    position: absolute;
+    top: 2px;
+}
+
 .calendar-dialog-permission-project-role-separator {
     padding: 0 5px;
     color: #999;
 }
 
 #calendar-dialog-permission-table-access-type {
-    width: 90px;
+    min-width: 113px;
 }
 
 #calendar-dialog-permission-table .calendar-dialog-permission-table-access-type {
-    width: 90px;
-}
-
-#calendar-dialog-permission-table-access-type-dropdown ul {
-    list-style-type: none;
+    min-width: 113px;
 }
 
 #calendar-dialog-permission-table li.aui-lozenge {
@@ -314,6 +327,12 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 
 #calendar-full-calendar {
     position: relative;
+}
+
+#mailru-calendar-gadget-full-calendar {
+    position: relative;
+    padding: 15px;
+    min-height: 200px;
 }
 
 .calendar-event-object {
@@ -371,7 +390,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 }
 
 .aui-inline-dialog {
-    z-index: 3200 !important;
+    z-index: 9999 !important;
 }
 
 .aui-inline-dialog .aui-inline-dialog-contents, .aui-inline-dialog .contents {
@@ -491,19 +510,6 @@ div.vis-item.vis-box {
     left: 0px;
     right: 0px;
     bottom: 0px;
-}
-
-.mailrucalendar-table-icon-column {
-    padding-left: 22px;
-    box-sizing: border-box;
-    display: inline-block;
-    position: relative;
-}
-
-.mailrucalendar-table-icon-column .mailrucalendar-table-icon {
-    left: 0;
-    position: absolute;
-    top: 2px;
 }
 
 /* Confirm dialog */

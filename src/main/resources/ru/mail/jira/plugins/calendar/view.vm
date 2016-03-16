@@ -30,18 +30,18 @@
             <% if (calendar.source) { %>
                 <div class="aui-dropdown2-section">
                     <ul>
-                        <li><a class="calendar-issue-navigator" href="<%= AJS.contextPath() %>/issues/?<%= calendar.source.split('_')[0] == 'project' ? 'jql=project%3D' + calendar.source.split('_')[1] : 'filter=' + calendar.source.split('_')[1] %>" target="_blank">$i18n.getText( "navigator.title" )</a></li>
+                        <li><a class="calendar-issue-navigator" href="#">$i18n.getText( "common.concepts.issues" )</a></li>
                     </ul>
                 </div>
             <% } %>
-            <% if (calendar.changable) { %>
-                <div class="aui-dropdown2-section">
-                    <ul>
-                        <li><a class="calendar-edit" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.edit" )</a></li>
+            <div class="aui-dropdown2-section">
+                <ul>
+                    <li><a class="calendar-edit" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.edit" )</a></li>
+                    <% if (calendar.changable) { %>
                         <li><a class="calendar-delete" href="#">$i18n.getText( "common.words.delete" )</a></li>
-                    </ul>
-                </div>
-            <% } %>
+                    <% } %>
+                </ul>
+            </div>
             <% if (calendar.favorite || calendar.visible) { %>
                 <div class="aui-dropdown2-section">
                     <ul>
@@ -50,81 +50,6 @@
                 </div>
             <% } %>
         </div>
-    </div>
-</script>
-
-<script type="text/template" id="issue-info-template">
-    <% function buildField(field, label) { %>
-        <dl>
-            <dt><%= label %>:</dt>
-            <dd><%= field %></dd>
-        </dl>
-    <% } %>
-
-    <div>
-        <div class="calenar-issue-popup-key-header">
-            <a target="_blank" href="<%= AJS.contextPath() %>/browse/<%= issue.key %>">
-                <strong><%= issue.key + ' ' + issue.summary.trim() %></strong>
-                <span class="aui-icon aui-icon-small aui-iconfont-share"/>
-            </a>
-        </div>
-        <% if(issue.assignee)
-            buildField(issue.assignee, "$i18n.getText('issue.field.assignee')")
-        %>
-        <% if(issue.reporter)
-            buildField(issue.reporter, "$i18n.getText('issue.field.reporter')")
-        %>
-        <% if (issue.status) { %>
-        <dl>
-            <dt>$i18n.getText('common.words.status'):</dt>
-            <dd>
-                <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-<%= issue.statusColor %>"><%= issue.status %></span>
-            </dd>
-        </dl>
-        <% } %>
-        <% if(issue.labels)
-            buildField(issue.labels, "$i18n.getText('common.concepts.labels')")
-        %>
-        <% if(issue.components)
-            buildField(issue.components, "$i18n.getText('common.concepts.components')")
-        %>
-        <% if(issue.dueDate)
-            buildField(issue.dueDate, "$i18n.getText('issue.field.duedate')")
-        %>
-        <% if(issue.environment)
-            buildField(issue.environment, "$i18n.getText('common.words.env')")
-        %>
-        <% if (issue.priority) { %>
-        <dl>
-            <dt>$i18n.getText('issue.field.priority'):</dt>
-            <dd>
-                <img class="calendar-priority-image-url" height="16" src="<%= AJS.contextPath() + issue.priorityIconUrl %>"/><%= issue.priority %>
-            </dd>
-        </dl>
-        <% } %>
-        <% if(issue.resolution)
-            buildField(issue.resolution, "$i18n.getText('issue.field.resolution')")
-        %>
-        <% if(issue.affect)
-            buildField(issue.affect, "$i18n.getText('issue.field.version')")
-        %>
-        <% if(issue.created)
-            buildField(issue.created, "$i18n.getText('issue.field.created')")
-        %>
-        <% if(issue.updated)
-            buildField(issue.updated, "$i18n.getText('issue.field.updated')")
-        %>
-        <% if (issue.customFields) {
-            Object.keys(issue.customFields).map(function (item) {
-        %>
-                <dl>
-                    <dt><%= item %>:</dt>
-                    <dd><%= issue.customFields[item] %></dd>
-                </dl>
-        <% });
-        } %>
-        <% if (issue.description && issue.description.trim()) %>
-        <div class="calendar-event-info-popup-description"><%= issue.description %></div>
     </div>
 </script>
 
@@ -187,9 +112,9 @@
         </div>
     </div>
 </div>
-#parse( "ru/mail/jira/plugins/calendar/calendar-dialog.vm" )
-#parse( "ru/mail/jira/plugins/calendar/feed-dialog.vm" )
-#parse( "ru/mail/jira/plugins/calendar/import-dialog.vm" )
-#parse( "ru/mail/jira/plugins/calendar/confirm-dialog.vm" )
+#parse( "ru/mail/jira/plugins/calendar/dialog/calendar-dialog.vm" )
+#parse( "ru/mail/jira/plugins/calendar/dialog/feed-dialog.vm" )
+#parse( "ru/mail/jira/plugins/calendar/dialog/import-dialog.vm" )
+#parse( "ru/mail/jira/plugins/calendar/dialog/confirm-dialog.vm" )
 </body>
 </html>
