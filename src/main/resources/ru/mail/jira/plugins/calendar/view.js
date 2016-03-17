@@ -38,9 +38,6 @@ require(['jquery',
             }
         });
 
-        /* Templates */
-        var calendarLinkTpl = _.template($('#calendar-link-template').html());
-
         var MainView = Backbone.View.extend({
             el: 'body',
             loadingCounter: 0,
@@ -163,10 +160,10 @@ require(['jquery',
                 });
                 var index = _.indexOf(sorted, calendar);
                 if (sorted.length - 1 == index)
-                    listBlock.append(calendarLinkTpl({calendar: calendar.toJSON()}));
+                    listBlock.append(JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({calendar: calendar.toJSON()}));
                 else {
                     var calendarNext = sorted[index + 1];
-                    this.$('.calendar-list-item-block[data-id="' + calendarNext.id + '"]').before(calendarLinkTpl({calendar: calendar.toJSON()}));
+                    this.$('.calendar-list-item-block[data-id="' + calendarNext.id + '"]').before(JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({calendar: calendar.toJSON()}));
                 }
 
                 AJS.$("#calendar-buttons-dropdown-" + calendar.id).on({
@@ -421,7 +418,7 @@ require(['jquery',
                 _.each(sorted, function(calendar) {
                     var json = calendar.toJSON();
                     if (calendar.get('visible') || calendar.get('favorite'))
-                        htmlFavoriteCalendars += calendarLinkTpl({calendar: json});
+                        htmlFavoriteCalendars += JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({calendar: json});
                     if (calendar.get('visible') && !calendar.get('hasError'))
                         eventSources.push(calendar.id);
                 });

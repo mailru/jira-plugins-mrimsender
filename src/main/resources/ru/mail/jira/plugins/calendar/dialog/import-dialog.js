@@ -1,9 +1,4 @@
 define('calendar/import-dialog', ['jquery', 'underscore', 'backbone'], function($, _, Backbone) {
-    var tableRowTpl;
-    AJS.toInit(function() {
-        tableRowTpl = _.template($('#import-calendars-row-template').html());
-    });
-
     return Backbone.View.extend({
         el: '#mailrucalendar-calendar-import-dialog',
         events: {
@@ -110,7 +105,12 @@ define('calendar/import-dialog', ['jquery', 'underscore', 'backbone'], function(
             this._onStartSearch();
             var rows = '';
             _.each(result, function(calendar) {
-                rows += tableRowTpl({calendar: calendar.toJSON()});
+                rows += JIRA.Templates.Plugins.MailRuCalendar.importTableRow({
+                    id: calendar.id,
+                    name: calendar.get('name'),
+                    color: calendar.get('color'),
+                    usersCount: calendar.get('usersCount') || 0
+                });
             });
             if (rows) {
                 this.tableContent.append(rows);

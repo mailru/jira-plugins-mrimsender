@@ -7,52 +7,6 @@
     $webResourceManager.requireResource( "ru.mail.jira.plugins.mailrucal:calendar-resources" )
 </head>
 <body>
-<script type="text/template" id="calendar-link-template">
-    <div class="calendar-list-item-block <%= calendar.visible ? 'calendar-visible' : '' %>" data-id="<%= calendar.id %>" data-color="<%= calendar.color %>" id="calendar-list-item-block-<%= calendar.id %>">
-        <% if (calendar.hasError) { %>
-        <a href="#" class="calendar-name not-working">
-            <span class="aui-icon aui-icon-small aui-iconfont-error" title="<%= calendar.error %>"/>
-        <% } else if (calendar.visible) { %>
-        <a href="#" class="calendar-name not-active">
-            <div class="calendar-view-color-box" style="background-color: <%= calendar.color %>;"/>
-        <% } else { %>
-        <a href="#" class="calendar-name">
-            <div class="calendar-view-color-box" style="border: 2px solid <%= calendar.color %>;"/>
-        <% } %>
-            <span class="aui-nav-item-label" title="<%= calendar.name %>"><%= calendar.name %></span>
-        </a>
-        <div class="calendar-vews-buttons-block aui-buttons">
-            <button class="aui-button aui-button-subtle aui-button-compact aui-dropdown2-trigger aui-dropdown2-trigger-arrowless calendar-buttons-dropdown" aria-owns="calendar-buttons-dropdown-<%= calendar.id %>" aria-haspopup="true">
-                <span class="aui-icon aui-icon-small aui-iconfont-more"/>
-            </button>
-        </div>
-        <div id="calendar-buttons-dropdown-<%= calendar.id %>" data-id="<%= calendar.id %>" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
-            <% if (calendar.source) { %>
-                <div class="aui-dropdown2-section">
-                    <ul>
-                        <li><a class="calendar-issue-navigator" href="#">$i18n.getText( "common.concepts.issues" )</a></li>
-                    </ul>
-                </div>
-            <% } %>
-            <div class="aui-dropdown2-section">
-                <ul>
-                    <li><a class="calendar-edit" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.edit" )</a></li>
-                    <% if (calendar.changable) { %>
-                        <li><a class="calendar-delete" href="#">$i18n.getText( "common.words.delete" )</a></li>
-                    <% } %>
-                </ul>
-            </div>
-            <% if (calendar.favorite || calendar.visible) { %>
-                <div class="aui-dropdown2-section">
-                    <ul>
-                        <li><a class="calendar-remove" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.removeFavorite" )</a></li>
-                    </ul>
-                </div>
-            <% } %>
-        </div>
-    </div>
-</script>
-
 <header class="aui-page-header">
     <div class="aui-page-header-inner">
         <div class="aui-page-header-main">

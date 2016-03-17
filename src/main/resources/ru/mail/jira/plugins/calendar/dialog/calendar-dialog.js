@@ -1,10 +1,5 @@
 define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], function($, _, Backbone) {
-    var sourceFieldTpl, colorFieldTpl, permissionRowTpl;
     AJS.toInit(function() {
-        sourceFieldTpl = _.template($('#source-field-template').html());
-        colorFieldTpl = _.template($('#color-field-template').html());
-        permissionRowTpl = _.template($('#permission-row-template').html());
-
         $.ajax({
             type: 'GET',
             url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/config/displayedFields',
@@ -209,7 +204,12 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             });
 
             function format(item) {
-                return sourceFieldTpl({item: item});
+                return JIRA.Templates.Plugins.MailRuCalendar.sourceField({
+                    text: item.text,
+                    unavailable: item.unavailable,
+                    avatarId: item.avatarId,
+                    projectId: item.id && item.id.indexOf('project_') > -1 ? item.id.substring('project_'.length) : ''
+                });
             }
         },
         _initColorField: function() {
@@ -220,7 +220,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             });
 
             function format(data) {
-                return colorFieldTpl({data: data});
+                return JIRA.Templates.Plugins.MailRuCalendar.colorField(data);
             }
         },
         _fillForm: function() {
@@ -357,10 +357,12 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             this.$('#calendar-dialog-permission-table-subject').auiSelect2('focus');
         },
         _addPermissionRow: function(subjectData) {
-            this.$('#calendar-dialog-permission-table tbody tr:first-child').before(permissionRowTpl({
+            this.$('#calendar-dialog-permission-table tbody tr:first-child').before(JIRA.Templates.Plugins.MailRuCalendar.permissionTableRow({
                 subjectId: subjectData.id,
                 subjectType: subjectData.type,
-                subject: subjectData.text,
+                subject: subjectData.type == 'PROJECT_ROLE'
+                    ? subjectData.text.replace(' - ', '<span class="calendar-dialog-permission-project-role-separator">/</span>')
+                    : subjectData.text,
                 accessType: subjectData.accessType,
                 avatarUrl: subjectData.avatarUrl
             }));

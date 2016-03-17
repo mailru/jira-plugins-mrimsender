@@ -134,6 +134,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     }
                 }, this),
                 eventAfterAllRender: $.proxy(function() {
+                    this.$el.fullCalendar('unfreezeContentHeight');
                     this.trigger('renderComplete');
                 }, this),
                 eventDrop: function(event, duration) {

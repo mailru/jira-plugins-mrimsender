@@ -1,20 +1,4 @@
 <section role="dialog" id="mailrucalendar-calendar-import-dialog" class="aui-layer aui-dialog2" aria-hidden="true">
-
-    <script type="text/template" id="import-calendars-row-template">
-        <tr>
-            <td class="mailrucalendar-table-select-column">
-                <input class="checkbox" type="checkbox" data-id="<%= calendar.id %>">
-            </td>
-            <td>
-                <div class="mailrucalendar-table-icon-column">
-                    <div class="calendar-view-color-box mailrucalendar-table-icon" style="background-color: <%= calendar.color %>;"/>
-                    <%= calendar.name %>
-                </div>
-            </td>
-            <td><%= calendar.usersCount || 0 %></td>
-        </tr>
-    </script>
-
     <header class="aui-dialog2-header">
         <h2 class="aui-dialog2-header-main">$i18n.getText( "ru.mail.jira.plugins.calendar.addSharedCalendar" )</h2>
     </header>

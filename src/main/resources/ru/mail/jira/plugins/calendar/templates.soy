@@ -146,3 +146,151 @@
         {$text}
     {/if}
 {/template}
+
+/**
+ * Text format for color select2 field
+ * @param id
+ */
+{template .colorField autoescape="false"}
+    <div class="calendar-dialog-color-option" style="background:{$id}"></div>
+{/template}
+
+/**
+ * Text format for source select2 field
+ * @param unavailable
+ * @param text
+ * @param projectId
+ * @param avatarId
+ */
+{template .sourceField autoescape="false"}
+    {if $unavailable }
+        <span class="calendar-dialog-source-unavailable-source">{$text}</span>
+    {elseif $projectId }
+        <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
+            <span class="aui-avatar-inner">
+                <img src="projectavatar?pid={$projectId}&avatarId={$avatarId}&size=xxmall" />
+            </span>
+        </span>
+        {sp}{$text}
+    {else}
+        {$text}
+    {/if}
+{/template}
+
+/**
+ * Text format for permission select2 field
+ * @param subjectId
+ * @param subjectType
+ * @param subject
+ * @param accessType
+ * @param avatarUrl
+ */
+{template .permissionTableRow autoescape="false"}
+    <tr data-id="{$subjectId}" data-subject-type="{$subjectType}">
+        <td class="calendar-dialog-permission-table-subject">
+            <div class="mailrucalendar-table-icon-column">
+                {if $subjectType == 'USER'}
+                    <div rel="{$subjectId}" class="user-hover">
+                        <span class="aui-avatar aui-avatar-xsmall mailrucalendar-table-icon">
+                            <span class="aui-avatar-inner">
+                                <img src="{$avatarUrl}" />
+                            </span>
+                        </span>
+                        {sp}{$subject}
+                    </div>
+                {elseif $subjectType == 'GROUP'}
+                    <span class="aui-icon aui-icon-small aui-iconfont-group icon-default mailrucalendar-table-icon"></span>
+                    {sp}{$subject}
+                {elseif $subjectType == 'PROJECT_ROLE'}
+                    <span class="aui-avatar aui-avatar-project aui-avatar-xsmall mailrucalendar-table-icon">
+                        <span class="aui-avatar-inner">
+                            <img src="{$avatarUrl}" />
+                        </span>
+                    </span>
+                    {sp}{$subject}
+                {/if}
+            </div>
+        </td>
+        <td class="calendar-dialog-permission-table-access-type">
+            <ul>
+                <li class="aui-lozenge {$accessType == 'USE' ? 'aui-lozenge-complete selected' : 'aui-lozenge-subtle'}" data-access-type="USE">{getText( 'ru.mail.jira.plugins.calendar.common.use' )}</li>
+                <li class="aui-lozenge {$accessType == 'ADMIN' ? 'aui-lozenge-complete selected' : 'aui-lozenge-subtle'}" data-access-type="ADMIN">{getText( 'ru.mail.jira.plugins.calendar.common.admin' )}</li>
+            </ul>
+        </td>
+        <td class="calendar-dialog-permission-table-action">
+            <span class="aui-icon aui-icon-small aui-iconfont-remove">{getText( 'common.words.delete' )}</span>
+        </td>
+    </tr>
+{/template}
+
+/**
+ * Build row for calendars import table
+ * @param id
+ * @param name
+ * @param color
+ * @param usersCount
+ */
+{template .importTableRow}
+    <tr>
+        <td class="mailrucalendar-table-select-column">
+            <input class="checkbox" type="checkbox" data-id="{$id}">
+        </td>
+        <td>
+            <div class="mailrucalendar-table-icon-column">
+                <div class="calendar-view-color-box mailrucalendar-table-icon" style="background-color: {$color};"/>
+                {$name}
+            </div>
+        </td>
+        <td>{$usersCount}</td>
+    </tr>
+{/template}
+
+/**
+ * Calendar entry in right list
+ * @param calendar
+ */
+{template .calendarEntry}
+    <div class="calendar-list-item-block {$calendar.visible ? 'calendar-visible' : '' }" data-id="{$calendar.id}" data-color="{$calendar.color}" id="calendar-list-item-block-{$calendar.id}">
+        {if $calendar.hasError}
+        <a href="#" class="calendar-name not-working">
+            <span class="aui-icon aui-icon-small aui-iconfont-error" title="{$calendar.error}"/>
+        {elseif $calendar.visible }
+        <a href="#" class="calendar-name not-active">
+            <div class="calendar-view-color-box" style="background-color: {$calendar.color};"/>
+        {else}
+        <a href="#" class="calendar-name">
+            <div class="calendar-view-color-box" style="border: 2px solid {$calendar.color};"/>
+        {/if}
+            <span class="aui-nav-item-label" title="{$calendar.name}">{$calendar.name}</span>
+        </a>
+        <div class="calendar-vews-buttons-block aui-buttons">
+            <button class="aui-button aui-button-subtle aui-button-compact aui-dropdown2-trigger aui-dropdown2-trigger-arrowless calendar-buttons-dropdown" aria-owns="calendar-buttons-dropdown-{$calendar.id}" aria-haspopup="true">
+                <span class="aui-icon aui-icon-small aui-iconfont-more"/>
+            </button>
+        </div>
+        <div id="calendar-buttons-dropdown-{$calendar.id}" data-id="{$calendar.id}" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
+            {if $calendar.source }
+                <div class="aui-dropdown2-section">
+                    <ul>
+                        <li><a class="calendar-issue-navigator" href="#">{getText( 'common.concepts.issues' )}</a></li>
+                    </ul>
+                </div>
+            {/if}
+            <div class="aui-dropdown2-section">
+                <ul>
+                    <li><a class="calendar-edit" href="#">{getText( 'ru.mail.jira.plugins.calendar.common.edit' )}</a></li>
+                    {if $calendar.changable }
+                        <li><a class="calendar-delete" href="#">{getText( 'common.words.delete' )}</a></li>
+                    {/if}
+                </ul>
+            </div>
+            {if $calendar.favorite or $calendar.visible }
+                <div class="aui-dropdown2-section">
+                    <ul>
+                        <li><a class="calendar-remove" href="#">{getText( 'ru.mail.jira.plugins.calendar.removeFavorite' )}</a></li>
+                    </ul>
+                </div>
+            {/if}
+        </div>
+    </div>
+{/template}

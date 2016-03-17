@@ -87,7 +87,7 @@ var gadget = AJS.Gadget({
     view: {
         onResizeAdjustHeight: true,
         enableReload: true,
-        onResizeReload: false,
+        onResizeReload: true,
         template: function(args) {
             var gadget = this;
             var view = gadget.getPref('view') || 'week';

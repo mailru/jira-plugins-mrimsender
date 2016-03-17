@@ -175,9 +175,9 @@ public class RestConfigurationService {
         filter = filter.trim().toLowerCase();
 
         for (ApplicationUser user : userManager.getAllApplicationUsers()) {
-            if (StringUtils.containsIgnoreCase(user.getDisplayName(), filter)
+            if (user.isActive() && (StringUtils.containsIgnoreCase(user.getDisplayName(), filter)
                     || StringUtils.containsIgnoreCase(user.getKey(), filter)
-                    || StringUtils.containsIgnoreCase(user.getName(), filter))
+                    || StringUtils.containsIgnoreCase(user.getName(), filter)))
                 result.add(new PermissionItemDto(user.getKey(),
                                                  String.format("%s - %s (%s)", user.getDisplayName(), user.getEmailAddress(), user.getKey()),
                                                  SubjectType.USER.name(),
