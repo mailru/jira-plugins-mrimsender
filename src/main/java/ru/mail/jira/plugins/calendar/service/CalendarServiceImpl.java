@@ -239,7 +239,7 @@ public class CalendarServiceImpl implements CalendarService {
         try {
             userCalendarService.updateCalendarVisibility(calendarId, user.getKey(), visible);
         } catch (GetException e) {
-            log.error("Can't get UserCalendar for calendar={} and user={}", calendarId, user.getKey(), e);
+            log.error("Can't get UserCalendar for calendar={} and user={}", calendarId, user.getKey());
             throw new RuntimeException(e);
         }
     }

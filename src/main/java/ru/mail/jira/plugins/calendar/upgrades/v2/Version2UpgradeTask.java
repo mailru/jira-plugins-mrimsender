@@ -4,11 +4,12 @@ import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.activeobjects.external.ActiveObjectsUpgradeTask;
 import com.atlassian.activeobjects.external.ModelVersion;
 import com.atlassian.crowd.embedded.api.Group;
+import com.atlassian.jira.permission.GlobalPermissionKey;
+import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.PermissionManager;
-import com.atlassian.jira.security.Permissions;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
@@ -51,6 +52,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings({"deprecation"})
 public class Version2UpgradeTask implements ActiveObjectsUpgradeTask {
     private final static Logger log = LoggerFactory.getLogger(Version2UpgradeTask.class);
 
@@ -288,7 +290,7 @@ public class Version2UpgradeTask implements ActiveObjectsUpgradeTask {
             Project project = projectManager.getProjectObj(projectId);
             if (project == null)
                 throw new IllegalArgumentException("Bad project id in shares => " + projectId);
-            if (!permissionManager.hasPermission(Permissions.BROWSE, project, user, false))
+            if (!permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false))
                 throw new IllegalArgumentException("No permission to view project in shares => " + project.getName());
 
             String roleIdStr = matcher.group(3);
@@ -491,7 +493,7 @@ public class Version2UpgradeTask implements ActiveObjectsUpgradeTask {
 
                 final MigratedUserPreferences oldUserPreferences = readUserPreferences(xml, dbf);
                 final String userKey = user.getKey();
-                final boolean isUserAdmin = globalPermissionManager.hasPermission(Permissions.ADMINISTER, user);
+                final boolean isUserAdmin = globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, user);
 
                 final List<Integer> showedCalendars = new ArrayList<Integer>();
                 Set<Long> shadowCalendars = oldUserPreferences.shadowCalendars;
@@ -530,7 +532,7 @@ public class Version2UpgradeTask implements ActiveObjectsUpgradeTask {
                                             break;
                                         }
                                     } else {
-                                        if (permissionManager.hasPermission(Permissions.BROWSE, project, user, false)) {
+                                        if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false)) {
                                             showedCalendars.add(calendar.getID());
                                             break;
                                         }

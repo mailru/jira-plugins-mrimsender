@@ -112,7 +112,7 @@ public class CalendarEventService {
                                   final ApplicationUser user,
                                   final boolean includeIssueInfo) throws ParseException, SearchException, GetException {
         if (log.isDebugEnabled())
-            log.debug("findEvents with params. calendarId={}, start={}, end={}, user={}, includeIssueInfo={}", calendarId, start, end, user.toString(), includeIssueInfo);
+            log.debug("findEvents with params. calendarId={}, start={}, end={}, user={}, includeIssueInfo={}", new Object[]{calendarId, start, end, user.toString(), includeIssueInfo});
         Calendar calendarModel = calendarService.getCalendar(calendarId);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String source = calendarModel.getSource();
@@ -152,7 +152,7 @@ public class CalendarEventService {
                                         ApplicationUser user, boolean includeIssueInfo) throws SearchException {
         if (log.isDebugEnabled())
             log.debug("getFilterEvents with params. calendar={}, filterId={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
-                      calendar, filterId, startField, endField, startTime, endTime, user, includeIssueInfo);
+                      new Object[]{calendar, filterId, startField, endField, startTime, endTime, user, includeIssueInfo});
         JiraServiceContext jsCtx = new JiraServiceContextImpl(user);
         SearchRequest filter = searchRequestService.getFilter(jsCtx, filterId);
 
@@ -209,7 +209,7 @@ public class CalendarEventService {
 
         List<Issue> issues = searchProvider.search(jqlBuilder.buildQuery(), user, PagerFilter.getUnlimitedFilter()).getIssues();
         if (log.isDebugEnabled())
-            log.debug("searchProvider.search(). query={}, user={}, issues.size()={}", jqlBuilder.buildQuery().toString(), user, issues.size());
+            log.debug("searchProvider.search(). query={}, user={}, issues.size()={}", new Object[]{jqlBuilder.buildQuery().toString(), user, issues.size()});
         for (Issue issue : issues) {
             try {
                 Date startDate = startCF == null ? retrieveDateByField(issue, startField) : retrieveDateByField(issue, startCF);
@@ -280,7 +280,7 @@ public class CalendarEventService {
         else if (field.startsWith("customfield_")) {
             CustomField customField = customFieldManager.getCustomFieldObject(field);
             if (log.isDebugEnabled())
-                log.debug("add DateRangeCondition for customfield. customField={}, start={}, end={}", customField, startTime, endTime);
+                log.debug("add DateRangeCondition for customfield. customField={}, start={}, end={}", new Object[]{customField, startTime, endTime});
             if (customField == null)
                 throw new IllegalArgumentException("Bad custom field id => " + field);
             jcb.addStringRangeCondition("cf[" + customField.getIdAsLong() + "]", dateTimeFormatter.format(startTime), dateTimeFormatter.format(endTime));
@@ -455,7 +455,7 @@ public class CalendarEventService {
 
     private Date retrieveDateByField(Issue issue, CustomField customField) {
         if (log.isDebugEnabled())
-            log.debug("retrieveDateByField with params. issue={}, customField={}, customFieldType={}", issue, customField, customField.getClass());
+            log.debug("retrieveDateByField with params. issue={}, customField={}, customFieldType={}", new Object[]{issue, customField, customField.getClass()});
         if (!(customField.getCustomFieldType() instanceof com.atlassian.jira.issue.fields.DateField))
             throw new IllegalArgumentException("Bad date time => " + customField.getName());
         return (Date) issue.getCustomFieldValue(customField);

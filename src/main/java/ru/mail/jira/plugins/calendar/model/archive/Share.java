@@ -4,6 +4,7 @@ import net.java.ao.Entity;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 
 @Deprecated
+@SuppressWarnings({"deprecation"})
 public interface Share extends Entity {
     Calendar getCalendar();
     void setCalendar(Calendar calendar);
