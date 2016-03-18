@@ -14,7 +14,6 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
-import com.atlassian.jira.security.Permissions;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
@@ -140,13 +139,13 @@ public class RestConfigurationService {
 
         List<Project> allProjects = isAdministrator(user) ? projectManager.getProjectObjects() : projectService.getAllProjects(user).get();
         for (Project project : allProjects) {
-            Collection<ProjectRole> projectRoles = projectRoleManager.getProjectRoles(user, project);
+            Collection<ProjectRole> projectRoles = projectRoleManager.getProjectRoles();
             for (ProjectRole role : projectRoles)
                 if (StringUtils.containsIgnoreCase(role.getName(), filter)
                         || StringUtils.containsIgnoreCase(project.getName(), filter)
                         || StringUtils.containsIgnoreCase(project.getKey(), filter))
                     result.add(new PermissionItemDto(PermissionUtils.projectRoleSubject(project.getId(), role.getId()),
-                                                     PermissionUtils.projectRoleSubject(project.getName(), role.getName()),
+                                                     project.getName(), role.getName(),
                                                      SubjectType.PROJECT_ROLE.name(),
                                                      null,
                                                      String.format("projectavatar?pid=%d&avatarId=%d&size=xxmall", project.getId(), project.getAvatar().getId())));
@@ -172,6 +171,9 @@ public class RestConfigurationService {
 
     private List<PermissionItemDto> getUsers(String filter) {
         List<PermissionItemDto> result = new ArrayList<PermissionItemDto>();
+        if (!globalPermissionManager.hasPermission(GlobalPermissionKey.USER_PICKER, jiraAuthenticationContext.getUser()))
+            return result;
+
         filter = filter.trim().toLowerCase();
 
         for (ApplicationUser user : userManager.getAllApplicationUsers()) {

@@ -105,7 +105,7 @@ var gadget = AJS.Gadget({
                     gadget.calendarView.setView(view);
                     gadget.calendarView.toggleWeekends(hideWeekends);
                 }
-                AJS.$('#mailru-calendar-gadget-full-calendar').width(gadgets.window.getViewportDimensions().width * 0.95);
+                AJS.$('#mailru-calendar-gadget-full-calendar').width(gadgets.window.getViewportDimensions().width - 30);
                 var calendars = gadget.getPref('calendars').split('|');
                 _.each(calendars, function(calendarId) {
                     calendarId && gadget.calendarView.addEventSource(calendarId, false);

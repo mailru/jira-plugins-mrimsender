@@ -11,7 +11,6 @@ import java.util.List;
 
 @Transactional
 public interface PermissionService {
-    String getSubjectDisplayName(String subject, SubjectType subjectType);
 
     String getPermissionAvatar(Permission permission, SubjectType subjectType);
 

@@ -117,34 +117,27 @@
 
 /**
  * Text format for permission select2 field
- * @param id
  * @param type
+ * @param rawText
  * @param text
  * @param avatarUrl
  */
 {template .permissionField autoescape="false"}
-    {if $type == 'USER'}
-        <div rel="{$id}" class="user-hover">
+    <div title="{$rawText}">
+        {if $type == 'USER' or $type == 'PROJECT_ROLE'}
             <span class="aui-avatar aui-avatar-xsmall">
                 <span class="aui-avatar-inner">
                     <img src="{$avatarUrl}" />
                 </span>
             </span>
             {sp}{$text}
-        </div>
-    {elseif $type == 'PROJECT_ROLE'}
-        <span class="aui-avatar aui-avatar-xsmall">
-            <span class="aui-avatar-inner">
-                <img src="{$avatarUrl}" />
-            </span>
-        </span>
-        {sp}{$text}
-    {elseif $type == 'GROUP'}
-        <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
-        {sp}{$text}
-    {else}
-        {$text}
-    {/if}
+        {elseif $type == 'GROUP'}
+            <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
+            {sp}{$text}
+        {else}
+            {$text}
+        {/if}
+    </div>
 {/template}
 
 /**
@@ -211,13 +204,11 @@
                 {/if}
             </div>
         </td>
-        <td class="calendar-dialog-permission-table-access-type">
+        <td class="calendar-dialog-permission-table-access-type calendar-dialog-permission-table-action" colspan="2">
             <ul>
                 <li class="aui-lozenge {$accessType == 'USE' ? 'aui-lozenge-complete selected' : 'aui-lozenge-subtle'}" data-access-type="USE">{getText( 'ru.mail.jira.plugins.calendar.common.use' )}</li>
                 <li class="aui-lozenge {$accessType == 'ADMIN' ? 'aui-lozenge-complete selected' : 'aui-lozenge-subtle'}" data-access-type="ADMIN">{getText( 'ru.mail.jira.plugins.calendar.common.admin' )}</li>
             </ul>
-        </td>
-        <td class="calendar-dialog-permission-table-action">
             <span class="aui-icon aui-icon-small aui-iconfont-remove">{getText( 'common.words.delete' )}</span>
         </td>
     </tr>

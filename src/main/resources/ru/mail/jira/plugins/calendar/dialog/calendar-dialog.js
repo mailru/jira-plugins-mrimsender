@@ -97,7 +97,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             this.$('input').val('');
             this.$('#calendar-dialog-error-panel').text('').addClass('hidden');
             this.$('#calendar-dialog-permission-table-error-panel').addClass('hidden');
-            this.$('#calendar-dialog-permission-table tbody tr').not(':last').remove();
+            this.$('#calendar-dialog-permission-table tbody tr').remove();
         },
         /* Public methods */
         show: function() {
@@ -143,11 +143,15 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
                     cache: true
                 },
                 formatResult: function(item) {
-                    var text = item.type == 'PROJECT_ROLE'
-                        ? item.text.replace(' - ', '<span class="calendar-dialog-permission-project-role-separator">/</span>')
-                        : item.text;
+                    var text = item.text;
+                    var rawText = item.text;
+                    if (item.type == 'PROJECT_ROLE') {
+                        text = AJS.format('{0}<span class="calendar-dialog-permission-project-role-separator">/</span>{1}', item.project, item.projectRole);
+                        rawText = AJS.format('{0} / {1}', item.project, item.projectRole);
+                    }
                     return JIRA.Templates.Plugins.MailRuCalendar.permissionField({
                         id: item.id,
+                        rawText: rawText,
                         text: text,
                         avatarUrl: item.avatarUrl,
                         type: item.type
@@ -155,12 +159,15 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
                 },
                 formatSelection: function(item) {
                     var text = item.text;
-                    if (item.type == 'PROJECT_ROLE')
-                        text = text.replace(' - ', '<span class="calendar-dialog-permission-project-role-separator">/</span>');
-                    else if (item.type == 'USER')
+                    var rawText = item.text;
+                    if (item.type == 'PROJECT_ROLE') {
+                        text = AJS.format('{0}<span class="calendar-dialog-permission-project-role-separator">/</span>{1}', item.project, item.projectRole);
+                        rawText = AJS.format('{0} / {1}', item.project, item.projectRole);
+                    } else if (item.type == 'USER')
                         text = text.substring(0, text.indexOf(" - "));
                     return JIRA.Templates.Plugins.MailRuCalendar.permissionField({
                         id: item.id,
+                        rawText: rawText,
                         text: text,
                         avatarUrl: item.avatarUrl,
                         type: item.type
@@ -169,6 +176,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
                 initSelection: function(element, callback) {
                 }
             });
+            this.$('.calendar-dialog-permission-table-subject .select2-container input').attr('placeholder', AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.users.groups.roles'));
         },
         _initSourceField: function() {
             this.$('#calendar-dialog-source').auiSelect2({
@@ -275,8 +283,8 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             this.$('#calendar-dialog-permission-table-subject').attr('disabled', !canAdmin);
             this.$('#calendar-dialog-permission-table-access-type').attr('disabled', !canAdmin);
             this.$('#calendar-dialog-permission-table-add').attr('disabled', !canAdmin);
-            this.$('.calendar-dialog-permission-table-action .aui-icon').attr('disabled', !canAdmin);
-            this.$('.calendar-dialog-permission-table-access-type .aui-lozenge').attr('disabled', !canAdmin);
+            this.$('tbody .calendar-dialog-permission-table-action .aui-icon').attr('disabled', !canAdmin);
+            this.$('tbody .calendar-dialog-permission-table-access-type .aui-lozenge').attr('disabled', !canAdmin);
             this.$okButton.attr('disabled', !canAdmin);
             this.$('.aui-dialog2-footer-hint').text(canAdmin ? '' : AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.no.edit.permission'));
         },
@@ -357,12 +365,15 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             this.$('#calendar-dialog-permission-table-subject').auiSelect2('focus');
         },
         _addPermissionRow: function(subjectData) {
-            this.$('#calendar-dialog-permission-table tbody tr:first-child').before(JIRA.Templates.Plugins.MailRuCalendar.permissionTableRow({
+            var text = subjectData.text;
+            if (subjectData.type == 'PROJECT_ROLE') {
+                text = AJS.format('{0}<span class="calendar-dialog-permission-project-role-separator">/</span>{1}', subjectData.project, subjectData.projectRole);
+            } else if (subjectData.type == 'USER' && text.indexOf(" - ") > -1)
+                text = text.substring(0, text.indexOf(" - "));
+            this.$('#calendar-dialog-permission-table tbody').prepend(JIRA.Templates.Plugins.MailRuCalendar.permissionTableRow({
                 subjectId: subjectData.id,
                 subjectType: subjectData.type,
-                subject: subjectData.type == 'PROJECT_ROLE'
-                    ? subjectData.text.replace(' - ', '<span class="calendar-dialog-permission-project-role-separator">/</span>')
-                    : subjectData.text,
+                subject: text,
                 accessType: subjectData.accessType,
                 avatarUrl: subjectData.avatarUrl
             }));
@@ -378,19 +389,24 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             if (!subjectDatas || !subjectDatas.length)
                 return;
             this.$('#calendar-dialog-permission-table-error-panel').addClass('hidden');
+            var existingSubjects = [];
             _.each(subjectDatas, $.proxy(function(subjectData) {
-                if (!this.permissionIds[subjectData.id]) {
-                    this._addPermissionRow($.extend(subjectData, {accessType: this.addAccessType}));
-                } else {
+                if (this.permissionIds[subjectData.id]) {
                     var text = subjectData.text;
-                    if (subjectData.type == 'PROJECT_ROLE')
-                        text = text.replace(' - ', '<span class="calendar-dialog-permission-project-role-separator">/</span>');
-                    else if (subjectData.type == 'USER')
+                    if (subjectData.type == 'PROJECT_ROLE') {
+                        text = AJS.format('{0}<span class="calendar-dialog-permission-project-role-separator">/</span>{1}', subjectData.project, subjectData.projectRole);
+                    } else if (subjectData.type == 'USER')
                         text = text.substring(0, text.indexOf(" - "));
-                    this.$('#calendar-dialog-permission-table-error-panel').removeClass('hidden').html(AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.alreadyHasAccess'), text));
+                    existingSubjects.push(text);
                 }
             }, this));
-            this.$('#calendar-dialog-permission-table-subject').auiSelect2('val', '');
+            if (!existingSubjects.length) {
+                _.each(subjectDatas, $.proxy(function(subjectData) {
+                    this._addPermissionRow($.extend(subjectData, {accessType: this.addAccessType}));
+                }, this));
+                this.$('#calendar-dialog-permission-table-subject').auiSelect2('val', '');
+            } else
+                this.$('#calendar-dialog-permission-table-error-panel').removeClass('hidden').html(AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.alreadyHasAccess'), existingSubjects.join(', ')));
         },
         _removePermission: function(e) {
             var $row = $(e.target).closest('tr');

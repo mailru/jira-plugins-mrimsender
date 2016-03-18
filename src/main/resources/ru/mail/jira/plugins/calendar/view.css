@@ -256,7 +256,20 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 }
 
 #calendar-dialog-permission-table .calendar-dialog-permission-table-subject {
-    width: 360px;
+    width: 286px;
+}
+
+#calendar-dialog-permission-table .calendar-dialog-permission-table-subject .select2-container input {
+    min-width: 268px;
+}
+
+#calendar-dialog-permission-table .calendar-dialog-permission-table-subject .select2-container {
+    display: block;
+}
+
+#calendar-dialog-permission-table .calendar-dialog-permission-table-subject .select2-choices {
+    min-height: 30px;
+    padding: 3px 5px;
 }
 
 .mailrucalendar-table-icon-column {
@@ -278,15 +291,20 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 }
 
 #calendar-dialog-permission-table-access-type {
-    min-width: 113px;
+    min-width: 115px;
 }
 
-#calendar-dialog-permission-table .calendar-dialog-permission-table-access-type {
-    min-width: 113px;
+#calendar-dialog-permission-table-add {
+    margin-left: 20px;
 }
 
-#calendar-dialog-permission-table li.aui-lozenge {
+.calendar-dialog-permission-table-access-type.calendar-dialog-permission-table-action {
+    text-align: right;
+}
+
+#calendar-dialog-permission-table tbody li.aui-lozenge {
     cursor: pointer;
+    margin-right: 5px;
 }
 
 #calendar-dialog-permission-table li.aui-lozenge[disabled] {
@@ -300,10 +318,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 
 #calendar-dialog-permission-table td > ul {
     padding-left: 0;
-}
-
-#calendar-dialog-permission-table .calendar-dialog-permission-table-action {
-    text-align: right;
+    float: left;
 }
 
 #calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon {
@@ -390,7 +405,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 }
 
 .aui-inline-dialog {
-    z-index: 9999 !important;
+    z-index: 3200 !important;
 }
 
 .aui-inline-dialog .aui-inline-dialog-contents, .aui-inline-dialog .contents {

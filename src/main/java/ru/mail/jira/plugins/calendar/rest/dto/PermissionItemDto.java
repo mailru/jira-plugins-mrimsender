@@ -11,6 +11,10 @@ public class PermissionItemDto {
     @XmlElement
     private String text;
     @XmlElement
+    private String project;
+    @XmlElement
+    private String projectRole;
+    @XmlElement
     private String type;
     @XmlElement
     private String accessType;
@@ -29,23 +33,68 @@ public class PermissionItemDto {
         this.avatarUrl = avatarUrl;
     }
 
+    public PermissionItemDto(String id, String project, String projectRole, String type, String accessType, String avatarUrl) {
+        this.id = id;
+        this.project = project;
+        this.projectRole = projectRole;
+        this.type = type;
+        this.accessType = accessType;
+        this.avatarUrl = avatarUrl;
+    }
+
     public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getText() {
         return text;
     }
 
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
+    }
+
+    public String getProjectRole() {
+        return projectRole;
+    }
+
+    public void setProjectRole(String projectRole) {
+        this.projectRole = projectRole;
+    }
+
     public String getType() {
         return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getAccessType() {
         return accessType;
     }
 
+    public void setAccessType(String accessType) {
+        this.accessType = accessType;
+    }
+
     public String getAvatarUrl() {
         return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 }

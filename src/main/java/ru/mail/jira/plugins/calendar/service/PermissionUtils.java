@@ -10,10 +10,6 @@ public class PermissionUtils {
         return String.format("%d-%d", projectId, roleId);
     }
 
-    public static String projectRoleSubject(String project, String role) {
-        return String.format("%s - %s", project, role);
-    }
-
     @Nullable
     public static Long getProject(String subject) {
         try {

@@ -48,32 +48,6 @@ public class PermissionServiceImpl implements PermissionService {
         this.userManager = userManager;
     }
 
-    public String getSubjectDisplayName(String subject, SubjectType subjectType) {
-        switch (subjectType) {
-            case USER:
-                ApplicationUser user = userManager.getUserByKey(subject);
-                if (user != null)
-                    return user.getDisplayName();
-                break;
-            case GROUP:
-                Group group = groupManager.getGroup(subject);
-                if (group != null)
-                    return group.getName();
-                break;
-            case PROJECT_ROLE:
-                Long projectId = PermissionUtils.getProject(subject);
-                Long projectRoleId = PermissionUtils.getProjectRole(subject);
-                if (projectId == null || projectRoleId == null)
-                    break;
-                Project project = projectManager.getProjectObj(projectId);
-                ProjectRole projectRole = projectRoleManager.getProjectRole(projectRoleId);
-                if (project != null && projectRole != null)
-                    return PermissionUtils.projectRoleSubject(project.getName(), projectRole.getName());
-                break;
-        }
-        return subject;
-    }
-
     public String getPermissionAvatar(Permission permission, SubjectType subjectType) {
         switch (subjectType) {
             case USER:

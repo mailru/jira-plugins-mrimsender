@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.calendar.service;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
+import com.atlassian.crowd.embedded.api.Group;
 import com.atlassian.jira.bc.JiraServiceContext;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
@@ -12,7 +13,11 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.security.Permissions;
+import com.atlassian.jira.security.groups.GroupManager;
+import com.atlassian.jira.security.roles.ProjectRole;
+import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -72,12 +77,15 @@ public class CalendarServiceImpl implements CalendarService {
     private ActiveObjects ao;
     private CustomFieldManager customFieldManager;
     private I18nHelper i18nHelper;
+    private GroupManager groupManager;
     private PermissionManager permissionManager;
     private PermissionService permissionService;
     private ProjectManager projectManager;
+    private ProjectRoleManager projectRoleManager;
     private SearchRequestService searchRequestService;
     private SearchRequestManager searchRequestManager;
     private UserCalendarService userCalendarService;
+    private UserManager userManager;
 
     public void setAo(ActiveObjects ao) {
         this.ao = ao;
@@ -115,6 +123,18 @@ public class CalendarServiceImpl implements CalendarService {
         this.userCalendarService = userCalendarService;
     }
 
+    public void setGroupManager(GroupManager groupManager) {
+        this.groupManager = groupManager;
+    }
+
+    public void setProjectRoleManager(ProjectRoleManager projectRoleManager) {
+        this.projectRoleManager = projectRoleManager;
+    }
+
+    public void setUserManager(UserManager userManager) {
+        this.userManager = userManager;
+    }
+
     public Calendar getCalendar(final int id) throws GetException {
         Calendar calendar = ao.get(Calendar.class, id);
         if (calendar == null)
@@ -140,11 +160,34 @@ public class CalendarServiceImpl implements CalendarService {
         List<PermissionItemDto> permissions = new ArrayList<PermissionItemDto>();
         for (Permission permission : calendar.getPermissions()) {
             SubjectType subjectType = SubjectType.fromInt(permission.getSubjectType());
-            permissions.add(new PermissionItemDto(permission.getSubject(),
-                                                  permissionService.getSubjectDisplayName(permission.getSubject(), subjectType),
-                                                  subjectType.name(),
-                                                  PermissionUtils.getAccessType(permission.isAdmin(), permission.isUse()),
-                                                  permissionService.getPermissionAvatar(permission, subjectType)));
+            PermissionItemDto itemDto = new PermissionItemDto(permission.getSubject(), "", subjectType.name(),
+                                                              PermissionUtils.getAccessType(permission.isAdmin(), permission.isUse()),
+                                                              permissionService.getPermissionAvatar(permission, subjectType));
+            switch (subjectType) {
+                case USER:
+                    ApplicationUser subjectUser = userManager.getUserByKey(permission.getSubject());
+                    if (subjectUser != null)
+                        itemDto.setText(String.format("%s - %s (%s)", subjectUser.getDisplayName(), subjectUser.getEmailAddress(), subjectUser.getKey()));
+                    break;
+                case GROUP:
+                    Group group = groupManager.getGroup(permission.getSubject());
+                    if (group != null)
+                        itemDto.setText(group.getName());
+                    break;
+                case PROJECT_ROLE:
+                    Long projectId = PermissionUtils.getProject(permission.getSubject());
+                    Long projectRoleId = PermissionUtils.getProjectRole(permission.getSubject());
+                    if (projectId == null || projectRoleId == null)
+                        break;
+                    Project project = projectManager.getProjectObj(projectId);
+                    ProjectRole projectRole = projectRoleManager.getProjectRole(projectRoleId);
+                    if (project != null && projectRole != null) {
+                        itemDto.setProject(project.getName());
+                        itemDto.setProjectRole(projectRole.getName());
+                    }
+                    break;
+            }
+            permissions.add(itemDto);
         }
         if (permissions.size() > 0)
             result.setPermissions(permissions);
@@ -163,7 +206,6 @@ public class CalendarServiceImpl implements CalendarService {
 
         permissionService.updatePermissions(calendar, calendarSettingDto.getPermissions());
         userCalendarService.addCalendarToUser(user.getKey(), calendar, true);
-        permissionService.addPermission(calendar, SubjectType.USER, user.getKey(), true, true);
         CalendarDto result = new CalendarDto(null, calendar);
         result.setFavorite(true);
         result.setChangable(true);
