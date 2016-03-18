@@ -17,7 +17,7 @@
  * @param contextPath AJS.contextPath()
  * @param issue json object containing field values
  */
-{template .issueInfo}
+{template .issueInfo autoescape="false"}
     <div>
         <div class="calenar-issue-popup-key-header">
             <a target="_blank" href="{$contextPath}/browse/{$issue.key}">

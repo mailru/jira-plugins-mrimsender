@@ -100,7 +100,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                 eventRender: function(event, $element) {
                     $element.addClass('calendar-event-object');
                     $element.find('.fc-title').prepend(event.id + ' ');
-                    AJS.InlineDialog($element, "eventDialog", function(content, trigger, showPopup) {
+                    AJS.InlineDialog($element, 'eventDialog', function(content, trigger, showPopup) {
                         $.ajax({
                             type: 'GET',
                             url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.id),

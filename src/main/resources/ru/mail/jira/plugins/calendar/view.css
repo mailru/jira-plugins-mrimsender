@@ -414,6 +414,11 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 
 .aui-inline-dialog .aui-inline-dialog-contents.calendar-event-info-popup {
     padding: 20px !important;
+    overflow: hidden;
+    overflow-y: scroll;
+    width: auto !important;
+    max-width: 500px;
+    min-width: 300px;
 }
 
 .calendar-event-info-popup dl {
