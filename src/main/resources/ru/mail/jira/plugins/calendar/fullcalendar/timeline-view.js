@@ -160,6 +160,7 @@
                 this.eventDialog = AJS.InlineDialog(target, "eventTimelineDialog", function(content, trigger, showPopup) {
                     $.ajax({
                         type: 'GET',
+                        globalThrobber: false,
                         url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.eventId),
                         success: function(issue) {
                             content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({

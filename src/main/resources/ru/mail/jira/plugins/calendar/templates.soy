@@ -123,21 +123,23 @@
  * @param avatarUrl
  */
 {template .permissionField autoescape="false"}
-    <div title="{$rawText}">
         {if $type == 'USER' or $type == 'PROJECT_ROLE'}
-            <span class="aui-avatar aui-avatar-xsmall">
-                <span class="aui-avatar-inner">
-                    <img src="{$avatarUrl}" />
+            <div title="{$rawText}">
+                <span class="aui-avatar aui-avatar-xsmall">
+                    <span class="aui-avatar-inner">
+                        <img src="{$avatarUrl}" />
+                    </span>
                 </span>
-            </span>
-            {sp}{$text}
+                {sp}{$text}
+            </div>
         {elseif $type == 'GROUP'}
-            <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
-            {sp}{$text}
+            <div title="{$rawText}">
+                <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
+                {sp}{$text}
+            </div>
         {else}
             {$text}
         {/if}
-    </div>
 {/template}
 
 /**
@@ -285,3 +287,46 @@
         </div>
     </div>
 {/template}
+
+/**
+ * Calendars with error in gadget
+ * @param calendars
+ */
+{template .gadgetCalendarError}
+    <div class="aui-message aui-message-error error">
+        <p class="title"><strong>{getText('ru.mail.jira.plugins.calendar.gadget.config.error')}</strong></p>
+        <ul>
+            {if length($calendars) == 0 }
+                <li>{getText('ru.mail.jira.plugins.calendar.gadget.config.unavailable')}</li>
+            {/if}
+        </ul>
+    </div>
+{/template}
+
+/**
+ * Calendars with error in gadget
+ * @param name
+ * @param color
+ */
+{template .calendarField}
+    <div title="{$name}">
+        <div class="calendar-view-color-box" style="background-color: {$color};"/>
+        {$name}
+    </div>
+{/template}
+
+/**
+ * Calendars with error in gadget
+ * @param calendars
+ */
+{template .calendarLegend}
+    {foreach $calendar in $calendars}
+        <div class="mailru-calendar-gadget-legend-entry">
+            {call .calendarField}
+                {param name: $calendar.name /}
+                {param color: $calendar.color /}
+            {/call}
+        </div>
+    {/foreach}
+{/template}
+

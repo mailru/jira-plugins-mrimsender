@@ -40,7 +40,11 @@ public interface UserData extends Entity {
     String getIcalUid();
     void setICalUid(String uid);
 
-    /** Last like flag shown */
+    /** Rating dialog statistic */
     long getLastLikeFlagShown();
     void setLastLikeFlagShown(long timestamp);
+    void setPluginRated(boolean rated);
+    boolean isPluginRated();
+    int getLikeShowCount();
+    void setLikeShowCount(int likeShowCount);
 }

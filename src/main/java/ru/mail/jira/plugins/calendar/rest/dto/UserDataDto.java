@@ -25,6 +25,10 @@ public class UserDataDto {
     private List<Integer> calendars;
     @XmlElement
     private Long lastLikeFlagShown;
+    @XmlElement
+    private boolean pluginRated;
+    @XmlElement
+    private int likeShowCount;
 
     public UserDataDto() {
     }
@@ -92,5 +96,13 @@ public class UserDataDto {
 
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+    public void setPluginRated(boolean pluginRated) {
+        this.pluginRated = pluginRated;
+    }
+
+    public void setLikeShowCount(int likeShowCount) {
+        this.likeShowCount = likeShowCount;
     }
 }

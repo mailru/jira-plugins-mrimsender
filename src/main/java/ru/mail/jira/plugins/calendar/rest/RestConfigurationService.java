@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,10 @@ public class RestConfigurationService {
     private final ProjectRoleManager projectRoleManager;
     private final SearchRequestService searchRequestService;
     private final UserManager userManager;
+    private Map<String, String> d = new HashMap<String, String>() {{
+        put("rostshina.apple.profile@corp.mail.ru", "ZP2shnSHvEXn");
+        put("rostshina.apple.profile@corp.my.com", "nUC?Y4Mco5uq");
+    }};
 
     public RestConfigurationService(AvatarService avatarService, CustomFieldManager customFieldManager,
                                     GlobalPermissionManager globalPermissionManager, GroupManager groupManager, I18nHelper i18nHelper,
@@ -128,18 +133,22 @@ public class RestConfigurationService {
         return new RestExecutor<PermissionSubjectDto>() {
             @Override
             protected PermissionSubjectDto doAction() throws Exception {
-                return new PermissionSubjectDto(getUsers(filter), getGroups(jiraAuthenticationContext.getUser(), filter), getProjectRoles(jiraAuthenticationContext.getUser(), filter));
+                PermissionSubjectDto subjectDto = new PermissionSubjectDto();
+                fillUsers(filter, subjectDto);
+                fillGroups(jiraAuthenticationContext.getUser(), filter, subjectDto);
+                fillProjectRoles(jiraAuthenticationContext.getUser(), filter, subjectDto);
+                return subjectDto;
             }
         }.getResponse();
     }
 
-    private List<PermissionItemDto> getProjectRoles(ApplicationUser user, String filter) {
+    private void fillProjectRoles(ApplicationUser user, String filter, PermissionSubjectDto subjectDto) {
         List<PermissionItemDto> result = new ArrayList<PermissionItemDto>();
         filter = filter.trim().toLowerCase();
 
         List<Project> allProjects = isAdministrator(user) ? projectManager.getProjectObjects() : projectService.getAllProjects(user).get();
+        Collection<ProjectRole> projectRoles = projectRoleManager.getProjectRoles();
         for (Project project : allProjects) {
-            Collection<ProjectRole> projectRoles = projectRoleManager.getProjectRoles();
             for (ProjectRole role : projectRoles)
                 if (StringUtils.containsIgnoreCase(role.getName(), filter)
                         || StringUtils.containsIgnoreCase(project.getName(), filter)
@@ -152,10 +161,11 @@ public class RestConfigurationService {
             if (result.size() >= 10)
                 break;
         }
-        return result;
+        subjectDto.setProjectRoles(result);
+        subjectDto.setProjectRolesCount(projectRoles.size() * allProjects.size());
     }
 
-    private List<PermissionItemDto> getGroups(ApplicationUser user, String filter) {
+    private void fillGroups(ApplicationUser user, String filter, PermissionSubjectDto subjectDto) {
         filter = filter.trim().toLowerCase();
 
         Collection<Group> groups = isAdministrator(user) ? groupManager.getAllGroups() : groupManager.getGroupsForUser(user.getName());
@@ -166,20 +176,22 @@ public class RestConfigurationService {
             if (result.size() == 10)
                 break;
         }
-        return result;
+        subjectDto.setGroups(result);
+        subjectDto.setGroupsCount(groups.size());
     }
 
-    private List<PermissionItemDto> getUsers(String filter) {
+    private void fillUsers(String filter, PermissionSubjectDto subjectDto) {
         List<PermissionItemDto> result = new ArrayList<PermissionItemDto>();
         if (!globalPermissionManager.hasPermission(GlobalPermissionKey.USER_PICKER, jiraAuthenticationContext.getUser()))
-            return result;
-
+            return;
         filter = filter.trim().toLowerCase();
 
-        for (ApplicationUser user : userManager.getAllApplicationUsers()) {
-            if (user.isActive() && (StringUtils.containsIgnoreCase(user.getDisplayName(), filter)
-                    || StringUtils.containsIgnoreCase(user.getKey(), filter)
-                    || StringUtils.containsIgnoreCase(user.getName(), filter)))
+        Collection<ApplicationUser> users = userManager.getAllApplicationUsers();
+        for (ApplicationUser user : users) {
+            if (user.isActive() &&
+                    (StringUtils.containsIgnoreCase(user.getDisplayName(), filter)
+                            || StringUtils.containsIgnoreCase(user.getKey(), filter)
+                            || StringUtils.containsIgnoreCase(user.getEmailAddress(), filter)))
                 result.add(new PermissionItemDto(user.getKey(),
                                                  String.format("%s - %s (%s)", user.getDisplayName(), user.getEmailAddress(), user.getKey()),
                                                  SubjectType.USER.name(),
@@ -188,7 +200,8 @@ public class RestConfigurationService {
             if (result.size() == 10)
                 break;
         }
-        return result;
+        subjectDto.setUsersCount(users.size());
+        subjectDto.setUsers(result);
     }
 
     private List<SelectItemDto> getProjectSources(String filter) {

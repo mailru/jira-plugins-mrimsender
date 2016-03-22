@@ -5,6 +5,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
         initialize: function(options) {
             this.eventSources = {};
             this.contextPath = options && _.has(options, 'contextPath') ? options.contextPath : AJS.contextPath();
+            this.customsButtonOptions = options && _.has(options, 'contextPath') ? options.customsButtonOptions : {};
         },
         _eventSource: function(id) {
             return this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + id;
@@ -17,12 +18,15 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             e.currentTarget.blur();
             this.trigger('changeWeekendsVisibility');
         },
+        _canButtonVisible: function(name) {
+            return this.customsButtonOptions[name] == undefined || this.customsButtonOptions[name].visible !== false;
+        },
         updateButtonsVisibility: function(view) {
-            if (view.name === 'timeline')
+            if (this._canButtonVisible('zoom-out') && this._canButtonVisible('zoom-in') && view.name === 'timeline')
                 this._getCalendarHeaderButton('zoom-out').parent('.fc-button-group').show();
             else
                 this._getCalendarHeaderButton('zoom-out').parent('.fc-button-group').hide();
-            if (view.name === 'quarter' || view.name === 'month' || view.name === 'basicWeek')
+            if (this._canButtonVisible('weekend') && (view.name === 'quarter' || view.name === 'month' || view.name === 'basicWeek'))
                 this._getCalendarHeaderButton('weekend').show();
             else
                 this._getCalendarHeaderButton('weekend').hide();
@@ -103,9 +107,13 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     AJS.InlineDialog($element, 'eventDialog', function(content, trigger, showPopup) {
                         $.ajax({
                             type: 'GET',
+                            globalThrobber: false,
                             url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.id),
                             success: function(issue) {
-                                content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({issue: issue, contextPath: AJS.contextPath()})).addClass('calendar-event-info-popup');
+                                content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
+                                    issue: issue,
+                                    contextPath: AJS.contextPath()
+                                })).addClass('calendar-event-info-popup');
                                 showPopup();
                             },
                             error: function(xhr) {
@@ -148,6 +156,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             function eventMove(event, duration, isDrag) {
                 $.ajax({
                     type: 'PUT',
+                    globalThrobber: false,
                     url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.id + '?dayDelta=' + duration._days + '&millisDelta=' + duration._milliseconds + '&isDrag=' + isDrag,
                     error: function(xhr) {
                         var msg = "Error while trying to drag event. Issue key => " + event.id;

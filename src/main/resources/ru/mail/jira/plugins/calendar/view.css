@@ -187,15 +187,16 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 
 #calendar-dialog {
     width: 780px;
+    top: 140px;
 }
 
 #calendar-dialog .aui-dialog2-content {
-    min-height: 280px;
+    min-height: 350px;
 }
 
 #calendar-dialog form {
     margin: 0;
-    max-height: 250px;
+    height: 340px;
     padding: 10px 20px 20px 20px;
     overflow: hidden;
     overflow-y: scroll;
@@ -239,11 +240,11 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     width: 600px;
 }
 
-#calendar-dialog-permission-table tbody > tr > td {
-    vertical-align: middle;
+#calendar-dialog-permission-table th.calendar-dialog-permission-table-action {
+    width: 47px;
 }
 
-#calendar-dialog-permission-table thead tr:first-child {
+#calendar-dialog-permission-table thead tr {
     background-color: #f0f0f0;
 }
 
@@ -256,20 +257,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 }
 
 #calendar-dialog-permission-table .calendar-dialog-permission-table-subject {
-    width: 286px;
-}
-
-#calendar-dialog-permission-table .calendar-dialog-permission-table-subject .select2-container input {
-    min-width: 268px;
-}
-
-#calendar-dialog-permission-table .calendar-dialog-permission-table-subject .select2-container {
-    display: block;
-}
-
-#calendar-dialog-permission-table .calendar-dialog-permission-table-subject .select2-choices {
-    min-height: 30px;
-    padding: 3px 5px;
+    width: 310px;
 }
 
 .mailrucalendar-table-icon-column {
@@ -290,12 +278,8 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     color: #999;
 }
 
-#calendar-dialog-permission-table-access-type {
-    min-width: 115px;
-}
-
-#calendar-dialog-permission-table-add {
-    margin-left: 20px;
+.calendar-dialog-permission-table-access-type {
+    min-width: 195px;
 }
 
 .calendar-dialog-permission-table-access-type.calendar-dialog-permission-table-action {
@@ -310,10 +294,6 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 #calendar-dialog-permission-table li.aui-lozenge[disabled] {
     opacity: 0.5;
     cursor: default;
-}
-
-#calendar-dialog-permission-table-access-type-dropdown {
-    z-index: 9999;
 }
 
 #calendar-dialog-permission-table td > ul {
@@ -331,23 +311,13 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 }
 
 #calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon[disabled] {
-    background: #f5f5f5;
-    border-color: #dddddd;
-    box-shadow: none;
-    color: #999;
-    cursor: default;
+    visibility: hidden !important;
 }
 
 /* Full Calendar */
 
 #calendar-full-calendar {
     position: relative;
-}
-
-#mailru-calendar-gadget-full-calendar {
-    position: relative;
-    padding: 15px;
-    min-height: 200px;
 }
 
 .calendar-event-object {
@@ -573,10 +543,6 @@ div.vis-item.vis-box {
     font-size: 2em;
     line-height: 1.2;
     color: #ddd;
-}
-
-.mailrucalendar-like-flag-rating:not(:checked) > label:before {
-    content: '\2605';
 }
 
 .mailrucalendar-like-flag-rating > input:checked ~ label {

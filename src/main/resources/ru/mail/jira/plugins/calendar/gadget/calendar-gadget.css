@@ -1,0 +1,18 @@
+.select2-results {
+    max-height: 150px;
+}
+
+.mailru-calendar-calendar-gadget {
+    position: relative;
+    padding: 15px;
+    min-height: 200px;
+}
+
+#mailru-calendar-gadget-legend {
+    margin-top: 10px;
+}
+
+.mailru-calendar-gadget-legend-entry {
+    float: left;
+    margin: 0 10px 5px 0;
+}

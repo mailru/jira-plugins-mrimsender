@@ -74,6 +74,7 @@
 
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
+        <resource type="download" name="calendar-gadget.css" location="ru/mail/jira/plugins/calendar/gadget/calendar-gadget.css"/>
         <resource type="download" name="calendar-gadget.js" location="ru/mail/jira/plugins/calendar/gadget/calendar-gadget.js"/>
     </web-resource>
 

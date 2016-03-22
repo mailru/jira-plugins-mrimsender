@@ -8,7 +8,7 @@ require(['jquery',
     'calendar/feed-dialog',
     'calendar/import-dialog',
     'calendar/timeline-view'], function($, _, Backbone, LikeFlag, CalendarView,
-                                             CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog) {
+                                        CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog) {
     AJS.toInit(function() {
         collectTopMailCounterScript();
 
@@ -390,8 +390,20 @@ require(['jquery',
                 mainView.loadFullCalendar(view, model.get('hideWeekends'));
 
                 Backbone.history.start();
-                //if (model.has('lastLikeFlagShown') && moment(model.get('lastLikeFlagShown')).add(3, 'M').isBefore(moment()))
-                new LikeFlag();
+
+                if (model.has('lastLikeFlagShown') && model.get('likeShowCount') == 0)
+                    $.ajax({
+                        type: 'PUT',
+                        url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/likeFlagShown/false'
+                    });
+                else if (model.has('lastLikeFlagShown') && !model.get('pluginRated') &&
+                    (model.get('likeShowCount') == 1 && moment(model.get('lastLikeFlagShown')).add(2, 'w').isBefore(moment())
+                    || model.get('likeShowCount') == 2 && moment(model.get('lastLikeFlagShown')).add(2, 'w').isBefore(moment())
+                    || model.get('likeShowCount') == 3 && moment(model.get('lastLikeFlagShown')).add(1, 'M').isBefore(moment())
+                    || model.get('likeShowCount') == 4 && moment(model.get('lastLikeFlagShown')).add(2, 'M').isBefore(moment())
+                    || model.get('likeShowCount') == 5 && moment(model.get('lastLikeFlagShown')).add(4, 'M').isBefore(moment())
+                    || model.get('likeShowCount') >= 6 && moment(model.get('lastLikeFlagShown')).add(8, 'M').isBefore(moment())))
+                    new LikeFlag();
             },
             error: function(model, response) {
                 var msg = 'Error while trying to load user preferences. ';

@@ -81,11 +81,11 @@
                 <table id="calendar-dialog-permission-table" class="aui aui-table-rowhover">
                     <thead>
                         <tr>
-                            <th class="calendar-dialog-permission-table-subject">
+                            <th class="calendar-dialog-permission-table-subject" colspan="2">
                                 <input type="hidden" class="full-width-field" id="calendar-dialog-permission-table-subject"/>
                             </th>
-                            <th class="calendar-dialog-permission-table-access-type" colspan="2">
-                                <button id="calendar-dialog-permission-table-access-type" class="aui-button aui-dropdown2-trigger" aria-owns="calendar-dialog-permission-table-access-type-dropdown" aria-haspopup="true">$i18n.getText( "ru.mail.jira.plugins.calendar.common.use" )</button><button id="calendar-dialog-permission-table-add" class="aui-button">$i18n.getText( "common.words.add" )</button>
+                            <th class="calendar-dialog-permission-table-action">
+                                <button id="calendar-dialog-permission-table-add" class="aui-button">$i18n.getText( "common.words.add" )</button>
                             </th>
                         </tr>
                     </thead>
@@ -103,12 +103,6 @@
                         </tr>
                     </tfoot>
                 </table>
-                <div id="calendar-dialog-permission-table-access-type-dropdown" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
-                    <ul class="aui-list-truncate">
-                        <li><a href="#" class="aui-dropdown2-radio checked" data-access-type="USE">$i18n.getText( "ru.mail.jira.plugins.calendar.common.use" )</a></li>
-                        <li><a href="#" class="aui-dropdown2-radio" data-access-type="ADMIN">$i18n.getText( "ru.mail.jira.plugins.calendar.common.admin" )</a></li>
-                    </ul>
-                </div>
                 <input class="hidden" type="submit"/>
             </form>
         </div>

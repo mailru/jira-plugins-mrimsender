@@ -55,8 +55,11 @@ public class UserDataService {
         UserDataDto userDataDto = new UserDataDto(userData);
         userDataDto.setDisplayName(user.getDisplayName());
         userDataDto.setAvatarUrl(getUserAvatarSrc(user));
-        if (isAdministrator(user))
+        if (isAdministrator(user)) {
             userDataDto.setLastLikeFlagShown(userData.getLastLikeFlagShown());
+            userDataDto.setPluginRated(userData.isPluginRated());
+            userDataDto.setLikeShowCount(userData.getLikeShowCount());
+        }
         return userDataDto;
     }
 
@@ -135,12 +138,14 @@ public class UserDataService {
         });
     }
 
-    public void updateUserLastLikeFlagShown(final ApplicationUser user) {
+    public void updateUserLikeData(final ApplicationUser user, final boolean rated) {
         ao.executeInTransaction(new TransactionCallback<Void>() {
             @Override
             public Void doInTransaction() {
                 UserData userData = getUserData(user);
+                userData.setPluginRated(rated);
                 userData.setLastLikeFlagShown(System.currentTimeMillis());
+                userData.setLikeShowCount(userData.getLikeShowCount() + 1);
                 userData.save();
                 return null;
             }
