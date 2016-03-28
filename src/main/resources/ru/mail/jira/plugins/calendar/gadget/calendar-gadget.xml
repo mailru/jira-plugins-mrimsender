@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Module>
-    <ModulePrefs title="__MSG_ru.mail.jira.plugins.calendar.gadget.info.title__"
-                 directory_title="__MSG_ru.mail.jira.plugins.calendar.gadget.info.title__"
+    <ModulePrefs title="__MSG_ru.mail.jira.plugins.calendar.linkTitle__"
+                 directory_title="__MSG_ru.mail.jira.plugins.calendar.linkTitle__"
                  description="__MSG_ru.mail.jira.plugins.calendar.gadget.info.description__"
                  author="Mail.Ru Group"
                  author_affiliation="Mail.Ru Group"
-                 title_url="https://marketplace.atlassian.com/vendors/37127"
                  screenshot="#staticResourceUrl("ru.mail.jira.plugins.mailrucal:calendar-gadget-resources", "intro-screenshot.png")"
                  thumbnail="#staticResourceUrl("ru.mail.jira.plugins.mailrucal:calendar-gadget-resources", "intro-thumb.png")">
         <Require feature="dynamic-height"/>
@@ -16,7 +15,7 @@
         <Require feature="views"/>
         <Optional feature="atlassian.util"/>
         <Optional feature="gadget-directory">
-            <Param name="categories">Other</Param>
+            <Param name="categories">JIRA</Param>
         </Optional>
         #oauth
         #supportedLocales("gadget.common,ru.mail.jira.plugins.calendar")

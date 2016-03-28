@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.calendar.service;
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
+import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.security.GlobalPermissionManager;
@@ -22,6 +23,7 @@ public class UserDataService {
     private final static Logger log = LoggerFactory.getLogger(UserDataService.class);
 
     private ActiveObjects ao;
+    private ApplicationProperties applicationProperties;
     private AvatarService avatarService;
     private CalendarService calendarService;
     private GlobalPermissionManager globalPermissionManager;
@@ -29,6 +31,10 @@ public class UserDataService {
 
     public void setAo(ActiveObjects ao) {
         this.ao = ao;
+    }
+
+    public void setApplicationProperties(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
     }
 
     public void setAvatarService(AvatarService avatarService) {
@@ -53,6 +59,7 @@ public class UserDataService {
 
     public UserDataDto getUserDataDto(ApplicationUser user, UserData userData) {
         UserDataDto userDataDto = new UserDataDto(userData);
+        userDataDto.setName(user.getName());
         userDataDto.setDisplayName(user.getDisplayName());
         userDataDto.setAvatarUrl(getUserAvatarSrc(user));
         if (isAdministrator(user)) {

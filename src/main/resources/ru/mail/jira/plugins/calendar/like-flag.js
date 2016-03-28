@@ -1,10 +1,12 @@
 define('calendar/like-flag', ['jquery', 'underscore', 'backbone', 'aui/flag'], function($, _, Backbone, flag) {
     var likeFlagLike = '' +
         '<p>'
-        + AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.liker.thanksAndReview'), '<a href="https://marketplace.atlassian.com/plugins/ru.mail.jira.plugins.mailrucal/server/reviews" target="_blank" class="aui-button aui-button-link mailrucalendar-like-flag-close">', '</a>') +
+        + AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.liker.thanksAndReview'), '<a href="https://marketplace.atlassian.com/plugins/ru.mail.jira.plugins.mailrucal/server/reviews" target="_blank" class="mailrucalendar-like-flag-close">', '</a>') +
         '</p>';
 
-    return Backbone.View.extend({
+    //todo for testing
+
+    Backbone.View.LikeFlag = Backbone.View.extend({
         events: {
             'click .mailrucalendar-like-flag-close': '_onClose',
             'change .mailrucalendar-like-flag-rating input[name=rating]': '_rate',
@@ -47,4 +49,5 @@ define('calendar/like-flag', ['jquery', 'underscore', 'backbone', 'aui/flag'], f
             this.$('.mailrucalendar-like-flag-container').hide().html(likeFlagLike).fadeIn();
         }
     });
+    return Backbone.View.LikeFlag;
 });

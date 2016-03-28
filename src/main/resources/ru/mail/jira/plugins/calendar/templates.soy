@@ -118,22 +118,81 @@
 /**
  * Text format for permission select2 field
  * @param type
- * @param rawText
+ * @param userName
+ * @param userNameHighlight
+ * @param userEmail
+ * @param userEmailHighlight
+ * @param userDisplayName
+ * @param userDisplayNameHighlight
  * @param text
+ * @param textHighlight
+ * @param project
+ * @param projectHighlight
+ * @param projectRole
+ * @param projectRoleHighlight
  * @param avatarUrl
  */
 {template .permissionField autoescape="false"}
-        {if $type == 'USER' or $type == 'PROJECT_ROLE'}
-            <div title="{$rawText}">
+        {if $type == 'USER'}
+            <div title="{$userDisplayName}{sp}-{sp}{$userEmail}{sp}({$userName})" class="calendar-dialog-permission-table-subject-overflow">
                 <span class="aui-avatar aui-avatar-xsmall">
                     <span class="aui-avatar-inner">
                         <img src="{$avatarUrl}" />
                     </span>
                 </span>
-                {sp}{$text}
+                {sp}{$userDisplayNameHighlight}{sp}-{sp}{$userEmailHighlight}{sp}({$userNameHighlight}
+            </div>
+        {elseif $type == 'PROJECT_ROLE'}
+            <div title="{$project}{sp}/{sp}{$projectRole}" class="calendar-dialog-permission-table-subject-overflow">
+                <span class="aui-avatar aui-avatar-xsmall">
+                    <span class="aui-avatar-inner">
+                        <img src="{$avatarUrl}" />
+                    </span>
+                </span>
+                {sp}<span class="calendar-dialog-permission-project-overflow">{$projectHighlight}</span><span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRoleHighlight}
             </div>
         {elseif $type == 'GROUP'}
-            <div title="{$rawText}">
+            <div title="{$text}" class="calendar-dialog-permission-table-subject-overflow">
+                <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
+                {sp}{$textHighlight}
+            </div>
+        {else}
+            {$text}
+        {/if}
+{/template}
+
+/**
+ * Text format for selection permission select2 field
+ * @param type
+ * @param userName
+ * @param userEmail
+ * @param userDisplayName
+ * @param text
+ * @param project
+ * @param projectRole
+ * @param avatarUrl
+*/
+{template .permissionFieldSelection autoescape="false"}
+        {if $type == 'USER'}
+            <div title="{$userDisplayName}{sp}-{sp}{$userEmail}{sp}({$userName})" class="calendar-dialog-permission-table-subject-overflow">
+                <span class="aui-avatar aui-avatar-xsmall">
+                    <span class="aui-avatar-inner">
+                        <img src="{$avatarUrl}" />
+                    </span>
+                </span>
+                {sp}{$userDisplayName}
+            </div>
+        {elseif $type == 'PROJECT_ROLE'}
+            <div title="{$project}{sp}/{sp}{$projectRole}" class="calendar-dialog-permission-table-subject-overflow">
+                <span class="aui-avatar aui-avatar-xsmall">
+                    <span class="aui-avatar-inner">
+                        <img src="{$avatarUrl}" />
+                    </span>
+                </span>
+                {sp}{$project}<span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRole}
+            </div>
+        {elseif $type == 'GROUP'}
+            <div title="{$text}" class="calendar-dialog-permission-table-subject-overflow">
                 <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
                 {sp}{$text}
             </div>
@@ -174,35 +233,44 @@
 
 /**
  * Text format for permission select2 field
- * @param subjectId
- * @param subjectType
- * @param subject
- * @param accessType
+ * @param id
+ * @param type
+ * @param userName
+ * @param userDisplayName
+ * @param text
+ * @param project
+ * @param projectRole
  * @param avatarUrl
+ * @param accessType
  */
 {template .permissionTableRow autoescape="false"}
-    <tr data-id="{$subjectId}" data-subject-type="{$subjectType}">
+    <tr data-id="{$id}" data-subject-type="{$type}">
         <td class="calendar-dialog-permission-table-subject">
             <div class="mailrucalendar-table-icon-column">
-                {if $subjectType == 'USER'}
-                    <div rel="{$subjectId}" class="user-hover">
+                {if $type == 'USER'}
+                    <div rel="{$userName}" class="user-hover">
                         <span class="aui-avatar aui-avatar-xsmall mailrucalendar-table-icon">
                             <span class="aui-avatar-inner">
                                 <img src="{$avatarUrl}" />
                             </span>
                         </span>
-                        {sp}{$subject}
+                        {sp}{$userDisplayName}
                     </div>
-                {elseif $subjectType == 'GROUP'}
+                {elseif $type == 'GROUP'}
                     <span class="aui-icon aui-icon-small aui-iconfont-group icon-default mailrucalendar-table-icon"></span>
-                    {sp}{$subject}
-                {elseif $subjectType == 'PROJECT_ROLE'}
-                    <span class="aui-avatar aui-avatar-project aui-avatar-xsmall mailrucalendar-table-icon">
-                        <span class="aui-avatar-inner">
-                            <img src="{$avatarUrl}" />
+                    {sp}{$text}
+                {elseif $type == 'PROJECT_ROLE'}
+                    {if $project}
+                        <span class="aui-avatar aui-avatar-project aui-avatar-xsmall mailrucalendar-table-icon">
+                            <span class="aui-avatar-inner">
+                                <img src="{$avatarUrl}" />
+                            </span>
                         </span>
-                    </span>
-                    {sp}{$subject}
+                        {sp}{$project}<span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRole}
+                    {else}
+                        <span class="aui-icon aui-icon-small aui-iconfont-admin-roles mailrucalendar-table-icon"></span>
+                        {sp}<i>{getText('ru.mail.jira.plugins.calendar.gadget.project.unavailable')}<span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRole}</i>
+                    {/if}
                 {/if}
             </div>
         </td>
@@ -222,6 +290,8 @@
  * @param name
  * @param color
  * @param usersCount
+ * @param hasError
+ * @param error
  */
 {template .importTableRow}
     <tr>
@@ -230,7 +300,11 @@
         </td>
         <td>
             <div class="mailrucalendar-table-icon-column">
+            {if $hasError}
+                <div class="aui-icon aui-icon-small aui-iconfont-error mailrucalendar-table-icon" title="{$error}"/>
+            {else}
                 <div class="calendar-view-color-box mailrucalendar-table-icon" style="background-color: {$color};"/>
+            {/if}
                 {$name}
             </div>
         </td>
@@ -262,21 +336,23 @@
             </button>
         </div>
         <div id="calendar-buttons-dropdown-{$calendar.id}" data-id="{$calendar.id}" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
-            {if $calendar.source }
+            {if $calendar.viewable}
+                {if $calendar.source }
+                    <div class="aui-dropdown2-section">
+                        <ul>
+                            <li><a class="calendar-issue-navigator" href="#">{getText( 'common.concepts.issues' )}</a></li>
+                        </ul>
+                    </div>
+                {/if}
                 <div class="aui-dropdown2-section">
                     <ul>
-                        <li><a class="calendar-issue-navigator" href="#">{getText( 'common.concepts.issues' )}</a></li>
+                        <li><a class="calendar-edit" href="#">{getText( 'ru.mail.jira.plugins.calendar.common.edit' )}</a></li>
+                        {if $calendar.changable }
+                            <li><a class="calendar-delete" href="#">{getText( 'common.words.delete' )}</a></li>
+                        {/if}
                     </ul>
                 </div>
             {/if}
-            <div class="aui-dropdown2-section">
-                <ul>
-                    <li><a class="calendar-edit" href="#">{getText( 'ru.mail.jira.plugins.calendar.common.edit' )}</a></li>
-                    {if $calendar.changable }
-                        <li><a class="calendar-delete" href="#">{getText( 'common.words.delete' )}</a></li>
-                    {/if}
-                </ul>
-            </div>
             {if $calendar.favorite or $calendar.visible }
                 <div class="aui-dropdown2-section">
                     <ul>
@@ -290,16 +366,10 @@
 
 /**
  * Calendars with error in gadget
- * @param calendars
  */
 {template .gadgetCalendarError}
     <div class="aui-message aui-message-error error">
-        <p class="title"><strong>{getText('ru.mail.jira.plugins.calendar.gadget.config.error')}</strong></p>
-        <ul>
-            {if length($calendars) == 0 }
-                <li>{getText('ru.mail.jira.plugins.calendar.gadget.config.unavailable')}</li>
-            {/if}
-        </ul>
+        <p>{getText('ru.mail.jira.plugins.calendar.gadget.config.error')}</p>
     </div>
 {/template}
 
@@ -307,26 +377,42 @@
  * Calendars with error in gadget
  * @param name
  * @param color
+ * @param hasError
  */
 {template .calendarField}
-    <div title="{$name}">
-        <div class="calendar-view-color-box" style="background-color: {$color};"/>
-        {$name}
-    </div>
+    {if $name}
+        <div title="{$name}">
+            {if $hasError}
+                <span class="aui-icon aui-icon-small aui-iconfont-error calendar-view-color-box"/>
+            {else}
+                <span class="calendar-view-color-box" style="background-color: {$color};"/>
+            {/if}
+            {$name}
+        </div>
+    {else}
+        <span class="aui-icon aui-icon-small aui-iconfont-error calendar-view-color-box"/>
+        <i>{getText('ru.mail.jira.plugins.calendar.gadget.config.calendar.unavailable')}</i>
+    {/if}
 {/template}
 
 /**
  * Calendars with error in gadget
+ * @param contextPath
  * @param calendars
  */
 {template .calendarLegend}
     {foreach $calendar in $calendars}
-        <div class="mailru-calendar-gadget-legend-entry">
-            {call .calendarField}
-                {param name: $calendar.name /}
-                {param color: $calendar.color /}
-            {/call}
-        </div>
+        {if $calendar.sourceType == 'project' }
+            <a href="{$contextPath}/issues/?jql=project%3D{$calendar.sourceId}" class="mailru-calendar-gadget-legend-entry">
+        {else}
+            <a href="{$contextPath}/issues/?filter={$calendar.sourceId}" class="mailru-calendar-gadget-legend-entry">
+        {/if}
+        {if $calendar.hasError}
+            <span class="aui-icon aui-icon-small aui-iconfont-error calendar-view-color-box" title="{$calendar.error}"/>
+        {else}
+            <span class="calendar-view-color-box" style="background-color: {$calendar.color};"/>
+        {/if}
+        {$calendar.name}</a>
     {/foreach}
 {/template}
 

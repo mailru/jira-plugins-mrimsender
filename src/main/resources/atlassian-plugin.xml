@@ -61,6 +61,9 @@
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
         <dependency>ru.mail.jira.plugins.mailrucal:mailru-calendar-soy-templates</dependency>
 
+        <resource type="download" name="intro-screenshot.png" location="ru/mail/jira/plugins/calendar/gadget/intro-screenshot.png"/>
+        <resource type="download" name="intro-thumb.png" location="ru/mail/jira/plugins/calendar/gadget/intro-thumb.png"/>
+
         <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>
         <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/libs/clipboard-min.js"/>
 

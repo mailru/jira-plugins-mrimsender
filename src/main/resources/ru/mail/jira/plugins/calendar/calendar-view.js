@@ -6,6 +6,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             this.eventSources = {};
             this.contextPath = options && _.has(options, 'contextPath') ? options.contextPath : AJS.contextPath();
             this.customsButtonOptions = options && _.has(options, 'contextPath') ? options.customsButtonOptions : {};
+            this.timeFormat = options && _.has(options, 'timeFormat') ? options.timeFormat : AJS.Meta.get('date-time')
         },
         _eventSource: function(id) {
             return this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + id;
@@ -48,6 +49,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
         init: function(view, hideWeekends) {
             var viewRenderFirstTime = true;
             var contextPath = this.contextPath;
+            var self = this;
             this.$el.fullCalendar({
                 contentHeight: 'auto',
                 defaultView: view,
@@ -83,8 +85,9 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     start: '10:00',
                     end: '19:00'
                 },
-                timeFormat: $("meta[name='ajs-date-time']").attr('content'),
-                slotLabelFormat: $("meta[name='ajs-date-time']").attr('content'),
+                timezone: 'local',
+                timeFormat: this.timeFormat,
+                slotLabelFormat: this.timeFormat,
                 lazyFetching: true,
                 editable: true,
                 draggable: true,
@@ -104,10 +107,9 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                 eventRender: function(event, $element) {
                     $element.addClass('calendar-event-object');
                     $element.find('.fc-title').prepend(event.id + ' ');
-                    AJS.InlineDialog($element, 'eventDialog', function(content, trigger, showPopup) {
+                    this.eventDialog = AJS.InlineDialog($element, 'eventDialog', function(content, trigger, showPopup) {
                         $.ajax({
                             type: 'GET',
-                            globalThrobber: false,
                             url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.id),
                             success: function(issue) {
                                 content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
@@ -145,6 +147,10 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     this.$el.fullCalendar('unfreezeContentHeight');
                     this.trigger('renderComplete');
                 }, this),
+                eventDragStart: function(event) {
+                    event.eventDialog && event.eventDialog.hide();
+                    event.eventDialog = undefined;
+                },
                 eventDrop: function(event, duration) {
                     eventMove(event, duration, true);
                 },
@@ -156,7 +162,6 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             function eventMove(event, duration, isDrag) {
                 $.ajax({
                     type: 'PUT',
-                    globalThrobber: false,
                     url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.id + '?dayDelta=' + duration._days + '&millisDelta=' + duration._milliseconds + '&isDrag=' + isDrag,
                     error: function(xhr) {
                         var msg = "Error while trying to drag event. Issue key => " + event.id;
@@ -196,8 +201,11 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             return this.$el.fullCalendar('getView').type;
         },
         toggleWeekends: function(hideWeekends) {
-            this._getCalendarHeaderButton('weekend').text(hideWeekends ? AJS.I18n.getText('ru.mail.jira.plugins.calendar.showWeekends') : AJS.I18n.getText('ru.mail.jira.plugins.calendar.hideWeekends'));
-            this.$el.fullCalendar('option', 'weekends', !hideWeekends);
+            var view = this.getViewType();
+            if (view === 'quarter' || view === 'month' || view === 'basicWeek') {
+                this._getCalendarHeaderButton('weekend').text(hideWeekends ? AJS.I18n.getText('ru.mail.jira.plugins.calendar.showWeekends') : AJS.I18n.getText('ru.mail.jira.plugins.calendar.hideWeekends'));
+                this.$el.fullCalendar('option', 'weekends', !hideWeekends);
+            }
         }
     });
 });

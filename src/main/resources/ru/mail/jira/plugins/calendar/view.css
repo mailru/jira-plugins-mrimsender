@@ -54,6 +54,16 @@
     border-color: #A89B95;
 }
 
+.select2-container.select2-container-disabled .select2-choice,
+.select2-container.select2-container-disabled .select2-choices,
+.select2-container.select2-container-disabled .select2-choices .select2-search-choice {
+    background-color: #f4f4f4 !important;
+    background-image: none !important;
+    border: 1px solid #ddd !important;
+    cursor: not-allowed !important;
+    color: #999999 !important;
+}
+
 /* Header */
 #calendar-period-btn {
     width: 110px;
@@ -242,6 +252,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 
 #calendar-dialog-permission-table th.calendar-dialog-permission-table-action {
     width: 47px;
+    padding-left: 0;
 }
 
 #calendar-dialog-permission-table thead tr {
@@ -256,8 +267,34 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     visibility: hidden;
 }
 
+#calendar-dialog-permission-table.aui.aui-table-rowhover > tfoot tr:hover {
+    background-color: #f0f0f0;
+}
+
 #calendar-dialog-permission-table .calendar-dialog-permission-table-subject {
-    width: 310px;
+    min-width: 310px;
+    max-width: 310px;
+}
+
+.calendar-dialog-permission-table-subject-overflow {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.calendar-dialog-permission-project-overflow {
+    display: inline-block;
+    max-width: 230px;
+    vertical-align: bottom;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.calendar-dialog-permission-table-error th {
+    color: #d04437;
+    font-weight: normal;
+    padding-top: 0;
 }
 
 .mailrucalendar-table-icon-column {
@@ -297,8 +334,9 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 }
 
 #calendar-dialog-permission-table td > ul {
-    padding-left: 0;
     float: left;
+    margin-top: -1px;
+    padding-left: 0;
 }
 
 #calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon {
@@ -322,6 +360,8 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 
 .calendar-event-object {
     cursor: pointer;
+    text-decoration: none !important;
+    color: #fff !important;
 }
 
 .fc-event-container {
@@ -418,7 +458,7 @@ a.calendar-name .aui-iconfont-error {
     color: #707070;
 }
 
-#calendar-dialog-form .long-field.aui-select2-container .select2-choices {
+.calendar-dialog-form .long-field.aui-select2-container .select2-choices {
     max-width: 400px;
 }
 
@@ -463,29 +503,36 @@ div.vis-item.vis-box {
     width: 730px;
 }
 
+#mailrucalendar-calendar-import-dialog .aui-quicksearch input[type='text'] {
+    padding-right: 26px;
+}
+
+#mailrucalendar-calendar-import-dialog .aui-quicksearch:after {
+    color: #999;
+    content: "\f18d";
+    font-family: "Atlassian Icons";
+    height: 16px;
+    margin-top: 11px;
+    position: absolute;
+    right: 7px;
+    top: -5px;
+    width: 16px;
+}
+
 #mailrucalendar-calendar-import-dialog .aui-dialog2-content {
     min-height: 400px;
 }
 
-.mailrucalendar-search-field {
-    border: 1px solid #cccccc;
+#mailrucalendar-no-calendars-for-import {
+    margin-top: 0;
 }
 
-.mailrucalendar-search-field .aui-icon {
-    position: absolute;
-    top: 12px;
-    left: 10px;
+#mailrucalendar-import-calendars-table {
+    margin-top: 0;
 }
 
-#mailrucalendar-query {
-    max-width: 688px;
-    width: 688px;
-    border: none;
-    text-indent: 30px;
-}
-
-#mailrucalendar-query-no-result {
-    padding-top: 20px;
+#mailrucalendar-import-calendars-table > thead > tr > th {
+    padding-top: 0;
 }
 
 .mailrucalendar-table-select-column {

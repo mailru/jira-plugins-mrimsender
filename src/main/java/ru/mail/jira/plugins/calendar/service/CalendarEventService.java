@@ -417,9 +417,6 @@ public class CalendarEventService {
 
         IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
 
-        //        String dateFormat = applicationProperties.getDefaultBackedString(APKeys.JIRA_DATE_PICKER_JAVA_FORMAT);
-        //        String dateTimeFormat = applicationProperties.getDefaultBackedString(APKeys.JIRA_DATE_TIME_PICKER_JAVA_FORMAT);
-        //        Locale locale = ComponentAccessor.getI18nHelperFactory().getInstance(user).getLocale();
         DateTimeFormatter datePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_PICKER);
         DateTimeFormatter dateTimePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_TIME_PICKER);
 

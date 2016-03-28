@@ -6,6 +6,8 @@ import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.bc.project.ProjectService;
+import com.atlassian.jira.config.properties.APKeys;
+import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.search.SearchRequest;
@@ -25,8 +27,8 @@ import com.atlassian.jira.sharing.search.SharedEntitySearchResult;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
-import ru.mail.jira.plugins.calendar.model.SubjectType;
 import ru.mail.jira.plugins.calendar.rest.dto.DateField;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueSourceDto;
 import ru.mail.jira.plugins.calendar.rest.dto.PermissionItemDto;
@@ -55,6 +57,7 @@ import java.util.Map;
 @Path("/calendar/config")
 @Produces(MediaType.APPLICATION_JSON)
 public class RestConfigurationService {
+    private final ApplicationProperties applicationProperties;
     private final AvatarService avatarService;
     private final CustomFieldManager customFieldManager;
     private final GlobalPermissionManager globalPermissionManager;
@@ -66,16 +69,13 @@ public class RestConfigurationService {
     private final ProjectRoleManager projectRoleManager;
     private final SearchRequestService searchRequestService;
     private final UserManager userManager;
-    private Map<String, String> d = new HashMap<String, String>() {{
-        put("rostshina.apple.profile@corp.mail.ru", "ZP2shnSHvEXn");
-        put("rostshina.apple.profile@corp.my.com", "nUC?Y4Mco5uq");
-    }};
 
-    public RestConfigurationService(AvatarService avatarService, CustomFieldManager customFieldManager,
+    public RestConfigurationService(ApplicationProperties applicationProperties, AvatarService avatarService, CustomFieldManager customFieldManager,
                                     GlobalPermissionManager globalPermissionManager, GroupManager groupManager, I18nHelper i18nHelper,
                                     JiraAuthenticationContext jiraAuthenticationContext,
                                     ProjectManager projectManager, ProjectService projectService,
                                     ProjectRoleManager projectRoleManager, SearchRequestService searchRequestService, UserManager userManager) {
+        this.applicationProperties = applicationProperties;
         this.avatarService = avatarService;
         this.customFieldManager = customFieldManager;
         this.globalPermissionManager = globalPermissionManager;
@@ -87,6 +87,19 @@ public class RestConfigurationService {
         this.projectRoleManager = projectRoleManager;
         this.searchRequestService = searchRequestService;
         this.userManager = userManager;
+    }
+
+    @GET
+    @Path("/props")
+    public Response getTimeFormat() {
+        return new RestExecutor<Map<String, String>>() {
+            @Override
+            protected Map<String, String> doAction() throws Exception {
+                Map<String, String> result = new HashMap<String, String>();
+                result.put("timeFormat", applicationProperties.getDefaultBackedString(APKeys.JIRA_LF_DATE_TIME));
+                return result;
+            }
+        }.getResponse();
     }
 
     @GET
@@ -148,21 +161,38 @@ public class RestConfigurationService {
 
         List<Project> allProjects = isAdministrator(user) ? projectManager.getProjectObjects() : projectService.getAllProjects(user).get();
         Collection<ProjectRole> projectRoles = projectRoleManager.getProjectRoles();
-        for (Project project : allProjects) {
-            for (ProjectRole role : projectRoles)
-                if (StringUtils.containsIgnoreCase(role.getName(), filter)
-                        || StringUtils.containsIgnoreCase(project.getName(), filter)
-                        || StringUtils.containsIgnoreCase(project.getKey(), filter))
-                    result.add(new PermissionItemDto(PermissionUtils.projectRoleSubject(project.getId(), role.getId()),
-                                                     project.getName(), role.getName(),
-                                                     SubjectType.PROJECT_ROLE.name(),
-                                                     null,
-                                                     String.format("projectavatar?pid=%d&avatarId=%d&size=xxmall", project.getId(), project.getAvatar().getId())));
-            if (result.size() >= 10)
-                break;
+        if (StringUtils.isEmpty(filter)) {
+            for (Project project : allProjects) {
+                for (ProjectRole role : projectRoles)
+                    result.add(PermissionItemDto.buildProjectRoleDto(PermissionUtils.projectRoleSubject(project.getId(), role.getId()),
+                                                                     String.format("%s (%s)", project.getName(), project.getKey()), role.getName(),
+                                                                     null,
+                                                                     String.format("projectavatar?pid=%d&avatarId=%d&size=xxmall", project.getId(), project.getAvatar().getId())));
+                if (result.size() >= 10)
+                    break;
+            }
+            subjectDto.setProjectRolesCount(projectRoles.size() * allProjects.size());
+        } else {
+            int count = 0;
+            long lastAddedProjectId = -1;
+            for (Project project : allProjects)
+                for (ProjectRole role : projectRoles)
+                    if (StringUtils.containsIgnoreCase(role.getName(), filter)
+                            || StringUtils.containsIgnoreCase(project.getName(), filter)
+                            || StringUtils.containsIgnoreCase(project.getKey(), filter)) {
+                        count++;
+                        if (result.size() < 10 || lastAddedProjectId == project.getId()) {
+                            lastAddedProjectId = project.getId();
+                            result.add(PermissionItemDto.buildProjectRoleDto(PermissionUtils.projectRoleSubject(project.getId(), role.getId()),
+                                                                             String.format("%s (%s)", project.getName(), project.getKey()), role.getName(),
+                                                                             null,
+                                                                             String.format("projectavatar?pid=%d&avatarId=%d&size=xxmall", project.getId(), project.getAvatar().getId())));
+                        }
+                    }
+            subjectDto.setProjectRolesCount(count);
         }
         subjectDto.setProjectRoles(result);
-        subjectDto.setProjectRolesCount(projectRoles.size() * allProjects.size());
+
     }
 
     private void fillGroups(ApplicationUser user, String filter, PermissionSubjectDto subjectDto) {
@@ -170,14 +200,25 @@ public class RestConfigurationService {
 
         Collection<Group> groups = isAdministrator(user) ? groupManager.getAllGroups() : groupManager.getGroupsForUser(user.getName());
         List<PermissionItemDto> result = new ArrayList<PermissionItemDto>();
-        for (Group group : groups) {
-            if (StringUtils.containsIgnoreCase(group.getName(), filter))
-                result.add(new PermissionItemDto(group.getName(), group.getName(), SubjectType.GROUP.name(), null, ""));
-            if (result.size() == 10)
-                break;
+
+        if (StringUtils.isEmpty(filter)) {
+            for (Group group : groups) {
+                result.add(PermissionItemDto.buildGroupDto(group.getName(), group.getName(), null));
+                if (result.size() >= 10)
+                    break;
+            }
+            subjectDto.setGroupsCount(groups.size());
+        } else {
+            int count = 0;
+            for (Group group : groups)
+                if (StringUtils.containsIgnoreCase(group.getName(), filter)) {
+                    count++;
+                    if (result.size() < 10)
+                        result.add(PermissionItemDto.buildGroupDto(group.getName(), group.getName(), null));
+                }
+            subjectDto.setGroupsCount(count);
         }
         subjectDto.setGroups(result);
-        subjectDto.setGroupsCount(groups.size());
     }
 
     private void fillUsers(String filter, PermissionSubjectDto subjectDto) {
@@ -187,20 +228,33 @@ public class RestConfigurationService {
         filter = filter.trim().toLowerCase();
 
         Collection<ApplicationUser> users = userManager.getAllApplicationUsers();
-        for (ApplicationUser user : users) {
-            if (user.isActive() &&
-                    (StringUtils.containsIgnoreCase(user.getDisplayName(), filter)
-                            || StringUtils.containsIgnoreCase(user.getKey(), filter)
-                            || StringUtils.containsIgnoreCase(user.getEmailAddress(), filter)))
-                result.add(new PermissionItemDto(user.getKey(),
-                                                 String.format("%s - %s (%s)", user.getDisplayName(), user.getEmailAddress(), user.getKey()),
-                                                 SubjectType.USER.name(),
-                                                 null,
-                                                 getUserAvatarSrc(user)));
-            if (result.size() == 10)
-                break;
+
+        if (StringUtils.isEmpty(filter)) {
+            for (ApplicationUser user : users) {
+                result.add(PermissionItemDto.buildUserDto(user.getKey(),
+                                                          user.getDisplayName(), user.getEmailAddress(), user.getName(),
+                                                          null,
+                                                          getUserAvatarSrc(user)));
+                if (result.size() >= 10)
+                    break;
+            }
+            subjectDto.setUsersCount(users.size());
+        } else {
+            int count = 0;
+            for (ApplicationUser user : users) {
+                if (user.isActive() && (StringUtils.containsIgnoreCase(user.getDisplayName(), filter)
+                        || StringUtils.containsIgnoreCase(user.getName(), filter)
+                        || StringUtils.containsIgnoreCase(user.getEmailAddress(), filter))) {
+                    count++;
+                    if (result.size() < 10)
+                        result.add(PermissionItemDto.buildUserDto(user.getKey(),
+                                                                  user.getDisplayName(), user.getEmailAddress(), user.getName(),
+                                                                  null,
+                                                                  getUserAvatarSrc(user)));
+                }
+            }
+            subjectDto.setUsersCount(count);
         }
-        subjectDto.setUsersCount(users.size());
         subjectDto.setUsers(result);
     }
 

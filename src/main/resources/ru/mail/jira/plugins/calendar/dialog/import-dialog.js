@@ -10,7 +10,7 @@ define('calendar/import-dialog', ['jquery', 'underscore', 'backbone'], function(
         initialize: function() {
             this.dialog = AJS.dialog2('#mailrucalendar-calendar-import-dialog');
             this.queryField = this.$('#mailrucalendar-query');
-            this.queryFieldContainer = this.$('.mailrucalendar-search-field');
+            this.queryFieldContainer = this.$('form');
             this.table = this.$('#mailrucalendar-import-calendars-table');
             this.tableContent = this.table.find('tbody');
             this.adminMessage = this.$('#mailrucalendar-admin-message');
@@ -42,9 +42,10 @@ define('calendar/import-dialog', ['jquery', 'underscore', 'backbone'], function(
             this.noResult.hide();
             this.addBtn.attr('disabled', 'disabled');
             this.dialog.show();
-            if (this.collection.findWhere({favorite: false}))
+            if (this.collection.findWhere({favorite: false})) {
                 this._fillSearchResultTable();
-            else {
+                this.queryField.select();
+            } else {
                 this.adminMessage.hide();
                 this.queryFieldContainer.hide();
                 this.noCalendars.show();
@@ -90,14 +91,9 @@ define('calendar/import-dialog', ['jquery', 'underscore', 'backbone'], function(
             var query = this.queryField.val();
             var result = this.collection.filter(function(calendar) {
                 var name = calendar.get('name');
-                var owner = calendar.get('owner');
-                var ownerFullName = calendar.get('ownerFullName');
                 var q = query.toLowerCase();
 
-                return !calendar.get('hasError') && !calendar.get('favorite') &&
-                    (name && name.toLowerCase().indexOf(q) != -1
-                    || owner && owner.toLowerCase().indexOf(q) != -1
-                    || ownerFullName && ownerFullName.toLowerCase().indexOf(q) != -1);
+                return !calendar.get('favorite') && name && name.toLowerCase().indexOf(q) != -1;
             });
             if (result.length && this._equalsDataArray(this.tableData, result))
                 return;
@@ -105,12 +101,7 @@ define('calendar/import-dialog', ['jquery', 'underscore', 'backbone'], function(
             this._onStartSearch();
             var rows = '';
             _.each(result, function(calendar) {
-                rows += JIRA.Templates.Plugins.MailRuCalendar.importTableRow({
-                    id: calendar.id,
-                    name: calendar.get('name'),
-                    color: calendar.get('color'),
-                    usersCount: calendar.get('usersCount') || 0
-                });
+                rows += JIRA.Templates.Plugins.MailRuCalendar.importTableRow(calendar.toJSON());
             });
             if (rows) {
                 this.tableContent.append(rows);

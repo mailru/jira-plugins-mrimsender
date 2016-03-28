@@ -1,5 +1,7 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
+import ru.mail.jira.plugins.calendar.model.SubjectType;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -11,32 +13,32 @@ public class PermissionItemDto {
     @XmlElement
     private String text;
     @XmlElement
-    private String project;
-    @XmlElement
-    private String projectRole;
-    @XmlElement
     private String type;
     @XmlElement
     private String accessType;
     @XmlElement
     private String avatarUrl;
+    @XmlElement
+    private boolean available;
+
+    @XmlElement
+    private String userDisplayName;
+    @XmlElement
+    private String userEmail;
+    @XmlElement
+    private String userName;
+
+    @XmlElement
+    private String project;
+    @XmlElement
+    private String projectRole;
 
     public PermissionItemDto() {
 
     }
 
-    public PermissionItemDto(String id, String text, String type, String accessType, String avatarUrl) {
+    private PermissionItemDto(String id, String type, String accessType, String avatarUrl) {
         this.id = id;
-        this.text = text;
-        this.type = type;
-        this.accessType = accessType;
-        this.avatarUrl = avatarUrl;
-    }
-
-    public PermissionItemDto(String id, String project, String projectRole, String type, String accessType, String avatarUrl) {
-        this.id = id;
-        this.project = project;
-        this.projectRole = projectRole;
         this.type = type;
         this.accessType = accessType;
         this.avatarUrl = avatarUrl;
@@ -96,5 +98,27 @@ public class PermissionItemDto {
 
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+
+    public static PermissionItemDto buildUserDto(String id, String displayName, String email, String name, String accessType, String avatarUrl) {
+        PermissionItemDto itemDto = new PermissionItemDto(id, SubjectType.USER.name(), accessType, avatarUrl);
+        itemDto.userDisplayName = displayName;
+        itemDto.userEmail = email;
+        itemDto.userName = name;
+        return itemDto;
+    }
+
+    public static PermissionItemDto buildGroupDto(String id, String text, String accessType) {
+        PermissionItemDto itemDto = new PermissionItemDto(id, SubjectType.GROUP.name(), accessType, "");
+        itemDto.setText(text);
+        return itemDto;
+    }
+
+    public static PermissionItemDto buildProjectRoleDto(String id, String project, String projectRole, String accessType, String avatarUrl) {
+        PermissionItemDto itemDto = new PermissionItemDto(id, SubjectType.PROJECT_ROLE.name(), accessType, avatarUrl);
+        itemDto.project = project;
+        itemDto.projectRole = projectRole;
+        return itemDto;
     }
 }

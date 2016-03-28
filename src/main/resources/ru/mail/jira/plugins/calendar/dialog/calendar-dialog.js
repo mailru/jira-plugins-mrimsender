@@ -50,7 +50,8 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             'click .calendar-dialog-permission-table-action .aui-icon:not([disabled])': '_removePermission',
             'click .calendar-dialog-permission-table-access-type .aui-lozenge:not([disabled])': '_toggleAccessType',
             'click a[href=#calendar-dialog-common-tab]': '_selectCommonTab',
-            'click a[href=#calendar-dialog-permissions-tab]': '_selectPermissionTab'
+            'click a[href=#calendar-dialog-permissions-tab]': '_selectPermissionTab',
+            'change #calendar-dialog-permission-table-subject': '_onChangeSubjectSelect'
         },
         initialize: function(options) {
             this.dialog = AJS.dialog2('#calendar-dialog');
@@ -58,6 +59,24 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             this.$cancelButton = this.$('#calendar-dialog-cancel');
             this.permissionIds = {};
             this.userData = options.userData;
+
+            var canAdmin = !this.model.id || this.model.get('canAdmin');
+            this.$('#calendar-dialog-name').attr('disabled', !canAdmin);
+            this.$('#calendar-dialog-color').attr('disabled', !canAdmin);
+            this.$('#calendar-dialog-color').auiSelect2('enable', canAdmin);
+            this.$('#calendar-dialog-event-start').attr('disabled', !canAdmin);
+            this.$('#calendar-dialog-event-start').auiSelect2('enable', canAdmin);
+            this.$('#calendar-dialog-event-end').attr('disabled', !canAdmin);
+            this.$('#calendar-dialog-event-end').auiSelect2('enable', canAdmin);
+            this.$('#calendar-dialog-source').attr('disabled', !canAdmin);
+            this.$('#calendar-dialog-source').auiSelect2('enable', canAdmin);
+            this.$('#calendar-dialog-displayed-fields').attr('disabled', !canAdmin);
+            this.$('#calendar-dialog-displayed-fields').auiSelect2('enable', canAdmin);
+            this.$('#calendar-dialog-permission-table-subject').attr('disabled', !canAdmin);
+            this.$('#calendar-dialog-permission-table-subject').auiSelect2('enable', canAdmin);
+            this.$('#calendar-dialog-permission-table-add').attr('disabled', !canAdmin);
+            this.$okButton.attr('disabled', !canAdmin);
+            this.$('.aui-dialog2-footer-hint').text(canAdmin ? '' : AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.no.edit.permission'));
 
             this._initSourceField();
             this._initColorField();
@@ -91,11 +110,11 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             this.$('div.error').text('').addClass('hidden');
             this.$('input').val('');
             this.$('#calendar-dialog-error-panel').text('').addClass('hidden');
-            this.$('#calendar-dialog-permission-table-error-panel').addClass('hidden');
             this.$('#calendar-dialog-permission-table tbody tr').remove();
         },
         /* Public methods */
         show: function() {
+            this.$('.calendar-dialog-permission-table-error').addClass('hidden');
             this.dialog.show();
             this._selectCommonTab();
         },
@@ -106,6 +125,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
         _initPermissionSubjectField: function() {
             this.$('#calendar-dialog-permission-table-subject').auiSelect2({
                 placeholder: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.users.groups.roles'),
+                allowClear: true,
                 ajax: {
                     url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/config/permission/subjects',
                     dataType: 'json',
@@ -138,41 +158,21 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
                     cache: true
                 },
                 formatResult: function(item, label, query) {
-                    var regexp = new RegExp(query.term, 'g');
-                    var replacement = '<b>' + query.term + '</b>';
-                    var text = item.text;
-                    var rawText = item.text;
+                    var regexp = query.term ? new RegExp('(' + query.term + ')', 'gi') : undefined;
+                    var replacement = '<b>$1</b>';
+                    var highlight = {};
                     if (item.type == 'PROJECT_ROLE') {
-                        text = AJS.format('{0}<span class="calendar-dialog-permission-project-role-separator">/</span>{1}', item.project.replace(regexp, replacement), item.projectRole.replace(regexp, replacement));
-                        rawText = AJS.format('{0} / {1}', item.project, item.projectRole);
-                    } else
-                        text = item.text.replace(regexp, replacement);
-                    return JIRA.Templates.Plugins.MailRuCalendar.permissionField({
-                        id: item.id,
-                        rawText: rawText,
-                        text: text,
-                        avatarUrl: item.avatarUrl,
-                        type: item.type
-                    });
+                        highlight.projectHighlight = regexp ? item.project.replace(regexp, replacement) : item.project;
+                        highlight.projectRoleHighlight = regexp ? item.projectRole.replace(regexp, replacement) : item.projectRole;
+                    } else if (item.type == 'USER') {
+                        highlight.userDisplayNameHighlight = regexp ? item.userDisplayName.replace(regexp, replacement) : item.userDisplayName;
+                        highlight.userEmailHighlight = regexp ? item.userEmail.replace(regexp, replacement) : item.userEmail;
+                        highlight.userNameHighlight = regexp ? item.userName.replace(regexp, replacement) : item.userName;
+                    } else if (item.type == 'GROUP')
+                        highlight.textHighlight = regexp ? item.text.replace(regexp, replacement) : item.text;
+                    return JIRA.Templates.Plugins.MailRuCalendar.permissionField(_.defaults(highlight, item));
                 },
-                formatSelection: function(item) {
-                    var text = item.text;
-                    var rawText = item.text;
-                    if (item.type == 'PROJECT_ROLE') {
-                        text = AJS.format('{0}<span class="calendar-dialog-permission-project-role-separator">/</span>{1}', item.project, item.projectRole);
-                        rawText = AJS.format('{0} / {1}', item.project, item.projectRole);
-                    } else if (item.type == 'USER')
-                        text = text.substring(0, text.indexOf(" - "));
-                    return JIRA.Templates.Plugins.MailRuCalendar.permissionField({
-                        id: item.id,
-                        rawText: rawText,
-                        text: text,
-                        avatarUrl: item.avatarUrl,
-                        type: item.type
-                    });
-                },
-                initSelection: function(element, callback) {
-                }
+                formatSelection: JIRA.Templates.Plugins.MailRuCalendar.permissionFieldSelection
             });
         },
         _initSourceField: function() {
@@ -209,12 +209,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             });
 
             function format(item) {
-                return JIRA.Templates.Plugins.MailRuCalendar.sourceField({
-                    text: item.text,
-                    unavailable: item.unavailable,
-                    avatarId: item.avatarId,
-                    projectId: item.id && item.id.indexOf('project_') > -1 ? item.id.substring('project_'.length) : ''
-                });
+                return JIRA.Templates.Plugins.MailRuCalendar.sourceField($.extend({projectId: item.id && item.id.indexOf('project_') > -1 ? item.id.substring('project_'.length) : ''}, item));
             }
         },
         _initColorField: function() {
@@ -251,7 +246,12 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
                 if (this.model.has('permissions')) {
                     var sortOrder = {'USER': 1, 'GROUP': 2, 'PROJECT_ROLE': 3};
                     var permissions = _.sortBy(this.model.get('permissions'), function(a) {
-                        return sortOrder[a.type] + a.text;
+                        if (a.type == 'USER')
+                            return sortOrder[a.type] + a.userDisplayName;
+                        else if (a.type == 'GROUP')
+                            return sortOrder[a.type] + a.text;
+                        else if (a.type == 'PROJECT_ROLE')
+                            return sortOrder[a.type] + a.project + a.projectRole;
                     }).reverse();
                     _.each(permissions, $.proxy(function(permission) {
                         this._addPermissionRow(permission);
@@ -264,25 +264,16 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
                 this._addPermissionRow({
                     id: this.userData.id,
                     type: 'USER',
-                    text: this.userData.get('displayName'),
+                    userName: this.userData.get('name'),
+                    userDisplayName: this.userData.get('displayName'),
                     accessType: 'ADMIN',
                     avatarUrl: this.userData.get('avatarUrl')
                 });
             }
 
             var canAdmin = !this.model.id || this.model.get('canAdmin');
-            this.$('#calendar-dialog-name').attr('disabled', !canAdmin);
-            this.$('#calendar-dialog-color').attr('disabled', !canAdmin);
-            this.$('#calendar-dialog-event-start').attr('disabled', !canAdmin);
-            this.$('#calendar-dialog-event-end').attr('disabled', !canAdmin);
-            this.$('#calendar-dialog-source').attr('disabled', !canAdmin);
-            this.$('#calendar-dialog-displayed-fields').attr('disabled', !canAdmin);
-            this.$('#calendar-dialog-permission-table-subject').attr('disabled', !canAdmin);
-            this.$('#calendar-dialog-permission-table-add').attr('disabled', !canAdmin);
             this.$('tbody .calendar-dialog-permission-table-action .aui-icon').attr('disabled', !canAdmin);
             this.$('tbody .calendar-dialog-permission-table-access-type .aui-lozenge').attr('disabled', !canAdmin);
-            this.$okButton.attr('disabled', !canAdmin);
-            this.$('.aui-dialog2-footer-hint').text(canAdmin ? '' : AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.no.edit.permission'));
         },
         _onFormSubmit: function(e) {
             e.preventDefault();
@@ -295,7 +286,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             this.$cancelButton.attr('disabled', 'disabled');
             this.$('#calendar-dialog-error-panel').addClass('hidden').text('');
             this.$('div.error').addClass('hidden').text('');
-            this.$('#calendar-dialog-permission-table-error-panel').addClass('hidden');
+            this.$('.calendar-dialog-permission-table-error').addClass('hidden');
 
             this.model.save(this._serialize(), {
                 success: $.proxy(this._ajaxSuccessHandler, this),
@@ -361,41 +352,35 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             this.$('#calendar-dialog-permission-table-subject').auiSelect2('focus');
         },
         _addPermissionRow: function(subjectData) {
-            var text = subjectData.text;
-            if (subjectData.type == 'PROJECT_ROLE') {
-                text = AJS.format('{0}<span class="calendar-dialog-permission-project-role-separator">/</span>{1}', subjectData.project, subjectData.projectRole);
-            } else if (subjectData.type == 'USER' && text.indexOf(" - ") > -1)
-                text = text.substring(0, text.indexOf(" - "));
-            this.$('#calendar-dialog-permission-table tbody').prepend(JIRA.Templates.Plugins.MailRuCalendar.permissionTableRow({
-                subjectId: subjectData.id,
-                subjectType: subjectData.type,
-                subject: text,
-                accessType: subjectData.accessType,
-                avatarUrl: subjectData.avatarUrl
-            }));
+            this.$('#calendar-dialog-permission-table tbody').prepend(JIRA.Templates.Plugins.MailRuCalendar.permissionTableRow(subjectData));
             this.permissionIds[subjectData.id] = {
                 id: subjectData.id,
                 type: subjectData.type,
                 accessType: subjectData.accessType
             };
         },
+        _onChangeSubjectSelect: function() {
+            this.$('.calendar-dialog-permission-table-error').addClass('hidden');
+        },
         _addPermission: function(e) {
             e.preventDefault();
-            var subjectData = this.$('#calendar-dialog-permission-table-subject').auiSelect2('data');
+            var $subjectSelect = this.$('#calendar-dialog-permission-table-subject');
+            var subjectData = $subjectSelect.auiSelect2('data');
             if (!subjectData)
                 return;
-            this.$('#calendar-dialog-permission-table-error-panel').addClass('hidden');
+            this.$('.calendar-dialog-permission-table-error').addClass('hidden');
             if (this.permissionIds[subjectData.id]) {
                 var text = subjectData.text;
-                if (subjectData.type == 'PROJECT_ROLE') {
+                if (subjectData.type == 'PROJECT_ROLE')
                     text = AJS.format('{0}<span class="calendar-dialog-permission-project-role-separator">/</span>{1}', subjectData.project, subjectData.projectRole);
-                } else if (subjectData.type == 'USER')
-                    text = text.substring(0, text.indexOf(" - "));
-                this.$('#calendar-dialog-permission-table-error-panel').removeClass('hidden').html(AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.alreadyHasAccess'), text));
+                else if (subjectData.type == 'USER')
+                    text = subjectData.userDisplayName;
+                this.$('.calendar-dialog-permission-table-error').removeClass('hidden').find('th').text(AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.alreadyHasAccess'), text));
             } else {
-                this._addPermissionRow($.extend(subjectData, {accessType: "USE"}));
-                this.$('#calendar-dialog-permission-table-subject').auiSelect2('val', '');
+                this._addPermissionRow($.extend({accessType: 'USE'}, subjectData));
+                $subjectSelect.auiSelect2('val', '');
             }
+            $subjectSelect.auiSelect2('focus');
         },
         _removePermission: function(e) {
             var $row = $(e.target).closest('tr');

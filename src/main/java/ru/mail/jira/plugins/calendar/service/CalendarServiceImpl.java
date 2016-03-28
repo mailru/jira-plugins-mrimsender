@@ -9,10 +9,10 @@ import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.issue.search.SearchRequestManager;
+import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.PermissionManager;
-import com.atlassian.jira.security.Permissions;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
@@ -160,19 +160,20 @@ public class CalendarServiceImpl implements CalendarService {
         List<PermissionItemDto> permissions = new ArrayList<PermissionItemDto>();
         for (Permission permission : calendar.getPermissions()) {
             SubjectType subjectType = SubjectType.fromInt(permission.getSubjectType());
-            PermissionItemDto itemDto = new PermissionItemDto(permission.getSubject(), "", subjectType.name(),
-                                                              PermissionUtils.getAccessType(permission.isAdmin(), permission.isUse()),
-                                                              permissionService.getPermissionAvatar(permission, subjectType));
+            PermissionItemDto itemDto = null;
             switch (subjectType) {
                 case USER:
                     ApplicationUser subjectUser = userManager.getUserByKey(permission.getSubject());
                     if (subjectUser != null)
-                        itemDto.setText(String.format("%s - %s (%s)", subjectUser.getDisplayName(), subjectUser.getEmailAddress(), subjectUser.getKey()));
+                        itemDto = PermissionItemDto.buildUserDto(permission.getSubject(), subjectUser.getDisplayName(), subjectUser.getEmailAddress(), subjectUser.getKey(),
+                                                                 PermissionUtils.getAccessType(permission.isAdmin(), permission.isUse()),
+                                                                 permissionService.getPermissionAvatar(permission, subjectType));
                     break;
                 case GROUP:
                     Group group = groupManager.getGroup(permission.getSubject());
                     if (group != null)
-                        itemDto.setText(group.getName());
+                        itemDto = PermissionItemDto.buildGroupDto(permission.getSubject(), group.getName(),
+                                                                  PermissionUtils.getAccessType(permission.isAdmin(), permission.isUse()));
                     break;
                 case PROJECT_ROLE:
                     Long projectId = PermissionUtils.getProject(permission.getSubject());
@@ -181,13 +182,17 @@ public class CalendarServiceImpl implements CalendarService {
                         break;
                     Project project = projectManager.getProjectObj(projectId);
                     ProjectRole projectRole = projectRoleManager.getProjectRole(projectRoleId);
-                    if (project != null && projectRole != null) {
-                        itemDto.setProject(project.getName());
-                        itemDto.setProjectRole(projectRole.getName());
-                    }
+                    String projectName = null;
+                    String projectRoleName = projectRole != null ? projectRole.getName() : null;
+                    if (project != null && permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false))
+                        projectName = project.getName();
+                    itemDto = PermissionItemDto.buildProjectRoleDto(permission.getSubject(), projectName, projectRoleName,
+                                                                    PermissionUtils.getAccessType(permission.isAdmin(), permission.isUse()),
+                                                                    permissionService.getPermissionAvatar(permission, SubjectType.PROJECT_ROLE));
                     break;
             }
-            permissions.add(itemDto);
+            if (itemDto != null)
+                permissions.add(itemDto);
         }
         if (permissions.size() > 0)
             result.setPermissions(permissions);
@@ -209,6 +214,7 @@ public class CalendarServiceImpl implements CalendarService {
         CalendarDto result = new CalendarDto(null, calendar);
         result.setFavorite(true);
         result.setChangable(true);
+        result.setViewable(true);
         result.setVisible(true);
         return result;
     }
@@ -222,8 +228,12 @@ public class CalendarServiceImpl implements CalendarService {
         setCalendarFields(calendar, calendarSettingDto);
         permissionService.updatePermissions(calendar, calendarSettingDto.getPermissions());
 
+        //update OneToMany entities after saving
+        calendar = getCalendar(calendarSettingDto.getId());
         UserCalendar userCalendar = userCalendarService.find(calendar.getID(), user.getKey());
-        return buildCalendarOutput(user, userCalendar, calendar, true, userCalendar != null && userCalendar.isEnabled(), userCalendar != null, userCalendarService.getUsersCount(calendar.getID()));
+        boolean canAdmin = permissionService.hasAdminPermission(user, calendar);
+        boolean canUse = canAdmin || permissionService.hasUsePermission(user, calendar);
+        return buildCalendarOutput(user, userCalendar, calendar, canUse, canAdmin, userCalendar != null && userCalendar.isEnabled(), userCalendar != null, userCalendarService.getUsersCount(calendar.getID()));
     }
 
     public void deleteCalendar(final ApplicationUser user, final int calendarId) throws GetException {
@@ -262,7 +272,7 @@ public class CalendarServiceImpl implements CalendarService {
             boolean canUse = canAdmin || permissionService.hasUsePermission(user, calendar);
             UserCalendar userCalendar = userCalendarService.find(calendar.getID(), user.getKey());
             if (canAdmin || canUse || userCalendar != null) {
-                CalendarDto output = buildCalendarOutput(user, userCalendar, calendar, canAdmin, userCalendar != null && userCalendar.isEnabled(), userCalendar != null, userCalendarService.getUsersCount(calendar.getID()));
+                CalendarDto output = buildCalendarOutput(user, userCalendar, calendar, canUse, canAdmin, userCalendar != null && userCalendar.isEnabled(), userCalendar != null, userCalendarService.getUsersCount(calendar.getID()));
                 if (!canAdmin && !canUse) {
                     output.setHasError(true);
                     output.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
@@ -273,7 +283,7 @@ public class CalendarServiceImpl implements CalendarService {
         }
         for (UserCalendar userCalendar : userCalendarService.find(user.getKey())) {
             if (!selectedCalendars.contains(userCalendar.getCalendarId())) {
-                CalendarDto output = buildCalendarOutput(user, userCalendar, null, false, false, true, 0);
+                CalendarDto output = buildCalendarOutput(user, userCalendar, null, false, false, false, true, 0);
                 output.setHasError(true);
                 output.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
                 result.add(output);
@@ -283,8 +293,9 @@ public class CalendarServiceImpl implements CalendarService {
         return result.toArray(new CalendarDto[result.size()]);
     }
 
-    private CalendarDto buildCalendarOutput(ApplicationUser user, UserCalendar userCalendar, Calendar calendar, boolean changable, boolean visible, boolean favorite, int usersCount) {
+    private CalendarDto buildCalendarOutput(ApplicationUser user, UserCalendar userCalendar, Calendar calendar, boolean canUse, boolean changable, boolean visible, boolean favorite, int usersCount) {
         CalendarDto output = new CalendarDto(userCalendar, calendar);
+        output.setViewable(canUse);
         output.setChangable(changable);
         output.setVisible(visible);
         output.setFavorite(favorite);
@@ -316,7 +327,7 @@ public class CalendarServiceImpl implements CalendarService {
         if (source.startsWith("project_")) {
             long projectId = Long.parseLong(source.substring("project_".length()));
             Project project = projectManager.getProjectObj(projectId);
-            if (project == null || !permissionManager.hasPermission(Permissions.BROWSE, project, user, false)) {
+            if (project == null || !permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false)) {
                 dto.setSelectedSourceIsUnavailable(true);
                 dto.setSelectedSourceName(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailableSource"));
             } else {
@@ -363,7 +374,7 @@ public class CalendarServiceImpl implements CalendarService {
                     if (project == null)
                         throw new RestFieldException("Can not find project with id => " + projectId, "source");
 
-                    if (!permissionManager.hasPermission(Permissions.BROWSE, project, user, false))
+                    if (!permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false))
                         throw new RestFieldException("No Permission to browse project " + project.getName(), "source");
                 }
             } else if (calendarSettingDto.getSelectedSourceId().startsWith("filter_")) {
@@ -383,11 +394,11 @@ public class CalendarServiceImpl implements CalendarService {
         }
 
         for (String field : calendarSettingDto.getSelectedDisplayedFields())
-            if (field.startsWith("customfield_"))
+            if (field.startsWith("customfield_")) {
                 if (customFieldManager.getCustomFieldObject(field) == null)
                     throw new RestFieldException("Can not find custom field with id => " + field, "fields");
-                else if (!DISPLAYED_FIELDS.contains(field))
-                    throw new RestFieldException(String.format("Can not find field %s among standart fields", field), "fields");
+            } else if (!DISPLAYED_FIELDS.contains(field))
+                throw new RestFieldException(String.format("Can not find field %s among standart fields", field), "fields");
 
         //todo check if permission subject exists
         //        if (StringUtils.isNotBlank(shares)) {

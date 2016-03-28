@@ -9,6 +9,29 @@ require(['jquery',
     'calendar/import-dialog',
     'calendar/timeline-view'], function($, _, Backbone, LikeFlag, CalendarView,
                                         CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog) {
+    $.fn.select2.defaults = $.extend($.fn.select2.defaults, {
+        formatNoMatches: function() {
+            return AJS.I18n.getText('ru.mail.jira.plugins.calendar.select2.formatNoMatches');
+        },
+        //formatInputTooShort: function(input, min) {
+        //    var n = min - input.length;
+        //    return "Please enter " + n + " more character" + (n == 1 ? "" : "s");
+        //},
+        //formatInputTooLong: function(input, max) {
+        //    var n = input.length - max;
+        //    return "Please delete " + n + " character" + (n == 1 ? "" : "s");
+        //},
+        //formatSelectionTooBig: function(limit) {
+        //    return "You can only select " + limit + " item" + (limit == 1 ? "" : "s");
+        //},
+        formatLoadMore: function(pageNumber) {
+            return AJS.I18n.getText('ru.mail.jira.plugins.calendar.select2.formatLoadMore');
+        },
+        formatSearching: function() {
+            return AJS.I18n.getText('ru.mail.jira.plugins.calendar.select2.formatSearching');
+        }
+    });
+
     AJS.toInit(function() {
         collectTopMailCounterScript();
 
@@ -82,15 +105,13 @@ require(['jquery',
             },
             _onCalendarChange: function(calendar) {
                 var $calendarBlock = $('#calendar-list-item-block-' + calendar.id);
-                $calendarBlock.find('span.aui-nav-item-label').text(calendar.get('name'));
-                $calendarBlock.data('color', calendar.get('color'));
-                $calendarBlock.toggleClass('calendar-visible', calendar.get('visible'));
+                $calendarBlock.replaceWith(JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({calendar: calendar.toJSON()}));
 
                 this.calendarView.removeEventSource(calendar.id);
                 if (calendar.get('favorite') && calendar.get('visible') && !calendar.get('hasError'))
                     this.calendarView.addEventSource(calendar.id);
                 else {
-                    this.changeEventSourceCallback(calendar.id, false, calendar.get('error'));
+                    this.changeEventSourceCallback(calendar.id);
 
                     if (!calendar.get('favorite'))
                         this.removeCalendarFromList(calendar);
@@ -110,29 +131,10 @@ require(['jquery',
                 var calendarId = $(this).data('id');
                 $('div.calendar-list-item-block[data-id=' + calendarId + ']').toggleClass('calendar-list-item-selected', false);
             },
-            changeEventSourceCallback: function(calendarId, visible, error) {
+            changeEventSourceCallback: function(calendarId) {
                 var $calendarBlock = this.$('#calendar-list-item-block-' + calendarId);
-                var $calendarLink = $calendarBlock.find('a.calendar-name');
-                $calendarLink.removeClass('not-active');
-
-                var calendarColor = $calendarBlock.data('color');
-                $calendarLink.find('.calendar-view-color-box').remove();
-
-                if (error) {
-                    if (!$calendarLink.hasClass('not-working')) {
-                        $calendarLink.addClass('not-working');
-                        $calendarLink.find('.calendar-view-color-box').remove();
-                        $calendarLink.prepend('<span class="aui-icon aui-icon-small aui-iconfont-error" title="' + error + '"></span>')
-                    }
-                } else {
-                    if ($calendarLink.hasClass('not-working'))
-                        $calendarLink.removeClass('not-working').find('span.aui-iconfont-error').remove();
-
-                    if (visible)
-                        $calendarLink.prepend('<div class="calendar-view-color-box" style="background-color: ' + calendarColor + ';"></div>');
-                    else
-                        $calendarLink.prepend('<div class="calendar-view-color-box" style="border: 2px solid ' + calendarColor + ';"></div>');
-                }
+                var calendar = this.collection.get(calendarId);
+                $calendarBlock.replaceWith(JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({calendar: calendar.toJSON()}));
             },
             startLoadingCalendarsCallback: function() {
                 this.loadingCounter++;
@@ -142,7 +144,7 @@ require(['jquery',
             finishLoadingCalendarsCallback: function() {
                 this.loadingCounter--;
                 if (this.loadingCounter <= 0) {
-                    $('.calendar-name').removeClass('not-active');
+                    this.$('.calendar-name').removeClass('not-active');
                     AJS.undim();
                     JIRA.Loading.hideLoadingIndicator();
                     this.loadingCounter = 0;
@@ -156,7 +158,7 @@ require(['jquery',
                 var sorted = _.sortBy(this.collection.filter(function(cal) {
                     return cal.get('favorite');
                 }), function(cal) {
-                    return cal.get('name');
+                    return cal.get('hasError') ? '' : cal.get('name');
                 });
                 var index = _.indexOf(sorted, calendar);
                 if (sorted.length - 1 == index)
@@ -175,7 +177,7 @@ require(['jquery',
                 var calendarBlock = this.$('#calendar-list-item-block-' + calendar.id);
                 var blockContainer = calendarBlock.parent('.aui-navgroup-inner');
                 calendarBlock.remove();
-                this.calendarView.removeEventSource(calendar);
+                this.calendarView.removeEventSource(calendar.id);
 
                 if (!blockContainer.find('.calendar-list-item-block').length)
                     blockContainer.css('display', 'none');
@@ -283,15 +285,17 @@ require(['jquery',
                 });
             },
             setCalendarView: function(viewName) {
-                this.calendarView.setView(viewName);
-                this.model.save({calendarView: viewName}, {
-                    error: function(xhr) {
-                        var msg = "Error while trying to update user default view to => " + viewName;
-                        if (xhr.responseText)
-                            msg += xhr.responseText;
-                        alert(msg);
-                    }
-                });
+                if (this.calendarView.getViewType() != viewName)
+                    this.calendarView.setView(viewName);
+                if (this.model.get('calendarView') != viewName)
+                    this.model.save({calendarView: viewName}, {
+                        error: function(xhr) {
+                            var msg = "Error while trying to update user default view to => " + viewName;
+                            if (xhr.responseText)
+                                msg += xhr.responseText;
+                            alert(msg);
+                        }
+                    });
             },
             updatePeriodButton: function(viewName) {
                 var $periodItem = this.$('#calendar-period-dropdown a[href$="' + viewName + '"]');
@@ -325,9 +329,9 @@ require(['jquery',
                 this.$('.aui-page-panel-nav').click();
 
                 var calendar = this.collection.get($(e.currentTarget).closest('div.aui-dropdown2').data('id'));
-                var confirmText = '<p>' + AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete1').replace('%s', '<b>' + calendar.get('name') + '</b>') + '</p>';
-                if (calendar.get('usersCount') > 1)
-                    confirmText += '<p>' + AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete2').replace('%s', calendar.get('usersCount')) + '</p>';
+                var confirmText = AJS.format('<p>{0}</p><p>{1}</p>',
+                    AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete1'), '<b>' + calendar.get('name') + '</b>'),
+                    AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete2'), calendar.get('usersCount') || 0));
                 var confirmDialog = new ConfirmDialog({
                     okText: AJS.I18n.getText('common.words.delete'),
                     header: AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDeleteHeader'),
@@ -425,7 +429,7 @@ require(['jquery',
                     mainView.startLoadingCalendarsCallback();
 
                 var sorted = collection.sortBy(function(calendar) {
-                    return calendar.get('name')
+                    return calendar.get('hasError') ? '' : calendar.get('name');
                 });
                 _.each(sorted, function(calendar) {
                     var json = calendar.toJSON();

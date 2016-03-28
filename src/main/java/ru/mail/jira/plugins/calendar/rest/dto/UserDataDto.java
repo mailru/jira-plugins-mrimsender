@@ -12,6 +12,8 @@ public class UserDataDto {
     @XmlElement
     private String id;
     @XmlElement
+    private String name;
+    @XmlElement
     private String displayName;
     @XmlElement
     private String avatarUrl;
@@ -27,7 +29,7 @@ public class UserDataDto {
     private Long lastLikeFlagShown;
     @XmlElement
     private boolean pluginRated;
-    @XmlElement
+
     private int likeShowCount;
 
     public UserDataDto() {
@@ -80,6 +82,14 @@ public class UserDataDto {
 
     public void setLastLikeFlagShown(Long lastLikeFlagShown) {
         this.lastLikeFlagShown = lastLikeFlagShown;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDisplayName() {

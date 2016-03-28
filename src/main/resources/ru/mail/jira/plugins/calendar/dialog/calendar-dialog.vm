@@ -16,7 +16,7 @@
             </div>
         </nav>
         <div id="calendar-dialog-common-tab">
-            <form id="calendar-dialog-form" class="aui unsectioned ajs-dirty-warning-exempt">
+            <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form">
                 <input class="hidden" type="submit"/>
                 <div id="calendar-dialog-error-panel" class="aui-message aui-message-error hidden"></div>
                 <div class="field-group">
@@ -52,7 +52,7 @@
                         <span class="aui-icon icon-required"></span>
                         $i18n.getText( "ru.mail.jira.plugins.calendar.dialog.source" )
                     </label>
-                    <input type="hidden" id="calendar-dialog-source" class="full-width-field"/>
+                    <input type="hidden" id="calendar-dialog-source" class="select full-width-field"/>
                     <div id="calendar-dialog-source-error" class="error hidden"></div>
                 </div>
                 <div class="field-group">
@@ -60,32 +60,35 @@
                         <span class="aui-icon icon-required"></span>
                         $i18n.getText( "ru.mail.jira.plugins.calendar.dialog.eventStart" )
                     </label>
-                    <input type="hidden" id="calendar-dialog-event-start" class="full-width-field calendar-dialog-select">
+                    <input type="hidden" id="calendar-dialog-event-start" class="select full-width-field calendar-dialog-select">
                     <div id="calendar-dialog-event-start-error" class="error hidden"></div>
                 </div>
                 <div class="field-group">
                     <label for="calendar-dialog-event-end">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.eventEnd" )</label>
-                    <input type="hidden" id="calendar-dialog-event-end" class="full-width-field calendar-dialog-select">
+                    <input type="hidden" id="calendar-dialog-event-end" class="select full-width-field calendar-dialog-select">
                     <div id="calendar-dialog-event-end-error" class="error hidden"></div>
                 </div>
                 <div class="field-group">
                     <label for="calendar-dialog-displayed-fields">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.fields" )</label>
-                    <input type="hidden" id="calendar-dialog-displayed-fields" class="full-width-field calendar-dialog-select">
+                    <input type="hidden" id="calendar-dialog-displayed-fields" class="multi-select full-width-field calendar-dialog-select">
                     <div id="calendar-dialog-fields-error" class="error hidden"></div>
                 </div>
             </form>
         </div>
         <div id="calendar-dialog-permissions-tab">
-            <form id="calendar-dialog-form" class="aui unsectioned ajs-dirty-warning-exempt">
-                <div id="calendar-dialog-permission-table-error-panel" class="aui-message aui-message-error hidden"></div>
+            <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form">
                 <table id="calendar-dialog-permission-table" class="aui aui-table-rowhover">
                     <thead>
                         <tr>
                             <th class="calendar-dialog-permission-table-subject" colspan="2">
-                                <input type="hidden" class="full-width-field" id="calendar-dialog-permission-table-subject"/>
+                                <input type="hidden" class="select full-width-field" id="calendar-dialog-permission-table-subject"/>
                             </th>
                             <th class="calendar-dialog-permission-table-action">
                                 <button id="calendar-dialog-permission-table-add" class="aui-button">$i18n.getText( "common.words.add" )</button>
+                            </th>
+                        </tr>
+                        <tr class="calendar-dialog-permission-table-error" class="hidden">
+                            <th colspan="3">
                             </th>
                         </tr>
                     </thead>

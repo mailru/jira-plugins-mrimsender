@@ -20,6 +20,8 @@ public class CalendarDto {
     @XmlElement
     private boolean changable;
     @XmlElement
+    private boolean viewable;
+    @XmlElement
     private boolean visible;
     @XmlElement
     private boolean favorite;
@@ -52,6 +54,10 @@ public class CalendarDto {
 
     public void setChangable(boolean changable) {
         this.changable = changable;
+    }
+
+    public void setViewable(boolean viewable) {
+        this.viewable = viewable;
     }
 
     public void setVisible(boolean visible) {

@@ -141,6 +141,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public void removeCalendarPermissions(Calendar calendar) {
+        ao.delete(calendar.getShares());
         ao.delete(calendar.getPermissions());
     }
 
