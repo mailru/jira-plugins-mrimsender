@@ -1,19 +1,10 @@
 (function(factory) {
-    if (typeof define === 'function' && define.amd) {
-        define(['jquery', 'moment'], factory);
-    }
-    else if (typeof exports === 'object') { // Node/CommonJS
-        module.exports = factory(require('jquery'), require('moment'));
-    }
-    else {
-        factory(jQuery, moment);
-    }
-})(function($, moment) {
-    AJS.toInit(function() {
+    factory(moment);
+})(function(moment) {
+    define('calendar/timeline-view', ['jquery', 'underscore'], function($, _) {
         var FC = $.fullCalendar;
         var View = FC.View;
         var TimelineView;
-        var issueInfoTpl = _.template($('#issue-info-template').html());
 
         moment.locale('mailru', {
             months: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.January'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.February'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.March'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.April'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.May'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.June'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.July'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.August'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.September'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.October'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.November'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.December')],
@@ -39,7 +30,7 @@
             defaultInterval: moment.duration(7, 'd'),
             timelineOptions: {
                 //autoResize: false,
-                height: 550,
+                height: 450,
                 multiselect: false,
                 zoomable: false,
                 zoomMin: moment.duration(4, 'h').asMilliseconds(),
@@ -131,7 +122,7 @@
                 return this.timelineOptions.zoomMax > this.getRangeInterval();
             },
             zoomIn: function() {
-                this.timeline.range.zoom(1/1.5);
+                this.timeline.range.zoom(1 / 1.5);
                 return this.timelineOptions.zoomMin < this.getRangeInterval();
             },
 
@@ -159,18 +150,24 @@
                 if (!event || !e.items.length || event.id == this.currentSelectedId) {
                     this.eventDialog && this.eventDialog.hide();
                     this.eventDialog = undefined;
+                    this.currentSelectedId = undefined;
                     return;
                 }
                 var target = e.event.target;
+                var contextPath = this.options.contextPath;
+                var popupWidth = this.options.calendarView.popupWidth;
                 this.currentSelectedId = event.id;
                 $('#inline-dialog-eventTimelineDialog').remove();
 
                 this.eventDialog = AJS.InlineDialog(target, "eventTimelineDialog", function(content, trigger, showPopup) {
                     $.ajax({
                         type: 'GET',
-                        url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.eventId + '/info',
+                        url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.eventId),
                         success: function(issue) {
-                            content.html(issueInfoTpl({issue: issue})).addClass('calendar-event-info-popup');
+                            content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
+                                issue: issue,
+                                contextPath: AJS.contextPath()
+                            })).addClass('calendar-event-info-popup');
                             showPopup();
                         },
                         error: function(xhr) {
@@ -182,6 +179,7 @@
                     });
                     return false;
                 }, {
+                    width: popupWidth,
                     isRelativeToMouse: true,
                     hideDelay: null,
                     onTop: true,
@@ -198,7 +196,7 @@
                         calendarId: event.calendarId,
                         start: event.start.toDate(),
                         end: event.end && event.end.toDate(),
-                        content: event.title,
+                        content: event.id + ' ' + event.title,
                         className: this._getClassForColor(event.color)
                     };
                 }, this));
@@ -227,7 +225,41 @@
                     case '#87A4C0':
                         return 'mailrucalendar-lightblue';
                     case '#A89B95':
+                        return 'mailrucalendar-grey';
+                    case '#f6c342':
+                        return 'mailrucalendar-yellow';
+                    case '#205081':
+                        return 'mailrucalendar-navy';
+                    case '#333333':
+                        return 'mailrucalendar-charcoal';
+                    case '#707070':
+                        return 'mailrucalendar-mediumgray';
+                    case '#815b3a':
+                        return 'mailrucalendar-mediumbrown';
+                    case '#f79232':
+                        return 'mailrucalendar-cheetoorange';
+                    case '#f1a257':
+                        return 'mailrucalendar-tan';
+                    case '#d39c3f':
                         return 'mailrucalendar-lightbrown';
+                    case '#afe1':
+                        return 'mailrucalendar-cyan';
+                    case '#4a6785':
+                        return 'mailrucalendar-slate';
+                    case '#84bbc6':
+                        return 'mailrucalendar-coolblue';
+                    case '#8eb021':
+                        return 'mailrucalendar-limegreen';
+                    case '#67ab49':
+                        return 'mailrucalendar-midgreen';
+                    case '#654982':
+                        return 'mailrucalendar-violet';
+                    case '#ac707a':
+                        return 'mailrucalendar-mauve';
+                    case '#f15c75':
+                        return 'mailrucalendar-brightpink';
+                    case '#f691b2':
+                        return 'mailrucalendar-rosie';
                 }
             }
         });
@@ -235,6 +267,5 @@
         FC.views.timeline = {
             'class': TimelineView
         };
-
     });
 });

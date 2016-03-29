@@ -7,6 +7,7 @@ import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.project.component.ProjectComponent;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
+import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueInputParameters;
@@ -43,7 +44,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 
@@ -57,38 +57,51 @@ public class CalendarEventService {
     public static final String RESOLVED_DATE_KEY = "resolved";
     public static final String DUE_DATE_KEY = "due_date";
 
-    private final CalendarService calendarService;
+    private CalendarService calendarService;
+    private CustomFieldManager customFieldManager;
+    private DateTimeFormatter dateTimeFormatter;
+    private FieldLayoutManager fieldLayoutManager;
+    private IssueService issueService;
+    private RendererManager rendererManager;
+    private SearchRequestService searchRequestService;
+    private SearchProvider searchProvider;
 
-    private final CustomFieldManager customFieldManager;
-    private final DateTimeFormatter dateTimeFormatter;
-    private final FieldLayoutManager fieldLayoutManager;
-    private final IssueService issueService;
-    private final RendererManager rendererManager;
-    private final SearchRequestService searchRequestService;
-    private final SearchProvider searchProvider;
-
-    public CalendarEventService(CalendarService calendarService,
-                                CustomFieldManager customFieldManager,
-                                DateTimeFormatter dateTimeFormatter,
-                                FieldLayoutManager fieldLayoutManager,
-                                IssueService issueService,
-                                RendererManager rendererManager,
-                                SearchRequestService searchRequestService,
-                                SearchProvider searchProvider) {
+    public void setCalendarService(CalendarService calendarService) {
         this.calendarService = calendarService;
+    }
+
+    public void setCustomFieldManager(CustomFieldManager customFieldManager) {
         this.customFieldManager = customFieldManager;
+    }
+
+    public void setDateTimeFormatter(DateTimeFormatter dateTimeFormatter) {
         this.dateTimeFormatter = dateTimeFormatter;
+    }
+
+    public void setFieldLayoutManager(FieldLayoutManager fieldLayoutManager) {
         this.fieldLayoutManager = fieldLayoutManager;
+    }
+
+    public void setIssueService(IssueService issueService) {
         this.issueService = issueService;
+    }
+
+    public void setRendererManager(RendererManager rendererManager) {
         this.rendererManager = rendererManager;
+    }
+
+    public void setSearchRequestService(SearchRequestService searchRequestService) {
         this.searchRequestService = searchRequestService;
+    }
+
+    public void setSearchProvider(SearchProvider searchProvider) {
         this.searchProvider = searchProvider;
     }
 
     public List<Event> findEvents(final int calendarId,
                                   final String start,
                                   final String end,
-                                  final ApplicationUser user) throws ParseException, SearchException {
+                                  final ApplicationUser user) throws ParseException, SearchException, GetException {
         return findEvents(calendarId, start, end, user, false);
     }
 
@@ -96,7 +109,9 @@ public class CalendarEventService {
                                   final String start,
                                   final String end,
                                   final ApplicationUser user,
-                                  final boolean includeIssueInfo) throws ParseException, SearchException {
+                                  final boolean includeIssueInfo) throws ParseException, SearchException, GetException {
+        if (log.isDebugEnabled())
+            log.debug("findEvents with params. calendarId={}, start={}, end={}, user={}, includeIssueInfo={}", new Object[]{calendarId, start, end, user.toString(), includeIssueInfo});
         Calendar calendarModel = calendarService.getCalendar(calendarId);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String source = calendarModel.getSource();
@@ -111,7 +126,7 @@ public class CalendarEventService {
         }
     }
 
-    public IssueInfo getEventInfo(ApplicationUser user, int calendarId, String eventId) {
+    public IssueInfo getEventInfo(ApplicationUser user, int calendarId, String eventId) throws GetException {
         Calendar calendar = calendarService.getCalendar(calendarId);
         IssueService.IssueResult issueResult = issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId);
         MutableIssue issue = issueResult.getIssue();
@@ -134,9 +149,14 @@ public class CalendarEventService {
                                         Date startTime,
                                         Date endTime,
                                         ApplicationUser user, boolean includeIssueInfo) throws SearchException {
+        if (log.isDebugEnabled())
+            log.debug("getFilterEvents with params. calendar={}, filterId={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
+                      new Object[]{calendar, filterId, startField, endField, startTime, endTime, user, includeIssueInfo});
         JiraServiceContext jsCtx = new JiraServiceContextImpl(user);
         SearchRequest filter = searchRequestService.getFilter(jsCtx, filterId);
 
+        if (log.isDebugEnabled())
+            log.debug("find filter by id. filter={}", filter);
         if (filter == null) {
             log.error("Filter with id => " + filterId + " is null. Maybe it was deleted");
             return new ArrayList<Event>(0);
@@ -158,6 +178,8 @@ public class CalendarEventService {
         CustomField startCF = null;
         if (startField.startsWith("customfield_")) {
             startCF = customFieldManager.getCustomFieldObject(startField);
+            if (log.isDebugEnabled())
+                log.debug("find customfield for startField. startCF={}", startCF);
             if (startCF == null)
                 throw new IllegalArgumentException("Bad custom field id => " + startField);
         }
@@ -165,6 +187,8 @@ public class CalendarEventService {
         CustomField endCF = null;
         if (StringUtils.isNotEmpty(endField) && endField.startsWith("customfield_")) {
             endCF = customFieldManager.getCustomFieldObject(endField);
+            if (log.isDebugEnabled())
+                log.debug("find customfield for endField. endCF={}", endCF);
             if (endCF == null)
                 throw new IllegalArgumentException("Bad custom field id => " + endField);
         }
@@ -179,16 +203,26 @@ public class CalendarEventService {
         }
         jqlBuilder.endsub();
         boolean dateFieldsIsDraggable = isDateFieldsDraggable(startField, endField);
+        if (log.isDebugEnabled())
+            log.debug("dateFieldsIsDraggable={}", dateFieldsIsDraggable);
 
         List<Issue> issues = searchProvider.search(jqlBuilder.buildQuery(), user, PagerFilter.getUnlimitedFilter()).getIssues();
+        if (log.isDebugEnabled())
+            log.debug("searchProvider.search(). query={}, user={}, issues.size()={}", new Object[]{jqlBuilder.buildQuery().toString(), user, issues.size()});
         for (Issue issue : issues) {
             try {
                 Date startDate = startCF == null ? retrieveDateByField(issue, startField) : retrieveDateByField(issue, startCF);
+                if (log.isDebugEnabled())
+                    log.debug("Issue startDate={}", startDate);
                 Date endDate = null;
                 if (StringUtils.isNotEmpty(endField))
                     endDate = endCF == null ? retrieveDateByField(issue, endField) : retrieveDateByField(issue, endCF);
+                if (log.isDebugEnabled())
+                    log.debug("Issue endDate={}", endDate);
 
                 boolean isAllDay = isAllDayEvent(startCF, endCF, startField, endField);
+                if (log.isDebugEnabled())
+                    log.debug("Issue isAllDay={}", isAllDay);
 
                 Event event = new Event();
                 event.setCalendarId(calendar.getID());
@@ -244,9 +278,11 @@ public class CalendarEventService {
             jcb.updatedBetween(dateTimeFormatter.format(startTime), dateTimeFormatter.format(endTime));
         else if (field.startsWith("customfield_")) {
             CustomField customField = customFieldManager.getCustomFieldObject(field);
+            if (log.isDebugEnabled())
+                log.debug("add DateRangeCondition for customfield. customField={}, start={}, end={}", new Object[]{customField, startTime, endTime});
             if (customField == null)
                 throw new IllegalArgumentException("Bad custom field id => " + field);
-            jcb.addDateRangeCondition("cf[" + customField.getIdAsLong() + "]", startTime, endTime);
+            jcb.addStringRangeCondition("cf[" + customField.getIdAsLong() + "]", dateTimeFormatter.format(startTime), dateTimeFormatter.format(endTime));
         } else
             throw new IllegalArgumentException("Bad field => " + field);
     }
@@ -273,7 +309,7 @@ public class CalendarEventService {
         return endFieldForDate && startFieldForDate;
     }
 
-    public void dragEvent(ApplicationUser user, Calendar calendar, Issue issue, int dayDelta, int millisDelta) throws Exception {
+    public void dragEvent(ApplicationUser user, Calendar calendar, Issue issue, long millisDelta) throws Exception {
         if (isDateFieldsNotDraggable(calendar.getEventStart(), calendar.getEventEnd()))
             throw new IllegalArgumentException(String.format("Can not drag event with key => %s, because it contains not draggable event date field", issue.getKey()));
 
@@ -307,19 +343,19 @@ public class CalendarEventService {
         DateTimeFormatter dateTimePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_TIME_PICKER);
 
         if (eventStartIsDueDate) {
-            Timestamp newDueDate = getNewTimestamp(issue.getDueDate(), dayDelta, millisDelta);
+            Date newDueDate = getNewDate(issue.getDueDate(), millisDelta);
             issueInputParams.setDueDate(datePickerFormat.format(newDueDate));
         } else if (eventStartCFValue != null) {
-            Timestamp value = getNewTimestamp(eventStartCFValue, dayDelta, millisDelta);
+            Date value = getNewDate(eventStartCFValue, millisDelta);
             DateTimeFormatter formatter = eventStartCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
             issueInputParams.addCustomFieldValue(eventStartCF.getIdAsLong(), formatter.format(value));
         }
 
         if (eventEndIsDueDate) {
-            Timestamp newDueDate = getNewTimestamp(issue.getDueDate(), dayDelta, millisDelta);
+            Date newDueDate = getNewDate(issue.getDueDate(), millisDelta);
             issueInputParams.setDueDate(datePickerFormat.format(newDueDate));
         } else if (eventEndCF != null && eventEndCFValue != null) {
-            Timestamp value = getNewTimestamp(eventEndCFValue, dayDelta, millisDelta);
+            Date value = getNewDate(eventEndCFValue, millisDelta);
             DateTimeFormatter formatter = eventEndCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
             issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), formatter.format(value));
         }
@@ -333,15 +369,11 @@ public class CalendarEventService {
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
     }
 
-    private Timestamp getNewTimestamp(Date source, int dayDelta, int millisDelta) {
-        int summaryMillis = MILLIS_IN_DAY * dayDelta + millisDelta;
-        GregorianCalendar gregorianCalendar = new GregorianCalendar();
-        gregorianCalendar.setTime(source);
-        gregorianCalendar.add(java.util.Calendar.MILLISECOND, summaryMillis);
-        return new Timestamp(gregorianCalendar.getTimeInMillis());
+    private Date getNewDate(Date date, long millisDelta) {
+        return new Date(date.getTime() + millisDelta);
     }
 
-    public void resizeEvent(ApplicationUser user, Calendar calendar, Issue issue, int dayDelta, int millisDelta) throws Exception {
+    public void resizeEvent(ApplicationUser user, Calendar calendar, Issue issue, long millisDelta) throws Exception {
         if (isDateFieldNotDraggable(calendar.getEventEnd()))
             throw new IllegalArgumentException(String.format("Can not resize event with key => %s, because it contains not draggable end field", issue.getKey()));
 
@@ -380,18 +412,15 @@ public class CalendarEventService {
 
         IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
 
-        //        String dateFormat = applicationProperties.getDefaultBackedString(APKeys.JIRA_DATE_PICKER_JAVA_FORMAT);
-        //        String dateTimeFormat = applicationProperties.getDefaultBackedString(APKeys.JIRA_DATE_TIME_PICKER_JAVA_FORMAT);
-        //        Locale locale = ComponentAccessor.getI18nHelperFactory().getInstance(user).getLocale();
         DateTimeFormatter datePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_PICKER);
         DateTimeFormatter dateTimePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_TIME_PICKER);
 
         if (eventEndIsDueDate) {
-            Timestamp newDueDate = getNewTimestamp(issue.getDueDate(), dayDelta, millisDelta);
+            Date newDueDate = getNewDate(issue.getDueDate(), millisDelta);
             issueInputParams.setDueDate(datePickerFormat.format(newDueDate));
         } else {
             DateTimeFormatter formatter = eventEndCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
-            Timestamp value = getNewTimestamp(eventEndDateValue, dayDelta, millisDelta);
+            Date value = getNewDate(eventEndDateValue, millisDelta);
             issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), formatter.format(value));
         }
 
@@ -417,6 +446,8 @@ public class CalendarEventService {
     }
 
     private Date retrieveDateByField(Issue issue, CustomField customField) {
+        if (log.isDebugEnabled())
+            log.debug("retrieveDateByField with params. issue={}, customField={}, customFieldType={}", new Object[]{issue, customField, customField.getClass()});
         if (!(customField.getCustomFieldType() instanceof com.atlassian.jira.issue.fields.DateField))
             throw new IllegalArgumentException("Bad date time => " + customField.getName());
         return (Date) issue.getCustomFieldValue(customField);
@@ -452,12 +483,12 @@ public class CalendarEventService {
             if (extraField.startsWith("customfield_")) {
                 CustomField customField = customFieldManager.getCustomFieldObject(extraField);
                 FieldLayoutItem fieldLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem(customField);
-                if(customField != null) {
+                if (customField != null) {
                     String columnViewHtml = customField.getColumnViewHtml(fieldLayoutItem, new HashMap<String, Object>(), issue);
                     if (StringUtils.isNotEmpty(columnViewHtml))
                         issueInfo.addCustomField(customField.getName(), columnViewHtml);
                 }
-            } else if (extraField.equals(CalendarService.REPORTER)) {
+            } else if (extraField.equals(CalendarServiceImpl.REPORTER)) {
                 if (issue.getReporter() != null) {
                     FieldLayoutItem reporterLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("reporter");
 
@@ -465,44 +496,44 @@ public class CalendarEventService {
                     String columnViewHtml = ((ReporterSystemField) reporterLayoutItem.getOrderableField()).getColumnViewHtml(reporterLayoutItem, new HashMap(), issue);
                     issueInfo.setReporter(columnViewHtml);
                 }
-            } else if (extraField.equals(CalendarService.ASSIGNEE)) {
+            } else if (extraField.equals(CalendarServiceImpl.ASSIGNEE)) {
                 if (issue.getAssignee() != null) {
                     FieldLayoutItem assigneeLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("assignee");
                     String columnViewHtml = ((AssigneeSystemField) assigneeLayoutItem.getOrderableField()).getColumnViewHtml(assigneeLayoutItem, new HashMap(), issue);
                     issueInfo.setAssignee(columnViewHtml);
                 }
-            } else if (extraField.equals(CalendarService.STATUS))
+            } else if (extraField.equals(CalendarServiceImpl.STATUS))
                 issueInfo.setStatus(issue.getStatusObject().getName());
-            else if (extraField.equals(CalendarService.LABELS)) {
+            else if (extraField.equals(CalendarServiceImpl.LABELS)) {
                 if (issue.getLabels() != null && !issue.getLabels().isEmpty()) {
                     FieldLayoutItem labelsLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("labels");
                     String columnViewHtml = ((LabelsSystemField) labelsLayoutItem.getOrderableField()).getColumnViewHtml(labelsLayoutItem, new HashMap(), issue);
                     issueInfo.setLabels(columnViewHtml);
                 }
-            } else if (extraField.equals(CalendarService.COMPONENTS) && issue.getComponentObjects() != null && !issue.getComponentObjects().isEmpty()) {
+            } else if (extraField.equals(CalendarServiceImpl.COMPONENTS) && issue.getComponentObjects() != null && !issue.getComponentObjects().isEmpty()) {
                 List<String> components = new ArrayList<String>();
                 for (ProjectComponent pc : issue.getComponentObjects())
                     components.add(pc.getName());
                 issueInfo.setComponents(components.toString());
-            } else if (extraField.equals(CalendarService.DUEDATE) && issue.getDueDate() != null)
+            } else if (extraField.equals(CalendarServiceImpl.DUEDATE) && issue.getDueDate() != null)
                 issueInfo.setDueDate(userDateTimeFormatter.format(issue.getDueDate()));
-            else if (extraField.equals(CalendarService.ENVIRONMENT) && issue.getEnvironment() != null)
+            else if (extraField.equals(CalendarServiceImpl.ENVIRONMENT) && issue.getEnvironment() != null)
                 issueInfo.setEnvironment(issue.getEnvironment());
-            else if (extraField.equals(CalendarService.PRIORITY) && issue.getPriorityObject() != null) {
+            else if (extraField.equals(CalendarServiceImpl.PRIORITY) && issue.getPriorityObject() != null) {
                 issueInfo.setPriority(issue.getPriorityObject().getName());
                 issueInfo.setPriorityIconUrl(issue.getPriorityObject().getIconUrl());
-            } else if (extraField.equals(CalendarService.RESOLUTION) && issue.getResolutionObject() != null)
+            } else if (extraField.equals(CalendarServiceImpl.RESOLUTION) && issue.getResolutionObject() != null)
                 issueInfo.setResolution(issue.getResolutionObject().getName());
-            else if (extraField.equals(CalendarService.AFFECT) && issue.getAffectedVersions() != null && !issue.getAffectedVersions().isEmpty()) {
+            else if (extraField.equals(CalendarServiceImpl.AFFECT) && issue.getAffectedVersions() != null && !issue.getAffectedVersions().isEmpty()) {
                 List<String> affectVersions = new ArrayList<String>();
                 for (Version ver : issue.getAffectedVersions())
                     affectVersions.add(ver.getName());
                 issueInfo.setAffect(affectVersions.toString());
-            } else if (extraField.equals(CalendarService.CREATED))
+            } else if (extraField.equals(CalendarServiceImpl.CREATED))
                 issueInfo.setCreated(userDateTimeFormatter.format(issue.getCreated()));
-            else if (extraField.equals(CalendarService.UPDATED))
+            else if (extraField.equals(CalendarServiceImpl.UPDATED))
                 issueInfo.setUpdated(userDateTimeFormatter.format(issue.getUpdated()));
-            else if (extraField.equals(CalendarService.DESCRIPTION)) {
+            else if (extraField.equals(CalendarServiceImpl.DESCRIPTION)) {
                 if (StringUtils.isNotEmpty(issue.getDescription())) {
                     String renderedDescription = rendererManager.getRendererForType("atlassian-wiki-renderer").render(issue.getDescription(), null);
                     issueInfo.setDescription(renderedDescription);

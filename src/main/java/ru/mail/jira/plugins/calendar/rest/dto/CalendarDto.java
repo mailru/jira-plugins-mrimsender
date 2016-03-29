@@ -1,13 +1,14 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
 import ru.mail.jira.plugins.calendar.model.Calendar;
+import ru.mail.jira.plugins.calendar.model.UserCalendar;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
-public class CalendarOutput {
+public class CalendarDto {
     @XmlElement
     private int id;
     @XmlElement
@@ -15,19 +16,13 @@ public class CalendarOutput {
     @XmlElement
     private String color;
     @XmlElement
-    private String owner;
-    @XmlElement
-    private String ownerFullName;
-    @XmlElement
-    private String ownerAvatarUrl;
+    private String source;
     @XmlElement
     private boolean changable;
     @XmlElement
+    private boolean viewable;
+    @XmlElement
     private boolean visible;
-    @XmlElement
-    private boolean isMy;
-    @XmlElement
-    private boolean fromOthers;
     @XmlElement
     private boolean favorite;
     @XmlElement
@@ -37,40 +32,36 @@ public class CalendarOutput {
     @XmlElement
     private Integer usersCount;
 
-    public CalendarOutput() { }
-
-    public CalendarOutput(Calendar calendar) {
-        this.id = calendar.getID();
-        this.name = calendar.getName();
-        this.color = calendar.getColor();
+    public CalendarDto() {
     }
 
-    public void setOwner(String owner) {
-        this.owner = owner;
+    public CalendarDto(UserCalendar userCalendar, Calendar calendar) {
+        if (calendar == null && userCalendar != null) {
+            this.id = userCalendar.getCalendarId();
+            this.name = userCalendar.getName();
+            this.color = userCalendar.getColor();
+        } else if (calendar != null) {
+            this.id = calendar.getID();
+            this.name = calendar.getName();
+            this.color = calendar.getColor();
+            this.source = calendar.getSource();
+        }
     }
 
-    public void setOwnerFullName(String ownerFullName) {
-        this.ownerFullName = ownerFullName;
-    }
-
-    public void setOwnerAvatarUrl(String ownerAvatarUrl) {
-        this.ownerAvatarUrl = ownerAvatarUrl;
+    public void setSource(String source) {
+        this.source = source;
     }
 
     public void setChangable(boolean changable) {
         this.changable = changable;
     }
 
+    public void setViewable(boolean viewable) {
+        this.viewable = viewable;
+    }
+
     public void setVisible(boolean visible) {
         this.visible = visible;
-    }
-
-    public void setIsMy(boolean isMy) {
-        this.isMy = isMy;
-    }
-
-    public void setFromOthers(boolean fromOthers) {
-        this.fromOthers = fromOthers;
     }
 
     public void setFavorite(boolean favorite) {

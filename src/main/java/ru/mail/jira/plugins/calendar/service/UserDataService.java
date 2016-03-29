@@ -1,129 +1,92 @@
 package ru.mail.jira.plugins.calendar.service;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
-import com.atlassian.crowd.embedded.api.Group;
-import com.atlassian.crowd.embedded.api.User;
-import com.atlassian.jira.bc.project.ProjectService;
+import com.atlassian.jira.avatar.Avatar;
+import com.atlassian.jira.avatar.AvatarService;
+import com.atlassian.jira.config.properties.ApplicationProperties;
+import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.permission.GlobalPermissionKey;
-import com.atlassian.jira.project.Project;
-import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.GlobalPermissionManager;
-import com.atlassian.jira.security.Permissions;
-import com.atlassian.jira.security.groups.GroupManager;
-import com.atlassian.jira.security.roles.ProjectRole;
-import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.transaction.TransactionCallback;
 import net.java.ao.ActiveObjectsException;
 import net.java.ao.Query;
-import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.UserData;
+import ru.mail.jira.plugins.calendar.rest.dto.UserDataDto;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 public class UserDataService {
-    private final ActiveObjects ao;
-    private final GroupManager groupManager;
-    private final GlobalPermissionManager globalPermissionManager;
-    private final ProjectManager projectManager;
-    private final ProjectService projectService;
-    private final ProjectRoleManager projectRoleManager;
+    private final static Logger log = LoggerFactory.getLogger(UserDataService.class);
 
-    public UserDataService(ActiveObjects ao,
-                           GroupManager groupManager,
-                           GlobalPermissionManager globalPermissionManager,
-                           ProjectManager projectManager,
-                           ProjectService projectService,
-                           ProjectRoleManager projectRoleManager) {
+    private ActiveObjects ao;
+    private ApplicationProperties applicationProperties;
+    private AvatarService avatarService;
+    private CalendarService calendarService;
+    private GlobalPermissionManager globalPermissionManager;
+    private UserCalendarService userCalendarService;
+
+    public void setAo(ActiveObjects ao) {
         this.ao = ao;
-        this.groupManager = groupManager;
-        this.globalPermissionManager = globalPermissionManager;
-        this.projectManager = projectManager;
-        this.projectService = projectService;
-        this.projectRoleManager = projectRoleManager;
     }
 
-    @Nullable
+    public void setApplicationProperties(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
+
+    public void setAvatarService(AvatarService avatarService) {
+        this.avatarService = avatarService;
+    }
+
+    public void setGlobalPermissionManager(GlobalPermissionManager globalPermissionManager) {
+        this.globalPermissionManager = globalPermissionManager;
+    }
+
+    public void setCalendarService(CalendarService calendarService) {
+        this.calendarService = calendarService;
+    }
+
+    public void setUserCalendarService(UserCalendarService userCalendarService) {
+        this.userCalendarService = userCalendarService;
+    }
+
+    public UserDataDto getUserDataDto(ApplicationUser user) {
+        return getUserDataDto(user, getUserData(user));
+    }
+
+    public UserDataDto getUserDataDto(ApplicationUser user, UserData userData) {
+        UserDataDto userDataDto = new UserDataDto(userData);
+        userDataDto.setName(user.getName());
+        userDataDto.setDisplayName(user.getDisplayName());
+        userDataDto.setAvatarUrl(getUserAvatarSrc(user));
+        if (isAdministrator(user)) {
+            userDataDto.setLastLikeFlagShown(userData.getLastLikeFlagShown());
+            userDataDto.setPluginRated(userData.isPluginRated());
+            userDataDto.setLikeShowCount(userData.getLikeShowCount());
+        }
+        return userDataDto;
+    }
+
     public UserData getUserData(final ApplicationUser user) {
         return getUserData(user.getKey());
     }
 
-    public Set<Integer> getShowedCalendars(final UserData userData) {
-        if (userData != null) {
-            String showedCalendars = userData.getShowedCalendars();
-            if (StringUtils.isNotEmpty(showedCalendars)) {
-                String[] splittedShowedCalendars = showedCalendars.split(";");
-                Set<Integer> result = new HashSet<Integer>(splittedShowedCalendars.length);
-                for (String calendarIdStr : splittedShowedCalendars)
-                    result.add(Integer.parseInt(calendarIdStr));
-                return result;
-            }
-        }
-        return new HashSet<Integer>(0);
-    }
-
-    public Set<Integer> getShowedCalendars(final ApplicationUser user) {
-        return getShowedCalendars(getUserData(user));
-    }
-
-    public Set<Integer> getFavoriteCalendars(UserData userData) {
-        if (userData != null) {
-            String favoriteCalendars = userData.getFavoriteCalendars();
-            String[] splittedFavoriteCalendars = StringUtils.split(favoriteCalendars, ";");
-            if (splittedFavoriteCalendars != null) {
-                Set<Integer> result = new HashSet<Integer>(splittedFavoriteCalendars.length);
-                for (String calendarIdStr : splittedFavoriteCalendars)
-                    result.add(Integer.parseInt(calendarIdStr));
-                return result;
-            }
-        }
-        return new HashSet<Integer>(0);
-    }
-
-    public Set<Integer> getFavoriteCalendars(ApplicationUser user) {
-        return getFavoriteCalendars(getUserData(user));
-    }
-
-    public int getUsersCount(final Calendar calendar) {
-        return ao.executeInTransaction(new TransactionCallback<Integer>() {
-            @Override
-            public Integer doInTransaction() {
-                String calenderId = String.valueOf(calendar.getID());
-                UserData[] result = ao.find(UserData.class, Query.select().where("FAVORITE_CALENDARS = ? " +
-                                                                                         "OR FAVORITE_CALENDARS LIKE ? " +
-                                                                                         "OR FAVORITE_CALENDARS LIKE ? " +
-                                                                                         "OR FAVORITE_CALENDARS LIKE ?",
-                                                                                 calenderId,
-                                                                                 calenderId + ";%",
-                                                                                 "%;" + calenderId + ";%",
-                                                                                 "%;" + calenderId));
-                return result.length + 1;
-            }
-        });
-    }
-
-    @Nullable
-    public UserData getUserData(final String userKey) {
+    private UserData getUserData(final String userKey) {
         return ao.executeInTransaction(new TransactionCallback<UserData>() {
             @Override
             public UserData doInTransaction() {
                 UserData[] userDatas = ao.find(UserData.class, Query.select().where("USER_KEY = ?", userKey));
-                if (userDatas.length == 0)
-                    return null;
+                UserData userData;
+                if (userDatas.length == 0) {
+                    userData = ao.create(UserData.class);
+                    userData.setUserKey(userKey);
+                    userData.setHideWeekends(false);
+                } else
+                    userData = userDatas[0];
 
-                UserData userData = userDatas[0];
                 if (userData.getIcalUid() == null) {
                     userData.setICalUid(UUID.randomUUID().toString().substring(0, 8));
                     userData.save();
@@ -133,54 +96,24 @@ public class UserDataService {
         });
     }
 
-    public UserData[] getUserData() {
-        return ao.executeInTransaction(new TransactionCallback<UserData[]>() {
+    public UserDataDto updateUserData(final ApplicationUser user, final UserDataDto userDataDto) {
+        return ao.executeInTransaction(new TransactionCallback<UserDataDto>() {
             @Override
-            public UserData[] doInTransaction() {
-                return ao.find(UserData.class);
-            }
-        });
-    }
-
-    public void updateUserData(final ApplicationUser user, final String view, final Boolean hideWeekedns) {
-        updateUserData(user.getKey(), view, hideWeekedns);
-    }
-
-    public void updateUserData(final String userKey, final String view, final Boolean hideWeekends) {
-        ao.executeInTransaction(new TransactionCallback<Void>() {
-            @Override
-            public Void doInTransaction() {
-                UserData userData = notTransactionalUpdateUserData(userKey, view, hideWeekends);
+            public UserDataDto doInTransaction() {
+                UserData userData = getUserData(user);
+                if (userDataDto.getCalendarView() != null)
+                    userData.setDefaultView(userDataDto.getCalendarView());
+                userData.setHideWeekends(userDataDto.isHideWeekends());
                 userData.save();
-                return null;
-            }
-        });
-    }
-
-    public void updateUserData(@Nonnull final String userKey, @Nonnull final String view, final boolean hideWeekends, @Nonnull final List<Integer> extraShowedCalendars) {
-        ao.executeInTransaction(new TransactionCallback<Void>() {
-            @Override
-            public Void doInTransaction() {
-                UserData userData = notTransactionalUpdateUserData(userKey, view, hideWeekends);
-                if (extraShowedCalendars.size() > 0) {
-                    if (userData.getShowedCalendars() == null)
-                        userData.setShowedCalendars(StringUtils.join(extraShowedCalendars, ";"));
-                    else {
-                        String[] split = StringUtils.split(userData.getShowedCalendars(), ';');
-                        List<Integer> showedCalendarIds = new ArrayList<Integer>();
-
-                        for (String showedCalendarIdStr : Arrays.asList(split))
-                            showedCalendarIds.add(Integer.parseInt(showedCalendarIdStr));
-
-                        for (Integer extraCalendarId : extraShowedCalendars) {
-                            if (!showedCalendarIds.contains(extraCalendarId))
-                                showedCalendarIds.add(extraCalendarId);
+                if (userDataDto.getCalendars() != null && !userDataDto.getCalendars().isEmpty())
+                    for (Integer calendarId : userDataDto.getCalendars())
+                        try {
+                            Calendar calendar = calendarService.getCalendar(calendarId);
+                            userCalendarService.addCalendarToUser(userData.getUserKey(), calendar, true);
+                        } catch (GetException e) {
+                            log.warn("User attempt to add not existing calendar. User={}, calendar={}", user.getKey(), calendarId);
                         }
-                        userData.setShowedCalendars(StringUtils.join(showedCalendarIds, ";"));
-                    }
-                }
-                userData.save();
-                return null;
+                return getUserDataDto(user, userData);
             }
         });
     }
@@ -200,134 +133,41 @@ public class UserDataService {
         });
     }
 
-    public UserData updateIcalUid(final ApplicationUser user) {
-        return ao.executeInTransaction(new TransactionCallback<UserData>() {
+    public UserDataDto updateIcalUid(final ApplicationUser user) {
+        return ao.executeInTransaction(new TransactionCallback<UserDataDto>() {
             @Override
-            public UserData doInTransaction() {
+            public UserDataDto doInTransaction() {
                 UserData userData = getUserData(user);
-                if (userData != null) {
-                    userData.setICalUid(UUID.randomUUID().toString().substring(0, 8));
-                    userData.save();
-                }
-                return userData;
+                userData.setICalUid(UUID.randomUUID().toString().substring(0, 8));
+                userData.save();
+                return getUserDataDto(user, userData);
             }
         });
     }
 
-    public void updateFavorites(final ApplicationUser user, final List<Integer> calendarIds) {
+    public void updateUserLikeData(final ApplicationUser user, final boolean rated) {
         ao.executeInTransaction(new TransactionCallback<Void>() {
             @Override
             public Void doInTransaction() {
-                UserData userData = notTransactionalUpdateUserData(user.getKey(), null, null);
-                Set<Integer> showed = getShowedCalendars(userData);
-                Set<Integer> favorite = getFavoriteCalendars(userData);
-                showed.addAll(calendarIds);
-                favorite.addAll(calendarIds);
-                userData.setShowedCalendars(StringUtils.join(showed, ";"));
-                userData.setFavoriteCalendars(StringUtils.join(favorite, ";"));
+                UserData userData = getUserData(user);
+                userData.setPluginRated(rated);
+                userData.setLastLikeFlagShown(System.currentTimeMillis());
+                userData.setLikeShowCount(userData.getLikeShowCount() + 1);
                 userData.save();
                 return null;
             }
         });
     }
 
-    public void updateFavorites(final UserData userData, final Collection<Integer> calendarIds) {
-        ao.executeInTransaction(new TransactionCallback<Void>() {
-            @Override
-            public Void doInTransaction() {
-                userData.setFavoriteCalendars(StringUtils.join(calendarIds, ";"));
-                userData.save();
-                return null;
-            }
-        });
-    }
-
-    public void removeFavorite(final ApplicationUser user, final Integer calendarId) {
-        ao.executeInTransaction(new TransactionCallback<Void>() {
-            @Override
-            public Void doInTransaction() {
-                UserData userData = notTransactionalUpdateUserData(user.getKey(), null, null);
-                Set<Integer> showed = getShowedCalendars(userData);
-                Set<Integer> favorites = getFavoriteCalendars(userData);
-                showed.remove(calendarId);
-                favorites.remove(calendarId);
-                userData.setFavoriteCalendars(StringUtils.join(favorites, ";"));
-                userData.setShowedCalendars(StringUtils.join(showed, ";"));
-                userData.save();
-                return null;
-            }
-        });
-    }
-
-    private UserData notTransactionalUpdateUserData(String userKey, String view, Boolean hideWeekedns) {
-        UserData userData = getUserData(userKey);
-        if (userData == null) {
-            userData = ao.create(UserData.class);
-            userData.setUserKey(userKey);
-            userData.setHideWeekends(false);
-            userData.setShowTime(false);
-            userData.setICalUid(UUID.randomUUID().toString().substring(0, 8));
-        }
-        if (view != null)
-            userData.setDefaultView(view);
-        if (hideWeekedns != null)
-            userData.setHideWeekends(hideWeekedns);
-        return userData;
-    }
-
-    public boolean isCalendarShowedForCurrentUser(final ApplicationUser user, Calendar calendar) {
-        UserData userData = findUserData(user);
-        if (userData == null || StringUtils.isBlank(userData.getShowedCalendars()))
-            return false;
-        return Arrays.asList(userData.getShowedCalendars().split(";")).contains(String.valueOf(calendar.getID()));
-    }
-
-    public UserData findUserData(final ApplicationUser user) {
-        UserData[] userDatas = ao.find(UserData.class, Query.select().where("USER_KEY = ?", user.getKey()));
-        if (userDatas.length > 0)
-            return userDatas[0];
-        return null;
-    }
-
-    public List<String> getUserGroups(ApplicationUser user) {
-        Collection<Group> groups = isAdministrator(user)
-                ? groupManager.getAllGroups()
-                : groupManager.getGroupsForUser(user.getName());
-        List<String> result = new ArrayList<String>(groups.size());
-        for (Group group : groups)
-            result.add(group.getName());
-        return result;
-    }
-
-    public Map<Long, String> getUserProjects(ApplicationUser user) {
-        Map<Long, String> result = new LinkedHashMap<Long, String>();
-        List<Project> allProjects = isAdministrator(user)
-                ? projectManager.getProjectObjects()
-                : projectService.getAllProjects(user).get();
-
-        for (Project project : allProjects)
-            result.put(project.getId(), project.getName());
-
-        return result;
-    }
-
-    public Map<Long, String> getUserRoles(ApplicationUser user, long projectId) {
-        Map<Long, String> result = new LinkedHashMap<Long, String>();
-        Collection<ProjectRole> projectRoles;
-        if (isAdministrator(user)) {
-            projectRoles = projectRoleManager.getProjectRoles();
-        } else {
-            Project project = projectManager.getProjectObj(projectId);
-            projectRoles = projectRoleManager.getProjectRoles(user, project);
-        }
-
-        for (ProjectRole role : projectRoles)
-            result.put(role.getId(), role.getName());
-
-        return result;
+    public void removeUserCalendar(final ApplicationUser user, final Integer calendarId) {
+        userCalendarService.removeCalendar(user.getKey(), calendarId);
     }
 
     private boolean isAdministrator(ApplicationUser user) {
         return globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, user);
+    }
+
+    private String getUserAvatarSrc(ApplicationUser user) {
+        return avatarService.getAvatarURL(user, user, Avatar.Size.SMALL).toString();
     }
 }

@@ -14,23 +14,37 @@ public interface UserData extends Entity {
     String getDefaultView();
     void setDefaultView(String defaultView);
 
-    /** Show time or not */
-    boolean isShowTime();
-    void setShowTime(boolean showTime);
-
     /** Hide weekends or not */
     boolean isHideWeekends();
     void setHideWeekends(boolean hideWeekends);
 
-    /** Ids of showed calendars */
-    String getShowedCalendars();
-    void setShowedCalendars(String showedCalendars);
-
-    /** Ids of favorite calendars */
-    String getFavoriteCalendars();
-    void setFavoriteCalendars(String favoriteCalendars);
-
     /** Hash for ical url */
     String getIcalUid();
     void setICalUid(String uid);
+
+    /** Rating dialog statistic */
+    long getLastLikeFlagShown();
+    void setLastLikeFlagShown(long timestamp);
+    void setPluginRated(boolean rated);
+    boolean isPluginRated();
+    int getLikeShowCount();
+    void setLikeShowCount(int likeShowCount);
+
+    /** Show time or not */
+    @Deprecated
+    boolean isShowTime();
+    @Deprecated
+    void setShowTime(boolean showTime);
+
+    /** Ids of showed calendars */
+    @Deprecated
+    String getShowedCalendars();
+    @Deprecated
+    void setShowedCalendars(String showedCalendars);
+
+    /** Ids of favorite calendars */
+    @Deprecated
+    String getFavoriteCalendars();
+    @Deprecated
+    void setFavoriteCalendars(String favoriteCalendars);
 }

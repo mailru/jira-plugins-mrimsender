@@ -1,0 +1,59 @@
+body {
+    color: #333333;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.42857142857143;
+}
+
+#calendars-field.builder-container {
+    padding-top: 0;
+}
+
+.select2-results {
+    max-height: 150px;
+}
+
+.select2-search-choice .calendar-view-color-box {
+    width: 12px;
+    height: 12px;
+    vertical-align: baseline;
+}
+
+.select2-search-choice .calendar-view-color-box.aui-icon-small:before {
+    font-size: 13px;
+    margin-top: -5px;
+}
+
+.select2-result-label .calendar-view-color-box.aui-icon-small:before {
+    font-size: 14px;
+    margin-top: -6px;
+    margin-left: 1px;
+}
+
+.mailru-calendar-calendar-gadget {
+    position: relative;
+    padding: 20px 20px 15px 20px;
+}
+
+#mailru-calendar-gadget-legend {
+    margin-top: 15px;
+}
+
+#mailru-calendar-gadget-legend:after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+.mailru-calendar-gadget-legend-entry {
+    float: left;
+    margin: 5px 20px 0 0;
+}
+
+a.mailru-calendar-gadget-legend-entry {
+    color: #3b73af !important;
+}
+
+a.mailru-calendar-gadget-legend-entry .aui-iconfont-error {
+    color: #707070;
+}

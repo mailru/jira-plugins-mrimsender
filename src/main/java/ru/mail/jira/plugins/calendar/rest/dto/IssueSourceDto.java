@@ -6,13 +6,13 @@ import java.util.List;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
-public class AllSources {
+public class IssueSourceDto {
     @XmlElement
-    private List<SourceField> projects;
+    private List<SelectItemDto> projects;
     @XmlElement
-    private List<SourceField> filters;
+    private List<SelectItemDto> filters;
 
-    public AllSources(List<SourceField> projects, List<SourceField> filters) {
+    public IssueSourceDto(List<SelectItemDto> projects, List<SelectItemDto> filters) {
         this.projects = projects;
         this.filters = filters;
     }
