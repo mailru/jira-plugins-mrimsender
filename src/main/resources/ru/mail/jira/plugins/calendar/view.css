@@ -49,9 +49,94 @@
     border-color: #87A4C0;
 }
 
-.mailrucalendar-lightbrown {
+.mailrucalendar-grey {
     background-color: #A89B95;
     border-color: #A89B95;
+}
+
+.mailrucalendar-yellow {
+    background-color: #f6c342;
+    border-color: #f6c342;
+}
+
+.mailrucalendar-navy {
+    background-color: #205081;
+    border-color: #205081;
+}
+
+.mailrucalendar-charcoal {
+    background-color: #333333;
+    border-color: #333333;
+}
+
+.mailrucalendar-mediumgray {
+    background-color: #707070;
+    border-color: #707070;
+}
+
+.mailrucalendar-mediumbrown {
+    background-color: #815b3a;
+    border-color: #815b3a;
+}
+
+.mailrucalendar-cheetoorange {
+    background-color: #f79232;
+    border-color: #f79232;
+}
+
+.mailrucalendar-tan {
+    background-color: #f1a257;
+    border-color: #f1a257;
+}
+
+.mailrucalendar-lightbrown {
+    background-color: #d39c3f;
+    border-color: #d39c3f;
+}
+
+.mailrucalendar-cyan {
+    background-color: #59afe1;
+    border-color: #59afe1;
+}
+
+.mailrucalendar-slate {
+    background-color: #4a6785;
+    border-color: #4a6785;
+}
+
+.mailrucalendar-coolblue {
+    background-color: #84bbc6;
+    border-color: #84bbc6;
+}
+
+.mailrucalendar-limegreen {
+    background-color: #8eb021;
+    border-color: #8eb021;
+}
+
+.mailrucalendar-midgreen {
+    background-color: #67ab49;
+    border-color: #67ab49;
+}
+
+.mailrucalendar-violet {
+    background-color: #654982;
+    border-color: #654982;
+}
+
+.mailrucalendar-mauve {
+    background-color: #ac707a;
+    border-color: #ac707a;
+}
+
+.mailrucalendar-brightpink {
+    background-color: #f15c75;
+    border-color: #f15c75;
+}
+
+.mailrucalendar-rosie {
+    background-color: #f691b2;
+    border-color: #f691b2;
 }
 
 .select2-container.select2-container-disabled .select2-choice,
@@ -62,6 +147,11 @@
     border: 1px solid #ddd !important;
     cursor: not-allowed !important;
     color: #999999 !important;
+}
+
+.aui-select2-container.select2-container.select2-container-disabled .select2-choice:active,
+.aui-select2-container.select2-container.select2-container-disabled.select2-dropdown-open .select2-choice {
+    box-shadow: none !important;
 }
 
 /* Header */
@@ -426,9 +516,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     padding: 20px !important;
     overflow: hidden;
     overflow-y: scroll;
-    width: auto !important;
-    max-width: 500px;
-    min-width: 300px;
+    max-width: 400px;
 }
 
 .calendar-event-info-popup dl {
@@ -556,10 +644,6 @@ div.vis-item.vis-box {
 }
 
 /* Like flag */
-
-.mailrucalendar-like-flag .aui-message {
-    min-height: 100px;
-}
 
 .mailrucalendar-like-flag-container {
     margin-top: 10px;

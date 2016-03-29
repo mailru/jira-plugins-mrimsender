@@ -36,11 +36,11 @@ public class CalendarDto {
     }
 
     public CalendarDto(UserCalendar userCalendar, Calendar calendar) {
-        if (calendar == null) {
+        if (calendar == null && userCalendar != null) {
             this.id = userCalendar.getCalendarId();
             this.name = userCalendar.getName();
             this.color = userCalendar.getColor();
-        } else {
+        } else if (calendar != null) {
             this.id = calendar.getID();
             this.name = calendar.getName();
             this.color = calendar.getColor();

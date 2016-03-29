@@ -10,12 +10,12 @@ require(['calendar/calendar-view'], function(CalendarView) {
                     fields: [
                         AJS.gadget.fields.nowConfigured(),
                         {
-                            id: 'calendars',
+                            id: 'calendars-field',
                             userpref: 'calendars',
                             label: gadget.getMsg('ru.mail.jira.plugins.calendar.gadget.config.calendars'),
                             type: 'callbackBuilder',
                             callback: function(parentDiv) {
-                                var selectedCalendars = gadget.getPref('calendars').split(',');
+                                var selectedCalendars = _.compact(gadget.getPref('calendars').split(','));
                                 var selectedCalendarMap = _.object(selectedCalendars, selectedCalendars.slice(0).fill(true));
                                 var data = [];
                                 _.each(args.calendars, function(calendar) {
@@ -42,7 +42,7 @@ require(['calendar/calendar-view'], function(CalendarView) {
                                     return calendar.hasError ? calendar.text ? '!' + calendar.text : '' : calendar.text;
                                 }), 'id');
 
-                                var $calendarSelect = AJS.$('<input type="hidden" class="select multi-select" id="calendars-field" name="calendars"/>');
+                                var $calendarSelect = AJS.$('<input type="hidden" class="select multi-select" id="calendars" name="calendars"/>');
                                 parentDiv.append($calendarSelect);
                                 parentDiv.closest('.field-group').append('<div class="description">' + AJS.format(gadget.getMsg('ru.mail.jira.plugins.calendar.gadget.config.calendars.description'), '<a href="' + AJS.contextPath() + '/secure/MailRuCalendar.jspa">', '</a>') + '</div>');
                                 $calendarSelect.auiSelect2({
@@ -83,7 +83,7 @@ require(['calendar/calendar-view'], function(CalendarView) {
                                 },
                                 {
                                     label: gadget.getMsg('ru.mail.jira.plugins.calendar.week'),
-                                    value: 'basicWeek'
+                                    value: 'agendaWeek'
                                 },
                                 {
                                     label: gadget.getMsg('ru.mail.jira.plugins.calendar.day'),
@@ -154,8 +154,9 @@ require(['calendar/calendar-view'], function(CalendarView) {
                     return calendar.hasError ? '' : calendar.name;
                 });
 
-                var view = gadget.getPref('view') || 'week';
+                var view = gadget.getPref('view') || 'month';
                 var hideWeekends = gadget.getPref('hideWeekends') == 'hideWeekends';
+                gadget.showView();
                 if (!AJS.$('#mailru-calendar-gadget-full-calendar').length) {
                     gadget.getView().empty().html('' +
                         '<div class="mailru-calendar-calendar-gadget">' +
@@ -181,11 +182,11 @@ require(['calendar/calendar-view'], function(CalendarView) {
                     });
                     gadget.calendarView.init(view, hideWeekends);
                 } else {
-                    gadget.showView();
                     gadget.calendarView.removeAllEventSource();
                     gadget.calendarView.setView(view);
                     gadget.calendarView.toggleWeekends(hideWeekends);
                 }
+                gadget.calendarView.popupWidth = gadgets.window.getViewportDimensions().width - 60;
                 AJS.$('.mailru-calendar-calendar-gadget').width(gadgets.window.getViewportDimensions().width - 40);
                 _.each(gadgetCalendars, function(calendar) {
                     gadget.calendarView.addEventSource(calendar.id, false);

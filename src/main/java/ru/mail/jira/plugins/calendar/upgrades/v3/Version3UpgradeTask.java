@@ -63,10 +63,10 @@ public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
                         permission.setUse(true);
                         permission.setCalendar(share.getCalendar());
                         if (StringUtils.isNotEmpty(share.getGroup())) {
-                            permission.setSubjectType(SubjectType.GROUP.ordinal());
+                            permission.setSubjectType(SubjectType.GROUP);
                             permission.setSubject(share.getGroup());
                         } else {
-                            permission.setSubjectType(SubjectType.PROJECT_ROLE.ordinal());
+                            permission.setSubjectType(SubjectType.PROJECT_ROLE);
                             permission.setSubject(PermissionUtils.projectRoleSubject(share.getProject(), share.getRole()));
                         }
                         permission.save();
@@ -76,7 +76,7 @@ public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
                         permission.setUse(true);
                         permission.setAdmin(true);
                         permission.setCalendar(calendar);
-                        permission.setSubjectType(SubjectType.USER.ordinal());
+                        permission.setSubjectType(SubjectType.USER);
                         permission.setSubject(calendar.getAuthorKey());
                         permission.save();
                     }

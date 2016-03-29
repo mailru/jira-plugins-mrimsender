@@ -3,9 +3,12 @@ define('calendar/like-flag', ['jquery', 'underscore', 'backbone', 'aui/flag'], f
         '<p>'
         + AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.liker.thanksAndReview'), '<a href="https://marketplace.atlassian.com/plugins/ru.mail.jira.plugins.mailrucal/server/reviews" target="_blank" class="mailrucalendar-like-flag-close">', '</a>') +
         '</p>';
+    var likeFlagOther = '' +
+        '<p>'
+        + AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.liker.badRateAndReview'), '<a href="https://answers.atlassian.com/questions/topics/758783/addon-ru.mail.jira.plugins.mailrucal" target="_blank" class="mailrucalendar-like-flag-close">', '</a>') +
+        '</p>';
 
     //todo for testing
-
     Backbone.View.LikeFlag = Backbone.View.extend({
         events: {
             'click .mailrucalendar-like-flag-close': '_onClose',
@@ -39,14 +42,20 @@ define('calendar/like-flag', ['jquery', 'underscore', 'backbone', 'aui/flag'], f
         },
         _rate: function(e) {
             var rating = $(e.target).val();
-            $.ajax({
-                type: 'POST',
-                contentType: 'application/json',
-                url: AJS.contextPath() + '/rest/plugins/1.0/available/ru.mail.jira.plugins.mailrucal-key/review',
-                data: JSON.stringify({ratingOnly: true, stars: rating, review: null})
-            });
+            if (rating == 4) {
+                $.ajax({
+                    type: 'POST',
+                    contentType: 'application/json',
+                    url: AJS.contextPath() + '/rest/plugins/1.0/available/ru.mail.jira.plugins.mailrucal-key/review',
+                    data: JSON.stringify({ratingOnly: true, stars: rating, review: null})
+                });
+                this.$('.title strong').text(AJS.I18n.getText('ru.mail.jira.plugins.calendar.liker.thanksAndReview.title'));
+                this.$('.mailrucalendar-like-flag-container').hide().html(likeFlagLike).fadeIn();
+            } else {
+                this.$('.title strong').text(AJS.I18n.getText('ru.mail.jira.plugins.calendar.liker.badRateAndReview.title'));
+                this.$('.mailrucalendar-like-flag-container').hide().html(likeFlagOther).fadeIn();
+            }
             _tmr.push({id: '2706504', type: 'reachGoal', goal: 'rating-' + rating});
-            this.$('.mailrucalendar-like-flag-container').hide().html(likeFlagLike).fadeIn();
         }
     });
     return Backbone.View.LikeFlag;

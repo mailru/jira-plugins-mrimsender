@@ -6,8 +6,8 @@ public interface Permission extends Entity {
     Calendar getCalendar();
     void setCalendar(Calendar calendar);
 
-    int getSubjectType();
-    void setSubjectType(int subjectType);
+    SubjectType getSubjectType();
+    void setSubjectType(SubjectType subjectType);
 
     /**
      * Permission subjects:

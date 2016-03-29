@@ -366,7 +366,7 @@ require(['jquery',
                 view: {
                     quarter: true,
                     month: true,
-                    basicWeek: true,
+                    agendaWeek: true,
                     agendaDay: true,
                     timeline: true
                 }

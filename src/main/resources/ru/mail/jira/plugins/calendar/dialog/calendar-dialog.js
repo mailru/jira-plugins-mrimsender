@@ -51,7 +51,8 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             'click .calendar-dialog-permission-table-access-type .aui-lozenge:not([disabled])': '_toggleAccessType',
             'click a[href=#calendar-dialog-common-tab]': '_selectCommonTab',
             'click a[href=#calendar-dialog-permissions-tab]': '_selectPermissionTab',
-            'change #calendar-dialog-permission-table-subject': '_onChangeSubjectSelect'
+            'change #calendar-dialog-permission-table-subject': '_onChangeSubjectSelect',
+            'select2-open #calendar-dialog-permission-table-subject': '_onOpenSubjectSelect'
         },
         initialize: function(options) {
             this.dialog = AJS.dialog2('#calendar-dialog');
@@ -157,6 +158,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
                     },
                     cache: true
                 },
+                dropdownCssClass: 'calendar-dialog-permission-table-subject-dropdown',
                 formatResult: function(item, label, query) {
                     var regexp = query.term ? new RegExp('(' + query.term + ')', 'gi') : undefined;
                     var replacement = '<b>$1</b>';
@@ -325,13 +327,17 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             this.hide();
         },
         _ajaxErrorHandler: function(model, response) {
-            var field = response.getResponseHeader('X-Atlassian-Rest-Exception-Field');
-            if (field)
-                this.$('#calendar-dialog-' + field + '-error').removeClass('hidden').text(response.responseText);
-            else
-                this.$('#calendar-dialog-error-panel').removeClass('hidden').text(response.responseText);
-
             this._selectCommonTab();
+            var field = response.getResponseHeader('X-Atlassian-Rest-Exception-Field');
+            if (field) {
+                this.$('#calendar-dialog-' + field + '-error').removeClass('hidden').text(response.responseText);
+                var $field = this.$('#calendar-dialog-' + field);
+                if ($field.hasClass('select') || $field.hasClass('multi-select'))
+                    this.$('#calendar-dialog-' + field).auiSelect2('focus');
+                else
+                    this.$('#calendar-dialog-' + field).focus();
+            } else
+                this.$('#calendar-dialog-error-panel').removeClass('hidden').text(response.responseText);
             this.$okButton.removeAttr('disabled');
             this.$cancelButton.removeAttr('disabled');
         },
@@ -362,6 +368,9 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
         _onChangeSubjectSelect: function() {
             this.$('.calendar-dialog-permission-table-error').addClass('hidden');
         },
+        _onOpenSubjectSelect: function() {
+            $('.calendar-dialog-permission-table-subject-dropdown input.select2-input').addClass('ajs-dirty-warning-exempt');
+        },
         _addPermission: function(e) {
             e.preventDefault();
             var $subjectSelect = this.$('#calendar-dialog-permission-table-subject');
@@ -375,7 +384,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
                     text = AJS.format('{0}<span class="calendar-dialog-permission-project-role-separator">/</span>{1}', subjectData.project, subjectData.projectRole);
                 else if (subjectData.type == 'USER')
                     text = subjectData.userDisplayName;
-                this.$('.calendar-dialog-permission-table-error').removeClass('hidden').find('th').text(AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.alreadyHasAccess'), text));
+                this.$('.calendar-dialog-permission-table-error').removeClass('hidden').find('th').html(AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.alreadyHasAccess'), text));
             } else {
                 this._addPermissionRow($.extend({accessType: 'USE'}, subjectData));
                 $subjectSelect.auiSelect2('val', '');

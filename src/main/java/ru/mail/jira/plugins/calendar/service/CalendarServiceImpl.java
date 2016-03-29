@@ -159,13 +159,13 @@ public class CalendarServiceImpl implements CalendarService {
 
         List<PermissionItemDto> permissions = new ArrayList<PermissionItemDto>();
         for (Permission permission : calendar.getPermissions()) {
-            SubjectType subjectType = SubjectType.fromInt(permission.getSubjectType());
+            SubjectType subjectType = permission.getSubjectType();
             PermissionItemDto itemDto = null;
             switch (subjectType) {
                 case USER:
                     ApplicationUser subjectUser = userManager.getUserByKey(permission.getSubject());
                     if (subjectUser != null)
-                        itemDto = PermissionItemDto.buildUserDto(permission.getSubject(), subjectUser.getDisplayName(), subjectUser.getEmailAddress(), subjectUser.getKey(),
+                        itemDto = PermissionItemDto.buildUserDto(subjectUser.getKey(), subjectUser.getDisplayName(), subjectUser.getEmailAddress(), subjectUser.getName(),
                                                                  PermissionUtils.getAccessType(permission.isAdmin(), permission.isUse()),
                                                                  permissionService.getPermissionAvatar(permission, subjectType));
                     break;
@@ -203,7 +203,7 @@ public class CalendarServiceImpl implements CalendarService {
         return fillUserCalendarDtos(user, ao.find(Calendar.class));
     }
 
-    public CalendarDto createCalendar(final ApplicationUser user, final CalendarSettingDto calendarSettingDto) {
+    public CalendarDto createCalendar(final ApplicationUser user, final CalendarSettingDto calendarSettingDto) throws GetException {
         validateCalendar(user, calendarSettingDto, true);
         Calendar calendar = ao.create(Calendar.class);
         calendar.setAuthorKey(user.getKey());
@@ -213,9 +213,14 @@ public class CalendarServiceImpl implements CalendarService {
         userCalendarService.addCalendarToUser(user.getKey(), calendar, true);
         CalendarDto result = new CalendarDto(null, calendar);
         result.setFavorite(true);
-        result.setChangable(true);
-        result.setViewable(true);
         result.setVisible(true);
+
+        //update OneToMany entities after saving
+        calendar = getCalendar(calendar.getID());
+        boolean canAdmin = permissionService.hasAdminPermission(user, calendar);
+        boolean canUse = canAdmin || permissionService.hasUsePermission(user, calendar);
+        result.setChangable(canAdmin);
+        result.setViewable(canUse);
         return result;
     }
 

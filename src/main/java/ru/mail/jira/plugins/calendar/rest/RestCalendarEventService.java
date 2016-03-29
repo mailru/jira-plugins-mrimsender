@@ -82,8 +82,7 @@ public class RestCalendarEventService {
     @Path("{calendarId}/event/{eventId}/")
     public Response moveEvent(@PathParam("calendarId") final int calendarId,
                               @PathParam("eventId") final String eventId,
-                              @QueryParam("dayDelta") final int dayDelta,
-                              @QueryParam("millisDelta") final int millisDelta,
+                              @QueryParam("millisDelta") final long millisDelta,
                               @QueryParam("isDrag") final boolean isDrag) {
         return new RestExecutor<Void>() {
             @Override
@@ -96,9 +95,9 @@ public class RestCalendarEventService {
 
                 Calendar calendar = calendarService.getCalendar(calendarId);
                 if (isDrag)
-                    calendarEventService.dragEvent(user, calendar, issue, dayDelta, millisDelta);
+                    calendarEventService.dragEvent(user, calendar, issue, millisDelta);
                 else
-                    calendarEventService.resizeEvent(user, calendar, issue, dayDelta, millisDelta);
+                    calendarEventService.resizeEvent(user, calendar, issue, millisDelta);
                 return null;
             }
         }.getResponse();

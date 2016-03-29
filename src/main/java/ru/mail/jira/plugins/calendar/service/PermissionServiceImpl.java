@@ -76,7 +76,7 @@ public class PermissionServiceImpl implements PermissionService {
             for (Permission permission : permissions)
                 if (permission.isAdmin()) {
                     String subject = permission.getSubject();
-                    switch (SubjectType.fromInt(permission.getSubjectType())) {
+                    switch (permission.getSubjectType()) {
                         case USER:
                             if (subject.equals(user.getKey()))
                                 return true;
@@ -111,7 +111,7 @@ public class PermissionServiceImpl implements PermissionService {
         for (Permission permission : permissions)
             if (permission.isUse()) {
                 String subject = permission.getSubject();
-                switch (SubjectType.fromInt(permission.getSubjectType())) {
+                switch (permission.getSubjectType()) {
                     case USER:
                         if (subject.equals(user.getKey()))
                             return true;
@@ -151,7 +151,7 @@ public class PermissionServiceImpl implements PermissionService {
         permission.setAdmin(canAdmin);
         permission.setUse(canUse);
         permission.setCalendar(calendar);
-        permission.setSubjectType(subjectType.ordinal());
+        permission.setSubjectType(subjectType);
         permission.setSubject(subject);
         permission.save();
     }
@@ -174,14 +174,14 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public Permission getOrCreate(Calendar calendar, SubjectType subjectType, String subject) {
-        Permission[] permissions = ao.find(Permission.class, Query.select().where("CALENDAR_ID = ? AND SUBJECT = ? AND SUBJECT_TYPE = ?", calendar.getID(), subject, subjectType.ordinal()));
+        Permission[] permissions = ao.find(Permission.class, Query.select().where("CALENDAR_ID = ? AND SUBJECT = ? AND SUBJECT_TYPE = ?", calendar.getID(), subject, subjectType));
         if (permissions.length > 1)
             throw new ActiveObjectsException(String.format("Found more that one object of type Permission for calendar '%s' and subject '%s'", calendar.getID(), subject));
         else if (permissions.length == 0) {
             Permission permission = ao.create(Permission.class);
             permission.setCalendar(calendar);
             permission.setSubject(subject);
-            permission.setSubjectType(subjectType.ordinal());
+            permission.setSubjectType(subjectType);
             permission.save();
             return permission;
         } else

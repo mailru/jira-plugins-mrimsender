@@ -36,7 +36,7 @@
             <ul class="aui-list-truncate">
                 <li><a href="#period/quarter" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.quarter" )</a></li>
                 <li><a href="#period/month" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.month" )</a></li>
-                <li><a href="#period/basicWeek" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.week" )</a></li>
+                <li><a href="#period/agendaWeek" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.week" )</a></li>
                 <li><a href="#period/agendaDay" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.day" )</a></li>
                 <li><a href="#period/timeline" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.timeline" )</a></li>
             </ul>

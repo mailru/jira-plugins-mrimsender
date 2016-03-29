@@ -44,7 +44,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 
@@ -310,7 +309,7 @@ public class CalendarEventService {
         return endFieldForDate && startFieldForDate;
     }
 
-    public void dragEvent(ApplicationUser user, Calendar calendar, Issue issue, int dayDelta, int millisDelta) throws Exception {
+    public void dragEvent(ApplicationUser user, Calendar calendar, Issue issue, long millisDelta) throws Exception {
         if (isDateFieldsNotDraggable(calendar.getEventStart(), calendar.getEventEnd()))
             throw new IllegalArgumentException(String.format("Can not drag event with key => %s, because it contains not draggable event date field", issue.getKey()));
 
@@ -344,19 +343,19 @@ public class CalendarEventService {
         DateTimeFormatter dateTimePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_TIME_PICKER);
 
         if (eventStartIsDueDate) {
-            Timestamp newDueDate = getNewTimestamp(issue.getDueDate(), dayDelta, millisDelta);
+            Date newDueDate = getNewDate(issue.getDueDate(), millisDelta);
             issueInputParams.setDueDate(datePickerFormat.format(newDueDate));
         } else if (eventStartCFValue != null) {
-            Timestamp value = getNewTimestamp(eventStartCFValue, dayDelta, millisDelta);
+            Date value = getNewDate(eventStartCFValue, millisDelta);
             DateTimeFormatter formatter = eventStartCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
             issueInputParams.addCustomFieldValue(eventStartCF.getIdAsLong(), formatter.format(value));
         }
 
         if (eventEndIsDueDate) {
-            Timestamp newDueDate = getNewTimestamp(issue.getDueDate(), dayDelta, millisDelta);
+            Date newDueDate = getNewDate(issue.getDueDate(), millisDelta);
             issueInputParams.setDueDate(datePickerFormat.format(newDueDate));
         } else if (eventEndCF != null && eventEndCFValue != null) {
-            Timestamp value = getNewTimestamp(eventEndCFValue, dayDelta, millisDelta);
+            Date value = getNewDate(eventEndCFValue, millisDelta);
             DateTimeFormatter formatter = eventEndCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
             issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), formatter.format(value));
         }
@@ -370,15 +369,11 @@ public class CalendarEventService {
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
     }
 
-    private Timestamp getNewTimestamp(Date source, int dayDelta, int millisDelta) {
-        int summaryMillis = MILLIS_IN_DAY * dayDelta + millisDelta;
-        GregorianCalendar gregorianCalendar = new GregorianCalendar();
-        gregorianCalendar.setTime(source);
-        gregorianCalendar.add(java.util.Calendar.MILLISECOND, summaryMillis);
-        return new Timestamp(gregorianCalendar.getTimeInMillis());
+    private Date getNewDate(Date date, long millisDelta) {
+        return new Date(date.getTime() + millisDelta);
     }
 
-    public void resizeEvent(ApplicationUser user, Calendar calendar, Issue issue, int dayDelta, int millisDelta) throws Exception {
+    public void resizeEvent(ApplicationUser user, Calendar calendar, Issue issue, long millisDelta) throws Exception {
         if (isDateFieldNotDraggable(calendar.getEventEnd()))
             throw new IllegalArgumentException(String.format("Can not resize event with key => %s, because it contains not draggable end field", issue.getKey()));
 
@@ -421,11 +416,11 @@ public class CalendarEventService {
         DateTimeFormatter dateTimePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_TIME_PICKER);
 
         if (eventEndIsDueDate) {
-            Timestamp newDueDate = getNewTimestamp(issue.getDueDate(), dayDelta, millisDelta);
+            Date newDueDate = getNewDate(issue.getDueDate(), millisDelta);
             issueInputParams.setDueDate(datePickerFormat.format(newDueDate));
         } else {
             DateTimeFormatter formatter = eventEndCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
-            Timestamp value = getNewTimestamp(eventEndDateValue, dayDelta, millisDelta);
+            Date value = getNewDate(eventEndDateValue, millisDelta);
             issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), formatter.format(value));
         }
 

@@ -5,7 +5,7 @@ body {
     line-height: 1.42857142857143;
 }
 
-#calendars.builder-container {
+#calendars-field.builder-container {
     padding-top: 0;
 }
 
@@ -56,9 +56,4 @@ a.mailru-calendar-gadget-legend-entry {
 
 a.mailru-calendar-gadget-legend-entry .aui-iconfont-error {
     color: #707070;
-}
-
-.aui-inline-dialog .aui-inline-dialog-contents.calendar-event-info-popup {
-    max-width: none;
-    min-width: 10px;
 }

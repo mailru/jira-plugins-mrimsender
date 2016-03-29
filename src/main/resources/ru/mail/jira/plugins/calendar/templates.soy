@@ -268,7 +268,11 @@
                         </span>
                         {sp}{$project}<span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRole}
                     {else}
-                        <span class="aui-icon aui-icon-small aui-iconfont-admin-roles mailrucalendar-table-icon"></span>
+                        <span class="aui-avatar aui-avatar-project aui-avatar-xsmall mailrucalendar-table-icon">
+                            <span class="aui-avatar-inner">
+                                <img src="projectavatar?size=xxmall" />
+                            </span>
+                        </span>
                         {sp}<i>{getText('ru.mail.jira.plugins.calendar.gadget.project.unavailable')}<span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRole}</i>
                     {/if}
                 {/if}

@@ -34,6 +34,11 @@
                     </label>
                     <select class="select short-field calendar-dialog-color calendar-dialog-select" id="calendar-dialog-color">
                         <option value="#5dab3e">#5dab3e</option>
+                        <option value="#f6c342">#f6c342</option>
+                        <option value="#205081">#205081</option>
+                        <option value="#333333">#333333</option>
+                        <option value="#ebf2f9">#ebf2f9</option>
+                        <option value="#707070">#707070</option>
                         <option value="#d7ad43">#d7ad43</option>
                         <option value="#3e6894">#3e6894</option>
                         <option value="#c9dad8">#c9dad8</option>
@@ -44,6 +49,19 @@
                         <option value="#3C2B28">#3C2B28</option>
                         <option value="#87A4C0">#87A4C0</option>
                         <option value="#A89B95">#A89B95</option>
+                        <option value="#815b3a">#815b3a</option>
+                        <option value="#f79232">#f79232</option>
+                        <option value="#f1a257">#f1a257</option>
+                        <option value="#d39c3f">#d39c3f</option>
+                        <option value="#59afe1">#59afe1</option>
+                        <option value="#4a6785">#4a6785</option>
+                        <option value="#84bbc6">#84bbc6</option>
+                        <option value="#8eb021">#8eb021</option>
+                        <option value="#67ab49">#67ab49</option>
+                        <option value="#654982">#654982</option>
+                        <option value="#ac707a">#ac707a</option>
+                        <option value="#f15c75">#f15c75</option>
+                        <option value="#f691b2">#f691b2</option>
                     </select>
                     <div id="calendar-dialog-color-error" class="error hidden"></div>
                 </div>

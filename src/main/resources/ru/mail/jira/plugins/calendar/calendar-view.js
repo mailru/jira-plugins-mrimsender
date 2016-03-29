@@ -6,7 +6,8 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             this.eventSources = {};
             this.contextPath = options && _.has(options, 'contextPath') ? options.contextPath : AJS.contextPath();
             this.customsButtonOptions = options && _.has(options, 'contextPath') ? options.customsButtonOptions : {};
-            this.timeFormat = options && _.has(options, 'timeFormat') ? options.timeFormat : AJS.Meta.get('date-time')
+            this.timeFormat = options && _.has(options, 'timeFormat') ? options.timeFormat : AJS.Meta.get('date-time');
+            this.popupWidth = options && _.has(options, 'popupWidth') ? options.popupWidth : 400;
         },
         _eventSource: function(id) {
             return this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + id;
@@ -27,7 +28,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                 this._getCalendarHeaderButton('zoom-out').parent('.fc-button-group').show();
             else
                 this._getCalendarHeaderButton('zoom-out').parent('.fc-button-group').hide();
-            if (this._canButtonVisible('weekend') && (view.name === 'quarter' || view.name === 'month' || view.name === 'basicWeek'))
+            if (this._canButtonVisible('weekend') && (view.name === 'quarter' || view.name === 'month' || view.name === 'agendaWeek'))
                 this._getCalendarHeaderButton('weekend').show();
             else
                 this._getCalendarHeaderButton('weekend').hide();
@@ -64,7 +65,8 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                         duration: {months: 3}
                     },
                     timeline: {
-                        contextPath: contextPath
+                        contextPath: contextPath,
+                        calendarView: self
                     }
                 },
                 customButtons: {
@@ -127,6 +129,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                         });
                         return false;
                     }, {
+                        width: self.popupWidth,
                         hideDelay: null,
                         onTop: true,
                         closeOnTriggerClick: true,
@@ -162,7 +165,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             function eventMove(event, duration, isDrag) {
                 $.ajax({
                     type: 'PUT',
-                    url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.id + '?dayDelta=' + duration._days + '&millisDelta=' + duration._milliseconds + '&isDrag=' + isDrag,
+                    url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.id + '?millisDelta=' + duration.asMilliseconds() + '&isDrag=' + isDrag,
                     error: function(xhr) {
                         var msg = "Error while trying to drag event. Issue key => " + event.id;
                         if (xhr.responseText)
@@ -202,7 +205,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
         },
         toggleWeekends: function(hideWeekends) {
             var view = this.getViewType();
-            if (view === 'quarter' || view === 'month' || view === 'basicWeek') {
+            if (view === 'quarter' || view === 'month' || view === 'agendaWeek') {
                 this._getCalendarHeaderButton('weekend').text(hideWeekends ? AJS.I18n.getText('ru.mail.jira.plugins.calendar.showWeekends') : AJS.I18n.getText('ru.mail.jira.plugins.calendar.hideWeekends'));
                 this.$el.fullCalendar('option', 'weekends', !hideWeekends);
             }
