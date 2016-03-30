@@ -23,12 +23,12 @@ public interface UserData extends Entity {
     void setICalUid(String uid);
 
     /** Rating dialog statistic */
-    long getLastLikeFlagShown();
-    void setLastLikeFlagShown(long timestamp);
-    void setPluginRated(boolean rated);
-    boolean isPluginRated();
-    int getLikeShowCount();
-    void setLikeShowCount(int likeShowCount);
+    long getNextFeedbackShow();
+    void setNextFeedbackShow(long timestamp);
+    int getFeedbackShowCount();
+    void setFeedbackShowCount(int feedbackShowCount);
+
+
 
     /** Show time or not */
     @Deprecated

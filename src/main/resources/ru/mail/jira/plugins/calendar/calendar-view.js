@@ -28,7 +28,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                 this._getCalendarHeaderButton('zoom-out').parent('.fc-button-group').show();
             else
                 this._getCalendarHeaderButton('zoom-out').parent('.fc-button-group').hide();
-            if (this._canButtonVisible('weekend') && (view.name === 'quarter' || view.name === 'month' || view.name === 'agendaWeek'))
+            if (this._canButtonVisible('weekend') && (view.name === 'quarter' || view.name === 'month'))
                 this._getCalendarHeaderButton('weekend').show();
             else
                 this._getCalendarHeaderButton('weekend').hide();
@@ -205,7 +205,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
         },
         toggleWeekends: function(hideWeekends) {
             var view = this.getViewType();
-            if (view === 'quarter' || view === 'month' || view === 'agendaWeek') {
+            if (view === 'quarter' || view === 'month') {
                 this._getCalendarHeaderButton('weekend').text(hideWeekends ? AJS.I18n.getText('ru.mail.jira.plugins.calendar.showWeekends') : AJS.I18n.getText('ru.mail.jira.plugins.calendar.hideWeekends'));
                 this.$el.fullCalendar('option', 'weekends', !hideWeekends);
             }

@@ -13,6 +13,7 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueInputParameters;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.RendererManager;
+import com.atlassian.jira.issue.customfields.impl.DateCFType;
 import com.atlassian.jira.issue.customfields.impl.DateTimeCFType;
 import com.atlassian.jira.issue.fields.AssigneeSystemField;
 import com.atlassian.jira.issue.fields.CustomField;
@@ -409,6 +410,10 @@ public class CalendarEventService {
 
         if (eventEndDateValue == null)
             throw new IllegalArgumentException("Can not resize event with empty end date field. Issue => " + issue.getKey());
+
+        if (Math.abs(millisDelta) < MILLIS_IN_DAY && (eventEndIsDueDate || eventEndCF != null && eventEndCF.getCustomFieldType() instanceof DateCFType)) {
+            return;
+        }
 
         IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
 

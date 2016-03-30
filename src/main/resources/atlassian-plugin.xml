@@ -19,10 +19,9 @@
         <entity>ru.mail.jira.plugins.calendar.model.UserCalendar</entity>
         <entity>ru.mail.jira.plugins.calendar.model.UserData</entity>
         <entity>ru.mail.jira.plugins.calendar.model.Permission</entity>
-        <entity>ru.mail.jira.plugins.calendar.model.archive.Share</entity>
 
-        <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v2.Version2UpgradeTask</upgradeTask>
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v3.Version3UpgradeTask</upgradeTask>
+        <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v4.Version4UpgradeTask</upgradeTask>
     </ao>
     <component key="tx-processor" name="Transactional Annotation Processor" class="com.atlassian.activeobjects.external.TransactionalAnnotationProcessor">
         <decription>Processes @Transactional annotations.</decription>

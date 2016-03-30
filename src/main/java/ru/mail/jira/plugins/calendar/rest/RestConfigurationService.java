@@ -27,7 +27,6 @@ import com.atlassian.jira.sharing.search.SharedEntitySearchResult;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.calendar.rest.dto.DateField;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueSourceDto;

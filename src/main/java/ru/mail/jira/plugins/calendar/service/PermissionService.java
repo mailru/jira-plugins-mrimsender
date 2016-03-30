@@ -4,7 +4,7 @@ import com.atlassian.activeobjects.tx.Transactional;
 import com.atlassian.jira.user.ApplicationUser;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.Permission;
-import ru.mail.jira.plugins.calendar.model.SubjectType;
+import ru.mail.jira.plugins.calendar.model.PermissionType;
 import ru.mail.jira.plugins.calendar.rest.dto.PermissionItemDto;
 
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.List;
 @Transactional
 public interface PermissionService {
 
-    String getPermissionAvatar(Permission permission, SubjectType subjectType);
+    String getPermissionAvatar(Permission permission, PermissionType permissionType);
 
     boolean hasAdminPermission(ApplicationUser user, Calendar calendar);
 
@@ -20,9 +20,9 @@ public interface PermissionService {
 
     void removeCalendarPermissions(Calendar calendar);
 
-    Permission getOrCreate(Calendar calendar, SubjectType subjectType, String subject);
+    Permission getOrCreate(Calendar calendar, PermissionType permissionType, String subject);
 
-    void addPermission(Calendar calendar, SubjectType subjectType, String subject, boolean canAdmin, boolean canUse);
+    void addPermission(Calendar calendar, PermissionType permissionType, String subject, boolean canAdmin, boolean canUse);
 
     void updatePermissions(Calendar calendar, List<PermissionItemDto> permissions);
 }

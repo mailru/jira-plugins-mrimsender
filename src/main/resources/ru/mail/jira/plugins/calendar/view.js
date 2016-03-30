@@ -395,18 +395,13 @@ require(['jquery',
 
                 Backbone.history.start();
 
-                if (model.has('lastLikeFlagShown') && model.get('likeShowCount') == 0)
+                if (model.has('nextFeedbackShow') && model.get('feedbackShowCount') == 0)
                     $.ajax({
                         type: 'PUT',
                         url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/likeFlagShown/false'
                     });
-                else if (model.has('lastLikeFlagShown') && !model.get('pluginRated') &&
-                    (model.get('likeShowCount') == 1 && moment(model.get('lastLikeFlagShown')).add(2, 'w').isBefore(moment())
-                    || model.get('likeShowCount') == 2 && moment(model.get('lastLikeFlagShown')).add(2, 'w').isBefore(moment())
-                    || model.get('likeShowCount') == 3 && moment(model.get('lastLikeFlagShown')).add(1, 'M').isBefore(moment())
-                    || model.get('likeShowCount') == 4 && moment(model.get('lastLikeFlagShown')).add(2, 'M').isBefore(moment())
-                    || model.get('likeShowCount') == 5 && moment(model.get('lastLikeFlagShown')).add(4, 'M').isBefore(moment())
-                    || model.get('likeShowCount') >= 6 && moment(model.get('lastLikeFlagShown')).add(8, 'M').isBefore(moment())))
+                else if (model.has('nextFeedbackShow') && !model.get('pluginRated')
+                    && moment(model.get('nextFeedbackShow')).isBefore(moment()))
                     new LikeFlag();
             },
             error: function(model, response) {

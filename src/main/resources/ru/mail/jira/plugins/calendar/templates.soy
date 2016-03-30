@@ -140,7 +140,7 @@
                         <img src="{$avatarUrl}" />
                     </span>
                 </span>
-                {sp}{$userDisplayNameHighlight}{sp}-{sp}{$userEmailHighlight}{sp}({$userNameHighlight}
+                {sp}{$userDisplayNameHighlight}{sp}-{sp}{$userEmailHighlight}{sp}({$userNameHighlight})
             </div>
         {elseif $type == 'PROJECT_ROLE'}
             <div title="{$project}{sp}/{sp}{$projectRole}" class="calendar-dialog-permission-table-subject-overflow">
@@ -273,7 +273,7 @@
                                 <img src="projectavatar?size=xxmall" />
                             </span>
                         </span>
-                        {sp}<i>{getText('ru.mail.jira.plugins.calendar.gadget.project.unavailable')}<span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRole}</i>
+                        {sp}<i>{getText('ru.mail.jira.plugins.calendar.gadget.project.unavailable')}</i><span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRole}
                     {/if}
                 {/if}
             </div>

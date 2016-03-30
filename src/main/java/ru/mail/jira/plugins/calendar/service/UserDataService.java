@@ -11,6 +11,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.transaction.TransactionCallback;
 import net.java.ao.ActiveObjectsException;
 import net.java.ao.Query;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.Calendar;
@@ -63,9 +64,9 @@ public class UserDataService {
         userDataDto.setDisplayName(user.getDisplayName());
         userDataDto.setAvatarUrl(getUserAvatarSrc(user));
         if (isAdministrator(user)) {
-            userDataDto.setLastLikeFlagShown(userData.getLastLikeFlagShown());
-            userDataDto.setPluginRated(userData.isPluginRated());
-            userDataDto.setLikeShowCount(userData.getLikeShowCount());
+            userDataDto.setNextFeedbackShow(userData.getNextFeedbackShow());
+            userDataDto.setPluginRated(userData.getNextFeedbackShow() == -1);
+            userDataDto.setFeedbackShowCount(userData.getFeedbackShowCount());
         }
         return userDataDto;
     }
@@ -150,9 +151,26 @@ public class UserDataService {
             @Override
             public Void doInTransaction() {
                 UserData userData = getUserData(user);
-                userData.setPluginRated(rated);
-                userData.setLastLikeFlagShown(System.currentTimeMillis());
-                userData.setLikeShowCount(userData.getLikeShowCount() + 1);
+                userData.setFeedbackShowCount(userData.getFeedbackShowCount() + 1);
+                if (rated)
+                    userData.setNextFeedbackShow(-1);
+                else {
+                    DateTime nextShow = new DateTime(userData.getNextFeedbackShow());
+                    if (nextShow.isBeforeNow())
+                        nextShow = new DateTime();
+                    int count = userData.getFeedbackShowCount();
+                    if (count == 1 || count == 2)
+                        nextShow = nextShow.plusWeeks(2);
+                    else if (count == 3)
+                        nextShow = nextShow.plusMonths(1);
+                    else if (count == 4)
+                        nextShow = nextShow.plusMonths(2);
+                    else if (count == 5)
+                        nextShow = nextShow.plusMonths(4);
+                    else if (count >= 6)
+                        nextShow = nextShow.plusMonths(8);
+                    userData.setNextFeedbackShow(nextShow.getMillis());
+                }
                 userData.save();
                 return null;
             }

@@ -20,7 +20,7 @@ import net.java.ao.ActiveObjectsException;
 import net.java.ao.Query;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.Permission;
-import ru.mail.jira.plugins.calendar.model.SubjectType;
+import ru.mail.jira.plugins.calendar.model.PermissionType;
 import ru.mail.jira.plugins.calendar.rest.dto.PermissionItemDto;
 
 import java.util.HashMap;
@@ -48,15 +48,15 @@ public class PermissionServiceImpl implements PermissionService {
         this.userManager = userManager;
     }
 
-    public String getPermissionAvatar(Permission permission, SubjectType subjectType) {
-        switch (subjectType) {
+    public String getPermissionAvatar(Permission permission, PermissionType permissionType) {
+        switch (permissionType) {
             case USER:
-                ApplicationUser user = userManager.getUserByKey(permission.getSubject());
+                ApplicationUser user = userManager.getUserByKey(permission.getPermissionValue());
                 if (user != null)
                     return getUserAvatarSrc(user);
                 break;
             case PROJECT_ROLE:
-                Long projectId = PermissionUtils.getProject(permission.getSubject());
+                Long projectId = PermissionUtils.getProject(permission.getPermissionValue());
                 if (projectId != null) {
                     Project project = projectManager.getProjectObj(projectId);
                     if (project != null)
@@ -75,8 +75,8 @@ public class PermissionServiceImpl implements PermissionService {
             Permission[] permissions = calendar.getPermissions();
             for (Permission permission : permissions)
                 if (permission.isAdmin()) {
-                    String subject = permission.getSubject();
-                    switch (permission.getSubjectType()) {
+                    String subject = permission.getPermissionValue();
+                    switch (permission.getPermissionType()) {
                         case USER:
                             if (subject.equals(user.getKey()))
                                 return true;
@@ -108,51 +108,48 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public boolean hasUsePermission(ApplicationUser user, Calendar calendar) {
         Permission[] permissions = calendar.getPermissions();
-        for (Permission permission : permissions)
-            if (permission.isUse()) {
-                String subject = permission.getSubject();
-                switch (permission.getSubjectType()) {
-                    case USER:
-                        if (subject.equals(user.getKey()))
+        for (Permission permission : permissions) {
+            String subject = permission.getPermissionValue();
+            switch (permission.getPermissionType()) {
+                case USER:
+                    if (subject.equals(user.getKey()))
+                        return true;
+                    break;
+                case GROUP:
+                    Group group = groupManager.getGroup(subject);
+                    if (group != null && groupManager.isUserInGroup(ApplicationUsers.toDirectoryUser(user), group))
+                        return true;
+                    break;
+                case PROJECT_ROLE:
+                    Long projectId = PermissionUtils.getProject(subject);
+                    Long projectRoleId = PermissionUtils.getProjectRole(subject);
+                    if (projectId == null)
+                        continue;
+                    Project project = projectManager.getProjectObj(projectId);
+                    if (projectRoleId != null) {
+                        ProjectRole projectRole = projectRoleManager.getProjectRole(projectRoleId);
+                        if (projectRole != null && projectRoleManager.isUserInProjectRole(user, projectRole, project))
                             return true;
-                        break;
-                    case GROUP:
-                        Group group = groupManager.getGroup(subject);
-                        if (group != null && groupManager.isUserInGroup(ApplicationUsers.toDirectoryUser(user), group))
-                            return true;
-                        break;
-                    case PROJECT_ROLE:
-                        Long projectId = PermissionUtils.getProject(subject);
-                        Long projectRoleId = PermissionUtils.getProjectRole(subject);
-                        if (projectId == null)
-                            continue;
-                        Project project = projectManager.getProjectObj(projectId);
-                        if (projectRoleId != null) {
-                            ProjectRole projectRole = projectRoleManager.getProjectRole(projectRoleId);
-                            if (projectRole != null && projectRoleManager.isUserInProjectRole(user, projectRole, project))
-                                return true;
-                        } else if (permissionManager.hasPermission(Permissions.BROWSE, project, user, false))
-                            return true;
-                        break;
-                }
+                    } else if (permissionManager.hasPermission(Permissions.BROWSE, project, user, false))
+                        return true;
+                    break;
             }
+        }
         return false;
     }
 
     @Override
     public void removeCalendarPermissions(Calendar calendar) {
-        ao.delete(calendar.getShares());
         ao.delete(calendar.getPermissions());
     }
 
     @Override
-    public void addPermission(Calendar calendar, SubjectType subjectType, String subject, boolean canAdmin, boolean canUse) {
+    public void addPermission(Calendar calendar, PermissionType permissionType, String subject, boolean canAdmin, boolean canUse) {
         Permission permission = ao.create(Permission.class);
         permission.setAdmin(canAdmin);
-        permission.setUse(canUse);
         permission.setCalendar(calendar);
-        permission.setSubjectType(subjectType);
-        permission.setSubject(subject);
+        permission.setPermissionType(permissionType);
+        permission.setPermissionValue(subject);
         permission.save();
     }
 
@@ -162,9 +159,8 @@ public class PermissionServiceImpl implements PermissionService {
         for (Permission permission : calendar.getPermissions())
             toDelete.put(permission.getID(), permission);
         for (PermissionItemDto permissionDto : permissions) {
-            Permission permission = getOrCreate(calendar, SubjectType.fromString(permissionDto.getType()), permissionDto.getId());
+            Permission permission = getOrCreate(calendar, PermissionType.fromString(permissionDto.getType()), permissionDto.getId());
             permission.setAdmin("ADMIN".equals(permissionDto.getAccessType()));
-            permission.setUse("USE".equals(permissionDto.getAccessType()));
             permission.save();
 
             toDelete.remove(permission.getID());
@@ -173,15 +169,15 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    public Permission getOrCreate(Calendar calendar, SubjectType subjectType, String subject) {
-        Permission[] permissions = ao.find(Permission.class, Query.select().where("CALENDAR_ID = ? AND SUBJECT = ? AND SUBJECT_TYPE = ?", calendar.getID(), subject, subjectType));
+    public Permission getOrCreate(Calendar calendar, PermissionType permissionType, String permissionValue) {
+        Permission[] permissions = ao.find(Permission.class, Query.select().where("CALENDAR_ID = ? AND PERMISSION_VALUE = ? AND PERMISSION_TYPE = ?", calendar.getID(), permissionValue, permissionType));
         if (permissions.length > 1)
-            throw new ActiveObjectsException(String.format("Found more that one object of type Permission for calendar '%s' and subject '%s'", calendar.getID(), subject));
+            throw new ActiveObjectsException(String.format("Found more that one object of type Permission for calendar '%s' and permissionValue '%s'", calendar.getID(), permissionValue));
         else if (permissions.length == 0) {
             Permission permission = ao.create(Permission.class);
             permission.setCalendar(calendar);
-            permission.setSubject(subject);
-            permission.setSubjectType(subjectType);
+            permission.setPermissionValue(permissionValue);
+            permission.setPermissionType(permissionType);
             permission.save();
             return permission;
         } else

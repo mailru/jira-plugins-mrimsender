@@ -26,11 +26,11 @@ public class UserDataDto {
     @XmlElement
     private List<Integer> calendars;
     @XmlElement
-    private Long lastLikeFlagShown;
+    private Long nextFeedbackShow;
     @XmlElement
     private boolean pluginRated;
-
-    private int likeShowCount;
+    @XmlElement
+    private int feedbackShowCount;
 
     public UserDataDto() {
     }
@@ -76,12 +76,12 @@ public class UserDataDto {
         this.calendars = calendars;
     }
 
-    public Long getLastLikeFlagShown() {
-        return lastLikeFlagShown;
+    public Long getNextFeedbackShow() {
+        return nextFeedbackShow;
     }
 
-    public void setLastLikeFlagShown(Long lastLikeFlagShown) {
-        this.lastLikeFlagShown = lastLikeFlagShown;
+    public void setNextFeedbackShow(Long nextFeedbackShow) {
+        this.nextFeedbackShow = nextFeedbackShow;
     }
 
     public String getName() {
@@ -112,7 +112,7 @@ public class UserDataDto {
         this.pluginRated = pluginRated;
     }
 
-    public void setLikeShowCount(int likeShowCount) {
-        this.likeShowCount = likeShowCount;
+    public void setFeedbackShowCount(int feedbackShowCount) {
+        this.feedbackShowCount = feedbackShowCount;
     }
 }

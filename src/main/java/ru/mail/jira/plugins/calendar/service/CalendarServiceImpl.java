@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.Permission;
-import ru.mail.jira.plugins.calendar.model.SubjectType;
+import ru.mail.jira.plugins.calendar.model.PermissionType;
 import ru.mail.jira.plugins.calendar.model.UserCalendar;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarSettingDto;
@@ -159,25 +159,25 @@ public class CalendarServiceImpl implements CalendarService {
 
         List<PermissionItemDto> permissions = new ArrayList<PermissionItemDto>();
         for (Permission permission : calendar.getPermissions()) {
-            SubjectType subjectType = permission.getSubjectType();
+            PermissionType permissionType = permission.getPermissionType();
             PermissionItemDto itemDto = null;
-            switch (subjectType) {
+            switch (permissionType) {
                 case USER:
-                    ApplicationUser subjectUser = userManager.getUserByKey(permission.getSubject());
+                    ApplicationUser subjectUser = userManager.getUserByKey(permission.getPermissionValue());
                     if (subjectUser != null)
                         itemDto = PermissionItemDto.buildUserDto(subjectUser.getKey(), subjectUser.getDisplayName(), subjectUser.getEmailAddress(), subjectUser.getName(),
-                                                                 PermissionUtils.getAccessType(permission.isAdmin(), permission.isUse()),
-                                                                 permissionService.getPermissionAvatar(permission, subjectType));
+                                                                 PermissionUtils.getAccessType(permission.isAdmin(), true),
+                                                                 permissionService.getPermissionAvatar(permission, permissionType));
                     break;
                 case GROUP:
-                    Group group = groupManager.getGroup(permission.getSubject());
+                    Group group = groupManager.getGroup(permission.getPermissionValue());
                     if (group != null)
-                        itemDto = PermissionItemDto.buildGroupDto(permission.getSubject(), group.getName(),
-                                                                  PermissionUtils.getAccessType(permission.isAdmin(), permission.isUse()));
+                        itemDto = PermissionItemDto.buildGroupDto(permission.getPermissionValue(), group.getName(),
+                                                                  PermissionUtils.getAccessType(permission.isAdmin(), true));
                     break;
                 case PROJECT_ROLE:
-                    Long projectId = PermissionUtils.getProject(permission.getSubject());
-                    Long projectRoleId = PermissionUtils.getProjectRole(permission.getSubject());
+                    Long projectId = PermissionUtils.getProject(permission.getPermissionValue());
+                    Long projectRoleId = PermissionUtils.getProjectRole(permission.getPermissionValue());
                     if (projectId == null || projectRoleId == null)
                         break;
                     Project project = projectManager.getProjectObj(projectId);
@@ -186,9 +186,9 @@ public class CalendarServiceImpl implements CalendarService {
                     String projectRoleName = projectRole != null ? projectRole.getName() : null;
                     if (project != null && permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false))
                         projectName = project.getName();
-                    itemDto = PermissionItemDto.buildProjectRoleDto(permission.getSubject(), projectName, projectRoleName,
-                                                                    PermissionUtils.getAccessType(permission.isAdmin(), permission.isUse()),
-                                                                    permissionService.getPermissionAvatar(permission, SubjectType.PROJECT_ROLE));
+                    itemDto = PermissionItemDto.buildProjectRoleDto(permission.getPermissionValue(), projectName, projectRoleName,
+                                                                    PermissionUtils.getAccessType(permission.isAdmin(), true),
+                                                                    permissionService.getPermissionAvatar(permission, PermissionType.PROJECT_ROLE));
                     break;
             }
             if (itemDto != null)

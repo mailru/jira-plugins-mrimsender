@@ -1,6 +1,6 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
-import ru.mail.jira.plugins.calendar.model.SubjectType;
+import ru.mail.jira.plugins.calendar.model.PermissionType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -102,7 +102,7 @@ public class PermissionItemDto {
 
 
     public static PermissionItemDto buildUserDto(String id, String displayName, String email, String name, String accessType, String avatarUrl) {
-        PermissionItemDto itemDto = new PermissionItemDto(id, SubjectType.USER.name(), accessType, avatarUrl);
+        PermissionItemDto itemDto = new PermissionItemDto(id, PermissionType.USER.name(), accessType, avatarUrl);
         itemDto.userDisplayName = displayName;
         itemDto.userEmail = email;
         itemDto.userName = name;
@@ -110,13 +110,13 @@ public class PermissionItemDto {
     }
 
     public static PermissionItemDto buildGroupDto(String id, String text, String accessType) {
-        PermissionItemDto itemDto = new PermissionItemDto(id, SubjectType.GROUP.name(), accessType, "");
+        PermissionItemDto itemDto = new PermissionItemDto(id, PermissionType.GROUP.name(), accessType, "");
         itemDto.setText(text);
         return itemDto;
     }
 
     public static PermissionItemDto buildProjectRoleDto(String id, String project, String projectRole, String accessType, String avatarUrl) {
-        PermissionItemDto itemDto = new PermissionItemDto(id, SubjectType.PROJECT_ROLE.name(), accessType, avatarUrl);
+        PermissionItemDto itemDto = new PermissionItemDto(id, PermissionType.PROJECT_ROLE.name(), accessType, avatarUrl);
         itemDto.project = project;
         itemDto.projectRole = projectRole;
         return itemDto;
