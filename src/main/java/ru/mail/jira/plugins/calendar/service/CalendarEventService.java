@@ -246,7 +246,7 @@ public class CalendarEventService {
                 }
 
                 event.setStartEditable(dateFieldsIsDraggable && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
-                event.setDurationEditable(isDateFieldDraggable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
+                event.setDurationEditable(isDateFieldResizable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
 
                 if (includeIssueInfo)
                     event.setIssueInfo(getEventInfo(calendar, issue));
@@ -328,7 +328,7 @@ public class CalendarEventService {
         CustomField eventEndCF = null;
         Timestamp eventEndCFValue = null;
         boolean eventEndIsDueDate = false;
-        if (calendar.getEventEnd() != null) {
+        if (StringUtils.isNotBlank(calendar.getEventEnd())) {
             if (calendar.getEventEnd().startsWith("customfield_")) {
                 eventEndCF = customFieldManager.getCustomFieldObject(calendar.getEventEnd());
                 if (eventEndCF == null)
@@ -396,7 +396,7 @@ public class CalendarEventService {
         CustomField eventEndCF = null;
         Date eventEndDateValue = null;
         boolean eventEndIsDueDate = false;
-        if (calendar.getEventEnd() != null) {
+        if (StringUtils.isNotEmpty(calendar.getEventEnd())) {
             if (calendar.getEventEnd().startsWith("customfield_")) {
                 eventEndCF = customFieldManager.getCustomFieldObject(calendar.getEventEnd());
                 if (eventEndCF == null)
@@ -466,16 +466,16 @@ public class CalendarEventService {
         return !isDateTimeField(cf);
     }
 
-    private boolean isDateFieldDraggable(String field) {
+    private boolean isDateFieldResizable(String field) {
         return !CREATED_DATE_KEY.equals(field) && !UPDATED_DATE_KEY.equals(field) && !RESOLVED_DATE_KEY.equals(field);
     }
 
     private boolean isDateFieldNotDraggable(String field) {
-        return !isDateFieldDraggable(field);
+        return !isDateFieldResizable(field);
     }
 
     private boolean isDateFieldsDraggable(String startField, String endField) {
-        return isDateFieldDraggable(startField) && isDateFieldDraggable(endField);
+        return isDateFieldResizable(startField) && (isDateFieldResizable(endField) || StringUtils.isEmpty(endField));
     }
 
     private boolean isDateFieldsNotDraggable(String startField, String endField) {

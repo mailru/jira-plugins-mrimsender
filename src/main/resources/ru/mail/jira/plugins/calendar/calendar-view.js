@@ -136,19 +136,20 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                         userLiveEvents: true
                     });
                 },
+                loading: $.proxy(function(isLoading, view) {
+                    this.trigger(isLoading ? 'startLoading' : 'stopLoading', view.name);
+                }, this),
                 viewRender: $.proxy(function(view) {
+                    this.trigger('render', view.name);
                     this.updateButtonsVisibility(view);
-                    if (viewRenderFirstTime)
-                        viewRenderFirstTime = false;
-                    else {
-                        var $visibleCalendars = $('.calendar-visible');
-                        this.trigger('render', view.name);
-                        $visibleCalendars.find('a.calendar-name').addClass('not-active');
-                    }
+                    $('.calendar-visible').find('a.calendar-name').addClass('not-active');
                 }, this),
                 eventAfterAllRender: $.proxy(function() {
                     this.$el.fullCalendar('unfreezeContentHeight');
-                    this.trigger('renderComplete');
+                    if (viewRenderFirstTime)
+                        viewRenderFirstTime = false;
+                    else
+                        this.trigger('renderComplete');
                 }, this),
                 eventDragStart: function(event) {
                     event.eventDialog && event.eventDialog.hide();
@@ -183,17 +184,20 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     !silent && this.trigger('addSourceSuccess', calendarId, true);
                 }, this)
             });
-            this.eventSources[calendarId] = this._eventSource(calendarId);
+            this.eventSources['' + calendarId] = this._eventSource(calendarId);
+        },
+        isCalendarInSources: function(calendarId) {
+            return this.eventSources['' + calendarId];
         },
         removeEventSource: function(calendarId) {
-            this.$el.fullCalendar('removeEventSource', this._eventSource(calendarId));
-            this.trigger('removeSource', calendarId);
-            this.eventSources = _.omit(this.eventSources, calendarId);
+            if (this.eventSources['' + calendarId]) {
+                this.$el.fullCalendar('removeEventSource', this._eventSource(calendarId));
+                this.eventSources = _.omit(this.eventSources, '' + calendarId);
+            }
         },
         removeAllEventSource: function() {
             _.each(this.eventSources, function(sourceUrl, calendarId) {
                 this.$el.fullCalendar('removeEventSource', sourceUrl);
-                this.trigger('removeSource', calendarId);
             }, this);
             this.eventSources = {};
         },

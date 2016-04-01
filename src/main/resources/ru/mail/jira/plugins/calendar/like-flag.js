@@ -5,7 +5,7 @@ define('calendar/like-flag', ['jquery', 'underscore', 'backbone', 'aui/flag'], f
         '</p>';
     var likeFlagOther = '' +
         '<p>'
-        + AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.liker.badRateAndReview'), '<a href="https://answers.atlassian.com/questions/topics/758783/addon-ru.mail.jira.plugins.mailrucal" target="_blank" class="mailrucalendar-like-flag-close">', '</a>') +
+        + AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.liker.badRateAndReview'), '<a href="https://answers.atlassian.com/questions/ask?topics=addon-ru.mail.jira.plugins.mailrucal" target="_blank" class="mailrucalendar-like-flag-close">', '</a>') +
         '</p>';
 
     //todo for testing

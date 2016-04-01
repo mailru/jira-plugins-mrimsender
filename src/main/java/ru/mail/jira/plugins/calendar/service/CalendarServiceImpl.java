@@ -221,6 +221,10 @@ public class CalendarServiceImpl implements CalendarService {
         boolean canUse = canAdmin || permissionService.hasUsePermission(user, calendar);
         result.setChangable(canAdmin);
         result.setViewable(canUse);
+        if (!canAdmin && !canUse) {
+            result.setHasError(true);
+            result.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
+        }
         return result;
     }
 
@@ -263,8 +267,8 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setName(calendarSettingDto.getSelectedName());
         calendar.setSource(calendarSettingDto.getSelectedSourceId());
         calendar.setColor(calendarSettingDto.getSelectedColor());
-        calendar.setEventStart(calendarSettingDto.getSelectedEventStartId());
-        calendar.setEventEnd(calendarSettingDto.getSelectedEventEndId());
+        calendar.setEventStart(StringUtils.trimToNull(calendarSettingDto.getSelectedEventStartId()));
+        calendar.setEventEnd(StringUtils.trimToNull(calendarSettingDto.getSelectedEventEndId()));
         calendar.setDisplayedFields(StringUtils.join(calendarSettingDto.getSelectedDisplayedFields(), ","));
         calendar.save();
     }
@@ -278,10 +282,6 @@ public class CalendarServiceImpl implements CalendarService {
             UserCalendar userCalendar = userCalendarService.find(calendar.getID(), user.getKey());
             if (canAdmin || canUse || userCalendar != null) {
                 CalendarDto output = buildCalendarOutput(user, userCalendar, calendar, canUse, canAdmin, userCalendar != null && userCalendar.isEnabled(), userCalendar != null, userCalendarService.getUsersCount(calendar.getID()));
-                if (!canAdmin && !canUse) {
-                    output.setHasError(true);
-                    output.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
-                }
                 selectedCalendars.add(calendar.getID());
                 result.add(output);
             }
@@ -312,6 +312,10 @@ public class CalendarServiceImpl implements CalendarService {
                 output.setHasError(true);
                 output.setError(filterHasNotAvailableError);
             }
+        }
+        if (!changable && !canUse) {
+            output.setHasError(true);
+            output.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
         }
         return output;
     }

@@ -144,7 +144,7 @@
 .select2-container.select2-container-disabled .select2-choices .select2-search-choice {
     background-color: #f4f4f4 !important;
     background-image: none !important;
-    border: 1px solid #ddd !important;
+    border-color: #ccc !important;
     cursor: not-allowed !important;
     color: #999999 !important;
 }
@@ -659,7 +659,7 @@ div.vis-item.vis-box {
 .mailrucalendar-like-flag-rating {
     width: 135px;
     height: 33px;
-    margin: 5px 0;
+    margin-top: 10px;
 }
 
 /* :not(:checked) is a filter, so that browsers that don’t support :checked don’t

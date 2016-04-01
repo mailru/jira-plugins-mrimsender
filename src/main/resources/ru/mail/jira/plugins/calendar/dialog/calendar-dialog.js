@@ -139,17 +139,17 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
                         var results = [];
                         if (data.users && data.users.length)
                             results.push({
-                                text: AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatching'), AJS.I18n.getText('admin.common.words.users'), data.users.length, data.usersCount),
+                                text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatching', AJS.I18n.getText('admin.common.words.users'), data.users.length, data.usersCount),
                                 children: data.users
                             });
                         if (data.groups && data.groups.length)
                             results.push({
-                                text: AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatching'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.common.groups'), data.groups.length, data.groupsCount),
+                                text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatching', AJS.I18n.getText('ru.mail.jira.plugins.calendar.common.groups'), data.groups.length, data.groupsCount),
                                 children: data.groups
                             });
                         if (data.projectRoles && data.projectRoles.length)
                             results.push({
-                                text: AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatching'), AJS.I18n.getText('common.words.project.roles'), data.projectRoles.length, data.projectRolesCount),
+                                text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatching', AJS.I18n.getText('common.words.project.roles'), data.projectRoles.length, data.projectRolesCount),
                                 children: data.projectRoles
                             });
                         return {
@@ -191,12 +191,12 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
                         var results = [];
                         if (data.projects && data.projects.length > 0)
                             results.push({
-                                text: AJS.I18n.getText('common.concepts.projects'),
+                                text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatching', AJS.I18n.getText('common.concepts.projects'), data.projects.length, data.totalProjectsCount),
                                 children: data.projects
                             });
                         if (data.filters && data.filters.length > 0)
                             results.push({
-                                text: AJS.I18n.getText('common.concepts.filters'),
+                                text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatching', AJS.I18n.getText('common.concepts.filters'), data.filters.length, data.totalFiltersCount),
                                 children: data.filters
                             });
                         return {results: results};

@@ -11,6 +11,7 @@ import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.search.SearchRequest;
+import com.atlassian.jira.issue.search.SearchRequestManager;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
@@ -67,13 +68,14 @@ public class RestConfigurationService {
     private final ProjectService projectService;
     private final ProjectRoleManager projectRoleManager;
     private final SearchRequestService searchRequestService;
+    private final SearchRequestManager searchRequestManager;
     private final UserManager userManager;
 
     public RestConfigurationService(ApplicationProperties applicationProperties, AvatarService avatarService, CustomFieldManager customFieldManager,
                                     GlobalPermissionManager globalPermissionManager, GroupManager groupManager, I18nHelper i18nHelper,
                                     JiraAuthenticationContext jiraAuthenticationContext,
                                     ProjectManager projectManager, ProjectService projectService,
-                                    ProjectRoleManager projectRoleManager, SearchRequestService searchRequestService, UserManager userManager) {
+                                    ProjectRoleManager projectRoleManager, SearchRequestService searchRequestService, SearchRequestManager searchRequestManager, UserManager userManager) {
         this.applicationProperties = applicationProperties;
         this.avatarService = avatarService;
         this.customFieldManager = customFieldManager;
@@ -85,6 +87,7 @@ public class RestConfigurationService {
         this.projectService = projectService;
         this.projectRoleManager = projectRoleManager;
         this.searchRequestService = searchRequestService;
+        this.searchRequestManager = searchRequestManager;
         this.userManager = userManager;
     }
 
@@ -134,7 +137,10 @@ public class RestConfigurationService {
         return new RestExecutor<IssueSourceDto>() {
             @Override
             protected IssueSourceDto doAction() throws Exception {
-                return new IssueSourceDto(getProjectSources(filter), getFilterSources(filter));
+                IssueSourceDto issueSourceDto = new IssueSourceDto();
+                fillProjectSources(issueSourceDto, filter);
+                fillFilterSources(issueSourceDto, filter);
+                return issueSourceDto;
             }
         }.getResponse();
     }
@@ -257,17 +263,16 @@ public class RestConfigurationService {
         subjectDto.setUsers(result);
     }
 
-    private List<SelectItemDto> getProjectSources(String filter) {
+    private void fillProjectSources(IssueSourceDto issueSourceDto, String filter) {
         List<SelectItemDto> result = new ArrayList<SelectItemDto>();
         filter = filter.trim().toLowerCase();
-        int length = 0;
+        int total = 0;
         List<Project> allProjects = projectService.getAllProjects(jiraAuthenticationContext.getUser()).get();
         for (Project project : allProjects) {
             if (project.getName().toLowerCase().contains(filter) || project.getKey().toLowerCase().contains(filter)) {
-                result.add(new SelectItemDto("project_" + project.getId(), String.format("%s (%s)", project.getName(), project.getKey()), project.getAvatar().getId()));
-                length++;
-                if (length == 10)
-                    break;
+                if (result.size() < 10)
+                    result.add(new SelectItemDto("project_" + project.getId(), String.format("%s (%s)", project.getName(), project.getKey()), project.getAvatar().getId()));
+                total++;
             }
         }
 
@@ -278,23 +283,24 @@ public class RestConfigurationService {
             }
         });
 
-        return result;
+        issueSourceDto.setTotalProjectsCount(total);
+        issueSourceDto.setProjects(result);
     }
 
-    private List<SelectItemDto> getFilterSources(String filter) {
+    private void fillFilterSources(IssueSourceDto issueSourceDto, String filter) {
         List<SelectItemDto> result = new ArrayList<SelectItemDto>();
         SharedEntitySearchParametersBuilder builder = new SharedEntitySearchParametersBuilder();
-        builder.setName(StringUtils.isBlank(filter) ? null : filter);
+        builder.setName(StringUtils.isBlank(filter) ? null : "\"" + filter + "\"");
         builder.setTextSearchMode(SharedEntitySearchParameters.TextSearchMode.WILDCARD);
         builder.setSortColumn(SharedEntityColumn.NAME, true);
         builder.setEntitySearchContext(SharedEntitySearchContext.USE);
-
-        SharedEntitySearchResult<SearchRequest> searchResults = searchRequestService.search(new JiraServiceContextImpl(jiraAuthenticationContext.getUser()), builder.toSearchParameters(), 0, 10);
+        SharedEntitySearchResult<SearchRequest> searchResults = searchRequestService.search(new JiraServiceContextImpl(jiraAuthenticationContext.getUser()), builder.toSearchParameters(), 0, filter.length() < 5 ? 10 : Integer.MAX_VALUE);
 
         for (SearchRequest search : searchResults.getResults())
             result.add(new SelectItemDto("filter_" + search.getId(), search.getName(), 0));
 
-        return result;
+        issueSourceDto.setTotalFiltersCount(searchResults.getTotalResultCount());
+        issueSourceDto.setFilters(result);
     }
 
     private String getUserAvatarSrc(ApplicationUser user) {

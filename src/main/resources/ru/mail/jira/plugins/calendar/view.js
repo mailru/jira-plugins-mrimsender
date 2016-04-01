@@ -63,7 +63,6 @@ require(['jquery',
 
         var MainView = Backbone.View.extend({
             el: 'body',
-            loadingCounter: 0,
             events: {
                 'click #calendar-create-feed': 'showCalendarFeedView',
                 'click #calendar-create': 'createCalendar',
@@ -78,17 +77,13 @@ require(['jquery',
                 this.calendarView = new CalendarView();
 
                 this.calendarView.on('addSource render', this.startLoadingCalendarsCallback, this);
-                this.calendarView.on('removeSource renderComplete', this.finishLoadingCalendarsCallback, this);
-                this.calendarView.on('addSourceSuccess', this.changeEventSourceCallback, this);
+                this.calendarView.on('renderComplete', this.finishLoadingCalendarsCallback, this);
                 this.calendarView.on('render', this.updatePeriodButton, this);
                 this.calendarView.on('changeWeekendsVisibility', this.toggleWeekendsVisibility, this);
 
-                this.collection.on('request', this.startLoadingCalendarsCallback, this);
-                this.collection.on('sync', this.finishLoadingCalendarsCallback, this);
-                this.collection.on('remove', this.removeCalendarFromList, this);
-                this.collection.on('change:favorite', this._onCalendarFavoriteChange, this);
-                this.collection.on('change', this._onCalendarChange, this);
-                this.collection.on('add', this._onCalendarAdd, this);
+                this.collection.on('remove', this._onDeleteCalendar, this);
+                this.collection.on('change', this._onChangeCalendar, this);
+                this.collection.on('add', this._onAddCalendar, this);
 
                 this.model.on('change:hideWeekends', this.onHideWeekendsHandler, this);
                 this.model.on('change:calendarView', this._onUserDataViewChange, this);
@@ -97,31 +92,22 @@ require(['jquery',
                 var view = model.get('calendarView') || "month";
                 this.setCalendarView(view);
             },
-            _onCalendarFavoriteChange: function(calendar) {
-                if (calendar.get('favorite'))
-                    this.addCalendarToList(calendar);
-                else
-                    this.removeCalendarFromList(calendar);
-            },
-            _onCalendarChange: function(calendar) {
-                var $calendarBlock = $('#calendar-list-item-block-' + calendar.id);
-                $calendarBlock.replaceWith(JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({calendar: calendar.toJSON()}));
+            _onChangeCalendar: function(calendar) {
+                this.buildCalendarList();
 
                 this.calendarView.removeEventSource(calendar.id);
                 if (calendar.get('favorite') && calendar.get('visible') && !calendar.get('hasError'))
                     this.calendarView.addEventSource(calendar.id);
-                else {
-                    this.changeEventSourceCallback(calendar.id);
-
-                    if (!calendar.get('favorite'))
-                        this.removeCalendarFromList(calendar);
-                }
             },
-            _onCalendarAdd: function(calendar) {
-                this.addCalendarToList(calendar);
+            _onAddCalendar: function(calendar) {
+                this.buildCalendarList();
                 this.calendarView.removeEventSource(calendar.id);
                 if (calendar.get('visible') && !calendar.get('hasError'))
                     this.calendarView.addEventSource(calendar.id);
+            },
+            _onDeleteCalendar: function(calendar) {
+                this.buildCalendarList();
+                this.calendarView.removeEventSource(calendar.id);
             },
             _onCalendarDropdownShow: function() {
                 var calendarId = $(this).data('id');
@@ -131,61 +117,17 @@ require(['jquery',
                 var calendarId = $(this).data('id');
                 $('div.calendar-list-item-block[data-id=' + calendarId + ']').toggleClass('calendar-list-item-selected', false);
             },
-            changeEventSourceCallback: function(calendarId) {
-                var $calendarBlock = this.$('#calendar-list-item-block-' + calendarId);
-                var calendar = this.collection.get(calendarId);
-                $calendarBlock.replaceWith(JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({calendar: calendar.toJSON()}));
-            },
             startLoadingCalendarsCallback: function() {
-                this.loadingCounter++;
                 AJS.dim();
                 JIRA.Loading.showLoadingIndicator();
+                console.log('startLoadingCalendarsCallback');
             },
             finishLoadingCalendarsCallback: function() {
-                this.loadingCounter--;
-                if (this.loadingCounter <= 0) {
-                    this.$('.calendar-name').removeClass('not-active');
+                this.$('.calendar-name').removeClass('not-active');
+                JIRA.Loading.hideLoadingIndicator();
+                if (!$('.aui-dialog2[aria-hidden=false]').length)
                     AJS.undim();
-                    JIRA.Loading.hideLoadingIndicator();
-                    this.loadingCounter = 0;
-                }
-            },
-            addCalendarToList: function(calendar) {
-                this.$('#mailrucalendar-empty-calendar-list').css('display', 'none');
-                var listBlock = this.$('#calendar-favorite-calendar-list');
-                listBlock.css('display', 'block');
-
-                var sorted = _.sortBy(this.collection.filter(function(cal) {
-                    return cal.get('favorite');
-                }), function(cal) {
-                    return cal.get('hasError') ? '' : cal.get('name');
-                });
-                var index = _.indexOf(sorted, calendar);
-                if (sorted.length - 1 == index)
-                    listBlock.append(JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({calendar: calendar.toJSON()}));
-                else {
-                    var calendarNext = sorted[index + 1];
-                    this.$('.calendar-list-item-block[data-id="' + calendarNext.id + '"]').before(JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({calendar: calendar.toJSON()}));
-                }
-
-                AJS.$("#calendar-buttons-dropdown-" + calendar.id).on({
-                    "aui-dropdown2-show": this._onCalendarDropdownShow,
-                    "aui-dropdown2-hide": this._onCalendarDropdownHide
-                });
-            },
-            removeCalendarFromList: function(calendar) {
-                var calendarBlock = this.$('#calendar-list-item-block-' + calendar.id);
-                var blockContainer = calendarBlock.parent('.aui-navgroup-inner');
-                calendarBlock.remove();
-                this.calendarView.removeEventSource(calendar.id);
-
-                if (!blockContainer.find('.calendar-list-item-block').length)
-                    blockContainer.css('display', 'none');
-
-                var calendarListEmpty = !this.collection.find(function(calendar) {
-                    return calendar.get('favorite');
-                });
-                calendarListEmpty && $('#mailrucalendar-empty-calendar-list').css('display', 'block');
+                console.log('finishLoadingCalendarsCallback');
             },
             loadFullCalendar: function(view, hideWeekends) {
                 this.updatePeriodButton(view);
@@ -246,11 +188,8 @@ require(['jquery',
                 });
             },
             toggleWeekendsVisibility: function() {
-                this.startLoadingCalendarsCallback();
                 this.model.save({hideWeekends: !this.model.get('hideWeekends')}, {
-                    success: $.proxy(this.finishLoadingCalendarsCallback, this),
                     error: $.proxy(function(xhr) {
-                        this.finishLoadingCalendarsCallback();
                         var msg = "Error while trying to update user hide weekends option. ";
                         if (xhr.responseText)
                             msg += xhr.responseText;
@@ -270,7 +209,8 @@ require(['jquery',
                 var calendarId = $calendarNameLink.closest('div.calendar-list-item-block').data('id');
                 var calendar = this.collection.get(calendarId);
 
-                this.startLoadingCalendarsCallback();
+                if (calendar.get('visible'))
+                    this.startLoadingCalendarsCallback();
                 $calendarNameLink.addClass('not-active');
 
                 $.ajax({
@@ -311,6 +251,9 @@ require(['jquery',
                 this.$('.aui-page-panel-nav').click();
 
                 var calendar = this.collection.get($(e.currentTarget).closest('div.aui-dropdown2').data('id'));
+
+                if (this.calendarView.isCalendarInSources(calendar.id))
+                    this.startLoadingCalendarsCallback();
                 $.ajax({
                     url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/favorite/' + calendar.id,
                     type: "DELETE",
@@ -318,9 +261,9 @@ require(['jquery',
                         this.finishLoadingCalendarsCallback();
                         alert(xhr.responseText || "Internal error");
                     }, this),
-                    success: function() {
+                    success: $.proxy(function() {
                         calendar.set({favorite: false, visible: false, usersCount: calendar.get('usersCount') - 1});
-                    }
+                    }, this)
                 });
             },
             deleteCalendar: function(e) {
@@ -337,7 +280,8 @@ require(['jquery',
                     header: AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDeleteHeader'),
                     text: confirmText,
                     okHandler: $.proxy(function() {
-                        this.startLoadingCalendarsCallback();
+                        if (this.calendarView.isCalendarInSources(calendar.id))
+                            this.startLoadingCalendarsCallback();
                         $.ajax({
                             url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendar.id,
                             type: 'DELETE',
@@ -353,6 +297,33 @@ require(['jquery',
                 });
 
                 confirmDialog.show();
+            },
+            buildCalendarList: function() {
+                var htmlFavoriteCalendars = '';
+                var sorted = this.collection.sortBy(function(calendar) {
+                    return calendar.get('hasError') ? '' : calendar.get('name');
+                });
+                _.each(sorted, function(calendar) {
+                    var json = calendar.toJSON();
+                    if (calendar.get('visible') || calendar.get('favorite'))
+                        htmlFavoriteCalendars += JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({calendar: json});
+                });
+
+                if (htmlFavoriteCalendars) {
+                    $('#mailrucalendar-empty-calendar-list').css('display', 'none');
+                    $('#calendar-favorite-calendar-list').empty().css('display', 'block').append(htmlFavoriteCalendars);
+                } else {
+                    $('#calendar-favorite-calendar-list').empty().css('display', 'none');
+                    $('#mailrucalendar-empty-calendar-list').css('display', 'block');
+                }
+
+                this.collection.each($.proxy(function(calendar) {
+                    if (calendar.get('visible') || calendar.get('favorite'))
+                        AJS.$('#calendar-buttons-dropdown-' + calendar.id).on({
+                            'aui-dropdown2-show': this._onCalendarDropdownShow,
+                            'aui-dropdown2-hide': this._onCalendarDropdownHide
+                        });
+                }, this));
             }
         });
 
@@ -380,6 +351,7 @@ require(['jquery',
                 mainView.setCalendarView(view);
             },
             validateViewType: function(view) {
+
                 return this.availableOptions.view[view] ? view : 'month';
             }
         });
@@ -391,6 +363,8 @@ require(['jquery',
         mainView.model.fetch({
             success: function(model) {
                 var view = model.get('calendarView') || 'month';
+                if (view == 'basicWeek')
+                    view = 'agendaWeek';
                 mainView.loadFullCalendar(view, model.get('hideWeekends'));
 
                 Backbone.history.start();
@@ -414,41 +388,15 @@ require(['jquery',
                 Backbone.history.start();
             }
         });
+        mainView.startLoadingCalendarsCallback();
         mainView.collection.fetch({
             silent: true,
             success: function(collection) {
-                var htmlFavoriteCalendars = '';
-                var eventSources = [];
-
-                if (!!collection.findWhere({visible: true}))
-                    mainView.startLoadingCalendarsCallback();
-
-                var sorted = collection.sortBy(function(calendar) {
-                    return calendar.get('hasError') ? '' : calendar.get('name');
-                });
-                _.each(sorted, function(calendar) {
-                    var json = calendar.toJSON();
-                    if (calendar.get('visible') || calendar.get('favorite'))
-                        htmlFavoriteCalendars += JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({calendar: json});
-                    if (calendar.get('visible') && !calendar.get('hasError'))
-                        eventSources.push(calendar.id);
-                });
-
-                if (htmlFavoriteCalendars)
-                    $('#calendar-favorite-calendar-list').css('display', 'block').append(htmlFavoriteCalendars);
-                else
-                    $('#mailrucalendar-empty-calendar-list').css('display', 'block');
-
+                mainView.buildCalendarList();
                 collection.each(function(calendar) {
-                    if (calendar.get('visible') || calendar.get('favorite'))
-                        AJS.$('#calendar-buttons-dropdown-' + calendar.id).on({
-                            'aui-dropdown2-show': mainView._onCalendarDropdownShow,
-                            'aui-dropdown2-hide': mainView._onCalendarDropdownHide
-                        });
+                    if (calendar.get('visible') && !calendar.get('hasError'))
+                        mainView.calendarView.addEventSource(calendar.id, true);
                 });
-
-                for (var a = 0; a < eventSources.length; a++)
-                    mainView.calendarView.addEventSource(eventSources[a], true);
             },
             error: function(request) {
                 alert(request.responseText);
