@@ -398,6 +398,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             $row.remove();
         },
         _toggleAccessType: function(e) {
+            e.preventDefault();
             var $accessType = $(e.target);
             var accessType = $accessType.data('access-type');
             var $row = $accessType.closest('tr');
@@ -409,7 +410,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone'], functio
             $accessType.toggleClass('aui-lozenge-complete', selected);
             $accessType.toggleClass('aui-lozenge-subtle', !selected);
             if (selected) {
-                var $otherAccessType = $row.find('li[data-access-type="' + (accessType == 'ADMIN' ? 'USE' : 'ADMIN') + '"]');
+                var $otherAccessType = $row.find('.aui-lozenge[data-access-type="' + (accessType == 'ADMIN' ? 'USE' : 'ADMIN') + '"]');
                 $otherAccessType.toggleClass('selected', false);
                 $otherAccessType.toggleClass('aui-lozenge-complete', false);
                 $otherAccessType.toggleClass('aui-lozenge-subtle', true);

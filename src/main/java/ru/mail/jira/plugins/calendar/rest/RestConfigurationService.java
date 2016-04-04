@@ -11,7 +11,6 @@ import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.search.SearchRequest;
-import com.atlassian.jira.issue.search.SearchRequestManager;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
@@ -68,14 +67,13 @@ public class RestConfigurationService {
     private final ProjectService projectService;
     private final ProjectRoleManager projectRoleManager;
     private final SearchRequestService searchRequestService;
-    private final SearchRequestManager searchRequestManager;
     private final UserManager userManager;
 
     public RestConfigurationService(ApplicationProperties applicationProperties, AvatarService avatarService, CustomFieldManager customFieldManager,
                                     GlobalPermissionManager globalPermissionManager, GroupManager groupManager, I18nHelper i18nHelper,
                                     JiraAuthenticationContext jiraAuthenticationContext,
                                     ProjectManager projectManager, ProjectService projectService,
-                                    ProjectRoleManager projectRoleManager, SearchRequestService searchRequestService, SearchRequestManager searchRequestManager, UserManager userManager) {
+                                    ProjectRoleManager projectRoleManager, SearchRequestService searchRequestService, UserManager userManager) {
         this.applicationProperties = applicationProperties;
         this.avatarService = avatarService;
         this.customFieldManager = customFieldManager;
@@ -87,7 +85,6 @@ public class RestConfigurationService {
         this.projectService = projectService;
         this.projectRoleManager = projectRoleManager;
         this.searchRequestService = searchRequestService;
-        this.searchRequestManager = searchRequestManager;
         this.userManager = userManager;
     }
 

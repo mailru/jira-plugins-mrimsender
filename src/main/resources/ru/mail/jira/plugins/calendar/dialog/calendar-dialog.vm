@@ -116,10 +116,8 @@
                         <tr>
                             <td><i>$i18n.getText( "admin.global.permissions.administer" )</i></td>
                             <td class="calendar-dialog-permission-table-access-type" colspan="2">
-                                <ul>
-                                    <li class="aui-lozenge aui-lozenge-subtle" disabled="disabled">$i18n.getText( "ru.mail.jira.plugins.calendar.common.use" )</li>
-                                    <li class="aui-lozenge aui-lozenge-complete" disabled="disabled">$i18n.getText( "ru.mail.jira.plugins.calendar.common.admin" )</li>
-                                </ul>
+                                <a class="aui-lozenge aui-lozenge-subtle" disabled="disabled">$i18n.getText( "ru.mail.jira.plugins.calendar.common.use" )</a>
+                                <a class="aui-lozenge aui-lozenge-complete" disabled="disabled">$i18n.getText( "ru.mail.jira.plugins.calendar.common.admin" )</a>
                             </td>
                         </tr>
                     </tfoot>

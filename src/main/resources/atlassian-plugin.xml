@@ -108,7 +108,7 @@
         <resource type="download" name="feed-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/feed-dialog.js"/>
         <resource type="download" name="import-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/import-dialog.js"/>
         <resource type="download" name="confirm-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/confirm-dialog.js"/>
-        <resource type="download" name="like-flag.js" location="ru/mail/jira/plugins/calendar/like-flag.js"/>
+        <resource type="download" name="feedback-flag.js" location="ru/mail/jira/plugins/calendar/feedback-flag.js"/>
 
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>

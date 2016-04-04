@@ -416,29 +416,33 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     min-width: 195px;
 }
 
-.calendar-dialog-permission-table-access-type.calendar-dialog-permission-table-action {
-    text-align: right;
-}
-
-#calendar-dialog-permission-table tbody li.aui-lozenge {
+#calendar-dialog-permission-table tbody a.aui-lozenge {
     cursor: pointer;
     margin-right: 5px;
 }
 
-#calendar-dialog-permission-table li.aui-lozenge[disabled] {
+#calendar-dialog-permission-table a.aui-lozenge[disabled] {
     opacity: 0.5;
-    cursor: default;
+    cursor: not-allowed;
 }
 
-#calendar-dialog-permission-table td > ul {
-    float: left;
+#calendar-dialog-permission-table td > a.aui-lozenge {
     margin-top: -1px;
-    padding-left: 0;
+    text-decoration: none;
+}
+
+#calendar-dialog-permission-table td > a.aui-lozenge.aui-lozenge-subtle {
+    color: #333 !important;
+}
+
+#calendar-dialog-permission-table td > a.aui-lozenge.aui-lozenge-complete {
+    color: #fff !important;
 }
 
 #calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon {
     cursor: pointer;
     color: #bbb;
+    margin-left: 5px;
 }
 
 #calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon:hover {
@@ -651,12 +655,7 @@ div.vis-item.vis-box {
 }
 
 /* Like flag */
-
-.mailrucalendar-like-flag-container {
-    margin-top: 10px;
-}
-
-.mailrucalendar-like-flag-rating {
+.mailrucalendar-feedback-flag-rating {
     width: 135px;
     height: 33px;
     margin-top: 10px;
@@ -665,13 +664,13 @@ div.vis-item.vis-box {
 /* :not(:checked) is a filter, so that browsers that don’t support :checked don’t
    follow these rules. Every browser that supports :checked also supports :not(), so
    it doesn’t make the test unnecessarily selective */
-.mailrucalendar-like-flag-rating:not(:checked) > input {
+.mailrucalendar-feedback-flag-rating:not(:checked) > input {
     position: absolute;
     top: -9999px;
     clip: rect(0, 0, 0, 0);
 }
 
-.mailrucalendar-like-flag-rating:not(:checked) > label {
+.mailrucalendar-feedback-flag-rating:not(:checked) > label {
     float: right;
     width: 1em;
     padding: 0 .1em;
@@ -683,19 +682,19 @@ div.vis-item.vis-box {
     color: #ddd;
 }
 
-.mailrucalendar-like-flag-rating > input:checked ~ label {
+.mailrucalendar-feedback-flag-rating > input:checked ~ label {
     color: gold;
 }
 
-.mailrucalendar-like-flag-rating:not(:checked) > label:hover,
-.mailrucalendar-like-flag-rating:not(:checked) > label:hover ~ label {
+.mailrucalendar-feedback-flag-rating:not(:checked) > label:hover,
+.mailrucalendar-feedback-flag-rating:not(:checked) > label:hover ~ label {
     color: gold;
 }
 
-.mailrucalendar-like-flag-rating > input:checked + label:hover,
-.mailrucalendar-like-flag-rating > input:checked + label:hover ~ label,
-.mailrucalendar-like-flag-rating > input:checked ~ label:hover,
-.mailrucalendar-like-flag-rating > input:checked ~ label:hover ~ label,
-.mailrucalendar-like-flag-rating > label:hover ~ input:checked ~ label {
+.mailrucalendar-feedback-flag-rating > input:checked + label:hover,
+.mailrucalendar-feedback-flag-rating > input:checked + label:hover ~ label,
+.mailrucalendar-feedback-flag-rating > input:checked ~ label:hover,
+.mailrucalendar-feedback-flag-rating > input:checked ~ label:hover ~ label,
+.mailrucalendar-feedback-flag-rating > label:hover ~ input:checked ~ label {
     color: gold;
 }

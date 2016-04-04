@@ -1,7 +1,7 @@
 require(['jquery',
     'underscore',
     'backbone',
-    'calendar/like-flag',
+    'calendar/feedback-flag',
     'calendar/calendar-view',
     'calendar/calendar-dialog',
     'calendar/confirm-dialog',
