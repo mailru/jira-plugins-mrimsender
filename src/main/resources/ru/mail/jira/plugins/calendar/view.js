@@ -392,11 +392,15 @@ require(['jquery',
         mainView.collection.fetch({
             silent: true,
             success: function(collection) {
+                var hasEnabledCalendar = false;
                 mainView.buildCalendarList();
                 collection.each(function(calendar) {
-                    if (calendar.get('visible') && !calendar.get('hasError'))
+                    if (calendar.get('visible') && !calendar.get('hasError')) {
                         mainView.calendarView.addEventSource(calendar.id, true);
+                        hasEnabledCalendar = true;
+                    }
                 });
+                hasEnabledCalendar || mainView.finishLoadingCalendarsCallback();
             },
             error: function(request) {
                 alert(request.responseText);

@@ -140,7 +140,8 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     this.trigger(isLoading ? 'startLoading' : 'stopLoading', view.name);
                 }, this),
                 viewRender: $.proxy(function(view) {
-                    this.trigger('render', view.name);
+                    if (!viewRenderFirstTime)
+                        this.trigger('render', view.name);
                     this.updateButtonsVisibility(view);
                     $('.calendar-visible').find('a.calendar-name').addClass('not-active');
                 }, this),
