@@ -7,6 +7,8 @@
         <param name="atlassian-data-center-compatible">true</param>
     </plugin-info>
 
+    <gadget key="mailru-calendar-gadget" location="ru/mail/jira/plugins/calendar/gadget/calendar-gadget.xml"/>
+
     <resource type="i18n" name="i18n" location="ru.mail.jira.plugins.calendar.mailrucalendar"/>
 
     <rest key="mailrucalendar-rest" path="/mailrucalendar" version="1.0" />
@@ -14,22 +16,25 @@
     <component-import key="ao" interface="com.atlassian.activeobjects.external.ActiveObjects" />
     <ao key="ao-entities">
         <entity>ru.mail.jira.plugins.calendar.model.Calendar</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.UserCalendar</entity>
         <entity>ru.mail.jira.plugins.calendar.model.UserData</entity>
-        <entity>ru.mail.jira.plugins.calendar.model.Share</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.Permission</entity>
+
+        <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v3.Version3UpgradeTask</upgradeTask>
+        <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v4.Version4UpgradeTask</upgradeTask>
     </ao>
+    <component key="tx-processor" name="Transactional Annotation Processor" class="com.atlassian.activeobjects.external.TransactionalAnnotationProcessor">
+        <decription>Processes @Transactional annotations.</decription>
+    </component>
 
     <component-import key="pluginSettingsFactory" interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
     <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
 
     <component key="calendar-event-service" class="ru.mail.jira.plugins.calendar.service.CalendarEventService" />
-    <component key="calendar-service" class="ru.mail.jira.plugins.calendar.service.CalendarService" />
+    <component key="calendar-service" class="ru.mail.jira.plugins.calendar.service.CalendarServiceImpl" />
     <component key="userData-service" class="ru.mail.jira.plugins.calendar.service.UserDataService" />
-
-    <component key="calendar-migrator" class="ru.mail.jira.plugins.calendar.migrator.CalendarMigrator" />
-    <component key="user-preferences-migrator" class="ru.mail.jira.plugins.calendar.migrator.UserPreferenceMigrator" />
-    <component key="all-data-migrator" class="ru.mail.jira.plugins.calendar.migrator.Migrator" public="true">
-        <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
-    </component>
+    <component key="userCalendar-service" class="ru.mail.jira.plugins.calendar.service.UserCalendarServiceImpl" />
+    <component key="permission-service" class="ru.mail.jira.plugins.calendar.service.PermissionServiceImpl" />
 
     <webwork1 key="calendar-action" class="java.lang.Object" roles-required="use">
         <actions>
@@ -38,6 +43,42 @@
             </action>
         </actions>
     </webwork1>
+
+    <web-resource key="mailru-calendar-soy-templates">
+        <dependency>com.atlassian.soy.soy-template-plugin:soy-deps</dependency>
+        <transformation extension="soy">
+            <transformer key="soyTransformer"/>
+        </transformation>
+        <resource type="download" name="templates.soy.js" location="ru/mail/jira/plugins/calendar/templates.soy"/>
+    </web-resource>
+
+    <web-resource key="calendar-gadget-resources">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <dependency>com.atlassian.auiplugin:aui-select2</dependency>
+        <dependency>ru.mail.jira.plugins.mailrucal:mailru-calendar-soy-templates</dependency>
+
+        <resource type="download" name="intro-screenshot.png" location="ru/mail/jira/plugins/calendar/gadget/intro-screenshot.png"/>
+        <resource type="download" name="intro-thumb.png" location="ru/mail/jira/plugins/calendar/gadget/intro-thumb.png"/>
+
+        <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>
+        <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/libs/clipboard-min.js"/>
+
+        <resource type="download" name="vis.css" location="ru/mail/jira/plugins/calendar/timeline/vis.css"/>
+        <resource type="download" name="vis-timeline.js" location="ru/mail/jira/plugins/calendar/timeline/vis-timeline.js"/>
+        <resource type="download" name="img/" location="ru/mail/jira/plugins/calendar/timeline/img"/>
+
+        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
+        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
+        <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/fullcalendar/timeline-view.js"/>
+
+        <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
+        <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
+        <resource type="download" name="calendar-gadget.css" location="ru/mail/jira/plugins/calendar/gadget/calendar-gadget.css"/>
+        <resource type="download" name="calendar-gadget.js" location="ru/mail/jira/plugins/calendar/gadget/calendar-gadget.js"/>
+    </web-resource>
 
     <web-resource key="calendar-resources">
         <transformation extension="js">
@@ -48,23 +89,28 @@
         <dependency>com.atlassian.auiplugin:aui-dropdown2</dependency>
         <dependency>com.atlassian.auiplugin:dialog2</dependency>
         <dependency>com.atlassian.auiplugin:aui-inline-dialog2</dependency>
+        <dependency>com.atlassian.auiplugin:aui-flag</dependency>
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
+        <dependency>ru.mail.jira.plugins.mailrucal:mailru-calendar-soy-templates</dependency>
 
         <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>
-        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
-        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
+        <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/libs/clipboard-min.js"/>
 
         <resource type="download" name="vis.css" location="ru/mail/jira/plugins/calendar/timeline/vis.css"/>
         <resource type="download" name="vis-timeline.js" location="ru/mail/jira/plugins/calendar/timeline/vis-timeline.js"/>
         <resource type="download" name="img/" location="ru/mail/jira/plugins/calendar/timeline/img"/>
 
-        <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/libs/clipboard-min.js"/>
+        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
+        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
+        <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/fullcalendar/timeline-view.js"/>
 
-        <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>
-        <resource type="download" name="calendar-dialog.js" location="ru/mail/jira/plugins/calendar/calendar-dialog.js"/>
-        <resource type="download" name="feed-dialog.js" location="ru/mail/jira/plugins/calendar/feed-dialog.js"/>
-        <resource type="download" name="import-dialog.js" location="ru/mail/jira/plugins/calendar/import-dialog.js"/>
-        <resource type="download" name="confirm-dialog.js" location="ru/mail/jira/plugins/calendar/confirm-dialog.js"/>
+        <resource type="download" name="calendar-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/calendar-dialog.js"/>
+        <resource type="download" name="feed-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/feed-dialog.js"/>
+        <resource type="download" name="import-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/import-dialog.js"/>
+        <resource type="download" name="confirm-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/confirm-dialog.js"/>
+        <resource type="download" name="like-flag.js" location="ru/mail/jira/plugins/calendar/like-flag.js"/>
+
+        <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
         <resource type="download" name="view.js" location="ru/mail/jira/plugins/calendar/view.js"/>
     </web-resource>
@@ -73,6 +119,12 @@
         <condition class="com.atlassian.jira.plugin.webfragment.conditions.UserLoggedInCondition"/>
         <label key="ru.mail.jira.plugins.calendar.linkTitle"/>
         <link linkId="amplugin-simple-cal-link-section">/secure/MailRuCalendar.jspa</link>
+    </web-item>
+
+    <web-item key="set-my-jira-home-mailru-calendar" name="Set my JIRA home Calendar" i18n-name-key="ru.mail.jira.plugins.calendar.linkTitle" section="system.user.options/set_my_jira_home" weight="77">
+        <description key="ru.mail.jira.plugins.calendar.linkDescription">Set JIRA home to the Mail.Ru Calendar.</description>
+        <label key="ru.mail.jira.plugins.calendar.linkTitle" />
+        <link linkId="set-my-jira-home-mailru-calendar-link">/secure/MailRuCalendar.jspa</link>
     </web-item>
 
     <servlet key="calendar-view-sevlet" class="ru.mail.jira.plugins.calendar.MailRuCalendarServlet">

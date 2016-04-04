@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+    <ModulePrefs title="__MSG_ru.mail.jira.plugins.calendar.linkTitle__"
+                 directory_title="__MSG_ru.mail.jira.plugins.calendar.linkTitle__"
+                 description="__MSG_ru.mail.jira.plugins.calendar.gadget.info.description__"
+                 author="Mail.Ru Group"
+                 author_affiliation="Mail.Ru Group"
+                 screenshot="#staticResourceUrl("ru.mail.jira.plugins.mailrucal:calendar-gadget-resources", "intro-screenshot.png")"
+                 thumbnail="#staticResourceUrl("ru.mail.jira.plugins.mailrucal:calendar-gadget-resources", "intro-thumb.png")">
+        <Require feature="dynamic-height"/>
+        <Optional feature="auth-refresh"/>
+        <Require feature="oauthpopup"/>
+        <Require feature="setprefs"/>
+        <Require feature="settitle"/>
+        <Require feature="views"/>
+        <Optional feature="atlassian.util"/>
+        <Optional feature="gadget-directory">
+            <Param name="categories">JIRA</Param>
+        </Optional>
+        #oauth
+        #supportedLocales("gadget.common,ru.mail.jira.plugins.calendar")
+    </ModulePrefs>
+    <UserPref name="isConfigured" datatype="hidden" default_value="false"/>
+    <UserPref name="calendars" datatype="hidden" default_value=""/>
+    <UserPref name="view" datatype="hidden" default_value="month"/>
+    <UserPref name="hideWeekends" datatype="hidden" default_value="showWeekends"/>
+    <UserPref name="refresh" datatype="hidden" default_value="false"/>
+    <Content type="html">
+        <![CDATA[
+            #requireResource("com.atlassian.gadgets.publisher:ajs-gadgets")
+            #requireResource("jira.webresources:global-static")
+            #requireResource("jira.webresources:jira-global")
+            #requireResource("ru.mail.jira.plugins.mailrucal:calendar-gadget-resources")
+            #includeResources()
+        ]]>
+    </Content>
+</Module>

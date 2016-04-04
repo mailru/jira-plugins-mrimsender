@@ -7,124 +7,10 @@
     $webResourceManager.requireResource( "ru.mail.jira.plugins.mailrucal:calendar-resources" )
 </head>
 <body>
-<script type="text/template" id="calendar-link-template">
-    <div class="calendar-list-item-block <%= calendar.visible ? 'calendar-visible' : '' %>" data-id="<%= calendar.id %>" data-color="<%= calendar.color %>" id="calendar-list-item-block-<%= calendar.id %>">
-        <% if (calendar.hasError) { %>
-        <a href="#" class="calendar-name not-working">
-            <span class="aui-icon aui-icon-small aui-iconfont-error" title="<%= calendar.error %>"/>
-        <% } else if (calendar.visible) { %>
-        <a href="#" class="calendar-name not-active">
-            <div class="calendar-view-color-box" style="background-color: <%= calendar.color %>;"/>
-        <% } else { %>
-        <a href="#" class="calendar-name">
-            <div class="calendar-view-color-box" style="border: 2px solid <%= calendar.color %>;"/>
-        <% } %>
-            <span class="aui-nav-item-label" title="<%= calendar.name %>"><%= calendar.name %></span>
-        </a>
-        <div class="calendar-vews-buttons-block aui-buttons">
-            <button class="aui-button aui-button-subtle aui-button-compact aui-dropdown2-trigger aui-dropdown2-trigger-arrowless calendar-buttons-dropdown" aria-owns="calendar-buttons-dropdown-<%= calendar.id %>" aria-haspopup="true">
-                <span class="aui-icon aui-icon-small aui-iconfont-more"/>
-            </button>
-        </div>
-        <div id="calendar-buttons-dropdown-<%= calendar.id %>" data-id="<%= calendar.id %>" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
-            <% if (calendar.changable) { %>
-            <div class="aui-dropdown2-section">
-                <ul>
-                    <li><a class="calendar-edit" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.edit" )</a></li>
-                    <li><a class="calendar-delete" href="#">$i18n.getText( "common.words.delete" )</a></li>
-                </ul>
-            </div>
-            <% } %>
-            <% if (!calendar.isMy && (calendar.favorite || calendar.visible)) { %>
-            <div class="aui-dropdown2-section">
-                <ul>
-                    <li><a class="calendar-remove" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.removeFavorite" )</a></li>
-                </ul>
-            </div>
-            <% } %>
-        </div>
-    </div>
-</script>
-
-<script type="text/template" id="issue-info-template">
-    <% function buildField(field, label) { %>
-        <dl>
-            <dt><%= label %>:</dt>
-            <dd><%= field %></dd>
-        </dl>
-    <% } %>
-
-    <div>
-        <div class="calenar-issue-popup-key-header">
-            <a target="_blank" href="<%= AJS.contextPath() %>/browse/<%= issue.key %>">
-                <strong><%= issue.key + ' ' + issue.summary.trim() %></strong>
-                <span class="aui-icon aui-icon-small aui-iconfont-share"/>
-            </a>
-        </div>
-        <% if(issue.assignee)
-            buildField(issue.assignee, "$i18n.getText('issue.field.assignee')")
-        %>
-        <% if(issue.reporter)
-            buildField(issue.reporter, "$i18n.getText('issue.field.reporter')")
-        %>
-        <% if (issue.status) { %>
-        <dl>
-            <dt>$i18n.getText('common.words.status'):</dt>
-            <dd>
-                <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-<%= issue.statusColor %>"><%= issue.status %></span>
-            </dd>
-        </dl>
-        <% } %>
-        <% if(issue.labels)
-            buildField(issue.labels, "$i18n.getText('common.concepts.labels')")
-        %>
-        <% if(issue.components)
-            buildField(issue.components, "$i18n.getText('common.concepts.components')")
-        %>
-        <% if(issue.dueDate)
-            buildField(issue.dueDate, "$i18n.getText('issue.field.duedate')")
-        %>
-        <% if(issue.environment)
-            buildField(issue.environment, "$i18n.getText('common.words.env')")
-        %>
-        <% if (issue.priority) { %>
-        <dl>
-            <dt>$i18n.getText('issue.field.priority'):</dt>
-            <dd>
-                <img class="calendar-priority-image-url" height="16" src="<%= AJS.contextPath() + issue.priorityIconUrl %>"/><%= issue.priority %>
-            </dd>
-        </dl>
-        <% } %>
-        <% if(issue.resolution)
-            buildField(issue.resolution, "$i18n.getText('issue.field.resolution')")
-        %>
-        <% if(issue.affect)
-            buildField(issue.affect, "$i18n.getText('issue.field.version')")
-        %>
-        <% if(issue.created)
-            buildField(issue.created, "$i18n.getText('issue.field.created')")
-        %>
-        <% if(issue.updated)
-            buildField(issue.updated, "$i18n.getText('issue.field.updated')")
-        %>
-        <% if (issue.customFields) {
-            Object.keys(issue.customFields).map(function (item) {
-        %>
-                <dl>
-                    <dt><%= item %>:</dt>
-                    <dd><%= issue.customFields[item] %></dd>
-                </dl>
-        <% });
-        } %>
-        <% if (issue.description && issue.description.trim()) %>
-        <div class="calendar-event-info-popup-description"><%= issue.description %></div>
-    </div>
-</script>
-
 <header class="aui-page-header">
     <div class="aui-page-header-inner">
         <div class="aui-page-header-main">
-            <h1>$i18n.getText( "ru.mail.jira.plugins.calendar.view.header" )</h1>
+            <h1>$i18n.getText( "ru.mail.jira.plugins.calendar.linkTitle" )</h1>
         </div>
         <div class="aui-page-header-actions">
             <div class="aui-buttons">
@@ -150,14 +36,14 @@
             <ul class="aui-list-truncate">
                 <li><a href="#period/quarter" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.quarter" )</a></li>
                 <li><a href="#period/month" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.month" )</a></li>
-                <li><a href="#period/basicWeek" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.week" )</a></li>
+                <li><a href="#period/agendaWeek" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.week" )</a></li>
                 <li><a href="#period/agendaDay" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.day" )</a></li>
                 <li><a href="#period/timeline" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.timeline" )</a></li>
             </ul>
         </div>
         <div id="calendar-add-dropdown" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
             <ul class="aui-list-truncate">
-                <li><a id="calendar-create" href="#">$i18n.getText( "common.words.create" )</a></li>
+                <li><a id="calendar-create" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.create" )</a></li>
                 <li><a id="calendar-import" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.add" )</a></li>
             </ul>
         </div>
@@ -174,23 +60,15 @@
                 <div class="aui-navgroup-inner" id="mailrucalendar-empty-calendar-list" hidden>
                     $i18n.getText( "ru.mail.jira.plugins.calendar.emptyCalendarList" )
                 </div>
-                <div class="aui-navgroup-inner" id="calendar-my-calendar-list">
-                    <div id="calendar-my-calendar-list-header" class="aui-nav-heading">
-                        <strong>$i18n.getText( "ru.mail.jira.plugins.calendar.myCalendars" )</strong>
-                    </div>
-                </div>
                 <div class="aui-navgroup-inner" id="calendar-favorite-calendar-list">
-                    <div id="calendar-favorite-calendar-list-header" class="aui-nav-heading">
-                        <strong>$i18n.getText( "ru.mail.jira.plugins.calendar.sharedCalendars" )</strong>
-                    </div>
                 </div>
             </nav>
         </div>
     </div>
 </div>
-#parse( "ru/mail/jira/plugins/calendar/calendar-dialog.vm" )
-#parse( "ru/mail/jira/plugins/calendar/feed-dialog.vm" )
-#parse( "ru/mail/jira/plugins/calendar/import-dialog.vm" )
-#parse( "ru/mail/jira/plugins/calendar/confirm-dialog.vm" )
+#parse( "ru/mail/jira/plugins/calendar/dialog/calendar-dialog.vm" )
+#parse( "ru/mail/jira/plugins/calendar/dialog/feed-dialog.vm" )
+#parse( "ru/mail/jira/plugins/calendar/dialog/import-dialog.vm" )
+#parse( "ru/mail/jira/plugins/calendar/dialog/confirm-dialog.vm" )
 </body>
 </html>

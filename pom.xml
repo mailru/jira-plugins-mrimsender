@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>mailrucal</artifactId>
-    <version>2.2.7</version>
+    <version>2.3.0.44</version>
 
     <organization>
         <name>Mail.Ru Group</name>
@@ -45,12 +45,6 @@
             <artifactId>commons</artifactId>
             <version>1.0</version>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.plugins.rest</groupId>
-            <artifactId>atlassian-rest-common</artifactId>
-            <version>1.0.2</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -131,8 +125,12 @@
         </plugins>
     </build>
     <properties>
-        <jira.version>7.0.9</jira.version>
+        <jira.version>7.1.2</jira.version>
         <amps.version>5.1.18</amps.version>
         <ao.version>0.19.7</ao.version>
+        <!--<fastdev.mvn.command>/usr/share/atlassian-plugin-sdk-5.0.13/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>-->
+        <fastdev.mvn.command>/Applications/Atlassian/atlassian-plugin-sdk-6.1.0/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>
+        <useFastdevCli>false</useFastdevCli>
+        <upm.license.compatibility.version>2.10</upm.license.compatibility.version>
     </properties>
 </project>

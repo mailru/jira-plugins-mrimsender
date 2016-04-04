@@ -4,8 +4,6 @@ import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.ApplicationUsers;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.Calendar;
@@ -65,6 +63,8 @@ public class RestCalendarEventService {
                               @QueryParam("start") final String start,
                               @QueryParam("end") final String end) {
         try {
+            if (log.isDebugEnabled())
+                log.debug("getEvents with params. calendarId={}, start={}, end={}", new Object[]{calendarId, start, end});
             List<Event> result = calendarEventService.findEvents(calendarId, start, end, jiraAuthenticationContext.getUser());
             CacheControl cacheControl = new CacheControl();
             cacheControl.setNoCache(true);
@@ -81,8 +81,7 @@ public class RestCalendarEventService {
     @Path("{calendarId}/event/{eventId}/")
     public Response moveEvent(@PathParam("calendarId") final int calendarId,
                               @PathParam("eventId") final String eventId,
-                              @QueryParam("dayDelta") final int dayDelta,
-                              @QueryParam("millisDelta") final int millisDelta,
+                              @QueryParam("millisDelta") final long millisDelta,
                               @QueryParam("isDrag") final boolean isDrag) {
         return new RestExecutor<Void>() {
             @Override
@@ -95,9 +94,9 @@ public class RestCalendarEventService {
 
                 Calendar calendar = calendarService.getCalendar(calendarId);
                 if (isDrag)
-                    calendarEventService.dragEvent(user, calendar, issue, dayDelta, millisDelta);
+                    calendarEventService.dragEvent(user, calendar, issue, millisDelta);
                 else
-                    calendarEventService.resizeEvent(user, calendar, issue, dayDelta, millisDelta);
+                    calendarEventService.resizeEvent(user, calendar, issue, millisDelta);
                 return null;
             }
         }.getResponse();
