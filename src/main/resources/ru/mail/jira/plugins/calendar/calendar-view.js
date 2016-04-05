@@ -20,6 +20,16 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             e.currentTarget.blur();
             this.trigger('changeWeekendsVisibility');
         },
+        _toggleFullscreen: function() {
+            $(this).find('span.fc-icon').toggleClass('fc-icon-mailrucalendar-icon-fullscreen fc-icon-mailrucalendar-icon-exit-fullscreen');
+            $('body').toggleClass('mailru-calendar-fullscreen');
+
+            if (this.getViewType() == 'timeline') {
+                var containerHeight = $(document).height();
+                var timeline = this.$el.fullCalendar('getView').timeline;
+                timeline.setOptions({height: $('body').hasClass('mailru-calendar-fullscreen') ? containerHeight - 93 + 'px' : '450px'});
+            }
+        },
         _canButtonVisible: function(name) {
             return this.customsButtonOptions[name] == undefined || this.customsButtonOptions[name].visible !== false;
         },
@@ -57,7 +67,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                 header: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'weekend zoom-out,zoom-in'
+                    right: 'weekend zoom-out,zoom-in fullscreen'
                 },
                 views: {
                     quarter: {
@@ -81,6 +91,10 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     'zoom-in': {
                         icon: 'zoom-in',
                         click: $.proxy(this.zoomInTimeline, this)
+                    },
+                    fullscreen: {
+                        icon: 'mailrucalendar-icon-fullscreen',
+                        click: $.proxy(this._toggleFullscreen, this)
                     }
                 },
                 businessHours: {
@@ -137,6 +151,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     });
                 },
                 loading: $.proxy(function(isLoading, view) {
+                    viewRenderFirstTime = false;
                     this.trigger(isLoading ? 'startLoading' : 'stopLoading', view.name);
                 }, this),
                 viewRender: $.proxy(function(view) {
