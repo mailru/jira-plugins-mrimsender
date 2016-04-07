@@ -74,7 +74,7 @@ require(['jquery',
                 'click .calendar-remove': 'removeFavoriteCalendar'
             },
             initialize: function() {
-                this.calendarView = new CalendarView();
+                this.calendarView = new CalendarView({enableFullscreen: true});
 
                 this.calendarView.on('addSource render', this.startLoadingCalendarsCallback, this);
                 this.calendarView.on('renderComplete', this.finishLoadingCalendarsCallback, this);

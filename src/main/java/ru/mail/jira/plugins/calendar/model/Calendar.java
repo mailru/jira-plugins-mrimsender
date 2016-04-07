@@ -12,6 +12,7 @@ public interface Calendar extends Entity {
     String getColor();
     void setColor(String color);
 
+    @StringLength(StringLength.UNLIMITED)
     String getSource();
     void setSource(String source);
 

@@ -40,6 +40,7 @@ import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -50,8 +51,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Path("/calendar/config")
 @Produces(MediaType.APPLICATION_JSON)
@@ -129,14 +132,17 @@ public class RestConfigurationService {
     }
 
     @GET
-    @Path("/eventSources")
-    public Response getEventSources(@QueryParam("filter") final String filter) {
+    @Path("/eventSources/{sourceType}")
+    public Response getEventSources(@QueryParam("filter") final String filter,
+                                    @PathParam("sourceType") final String sourceType) {
         return new RestExecutor<IssueSourceDto>() {
             @Override
             protected IssueSourceDto doAction() throws Exception {
                 IssueSourceDto issueSourceDto = new IssueSourceDto();
-                fillProjectSources(issueSourceDto, filter);
-                fillFilterSources(issueSourceDto, filter);
+                if ("project".equals(sourceType))
+                    fillProjectSources(issueSourceDto, filter);
+                else if ("filter".equals(sourceType))
+                    fillFilterSources(jiraAuthenticationContext.getUser(), issueSourceDto, filter);
                 return issueSourceDto;
             }
         }.getResponse();
@@ -268,7 +274,7 @@ public class RestConfigurationService {
         for (Project project : allProjects) {
             if (project.getName().toLowerCase().contains(filter) || project.getKey().toLowerCase().contains(filter)) {
                 if (result.size() < 10)
-                    result.add(new SelectItemDto("project_" + project.getId(), String.format("%s (%s)", project.getName(), project.getKey()), project.getAvatar().getId()));
+                    result.add(new SelectItemDto(String.valueOf(project.getId()), String.format("%s (%s)", project.getName(), project.getKey()), project.getAvatar().getId()));
                 total++;
             }
         }
@@ -284,19 +290,45 @@ public class RestConfigurationService {
         issueSourceDto.setProjects(result);
     }
 
-    private void fillFilterSources(IssueSourceDto issueSourceDto, String filter) {
+    private void fillFilterSources(ApplicationUser user, IssueSourceDto issueSourceDto, String filter) {
+        int total;
         List<SelectItemDto> result = new ArrayList<SelectItemDto>();
-        SharedEntitySearchParametersBuilder builder = new SharedEntitySearchParametersBuilder();
-        builder.setName(StringUtils.isBlank(filter) ? null : "\"" + filter + "\"");
-        builder.setTextSearchMode(SharedEntitySearchParameters.TextSearchMode.WILDCARD);
-        builder.setSortColumn(SharedEntityColumn.NAME, true);
-        builder.setEntitySearchContext(SharedEntitySearchContext.USE);
-        SharedEntitySearchResult<SearchRequest> searchResults = searchRequestService.search(new JiraServiceContextImpl(jiraAuthenticationContext.getUser()), builder.toSearchParameters(), 0, filter.length() < 5 ? 10 : Integer.MAX_VALUE);
+        Set<SearchRequest> searchRequests = new LinkedHashSet<SearchRequest>();
+        Collection<SearchRequest> favorites = searchRequestService.getFavouriteFilters(user);
+        Collection<SearchRequest> owned = searchRequestService.getOwnedFilters(user);
 
-        for (SearchRequest search : searchResults.getResults())
-            result.add(new SelectItemDto("filter_" + search.getId(), search.getName(), 0));
+        filter = StringUtils.trimToNull(filter);
+        if (filter == null) {
+            searchRequests.addAll(favorites);
+            searchRequests.addAll(owned);
+            SharedEntitySearchParametersBuilder builder = new SharedEntitySearchParametersBuilder();
+            builder.setSortColumn(SharedEntityColumn.NAME, true);
+            builder.setEntitySearchContext(SharedEntitySearchContext.USE);
+            SharedEntitySearchResult<SearchRequest> searchResults = searchRequestService.search(new JiraServiceContextImpl(user), builder.toSearchParameters(), 0, 10);
+            if (searchRequests.isEmpty())
+                searchRequests.addAll(searchResults.getResults());
+            total = searchResults.getTotalResultCount();
+        } else {
+            for (SearchRequest searchRequest : favorites)
+                if (StringUtils.containsIgnoreCase(searchRequest.getName(), filter))
+                    searchRequests.add(searchRequest);
+            for (SearchRequest searchRequest : owned)
+                if (StringUtils.containsIgnoreCase(searchRequest.getName(), filter))
+                    searchRequests.add(searchRequest);
+            SharedEntitySearchParametersBuilder builder = new SharedEntitySearchParametersBuilder();
+            builder.setName("\"" + filter + "\"");
+            builder.setTextSearchMode(SharedEntitySearchParameters.TextSearchMode.WILDCARD);
+            builder.setSortColumn(SharedEntityColumn.NAME, true);
+            builder.setEntitySearchContext(SharedEntitySearchContext.USE);
+            SharedEntitySearchResult<SearchRequest> searchResults = searchRequestService.search(new JiraServiceContextImpl(user), builder.toSearchParameters(), 0, Integer.MAX_VALUE);
+            searchRequests.addAll(searchResults.getResults());
 
-        issueSourceDto.setTotalFiltersCount(searchResults.getTotalResultCount());
+            total = Math.max(searchRequests.size(), searchResults.getTotalResultCount());
+        }
+
+        for (SearchRequest search : searchRequests)
+            result.add(new SelectItemDto(String.valueOf(search.getId()), search.getName(), 0));
+        issueSourceDto.setTotalFiltersCount(total);
         issueSourceDto.setFilters(result);
     }
 

@@ -8,6 +8,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             this.customsButtonOptions = options && _.has(options, 'contextPath') ? options.customsButtonOptions : {};
             this.timeFormat = options && _.has(options, 'timeFormat') ? options.timeFormat : AJS.Meta.get('date-time');
             this.popupWidth = options && _.has(options, 'popupWidth') ? options.popupWidth : 400;
+            this.enableFullscreen = options && _.has(options, 'enableFullscreen') ? options.enableFullscreen : false;
         },
         _eventSource: function(id) {
             return this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + id;
@@ -21,8 +22,8 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             this.trigger('changeWeekendsVisibility');
         },
         _toggleFullscreen: function() {
-            $(this).find('span.fc-icon').toggleClass('fc-icon-mailrucalendar-icon-fullscreen fc-icon-mailrucalendar-icon-exit-fullscreen');
-            $('body').toggleClass('mailru-calendar-fullscreen');
+            this.$('.fc-fullscreen-button span.fc-icon').toggleClass('fc-icon-mailrucalendar-icon-fullscreen fc-icon-mailrucalendar-icon-exit-fullscreen');
+            $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,.aui-page-panel-nav, #studio-header,#footer').toggle(400);
 
             if (this.getViewType() == 'timeline') {
                 var containerHeight = $(document).height();
@@ -67,7 +68,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                 header: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'weekend zoom-out,zoom-in fullscreen'
+                    right: 'weekend zoom-out,zoom-in' + (this.enableFullscreen ? ' fullscreen' : '')
                 },
                 views: {
                     quarter: {

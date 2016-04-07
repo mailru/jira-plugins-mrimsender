@@ -117,13 +117,14 @@
 
     <web-item key="calendar-link" name="Calendar Link" section="system.top.navigation.bar" weight="47">
         <condition class="com.atlassian.jira.plugin.webfragment.conditions.UserLoggedInCondition"/>
-        <label key="ru.mail.jira.plugins.calendar.linkTitle"/>
+        <label key="ru.mail.jira.plugins.calendar.linkTitleShort"/>
+        <tooltip key="ru.mail.jira.plugins.calendar.linkTitle"/>
         <link linkId="amplugin-simple-cal-link-section">/secure/MailRuCalendar.jspa</link>
     </web-item>
 
     <web-item key="set-my-jira-home-mailru-calendar" name="Set my JIRA home Calendar" i18n-name-key="ru.mail.jira.plugins.calendar.linkTitle" section="system.user.options/set_my_jira_home" weight="77">
-        <description key="ru.mail.jira.plugins.calendar.linkDescription">Set JIRA home to the Mail.Ru Calendar.</description>
-        <label key="ru.mail.jira.plugins.calendar.linkTitle" />
+        <tooltip key="ru.mail.jira.plugins.calendar.linkDescription"/>
+        <label key="ru.mail.jira.plugins.calendar.linkTitleShort" />
         <link linkId="set-my-jira-home-mailru-calendar-link">/secure/MailRuCalendar.jspa</link>
     </web-item>
 

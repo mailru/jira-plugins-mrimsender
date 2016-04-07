@@ -4,6 +4,7 @@ import com.atlassian.jira.bc.JiraServiceContext;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.bc.issue.IssueService;
+import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.bc.project.component.ProjectComponent;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
@@ -66,6 +67,7 @@ public class CalendarEventService {
     private RendererManager rendererManager;
     private SearchRequestService searchRequestService;
     private SearchProvider searchProvider;
+    private SearchService searchService;
 
     public void setCalendarService(CalendarService calendarService) {
         this.calendarService = calendarService;
@@ -99,6 +101,10 @@ public class CalendarEventService {
         this.searchProvider = searchProvider;
     }
 
+    public void setSearchService(SearchService searchService) {
+        this.searchService = searchService;
+    }
+
     public List<Event> findEvents(final int calendarId,
                                   final String start,
                                   final String end,
@@ -122,6 +128,9 @@ public class CalendarEventService {
         else if (source.startsWith("filter_"))
             return getFilterEvents(calendarModel, Long.parseLong(source.substring("filter_".length())),
                                    calendarModel.getEventStart(), calendarModel.getEventEnd(), dateFormat.parse(start), dateFormat.parse(end), user, includeIssueInfo);
+        else if (source.startsWith("jql_"))
+            return getJqlEvents(calendarModel, StringUtils.substringAfter(source, "jql_"),
+                                calendarModel.getEventStart(), calendarModel.getEventEnd(), dateFormat.parse(start), dateFormat.parse(end), user, includeIssueInfo);
         else {
             return Collections.emptyList();
         }
@@ -165,6 +174,33 @@ public class CalendarEventService {
 
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder(filter.getQuery());
         return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo);
+    }
+
+    private List<Event> getJqlEvents(Calendar calendar,
+                                     String jql,
+                                     String startField,
+                                     String endField,
+                                     Date startTime,
+                                     Date endTime,
+                                     ApplicationUser user, boolean includeIssueInfo) throws SearchException {
+        if (log.isDebugEnabled())
+            log.debug("getJqlEvents with params. calendar={}, jql={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
+                      new Object[]{calendar, jql, startField, endField, startTime, endTime, user, includeIssueInfo});
+        if (log.isDebugEnabled())
+            log.debug("find filter by jql. jql={}", jql);
+        if (jql == null) {
+            log.error("JQL => {} is null.", jql);
+            return new ArrayList<Event>(0);
+        }
+        SearchService.ParseResult parseResult = searchService.parseQuery(ApplicationUsers.toDirectoryUser(user), jql);
+
+        if (parseResult.isValid()) {
+            JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder(parseResult.getQuery());
+            return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo);
+        } else {
+            log.error("JQL is invalid => {}", jql);
+            return new ArrayList<Event>(0);
+        }
     }
 
     private List<Event> getEvents(Calendar calendar,

@@ -15,7 +15,9 @@ public class CalendarSettingDto {
     @XmlElement
     private String selectedColor;
     @XmlElement
-    private String selectedSourceId;
+    private String selectedSourceType;
+    @XmlElement
+    private String selectedSourceValue;
     @XmlElement
     private String selectedSourceName;
     @XmlElement
@@ -65,14 +67,6 @@ public class CalendarSettingDto {
         this.selectedColor = selectedColor;
     }
 
-    public String getSelectedSourceId() {
-        return selectedSourceId;
-    }
-
-    public void setSelectedSourceId(String selectedSourceId) {
-        this.selectedSourceId = selectedSourceId;
-    }
-
     public String getSelectedSourceName() {
         return selectedSourceName;
     }
@@ -87,6 +81,22 @@ public class CalendarSettingDto {
 
     public void setSelectedSourceAvatarId(Long selectedSourceAvatarId) {
         this.selectedSourceAvatarId = selectedSourceAvatarId;
+    }
+
+    public String getSelectedSourceType() {
+        return selectedSourceType;
+    }
+
+    public void setSelectedSourceType(String selectedSourceType) {
+        this.selectedSourceType = selectedSourceType;
+    }
+
+    public String getSelectedSourceValue() {
+        return selectedSourceValue;
+    }
+
+    public void setSelectedSourceValue(String selectedSourceValue) {
+        this.selectedSourceValue = selectedSourceValue;
     }
 
     public boolean isSelectedSourceIsUnavailable() {

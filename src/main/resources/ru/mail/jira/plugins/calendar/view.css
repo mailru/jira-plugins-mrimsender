@@ -140,8 +140,10 @@
 }
 
 .mailrucalendar-icon-filter-issues {
-    background: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgi…lPSJNU1NoYXBlR3JvdXAiPjwvcGF0aD4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPg==");
+    background: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjIwcHgiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDIwIDIwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbG5zOnNrZXRjaD0iaHR0cDovL3d3dy5ib2hlbWlhbmNvZGluZy5jb20vc2tldGNoL25zIj4KICAgIDwhLS0gR2VuZXJhdG9yOiBTa2V0Y2ggMy4xLjEgKDg3NjEpIC0gaHR0cDovL3d3dy5ib2hlbWlhbmNvZGluZy5jb20vc2tldGNoIC0tPgogICAgPHRpdGxlPmFsbC1pc3N1ZXM8L3RpdGxlPgogICAgPGRlc2M+Q3JlYXRlZCB3aXRoIFNrZXRjaC48L2Rlc2M+CiAgICA8ZGVmcz48L2RlZnM+CiAgICA8ZyBpZD0iUGFnZS0xIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBza2V0Y2g6dHlwZT0iTVNQYWdlIj4KICAgICAgICA8ZyBpZD0iYWxsLWlzc3VlcyIgc2tldGNoOnR5cGU9Ik1TQXJ0Ym9hcmRHcm91cCIgZmlsbD0iIzMzMzMzMyI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0xMy40LDE0IEwxOSwxNCBMMTksMTMgTDE0LjIsMTMgQzE0LDEzLjQgMTMuNywxMy43IDEzLjQsMTQgTDEzLjQsMTQgWiIgaWQ9IlNoYXBlIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0xOSwxMSBMMTksMTAgTDE1LjQsMTAgQzE1LjQsMTAuMyAxNS4zLDEwLjcgMTUuMiwxMSBMMTksMTEgTDE5LDExIFoiIGlkPSJTaGFwZSIgc2tldGNoOnR5cGU9Ik1TU2hhcGVHcm91cCI+PC9wYXRoPgogICAgICAgICAgICA8cGF0aCBkPSJNMTksOCBMMTksNyBMMTUuMiw3IEMxNS4zLDcuMyAxNS40LDcuNyAxNS40LDggTDE5LDggTDE5LDggWiIgaWQ9IlNoYXBlIiBza2V0Y2g6dHlwZT0iTVNTaGFwZUdyb3VwIj48L3BhdGg+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0xNC4yLDUgTDE5LDUgTDE5LDQgTDEzLjQsNCBDMTMuNyw0LjMgMTQsNC42IDE0LjIsNSBMMTQuMiw1IFoiIGlkPSJTaGFwZSIgc2tldGNoOnR5cGU9Ik1TU2hhcGVHcm91cCI+PC9wYXRoPgogICAgICAgICAgICA8cGF0aCBkPSJNOC41LDQgQzUuNyw0IDMuNSw2LjIgMy41LDkgQzMuNSwxMCAzLjgsMTAuOCA0LjIsMTEuNiBMMS41LDE0LjMgQzEuMSwxNC43IDEuMSwxNS4zIDEuNSwxNS43IEwxLjUsMTUuNyBDMS45LDE2LjEgMi41LDE2LjEgMi45LDE1LjcgTDUuNiwxMyBDNi41LDEzLjcgNy40LDE0IDguNSwxNCBDMTEuMywxNCAxMy41LDExLjggMTMuNSw5IEMxMy41LDYuMiAxMS4zLDQgOC41LDQgTDguNSw0IFogTTguNSwxMyBDNi4zLDEzIDQuNSwxMS4yIDQuNSw5IEM0LjUsNi44IDYuMyw1IDguNSw1IEMxMC43LDUgMTIuNSw2LjggMTIuNSw5IEMxMi41LDExLjIgMTAuNywxMyA4LjUsMTMgTDguNSwxMyBaIiBpZD0iU2hhcGUiIHNrZXRjaDp0eXBlPSJNU1NoYXBlR3JvdXAiPjwvcGF0aD4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPg==");
     background-size: 20px 20px;
+    height: 20px;
+    width: 20px;
 }
 
 .fc-icon-mailrucalendar-icon-fullscreen {
@@ -174,17 +176,6 @@
 .aui-select2-container.select2-container.select2-container-disabled .select2-choice:active,
 .aui-select2-container.select2-container.select2-container-disabled.select2-dropdown-open .select2-choice {
     box-shadow: none !important;
-}
-
-/* Fullscreen */
-.mailru-calendar-fullscreen #header,
-.mailru-calendar-fullscreen #timezoneDiffBanner,
-.mailru-calendar-fullscreen #announcement-banner,
-.mailru-calendar-fullscreen .aui-page-header,
-.mailru-calendar-fullscreen .aui-page-panel-nav,
-.mailru-calendar-fullscreen #studio-header,
-.mailru-calendar-fullscreen #footer {
-    display: none;
 }
 
 /* Header */
@@ -367,7 +358,57 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     vertical-align: top;
 }
 
+#calendar-dialog #advanced-search {
+    padding: 4px 26px 4px 26px;
+    resize: none;
+    height: 64px;
+}
+
+#calendar-dialog #advanced-search + .description {
+    margin-top: 0;
+}
+
+.atlassian-autocomplete .suggestions {
+    top: 62px !important;
+    max-height: 180px;
+}
+
+#calendar-dialog .atlassian-autocomplete > .syntax-help,
+#calendar-dialog .atlassian-autocomplete > .syntax-help:hover {
+    position: absolute;
+    color: #707070;
+    right: 56px;
+    top: 6px;
+}
+
+#calendar-dialog .atlassian-autocomplete > .mailrucalendar-jql-link,
+#calendar-dialog .atlassian-autocomplete > .mailrucalendar-jql-link:hover {
+    position: absolute;
+    right: 26px;
+    top: 4px;
+    color: #707070;
+}
+
+#calendar-dialog .atlassian-autocomplete label .icon {
+    position: absolute;
+    top: 7px;
+    left: 6px;
+}
+
+#calendar-dialog .atlassian-autocomplete label .jql-label {
+    border: 1px solid #cccccc;
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    margin-bottom: -1px;
+    background-color: #fff;
+    padding: 2px 5px;
+    border-bottom-color: transparent;
+}
+
 #calendar-dialog-common-tab,
+#calendar-dialog-source-tab,
 #calendar-dialog-permissions-tab {
     display: table-cell;
     width: 600px;
