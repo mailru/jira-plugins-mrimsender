@@ -349,6 +349,10 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     padding: 0;
 }
 
+#calendar-dialog .medium-long-field {
+    max-width: 350px;
+}
+
 #calendar-dialog .aui-navgroup {
     border-right: 1px solid #ccc;
     box-sizing: border-box;
@@ -361,7 +365,6 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 #calendar-dialog #advanced-search {
     padding: 4px 26px 4px 26px;
     resize: none;
-    height: 64px;
 }
 
 #calendar-dialog #advanced-search + .description {
@@ -369,8 +372,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 }
 
 .atlassian-autocomplete .suggestions {
-    top: 62px !important;
-    max-height: 180px;
+    max-height: 195px;
 }
 
 #calendar-dialog .atlassian-autocomplete > .syntax-help,
@@ -535,6 +537,14 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 .fc-event-container {
     font-family: inherit;
     font-size: 14px;
+}
+
+.fc-basic-view .fc-week-number {
+    font-weight: bold;
+}
+
+.fc-day.fc-widget-content.fc-first-day-of-month {
+
 }
 
 .fc-day-grid-event .fc-content {

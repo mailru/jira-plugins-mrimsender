@@ -1,5 +1,4 @@
 define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/util/forms', 'jira/jql/jql-parser', 'jira/autocomplete/jql-autocomplete'], function($, _, Backbone, Forms, JQLParser, JQLAutoComplete) {
-    var jqlAutoComplete;
     AJS.toInit(function() {
         $.ajax({
             type: 'GET',
@@ -48,22 +47,34 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 var jqlFunctionNames = autoCompleteData.visibleFunctionNames || [];
                 var jqlReservedWords = autoCompleteData.jqlReservedWords || [];
 
-                jqlAutoComplete = JQLAutoComplete({
+                var jqlAutoComplete = JQLAutoComplete({
                     fieldID: 'advanced-search',
+                    errorID: 'jqlerrormsg',
                     parser: JQLParser(jqlReservedWords),
                     queryDelay: 0.65,
                     jqlFieldNames: jqlFieldNames,
                     jqlFunctionNames: jqlFunctionNames,
-                    minQueryLength: 0,
+                    minQueryLength: 1,
                     allowArrowCarousel: true,
-                    autoSelectFirst: false,
-                    errorID: 'jqlerrormsg'
+                    autoSelectFirst: false
                 });
                 jqlField = $('#advanced-search');
                 jqlField.unbind("keypress", Forms.submitOnEnter).keypress(function(e) {
                     if (jqlAutoComplete.dropdownController === null || !jqlAutoComplete.dropdownController.displayed || jqlAutoComplete.selectedIndex < 0)
                         return true;
                 });
+                jqlField.keydown(function(e) {
+                    if (e.which == 27 && (jqlAutoComplete.dropdownController !== null || jqlAutoComplete.dropdownController.displayed || jqlAutoComplete.selectedIndex >= 0)) {
+                        e.stopPropagation();
+                        return true;
+                    }
+                });
+
+                jqlAutoComplete.buildResponseContainer();
+                jqlAutoComplete.parse(jqlField.val());
+                jqlAutoComplete.updateColumnLineCount();
+
+                $('.atlassian-autocomplete .suggestions').css('top', '68px');
 
                 jqlField.click(function() {
                     jqlAutoComplete.dropdownController.hideDropdown();
@@ -77,8 +88,9 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
         events: {
             'click #calendar-dialog-ok:not([disabled])': '_submit',
             'click #calendar-dialog-cancel': 'hide',
-            'keydown': '_keydownHandler',
-            'click .mailrucalendar-jql-link': 'viewInIssueNavigator',
+            'change #advanced-search': '_onJqlChange',
+            'keyup #advanced-search': '_onJqlChange',
+            'paste #advanced-search': '_onJqlChange',
             'click #calendar-dialog-permission-table-add:not([disabled])': '_addPermission',
             'click .calendar-dialog-permission-table-action .aui-icon:not([disabled])': '_removePermission',
             'click .calendar-dialog-permission-table-access-type .aui-lozenge:not([disabled])': '_toggleAccessType',
@@ -128,6 +140,8 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
             AJS.tabs.setup();
             this.dialog.on('hide', $.proxy(this.destroy, this));
             this.$('form').submit($.proxy(this._onFormSubmit, this));
+            this.dialog.on('hide', $.proxy(this.destroy, this));
+            
         },
         destroy: function() {
             this.stopListening();
@@ -165,11 +179,6 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
         hide: function() {
             this.dialog.hide();
         },
-        viewInIssueNavigator: function(e) {
-            e.preventDefault();
-            if (this.sourceType == 'jql')
-                window.open(AJS.format("{0}/issues/?jql={1}", AJS.contextPath(), this.$('#advanced-search').val()));
-        },
         /* Private methods */
         _keydownHandler: function(e) {
             switch (e.which) {
@@ -179,6 +188,28 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                         this.hide();
                     break;
             }
+        },
+        _onJqlChange: function() {
+            var currentJql = this.$('#advanced-search').val().trim();
+            if (this.oldJql == currentJql)
+                return;
+            this.oldJql = currentJql;
+            $.ajax({
+                type: 'GET',
+                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/config/jql/count',
+                data: {
+                    jql: currentJql
+                },
+                success: function(result) {
+                    if (_.has(result, 'issueCount'))
+                        $('.atlassian-autocomplete .description').html(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.source.jql.description', '<a href="' + AJS.format('{0}/issues/?jql={1}', AJS.contextPath(), currentJql) + '" target="_blank">', result.issueCount, '</a>')).fadeIn(250);
+                    else
+                        $('.atlassian-autocomplete .description').fadeOut(250);
+                },
+                error: function() {
+                    $('.atlassian-autocomplete .description').fadeOut(250);
+                }
+            });
         },
         _initPermissionSubjectField: function() {
             this.$('#calendar-dialog-permission-table-subject').auiSelect2({
@@ -262,6 +293,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 }
             });
 
+            var filterSourceTerm;
             this.$('#calendar-dialog-source-filter-field').auiSelect2({
                 minimumInputLength: 0,
                 ajax: {
@@ -269,13 +301,14 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                     dataType: 'json',
                     quietMillis: 100,
                     data: function(term) {
+                        filterSourceTerm = term;
                         return {filter: term};
                     },
                     results: function(data) {
                         var results = [];
                         if (data.filters && data.filters.length > 0)
                             results.push({
-                                text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatchingShort', data.filters.length, data.totalFiltersCount),
+                                text: filterSourceTerm ? AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatchingShort', data.filters.length, data.totalFiltersCount) : AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.source.filter.myAndFavorite'),
                                 children: data.filters
                             });
                         return {results: results};
@@ -288,10 +321,6 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 initSelection: function(element, callback) {
                 }
             });
-
-            jqlAutoComplete.buildResponseContainer();
-            jqlAutoComplete.parse(jqlField.val());
-            jqlAutoComplete.updateColumnLineCount();
 
             function format(item) {
                 return JIRA.Templates.Plugins.MailRuCalendar.sourceField($.extend({projectId: item.id && item.id.indexOf('project_') > -1 ? item.id.substring('project_'.length) : ''}, item));
@@ -342,6 +371,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                     });
                 else if (this.sourceType == 'jql') {
                     this.$('#advanced-search').val(this.model.get('selectedSourceValue'));
+                    this._onJqlChange();
                 }
 
                 if (this.model.has('selectedDisplayedFields'))
@@ -366,7 +396,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 this.$okButton.text(AJS.I18n.getText('common.words.create'));
 
                 this._showSourceField('project');
-
+                this.$('#calendar-dialog-displayed-fields').auiSelect2('val', ['common.words.status', 'issue.field.assignee', 'issue.field.created', 'issue.field.duedate']);
                 this._addPermissionRow({
                     id: this.userData.id,
                     type: 'USER',
@@ -445,7 +475,14 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                     this._selectSourceTab();
                 this.$('#calendar-dialog-' + field + '-error').removeClass('hidden').text(response.responseText);
                 var $field = this.$('#calendar-dialog-' + field);
-                if ($field.hasClass('select') || $field.hasClass('multi-select'))
+                if (field == 'source') {
+                    if (this.sourceType == 'project')
+                        this.$('#calendar-dialog-source-project-field').auiSelect2('focus');
+                    else if (this.sourceType == 'filter')
+                        this.$('#calendar-dialog-source-filter-field').auiSelect2('focus');
+                    else if (this.sourceType == 'jql')
+                        this.$('#advanced-search').focus();
+                } else if ($field.hasClass('select') || $field.hasClass('multi-select'))
                     this.$('#calendar-dialog-' + field).auiSelect2('focus');
                 else
                     this.$('#calendar-dialog-' + field).focus();
@@ -487,6 +524,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
         _onSourceTypeChange: function() {
             var sourceType = this.$('input[type=radio][name=calendar-dialog-source]:checked').val();
             this._showSourceField(sourceType);
+            this.$('#calendar-dialog-source-error').addClass('hidden');
         },
         _addPermissionRow: function(subjectData) {
             this.$('#calendar-dialog-permission-table tbody').prepend(JIRA.Templates.Plugins.MailRuCalendar.permissionTableRow(subjectData));

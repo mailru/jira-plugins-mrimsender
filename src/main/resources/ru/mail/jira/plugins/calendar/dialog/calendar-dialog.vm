@@ -84,7 +84,7 @@
                     </div>
                     <div class="radio">
                         <input class="radio" type="radio" id="calendar-dialog-source-filter" name="calendar-dialog-source" value="filter">
-                        <label for="calendar-dialog-source-filter">$i18n.getText( "common.concepts.filterissues" )</label>
+                        <label for="calendar-dialog-source-filter">$i18n.getText( "ru.mail.jira.plugins.calendar.common.filter" )</label>
                     </div>
                     <div class="radio">
                         <input class="radio" type="radio" id="calendar-dialog-source-jql" name="calendar-dialog-source" value="jql">
@@ -98,7 +98,7 @@
                     </label>
                     <label for="calendar-dialog-source-filter-field" class="calendar-dialog-source-label calendar-dialog-source-filter-label hidden">
                         <span class="aui-icon icon-required"></span>
-                        $i18n.getText( "common.concepts.filterissues" )
+                        $i18n.getText( "ru.mail.jira.plugins.calendar.common.filter" )
                     </label>
                     <label for="advanced-search" class="calendar-dialog-source-label calendar-dialog-source-jql-label hidden">
                         <span class="aui-icon icon-required"></span>
@@ -108,12 +108,13 @@
                     <input type="hidden" id="calendar-dialog-source-filter-field" class="select calendar-dialog-source-field medium-long-field"/>
                     <div class="search-field-container atlassian-autocomplete">
                         <label for="advanced-search">
-                        <span id="jqlerrormsg" class="icon jqlgood">
-                        </span>
                         </label>
-                        <textarea id="advanced-search" class="textarea medium-long-field search-entry advanced-search" name="calendar-dialog-jql"></textarea>
+                        <label for="advanced-search">
+                            <span id="jqlerrormsg" class="icon jqlgood" title="">
+                            </span>
+                        </label>
+                        <textarea id="advanced-search" class="textarea medium-long-field search-entry advanced-search" name="calendar-dialog-jql" rows="3"></textarea>
                         <div class="description medium-long-field">
-                            $i18n.getText( "ru.mail.jira.plugins.calendar.dialog.source.jql.description", '<a class="mailrucalendar-jql-link" href="#" target="_blank">', '</a>' )
                         </div>
                         <a class="syntax-help" href="https://docs.atlassian.com/jira/docs-064/Advanced+Searching" title="$i18n.getText( "navigator.advanced.query.syntax" )" target="_jirahelp" tabindex="-1">
                             <span class="aui-icon aui-icon-small aui-iconfont-help">$i18n.getText( "navigator.advanced.query.syntax" )</span>
@@ -132,7 +133,7 @@
                 <div class="field-group">
                     <label for="calendar-dialog-event-end">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.eventEnd" )</label>
                     <input type="hidden" id="calendar-dialog-event-end" class="select medium-long-field calendar-dialog-select">
-                    <div class="description">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.eventStartEndDescription" )</div>
+                    <div class="description medium-long-field">$i18n.getText( "ru.mail.jira.plugins.calendar.dialog.eventStartEndDescription" )</div>
                     <div id="calendar-dialog-event-end-error" class="error hidden"></div>
                 </div>
                 <div class="field-group">

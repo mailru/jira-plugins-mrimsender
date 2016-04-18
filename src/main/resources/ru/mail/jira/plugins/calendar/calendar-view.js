@@ -23,7 +23,8 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
         },
         _toggleFullscreen: function() {
             this.$('.fc-fullscreen-button span.fc-icon').toggleClass('fc-icon-mailrucalendar-icon-fullscreen fc-icon-mailrucalendar-icon-exit-fullscreen');
-            $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,.aui-page-panel-nav, #studio-header,#footer').toggle(400);
+            $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer').fadeToggle(400);
+            $('.aui-page-panel-nav').fadeToggle(400);
 
             if (this.getViewType() == 'timeline') {
                 var containerHeight = $(document).height();
@@ -102,6 +103,9 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     start: '10:00',
                     end: '19:00'
                 },
+                weekNumberTitle: '',
+                weekNumbers: true,
+                weekNumberCalculation: 'ISO',
                 timezone: 'local',
                 timeFormat: this.timeFormat,
                 slotLabelFormat: this.timeFormat,
@@ -167,6 +171,13 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                         viewRenderFirstTime = false;
                     else
                         this.trigger('renderComplete');
+
+                    var view = this.$el.fullCalendar('getView');
+                    var start = view.start.clone().startOf('month');
+                    var end = view.end.clone();
+                    for (; start.isBefore(end); start.add(1, 'M')) {
+                        this.$('.fc-day.fc-widget-content[data-date=' + start.format("YYYY-MM-DD") + ']').addClass('fc-first-day-of-month');
+                    }
                 }, this),
                 eventDragStart: function(event) {
                     event.eventDialog && event.eventDialog.hide();
