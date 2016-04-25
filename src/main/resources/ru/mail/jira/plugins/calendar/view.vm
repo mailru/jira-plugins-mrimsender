@@ -2,6 +2,8 @@
 <head>
     <title>$i18n.getText( "ru.mail.jira.plugins.calendar.linkTitle" )</title>
     <meta name="decorator" content="atl.general"/>
+    <meta name="ajs-advanced-search-help-url" content="https://docs.atlassian.com/jira/docs-064/Advanced+Searching"/>
+    <meta name="ajs-advanced-search-help-title" content="$i18n.getText( "navigator.advanced.query.syntax" )"/>
     $webResourceManager.requireResource( "jira.webresources:global-static" )
     $webResourceManager.requireResource( "jira.webresources:jira-global" )
     $webResourceManager.requireResource( "ru.mail.jira.plugins.mailrucal:calendar-resources" )

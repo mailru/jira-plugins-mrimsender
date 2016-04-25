@@ -1,6 +1,6 @@
 define('calendar/feedback-flag', ['jquery', 'underscore', 'backbone'], function($, _, Backbone) {
     var likeFlagLike = AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.liker.thanksAndReview'), '<a href="https://marketplace.atlassian.com/plugins/ru.mail.jira.plugins.mailrucal/server/reviews" target="_blank" class="mailrucalendar-feedback-flag-close">', '</a>');
-    var likeFlagOther = AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.liker.badRateAndReview'), '<a href="https://answers.atlassian.com/questions/ask?topics=addon-ru.mail.jira.plugins.mailrucal" target="_blank" class="mailrucalendar-feedback-flag-close">', '</a>');
+    var likeFlagOther = AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.liker.badRateAndReview'), '<a href="https://github.com/mailru/jira-plugins-mailrucal/issues" target="_blank" class="mailrucalendar-feedback-flag-close">', '</a>');
     var flag;
     try {
         flag = require('aui/flag');

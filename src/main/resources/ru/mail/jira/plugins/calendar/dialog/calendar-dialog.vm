@@ -18,7 +18,7 @@
                 </ul>
             </div>
         </nav>
-        <div id="calendar-dialog-common-tab">
+        <div id="calendar-dialog-common-tab" class="calendar-dialog-tab">
             <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form">
                 <input class="hidden" type="submit"/>
                 <div id="calendar-dialog-error-panel" class="aui-message aui-message-error hidden"></div>
@@ -70,7 +70,7 @@
                 </div>
             </form>
         </div>
-        <div id="calendar-dialog-source-tab">
+        <div id="calendar-dialog-source-tab" class="calendar-dialog-tab">
             <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form">
                 <input class="hidden" type="submit"/>
                 <div class="field-group">
@@ -106,19 +106,18 @@
                     </label>
                     <input type="hidden" id="calendar-dialog-source-project-field" class="select calendar-dialog-source-field medium-long-field"/>
                     <input type="hidden" id="calendar-dialog-source-filter-field" class="select calendar-dialog-source-field medium-long-field"/>
-                    <div class="search-field-container atlassian-autocomplete">
-                        <label for="advanced-search">
-                        </label>
-                        <label for="advanced-search">
-                            <span id="jqlerrormsg" class="icon jqlgood" title="">
-                            </span>
-                        </label>
-                        <textarea id="advanced-search" class="textarea medium-long-field search-entry advanced-search" name="calendar-dialog-jql" rows="3"></textarea>
-                        <div class="description medium-long-field">
+                    <div class="search-field-container">
+                        <div class="atlassian-autocomplete">
+                            <label for="advanced-search"></label>
+                            <label for="advanced-search">
+                                <span id="jqlerrormsg" class="icon jqlgood" title=""></span>
+                            </label>
+                            <textarea id="advanced-search" class="textarea medium-long-field search-entry advanced-search" name="calendar-dialog-jql" rows="3"></textarea>
+                            <a class="syntax-help" href="https://docs.atlassian.com/jira/docs-064/Advanced+Searching" title="$i18n.getText( "navigator.advanced.query.syntax" )" target="_jirahelp" tabindex="-1">
+                                <span class="aui-icon aui-icon-small aui-iconfont-help">$i18n.getText( "navigator.advanced.query.syntax" )</span>
+                            </a>
                         </div>
-                        <a class="syntax-help" href="https://docs.atlassian.com/jira/docs-064/Advanced+Searching" title="$i18n.getText( "navigator.advanced.query.syntax" )" target="_jirahelp" tabindex="-1">
-                            <span class="aui-icon aui-icon-small aui-iconfont-help">$i18n.getText( "navigator.advanced.query.syntax" )</span>
-                        </a>
+                        <div class="description medium-long-field"></div>
                     </div>
                     <div id="calendar-dialog-source-error" class="error hidden"></div>
                 </div>
@@ -143,7 +142,7 @@
                 </div>
             </form>
         </div>
-        <div id="calendar-dialog-permissions-tab">
+        <div id="calendar-dialog-permissions-tab" class="calendar-dialog-tab">
             <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form">
                 <table id="calendar-dialog-permission-table" class="aui aui-table-rowhover">
                     <thead>

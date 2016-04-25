@@ -273,8 +273,8 @@ require(['jquery',
 
                 var calendar = this.collection.get($(e.currentTarget).closest('div.aui-dropdown2').data('id'));
                 var confirmText = AJS.format('<p>{0}</p><p>{1}</p>',
-                    AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete1'), '<b>' + calendar.get('name') + '</b>'),
-                    AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete2'), calendar.get('usersCount') || 0));
+                    AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete1', '<b>' + calendar.get('name') + '</b>'),
+                    AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete2', calendar.get('usersCount') || 0));
                 var confirmDialog = new ConfirmDialog({
                     okText: AJS.I18n.getText('common.words.delete'),
                     header: AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDeleteHeader'),
@@ -343,7 +343,7 @@ require(['jquery',
                 }
             },
             defaultHandler: function() {
-                this.navigate('period/' + mainView.calendarView.getViewType());
+                this.navigate('period/' + mainView.calendarView.getViewType(), {replace: true});
             },
             switchPeriod: function(view) {
                 view = this.validateViewType(view);
@@ -351,7 +351,6 @@ require(['jquery',
                 mainView.setCalendarView(view);
             },
             validateViewType: function(view) {
-
                 return this.availableOptions.view[view] ? view : 'month';
             }
         });

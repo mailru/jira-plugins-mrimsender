@@ -42,7 +42,6 @@ import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -53,10 +52,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Path("/calendar/config")
 @Produces(MediaType.APPLICATION_JSON)
@@ -322,45 +319,25 @@ public class RestConfigurationService {
     }
 
     private void fillFilterSources(ApplicationUser user, IssueSourceDto issueSourceDto, String filter) {
-        int total;
-        List<SelectItemDto> result = new ArrayList<SelectItemDto>();
-        Set<SearchRequest> searchRequests = new LinkedHashSet<SearchRequest>();
-        Collection<SearchRequest> favorites = searchRequestService.getFavouriteFilters(user);
-        Collection<SearchRequest> owned = searchRequestService.getOwnedFilters(user);
-
         filter = StringUtils.trimToNull(filter);
+        SharedEntitySearchParametersBuilder builder = new SharedEntitySearchParametersBuilder();
+        builder.setName(filter);
+        builder.setTextSearchMode(SharedEntitySearchParameters.TextSearchMode.WILDCARD);
+        builder.setSortColumn(SharedEntityColumn.NAME, true);
+        builder.setEntitySearchContext(SharedEntitySearchContext.USE);
         if (filter == null) {
-            searchRequests.addAll(favorites);
-            searchRequests.addAll(owned);
-            SharedEntitySearchParametersBuilder builder = new SharedEntitySearchParametersBuilder();
-            builder.setSortColumn(SharedEntityColumn.NAME, true);
-            builder.setEntitySearchContext(SharedEntitySearchContext.USE);
-            SharedEntitySearchResult<SearchRequest> searchResults = searchRequestService.search(new JiraServiceContextImpl(user), builder.toSearchParameters(), 0, 10);
-            if (searchRequests.isEmpty())
-                searchRequests.addAll(searchResults.getResults());
-            total = searchResults.getTotalResultCount();
+            Collection<SearchRequest> favorites = searchRequestService.getFavouriteFilters(user);
+            Collection<SearchRequest> owned = searchRequestService.getOwnedFilters(user);
+            issueSourceDto.setMyFilters(SelectItemDto.buildSelectSearchRequestItemDtos(owned));
+            issueSourceDto.setFavouriteFilters(SelectItemDto.buildSelectSearchRequestItemDtos(favorites));
+            if (owned.isEmpty() && favorites.isEmpty()) {
+                SharedEntitySearchResult<SearchRequest> searchResults = searchRequestService.search(new JiraServiceContextImpl(user), builder.toSearchParameters(), 0, 10);
+                issueSourceDto.setFilters(SelectItemDto.buildSelectSearchRequestItemDtos(searchResults.getResults()));
+            }
         } else {
-            for (SearchRequest searchRequest : favorites)
-                if (StringUtils.containsIgnoreCase(searchRequest.getName(), filter))
-                    searchRequests.add(searchRequest);
-            for (SearchRequest searchRequest : owned)
-                if (StringUtils.containsIgnoreCase(searchRequest.getName(), filter))
-                    searchRequests.add(searchRequest);
-            SharedEntitySearchParametersBuilder builder = new SharedEntitySearchParametersBuilder();
-            builder.setName("\"" + filter + "\"");
-            builder.setTextSearchMode(SharedEntitySearchParameters.TextSearchMode.WILDCARD);
-            builder.setSortColumn(SharedEntityColumn.NAME, true);
-            builder.setEntitySearchContext(SharedEntitySearchContext.USE);
             SharedEntitySearchResult<SearchRequest> searchResults = searchRequestService.search(new JiraServiceContextImpl(user), builder.toSearchParameters(), 0, Integer.MAX_VALUE);
-            searchRequests.addAll(searchResults.getResults());
-
-            total = Math.max(searchRequests.size(), searchResults.getTotalResultCount());
+            issueSourceDto.setFilters(SelectItemDto.buildSelectSearchRequestItemDtos(searchResults.getResults()));
         }
-
-        for (SearchRequest search : searchRequests)
-            result.add(new SelectItemDto(String.valueOf(search.getId()), search.getName(), 0));
-        issueSourceDto.setTotalFiltersCount(total);
-        issueSourceDto.setFilters(result);
     }
 
     private String getUserAvatarSrc(ApplicationUser user) {

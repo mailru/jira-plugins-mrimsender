@@ -1,4 +1,5 @@
 define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/util/forms', 'jira/jql/jql-parser', 'jira/autocomplete/jql-autocomplete'], function($, _, Backbone, Forms, JQLParser, JQLAutoComplete) {
+    var jqlAutoComplete;
     AJS.toInit(function() {
         $.ajax({
             type: 'GET',
@@ -43,36 +44,26 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
             type: 'GET',
             url: AJS.contextPath() + '/rest/api/2/jql/autocompletedata',
             success: $.proxy(function(autoCompleteData) {
-                var jqlFieldNames = autoCompleteData.visibleFieldNames || [];
-                var jqlFunctionNames = autoCompleteData.visibleFunctionNames || [];
-                var jqlReservedWords = autoCompleteData.jqlReservedWords || [];
-
-                var jqlAutoComplete = JQLAutoComplete({
+                jqlAutoComplete = JQLAutoComplete({
                     fieldID: 'advanced-search',
                     errorID: 'jqlerrormsg',
-                    parser: JQLParser(jqlReservedWords),
+                    parser: JQLParser(autoCompleteData.jqlReservedWords || []),
                     queryDelay: 0.65,
-                    jqlFieldNames: jqlFieldNames,
-                    jqlFunctionNames: jqlFunctionNames,
-                    minQueryLength: 1,
-                    allowArrowCarousel: true,
-                    autoSelectFirst: false
+                    jqlFieldNames: autoCompleteData.visibleFieldNames || [],
+                    jqlFunctionNames: autoCompleteData.visibleFunctionNames || [],
+                    minQueryLength: 0,
+                    //allowArrowCarousel: true,
+                    autoSelectFirst: false,
+                    maxHeight: '195'
                 });
                 jqlField = $('#advanced-search');
                 jqlField.unbind("keypress", Forms.submitOnEnter).keypress(function(e) {
                     if (jqlAutoComplete.dropdownController === null || !jqlAutoComplete.dropdownController.displayed || jqlAutoComplete.selectedIndex < 0)
                         return true;
                 });
-                jqlField.keydown(function(e) {
-                    if (e.which == 27 && (jqlAutoComplete.dropdownController !== null || jqlAutoComplete.dropdownController.displayed || jqlAutoComplete.selectedIndex >= 0)) {
-                        e.stopPropagation();
-                        return true;
-                    }
-                });
 
                 jqlAutoComplete.buildResponseContainer();
                 jqlAutoComplete.parse(jqlField.val());
-                jqlAutoComplete.updateColumnLineCount();
 
                 $('.atlassian-autocomplete .suggestions').css('top', '68px');
 
@@ -140,14 +131,15 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
             AJS.tabs.setup();
             this.dialog.on('hide', $.proxy(this.destroy, this));
             this.$('form').submit($.proxy(this._onFormSubmit, this));
-            this.dialog.on('hide', $.proxy(this.destroy, this));
-            
+            this._keypressHandler = $.proxy(this._keypressHandler, this);
+            $(document.body).on('keyup', this._keypressHandler);
         },
         destroy: function() {
             this.stopListening();
             this.undelegateEvents();
             this.$('form').off();
             this.dialog.off();
+            $(document.body).off('keyup', this._keypressHandler);
 
             this.$okButton.removeAttr('disabled');
             this.$cancelButton.removeAttr('disabled');
@@ -164,6 +156,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 self.auiSelect2('val', self.find('option:eq(2)').val()); // todo:xxx bad index
             });
             this.$('#advanced-search').val('');
+            this.$('.search-field-container .description').text('').hide();
 
             this.$('div.error').text('').addClass('hidden');
             this.$('input:not([type=radio])').val('');
@@ -180,7 +173,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
             this.dialog.hide();
         },
         /* Private methods */
-        _keydownHandler: function(e) {
+        _keypressHandler: function(e) {
             switch (e.which) {
                 // esc
                 case 27 :
@@ -191,23 +184,24 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
         },
         _onJqlChange: function() {
             var currentJql = this.$('#advanced-search').val().trim();
-            if (this.oldJql == currentJql)
+            if (this.oldJql === currentJql)
                 return;
-            this.oldJql = currentJql;
+            jqlAutoComplete.parse(currentJql);
             $.ajax({
                 type: 'GET',
                 url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/config/jql/count',
                 data: {
                     jql: currentJql
                 },
-                success: function(result) {
+                success: $.proxy(function(result) {
                     if (_.has(result, 'issueCount'))
-                        $('.atlassian-autocomplete .description').html(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.source.jql.description', '<a href="' + AJS.format('{0}/issues/?jql={1}', AJS.contextPath(), currentJql) + '" target="_blank">', result.issueCount, '</a>')).fadeIn(250);
+                        this.$('.search-field-container .description').html(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.source.jql.description', '<a href="' + AJS.format('{0}/issues/?jql={1}', AJS.contextPath(), currentJql) + '" target="_blank">', result.issueCount, '</a>')).fadeIn(250);
                     else
-                        $('.atlassian-autocomplete .description').fadeOut(250);
-                },
+                        this.$('.search-field-container .description').fadeOut(250);
+                    this.oldJql = currentJql;
+                }, this),
                 error: function() {
-                    $('.atlassian-autocomplete .description').fadeOut(250);
+                    $('.search-field-container .description').fadeOut(250);
                 }
             });
         },
@@ -287,8 +281,18 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                     cache: true
                 },
                 dropdownCssClass: 'calendar-dialog-source-dropdown',
-                formatResult: format,
-                formatSelection: format,
+                formatResult: function format(item) {
+                    return JIRA.Templates.Plugins.MailRuCalendar.sourceField($.extend({
+                        projectId: item.id,
+                        sourceType: 'project'
+                    }, item));
+                },
+                formatSelection: function format(item) {
+                    return JIRA.Templates.Plugins.MailRuCalendar.sourceField($.extend({
+                        projectId: item.id,
+                        sourceType: 'project'
+                    }, item));
+                },
                 initSelection: function(element, callback) {
                 }
             });
@@ -308,23 +312,33 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                         var results = [];
                         if (data.filters && data.filters.length > 0)
                             results.push({
-                                text: filterSourceTerm ? AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatchingShort', data.filters.length, data.totalFiltersCount) : AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.source.filter.myAndFavorite'),
+                                text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.source.foundFilters', data.filters.length),
                                 children: data.filters
+                            });
+                        if (data.myFilters && data.myFilters.length > 0)
+                            results.push({
+                                text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.source.myFilters'),
+                                children: data.myFilters
+                            });
+                        if (data.favouriteFilters && data.favouriteFilters.length > 0)
+                            results.push({
+                                text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.source.favouriteFilters'),
+                                children: data.favouriteFilters
                             });
                         return {results: results};
                     },
                     cache: true
                 },
                 dropdownCssClass: 'calendar-dialog-source-dropdown',
-                formatResult: format,
-                formatSelection: format,
+                formatResult: function format(item) {
+                    return JIRA.Templates.Plugins.MailRuCalendar.sourceField(item);
+                },
+                formatSelection: function format(item) {
+                    return JIRA.Templates.Plugins.MailRuCalendar.sourceField(item);
+                },
                 initSelection: function(element, callback) {
                 }
             });
-
-            function format(item) {
-                return JIRA.Templates.Plugins.MailRuCalendar.sourceField($.extend({projectId: item.id && item.id.indexOf('project_') > -1 ? item.id.substring('project_'.length) : ''}, item));
-            }
         },
         _showSourceField: function(sourceType) {
             this.sourceType = sourceType;
@@ -336,6 +350,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
             } else if (sourceType == 'jql') {
                 this.$('.calendar-dialog-source-field').addClass('hidden');
                 this.$('.search-field-container').removeClass('hidden');
+                this._onJqlChange();
             }
             this.$('.calendar-dialog-source-label').addClass('hidden');
             this.$('.calendar-dialog-source-' + sourceType + '-label').removeClass('hidden');
@@ -493,32 +508,33 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
         },
         _selectCommonTab: function(e) {
             e && e.preventDefault();
-            this.$('#calendar-dialog-permissions-tab').toggleClass('hidden', true);
-            this.$('a[href=#calendar-dialog-permissions-tab]').closest('li').toggleClass('aui-nav-selected', false);
-            this.$('#calendar-dialog-source-tab').toggleClass('hidden', true);
-            this.$('a[href=#calendar-dialog-source-tab]').closest('li').toggleClass('aui-nav-selected', false);
-            this.$('#calendar-dialog-common-tab').toggleClass('hidden', false);
-            this.$('a[href=#calendar-dialog-common-tab]').closest('li').toggleClass('aui-nav-selected', true);
+
+            this.$('.aui-navgroup li.aui-nav-selected').removeClass('aui-nav-selected');
+            this.$('.calendar-dialog-tab').addClass('hidden');
+
+            this.$('#calendar-dialog-common-tab').removeClass('hidden');
+            this.$('a[href=#calendar-dialog-common-tab]').closest('li').addClass('aui-nav-selected');
+
             this.$('#calendar-dialog-name').focus();
         },
         _selectSourceTab: function(e) {
             e && e.preventDefault();
-            this.$('#calendar-dialog-permissions-tab').toggleClass('hidden', true);
-            this.$('a[href=#calendar-dialog-permissions-tab]').closest('li').toggleClass('aui-nav-selected', false);
-            this.$('#calendar-dialog-common-tab').toggleClass('hidden', true);
-            this.$('a[href=#calendar-dialog-common-tab]').closest('li').toggleClass('aui-nav-selected', false);
-            this.$('#calendar-dialog-source-tab').toggleClass('hidden', false);
-            this.$('a[href=#calendar-dialog-source-tab]').closest('li').toggleClass('aui-nav-selected', true);
-            this.$('#calendar-dialog-source-project').focus();
+            this.$('.aui-navgroup li.aui-nav-selected').removeClass('aui-nav-selected');
+            this.$('.calendar-dialog-tab').addClass('hidden');
+
+            this.$('#calendar-dialog-source-tab').removeClass('hidden');
+            this.$('a[href=#calendar-dialog-source-tab]').closest('li').addClass('aui-nav-selected');
+
+            this.$('#calendar-dialog-source-' + this.sourceType).focus();
         },
         _selectPermissionTab: function(e) {
             e && e.preventDefault();
-            this.$('#calendar-dialog-permissions-tab').toggleClass('hidden', false);
-            this.$('a[href=#calendar-dialog-permissions-tab]').closest('li').toggleClass('aui-nav-selected', true);
-            this.$('#calendar-dialog-source-tab').toggleClass('hidden', true);
-            this.$('a[href=#calendar-dialog-source-tab]').closest('li').toggleClass('aui-nav-selected', false);
-            this.$('#calendar-dialog-common-tab').toggleClass('hidden', true);
-            this.$('a[href=#calendar-dialog-common-tab]').closest('li').toggleClass('aui-nav-selected', false);
+            this.$('.aui-navgroup li.aui-nav-selected').removeClass('aui-nav-selected');
+            this.$('.calendar-dialog-tab').addClass('hidden');
+
+            this.$('#calendar-dialog-permissions-tab').removeClass('hidden');
+            this.$('a[href=#calendar-dialog-permissions-tab]').closest('li').addClass('aui-nav-selected');
+
             this.$('#calendar-dialog-permission-table-subject').auiSelect2('focus');
         },
         _onSourceTypeChange: function() {

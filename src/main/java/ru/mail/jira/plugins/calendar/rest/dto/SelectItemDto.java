@@ -1,7 +1,12 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
+import com.atlassian.jira.issue.search.SearchRequest;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
@@ -52,5 +57,12 @@ public class SelectItemDto {
 
     public long getAvatarId() {
         return avatarId;
+    }
+
+    public static  List<SelectItemDto> buildSelectSearchRequestItemDtos(Collection<SearchRequest> searchRequests) {
+        List<SelectItemDto> result = new ArrayList<SelectItemDto>(searchRequests.size());
+        for (SearchRequest search : searchRequests)
+            result.add(new SelectItemDto(String.valueOf(search.getId()), search.getName(), 0));
+        return result;
     }
 }

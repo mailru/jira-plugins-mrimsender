@@ -18,13 +18,16 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
         },
         _onClickWeekendsVisibility: function(e) {
             e.preventDefault();
-            e.currentTarget.blur();
             this.trigger('changeWeekendsVisibility');
         },
         _toggleFullscreen: function() {
             this.$('.fc-fullscreen-button span.fc-icon').toggleClass('fc-icon-mailrucalendar-icon-fullscreen fc-icon-mailrucalendar-icon-exit-fullscreen');
-            $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer').fadeToggle(400);
-            $('.aui-page-panel-nav').fadeToggle(400);
+            this.fullscreenMode = !this.fullscreenMode;
+            if (this.fullscreenMode) {
+                $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer').slideUp(400);
+                $('.aui-page-panel-nav').animate({width: 'toggle', 'padding': 'toggle'}, 400);
+            } else
+                $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer,.aui-page-panel-nav').fadeIn(400);
 
             if (this.getViewType() == 'timeline') {
                 var containerHeight = $(document).height();
@@ -48,14 +51,12 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
         zoomOutTimeline: function() {
             var view = this.$el.fullCalendar('getView');
             var canZoomOut = view.zoomOut();
-            this._getCalendarHeaderButton('zoom-out').blur();
             !canZoomOut && view.calendar.header.disableButton('zoom-out');
             view.calendar.header.enableButton('zoom-in');
         },
         zoomInTimeline: function() {
             var view = this.$el.fullCalendar('getView');
             var canZoomIn = view.zoomIn();
-            this._getCalendarHeaderButton('zoom-in').blur();
             !canZoomIn && view.calendar.header.disableButton('zoom-in');
             view.calendar.header.enableButton('zoom-out');
         },
@@ -224,7 +225,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             }
         },
         removeAllEventSource: function() {
-            _.each(this.eventSources, function(sourceUrl, calendarId) {
+            _.each(this.eventSources, function(sourceUrl) {
                 this.$el.fullCalendar('removeEventSource', sourceUrl);
             }, this);
             this.eventSources = {};
@@ -244,4 +245,3 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
         }
     });
 });
-

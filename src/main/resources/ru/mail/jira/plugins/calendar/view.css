@@ -367,12 +367,8 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     resize: none;
 }
 
-#calendar-dialog #advanced-search + .description {
-    margin-top: 0;
-}
-
-.atlassian-autocomplete .suggestions {
-    max-height: 195px;
+#calendar-dialog .atlassian-autocomplete {
+    height: 70px;
 }
 
 #calendar-dialog .atlassian-autocomplete > .syntax-help,
@@ -409,6 +405,12 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     border-bottom-color: transparent;
 }
 
+#calendar-dialog #calendar-dialog-source-error {
+    white-space: pre-line;
+    word-break: break-all;
+    max-width: 350px;
+}
+
 #calendar-dialog-common-tab,
 #calendar-dialog-source-tab,
 #calendar-dialog-permissions-tab {
@@ -431,6 +433,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 
 #calendar-dialog-permission-table tbody > tr .calendar-dialog-permission-table-action .aui-icon {
     visibility: hidden;
+    float: right;
 }
 
 #calendar-dialog-permission-table.aui.aui-table-rowhover > tfoot tr:hover {
@@ -442,7 +445,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     max-width: 310px;
 }
 
-.calendar-dialog-permission-table-subject-overflow {
+.calendar-dialog-select-overflow {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -488,6 +491,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 #calendar-dialog-permission-table tbody a.aui-lozenge {
     cursor: pointer;
     margin-right: 5px;
+    float: left;
 }
 
 #calendar-dialog-permission-table a.aui-lozenge[disabled] {
@@ -496,7 +500,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 }
 
 #calendar-dialog-permission-table td > a.aui-lozenge {
-    margin-top: -1px;
+    margin-top: 2px;
     text-decoration: none;
 }
 
@@ -511,7 +515,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 #calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon {
     cursor: pointer;
     color: #bbb;
-    margin-left: 5px;
+    margin: 1px 0 0 5px;
 }
 
 #calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon:hover {
@@ -526,6 +530,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 
 #calendar-full-calendar {
     position: relative;
+    z-index: 0;
 }
 
 .calendar-event-object {

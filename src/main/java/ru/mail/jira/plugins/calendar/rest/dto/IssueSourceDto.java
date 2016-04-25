@@ -12,9 +12,11 @@ public class IssueSourceDto {
     @XmlElement
     private int totalProjectsCount;
     @XmlElement
-    private List<SelectItemDto> filters;
+    private List<SelectItemDto> myFilters;
     @XmlElement
-    private int totalFiltersCount;
+    private List<SelectItemDto> favouriteFilters;
+    @XmlElement
+    private List<SelectItemDto> filters;
 
     public List<SelectItemDto> getProjects() {
         return projects;
@@ -32,19 +34,27 @@ public class IssueSourceDto {
         this.totalProjectsCount = totalProjectsCount;
     }
 
+    public List<SelectItemDto> getMyFilters() {
+        return myFilters;
+    }
+
+    public void setMyFilters(List<SelectItemDto> myFilters) {
+        this.myFilters = myFilters;
+    }
+
+    public List<SelectItemDto> getFavouriteFilters() {
+        return favouriteFilters;
+    }
+
+    public void setFavouriteFilters(List<SelectItemDto> favouriteFilters) {
+        this.favouriteFilters = favouriteFilters;
+    }
+
     public List<SelectItemDto> getFilters() {
         return filters;
     }
 
     public void setFilters(List<SelectItemDto> filters) {
         this.filters = filters;
-    }
-
-    public int getTotalFiltersCount() {
-        return totalFiltersCount;
-    }
-
-    public void setTotalFiltersCount(int totalFiltersCount) {
-        this.totalFiltersCount = totalFiltersCount;
     }
 }

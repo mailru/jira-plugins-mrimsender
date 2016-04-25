@@ -134,7 +134,7 @@
  */
 {template .permissionField autoescape="false"}
         {if $type == 'USER'}
-            <div title="{$userDisplayName}{sp}-{sp}{$userEmail}{sp}({$userName})" class="calendar-dialog-permission-table-subject-overflow">
+            <div title="{$userDisplayName}{sp}-{sp}{$userEmail}{sp}({$userName})" class="calendar-dialog-select-overflow">
                 <span class="aui-avatar aui-avatar-xsmall">
                     <span class="aui-avatar-inner">
                         <img src="{$avatarUrl}" />
@@ -143,7 +143,7 @@
                 {sp}{$userDisplayNameHighlight}{sp}-{sp}{$userEmailHighlight}{sp}({$userNameHighlight})
             </div>
         {elseif $type == 'PROJECT_ROLE'}
-            <div title="{$project}{sp}/{sp}{$projectRole}" class="calendar-dialog-permission-table-subject-overflow">
+            <div title="{$project}{sp}/{sp}{$projectRole}" class="calendar-dialog-select-overflow">
                 <span class="aui-avatar aui-avatar-xsmall">
                     <span class="aui-avatar-inner">
                         <img src="{$avatarUrl}" />
@@ -152,7 +152,7 @@
                 {sp}<span class="calendar-dialog-permission-project-overflow">{$projectHighlight}</span><span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRoleHighlight}
             </div>
         {elseif $type == 'GROUP'}
-            <div title="{$text}" class="calendar-dialog-permission-table-subject-overflow">
+            <div title="{$text}" class="calendar-dialog-select-overflow">
                 <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
                 {sp}{$textHighlight}
             </div>
@@ -174,7 +174,7 @@
 */
 {template .permissionFieldSelection autoescape="false"}
         {if $type == 'USER'}
-            <div title="{$userDisplayName}{sp}-{sp}{$userEmail}{sp}({$userName})" class="calendar-dialog-permission-table-subject-overflow">
+            <div title="{$userDisplayName}{sp}-{sp}{$userEmail}{sp}({$userName})" class="calendar-dialog-select-overflow">
                 <span class="aui-avatar aui-avatar-xsmall">
                     <span class="aui-avatar-inner">
                         <img src="{$avatarUrl}" />
@@ -183,7 +183,7 @@
                 {sp}{$userDisplayName}
             </div>
         {elseif $type == 'PROJECT_ROLE'}
-            <div title="{$project}{sp}/{sp}{$projectRole}" class="calendar-dialog-permission-table-subject-overflow">
+            <div title="{$project}{sp}/{sp}{$projectRole}" class="calendar-dialog-select-overflow">
                 <span class="aui-avatar aui-avatar-xsmall">
                     <span class="aui-avatar-inner">
                         <img src="{$avatarUrl}" />
@@ -192,7 +192,7 @@
                 {sp}{$project}<span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRole}
             </div>
         {elseif $type == 'GROUP'}
-            <div title="{$text}" class="calendar-dialog-permission-table-subject-overflow">
+            <div title="{$text}" class="calendar-dialog-select-overflow">
                 <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
                 {sp}{$text}
             </div>
@@ -213,21 +213,33 @@
  * Text format for source select2 field
  * @param unavailable
  * @param text
+ * @param sourceType
  * @param projectId
  * @param avatarId
  */
 {template .sourceField autoescape="false"}
     {if $unavailable }
-        <span class="calendar-dialog-source-unavailable-source">{$text}</span>
-    {elseif $projectId }
-        <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
-            <span class="aui-avatar-inner">
-                <img src="projectavatar?pid={$projectId}&avatarId={$avatarId}&size=xxmall" />
+        {if $sourceType == 'project'}
+            <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
+                <span class="aui-avatar-inner">
+                    <img src="projectavatar?size=xxmall" />
+                </span>
             </span>
-        </span>
-        {sp}{$text}
+        {/if}
+        {sp}<span class="calendar-dialog-source-unavailable-source">{$text}</span>
+    {elseif $projectId }
+        <div title="{$text}" class="calendar-dialog-select-overflow">
+            <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
+                <span class="aui-avatar-inner">
+                    <img src="projectavatar?pid={$projectId}&avatarId={$avatarId}&size=xxmall" />
+                </span>
+            </span>
+            {sp}{$text}
+        </div>
     {else}
-        {$text}
+        <div title="{$text}" class="calendar-dialog-select-overflow">
+            {$text}
+        </div>
     {/if}
 {/template}
 
