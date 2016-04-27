@@ -277,15 +277,17 @@ public class CalendarEventService {
                     continue;
                 }
 
+                DateTimeFormatter startFormatter = startField.equals(DUE_DATE_KEY) || startCF != null && startCF.getCustomFieldType() instanceof DateCFType ? userDateFormat.withSystemZone() : userDateTimeFormat;
+                DateTimeFormatter endFormatter = endField.equals(DUE_DATE_KEY) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType ? userDateFormat.withSystemZone() : userDateTimeFormat;
                 if (startDate != null) {
-                    event.setStart(userDateTimeFormat.format(startDate));
+                    event.setStart(startFormatter.format(startDate));
                     if (endDate != null)
                         if (endField.equals(DUE_DATE_KEY) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType)
-                            event.setEnd(userDateTimeFormat.format(new Date(endDate.getTime() + MILLIS_IN_DAY)));
+                            event.setEnd(endFormatter.format(new Date(endDate.getTime() + MILLIS_IN_DAY)));
                         else
-                            event.setEnd(userDateTimeFormat.format(endDate));
+                            event.setEnd(endFormatter.format(endDate));
                 } else
-                    event.setStart(userDateTimeFormat.format(endDate));
+                    event.setStart(endFormatter.format(endDate));
 
                 event.setStartEditable(dateFieldsIsDraggable && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
                 event.setDurationEditable(isDateFieldResizable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
@@ -603,7 +605,7 @@ public class CalendarEventService {
                     components.add(pc.getName());
                 issueInfo.setComponents(components.toString());
             } else if (extraField.equals(CalendarServiceImpl.DUEDATE) && issue.getDueDate() != null)
-                issueInfo.setDueDate(userDateTimeFormatter.withStyle(DateTimeStyle.ISO_8601_DATE).format(issue.getDueDate()));
+                issueInfo.setDueDate(userDateTimeFormatter.forLoggedInUser().withSystemZone().withStyle(DateTimeStyle.ISO_8601_DATE).format(issue.getDueDate()));
             else if (extraField.equals(CalendarServiceImpl.ENVIRONMENT) && issue.getEnvironment() != null)
                 issueInfo.setEnvironment(issue.getEnvironment());
             else if (extraField.equals(CalendarServiceImpl.PRIORITY) && issue.getPriorityObject() != null) {
