@@ -164,7 +164,15 @@ require(['jquery',
                 this.$('.aui-page-panel-nav').click();
 
                 var calendar = this.collection.get($(e.currentTarget).closest('div.aui-dropdown2').data('id'));
-                window.open(AJS.format("{0}/issues/?{1}", AJS.contextPath(), calendar.get('source').split('_')[0] == 'project' ? 'jql=project%3D' + calendar.get('source').split('_')[1] : 'filter=' + calendar.get('source').split('_')[1]));
+                var sourceType = calendar.get('source').split('_')[0];
+                var url;
+                if (sourceType == 'project')
+                    url = 'jql=project%3D' + calendar.get('source').split('_')[1];
+                else if (sourceType == 'filter')
+                    url = 'filter=' + calendar.get('source').split('_')[1];
+                else if (sourceType == 'jql')
+                    url = 'jql=' + calendar.get('source').split('_')[1].replace(/"/g, '\'');
+                window.open(AJS.format("{0}/issues/?{1}", AJS.contextPath(), url));
             },
             editCalendar: function(e) {
                 e.preventDefault();
