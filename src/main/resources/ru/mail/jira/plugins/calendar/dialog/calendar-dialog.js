@@ -195,7 +195,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 },
                 success: $.proxy(function(result) {
                     if (_.has(result, 'issueCount'))
-                        this.$('.search-field-container .description').html(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.source.jql.description', '<a href="' + AJS.format('{0}/issues/?jql={1}', AJS.contextPath(), currentJql.replace("\"", "'")) + '" target="_blank">', result.issueCount, '</a>')).fadeIn(250);
+                        this.$('.search-field-container .description').html(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.source.jql.description', '<a href="' + AJS.format('{0}/issues/?jql={1}', AJS.contextPath(), currentJql.replace(/"/g, '\'')) + '" target="_blank">', result.issueCount, '</a>')).fadeIn(250);
                     else
                         this.$('.search-field-container .description').fadeOut(250);
                     this.oldJql = currentJql;
