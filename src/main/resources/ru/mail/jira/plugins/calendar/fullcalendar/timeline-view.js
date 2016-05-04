@@ -34,7 +34,13 @@
                 multiselect: false,
                 zoomable: false,
                 zoomMin: moment.duration(4, 'h').asMilliseconds(),
-                zoomMax: moment.duration(1.5, 'y').asMilliseconds()
+                zoomMax: moment.duration(1.5, 'y').asMilliseconds(),
+                editable: {
+                    add: false,
+                    updateTime: true,
+                    updateGroup: false,
+                    remove: false
+                }
             },
             initialize: function() {
             },
@@ -50,7 +56,9 @@
                 if (!this.timeline) {
                     this.timeline = new vis.Timeline(this.el[0], null, $.extend(this.timelineOptions, {
                         start: this.start,
-                        end: this.end
+                        end: this.end,
+                        onMove: $.proxy(this._onMove, this),
+                        onMoving: $.proxy(this._onMoving, this)
                     }));
                     $(this.el).on('remove', $.proxy(this._destroy, this));
                     this.timeline.on('select', $.proxy(this._onEventSelect, this));
@@ -126,6 +134,47 @@
                 return this.timelineOptions.zoomMin < this.getRangeInterval();
             },
 
+            _onMove: function(item, callback) {
+                $.ajax({
+                    type: 'PUT',
+                    url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + item.calendarId + '/event/' + item.eventId + '/move',
+                    data: {
+                        start: moment(item.start).format(),
+                        end: item.end ? moment(item.end).format() : ''
+                    },
+                    error: function(xhr) {
+                        var msg = "Error while trying to drag event. Issue key => " + item.eventId;
+                        if (xhr.responseText)
+                            msg += xhr.responseText;
+                        alert(msg);
+                        callback(null);
+                    },
+                    success: $.proxy(function(event) {
+                        callback({
+                            id: event.calendarId + event.id,
+                            eventId: event.id,
+                            calendarId: event.calendarId,
+                            start: moment(event.start).toDate(),
+                            end: event.end && moment(event.end).toDate(),
+                            content: event.id + ' ' + event.title,
+                            className: this._getClassForColor(event.color),
+                            startEditable: event.startEditable,
+                            durationEditable: event.durationEditable,
+                            editable: event.startEditable || event.durationEditable
+                        });
+                    }, this)
+                });
+            },
+            _onMoving: function(item, callback) {
+                var originalEvent = this.timeline.itemsData.get(item.id);
+                if (!originalEvent.startEditable && originalEvent.start.getTime() != item.start.getTime())
+                    callback(null);
+                else {
+                    if (!originalEvent.durationEditable && originalEvent.end)
+                        item.end = originalEvent.end.getTime();
+                    callback(item);
+                }
+            },
             _onRangeChange: function() {
                 if (this.eventDialog) {
                     this.eventDialog.hide();
@@ -197,7 +246,10 @@
                         start: event.start.clone().local().toDate(),
                         end: event.end && event.end.clone().local().toDate(),
                         content: event.id + ' ' + event.title,
-                        className: this._getClassForColor(event.color)
+                        className: this._getClassForColor(event.color),
+                        startEditable: event.startEditable,
+                        durationEditable: event.durationEditable,
+                        editable: event.startEditable || event.durationEditable
                     };
                 }, this));
             },

@@ -35,9 +35,29 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                 if (this.getViewType() == 'timeline')
                     this.$el.fullCalendar('getView').timeline.setOptions({height: '450px'});
             }
+            }
         },
         _canButtonVisible: function(name) {
             return this.customsButtonOptions[name] == undefined || this.customsButtonOptions[name].visible !== false;
+        },
+        _eventMove: function(event, duration, revertFunc) {
+            var start = event.start.toDate();
+            var end = event.end && event.end.toDate();
+            $.ajax({
+                type: 'PUT',
+                url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.id + '/move',
+                data: {
+                    start: moment(start).format(),
+                    end: end ? moment(end).format() : ''
+                },
+                error: function(xhr) {
+                    var msg = "Error while trying to drag event. Issue key => " + event.id;
+                    if (xhr.responseText)
+                        msg += xhr.responseText;
+                    alert(msg);
+                    revertFunc();
+                }
+            });
         },
         updateButtonsVisibility: function(view) {
             if (this._canButtonVisible('zoom-out') && this._canButtonVisible('zoom-in') && view.name === 'timeline')
@@ -185,26 +205,9 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     event.eventDialog && event.eventDialog.hide();
                     event.eventDialog = undefined;
                 },
-                eventDrop: function(event, duration) {
-                    eventMove(event, duration, true);
-                },
-                eventResize: function(event, duration) {
-                    eventMove(event, duration, false);
-                }
+                eventDrop: $.proxy(this._eventMove, this),
+                eventResize: $.proxy(this._eventMove, this)
             });
-
-            function eventMove(event, duration, isDrag) {
-                $.ajax({
-                    type: 'PUT',
-                    url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.id + '?millisDelta=' + duration.asMilliseconds() + '&isDrag=' + isDrag,
-                    error: function(xhr) {
-                        var msg = "Error while trying to drag event. Issue key => " + event.id;
-                        if (xhr.responseText)
-                            msg += xhr.responseText;
-                        alert(msg);
-                    }
-                });
-            }
         },
         addEventSource: function(calendarId, silent) {
             !silent && this.trigger('addSource', calendarId);
