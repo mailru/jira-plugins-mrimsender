@@ -1,19 +1,16 @@
 package ru.mail.jira.plugins.calendar.rest;
 
-import com.atlassian.jira.bc.issue.IssueService;
-import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.ApplicationUsers;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.Event;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
 import ru.mail.jira.plugins.calendar.service.CalendarEventService;
-import ru.mail.jira.plugins.calendar.service.CalendarService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -30,19 +27,12 @@ import java.util.List;
 public class RestCalendarEventService {
     private final static Logger log = LoggerFactory.getLogger(RestCalendarEventService.class);
 
-    private final CalendarService calendarService;
     private final CalendarEventService calendarEventService;
-
-    private final IssueService issueService;
     private final JiraAuthenticationContext jiraAuthenticationContext;
 
-    public RestCalendarEventService(CalendarService calendarService,
-                                    CalendarEventService calendarEventService,
-                                    IssueService issueService,
+    public RestCalendarEventService(CalendarEventService calendarEventService,
                                     JiraAuthenticationContext jiraAuthenticationContext) {
-        this.calendarService = calendarService;
         this.calendarEventService = calendarEventService;
-        this.issueService = issueService;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
     }
 
@@ -79,26 +69,16 @@ public class RestCalendarEventService {
     }
 
     @PUT
-    @Path("{calendarId}/event/{eventId}/")
+    @Path("{calendarId}/event/{eventId}/move")
     public Response moveEvent(@PathParam("calendarId") final int calendarId,
                               @PathParam("eventId") final String eventId,
-                              @QueryParam("millisDelta") final long millisDelta,
-                              @QueryParam("isDrag") final boolean isDrag) {
-        return new RestExecutor<Void>() {
+                              @FormParam("start") final String start,
+                              @FormParam("end") final String end) {
+        return new RestExecutor<Event>() {
             @Override
-            protected Void doAction() throws Exception {
+            protected Event doAction() throws Exception {
                 ApplicationUser user = jiraAuthenticationContext.getUser();
-                IssueService.IssueResult issueResult = issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId);
-                MutableIssue issue = issueResult.getIssue();
-                if (!issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)))
-                    throw new IllegalArgumentException("Can not edit issue with key => " + eventId);
-
-                Calendar calendar = calendarService.getCalendar(calendarId);
-                if (isDrag)
-                    calendarEventService.dragEvent(user, calendar, issue, millisDelta);
-                else
-                    calendarEventService.resizeEvent(user, calendar, issue, millisDelta);
-                return null;
+                return calendarEventService.moveEvent(user, calendarId, eventId, StringUtils.trimToNull(start), StringUtils.trimToNull(end));
             }
         }.getResponse();
     }

@@ -661,6 +661,10 @@ div.vis-item-content {
     font-weight: normal;
 }
 
+.vis-content .vis-delete {
+    display: none;
+}
+
 div.vis-item.vis-box {
     text-align: center;
     border-style: solid;

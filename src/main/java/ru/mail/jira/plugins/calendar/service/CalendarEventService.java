@@ -230,7 +230,6 @@ public class CalendarEventService {
                 throw new IllegalArgumentException("Bad custom field id => " + endField);
         }
         DateTimeFormatter userDateFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.ISO_8601_DATE);
-        DateTimeFormatter userDateTimeFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
 
         jqlBuilder.and().sub();
         addDateCondition(startField, startTime, endTime, jqlBuilder, userDateFormat);
@@ -243,64 +242,74 @@ public class CalendarEventService {
             addEndGreaterCondition(endField, endTime, jqlBuilder, userDateFormat);
         }
         jqlBuilder.endsub();
-        boolean dateFieldsIsDraggable = isDateFieldsDraggable(startField, endField);
-        if (log.isDebugEnabled())
-            log.debug("dateFieldsIsDraggable={}", dateFieldsIsDraggable);
 
         List<Issue> issues = searchProvider.search(jqlBuilder.buildQuery(), user, PagerFilter.getUnlimitedFilter()).getIssues();
         if (log.isDebugEnabled())
             log.debug("searchProvider.search(). query={}, user={}, issues.size()={}", new Object[]{jqlBuilder.buildQuery().toString(), user, issues.size()});
         for (Issue issue : issues) {
             try {
-                Date startDate = startCF == null ? retrieveDateByField(issue, startField) : retrieveDateByField(issue, startCF);
-                if (log.isDebugEnabled())
-                    log.debug("Issue startDate={}", startDate);
-                Date endDate = null;
-                if (StringUtils.isNotEmpty(endField))
-                    endDate = endCF == null ? retrieveDateByField(issue, endField) : retrieveDateByField(issue, endCF);
-                if (log.isDebugEnabled())
-                    log.debug("Issue endDate={}", endDate);
-
-                boolean isAllDay = isAllDayEvent(startCF, endCF, startField, endField);
-                if (log.isDebugEnabled())
-                    log.debug("Issue isAllDay={}", isAllDay);
-
-                Event event = new Event();
-                event.setCalendarId(calendar.getID());
-                event.setId(issue.getKey());
-                event.setTitle(issue.getSummary());
-                event.setColor(calendar.getColor());
-                event.setAllDay(isAllDay);
-
-                if (startDate == null && endDate == null) { // Something unbelievable
-                    log.error("Event " + issue.getKey() + " doesn't contain startDate and endDate");
-                    continue;
-                }
-
-                DateTimeFormatter startFormatter = startField.equals(DUE_DATE_KEY) || startCF != null && startCF.getCustomFieldType() instanceof DateCFType ? userDateFormat.withSystemZone() : userDateTimeFormat;
-                DateTimeFormatter endFormatter = endField != null && endField.equals(DUE_DATE_KEY) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType ? userDateFormat.withSystemZone() : userDateTimeFormat;
-                if (startDate != null) {
-                    event.setStart(startFormatter.format(startDate));
-                    if (endDate != null)
-                        if (endField.equals(DUE_DATE_KEY) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType)
-                            event.setEnd(endFormatter.format(new Date(endDate.getTime() + MILLIS_IN_DAY)));
-                        else
-                            event.setEnd(endFormatter.format(endDate));
-                } else
-                    event.setStart(endFormatter.format(endDate));
-
-                event.setStartEditable(dateFieldsIsDraggable && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
-                event.setDurationEditable(isDateFieldResizable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
-
-                if (includeIssueInfo)
-                    event.setIssueInfo(getEventInfo(calendar, issue));
-
-                result.add(event);
+                Event event = buildEvent(calendar, user, issue, includeIssueInfo, startField, startCF, endField, endCF);
+                if (event != null)
+                    result.add(event);
             } catch (Exception e) {
                 log.error(String.format("Error while trying to translate issue => %s to event", issue.getKey()), e);
             }
         }
         return result;
+    }
+
+    private Event buildEvent(Calendar calendar, ApplicationUser user, Issue issue, boolean includeIssueInfo,
+                             String startField, CustomField startCF, String endField, CustomField endCF) {
+        if (calendar == null || issue == null)
+            return null;
+        DateTimeFormatter userDateFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.ISO_8601_DATE);
+        DateTimeFormatter userDateTimeFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+        Date startDate = startCF == null ? retrieveDateByField(issue, startField) : retrieveDateByField(issue, startCF);
+        if (log.isDebugEnabled())
+            log.debug("Issue startDate={}", startDate);
+        Date endDate = null;
+        if (StringUtils.isNotEmpty(endField))
+            endDate = endCF == null ? retrieveDateByField(issue, endField) : retrieveDateByField(issue, endCF);
+        if (log.isDebugEnabled())
+            log.debug("Issue endDate={}", endDate);
+        boolean isAllDay = isAllDayEvent(startCF, endCF, startField, endField);
+        if (log.isDebugEnabled())
+            log.debug("Issue isAllDay={}", isAllDay);
+        boolean dateFieldsIsDraggable = isDateFieldsDraggable(startField, endField);
+        if (log.isDebugEnabled())
+            log.debug("dateFieldsIsDraggable={}", dateFieldsIsDraggable);
+
+        Event event = new Event();
+        event.setCalendarId(calendar.getID());
+        event.setId(issue.getKey());
+        event.setTitle(issue.getSummary());
+        event.setColor(calendar.getColor());
+        event.setAllDay(isAllDay);
+
+        if (startDate == null && endDate == null) { // Something unbelievable
+            log.error("Event " + issue.getKey() + " doesn't contain startDate and endDate");
+            return null;
+        }
+
+        DateTimeFormatter startFormatter = startField.equals(DUE_DATE_KEY) || startCF != null && startCF.getCustomFieldType() instanceof DateCFType ? userDateFormat.withSystemZone() : userDateTimeFormat;
+        DateTimeFormatter endFormatter = endField != null && endField.equals(DUE_DATE_KEY) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType ? userDateFormat.withSystemZone() : userDateTimeFormat;
+        if (startDate != null) {
+            event.setStart(startFormatter.format(startDate));
+            if (endDate != null)
+                if (endField.equals(DUE_DATE_KEY) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType)
+                    event.setEnd(endFormatter.format(new Date(endDate.getTime() + MILLIS_IN_DAY)));
+                else
+                    event.setEnd(endFormatter.format(endDate));
+        } else
+            event.setStart(endFormatter.format(endDate));
+
+        event.setStartEditable(dateFieldsIsDraggable && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
+        event.setDurationEditable(isDateFieldResizable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
+
+        if (includeIssueInfo)
+            event.setIssueInfo(getEventInfo(calendar, issue));
+
+        return event;
     }
 
     private IssueInfo getEventInfo(Calendar calendar, Issue issue) {
@@ -394,55 +403,48 @@ public class CalendarEventService {
         return endFieldForDate && startFieldForDate;
     }
 
-    public void dragEvent(ApplicationUser user, Calendar calendar, Issue issue, long millisDelta) throws Exception {
-        if (isDateFieldsNotDraggable(calendar.getEventStart(), calendar.getEventEnd()))
-            throw new IllegalArgumentException(String.format("Can not drag event with key => %s, because it contains not draggable event date field", issue.getKey()));
-
+    public Event moveEvent(ApplicationUser user, int calendarId, String eventId, String start, String end) throws Exception {
+        IssueService.IssueResult issueResult = issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId);
+        MutableIssue issue = issueResult.getIssue();
+        if (!issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)))
+            throw new IllegalArgumentException("Can not edit issue with key => " + eventId);
+        Calendar calendar = calendarService.getCalendar(calendarId);
         CustomField eventStartCF = null;
-        Timestamp eventStartCFValue = null;
-        boolean eventStartIsDueDate = false;
+        CustomField eventEndCF = null;
+        if (isDateFieldNotDraggable(calendar.getEventStart()) && isDateFieldNotDraggable(calendar.getEventEnd()))
+            throw new IllegalArgumentException(String.format("Can not move event with key => %s, because it contains not draggable event date field", issue.getKey()));
         if (calendar.getEventStart().startsWith("customfield_")) {
             eventStartCF = customFieldManager.getCustomFieldObject(calendar.getEventStart());
             if (eventStartCF == null)
                 throw new IllegalStateException("Can not find custom field => " + calendar.getEventStart()); //todo:xxx may be not stateException
-            eventStartCFValue = (Timestamp) issue.getCustomFieldValue(eventStartCF);
-        } else
-            eventStartIsDueDate = true;
-
-        CustomField eventEndCF = null;
-        Timestamp eventEndCFValue = null;
-        boolean eventEndIsDueDate = false;
-        if (StringUtils.isNotBlank(calendar.getEventEnd())) {
-            if (calendar.getEventEnd().startsWith("customfield_")) {
-                eventEndCF = customFieldManager.getCustomFieldObject(calendar.getEventEnd());
-                if (eventEndCF == null)
-                    throw new IllegalStateException("Can not find custom field => " + calendar.getEventStart()); //todo:xxx may be not stateException
-                eventEndCFValue = (Timestamp) issue.getCustomFieldValue(eventEndCF);
-            } else
-                eventEndIsDueDate = true;
+        }
+        if (calendar.getEventEnd() != null && calendar.getEventEnd().startsWith("customfield_")) {
+            eventEndCF = customFieldManager.getCustomFieldObject(calendar.getEventEnd());
+            if (eventEndCF == null)
+                throw new IllegalStateException("Can not find custom field => " + calendar.getEventEnd()); //todo:xxx may be not stateException
         }
 
-        IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
-
+        DateTimeFormatter dateTimeFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
         DateTimeFormatter datePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_PICKER);
         DateTimeFormatter dateTimePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_TIME_PICKER);
 
-        if (eventStartIsDueDate) {
-            Date newDueDate = getNewDate(issue.getDueDate(), millisDelta);
-            issueInputParams.setDueDate(datePickerFormat.format(newDueDate));
-        } else if (eventStartCFValue != null) {
-            Date value = getNewDate(eventStartCFValue, millisDelta);
-            DateTimeFormatter formatter = eventStartCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
-            issueInputParams.addCustomFieldValue(eventStartCF.getIdAsLong(), formatter.format(value));
-        }
+        IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
 
-        if (eventEndIsDueDate) {
-            Date newDueDate = getNewDate(issue.getDueDate(), millisDelta);
-            issueInputParams.setDueDate(datePickerFormat.format(newDueDate));
-        } else if (eventEndCF != null && eventEndCFValue != null) {
-            Date value = getNewDate(eventEndCFValue, millisDelta);
-            DateTimeFormatter formatter = eventEndCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
-            issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), formatter.format(value));
+        if (start != null && isDateFieldResizable(calendar.getEventStart())) {
+            Date startDate = dateTimeFormat.parse(start);
+            if (eventStartCF != null) {
+                DateTimeFormatter formatter = eventStartCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
+                issueInputParams.addCustomFieldValue(eventStartCF.getIdAsLong(), formatter.format(startDate));
+            } else
+                issueInputParams.setDueDate(datePickerFormat.format(startDate));
+        }
+        if (end != null && isDateFieldResizable(calendar.getEventEnd()) && !calendar.getEventStart().equals(calendar.getEventEnd())) {
+            Date endDate = dateTimeFormat.parse(end);
+            if (eventEndCF != null) {
+                DateTimeFormatter formatter = eventEndCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
+                issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), formatter.format(endDate));
+            } else
+                issueInputParams.setDueDate(datePickerFormat.format(endDate));
         }
 
         IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(user.getDirectoryUser(), issue.getId(), issueInputParams);
@@ -452,74 +454,8 @@ public class CalendarEventService {
         IssueService.IssueResult updateResult = issueService.update(user.getDirectoryUser(), updateValidationResult);
         if (!updateResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
-    }
 
-    private Date getNewDate(Date date, long millisDelta) {
-        return new Date(date.getTime() + millisDelta);
-    }
-
-    public void resizeEvent(ApplicationUser user, Calendar calendar, Issue issue, long millisDelta) throws Exception {
-        if (isDateFieldNotDraggable(calendar.getEventEnd()))
-            throw new IllegalArgumentException(String.format("Can not resize event with key => %s, because it contains not draggable end field", issue.getKey()));
-
-        CustomField eventStartCF;
-        Date eventStartDateValue;
-        if (calendar.getEventStart().startsWith("customfield_")) {
-            eventStartCF = customFieldManager.getCustomFieldObject(calendar.getEventStart());
-            if (eventStartCF == null)
-                throw new IllegalStateException("Can not find custom field => " + calendar.getEventStart()); //todo:xxx may be not stateException
-            eventStartDateValue = (Timestamp) issue.getCustomFieldValue(eventStartCF);
-        } else {
-            eventStartDateValue = retrieveDateByField(issue, calendar.getEventStart());
-        }
-
-        if (eventStartDateValue == null)
-            throw new IllegalArgumentException("Can not resize event with empty start date field. Issue => " + issue.getKey());
-
-
-        CustomField eventEndCF = null;
-        Date eventEndDateValue = null;
-        boolean eventEndIsDueDate = false;
-        if (StringUtils.isNotEmpty(calendar.getEventEnd())) {
-            if (calendar.getEventEnd().startsWith("customfield_")) {
-                eventEndCF = customFieldManager.getCustomFieldObject(calendar.getEventEnd());
-                if (eventEndCF == null)
-                    throw new IllegalStateException("Can not find custom field => " + calendar.getEventStart()); //todo:xxx may be not stateException
-                eventEndDateValue = (Timestamp) issue.getCustomFieldValue(eventEndCF);
-            } else {
-                eventEndIsDueDate = true;
-                eventEndDateValue = retrieveDateByField(issue, calendar.getEventEnd());
-            }
-        }
-
-        if (eventEndDateValue == null)
-            throw new IllegalArgumentException("Can not resize event with empty end date field. Issue => " + issue.getKey());
-
-        if (Math.abs(millisDelta) < MILLIS_IN_DAY && (eventEndIsDueDate || eventEndCF != null && eventEndCF.getCustomFieldType() instanceof DateCFType)) {
-            return;
-        }
-
-        IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
-
-        DateTimeFormatter datePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_PICKER);
-        DateTimeFormatter dateTimePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_TIME_PICKER);
-
-        if (eventEndIsDueDate) {
-            Date newDueDate = getNewDate(issue.getDueDate(), millisDelta);
-            issueInputParams.setDueDate(datePickerFormat.format(newDueDate));
-        } else {
-            DateTimeFormatter formatter = eventEndCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
-            Date value = getNewDate(eventEndDateValue, millisDelta);
-            issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), formatter.format(value));
-        }
-
-        IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(ApplicationUsers.toDirectoryUser(user), issue.getId(), issueInputParams);
-        if (!updateValidationResult.isValid())
-            throw new Exception(CommonUtils.formatErrorCollection(updateValidationResult.getErrorCollection()));
-
-        IssueService.IssueResult updateResult = issueService.update(ApplicationUsers.toDirectoryUser(user), updateValidationResult);
-        if (!updateResult.isValid())
-            throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
+        return buildEvent(calendar, user, issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId).getIssue(), false, calendar.getEventStart(), eventStartCF, calendar.getEventEnd(), eventEndCF);
     }
 
     private Date retrieveDateByField(Issue issue, String field) {
