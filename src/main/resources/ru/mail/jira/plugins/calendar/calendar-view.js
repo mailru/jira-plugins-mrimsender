@@ -25,14 +25,15 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             this.fullscreenMode = !this.fullscreenMode;
             if (this.fullscreenMode) {
                 $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer').slideUp(400);
-                $('.aui-page-panel-nav').animate({width: 'toggle', 'padding': 'toggle'}, 400);
-            } else
+                $('.aui-page-panel-nav').animate({width: 'toggle', 'padding': 'toggle'}, 400, $.proxy(function() {
+                    if (this.getViewType() == 'timeline')
+                        this.$el.fullCalendar('getView').timeline.setOptions({height: $(window).height() - 93 + 'px'});
+                }, this));
+            } else {
                 $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer,.aui-page-panel-nav').fadeIn(400);
-
-            if (this.getViewType() == 'timeline') {
-                var containerHeight = $(document).height();
-                var timeline = this.$el.fullCalendar('getView').timeline;
-                timeline.setOptions({height: $('body').hasClass('mailru-calendar-fullscreen') ? containerHeight - 93 + 'px' : '450px'});
+                $(window).trigger('resize');
+                if (this.getViewType() == 'timeline')
+                    this.$el.fullCalendar('getView').timeline.setOptions({height: '450px'});
             }
         },
         _canButtonVisible: function(name) {

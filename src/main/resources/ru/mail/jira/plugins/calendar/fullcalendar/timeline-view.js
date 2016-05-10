@@ -194,8 +194,8 @@
                         id: event.calendarId + event.id,
                         eventId: event.id,
                         calendarId: event.calendarId,
-                        start: event.start.toDate(),
-                        end: event.end && event.end.toDate(),
+                        start: event.start.clone().local().toDate(),
+                        end: event.end && event.end.clone().local().toDate(),
                         content: event.id + ' ' + event.title,
                         className: this._getClassForColor(event.color)
                     };
