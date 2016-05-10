@@ -35,7 +35,6 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                 if (this.getViewType() == 'timeline')
                     this.$el.fullCalendar('getView').timeline.setOptions({height: '450px'});
             }
-            }
         },
         _canButtonVisible: function(name) {
             return this.customsButtonOptions[name] == undefined || this.customsButtonOptions[name].visible !== false;

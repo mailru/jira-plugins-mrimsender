@@ -32,6 +32,7 @@
 
     <component key="calendar-event-service" class="ru.mail.jira.plugins.calendar.service.CalendarEventService" />
     <component key="calendar-service" class="ru.mail.jira.plugins.calendar.service.CalendarServiceImpl" />
+    <component key="jira-deprecated-service" class="ru.mail.jira.plugins.calendar.service.JiraDeprecatedService" />
     <component key="userData-service" class="ru.mail.jira.plugins.calendar.service.UserDataService" />
     <component key="userCalendar-service" class="ru.mail.jira.plugins.calendar.service.UserCalendarServiceImpl" />
     <component key="permission-service" class="ru.mail.jira.plugins.calendar.service.PermissionServiceImpl" />
@@ -91,6 +92,7 @@
         <dependency>com.atlassian.auiplugin:aui-inline-dialog2</dependency>
         <dependency>com.atlassian.auiplugin:aui-flag</dependency>
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
+        <dependency>jira.webresources:jqlautocomplete</dependency>
         <dependency>ru.mail.jira.plugins.mailrucal:mailru-calendar-soy-templates</dependency>
 
         <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>

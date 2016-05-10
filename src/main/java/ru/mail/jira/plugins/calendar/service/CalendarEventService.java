@@ -29,7 +29,6 @@ import com.atlassian.jira.jql.builder.JqlClauseBuilder;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
 import com.atlassian.jira.project.version.Version;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.ApplicationUsers;
 import com.atlassian.jira.web.bean.PagerFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -40,7 +39,6 @@ import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
 import ru.mail.jira.plugins.commons.CommonUtils;
 
 import javax.annotation.Nullable;
-import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -64,10 +62,10 @@ public class CalendarEventService {
     private DateTimeFormatter dateTimeFormatter;
     private FieldLayoutManager fieldLayoutManager;
     private IssueService issueService;
+    private JiraDeprecatedService jiraDeprecatedService;
     private RendererManager rendererManager;
     private SearchRequestService searchRequestService;
     private SearchProvider searchProvider;
-    private SearchService searchService;
 
     public void setCalendarService(CalendarService calendarService) {
         this.calendarService = calendarService;
@@ -89,6 +87,10 @@ public class CalendarEventService {
         this.issueService = issueService;
     }
 
+    public void setJiraDeprecatedService(JiraDeprecatedService jiraDeprecatedService) {
+        this.jiraDeprecatedService = jiraDeprecatedService;
+    }
+
     public void setRendererManager(RendererManager rendererManager) {
         this.rendererManager = rendererManager;
     }
@@ -99,10 +101,6 @@ public class CalendarEventService {
 
     public void setSearchProvider(SearchProvider searchProvider) {
         this.searchProvider = searchProvider;
-    }
-
-    public void setSearchService(SearchService searchService) {
-        this.searchService = searchService;
     }
 
     public List<Event> findEvents(final int calendarId,
@@ -138,7 +136,7 @@ public class CalendarEventService {
 
     public IssueInfo getEventInfo(ApplicationUser user, int calendarId, String eventId) throws GetException {
         Calendar calendar = calendarService.getCalendar(calendarId);
-        IssueService.IssueResult issueResult = issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId);
+        IssueService.IssueResult issueResult = jiraDeprecatedService.issueService.getIssue(user, eventId);
         MutableIssue issue = issueResult.getIssue();
         return getEventInfo(calendar, issue);
     }
@@ -192,7 +190,7 @@ public class CalendarEventService {
             log.error("JQL => {} is null.", jql);
             return new ArrayList<Event>(0);
         }
-        SearchService.ParseResult parseResult = searchService.parseQuery(ApplicationUsers.toDirectoryUser(user), jql);
+        SearchService.ParseResult parseResult = jiraDeprecatedService.searchService.parseQuery(user, jql);
 
         if (parseResult.isValid()) {
             JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder(parseResult.getQuery());
@@ -229,7 +227,7 @@ public class CalendarEventService {
             if (endCF == null)
                 throw new IllegalArgumentException("Bad custom field id => " + endField);
         }
-        DateTimeFormatter userDateFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.ISO_8601_DATE);
+        DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
 
         jqlBuilder.and().sub();
         addDateCondition(startField, startTime, endTime, jqlBuilder, userDateFormat);
@@ -262,8 +260,8 @@ public class CalendarEventService {
                              String startField, CustomField startCF, String endField, CustomField endCF) {
         if (calendar == null || issue == null)
             return null;
-        DateTimeFormatter userDateFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.ISO_8601_DATE);
-        DateTimeFormatter userDateTimeFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+        DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
+        DateTimeFormatter userDateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
         Date startDate = startCF == null ? retrieveDateByField(issue, startField) : retrieveDateByField(issue, startCF);
         if (log.isDebugEnabled())
             log.debug("Issue startDate={}", startDate);
@@ -303,8 +301,8 @@ public class CalendarEventService {
         } else
             event.setStart(endFormatter.format(endDate));
 
-        event.setStartEditable(dateFieldsIsDraggable && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
-        event.setDurationEditable(isDateFieldResizable(endField) && startDate != null && endDate != null && issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)));
+        event.setStartEditable(dateFieldsIsDraggable && jiraDeprecatedService.issueService.isEditable(issue, user));
+        event.setDurationEditable(isDateFieldResizable(endField) && startDate != null && endDate != null && jiraDeprecatedService.issueService.isEditable(issue, user));
 
         if (includeIssueInfo)
             event.setIssueInfo(getEventInfo(calendar, issue));
@@ -404,9 +402,9 @@ public class CalendarEventService {
     }
 
     public Event moveEvent(ApplicationUser user, int calendarId, String eventId, String start, String end) throws Exception {
-        IssueService.IssueResult issueResult = issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId);
+        IssueService.IssueResult issueResult = jiraDeprecatedService.issueService.getIssue(user, eventId);
         MutableIssue issue = issueResult.getIssue();
-        if (!issueService.isEditable(issue, ApplicationUsers.toDirectoryUser(user)))
+        if (!jiraDeprecatedService.issueService.isEditable(issue, user))
             throw new IllegalArgumentException("Can not edit issue with key => " + eventId);
         Calendar calendar = calendarService.getCalendar(calendarId);
         CustomField eventStartCF = null;
@@ -424,9 +422,9 @@ public class CalendarEventService {
                 throw new IllegalStateException("Can not find custom field => " + calendar.getEventEnd()); //todo:xxx may be not stateException
         }
 
-        DateTimeFormatter dateTimeFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-        DateTimeFormatter datePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_PICKER);
-        DateTimeFormatter dateTimePickerFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.DATE_TIME_PICKER);
+        DateTimeFormatter dateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+        DateTimeFormatter datePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.DATE_PICKER);
+        DateTimeFormatter dateTimePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.DATE_TIME_PICKER);
 
         IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
 
@@ -447,15 +445,15 @@ public class CalendarEventService {
                 issueInputParams.setDueDate(datePickerFormat.format(endDate));
         }
 
-        IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(user.getDirectoryUser(), issue.getId(), issueInputParams);
+        IssueService.UpdateValidationResult updateValidationResult = jiraDeprecatedService.issueService.validateUpdate(user, issue.getId(), issueInputParams);
         if (!updateValidationResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateValidationResult.getErrorCollection()));
 
-        IssueService.IssueResult updateResult = issueService.update(user.getDirectoryUser(), updateValidationResult);
+        IssueService.IssueResult updateResult = jiraDeprecatedService.issueService.update(user, updateValidationResult);
         if (!updateResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
 
-        return buildEvent(calendar, user, issueService.getIssue(ApplicationUsers.toDirectoryUser(user), eventId).getIssue(), false, calendar.getEventStart(), eventStartCF, calendar.getEventEnd(), eventEndCF);
+        return buildEvent(calendar, user, jiraDeprecatedService.issueService.getIssue(user, eventId).getIssue(), false, calendar.getEventStart(), eventStartCF, calendar.getEventEnd(), eventEndCF);
     }
 
     private Date retrieveDateByField(Issue issue, String field) {

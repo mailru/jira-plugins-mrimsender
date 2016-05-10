@@ -14,7 +14,6 @@ import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.ApplicationUsers;
 import com.atlassian.jira.user.util.UserManager;
 import net.java.ao.ActiveObjectsException;
 import net.java.ao.Query;
@@ -32,16 +31,18 @@ public class PermissionServiceImpl implements PermissionService {
     private final AvatarService avatarService;
     private final GlobalPermissionManager globalPermissionManager;
     private final GroupManager groupManager;
+    private final JiraDeprecatedService jiraDeprecatedService;
     private final PermissionManager permissionManager;
     private final ProjectManager projectManager;
     private final ProjectRoleManager projectRoleManager;
     private final UserManager userManager;
 
-    public PermissionServiceImpl(ActiveObjects ao, AvatarService avatarService, GlobalPermissionManager globalPermissionManager, GroupManager groupManager, PermissionManager permissionManager, ProjectManager projectManager, ProjectRoleManager projectRoleManager, UserManager userManager) {
+    public PermissionServiceImpl(ActiveObjects ao, AvatarService avatarService, GlobalPermissionManager globalPermissionManager, GroupManager groupManager, JiraDeprecatedService jiraDeprecatedService, PermissionManager permissionManager, ProjectManager projectManager, ProjectRoleManager projectRoleManager, UserManager userManager) {
         this.ao = ao;
         this.avatarService = avatarService;
         this.globalPermissionManager = globalPermissionManager;
         this.groupManager = groupManager;
+        this.jiraDeprecatedService = jiraDeprecatedService;
         this.permissionManager = permissionManager;
         this.projectManager = projectManager;
         this.projectRoleManager = projectRoleManager;
@@ -83,7 +84,7 @@ public class PermissionServiceImpl implements PermissionService {
                             break;
                         case GROUP:
                             Group group = groupManager.getGroup(subject);
-                            if (group != null && groupManager.isUserInGroup(ApplicationUsers.toDirectoryUser(user), group))
+                            if (group != null && jiraDeprecatedService.groupManager.isUserInGroup(user, group))
                                 return true;
                             break;
                         case PROJECT_ROLE:
@@ -117,7 +118,7 @@ public class PermissionServiceImpl implements PermissionService {
                     break;
                 case GROUP:
                     Group group = groupManager.getGroup(subject);
-                    if (group != null && groupManager.isUserInGroup(ApplicationUsers.toDirectoryUser(user), group))
+                    if (group != null && jiraDeprecatedService.groupManager.isUserInGroup(user, group))
                         return true;
                     break;
                 case PROJECT_ROLE:

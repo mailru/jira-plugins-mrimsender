@@ -18,7 +18,6 @@ import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.ApplicationUsers;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.util.MessageSet;
@@ -32,7 +31,6 @@ import ru.mail.jira.plugins.calendar.model.UserCalendar;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarSettingDto;
 import ru.mail.jira.plugins.calendar.rest.dto.PermissionItemDto;
-import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.commons.RestFieldException;
 
 import javax.annotation.Nullable;
@@ -81,13 +79,13 @@ public class CalendarServiceImpl implements CalendarService {
     private CustomFieldManager customFieldManager;
     private I18nHelper i18nHelper;
     private GroupManager groupManager;
+    private JiraDeprecatedService jiraDeprecatedService;
     private PermissionManager permissionManager;
     private PermissionService permissionService;
     private ProjectManager projectManager;
     private ProjectRoleManager projectRoleManager;
     private SearchRequestService searchRequestService;
     private SearchRequestManager searchRequestManager;
-    private SearchService searchService;
     private UserCalendarService userCalendarService;
     private UserManager userManager;
 
@@ -101,6 +99,10 @@ public class CalendarServiceImpl implements CalendarService {
 
     public void setI18nHelper(I18nHelper i18nHelper) {
         this.i18nHelper = i18nHelper;
+    }
+
+    public void setJiraDeprecatedService(JiraDeprecatedService jiraDeprecatedService) {
+        this.jiraDeprecatedService = jiraDeprecatedService;
     }
 
     public void setPermissionManager(PermissionManager permissionManager) {
@@ -121,10 +123,6 @@ public class CalendarServiceImpl implements CalendarService {
 
     public void setSearchRequestManager(SearchRequestManager searchRequestManager) {
         this.searchRequestManager = searchRequestManager;
-    }
-
-    public void setSearchService(SearchService searchService) {
-        this.searchService = searchService;
     }
 
     public void setUserCalendarService(UserCalendarService userCalendarService) {
@@ -407,10 +405,10 @@ public class CalendarServiceImpl implements CalendarService {
                         throw new RestFieldException(serviceContext.getErrorCollection().getErrorMessages().toString(), "source");
                 }
             } else if (calendarSettingDto.getSelectedSourceType().equals("jql")) {
-                SearchService.ParseResult parseResult = searchService.parseQuery(ApplicationUsers.toDirectoryUser(user), calendarSettingDto.getSelectedSourceValue());
+                SearchService.ParseResult parseResult = jiraDeprecatedService.searchService.parseQuery(user, calendarSettingDto.getSelectedSourceValue());
                 if (!parseResult.isValid())
                     throw new RestFieldException(StringUtils.join(parseResult.getErrors().getErrorMessages(), "\n"), "source");
-                MessageSet validateMessages = searchService.validateQuery(ApplicationUsers.toDirectoryUser(user), parseResult.getQuery());
+                MessageSet validateMessages = jiraDeprecatedService.searchService.validateQuery(user, parseResult.getQuery());
                 if (validateMessages.hasAnyErrors())
                     throw new RestFieldException(StringUtils.join(validateMessages.getErrorMessages(), "\n"), "source");
             }

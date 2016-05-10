@@ -26,7 +26,6 @@ import com.atlassian.jira.sharing.search.SharedEntitySearchParameters;
 import com.atlassian.jira.sharing.search.SharedEntitySearchParametersBuilder;
 import com.atlassian.jira.sharing.search.SharedEntitySearchResult;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.ApplicationUsers;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +37,7 @@ import ru.mail.jira.plugins.calendar.rest.dto.SelectItemDto;
 import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.CalendarServiceImpl;
 import ru.mail.jira.plugins.calendar.service.PermissionUtils;
+import ru.mail.jira.plugins.calendar.service.JiraDeprecatedService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.GET;
@@ -65,6 +65,7 @@ public class RestConfigurationService {
     private final GroupManager groupManager;
     private final I18nHelper i18nHelper;
     private final JiraAuthenticationContext jiraAuthenticationContext;
+    private final JiraDeprecatedService jiraDeprecatedService;
     private final ProjectManager projectManager;
     private final ProjectService projectService;
     private final ProjectRoleManager projectRoleManager;
@@ -75,7 +76,7 @@ public class RestConfigurationService {
     public RestConfigurationService(ApplicationProperties applicationProperties, AvatarService avatarService, CustomFieldManager customFieldManager,
                                     GlobalPermissionManager globalPermissionManager, GroupManager groupManager, I18nHelper i18nHelper,
                                     JiraAuthenticationContext jiraAuthenticationContext,
-                                    ProjectManager projectManager, ProjectService projectService,
+                                    JiraDeprecatedService jiraDeprecatedService, ProjectManager projectManager, ProjectService projectService,
                                     ProjectRoleManager projectRoleManager, SearchRequestService searchRequestService, SearchService searchService, UserManager userManager) {
         this.applicationProperties = applicationProperties;
         this.avatarService = avatarService;
@@ -84,6 +85,7 @@ public class RestConfigurationService {
         this.groupManager = groupManager;
         this.i18nHelper = i18nHelper;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
+        this.jiraDeprecatedService = jiraDeprecatedService;
         this.projectManager = projectManager;
         this.projectService = projectService;
         this.projectRoleManager = projectRoleManager;
@@ -182,9 +184,9 @@ public class RestConfigurationService {
                 ApplicationUser user = jiraAuthenticationContext.getUser();
                 Map<String, Object> result = new HashMap<String, Object>();
                 if (StringUtils.isNotBlank(jql)) {
-                    SearchService.ParseResult parseResult = searchService.parseQuery(ApplicationUsers.toDirectoryUser(user), jql);
+                    SearchService.ParseResult parseResult = jiraDeprecatedService.searchService.parseQuery(user, jql);
                     if (parseResult.isValid())
-                        result.put("issueCount", searchService.searchCount(ApplicationUsers.toDirectoryUser(user), parseResult.getQuery()));
+                        result.put("issueCount", jiraDeprecatedService.searchService.searchCount(user, parseResult.getQuery()));
                 }
                 return result;
             }

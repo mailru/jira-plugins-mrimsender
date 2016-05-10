@@ -29,6 +29,7 @@ import ru.mail.jira.plugins.calendar.rest.dto.Event;
 import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.CalendarService;
 import ru.mail.jira.plugins.calendar.service.UserDataService;
+import ru.mail.jira.plugins.calendar.service.JiraDeprecatedService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.DELETE;
@@ -55,6 +56,7 @@ public class RestCalendarService {
     private final DateTimeFormatter dateTimeFormatter;
     private final I18nHelper i18nHelper;
     private final JiraAuthenticationContext jiraAuthenticationContext;
+    private final JiraDeprecatedService jiraDeprecatedService;
     private final UserDataService userDataService;
     private final UserManager userManager;
 
@@ -64,12 +66,13 @@ public class RestCalendarService {
                                DateTimeFormatter dateTimeFormatter,
                                I18nHelper i18nHelper,
                                JiraAuthenticationContext jiraAuthenticationContext,
-                               UserDataService userDataService, UserManager userManager) {
+                               JiraDeprecatedService jiraDeprecatedService, UserDataService userDataService, UserManager userManager) {
         this.calendarService = calendarService;
         this.calendarEventService = calendarEventService;
         this.dateTimeFormatter = dateTimeFormatter;
         this.i18nHelper = i18nHelper;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
+        this.jiraDeprecatedService = jiraDeprecatedService;
         this.userDataService = userDataService;
         this.userManager = userManager;
     }
@@ -160,7 +163,7 @@ public class RestCalendarService {
                 if (user == null || !user.isActive())
                     return null;
 
-                DateTimeFormatter userDateTimeFormat = dateTimeFormatter.forUser(user.getDirectoryUser()).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+                DateTimeFormatter userDateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
                 final net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
                 calendar.getProperties().add(new ProdId("-//MailRu Calendar/" + icalUid + "/iCal4j 1.0//EN"));
                 calendar.getProperties().add(Version.VERSION_2_0);

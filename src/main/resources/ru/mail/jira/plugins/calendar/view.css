@@ -512,17 +512,17 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     color: #fff !important;
 }
 
-#calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon {
+#calendar-dialog-permission-table .calendar-dialog-permission-table-action a.aui-icon {
     cursor: pointer;
     color: #bbb;
     margin: 1px 0 0 5px;
 }
 
-#calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon:hover {
+#calendar-dialog-permission-table .calendar-dialog-permission-table-action a.aui-icon:hover {
     color: #505050;
 }
 
-#calendar-dialog-permission-table .calendar-dialog-permission-table-action span.aui-icon[disabled] {
+#calendar-dialog-permission-table .calendar-dialog-permission-table-action a.aui-icon[disabled] {
     visibility: hidden !important;
 }
 
