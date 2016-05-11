@@ -51,6 +51,10 @@
             <transformer key="soyTransformer"/>
         </transformation>
         <resource type="download" name="templates.soy.js" location="ru/mail/jira/plugins/calendar/templates.soy"/>
+        <resource type="download" name="calendar-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/calendar-dialog.soy"/>
+        <resource type="download" name="confirm-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/confirm-dialog.soy"/>
+        <resource type="download" name="feed-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/feed-dialog.soy"/>
+        <resource type="download" name="import-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/import-dialog.soy"/>
     </web-resource>
 
     <web-resource key="calendar-gadget-resources">

@@ -1,0 +1,42 @@
+{namespace JIRA.Templates.Plugins.MailRuCalendar.ImportDialog}
+
+/**
+* Import dialog
+*/
+{template .dialog}
+    <section role="dialog" id="mailrucalendar-calendar-import-dialog" class="aui-layer aui-dialog2" aria-hidden="true">
+        <header class="aui-dialog2-header">
+            <h2 class="aui-dialog2-header-main">{getText( 'ru.mail.jira.plugins.calendar.addSharedCalendar' )}</h2>
+            <div class="aui-dialog2-header-secondary">
+                <form class="aui top-label ajs-dirty-warning-exempt aui-quicksearch" autocomplete="off">
+                    <input type="text" class="text" id="mailrucalendar-query" maxlength="254" placeholder="{getText( 'common.concepts.search' )}"></input>
+                </form>
+            </div>
+        </header>
+        <div class="aui-dialog2-content">
+            <div id="mailrucalendar-query-no-result" class="hidden">
+                {getText( 'ru.mail.jira.plugins.calendar.import.dialog.noResultFound' )} <span></span>
+            </div>
+            <table id="mailrucalendar-import-calendars-table" class="aui aui-table-rowhover" style="display:none;">
+                <thead>
+                <tr>
+                    <th class="mailrucalendar-table-select-column"></th>
+                    <th>{getText( 'ru.mail.jira.plugins.calendar.view.header' )}</th>
+                    <th>{getText( 'admin.common.words.users' )}</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <div id="mailrucalendar-no-calendars-for-import" class="aui-message aui-message-generic hidden">
+                {getText( 'ru.mail.jira.plugins.calendar.import.dialog.noCalendarsForImport' )} <span></span>
+            </div>
+        </div>
+        <footer class="aui-dialog2-footer" style="width: 100%">
+            <div class="aui-dialog2-footer-actions">
+                <button id="calendar-import-dialog-ok" class="aui-button aui-button-primary" disabled>{getText( 'common.forms.add' )}</button>
+                <button id="calendar-import-dialog-cancel" class="aui-button aui-button-link">{getText( 'common.words.cancel' )}</button>
+            </div>
+        </footer>
+    </section>
+{/template}

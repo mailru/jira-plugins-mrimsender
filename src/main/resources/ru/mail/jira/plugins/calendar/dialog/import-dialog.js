@@ -1,21 +1,25 @@
 define('calendar/import-dialog', ['jquery', 'underscore', 'backbone'], function($, _, Backbone) {
     return Backbone.View.extend({
-        el: '#mailrucalendar-calendar-import-dialog',
         events: {
             'click #calendar-import-dialog-ok': 'save',
             'click #calendar-import-dialog-cancel': 'hide',
             'click #mailrucalendar-calendar-import-dialog tbody tr': 'selectRow',
             'keyup #mailrucalendar-query': '_fillSearchResultTable'
         },
+        render: function() {
+            this.$el.html(JIRA.Templates.Plugins.MailRuCalendar.ImportDialog.dialog());
+            $(document.body).append(this.$el);
+            this.setElement($('#mailrucalendar-calendar-import-dialog').unwrap());
+            return this;
+        },
         initialize: function() {
+            this.render();
+
             this.dialog = AJS.dialog2('#mailrucalendar-calendar-import-dialog');
             this.queryField = this.$('#mailrucalendar-query');
-            this.queryFieldContainer = this.$('form');
             this.table = this.$('#mailrucalendar-import-calendars-table');
             this.tableContent = this.table.find('tbody');
-            this.adminMessage = this.$('#mailrucalendar-admin-message');
             this.noResult = this.$('#mailrucalendar-query-no-result');
-            this.noCalendars = this.$('#mailrucalendar-no-calendars-for-import');
             this.addBtn = this.$('#calendar-import-dialog-ok');
             this.selectedIds = [];
 
@@ -23,32 +27,19 @@ define('calendar/import-dialog', ['jquery', 'underscore', 'backbone'], function(
             this.$('form').submit($.proxy(this._onFormSubmit, this));
         },
         destroy: function() {
-            this.stopListening();
-            this.undelegateEvents();
-            this.dialog.off();
-            this.$('form').off();
-
-            this.queryField.val('');
-            this.tableContent.empty();
+            this.remove();
         },
         hide: function() {
             this.dialog.hide();
         },
         show: function() {
-            this.noCalendars.hide();
-            this.adminMessage.show();
-            this.queryFieldContainer.show();
-            this.table.hide();
-            this.noResult.hide();
-            this.addBtn.attr('disabled', 'disabled');
             this.dialog.show();
             if (this.collection.findWhere({favorite: false})) {
                 this._fillSearchResultTable();
                 this.queryField.select();
             } else {
-                this.adminMessage.hide();
-                this.queryFieldContainer.hide();
-                this.noCalendars.show();
+                this.$('form').addClass('hidden');
+                this.$('#mailrucalendar-no-calendars-for-import').removeClass('hidden');
             }
         },
         save: function() {
@@ -84,7 +75,7 @@ define('calendar/import-dialog', ['jquery', 'underscore', 'backbone'], function(
         _onStartSearch: function() {
             this.table.hide();
             this.tableContent.empty();
-            this.noResult.hide();
+            this.noResult.addClass('hidden');
             this.selectedIds = [];
         },
         _fillSearchResultTable: function() {
@@ -107,7 +98,7 @@ define('calendar/import-dialog', ['jquery', 'underscore', 'backbone'], function(
                 this.tableContent.append(rows);
                 this.table.fadeIn(250);
             } else {
-                this.noResult.show();
+                this.noResult.removeClass('hidden');
                 this.noResult.find('span').text(query);
             }
             this.tableData = result;

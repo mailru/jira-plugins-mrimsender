@@ -1,13 +1,20 @@
 define('calendar/feed-dialog', ['jquery', 'underscore', 'backbone', 'calendar/confirm-dialog'], function($, _, Backbone, ConfirmDialog) {
     return Backbone.View.extend({
-        el: '#calendar-feed-dialog',
         events: {
             'click #calendar-feed-dialog-ok': 'hide',
             'click #calendar-feed-dialog-delete': '_resetLink',
             'change #calendar-feed-dialog-calendars': '_updateCalendarFeedUrl'
         },
+        render: function() {
+            this.$el.html(JIRA.Templates.Plugins.MailRuCalendar.FeedDialog.dialog());
+            $(document.body).append(this.$el);
+            this.setElement($('#calendar-feed-dialog').unwrap());
+            return this;
+        },
         initialize: function() {
-            this.clipboard = new Clipboard('#url-field-copy');
+            this.render();
+
+            new Clipboard('#url-field-copy');
             this.dialog = AJS.dialog2('#calendar-feed-dialog');
             this.$calendarSelect = this.$('#calendar-feed-dialog-calendars');
             this.$urlField = this.$('.url-field');
@@ -18,11 +25,7 @@ define('calendar/feed-dialog', ['jquery', 'underscore', 'backbone', 'calendar/co
             this.$('form').submit($.proxy(this._onFormSubmit, this));
         },
         destroy: function() {
-            this.clipboard.destroy();
-            this.stopListening();
-            this.undelegateEvents();
-            this.dialog.off();
-            this.$('form').off();
+            this.remove();
         },
         /* Public methods */
         hide: function() {

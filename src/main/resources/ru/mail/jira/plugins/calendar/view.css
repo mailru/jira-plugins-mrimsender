@@ -493,7 +493,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     min-width: 195px;
 }
 
-#calendar-dialog-permission-table tbody a.aui-lozenge {
+#calendar-dialog-permission-table td a.aui-lozenge {
     cursor: pointer;
     margin-right: 5px;
     float: left;

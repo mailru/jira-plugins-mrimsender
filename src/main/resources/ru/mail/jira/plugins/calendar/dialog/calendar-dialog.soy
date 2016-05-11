@@ -1,0 +1,378 @@
+{namespace JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog}
+
+/**
+ * Calendar dialog
+ * @param model
+ * @param canAdmin
+ */
+{template .dialog}
+    <section role="dialog" id="calendar-dialog" class="aui-layer aui-dialog2" aria-hidden="true" data-aui-modal="true">
+        <header class="aui-dialog2-header">
+            <h2 id="calendar-dialog-header" class="aui-dialog2-header-main">{$model.id ? getText('ru.mail.jira.plugins.calendar.editCalendar') : getText('ru.mail.jira.plugins.calendar.createCalendar')}</h2>
+        </header>
+        <div class="aui-dialog2-content">
+            <nav class="aui-navgroup aui-navgroup-vertical">
+                <div class="aui-navgroup-inner">
+                    <ul class="aui-nav">
+                        <li class="aui-nav-selected">
+                            <a href="#calendar-dialog-common-tab">{getText( 'ru.mail.jira.plugins.calendar.common.general' )}</a>
+                        </li>
+                        <li>
+                            <a href="#calendar-dialog-source-tab">{getText( 'ru.mail.jira.plugins.calendar.dialog.eventsTab' )}</a>
+                        </li>
+                        <li>
+                            <a href="#calendar-dialog-permissions-tab">{getText( 'admin.common.words.permissions' )}</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <div id="calendar-dialog-common-tab" class="calendar-dialog-tab">
+                <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form">
+                    <input class="hidden" type="submit"/>
+                    <div id="calendar-dialog-error-panel" class="aui-message aui-message-error hidden"></div>
+                    <div class="field-group">
+                        <label for="calendar-dialog-name">
+                            <span class="aui-icon icon-required"></span>
+                            {getText( 'common.words.name' )}
+                        </label>
+                        <input class="text medium-long-field" type="text" id="calendar-dialog-name" maxlength="254" {not $canAdmin ? 'disabled' : ''}>
+                        <div id="calendar-dialog-name-error" class="error hidden"></div>
+                    </div>
+                    <div class="field-group">
+                        <label for="calendar-dialog-color">
+                            <span class="aui-icon icon-required"></span>
+                            {getText( 'admin.common.words.color' )}
+                        </label>
+                        <select class="select short-field calendar-dialog-color calendar-dialog-select" id="calendar-dialog-color" {not $canAdmin ? 'disabled' : ''}>
+                            <option value="#5dab3e">#5dab3e</option>
+                            <option value="#f6c342">#f6c342</option>
+                            <option value="#205081">#205081</option>
+                            <option value="#333333">#333333</option>
+                            <option value="#ebf2f9">#ebf2f9</option>
+                            <option value="#707070">#707070</option>
+                            <option value="#d7ad43">#d7ad43</option>
+                            <option value="#3e6894">#3e6894</option>
+                            <option value="#c9dad8">#c9dad8</option>
+                            <option value="#588e87">#588e87</option>
+                            <option value="#e18434">#e18434</option>
+                            <option value="#83382A">#83382A</option>
+                            <option value="#D04A32">#D04A32</option>
+                            <option value="#3C2B28">#3C2B28</option>
+                            <option value="#87A4C0">#87A4C0</option>
+                            <option value="#A89B95">#A89B95</option>
+                            <option value="#815b3a">#815b3a</option>
+                            <option value="#f79232">#f79232</option>
+                            <option value="#f1a257">#f1a257</option>
+                            <option value="#d39c3f">#d39c3f</option>
+                            <option value="#59afe1">#59afe1</option>
+                            <option value="#4a6785">#4a6785</option>
+                            <option value="#84bbc6">#84bbc6</option>
+                            <option value="#8eb021">#8eb021</option>
+                            <option value="#67ab49">#67ab49</option>
+                            <option value="#654982">#654982</option>
+                            <option value="#ac707a">#ac707a</option>
+                            <option value="#f15c75">#f15c75</option>
+                            <option value="#f691b2">#f691b2</option>
+                        </select>
+                        <div id="calendar-dialog-color-error" class="error hidden"></div>
+                    </div>
+                </form>
+            </div>
+            <div id="calendar-dialog-source-tab" class="calendar-dialog-tab">
+                <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form">
+                    <input class="hidden" type="submit"/>
+                    <div class="field-group">
+                        <label>
+                            <span class="aui-icon icon-required"></span>
+                            {getText( 'ru.mail.jira.plugins.calendar.dialog.source' )}
+                        </label>
+                        <div class="radio">
+                            <input class="radio" type="radio" id="calendar-dialog-source-project" name="calendar-dialog-source" value="project" checked="checked" {not $canAdmin ? 'disabled' : ''}>
+                            <label for="calendar-dialog-source-project">{getText( 'common.concepts.project' )}</label>
+                        </div>
+                        <div class="radio">
+                            <input class="radio" type="radio" id="calendar-dialog-source-filter" name="calendar-dialog-source" value="filter" {not $canAdmin ? 'disabled' : ''}>
+                            <label for="calendar-dialog-source-filter">{getText( 'ru.mail.jira.plugins.calendar.common.filter' )}</label>
+                        </div>
+                        <div class="radio">
+                            <input class="radio" type="radio" id="calendar-dialog-source-jql" name="calendar-dialog-source" value="jql" {not $canAdmin ? 'disabled' : ''}>
+                            <label for="calendar-dialog-source-jql">{getText( 'jira.jql.query' )}</label>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label for="calendar-dialog-source-project-field" class="calendar-dialog-source-label calendar-dialog-source-project-label hidden">
+                            <span class="aui-icon icon-required"></span>
+                            {getText( 'common.concepts.project' )}
+                        </label>
+                        <label for="calendar-dialog-source-filter-field" class="calendar-dialog-source-label calendar-dialog-source-filter-label hidden">
+                            <span class="aui-icon icon-required"></span>
+                            {getText( 'ru.mail.jira.plugins.calendar.common.filter' )}
+                        </label>
+                        <label for="advanced-search" class="calendar-dialog-source-label calendar-dialog-source-jql-label hidden">
+                            <span class="aui-icon icon-required"></span>
+                            {getText( 'jira.jql.query' )}
+                        </label>
+                        <input type="hidden" id="calendar-dialog-source-project-field" class="select calendar-dialog-source-field medium-long-field" {not $canAdmin ? 'disabled' : ''}/>
+                        <input type="hidden" id="calendar-dialog-source-filter-field" class="select calendar-dialog-source-field medium-long-field" {not $canAdmin ? 'disabled' : ''}/>
+                        <div class="search-field-container hidden">
+                            <div class="atlassian-autocomplete">
+                                <label for="advanced-search"></label>
+                                <label for="advanced-search">
+                                    <span id="jqlerrormsg" class="icon jqlgood" title=""></span>
+                                </label>
+                                <textarea id="advanced-search" class="textarea medium-long-field search-entry advanced-search" name="calendar-dialog-jql" rows="3" {not $canAdmin ? 'disabled' : ''}></textarea>
+                                <a class="syntax-help" href="https://docs.atlassian.com/jira/docs-064/Advanced+Searching" title="{getText( 'navigator.advanced.query.syntax' )}" target="_jirahelp" tabindex="-1">
+                                    <span class="aui-icon aui-icon-small aui-iconfont-help">{getText( 'navigator.advanced.query.syntax' )}</span>
+                                </a>
+                            </div>
+                            <div class="description medium-long-field"></div>
+                        </div>
+                        <div id="calendar-dialog-source-error" class="error hidden"></div>
+                    </div>
+                    <div class="field-group">
+                        <label for="calendar-dialog-event-start">
+                            <span class="aui-icon icon-required"></span>
+                            {getText( 'ru.mail.jira.plugins.calendar.dialog.eventStart' )}
+                        </label>
+                        <input type="hidden" id="calendar-dialog-event-start" class="select medium-long-field calendar-dialog-select" {not $canAdmin ? 'disabled' : ''}>
+                        <div id="calendar-dialog-event-start-error" class="error hidden"></div>
+                    </div>
+                    <div class="field-group">
+                        <label for="calendar-dialog-event-end">{getText( 'ru.mail.jira.plugins.calendar.dialog.eventEnd' )}</label>
+                        <input type="hidden" id="calendar-dialog-event-end" class="select medium-long-field calendar-dialog-select" {not $canAdmin ? 'disabled' : ''}>
+                        <div class="description medium-long-field">{getText( 'ru.mail.jira.plugins.calendar.dialog.eventStartEndDescription' )}</div>
+                        <div id="calendar-dialog-event-end-error" class="error hidden"></div>
+                    </div>
+                    <div class="field-group">
+                        <label for="calendar-dialog-displayed-fields">{getText( 'ru.mail.jira.plugins.calendar.dialog.fields' )}</label>
+                        <input type="hidden" id="calendar-dialog-displayed-fields" class="multi-select medium-long-field calendar-dialog-select" {not $canAdmin ? 'disabled' : ''}>
+                        <div id="calendar-dialog-fields-error" class="error hidden"></div>
+                    </div>
+                </form>
+            </div>
+            <div id="calendar-dialog-permissions-tab" class="calendar-dialog-tab">
+                <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form">
+                    <table id="calendar-dialog-permission-table" class="aui aui-table-rowhover">
+                        <thead>
+                            <tr>
+                                <th class="calendar-dialog-permission-table-subject" colspan="2">
+                                    <input type="hidden" class="select full-width-field" id="calendar-dialog-permission-table-subject" {not $canAdmin ? 'disabled' : ''}/>
+                                </th>
+                                <th class="calendar-dialog-permission-table-action">
+                                    <button id="calendar-dialog-permission-table-add" class="aui-button" {not $canAdmin ? 'disabled' : ''}>{getText( 'common.words.add' )}</button>
+                                </th>
+                            </tr>
+                            <tr class="calendar-dialog-permission-table-error" class="hidden">
+                                <th colspan="3">
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td><i>{getText( 'admin.global.permissions.administer' )}</i></td>
+                                <td class="calendar-dialog-permission-table-access-type" colspan="2">
+                                    <a class="aui-lozenge aui-lozenge-subtle" disabled="disabled">{getText( 'ru.mail.jira.plugins.calendar.common.use' )}</a>
+                                    <a class="aui-lozenge aui-lozenge-complete" disabled="disabled">{getText( 'ru.mail.jira.plugins.calendar.common.admin' )}</a>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <input class="hidden" type="submit"/>
+                </form>
+            </div>
+        </div>
+        <footer class="aui-dialog2-footer" style="width: 100%">
+            <div class="aui-dialog2-footer-actions">
+                <button id="calendar-dialog-ok" class="aui-button aui-button-primary" {not $canAdmin ? 'disabled' : ''}>{$model.id ? getText( 'common.forms.update') : getText( 'common.words.create')}</button>
+                <button id="calendar-dialog-cancel" class="aui-button aui-button-link">{getText( 'common.words.cancel' )}</button>
+            </div>
+            <div class="aui-dialog2-footer-hint">{not $canAdmin ? getText('ru.mail.jira.plugins.calendar.dialog.no.edit.permission') : ''}</div>
+        </footer>
+    </section>
+{/template}
+
+
+/**
+ * Text format for permission select2 field
+ * @param type
+ * @param userName
+ * @param userNameHighlight
+ * @param userEmail
+ * @param userEmailHighlight
+ * @param userDisplayName
+ * @param userDisplayNameHighlight
+ * @param text
+ * @param textHighlight
+ * @param project
+ * @param projectHighlight
+ * @param projectRole
+ * @param projectRoleHighlight
+ * @param avatarUrl
+ */
+{template .permissionField autoescape="false"}
+        {if $type == 'USER'}
+            <div title="{$userDisplayName}{sp}-{sp}{$userEmail}{sp}({$userName})" class="calendar-dialog-select-overflow">
+                <span class="aui-avatar aui-avatar-xsmall">
+                    <span class="aui-avatar-inner">
+                        <img src="{$avatarUrl}" />
+                    </span>
+                </span>
+                {sp}{$userDisplayNameHighlight}{sp}-{sp}{$userEmailHighlight}{sp}({$userNameHighlight})
+            </div>
+        {elseif $type == 'PROJECT_ROLE'}
+            <div title="{$project}{sp}/{sp}{$projectRole}" class="calendar-dialog-select-overflow">
+                <span class="aui-avatar aui-avatar-xsmall">
+                    <span class="aui-avatar-inner">
+                        <img src="{$avatarUrl}" />
+                    </span>
+                </span>
+                {sp}<span class="calendar-dialog-permission-project-overflow">{$projectHighlight}</span><span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRoleHighlight}
+            </div>
+        {elseif $type == 'GROUP'}
+            <div title="{$text}" class="calendar-dialog-select-overflow">
+                <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
+                {sp}{$textHighlight}
+            </div>
+        {else}
+            {$text}
+        {/if}
+{/template}
+
+/**
+ * Text format for selection permission select2 field
+ * @param type
+ * @param userName
+ * @param userEmail
+ * @param userDisplayName
+ * @param text
+ * @param project
+ * @param projectRole
+ * @param avatarUrl
+*/
+{template .permissionFieldSelection autoescape="false"}
+        {if $type == 'USER'}
+            <div title="{$userDisplayName}{sp}-{sp}{$userEmail}{sp}({$userName})" class="calendar-dialog-select-overflow">
+                <span class="aui-avatar aui-avatar-xsmall">
+                    <span class="aui-avatar-inner">
+                        <img src="{$avatarUrl}" />
+                    </span>
+                </span>
+                {sp}{$userDisplayName}
+            </div>
+        {elseif $type == 'PROJECT_ROLE'}
+            <div title="{$project}{sp}/{sp}{$projectRole}" class="calendar-dialog-select-overflow">
+                <span class="aui-avatar aui-avatar-xsmall">
+                    <span class="aui-avatar-inner">
+                        <img src="{$avatarUrl}" />
+                    </span>
+                </span>
+                {sp}{$project}<span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRole}
+            </div>
+        {elseif $type == 'GROUP'}
+            <div title="{$text}" class="calendar-dialog-select-overflow">
+                <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
+                {sp}{$text}
+            </div>
+        {else}
+            {$text}
+        {/if}
+{/template}
+
+/**
+ * Text format for color select2 field
+ * @param id
+ */
+{template .colorField autoescape="false"}
+    <div class="calendar-dialog-color-option" style="background:{$id}"></div>
+{/template}
+
+/**
+ * Text format for source select2 field
+ * @param unavailable
+ * @param text
+ * @param sourceType
+ * @param projectId
+ * @param avatarId
+ */
+{template .sourceField autoescape="false"}
+    {if $unavailable }
+        {if $sourceType == 'project'}
+            <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
+                <span class="aui-avatar-inner">
+                    <img src="projectavatar?size=xxmall" />
+                </span>
+            </span>
+        {/if}
+        {sp}<span class="calendar-dialog-source-unavailable-source">{$text}</span>
+    {elseif $projectId }
+        <div title="{$text}" class="calendar-dialog-select-overflow">
+            <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
+                <span class="aui-avatar-inner">
+                    <img src="projectavatar?pid={$projectId}&avatarId={$avatarId}&size=xxmall" />
+                </span>
+            </span>
+            {sp}{$text}
+        </div>
+    {else}
+        <div title="{$text}" class="calendar-dialog-select-overflow">
+            {$text}
+        </div>
+    {/if}
+{/template}
+
+/**
+ * Text format for permission select2 field
+ * @param id
+ * @param type
+ * @param userName
+ * @param userDisplayName
+ * @param text
+ * @param project
+ * @param projectRole
+ * @param avatarUrl
+ * @param accessType
+ */
+{template .permissionTableRow autoescape="false"}
+    <tr data-id="{$id}" data-subject-type="{$type}">
+        <td class="calendar-dialog-permission-table-subject">
+            <div class="mailrucalendar-table-icon-column">
+                {if $type == 'USER'}
+                    <div rel="{$userName}" class="user-hover">
+                        <span class="aui-avatar aui-avatar-xsmall mailrucalendar-table-icon">
+                            <span class="aui-avatar-inner">
+                                <img src="{$avatarUrl}" />
+                            </span>
+                        </span>
+                        {sp}{$userDisplayName}
+                    </div>
+                {elseif $type == 'GROUP'}
+                    <span class="aui-icon aui-icon-small aui-iconfont-group icon-default mailrucalendar-table-icon"></span>
+                    {sp}{$text}
+                {elseif $type == 'PROJECT_ROLE'}
+                    {if $project}
+                        <span class="aui-avatar aui-avatar-project aui-avatar-xsmall mailrucalendar-table-icon">
+                            <span class="aui-avatar-inner">
+                                <img src="{$avatarUrl}" />
+                            </span>
+                        </span>
+                        {sp}{$project}<span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRole}
+                    {else}
+                        <span class="aui-avatar aui-avatar-project aui-avatar-xsmall mailrucalendar-table-icon">
+                            <span class="aui-avatar-inner">
+                                <img src="projectavatar?size=xxmall" />
+                            </span>
+                        </span>
+                        {sp}<i>{getText('ru.mail.jira.plugins.calendar.gadget.project.unavailable')}</i><span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRole}
+                    {/if}
+                {/if}
+            </div>
+        </td>
+        <td class="calendar-dialog-permission-table-access-type calendar-dialog-permission-table-action" colspan="2">
+            <a href="#" class="aui-lozenge {$accessType == 'USE' ? 'aui-lozenge-complete selected' : 'aui-lozenge-subtle'}" data-access-type="USE">{getText( 'ru.mail.jira.plugins.calendar.common.use' )}</a>
+            <a href="#" class="aui-lozenge {$accessType == 'ADMIN' ? 'aui-lozenge-complete selected' : 'aui-lozenge-subtle'}" data-access-type="ADMIN">{getText( 'ru.mail.jira.plugins.calendar.common.admin' )}</a>
+            <a href="#" class="aui-icon aui-icon-small aui-iconfont-remove">{getText( 'common.words.delete' )}</a>
+        </td>
+    </tr>
+{/template}

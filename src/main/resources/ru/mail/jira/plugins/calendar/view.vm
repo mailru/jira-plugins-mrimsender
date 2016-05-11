@@ -68,9 +68,5 @@
         </div>
     </div>
 </div>
-#parse( "ru/mail/jira/plugins/calendar/dialog/calendar-dialog.vm" )
-#parse( "ru/mail/jira/plugins/calendar/dialog/feed-dialog.vm" )
-#parse( "ru/mail/jira/plugins/calendar/dialog/import-dialog.vm" )
-#parse( "ru/mail/jira/plugins/calendar/dialog/confirm-dialog.vm" )
 </body>
 </html>

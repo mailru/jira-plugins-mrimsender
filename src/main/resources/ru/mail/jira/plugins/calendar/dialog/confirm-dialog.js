@@ -1,31 +1,26 @@
-define('calendar/confirm-dialog', ['jquery', 'backbone'], function($, Backbone) {
+define('calendar/confirm-dialog', ['jquery', 'underscore', 'backbone'], function($, _, Backbone) {
     return Backbone.View.extend({
-        el: '#mailrucalendar-confirm-dialog',
         events: {
             'click #mailrucalendar-confirm-dialog-ok': '_ok',
             'click #mailrucalendar-confirm-dialog-cancel': '_cancel'
         },
+        render: function(options) {
+            this.$el.html(JIRA.Templates.Plugins.MailRuCalendar.ConfirmDialog.dialog(_.defaults(options, {okText: AJS.I18n.getText("admin.common.words.confirm")})));
+            $(document.body).append(this.$el);
+            this.setElement($('#mailrucalendar-confirm-dialog').unwrap());
+            return this;
+        },
         initialize: function(options) {
+            this.render(options);
             this.dialog = AJS.dialog2('#mailrucalendar-confirm-dialog');
-            this.header = this.$('.aui-dialog2-header-main');
-            this.text = this.$('.aui-dialog2-content');
-            this.okBtn = this.$('#mailrucalendar-confirm-dialog-ok');
 
-            this.header.empty();
-            this.text.empty();
-
-            options.okText && this.okBtn.text(options.okText);
-            this.header.append(options.header);
-            this.text.append(options.text);
             this._okHandler = options.okHandler;
             this._cancelHandler = options.cancelHandler;
 
             this.dialog.on('hide', $.proxy(this.destroy, this));
         },
         destroy: function() {
-            this.stopListening();
-            this.undelegateEvents();
-            this.dialog.off();
+            this.remove();
         },
         show: function() {
             this.dialog.show();

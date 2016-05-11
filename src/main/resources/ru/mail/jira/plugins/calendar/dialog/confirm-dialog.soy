@@ -1,0 +1,22 @@
+{namespace JIRA.Templates.Plugins.MailRuCalendar.ConfirmDialog}
+
+/**
+ * Confirm dialog
+ * @param header
+ * @param text
+ * @param okText
+ */
+{template .dialog autoescape="false"}
+    <section role="dialog" id="mailrucalendar-confirm-dialog" class="aui-layer aui-dialog2 aui-dialog2-small aui-dialog2-warning" aria-hidden="true" data-aui-focus-selector="#mailrucalendar-confirm-dialog-ok">
+        <header class="aui-dialog2-header">
+            <h2 class="aui-dialog2-header-main">{$header}</h2>
+        </header>
+        <div class="aui-dialog2-content">{$text}</div>
+        <footer class="aui-dialog2-footer" style="width: 100%">
+            <div class="aui-dialog2-footer-actions">
+                <button id="mailrucalendar-confirm-dialog-ok" class="aui-button">{$okText}</button>
+                <button id="mailrucalendar-confirm-dialog-cancel" class="aui-button aui-button-link">{getText( 'admin.common.words.cancel' )}</button>
+            </div>
+        </footer>
+    </section>
+{/template}
