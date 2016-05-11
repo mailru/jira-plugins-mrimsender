@@ -427,12 +427,17 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     background-color: #f0f0f0;
 }
 
-#calendar-dialog-permission-table tbody > tr:hover .calendar-dialog-permission-table-action .aui-icon {
-    visibility: visible;
+#calendar-dialog-permission-table tbody > tr.calendar-dialog-permission-table-row-hover {
+    background-color: #f0f0f0;
+}
+
+#calendar-dialog-permission-table tbody > tr:hover .calendar-dialog-permission-table-action .aui-icon,
+#calendar-dialog-permission-table tbody > tr.calendar-dialog-permission-table-row-hover .calendar-dialog-permission-table-action .aui-icon {
+    opacity: 1;
 }
 
 #calendar-dialog-permission-table tbody > tr .calendar-dialog-permission-table-action .aui-icon {
-    visibility: hidden;
+    opacity: 0;
     float: right;
 }
 
@@ -523,7 +528,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 }
 
 #calendar-dialog-permission-table .calendar-dialog-permission-table-action a.aui-icon[disabled] {
-    visibility: hidden !important;
+    opacity: 0 !important;
 }
 
 /* Full Calendar */

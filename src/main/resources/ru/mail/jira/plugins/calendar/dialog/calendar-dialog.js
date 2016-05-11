@@ -89,6 +89,8 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
             'click a[href=#calendar-dialog-source-tab]': '_selectSourceTab',
             'click a[href=#calendar-dialog-permissions-tab]': '_selectPermissionTab',
             'change #calendar-dialog-permission-table-subject': '_onChangeSubjectSelect',
+            'focus .calendar-dialog-permission-table-action a': '_onPermissionTableActionFocus',
+            'blur .calendar-dialog-permission-table-action a': '_onPermissionTableActionBlur',
             'select2-open #calendar-dialog-permission-table-subject': '_onOpenSubjectSelect',
             'change input[type=radio][name=calendar-dialog-source]': '_onSourceTypeChange'
         },
@@ -541,6 +543,12 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
             var sourceType = this.$('input[type=radio][name=calendar-dialog-source]:checked').val();
             this._showSourceField(sourceType);
             this.$('#calendar-dialog-source-error').addClass('hidden');
+        },
+        _onPermissionTableActionFocus: function(e) {
+            $(e.target).closest('tr').addClass('calendar-dialog-permission-table-row-hover');
+        },
+        _onPermissionTableActionBlur: function(e) {
+            $(e.target).closest('tr').removeClass('calendar-dialog-permission-table-row-hover');
         },
         _addPermissionRow: function(subjectData) {
             this.$('#calendar-dialog-permission-table tbody').prepend(JIRA.Templates.Plugins.MailRuCalendar.permissionTableRow(subjectData));
