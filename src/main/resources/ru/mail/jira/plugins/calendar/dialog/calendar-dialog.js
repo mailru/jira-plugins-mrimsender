@@ -126,7 +126,10 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                     cache: true
                 },
                 dropdownCssClass: 'calendar-dialog-source-dropdown',
-                formatResult: function format(item) {
+                formatResult: function format(item, label, query) {
+                    if(query.term) {
+                        item.text = item.text.replace(new RegExp('(' + query.term + ')', 'gi'), '<b>$1</b>');
+                    }
                     return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField($.extend({
                         projectId: item.id,
                         sourceType: 'project'
@@ -175,7 +178,10 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                     cache: true
                 },
                 dropdownCssClass: 'calendar-dialog-source-dropdown',
-                formatResult: function format(item) {
+                formatResult: function format(item, label, query) {
+                    if(query.term) {
+                        item.text = item.text.replace(new RegExp('(' + query.term + ')', 'gi'), '<b>$1</b>');
+                    }
                     return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(item);
                 },
                 formatSelection: function format(item) {
