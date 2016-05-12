@@ -294,12 +294,24 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
         hide: function() {
             this.dialog.hide();
         },
+        isDirty: function() {
+            var orig = this.model.toJSON();
+            var changed = this._serialize();
+            orig.selectedEventEndId = orig.selectedEventEndId || undefined;
+            changed.selectedEventEndId = changed.selectedEventEndId || undefined;
+
+            return orig.selectedName != changed.selectedName || orig.selectedColor != changed.selectedColor
+                || orig.selectedSourceType != changed.selectedSourceType || orig.selectedSourceValue != changed.selectedSourceValue
+                || orig.selectedEventStartId != changed.selectedEventStartId || orig.selectedEventEndId != changed.selectedEventEndId
+                || !_.isEqual(orig.selectedDisplayedFields, changed.selectedDisplayedFields)
+                || this.isPermissionTableChanged;
+        },
         /* Private methods */
         _keypressHandler: function(e) {
             switch (e.which) {
                 // esc
                 case 27 :
-                    if (confirm(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.hideConfirm')))
+                    if (!this.isDirty() || confirm(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.hideConfirm')))
                         this.hide();
                     break;
             }
@@ -390,6 +402,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                     accessType: 'ADMIN',
                     avatarUrl: this.userData.get('avatarUrl')
                 });
+                this.model.set(this._serialize());
             }
 
             var canAdmin = !this.model.id || this.model.get('canAdmin');
@@ -549,6 +562,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
             } else {
                 this._addPermissionRow($.extend({accessType: 'USE'}, subjectData));
                 $subjectSelect.auiSelect2('val', '');
+                this.isPermissionTableChanged = true;
             }
             $subjectSelect.auiSelect2('focus');
         },
@@ -557,6 +571,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
             var subjectId = $row.data('id');
             this.permissionIds[subjectId] = undefined;
             $row.remove();
+            this.isPermissionTableChanged = true;
         },
         _toggleAccessType: function(e) {
             e.preventDefault();
@@ -577,6 +592,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 $otherAccessType.toggleClass('aui-lozenge-subtle', true);
             }
             permission.accessType = selected ? accessType : undefined;
+            this.isPermissionTableChanged = true;
         }
     });
 });
