@@ -132,6 +132,17 @@ public class RestCalendarService {
         }.getResponse();
     }
 
+    @GET
+    @Path("forUser")
+    public Response getUserCalendars() {
+        return new RestExecutor<CalendarDto[]>() {
+            @Override
+            protected CalendarDto[] doAction() throws Exception {
+                return calendarService.getUserCalendars(jiraAuthenticationContext.getUser());
+            }
+        }.getResponse();
+    }
+
     @PUT
     @Path("/{calendarId}/visibility/{visible}")
     public Response invertVisibility(@PathParam("calendarId") final int calendarId,

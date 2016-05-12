@@ -9,6 +9,7 @@ require(['jquery',
     'calendar/import-dialog',
     'calendar/timeline-view'], function($, _, Backbone, LikeFlag, CalendarView,
                                         CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog) {
+    // Override default texts for auiSelect2 messages
     $.fn.select2.defaults = $.extend($.fn.select2.defaults, {
         formatNoMatches: function() {
             return AJS.I18n.getText('ru.mail.jira.plugins.calendar.select2.formatNoMatches');
@@ -41,24 +42,7 @@ require(['jquery',
         var CalendarDetail = Backbone.Model.extend({urlRoot: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/'});
         var CalendarCollection = Backbone.Collection.extend({
             model: Calendar,
-            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/all',
-            comparator: function(a, b) {
-                var aCount = a.get('usersCount'),
-                    bCount = b.get('usersCount'),
-                    aName = a.get('name'),
-                    bName = b.get('name');
-                if (!aCount && !bCount || aCount == bCount)
-                    if (aName < bName)
-                        return -1;
-                    else if (aName > bName)
-                        return 1;
-                    else
-                        return 0;
-                else if (aCount < bCount)
-                    return 1;
-                else
-                    return -1;
-            }
+            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/forUser'
         });
 
         var MainView = Backbone.View.extend({
@@ -154,7 +138,7 @@ require(['jquery',
 
                 var importView = new CalendarImportDialog({
                     model: this.model,
-                    collection: this.collection
+                    collection: this.collection,//user calendars
                 });
                 importView.show();
             },

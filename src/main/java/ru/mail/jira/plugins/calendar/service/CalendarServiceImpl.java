@@ -209,6 +209,11 @@ public class CalendarServiceImpl implements CalendarService {
         return fillUserCalendarDtos(user, ao.find(Calendar.class));
     }
 
+    @Override
+    public CalendarDto[] getUserCalendars(ApplicationUser user) {
+        return fillUserCalendarDtos(user);
+    }
+
     public CalendarDto createCalendar(final ApplicationUser user, final CalendarSettingDto calendarSettingDto) throws GetException {
         validateCalendar(user, calendarSettingDto, true);
         Calendar calendar = ao.create(Calendar.class);
@@ -279,6 +284,30 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.save();
     }
 
+    private CalendarDto[] fillUserCalendarDtos(final ApplicationUser user) {
+        List<CalendarDto> result = new ArrayList<CalendarDto>();
+        UserCalendar[] userCalendars = userCalendarService.find(user.getKey());
+        for (UserCalendar userCalendar : userCalendars) {
+            CalendarDto output = null;
+            try {
+                Calendar calendar = getCalendar(userCalendar.getCalendarId());
+                boolean canAdmin = permissionService.hasAdminPermission(user, calendar);
+                boolean canUse = canAdmin || permissionService.hasUsePermission(user, calendar);
+                if (canAdmin || canUse)
+                    output = buildCalendarOutput(user, userCalendar, calendar, true, canAdmin, userCalendar.isEnabled(), true, userCalendarService.getUsersCount(calendar.getID()));
+            } catch (GetException e) {
+                //ignore
+            }
+            if (output == null) {
+                output = buildCalendarOutput(user, userCalendar, null, false, false, false, true, 0);
+                output.setHasError(true);
+                output.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
+            }
+            result.add(output);
+        }
+        return result.toArray(new CalendarDto[result.size()]);
+    }
+
     private CalendarDto[] fillUserCalendarDtos(final ApplicationUser user, Calendar[] calendars) {
         List<CalendarDto> result = new ArrayList<CalendarDto>();
         Set<Integer> selectedCalendars = new TreeSet<Integer>();
@@ -299,7 +328,6 @@ public class CalendarServiceImpl implements CalendarService {
                 output.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
                 result.add(output);
             }
-
         }
         return result.toArray(new CalendarDto[result.size()]);
     }

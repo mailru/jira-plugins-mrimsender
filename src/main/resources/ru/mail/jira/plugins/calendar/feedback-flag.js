@@ -6,9 +6,7 @@ define('calendar/feedback-flag', ['jquery', 'underscore', 'backbone'], function(
         flag = require('aui/flag');
     } catch (e) {
     }
-
-    //todo for testing
-    Backbone.View.LikeFlag = Backbone.View.extend({
+    return Backbone.View.extend({
         events: {
             'click .mailrucalendar-feedback-flag-close': '_onClose',
             'change .mailrucalendar-feedback-flag-rating input[name=rating]': '_rate',
@@ -57,5 +55,4 @@ define('calendar/feedback-flag', ['jquery', 'underscore', 'backbone'], function(
             _tmr.push({id: '2706504', type: 'reachGoal', goal: 'rating-' + rating});
         }
     });
-    return Backbone.View.LikeFlag;
 });
