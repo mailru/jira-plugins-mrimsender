@@ -127,18 +127,21 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 },
                 dropdownCssClass: 'calendar-dialog-source-dropdown',
                 formatResult: function format(item, label, query) {
-                    if(query.term) {
-                        item.text = item.text.replace(new RegExp('(' + query.term + ')', 'gi'), '<b>$1</b>');
-                    }
-                    return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField($.extend({
+                    var text = item.text;
+                    if (query.term)
+                        text = text.replace(new RegExp('(' + query.term + ')', 'gi'), '{b}$1{/b}');
+                    text = AJS.escapeHTML(text).replace(new RegExp('{b}', 'gi'), '<b>').replace(new RegExp('{/b}', 'gi'), '</b>');
+                    return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(_.defaults({
                         projectId: item.id,
-                        sourceType: 'project'
+                        sourceType: 'project',
+                        text: text
                     }, item));
                 },
                 formatSelection: function format(item) {
-                    return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField($.extend({
+                    return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(_.defaults({
                         projectId: item.id,
-                        sourceType: 'project'
+                        sourceType: 'project',
+                        text: AJS.escapeHTML(item.text)
                     }, item));
                 },
                 initSelection: function(element, callback) {
@@ -179,13 +182,15 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 },
                 dropdownCssClass: 'calendar-dialog-source-dropdown',
                 formatResult: function format(item, label, query) {
-                    if(query.term) {
-                        item.text = item.text.replace(new RegExp('(' + query.term + ')', 'gi'), '<b>$1</b>');
-                    }
-                    return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(item);
+                    var text = item.text;
+                    if (query.term)
+                        text = text.replace(new RegExp('(' + query.term + ')', 'gi'), '{b}$1{/b}');
+                    text = AJS.escapeHTML(text).replace(new RegExp('{b}', 'gi'), '<b>').replace(new RegExp('{/b}', 'gi'), '</b>');
+                    return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(_.defaults({text: text}, item));
                 },
                 formatSelection: function format(item) {
-                    return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(item);
+                    var text = AJS.escapeHTML(item.text);
+                    return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(_.defaults({text: text}, item));
                 },
                 initSelection: function(element, callback) {
                 }
@@ -272,17 +277,24 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 dropdownCssClass: 'calendar-dialog-permission-table-subject-dropdown',
                 formatResult: function(item, label, query) {
                     var regexp = query.term ? new RegExp('(' + query.term + ')', 'gi') : undefined;
-                    var replacement = '<b>$1</b>';
+                    var replacement = '{b}$1{/b}';
                     var highlight = {};
                     if (item.type == 'PROJECT_ROLE') {
                         highlight.projectHighlight = regexp ? item.project.replace(regexp, replacement) : item.project;
+                        highlight.projectHighlight = AJS.escapeHTML(highlight.projectHighlight).replace(new RegExp('{b}', 'gi'), '<b>').replace(new RegExp('{/b}', 'gi'), '</b>');
                         highlight.projectRoleHighlight = regexp ? item.projectRole.replace(regexp, replacement) : item.projectRole;
+                        highlight.projectRoleHighlight = AJS.escapeHTML(highlight.projectRoleHighlight).replace(new RegExp('{b}', 'gi'), '<b>').replace(new RegExp('{/b}', 'gi'), '</b>');
                     } else if (item.type == 'USER') {
                         highlight.userDisplayNameHighlight = regexp ? item.userDisplayName.replace(regexp, replacement) : item.userDisplayName;
+                        highlight.userDisplayNameHighlight = AJS.escapeHTML(highlight.userDisplayNameHighlight).replace(new RegExp('{b}', 'gi'), '<b>').replace(new RegExp('{/b}', 'gi'), '</b>');
                         highlight.userEmailHighlight = regexp ? item.userEmail.replace(regexp, replacement) : item.userEmail;
+                        highlight.userEmailHighlight = AJS.escapeHTML(highlight.userEmailHighlight).replace(new RegExp('{b}', 'gi'), '<b>').replace(new RegExp('{/b}', 'gi'), '</b>');
                         highlight.userNameHighlight = regexp ? item.userName.replace(regexp, replacement) : item.userName;
-                    } else if (item.type == 'GROUP')
+                        highlight.userNameHighlight = AJS.escapeHTML(highlight.userNameHighlight).replace(new RegExp('{b}', 'gi'), '<b>').replace(new RegExp('{/b}', 'gi'), '</b>');
+                    } else if (item.type == 'GROUP') {
                         highlight.textHighlight = regexp ? item.text.replace(regexp, replacement) : item.text;
+                        highlight.textHighlight = AJS.escapeHTML(highlight.textHighlight).replace(new RegExp('{b}', 'gi'), '<b>').replace(new RegExp('{/b}', 'gi'), '</b>');
+                    }
                     return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.permissionField(_.defaults(highlight, item));
                 },
                 formatSelection: JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.permissionFieldSelection

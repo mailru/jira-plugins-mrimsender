@@ -213,7 +213,7 @@
  */
 {template .permissionField autoescape="false"}
         {if $type == 'USER'}
-            <div title="{$userDisplayName}{sp}-{sp}{$userEmail}{sp}({$userName})" class="calendar-dialog-select-overflow">
+            <div title="{$userDisplayName |escapeHtml}{sp}-{sp}{$userEmail |escapeHtml}{sp}({$userName |escapeHtml})" class="calendar-dialog-select-overflow">
                 <span class="aui-avatar aui-avatar-xsmall">
                     <span class="aui-avatar-inner">
                         <img src="{$avatarUrl}" />
@@ -222,7 +222,7 @@
                 {sp}{$userDisplayNameHighlight}{sp}-{sp}{$userEmailHighlight}{sp}({$userNameHighlight})
             </div>
         {elseif $type == 'PROJECT_ROLE'}
-            <div title="{$project}{sp}/{sp}{$projectRole}" class="calendar-dialog-select-overflow">
+            <div title="{$project |escapeHtml}{sp}/{sp}{$projectRole |escapeHtml}" class="calendar-dialog-select-overflow">
                 <span class="aui-avatar aui-avatar-xsmall">
                     <span class="aui-avatar-inner">
                         <img src="{$avatarUrl}" />
@@ -231,7 +231,7 @@
                 {sp}<span class="calendar-dialog-permission-project-overflow">{$projectHighlight}</span><span class="calendar-dialog-permission-project-role-separator">/</span>{$projectRoleHighlight}
             </div>
         {elseif $type == 'GROUP'}
-            <div title="{$text}" class="calendar-dialog-select-overflow">
+            <div title="{$text |escapeHtml}" class="calendar-dialog-select-overflow">
                 <span class="aui-icon aui-icon-small aui-iconfont-group icon-default"></span>
                 {sp}{$textHighlight}
             </div>
@@ -251,7 +251,7 @@
  * @param projectRole
  * @param avatarUrl
 */
-{template .permissionFieldSelection autoescape="false"}
+{template .permissionFieldSelection}
         {if $type == 'USER'}
             <div title="{$userDisplayName}{sp}-{sp}{$userEmail}{sp}({$userName})" class="calendar-dialog-select-overflow">
                 <span class="aui-avatar aui-avatar-xsmall">
@@ -284,7 +284,7 @@
  * Text format for color select2 field
  * @param id
  */
-{template .colorField autoescape="false"}
+{template .colorField}
     <div class="calendar-dialog-color-option" style="background:{$id}"></div>
 {/template}
 
@@ -334,7 +334,7 @@
  * @param avatarUrl
  * @param accessType
  */
-{template .permissionTableRow autoescape="false"}
+{template .permissionTableRow}
     <tr data-id="{$id}" data-subject-type="{$type}">
         <td class="calendar-dialog-permission-table-subject">
             <div class="mailrucalendar-table-icon-column">
