@@ -51,8 +51,6 @@
             },
             _destroy: function() {
                 $('#inline-dialog-eventTimelineDialog').remove();
-                this.eventDialog = undefined;
-                this.timeline.off('select');
                 this.timeline.off('rangechanged');
                 this.timeline.off('rangechange');
                 this.timeline = undefined;
@@ -66,7 +64,6 @@
                         onMoving: $.proxy(this._onMoving, this)
                     }));
                     $(this.el).on('remove', $.proxy(this._destroy, this));
-                    this.timeline.on('select', $.proxy(this._onEventSelect, this));
                     this.timeline.on('rangechanged', $.proxy(this._onRangeChanged, this));
                     this.timeline.on('rangechange', $.proxy(this._onRangeChange, this));
                     this.setRange();
@@ -140,6 +137,7 @@
             },
 
             _onMove: function(item, callback) {
+                this.options.calendarView.eventDialog && this.options.calendarView.eventDialog.hide();
                 $.ajax({
                     type: 'PUT',
                     url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + item.calendarId + '/event/' + item.eventId + '/move',
@@ -159,10 +157,11 @@
                             id: event.calendarId + event.id,
                             eventId: event.id,
                             calendarId: event.calendarId,
-                            start: moment(event.start).toDate(),
-                            end: event.end && moment(event.end).toDate(),
-                            content: event.id + ' ' + event.title,
+                            start: event.start.clone().local().toDate(),
+                            end: event.end && event.end.clone().local().toDate(),
+                            content: event.id + ' ' + AJS.escapeHTML(event.title),
                             className: this._getClassForColor(event.color),
+                            style: event.datesError ? 'opacity: 0.4;border-color:#d04437;' : '',
                             startEditable: event.startEditable,
                             durationEditable: event.durationEditable,
                             editable: event.startEditable || event.durationEditable
@@ -171,6 +170,7 @@
                 });
             },
             _onMoving: function(item, callback) {
+                this.options.calendarView.eventDialog && this.options.calendarView.eventDialog.hide();
                 var originalEvent = this.timeline.itemsData.get(item.id);
                 if (!originalEvent.startEditable && originalEvent.start.getTime() != item.start.getTime())
                     callback(null);
@@ -181,10 +181,7 @@
                 }
             },
             _onRangeChange: function() {
-                if (this.eventDialog) {
-                    this.eventDialog.hide();
-                    this.eventDialog = undefined
-                }
+                this.options.calendarView.eventDialog && this.options.calendarView.eventDialog.hide();
             },
             _onRangeChanged: function() {
                 var _start = this.start;
@@ -199,49 +196,6 @@
                     this.calendar.getAndRenderEvents();
                 }
             },
-            _onEventSelect: function(e) {
-                var event = this.timeline.itemsData.get(e.items[0]);
-                if (!event || !e.items.length || event.id == this.currentSelectedId) {
-                    this.eventDialog && this.eventDialog.hide();
-                    this.eventDialog = undefined;
-                    this.currentSelectedId = undefined;
-                    return;
-                }
-                var target = e.event.target;
-                var contextPath = this.options.contextPath;
-                var popupWidth = this.options.calendarView.popupWidth;
-                this.currentSelectedId = event.id;
-                $('#inline-dialog-eventTimelineDialog').remove();
-
-                this.eventDialog = AJS.InlineDialog(target, "eventTimelineDialog", function(content, trigger, showPopup) {
-                    $.ajax({
-                        type: 'GET',
-                        url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.eventId),
-                        success: function(issue) {
-                            content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
-                                issue: issue,
-                                contextPath: AJS.contextPath()
-                            })).addClass('calendar-event-info-popup');
-                            showPopup();
-                        },
-                        error: function(xhr) {
-                            var msg = "Error while trying to view info about issue => " + event.eventId;
-                            if (xhr.responseText)
-                                msg += xhr.responseText;
-                            alert(msg);
-                        }
-                    });
-                    return false;
-                }, {
-                    width: popupWidth,
-                    isRelativeToMouse: true,
-                    hideDelay: null,
-                    onTop: true,
-                    closeOnTriggerClick: true,
-                    userLiveEvents: true
-                });
-                this.eventDialog.show();
-            },
             _transformToTimelineFormat: function(events) {
                 return _.map(events, $.proxy(function(event) {
                     return {
@@ -250,8 +204,9 @@
                         calendarId: event.calendarId,
                         start: event.start.clone().local().toDate(),
                         end: event.end && event.end.clone().local().toDate(),
-                        content: event.id + ' ' + event.title,
+                        content: event.id + ' ' + AJS.escapeHTML(event.title),
                         className: this._getClassForColor(event.color),
+                        style: event.datesError ? 'opacity: 0.4;border-color:#d04437;' : '',
                         startEditable: event.startEditable,
                         durationEditable: event.durationEditable,
                         editable: event.startEditable || event.durationEditable

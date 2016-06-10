@@ -15,6 +15,12 @@ public class IssueInfo {
     @XmlElement
     private String key;
     @XmlElement
+    private String avatarUrl;
+    @XmlElement
+    private String start;
+    @XmlElement
+    private String end;
+    @XmlElement
     private String summary;
     @XmlElement
     private String type;
@@ -56,6 +62,30 @@ public class IssueInfo {
     public IssueInfo(String key, String summary) {
         this.key = key;
         this.summary = summary;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public String getEnd() {
+        return end;
+    }
+
+    public void setEnd(String end) {
+        this.end = end;
+    }
+
+    public String getStart() {
+        return start;
+    }
+
+    public void setStart(String start) {
+        this.start = start;
     }
 
     public String getType() {

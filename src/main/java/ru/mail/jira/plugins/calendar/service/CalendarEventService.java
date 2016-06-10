@@ -27,6 +27,7 @@ import com.atlassian.jira.issue.search.SearchProvider;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.jql.builder.JqlClauseBuilder;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
+import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.version.Version;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.bean.PagerFilter;
@@ -138,7 +139,7 @@ public class CalendarEventService {
         Calendar calendar = calendarService.getCalendar(calendarId);
         IssueService.IssueResult issueResult = jiraDeprecatedService.issueService.getIssue(user, eventId);
         MutableIssue issue = issueResult.getIssue();
-        return getEventInfo(calendar, issue);
+        return getEventInfo(calendar, issue, user);
     }
 
     private List<Event> getProjectEvents(Calendar calendar, long projectId,
@@ -319,15 +320,49 @@ public class CalendarEventService {
         event.setDurationEditable(isDateFieldResizable(endField) && startDate != null && endDate != null && jiraDeprecatedService.issueService.isEditable(issue, user));
 
         if (includeIssueInfo)
-            event.setIssueInfo(getEventInfo(calendar, issue));
+            event.setIssueInfo(getEventInfo(calendar, issue, user));
 
         return event;
     }
 
-    private IssueInfo getEventInfo(Calendar calendar, Issue issue) {
+    private IssueInfo getEventInfo(Calendar calendar, Issue issue, ApplicationUser user) {
         IssueInfo result = new IssueInfo(issue.getKey(), issue.getSummary());
         result.setStatusColor(issue.getStatusObject().getStatusCategory().getColorName());
+        result.setAvatarUrl(String.format("secure/viewavatar?size=xsmall&avatarId=%d&avatarType=issuetype", issue.getProjectObject().getAvatar().getId()));
 
+        DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
+        DateTimeFormatter userDateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user);
+        CustomField startCF = null;
+        if (calendar.getEventStart().startsWith("customfield_")) {
+            startCF = customFieldManager.getCustomFieldObject(calendar.getEventStart());
+            if (log.isDebugEnabled())
+                log.debug("find customfield for startField. startCF={}", startCF);
+            if (startCF == null)
+                throw new IllegalArgumentException("Bad custom field id => " + calendar.getEventStart());
+        }
+
+        CustomField endCF = null;
+        if (StringUtils.isNotEmpty(calendar.getEventEnd()) && calendar.getEventEnd().startsWith("customfield_")) {
+            endCF = customFieldManager.getCustomFieldObject(calendar.getEventEnd());
+            if (log.isDebugEnabled())
+                log.debug("find customfield for endField. endCF={}", endCF);
+            if (endCF == null)
+                throw new IllegalArgumentException("Bad custom field id => " + calendar.getEventEnd());
+        }
+        Date startDate = startCF == null ? retrieveDateByField(issue, calendar.getEventStart()) : retrieveDateByField(issue, startCF);
+        if (log.isDebugEnabled())
+            log.debug("Issue startDate={}", startDate);
+        Date endDate = null;
+        if (StringUtils.isNotEmpty(calendar.getEventEnd()))
+            endDate = endCF == null ? retrieveDateByField(issue, calendar.getEventEnd()) : retrieveDateByField(issue, endCF);
+
+        DateTimeFormatter startFormatter = calendar.getEventStart().equals(DUE_DATE_KEY) || startCF != null && startCF.getCustomFieldType() instanceof DateCFType ? userDateFormat.withSystemZone() : userDateTimeFormat;
+        DateTimeFormatter endFormatter = calendar.getEventEnd() != null && calendar.getEventEnd().equals(DUE_DATE_KEY) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType ? userDateFormat.withSystemZone() : userDateTimeFormat;
+        if (startDate != null) {
+            result.setStart(startFormatter.format(startDate));
+            if (endDate != null)
+                result.setEnd(endFormatter.format(endDate));
+        }
         if (StringUtils.isNotEmpty(calendar.getDisplayedFields()))
             fillDisplayedFields(result, calendar.getDisplayedFields().split(","), issue);
         return result;

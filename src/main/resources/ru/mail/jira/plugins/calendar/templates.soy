@@ -21,98 +21,118 @@
     <div>
         <div class="calenar-issue-popup-key-header">
             <a target="_blank" href="{$contextPath}/browse/{$issue.key}">
-                <strong>{$issue.key}{sp}{$issue.summary |escapeHtml}</strong>
-                <span class="aui-icon aui-icon-small aui-iconfont-share"/>
+                <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
+                    <span class="aui-avatar-inner">
+                        <img src="{$contextPath}/{$issue.avatarUrl}" />
+                    </span>
+                </span>{$issue.key}
             </a>
-        </div>
-        {if $issue.assignee}
-            {call .issueInfoBuildField}
-                {param value: $issue.assignee /}
-                {param label: getText('issue.field.assignee') /}
-            {/call}
-        {/if}
-        {if $issue.reporter}
-            {call .issueInfoBuildField}
-                {param value: $issue.reporter /}
-                {param label: getText('issue.field.reporter') /}
-            {/call}
-        {/if}
-        {if $issue.status}
+            <div>{$issue.summary |escapeHtml}</div>
             <dl>
-                <dt>{getText('common.words.status')}:</dt>
-                <dd>
-                    <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-{$issue.statusColor}">{$issue.status}</span>
-                </dd>
+                <dt>{getText('ru.mail.jira.plugins.calendar.dialog.eventStart')}:</dt>
+                <dd>{$issue.start}</dd>
             </dl>
-        {/if}
-        {if $issue.labels}
-            {call .issueInfoBuildField}
-                {param value: $issue.labels /}
-                {param label: getText('common.concepts.labels') /}
-            {/call}
-        {/if}
-        {if $issue.components}
-            {call .issueInfoBuildField}
-                {param value: $issue.components /}
-                {param label: getText('common.concepts.components') /}
-            {/call}
-        {/if}
-        {if $issue.dueDate}
-            {call .issueInfoBuildField}
-                {param value: $issue.dueDate /}
-                {param label: getText('issue.field.duedate') /}
-            {/call}
-        {/if}
-        {if $issue.environment}
-            {call .issueInfoBuildField}
-                {param value: $issue.environment /}
-                {param label: getText('common.words.env') /}
-            {/call}
-        {/if}
-        {if $issue.priority}
-            <dl>
-                <dt>{getText('issue.field.priority')}:</dt>
-                <dd>
-                    <img class="calendar-priority-image-url" height="16" src="{$contextPath}{$issue.priorityIconUrl}"/>{$issue.priority}
-                </dd>
-            </dl>
-        {/if}
-        {if $issue.resolution}
-            {call .issueInfoBuildField}
-                {param value: $issue.resolution /}
-                {param label: getText('issue.field.resolution') /}
-            {/call}
-        {/if}
-        {if $issue.affect}
-            {call .issueInfoBuildField}
-                {param value: $issue.affect /}
-                {param label: getText('issue.field.version') /}
-            {/call}
-        {/if}
-        {if $issue.created}
-            {call .issueInfoBuildField}
-                {param value: $issue.created /}
-                {param label: getText('issue.field.created') /}
-            {/call}
-        {/if}
-        {if $issue.updated}
-            {call .issueInfoBuildField}
-                {param value: $issue.updated /}
-                {param label: getText('issue.field.updated') /}
-            {/call}
-        {/if}
-        {if $issue.customFields}
-            {foreach $key in keys($issue.customFields)}
+            {if $issue.end}
                 <dl>
-                    <dt>{$key}:</dt>
-                    <dd>{$issue.customFields[$key]}</dd>
+                    <dt>{getText('ru.mail.jira.plugins.calendar.dialog.eventEnd')}:</dt>
+                    <dd>{$issue.end}</dd>
                 </dl>
-            {/foreach}
+            {/if}
+        </div>
+        {if $issue.assignee or $issue.reporter or $issue.status or $issue.labels or $issue.components
+            or $issue.dueDate or $issue.environment or $issue.priority or $issue.resolution or $issue.affect
+            or $issue.created or $issue.updated or $issue.customFields or $issue.description}
+            <div class="calenar-issue-popup-key-fields">
+                {if $issue.assignee}
+                    {call .issueInfoBuildField}
+                        {param value: $issue.assignee /}
+                        {param label: getText('issue.field.assignee') /}
+                    {/call}
+                {/if}
+                {if $issue.reporter}
+                    {call .issueInfoBuildField}
+                        {param value: $issue.reporter /}
+                        {param label: getText('issue.field.reporter') /}
+                    {/call}
+                {/if}
+                {if $issue.status}
+                    <dl>
+                        <dt>{getText('common.words.status')}:</dt>
+                        <dd>
+                            <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-{$issue.statusColor}">{$issue.status}</span>
+                        </dd>
+                    </dl>
+                {/if}
+                {if $issue.labels}
+                    {call .issueInfoBuildField}
+                        {param value: $issue.labels /}
+                        {param label: getText('common.concepts.labels') /}
+                    {/call}
+                {/if}
+                {if $issue.components}
+                    {call .issueInfoBuildField}
+                        {param value: $issue.components /}
+                        {param label: getText('common.concepts.components') /}
+                    {/call}
+                {/if}
+                {if $issue.dueDate}
+                    {call .issueInfoBuildField}
+                        {param value: $issue.dueDate /}
+                        {param label: getText('issue.field.duedate') /}
+                    {/call}
+                {/if}
+                {if $issue.environment}
+                    {call .issueInfoBuildField}
+                        {param value: $issue.environment /}
+                        {param label: getText('common.words.env') /}
+                    {/call}
+                {/if}
+                {if $issue.priority}
+                    <dl>
+                        <dt>{getText('issue.field.priority')}:</dt>
+                        <dd>
+                            <img class="calendar-priority-image-url" height="16" src="{$contextPath}{$issue.priorityIconUrl}"/>{$issue.priority}
+                        </dd>
+                    </dl>
+                {/if}
+                {if $issue.resolution}
+                    {call .issueInfoBuildField}
+                        {param value: $issue.resolution /}
+                        {param label: getText('issue.field.resolution') /}
+                    {/call}
+                {/if}
+                {if $issue.affect}
+                    {call .issueInfoBuildField}
+                        {param value: $issue.affect /}
+                        {param label: getText('issue.field.version') /}
+                    {/call}
+                {/if}
+                {if $issue.created}
+                    {call .issueInfoBuildField}
+                        {param value: $issue.created /}
+                        {param label: getText('issue.field.created') /}
+                    {/call}
+                {/if}
+                {if $issue.updated}
+                    {call .issueInfoBuildField}
+                        {param value: $issue.updated /}
+                        {param label: getText('issue.field.updated') /}
+                    {/call}
+                {/if}
+                {if $issue.customFields}
+                    {foreach $key in keys($issue.customFields)}
+                        <dl>
+                            <dt>{$key}:</dt>
+                            <dd>{$issue.customFields[$key]}</dd>
+                        </dl>
+                    {/foreach}
+                {/if}
+                {if $issue.description}
+                    <div class="calendar-event-info-popup-description">{$issue.description}</div>
+                {/if}
+            </div>
         {/if}
-        {if $issue.description}
-            <div class="calendar-event-info-popup-description">{$issue.description}</div>
-        {/if}
-      </div>
+    </div>
 {/template}
 
 /**

@@ -9,6 +9,41 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             this.timeFormat = options && _.has(options, 'timeFormat') ? options.timeFormat : AJS.Meta.get('date-time');
             this.popupWidth = options && _.has(options, 'popupWidth') ? options.popupWidth : 400;
             this.enableFullscreen = options && _.has(options, 'enableFullscreen') ? options.enableFullscreen : false;
+
+            var contextPath = this.contextPath;
+            var self = this;
+            this.eventDialog = AJS.InlineDialog('.calendar-event-object,.vis-item', 'eventDialog', function(content, trigger, showPopup) {
+                var event;
+                if (self.getViewType() == 'timeline') {
+                    var timeline = self.$el.fullCalendar('getView').timeline;
+                    event = timeline.itemsData.get(timeline.getEventProperties({target: trigger}).item);
+                } else
+                    event = self.$el.fullCalendar('clientEvents', $(trigger).data('event-id'))[0];
+
+                $.ajax({
+                    type: 'GET',
+                    url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.eventId || event.id),
+                    success: function(issue) {
+                        content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
+                            issue: issue,
+                            contextPath: AJS.contextPath()
+                        })).addClass('calendar-event-info-popup');
+                        showPopup();
+                    },
+                    error: function(xhr) {
+                        var msg = "Error while trying to view info about issue => " + event.eventId;
+                        if (xhr.responseText)
+                            msg += xhr.responseText;
+                        alert(msg);
+                    }
+                });
+            }, {
+                width: this.popupWidth,
+                hideDelay: null,
+                onTop: true,
+                closeOnTriggerClick: true,
+                useLiveEvents: true
+            });
         },
         _eventSource: function(id) {
             return this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + id;
@@ -148,33 +183,10 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                 slotDuration: '01:00',
                 eventRender: function(event, $element) {
                     $element.addClass('calendar-event-object');
+                    if (event.datesError)
+                        $element.addClass('calendar-event-dates-error');
                     $element.find('.fc-title').prepend(event.id + ' ');
-                    this.eventDialog = AJS.InlineDialog($element, 'eventDialog', function(content, trigger, showPopup) {
-                        $.ajax({
-                            type: 'GET',
-                            url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.id),
-                            success: function(issue) {
-                                content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
-                                    issue: issue,
-                                    contextPath: AJS.contextPath()
-                                })).addClass('calendar-event-info-popup');
-                                showPopup();
-                            },
-                            error: function(xhr) {
-                                var msg = "Error while trying to view info about issue => " + event.id;
-                                if (xhr.responseText)
-                                    msg += xhr.responseText;
-                                alert(msg);
-                            }
-                        });
-                        return false;
-                    }, {
-                        width: self.popupWidth,
-                        hideDelay: null,
-                        onTop: true,
-                        closeOnTriggerClick: true,
-                        userLiveEvents: true
-                    });
+                    $element.data('event-id', event.id);
                 },
                 loading: $.proxy(function(isLoading, view) {
                     viewRenderFirstTime = false;
@@ -201,8 +213,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     }
                 }, this),
                 eventDragStart: function(event) {
-                    event.eventDialog && event.eventDialog.hide();
-                    event.eventDialog = undefined;
+                    self.eventDialog && self.eventDialog.hide();
                 },
                 eventDrop: $.proxy(this._eventMove, this),
                 eventResize: $.proxy(this._eventMove, this)
