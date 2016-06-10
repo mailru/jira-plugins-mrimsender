@@ -544,6 +544,11 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     color: #fff !important;
 }
 
+.calendar-event-dates-error {
+    opacity: 0.4;
+    border-color: #d04437 !important;
+}
+
 .fc-event-container {
     font-family: inherit;
     font-size: 14px;

@@ -27,6 +27,8 @@ public class Event {
     @XmlElement
     private boolean startEditable;
     @XmlElement
+    private boolean datesError;
+    @XmlElement
     private IssueInfo issueInfo;
 
     public String getId() {
@@ -107,6 +109,14 @@ public class Event {
 
     public void setStartEditable(boolean startEditable) {
         this.startEditable = startEditable;
+    }
+
+    public boolean isDatesError() {
+        return datesError;
+    }
+
+    public void setDatesError(boolean datesError) {
+        this.datesError = datesError;
     }
 
     public IssueInfo getIssueInfo() {

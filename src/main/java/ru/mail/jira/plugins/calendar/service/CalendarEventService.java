@@ -289,12 +289,26 @@ public class CalendarEventService {
             return null;
         }
 
+        if (startDate != null && endDate != null && startDate.after(endDate)) {
+            Date tmpDate = startDate;
+            String tmpField = startField;
+            CustomField tmpCF = startCF;
+            startDate = endDate;
+            startField = endField;
+            startCF = endCF;
+            endDate = tmpDate;
+            endField = tmpField;
+            endCF = tmpCF;
+            event.setDatesError(true);
+            dateFieldsIsDraggable = false;
+        }
+
         DateTimeFormatter startFormatter = startField.equals(DUE_DATE_KEY) || startCF != null && startCF.getCustomFieldType() instanceof DateCFType ? userDateFormat.withSystemZone() : userDateTimeFormat;
         DateTimeFormatter endFormatter = endField != null && endField.equals(DUE_DATE_KEY) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType ? userDateFormat.withSystemZone() : userDateTimeFormat;
         if (startDate != null) {
             event.setStart(startFormatter.format(startDate));
             if (endDate != null)
-                if (endField.equals(DUE_DATE_KEY) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType)
+                if (DUE_DATE_KEY.equals(endField) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType)
                     event.setEnd(endFormatter.format(new Date(endDate.getTime() + MILLIS_IN_DAY)));
                 else
                     event.setEnd(endFormatter.format(endDate));
