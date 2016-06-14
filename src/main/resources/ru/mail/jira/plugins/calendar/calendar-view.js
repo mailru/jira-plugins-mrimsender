@@ -38,6 +38,8 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     }
                 });
             }, {
+                isRelativeToMouse: true,
+                cacheContent: false,
                 width: this.popupWidth,
                 hideDelay: null,
                 onTop: true,
