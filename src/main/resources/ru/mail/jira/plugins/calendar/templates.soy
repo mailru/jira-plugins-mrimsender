@@ -26,8 +26,7 @@
                         <img src="{$contextPath}/{$issue.avatarUrl}" />
                     </span>
                 </span>{$issue.key}
-            </a>
-            <div>{$issue.summary |escapeHtml}</div>
+            </a>{sp}{$issue.summary |escapeHtml}
             <dl>
                 <dt>{getText('ru.mail.jira.plugins.calendar.dialog.eventStart')}:</dt>
                 <dd>{$issue.start}</dd>
@@ -41,7 +40,7 @@
         </div>
         {if $issue.assignee or $issue.reporter or $issue.status or $issue.labels or $issue.components
             or $issue.dueDate or $issue.environment or $issue.priority or $issue.resolution or $issue.affect
-            or $issue.created or $issue.updated or $issue.customFields or $issue.description}
+            or $issue.created or $issue.updated or length(keys($issue.customFields)) > 0 or $issue.description}
             <div class="calenar-issue-popup-key-fields">
                 {if $issue.assignee}
                     {call .issueInfoBuildField}
