@@ -28,8 +28,8 @@ import ru.mail.jira.plugins.calendar.rest.dto.CalendarSettingDto;
 import ru.mail.jira.plugins.calendar.rest.dto.Event;
 import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.CalendarService;
-import ru.mail.jira.plugins.calendar.service.UserDataService;
 import ru.mail.jira.plugins.calendar.service.JiraDeprecatedService;
+import ru.mail.jira.plugins.calendar.service.UserDataService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.DELETE;
@@ -39,6 +39,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -46,6 +47,7 @@ import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Set;
 
 @Path("/calendar")
 @Produces(MediaType.APPLICATION_JSON)
@@ -53,7 +55,6 @@ public class RestCalendarService {
     private final CalendarService calendarService;
     private final CalendarEventService calendarEventService;
 
-    private final DateTimeFormatter dateTimeFormatter;
     private final I18nHelper i18nHelper;
     private final JiraAuthenticationContext jiraAuthenticationContext;
     private final JiraDeprecatedService jiraDeprecatedService;
@@ -63,13 +64,11 @@ public class RestCalendarService {
 
     public RestCalendarService(CalendarService calendarService,
                                CalendarEventService calendarEventService,
-                               DateTimeFormatter dateTimeFormatter,
                                I18nHelper i18nHelper,
                                JiraAuthenticationContext jiraAuthenticationContext,
                                JiraDeprecatedService jiraDeprecatedService, UserDataService userDataService, UserManager userManager) {
         this.calendarService = calendarService;
         this.calendarEventService = calendarEventService;
-        this.dateTimeFormatter = dateTimeFormatter;
         this.i18nHelper = i18nHelper;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
         this.jiraDeprecatedService = jiraDeprecatedService;
@@ -128,6 +127,17 @@ public class RestCalendarService {
             @Override
             protected CalendarDto[] doAction() throws Exception {
                 return calendarService.getAllCalendars(jiraAuthenticationContext.getUser());
+            }
+        }.getResponse();
+    }
+
+    @GET
+    @Path("find")
+    public Response findCalendars(@QueryParam("id") final Set<Integer> calendarIds) {
+        return new RestExecutor<CalendarDto[]>() {
+            @Override
+            protected CalendarDto[] doAction() throws Exception {
+                return calendarService.findCalendars(jiraAuthenticationContext.getUser(), calendarIds.toArray(new Integer[calendarIds.size()]));
             }
         }.getResponse();
     }

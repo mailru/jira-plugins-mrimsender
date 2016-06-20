@@ -10,14 +10,6 @@ public interface UserData extends Entity {
     String getUserKey();
     void setUserKey(String userKey);
 
-    /** Week, day or month */
-    String getDefaultView();
-    void setDefaultView(String defaultView);
-
-    /** Hide weekends or not */
-    boolean isHideWeekends();
-    void setHideWeekends(boolean hideWeekends);
-
     /** Hash for ical url */
     String getIcalUid();
     void setICalUid(String uid);
@@ -29,6 +21,17 @@ public interface UserData extends Entity {
     void setFeedbackShowCount(int feedbackShowCount);
 
 
+    /** Week, day or month */
+    @Deprecated
+    String getDefaultView();
+    @Deprecated
+    void setDefaultView(String defaultView);
+
+    /** Hide weekends or not */
+    @Deprecated
+    boolean isHideWeekends();
+    @Deprecated
+    void setHideWeekends(boolean hideWeekends);
 
     /** Show time or not */
     @Deprecated

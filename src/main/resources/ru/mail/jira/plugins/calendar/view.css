@@ -225,6 +225,10 @@
     cursor: default;
 }
 
+#mailrucalendar-message-calendar-list .mailrucalendar-calendar-block {
+    margin-top: 5px;
+}
+
 #calendar-favorite-calendar-list {
     display: none;
 }
@@ -471,14 +475,13 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     padding-top: 0;
 }
 
-.mailrucalendar-table-icon-column {
+.mailrucalendar-calendar-block {
     padding-left: 22px;
     box-sizing: border-box;
-    display: inline-block;
     position: relative;
 }
 
-.mailrucalendar-table-icon-column .mailrucalendar-table-icon {
+.mailrucalendar-calendar-block .mailrucalendar-calendar-block-icon {
     left: 0;
     position: absolute;
     top: 2px;
@@ -602,7 +605,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     overflow-y: scroll;
 }
 
-.calenar-issue-popup-key-fields dl:first-of-type{
+.calenar-issue-popup-key-fields dl:first-of-type {
     margin-top: 10px
 }
 

@@ -40,3 +40,31 @@
         </footer>
     </section>
 {/template}
+
+/**
+ * Build row for calendars import table
+ * @param id
+ * @param name
+ * @param color
+ * @param usersCount
+ * @param hasError
+ * @param error
+ */
+{template .importTableRow}
+    <tr>
+        <td class="mailrucalendar-table-select-column">
+            <input class="checkbox" type="checkbox" data-id="{$id}">
+        </td>
+        <td>
+            <div class="mailrucalendar-calendar-block">
+            {if $hasError}
+                <div class="aui-icon aui-icon-small aui-iconfont-error mailrucalendar-table-icon" title="{$error}"/>
+            {else}
+                <div class="calendar-view-color-box mailrucalendar-calendar-block-icon" style="background-color: {$color};"/>
+            {/if}
+                {$name}
+            </div>
+        </td>
+        <td>{$usersCount}</td>
+    </tr>
+{/template}

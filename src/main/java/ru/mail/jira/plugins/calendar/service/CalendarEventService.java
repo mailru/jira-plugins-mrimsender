@@ -27,7 +27,6 @@ import com.atlassian.jira.issue.search.SearchProvider;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.jql.builder.JqlClauseBuilder;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
-import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.version.Version;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.bean.PagerFilter;
@@ -328,7 +327,8 @@ public class CalendarEventService {
     private IssueInfo getEventInfo(Calendar calendar, Issue issue, ApplicationUser user) {
         IssueInfo result = new IssueInfo(issue.getKey(), issue.getSummary());
         result.setStatusColor(issue.getStatusObject().getStatusCategory().getColorName());
-        result.setAvatarUrl(String.format("secure/viewavatar?size=xsmall&avatarId=%d&avatarType=issuetype", issue.getProjectObject().getAvatar().getId()));
+        if (issue.getIssueTypeObject().getAvatar() != null)
+            result.setAvatarUrl(String.format("secure/viewavatar?size=xsmall&avatarId=%d&avatarType=issuetype", issue.getIssueTypeObject().getAvatar().getId()));
 
         DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
         DateTimeFormatter userDateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user);

@@ -120,7 +120,7 @@ define('calendar/import-dialog', ['jquery', 'underscore', 'backbone'], function(
             this._onStartSearch();
             var rows = '';
             _.each(result, function(calendar) {
-                rows += JIRA.Templates.Plugins.MailRuCalendar.importTableRow(calendar.toJSON());
+                rows += JIRA.Templates.Plugins.MailRuCalendar.ImportDialog.importTableRow(calendar.toJSON());
             });
             if (rows) {
                 this.tableContent.append(rows);

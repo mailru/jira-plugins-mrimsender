@@ -84,7 +84,6 @@ public class UserDataService {
                 if (userDatas.length == 0) {
                     userData = ao.create(UserData.class);
                     userData.setUserKey(userKey);
-                    userData.setHideWeekends(false);
                 } else
                     userData = userDatas[0];
 
@@ -101,20 +100,15 @@ public class UserDataService {
         return ao.executeInTransaction(new TransactionCallback<UserDataDto>() {
             @Override
             public UserDataDto doInTransaction() {
-                UserData userData = getUserData(user);
-                if (userDataDto.getCalendarView() != null)
-                    userData.setDefaultView(userDataDto.getCalendarView());
-                userData.setHideWeekends(userDataDto.isHideWeekends());
-                userData.save();
                 if (userDataDto.getCalendars() != null && !userDataDto.getCalendars().isEmpty())
                     for (Integer calendarId : userDataDto.getCalendars())
                         try {
                             Calendar calendar = calendarService.getCalendar(calendarId);
-                            userCalendarService.addCalendarToUser(userData.getUserKey(), calendar, true);
+                            userCalendarService.addCalendarToUser(user.getKey(), calendar, true);
                         } catch (GetException e) {
                             log.warn("User attempt to add not existing calendar. User={}, calendar={}", user.getKey(), calendarId);
                         }
-                return getUserDataDto(user, userData);
+                return getUserDataDto(user, getUserData(user));
             }
         });
     }

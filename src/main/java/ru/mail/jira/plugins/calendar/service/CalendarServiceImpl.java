@@ -214,6 +214,11 @@ public class CalendarServiceImpl implements CalendarService {
         return fillUserCalendarDtos(user);
     }
 
+    @Override
+    public CalendarDto[] findCalendars(ApplicationUser user, Integer[] calendarIds) {
+        return fillUserCalendarDtos(user, ao.get(Calendar.class, calendarIds));
+    }
+
     public CalendarDto createCalendar(final ApplicationUser user, final CalendarSettingDto calendarSettingDto) throws GetException {
         validateCalendar(user, calendarSettingDto, true);
         Calendar calendar = ao.create(Calendar.class);
@@ -318,14 +323,6 @@ public class CalendarServiceImpl implements CalendarService {
             if (canAdmin || canUse || userCalendar != null) {
                 CalendarDto output = buildCalendarOutput(user, userCalendar, calendar, canUse, canAdmin, userCalendar != null && userCalendar.isEnabled(), userCalendar != null, userCalendarService.getUsersCount(calendar.getID()));
                 selectedCalendars.add(calendar.getID());
-                result.add(output);
-            }
-        }
-        for (UserCalendar userCalendar : userCalendarService.find(user.getKey())) {
-            if (!selectedCalendars.contains(userCalendar.getCalendarId())) {
-                CalendarDto output = buildCalendarOutput(user, userCalendar, null, false, false, false, true, 0);
-                output.setHasError(true);
-                output.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
                 result.add(output);
             }
         }

@@ -15,7 +15,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             this.eventDialog = AJS.InlineDialog('.calendar-event-object,.vis-item', 'eventDialog', function(content, trigger, showPopup) {
                 var event;
                 if (self.getViewType() == 'timeline') {
-                    var timeline = self.$el.fullCalendar('getView').timeline;
+                    var timeline = self.getView().timeline;
                     event = timeline.itemsData.get(timeline.getEventProperties({target: trigger}).item);
                 } else
                     event = self.$el.fullCalendar('clientEvents', $(trigger).data('event-id'))[0];
@@ -121,9 +121,12 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             var viewRenderFirstTime = true;
             var contextPath = this.contextPath;
             var self = this;
+            var start = localStorage.getItem('mailrucalendar.start');
+            var end = localStorage.getItem('mailrucalendar.end');
             this.$el.fullCalendar({
                 contentHeight: 'auto',
                 defaultView: view,
+                defaultDate: start && end ? new Date((moment(start).toDate().getTime() + moment(end).toDate().getTime()) / 2) : undefined,
                 header: {
                     left: 'prev,next today',
                     center: 'title',
@@ -249,8 +252,14 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
         setView: function(viewName) {
             this.$el.fullCalendar('changeView', viewName);
         },
+        getView: function() {
+            return this.$el.fullCalendar('getView');
+        },
         getViewType: function() {
-            return this.$el.fullCalendar('getView').type;
+            return this.getView().type;
+        },
+        getNow: function() {
+            return this.$el.fullCalendar('getNow');
         },
         toggleWeekends: function(hideWeekends) {
             var view = this.getViewType();

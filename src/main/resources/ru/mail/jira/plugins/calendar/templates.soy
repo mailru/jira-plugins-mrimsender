@@ -21,11 +21,13 @@
     <div>
         <div class="calenar-issue-popup-key-header">
             <a target="_blank" href="{$contextPath}/browse/{$issue.key}">
-                <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
-                    <span class="aui-avatar-inner">
-                        <img src="{$contextPath}/{$issue.avatarUrl}" />
+                {if $issue.avatarUrl}
+                    <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
+                        <span class="aui-avatar-inner">
+                            <img src="{$contextPath}/{$issue.avatarUrl}" />
+                        </span>
                     </span>
-                </span>{$issue.key}
+                {/if}{$issue.key}
             </a>{sp}{$issue.summary |escapeHtml}
             <dl>
                 <dt>{getText('ru.mail.jira.plugins.calendar.dialog.eventStart')}:</dt>
@@ -132,34 +134,6 @@
             </div>
         {/if}
     </div>
-{/template}
-
-/**
- * Build row for calendars import table
- * @param id
- * @param name
- * @param color
- * @param usersCount
- * @param hasError
- * @param error
- */
-{template .importTableRow}
-    <tr>
-        <td class="mailrucalendar-table-select-column">
-            <input class="checkbox" type="checkbox" data-id="{$id}">
-        </td>
-        <td>
-            <div class="mailrucalendar-table-icon-column">
-            {if $hasError}
-                <div class="aui-icon aui-icon-small aui-iconfont-error mailrucalendar-table-icon" title="{$error}"/>
-            {else}
-                <div class="calendar-view-color-box mailrucalendar-table-icon" style="background-color: {$color};"/>
-            {/if}
-                {$name}
-            </div>
-        </td>
-        <td>{$usersCount}</td>
-    </tr>
 {/template}
 
 /**
