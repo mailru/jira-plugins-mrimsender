@@ -116,7 +116,6 @@
                         <input type="hidden" id="calendar-dialog-source-filter-field" class="select calendar-dialog-source-field medium-long-field" {not $canAdmin ? 'disabled' : ''}/>
                         <div class="search-field-container hidden">
                             <div class="atlassian-autocomplete">
-                                <label for="advanced-search"></label>
                                 <label for="advanced-search">
                                     <span id="jqlerrormsg" class="icon jqlgood" title=""></span>
                                 </label>
@@ -125,7 +124,7 @@
                                     <span class="aui-icon aui-icon-small aui-iconfont-help">{getText( 'navigator.advanced.query.syntax' )}</span>
                                 </a>
                             </div>
-                            <div class="description medium-long-field"></div>
+                            <div class="description medium-long-field hidden"></div>
                         </div>
                         <div id="calendar-dialog-source-error" class="error hidden"></div>
                     </div>
@@ -157,13 +156,10 @@
                             <tr>
                                 <th class="calendar-dialog-permission-table-subject" colspan="2">
                                     <input type="hidden" class="select full-width-field" id="calendar-dialog-permission-table-subject" {not $canAdmin ? 'disabled' : ''}/>
+                                    <div class="calendar-dialog-permission-table-error hidden"></div>
                                 </th>
                                 <th class="calendar-dialog-permission-table-action">
                                     <button id="calendar-dialog-permission-table-add" class="aui-button" {not $canAdmin ? 'disabled' : ''}>{getText( 'common.words.add' )}</button>
-                                </th>
-                            </tr>
-                            <tr class="calendar-dialog-permission-table-error hidden">
-                                <th colspan="3">
                                 </th>
                             </tr>
                         </thead>

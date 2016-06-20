@@ -469,10 +469,10 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     text-overflow: ellipsis;
 }
 
-.calendar-dialog-permission-table-error th {
+.calendar-dialog-permission-table-error {
     color: #d04437;
     font-weight: normal;
-    padding-top: 0;
+    padding-top: 3px;
 }
 
 .mailrucalendar-calendar-block {

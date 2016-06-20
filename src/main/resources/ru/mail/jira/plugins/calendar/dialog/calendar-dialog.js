@@ -576,7 +576,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                     text = AJS.format('{0}<span class="calendar-dialog-permission-project-role-separator">/</span>{1}', subjectData.project, subjectData.projectRole);
                 else if (subjectData.type == 'USER')
                     text = subjectData.userDisplayName;
-                this.$('.calendar-dialog-permission-table-error').removeClass('hidden').find('th').html(AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.alreadyHasAccess'), text));
+                this.$('.calendar-dialog-permission-table-error').removeClass('hidden').html(AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.alreadyHasAccess'), text));
             } else {
                 this._addPermissionRow($.extend({accessType: 'USE'}, subjectData));
                 $subjectSelect.auiSelect2('val', '');

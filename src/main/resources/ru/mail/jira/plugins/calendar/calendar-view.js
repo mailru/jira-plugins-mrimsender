@@ -20,6 +20,11 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                 } else
                     event = self.$el.fullCalendar('clientEvents', $(trigger).data('event-id'))[0];
 
+                // Atlassian bug workaround
+                content.click(function (e) {
+                    e.stopPropagation();
+                });
+
                 $.ajax({
                     type: 'GET',
                     url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.eventId || event.id),

@@ -52,6 +52,7 @@ require(['jquery',
                 'click #calendar-create': 'createCalendar',
                 'click #calendar-import': 'importCalendar',
                 'click #mailrucalendar-add-url-calendars': 'addUrlCalendars',
+                'click #calendar-period-dropdown a': 'changeCalendarView',
                 'click .calendar-name': 'toggleCalendarVisibility',
                 'click .calendar-issue-navigator': 'openIssueNavigator',
                 'click .calendar-delete': 'deleteCalendar',
@@ -86,7 +87,7 @@ require(['jquery',
                     this.calendarView.addEventSource(calendar.id);
 
                 var calendars = _.pluck(this.collection.where({visible: true}), 'id');
-                router.navigate('period=' + this.calendarView.getViewType() + '/calendars=' + calendars.join(','), {
+                router.navigate('calendars=' + calendars.join(','), {
                     replace: true,
                     trigger: false
                 });
@@ -192,6 +193,10 @@ require(['jquery',
             onHideWeekendsHandler: function(model) {
                 this.calendarView.toggleWeekends(model.get('hideWeekends'));
             },
+            changeCalendarView: function(e) {
+                e.preventDefault();
+                this.setCalendarView(this.$(e.currentTarget).data('view-type'));
+            },
             toggleCalendarVisibility: function(e) {
                 e.preventDefault();
                 var $calendarNameLink = this.$(e.currentTarget);
@@ -266,6 +271,7 @@ require(['jquery',
                                         '</div>';
                                 });
 
+                                this.$('#mailrucalendar-message-calendar-list').empty();
                                 AJS.messages.generic('#mailrucalendar-message-calendar-list', {
                                     body: AJS.I18n.getText('ru.mail.jira.plugins.calendar.addSharedCalendars', '<a href="#" id="mailrucalendar-add-url-calendars">' + AJS.I18n.getText('ru.mail.jira.plugins.calendar.addSharedCalendars.add') + '</a>') +
                                     calendarHtml
@@ -287,7 +293,7 @@ require(['jquery',
                 });
             },
             updatePeriodButton: function(viewName) {
-                var $periodItem = this.$('#calendar-period-dropdown a[href$="' + viewName + '"]');
+                var $periodItem = this.$('#calendar-period-dropdown a[data-view-type=' + viewName + ']');
 
                 this.$('#calendar-period-dropdown a').removeClass('aui-dropdown2-checked');
                 this.$('#calendar-period-dropdown a').removeClass('checked');
@@ -385,33 +391,10 @@ require(['jquery',
         /* Router */
         var ViewRouter = Backbone.Router.extend({
             routes: {
-                '': 'defaultHandler',
-                'period=:view': 'switchPeriod',
-                'period=:view/calendars=:calendars': 'switchPeriodAndCalendars'
+                'calendars=:calendars': 'setCalendars'
             },
-            availableOptions: {
-                view: {
-                    quarter: true,
-                    month: true,
-                    agendaWeek: true,
-                    agendaDay: true,
-                    timeline: true
-                }
-            },
-            defaultHandler: function() {
-                this.navigate('period=' + mainView.calendarView.getViewType(), {replace: true});
-            },
-            switchPeriod: function(view) {
-                view = this.validateViewType(view);
-                this.navigate('period=' + view);
-                mainView.setCalendarView(view);
-            },
-            switchPeriodAndCalendars: function(view, calendars) {
-                mainView.setCalendarView(view);
+            setCalendars: function(calendars) {
                 mainView.setUrlCalendars(calendars.split(','));
-            },
-            validateViewType: function(view) {
-                return this.availableOptions.view[view] ? view : 'month';
             }
         });
 
@@ -465,7 +448,7 @@ require(['jquery',
                         hasEnabledCalendar = true;
                     }
                 });
-                router.navigate('period=' + mainView.calendarView.getViewType() + '/calendars=' + calendars.join(','), {
+                router.navigate('calendars=' + calendars.join(','), {
                     replace: true,
                     trigger: false
                 });
