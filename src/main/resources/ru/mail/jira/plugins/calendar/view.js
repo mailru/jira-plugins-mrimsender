@@ -228,9 +228,10 @@ require(['jquery',
                 if (calendars !== undefined)
                     this.urlCalendars = calendars;
                 if (mainView.calendarsLoaded && this.urlCalendars !== undefined) {
-                    this.collection.each(function(calendar) {
-                        calendar.set({visible: false}, {silent: this.urlCalendars.length});
-                    }, this);
+                    if (calendars !== undefined)
+                        this.collection.each(function(calendar) {
+                            calendar.set({visible: false}, {silent: this.urlCalendars.length});
+                        }, this);
 
                     var notInCollection = [];
                     _.each(this.urlCalendars, function(calendarId) {
