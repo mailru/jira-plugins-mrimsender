@@ -79,28 +79,32 @@ require(['jquery',
                 var view = model.get('calendarView') || 'month';
                 this.setCalendarView(view);
             },
-            _onChangeCalendar: function(calendar) {
-                this.buildCalendarList();
-
-                this.calendarView.removeEventSource(calendar.id);
-                if (calendar.get('favorite') && calendar.get('visible') && !calendar.get('hasError'))
-                    this.calendarView.addEventSource(calendar.id);
-
+            fillCalendarsInUrl: function() {
                 var calendars = _.pluck(this.collection.where({visible: true}), 'id');
                 router.navigate('calendars=' + calendars.join(','), {
                     replace: true,
                     trigger: false
                 });
             },
+            _onChangeCalendar: function(calendar) {
+                this.buildCalendarList();
+
+                this.calendarView.removeEventSource(calendar.id);
+                if (calendar.get('favorite') && calendar.get('visible') && !calendar.get('hasError'))
+                    this.calendarView.addEventSource(calendar.id);
+                this.fillCalendarsInUrl();
+            },
             _onAddCalendar: function(calendar) {
                 this.buildCalendarList();
                 this.calendarView.removeEventSource(calendar.id);
                 if (calendar.get('visible') && !calendar.get('hasError'))
                     this.calendarView.addEventSource(calendar.id);
+                this.fillCalendarsInUrl();
             },
             _onDeleteCalendar: function(calendar) {
                 this.buildCalendarList();
                 this.calendarView.removeEventSource(calendar.id);
+                this.fillCalendarsInUrl();
             },
             _onCalendarDropdownShow: function() {
                 var calendarId = $(this).data('id');
@@ -439,19 +443,14 @@ require(['jquery',
             silent: true,
             success: function(collection) {
                 var hasEnabledCalendar = false;
-                var calendars = [];
                 mainView.buildCalendarList();
                 collection.each(function(calendar) {
                     if (calendar.get('visible') && !calendar.get('hasError')) {
                         mainView.calendarView.addEventSource(calendar.id, true);
-                        calendars.push(calendar.id);
                         hasEnabledCalendar = true;
                     }
                 });
-                router.navigate('calendars=' + calendars.join(','), {
-                    replace: true,
-                    trigger: false
-                });
+                mainView.fillCalendarsInUrl();
                 hasEnabledCalendar || mainView.finishLoadingCalendarsCallback();
                 mainView.calendarsLoaded = true;
                 mainView.setUrlCalendars();

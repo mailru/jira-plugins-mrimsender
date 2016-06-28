@@ -22,6 +22,8 @@ import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.util.Uris;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarSettingDto;
@@ -52,6 +54,8 @@ import java.util.Set;
 @Path("/calendar")
 @Produces(MediaType.APPLICATION_JSON)
 public class RestCalendarService {
+    private final static Logger log = LoggerFactory.getLogger(RestCalendarService.class);
+
     private final CalendarService calendarService;
     private final CalendarEventService calendarEventService;
 
@@ -175,54 +179,71 @@ public class RestCalendarService {
         return new RestExecutor<StreamingOutput>() {
             @Override
             protected StreamingOutput doAction() throws Exception {
-                String[] calendarIds = StringUtils.split(calendars, "-");
+                try {
+                    String[] calendarIds = StringUtils.split(calendars, "-");
 
-                UserData userData = userDataService.getUserDataByIcalUid(icalUid);
-                if (userData == null)
-                    return null;
-                ApplicationUser user = userManager.getUserByKey(userData.getUserKey());
-                if (user == null || !user.isActive())
-                    return null;
+                    UserData userData = userDataService.getUserDataByIcalUid(icalUid);
+                    if (userData == null)
+                        return null;
+                    ApplicationUser user = userManager.getUserByKey(userData.getUserKey());
+                    if (user == null || !user.isActive())
+                        return null;
 
-                DateTimeFormatter userDateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-                final net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
-                calendar.getProperties().add(new ProdId("-//MailRu Calendar/" + icalUid + "/iCal4j 1.0//EN"));
-                calendar.getProperties().add(Version.VERSION_2_0);
-                calendar.getProperties().add(CalScale.GREGORIAN);
+                    DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
+                    DateTimeFormatter userDateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+                    final net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
+                    calendar.getProperties().add(new ProdId("-//MailRu Calendar/" + icalUid + "/iCal4j 1.0//EN"));
+                    calendar.getProperties().add(Version.VERSION_2_0);
+                    calendar.getProperties().add(CalScale.GREGORIAN);
 
-                LocalDate startSearch = LocalDate.now().minusMonths(3);
-                LocalDate endSearch = LocalDate.now().plusMonths(1);
+                    LocalDate startSearch = LocalDate.now().minusMonths(3);
+                    LocalDate endSearch = LocalDate.now().plusMonths(1);
 
-                for (String calendarId : calendarIds) {
-                    List<Event> events = calendarEventService.findEvents(Integer.parseInt(calendarId),
-                                                                         startSearch.toString("yyyy-MM-dd"),
-                                                                         endSearch.toString("yyyy-MM-dd"),
-                                                                         userManager.getUserByKey(userData.getUserKey()),
-                                                                         true);
+                    for (String calendarId : calendarIds) {
+                        List<Event> events = calendarEventService.findEvents(Integer.parseInt(calendarId),
+                                                                             startSearch.toString("yyyy-MM-dd"),
+                                                                             endSearch.toString("yyyy-MM-dd"),
+                                                                             userManager.getUserByKey(userData.getUserKey()),
+                                                                             true);
 
-                    for (Event event : events) {
-                        DateTime start = new DateTime(userDateTimeFormat.parse(event.getStart()));
-                        DateTime end = event.getEnd() != null ? new DateTime(userDateTimeFormat.parse(event.getEnd())) : null;
+                        for (Event event : events) {
+                            DateTime start;
+                            try {
+                                start = new DateTime(userDateTimeFormat.parse(event.getStart()));
+                            } catch (Exception e) {
+                                start = new DateTime(userDateFormat.parse(event.getStart()));
+                            }
+                            DateTime end = null;
+                            if (event.getEnd() != null)
+                                try {
+                                    end = new DateTime(userDateTimeFormat.parse(event.getEnd()));
+                                } catch (Exception e) {
+                                    end = new DateTime(userDateFormat.parse(event.getEnd()));
+                                }
 
-                        VEvent vEvent = end != null ? new VEvent(start, end, event.getTitle()) : new VEvent(start, event.getTitle());
-                        vEvent.getProperties().add(new Uid(calendarId + "_" + event.getId()));
-                        vEvent.getProperties().add(new Url(Uris.create(ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/" + event.getId())));
-                        if (event.getIssueInfo() != null)
-                            vEvent.getProperties().add(new Description(event.getIssueInfo().toFormatString(i18nHelper)));
-                        calendar.getComponents().add(vEvent);
-                    }
-                }
-
-                return new StreamingOutput() {
-                    @Override
-                    public void write(OutputStream output) throws IOException, WebApplicationException {
-                        try {
-                            new CalendarOutputter().output(calendar, output);
-                        } catch (ValidationException e) {
-                            throw new IOException(e);
+                            VEvent vEvent = end != null ? new VEvent(start, end, event.getTitle()) : new VEvent(start, event.getTitle());
+                            vEvent.getProperties().add(new Uid(calendarId + "_" + event.getId()));
+                            vEvent.getProperties().add(new Url(Uris.create(ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/" + event.getId())));
+                            if (event.getIssueInfo() != null)
+                                vEvent.getProperties().add(new Description(event.getIssueInfo().toFormatString(i18nHelper)));
+                            calendar.getComponents().add(vEvent);
                         }
                     }
-                };
+
+                    return new StreamingOutput() {
+                        @Override
+                        public void write(OutputStream output) throws IOException, WebApplicationException {
+                            try {
+                                new CalendarOutputter().output(calendar, output);
+                            } catch (ValidationException e) {
+                                throw new IOException(e);
+                            }
+                        }
+                    };
+                } catch (Throwable t) {
+                    log.error("Export ics calendar", t);
+                    return null;
+                }
             }
         }.getResponse();
     }
