@@ -21,7 +21,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     event = self.$el.fullCalendar('clientEvents', $(trigger).data('event-id'))[0];
 
                 // Atlassian bug workaround
-                content.click(function (e) {
+                content.click(function(e) {
                     e.stopPropagation();
                 });
 

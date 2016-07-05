@@ -37,8 +37,6 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 public class CalendarServiceImpl implements CalendarService {
@@ -315,14 +313,14 @@ public class CalendarServiceImpl implements CalendarService {
 
     private CalendarDto[] fillUserCalendarDtos(final ApplicationUser user, Calendar[] calendars) {
         List<CalendarDto> result = new ArrayList<CalendarDto>();
-        Set<Integer> selectedCalendars = new TreeSet<Integer>();
         for (Calendar calendar : calendars) {
+            if (calendar == null)
+                continue;
             boolean canAdmin = permissionService.hasAdminPermission(user, calendar);
             boolean canUse = canAdmin || permissionService.hasUsePermission(user, calendar);
             UserCalendar userCalendar = userCalendarService.find(calendar.getID(), user.getKey());
             if (canAdmin || canUse || userCalendar != null) {
                 CalendarDto output = buildCalendarOutput(user, userCalendar, calendar, canUse, canAdmin, userCalendar != null && userCalendar.isEnabled(), userCalendar != null, userCalendarService.getUsersCount(calendar.getID()));
-                selectedCalendars.add(calendar.getID());
                 result.add(output);
             }
         }

@@ -207,6 +207,11 @@
 
 /* Right Panel */
 
+#mailrucalendar-message-calendar-list {
+    border-bottom: solid 1px #e6e6e6;
+    margin-bottom: 15px;
+}
+
 #mailrucalendar-empty-calendar-list {
     color: #707070;
 }

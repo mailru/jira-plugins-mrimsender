@@ -203,12 +203,28 @@ require(['jquery',
             },
             toggleCalendarVisibility: function(e) {
                 e.preventDefault();
+                var self = this;
                 var $calendarNameLink = this.$(e.currentTarget);
                 if ($calendarNameLink.hasClass('not-working'))
                     return;
 
                 var calendarId = $calendarNameLink.closest('div.calendar-list-item-block').data('id');
                 var calendar = this.collection.get(calendarId);
+                if (!calendar || !calendar.get('favorite')) {
+                    this.model.save({calendars: [calendarId]}, {
+                        success: function() {
+                            self.collection.fetch({
+                                success: function() {
+                                    self.setUrlCalendars()
+                                }
+                            });
+                        },
+                        error: function(model, response) {
+                            alert(response.responseText);
+                        }
+                    });
+                    return;
+                }
 
                 if (calendar.get('visible'))
                     this.startLoadingCalendarsCallback();
@@ -239,7 +255,7 @@ require(['jquery',
                 if (mainView.calendarsLoaded && this.urlCalendars !== undefined) {
                     if (calendars !== undefined)
                         this.collection.each(function(calendar) {
-                            calendar.set({visible: false}, {silent: this.urlCalendars.length});
+                            calendar.set({visible: false}, {silent: !!this.urlCalendars.length});
                         }, this);
 
                     var notInCollection = [];
@@ -267,34 +283,19 @@ require(['jquery',
                                 id: notInCollection
                             },
                             success: function(response) {
-                                var calendarHtml = '';
+                                var html = AJS.I18n.getText('ru.mail.jira.plugins.calendar.addSharedCalendars');
                                 _.each(response, function(calendar) {
-                                    calendarHtml += '' +
-                                        '<div class="mailrucalendar-calendar-block">' +
-                                        '   <div class="calendar-view-color-box mailrucalendar-calendar-block-icon" style="background-color: ' + calendar.color + '"/>' + calendar.name +
-                                        '</div>';
+                                    html += JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({
+                                        calendar: calendar,
+                                        enableButton: false
+                                    });
                                 });
-
-                                this.$('#mailrucalendar-message-calendar-list').empty();
-                                AJS.messages.generic('#mailrucalendar-message-calendar-list', {
-                                    body: AJS.I18n.getText('ru.mail.jira.plugins.calendar.addSharedCalendars', '<a href="#" id="mailrucalendar-add-url-calendars">' + AJS.I18n.getText('ru.mail.jira.plugins.calendar.addSharedCalendars.add') + '</a>') +
-                                    calendarHtml
-                                });
+                                this.$('#mailrucalendar-message-calendar-list').html(html).removeClass('hidden');
                             }
                         });
+                    else
+                        this.$('#mailrucalendar-message-calendar-list').empty().addClass('hidden');
                 }
-            },
-            addUrlCalendars: function(e) {
-                e.preventDefault();
-                this.model.save({calendars: this.urlCalendars}, {
-                    success: $.proxy(function() {
-                        this.collection.fetch();
-                        this.$('#mailrucalendar-message-calendar-list').empty();
-                    }, this),
-                    error: function(model, response) {
-                        alert(response.responseText);
-                    }
-                });
             },
             updatePeriodButton: function(viewName) {
                 var $periodItem = this.$('#calendar-period-dropdown a[data-view-type=' + viewName + ']');
@@ -371,7 +372,10 @@ require(['jquery',
                 _.each(sorted, function(calendar) {
                     var json = calendar.toJSON();
                     if (calendar.get('visible') || calendar.get('favorite'))
-                        htmlFavoriteCalendars += JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({calendar: json});
+                        htmlFavoriteCalendars += JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({
+                            calendar: json,
+                            enableButton: true
+                        });
                 });
 
                 if (htmlFavoriteCalendars) {

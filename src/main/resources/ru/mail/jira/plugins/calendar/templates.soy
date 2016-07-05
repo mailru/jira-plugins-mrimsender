@@ -139,6 +139,7 @@
 /**
  * Calendar entry in right list
  * @param calendar
+ * @param enableButton
  */
 {template .calendarEntry}
     <div class="calendar-list-item-block {$calendar.visible ? 'calendar-visible' : '' }" data-id="{$calendar.id}" data-color="{$calendar.color}" id="calendar-list-item-block-{$calendar.id}">
@@ -154,37 +155,39 @@
         {/if}
             <span class="aui-nav-item-label" title="{$calendar.name}">{$calendar.name}</span>
         </a>
-        <div class="calendar-vews-buttons-block aui-buttons">
-            <button class="aui-button aui-button-subtle aui-button-compact aui-dropdown2-trigger aui-dropdown2-trigger-arrowless calendar-buttons-dropdown" aria-owns="calendar-buttons-dropdown-{$calendar.id}" aria-haspopup="true">
-                <span class="aui-icon aui-icon-small aui-iconfont-more"/>
-            </button>
-        </div>
-        <div id="calendar-buttons-dropdown-{$calendar.id}" data-id="{$calendar.id}" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
-            {if $calendar.viewable}
-                {if $calendar.source }
+        {if $enableButton}
+            <div class="calendar-vews-buttons-block aui-buttons">
+                <button class="aui-button aui-button-subtle aui-button-compact aui-dropdown2-trigger aui-dropdown2-trigger-arrowless calendar-buttons-dropdown" aria-owns="calendar-buttons-dropdown-{$calendar.id}" aria-haspopup="true">
+                    <span class="aui-icon aui-icon-small aui-iconfont-more"/>
+                </button>
+            </div>
+            <div id="calendar-buttons-dropdown-{$calendar.id}" data-id="{$calendar.id}" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
+                {if $calendar.viewable}
+                    {if $calendar.source }
+                        <div class="aui-dropdown2-section">
+                            <ul>
+                                <li><a class="calendar-issue-navigator" href="#">{getText( 'common.concepts.issues' )}</a></li>
+                            </ul>
+                        </div>
+                    {/if}
                     <div class="aui-dropdown2-section">
                         <ul>
-                            <li><a class="calendar-issue-navigator" href="#">{getText( 'common.concepts.issues' )}</a></li>
+                            <li><a class="calendar-edit" href="#">{getText( 'ru.mail.jira.plugins.calendar.common.edit' )}</a></li>
+                            {if $calendar.changable }
+                                <li><a class="calendar-delete" href="#">{getText( 'common.words.delete' )}</a></li>
+                            {/if}
                         </ul>
                     </div>
                 {/if}
-                <div class="aui-dropdown2-section">
-                    <ul>
-                        <li><a class="calendar-edit" href="#">{getText( 'ru.mail.jira.plugins.calendar.common.edit' )}</a></li>
-                        {if $calendar.changable }
-                            <li><a class="calendar-delete" href="#">{getText( 'common.words.delete' )}</a></li>
-                        {/if}
-                    </ul>
-                </div>
-            {/if}
-            {if $calendar.favorite or $calendar.visible }
-                <div class="aui-dropdown2-section">
-                    <ul>
-                        <li><a class="calendar-remove" href="#">{getText( 'ru.mail.jira.plugins.calendar.removeFavorite' )}</a></li>
-                    </ul>
-                </div>
-            {/if}
-        </div>
+                {if $calendar.favorite or $calendar.visible }
+                    <div class="aui-dropdown2-section">
+                        <ul>
+                            <li><a class="calendar-remove" href="#">{getText( 'ru.mail.jira.plugins.calendar.removeFavorite' )}</a></li>
+                        </ul>
+                    </div>
+                {/if}
+            </div>
+        {/if}
     </div>
 {/template}
 

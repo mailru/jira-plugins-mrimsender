@@ -59,10 +59,10 @@
         </section>
         <div class="aui-page-panel-nav">
             <nav class="aui-navgroup aui-navgroup-vertical">
-                <div class="aui-navgroup-inner" id="mailrucalendar-message-calendar-list">
+                <div class="aui-navgroup-inner hidden" id="mailrucalendar-message-calendar-list">
                 </div>
                 <div class="aui-navgroup-inner" id="mailrucalendar-empty-calendar-list" hidden>
-                    $i18n.getText( "common.words.delete" )
+                    $i18n.getText( "ru.mail.jira.plugins.calendar.emptyCalendarList" )
                 </div>
                 <div class="aui-navgroup-inner" id="calendar-favorite-calendar-list">
                 </div>
