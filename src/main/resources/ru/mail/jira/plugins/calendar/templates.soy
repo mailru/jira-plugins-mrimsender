@@ -31,7 +31,7 @@
             </a>{sp}{$issue.summary |escapeHtml}
             <dl>
                 <dt>{getText('ru.mail.jira.plugins.calendar.dialog.eventStart')}:</dt>
-                <dd>{$issue.start}</dd>
+                <dd>{$issue.start ? $issue.start : getText('ru.mail.jira.plugins.calendar.dialog.eventStart.empty')}</dd>
             </dl>
             {if $issue.end}
                 <dl>

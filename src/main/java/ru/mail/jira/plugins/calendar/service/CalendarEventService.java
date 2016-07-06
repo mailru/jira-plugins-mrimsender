@@ -313,8 +313,11 @@ public class CalendarEventService {
                     event.setEnd(endFormatter.format(new Date(endDate.getTime() + MILLIS_IN_DAY)));
                 else
                     event.setEnd(endFormatter.format(endDate));
-        } else
+        } else {
             event.setStart(endFormatter.format(endDate));
+            event.setDatesError(true);
+            dateFieldsIsDraggable = false;
+        }
 
         event.setStartEditable(dateFieldsIsDraggable && jiraDeprecatedService.issueService.isEditable(issue, user));
         event.setDurationEditable(isDateFieldResizable(endField) && startDate != null && endDate != null && jiraDeprecatedService.issueService.isEditable(issue, user));
