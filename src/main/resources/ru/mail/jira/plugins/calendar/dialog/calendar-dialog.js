@@ -141,7 +141,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                     return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(_.defaults({
                         projectId: item.id,
                         sourceType: 'project',
-                        text: AJS.escapeHTML(item.text)
+                        text: item.text ? AJS.escapeHTML(item.text) : ''
                     }, item));
                 },
                 initSelection: function(element, callback) {
@@ -189,7 +189,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                     return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(_.defaults({text: text}, item));
                 },
                 formatSelection: function format(item) {
-                    var text = AJS.escapeHTML(item.text);
+                    var text = item.text ? AJS.escapeHTML(item.text) : '';
                     return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(_.defaults({text: text}, item));
                 },
                 initSelection: function(element, callback) {
