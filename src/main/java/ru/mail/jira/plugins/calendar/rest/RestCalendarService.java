@@ -10,6 +10,7 @@ import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugins.rest.common.security.AnonymousAllowed;
 import net.fortuna.ical4j.data.CalendarOutputter;
+import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.component.VEvent;
@@ -207,19 +208,21 @@ public class RestCalendarService {
                                                                              true);
 
                         for (Event event : events) {
-                            DateTime start;
+                            Date start = new DateTime(true);
                             try {
-                                start = new DateTime(userDateTimeFormat.parse(event.getStart()));
+                                start.setTime(userDateTimeFormat.parse(event.getStart()).getTime());
                             } catch (Exception e) {
-                                start = new DateTime(userDateFormat.parse(event.getStart()));
+                                start.setTime(userDateFormat.parse(event.getStart()).getTime());
                             }
-                            DateTime end = null;
-                            if (event.getEnd() != null)
+                            Date end = null;
+                            if (event.getEnd() != null) {
+                                end = new DateTime(true);
                                 try {
-                                    end = new DateTime(userDateTimeFormat.parse(event.getEnd()));
+                                    end.setTime(userDateTimeFormat.parse(event.getEnd()).getTime());
                                 } catch (Exception e) {
-                                    end = new DateTime(userDateFormat.parse(event.getEnd()));
+                                    end.setTime(userDateFormat.parse(event.getEnd()).getTime());
                                 }
+                            }
 
                             VEvent vEvent = end != null ? new VEvent(start, end, event.getTitle()) : new VEvent(start, event.getTitle());
                             vEvent.getProperties().add(new Uid(calendarId + "_" + event.getId()));
