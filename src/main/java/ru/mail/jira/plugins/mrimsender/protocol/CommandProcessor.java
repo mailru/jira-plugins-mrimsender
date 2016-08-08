@@ -92,11 +92,11 @@ public class CommandProcessor extends Thread {
                 if ("#issues".equalsIgnoreCase(message)) {
                     SearchService searchService = ComponentAccessor.getComponent(SearchService.class);
 
-                    SearchService.ParseResult parseResult = searchService.parseQuery(fromUser.getDirectoryUser(), ISSUES_JQL);
+                    SearchService.ParseResult parseResult = searchService.parseQuery(fromUser, ISSUES_JQL);
                     if (!parseResult.isValid())
                         throw new Exception("Unable to parse search query");
 
-                    SearchResults searchResults = searchService.search(fromUser.getDirectoryUser(), parseResult.getQuery(), PagerFilter.getUnlimitedFilter());
+                    SearchResults searchResults = searchService.search(fromUser, parseResult.getQuery(), PagerFilter.getUnlimitedFilter());
 
                     StringBuilder sb = new StringBuilder();
                     if (!searchResults.getIssues().isEmpty())
@@ -159,11 +159,11 @@ public class CommandProcessor extends Thread {
                     issueInputParameters.setAssigneeId("-1");
                     issueInputParameters.setSummary(summary);
 
-                    IssueService.CreateValidationResult createValidationResult = issueService.validateCreate(fromUser.getDirectoryUser(), issueInputParameters);
+                    IssueService.CreateValidationResult createValidationResult = issueService.validateCreate(fromUser, issueInputParameters);
                     if (!createValidationResult.isValid())
                         throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.error", CommonUtils.formatErrorCollection(createValidationResult.getErrorCollection())));
 
-                    IssueService.IssueResult issueResult = issueService.create(fromUser.getDirectoryUser(), createValidationResult);
+                    IssueService.IssueResult issueResult = issueService.create(fromUser, createValidationResult);
                     if (!issueResult.isValid())
                         throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.error", CommonUtils.formatErrorCollection(issueResult.getErrorCollection())));
 
@@ -227,7 +227,7 @@ public class CommandProcessor extends Thread {
         String[] issueKeys = tokens[0].split("\\s+");
         List<Issue> issues = new ArrayList<Issue>(issueKeys.length);
         for (String issueKey : issueKeys) {
-            IssueService.IssueResult issueResult = issueService.getIssue(fromUser.getDirectoryUser(), issueKey);
+            IssueService.IssueResult issueResult = issueService.getIssue(fromUser, issueKey);
             if (!issueResult.isValid())
                 throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.unableToAccessIssue", issueKey, CommonUtils.formatErrorCollection(issueResult.getErrorCollection())));
             issues.add(issueResult.getIssue());
@@ -371,14 +371,14 @@ public class CommandProcessor extends Thread {
             IssueInputParameters issueInputParameters = issueService.newIssueInputParameters();
             issueInputParameters.setAssigneeId(assignee.getName());
 
-            IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(fromUser.getDirectoryUser(), issue.getId(), issueInputParameters);
+            IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(fromUser, issue.getId(), issueInputParameters);
             if (!updateValidationResult.isValid())
                 throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.assignCommand.error", issue.getKey(), assignee.getDisplayName(), CommonUtils.formatErrorCollection(updateValidationResult.getErrorCollection())));
 
             if (validation)
                 return null;
 
-            IssueService.IssueResult issueResult = issueService.update(fromUser.getDirectoryUser(), updateValidationResult);
+            IssueService.IssueResult issueResult = issueService.update(fromUser, updateValidationResult);
             if (!issueResult.isValid())
                 throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.assignCommand.error", issue.getKey(), assignee.getDisplayName(), CommonUtils.formatErrorCollection(issueResult.getErrorCollection())));
 
@@ -436,14 +436,14 @@ public class CommandProcessor extends Thread {
             if (StringUtils.isNotEmpty(commentText))
                 issueInputParameters.setComment(commentText);
 
-            IssueService.TransitionValidationResult transitionValidationResult = issueService.validateTransition(fromUser.getDirectoryUser(), issue.getId(), actionDescriptor.getId(), issueInputParameters);
+            IssueService.TransitionValidationResult transitionValidationResult = issueService.validateTransition(fromUser, issue.getId(), actionDescriptor.getId(), issueInputParameters);
             if (!transitionValidationResult.isValid())
                 throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.workflowCommand.error", issue.getKey(), actionDescriptor.getName(), CommonUtils.formatErrorCollection(transitionValidationResult.getErrorCollection())));
 
             if (validation)
                 return null;
 
-            IssueService.IssueResult issueResult = issueService.transition(fromUser.getDirectoryUser(), transitionValidationResult);
+            IssueService.IssueResult issueResult = issueService.transition(fromUser, transitionValidationResult);
             if (!issueResult.isValid())
                 throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.workflowCommand.error", issue.getKey(), actionDescriptor.getName(), CommonUtils.formatErrorCollection(issueResult.getErrorCollection())));
 

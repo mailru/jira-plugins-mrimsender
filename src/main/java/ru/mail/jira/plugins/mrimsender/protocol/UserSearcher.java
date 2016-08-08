@@ -1,9 +1,7 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
-import com.atlassian.crowd.embedded.api.User;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.ApplicationUsers;
 import com.atlassian.jira.user.util.UserManager;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
@@ -20,9 +18,9 @@ public class UserSearcher {
     private final UserManager userManager = ComponentAccessor.getUserManager();
 
     private UserSearcher() {
-        for (User directoryUser : userManager.getAllUsers())
+        for (ApplicationUser user : userManager.getAllUsers())
             try {
-                updateUser(ApplicationUsers.from(directoryUser));
+                updateUser(user);
             } catch (IllegalStateException ignore) {
                 // Workaround for users that have no unique key mapping
             }
@@ -48,9 +46,8 @@ public class UserSearcher {
                 mrimLoginCache.remove(mrimLogin.toLowerCase());
         }
 
-        for (User directoryUser : userManager.getAllUsers())
+        for (ApplicationUser user : userManager.getAllUsers())
             try {
-                ApplicationUser user = ApplicationUsers.from(directoryUser);
                 if (user.isActive() && mrimLogin.equalsIgnoreCase(userData.getMrimLogin(user))) {
                     mrimLoginCache.put(mrimLogin.toLowerCase(), user.getKey());
                     return user;
@@ -72,9 +69,8 @@ public class UserSearcher {
                 emailCache.remove(email.toLowerCase());
         }
 
-        for (User directoryUser : userManager.getAllUsers())
+        for (ApplicationUser user : userManager.getAllUsers())
             try {
-                ApplicationUser user = ApplicationUsers.from(directoryUser);
                 if (email.equalsIgnoreCase(user.getEmailAddress())) {
                     emailCache.put(email.toLowerCase(), user.getKey());
                     return user;

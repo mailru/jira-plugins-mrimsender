@@ -77,7 +77,7 @@
     </build>
 
     <properties>
-        <jira.version>6.3.6</jira.version>
+        <jira.version>7.1.9</jira.version>
         <amps.version>5.0.4</amps.version>
         <fastdev.mvn.command>/usr/share/atlassian-plugin-sdk-5.0.4/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>
         <useFastdevCli>false</useFastdevCli>

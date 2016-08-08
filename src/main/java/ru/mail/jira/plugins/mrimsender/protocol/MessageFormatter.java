@@ -1,6 +1,5 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
-import com.atlassian.crowd.embedded.api.User;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.ConstantsManager;
 import com.atlassian.jira.config.properties.APKeys;
@@ -41,7 +40,7 @@ public class MessageFormatter {
         this.recipient = recipient;
     }
 
-    private String formatUser(User user, String messageKey) {
+    private String formatUser(ApplicationUser user, String messageKey) {
         if (user != null)
             return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
         else
@@ -94,10 +93,10 @@ public class MessageFormatter {
         appendField(sb, i18nHelper.getText("issue.field.components"), issue.getComponentObjects());
 
         if (issue.getCreated() != null)
-            appendField(sb, i18nHelper.getText("issue.field.created"), dateTimeFormatter.forUser(recipient.getDirectoryUser()).withStyle(DateTimeStyle.COMPLETE).format(issue.getCreated()), false);
+            appendField(sb, i18nHelper.getText("issue.field.created"), dateTimeFormatter.forUser(recipient).withStyle(DateTimeStyle.COMPLETE).format(issue.getCreated()), false);
 
         if (issue.getDueDate() != null)
-            appendField(sb, i18nHelper.getText("issue.field.duedate"), dateTimeFormatter.forUser(recipient.getDirectoryUser()).withSystemZone().withStyle(DateTimeStyle.DATE).format(issue.getDueDate()), false);
+            appendField(sb, i18nHelper.getText("issue.field.duedate"), dateTimeFormatter.forUser(recipient).withSystemZone().withStyle(DateTimeStyle.DATE).format(issue.getDueDate()), false);
 
         appendField(sb, i18nHelper.getText("issue.field.environment"), issue.getEnvironment(), false);
         appendField(sb, i18nHelper.getText("issue.field.fixversions"), issue.getFixVersions());
@@ -158,7 +157,7 @@ public class MessageFormatter {
 
     public String formatEvent(IssueEvent issueEvent) {
         Issue issue = issueEvent.getIssue();
-        User user = issueEvent.getUser();
+        ApplicationUser user = issueEvent.getUser();
         String issueLink = String.format("%s/browse/%s", ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL), issue.getKey());
 
         StringBuilder sb = new StringBuilder();
@@ -217,7 +216,7 @@ public class MessageFormatter {
 
     public String formatEvent(MentionIssueEvent mentionIssueEvent) {
         Issue issue = mentionIssueEvent.getIssue();
-        User user = mentionIssueEvent.getFromUser();
+        ApplicationUser user = mentionIssueEvent.getFromUser();
         String issueLink = String.format("%s/browse/%s", ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL), issue.getKey());
 
         StringBuilder sb = new StringBuilder();
