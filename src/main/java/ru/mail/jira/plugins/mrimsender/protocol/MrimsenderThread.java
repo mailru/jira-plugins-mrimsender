@@ -95,7 +95,7 @@ public class MrimsenderThread extends Thread {
                     long sleepInterval = MIN_SLEEP_INTERVAL;
                     while (!reconnect && sleepInterval < MAX_SLEEP_INTERVAL) {
                         try {
-                            sendEmail(false, (sleepInterval / (60 * 1000)));
+                            sendEmail(false, (int)(sleepInterval / (60 * 1000)));
                             sleep(sleepInterval);
                             resetWorker();
                             if (worker != null)
@@ -112,7 +112,7 @@ public class MrimsenderThread extends Thread {
         closeWorker();
     }
 
-    private void sendEmail(boolean unableToReconnectMessage, double reconnectInterval) {
+    private void sendEmail(boolean unableToReconnectMessage, int reconnectInterval) {
         try {
             PluginData pluginData = ComponentAccessor.getOSGiComponentInstanceOfType(PluginData.class);
             for (String recipientKey : pluginData.getNotifiedUserKeys()) {
