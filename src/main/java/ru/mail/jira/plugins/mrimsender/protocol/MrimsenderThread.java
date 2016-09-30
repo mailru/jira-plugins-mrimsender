@@ -15,6 +15,8 @@ import java.util.concurrent.*;
 
 public class MrimsenderThread extends Thread {
     private static final int MAX_QUEUE_SIZE = 10000;
+    private static final long MIN_SLEEP_INTERVAL = 30 * 1000;
+    private static final long MAX_SLEEP_INTERVAL = 32 * 60 * 1000;
 
     private static final Logger log = Logger.getLogger(MrimsenderThread.class);
     private static MrimsenderThread instance;
@@ -89,20 +91,28 @@ public class MrimsenderThread extends Thread {
                 // Try to recover the state
                 resetWorker();
                 if (worker == null) {
-                    sendEmail(false);
-                    try {
-                        sleep(10 * 60 * 1000);
-                        resetWorker();
-                        if (worker == null)
-                            sendEmail(true);
-                    } catch (InterruptedException ignore) {
+                    boolean reconnect = false;
+                    long sleepInterval = MIN_SLEEP_INTERVAL;
+                    while (!reconnect && sleepInterval < MAX_SLEEP_INTERVAL) {
+                        try {
+                            sendEmail(false, (sleepInterval / (60 * 1000)));
+                            sleep(sleepInterval);
+                            resetWorker();
+                            if (worker != null)
+                                reconnect = true;
+                            sleepInterval = sleepInterval * 2;
+                        } catch (InterruptedException ignore) {
+                        }
                     }
+
+                    if (sleepInterval > MAX_SLEEP_INTERVAL)
+                        sendEmail(true, 0);
                 }
             }
         closeWorker();
     }
 
-    private void sendEmail(boolean unableToReconnectMessage) {
+    private void sendEmail(boolean unableToReconnectMessage, double reconnectInterval) {
         try {
             PluginData pluginData = ComponentAccessor.getOSGiComponentInstanceOfType(PluginData.class);
             for (String recipientKey : pluginData.getNotifiedUserKeys()) {
@@ -111,7 +121,7 @@ public class MrimsenderThread extends Thread {
                     throw new IllegalStateException(String.format("Recipient user is not found by key (%s)", recipientKey));
 
                 I18nHelper i18nHelper = ComponentAccessor.getI18nHelperFactory().getInstance(recipient);
-                String message = i18nHelper.getText(unableToReconnectMessage ? "ru.mail.jira.plugins.mrimsender.email.unableToReconnect" : "ru.mail.jira.plugins.mrimsender.email.unableToConnect");
+                String message = unableToReconnectMessage ? i18nHelper.getText("ru.mail.jira.plugins.mrimsender.email.unableToReconnect") : i18nHelper.getText("ru.mail.jira.plugins.mrimsender.email.unableToConnect", reconnectInterval);
                 CommonUtils.sendEmail(recipient, i18nHelper.getText("ru.mail.jira.plugins.mrimsender.email.subject"), message);
             }
         } catch (Exception e) {
