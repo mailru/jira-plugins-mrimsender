@@ -1,6 +1,6 @@
 package ru.mail.jira.plugins.mrimsender.configuration;
 
-import com.atlassian.crowd.embedded.api.User;
+import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.Condition;
 
@@ -13,8 +13,8 @@ public class ProfilePanelCondition implements Condition {
 
     @Override
     public boolean shouldDisplay(Map<String, Object> paramMap) {
-        User profileUser = (User) paramMap.get("profileUser");
-        User currentUser = (User) paramMap.get("currentUser");
+        ApplicationUser profileUser = (ApplicationUser) paramMap.get("profileUser");
+        ApplicationUser currentUser = (ApplicationUser) paramMap.get("currentUser");
         return profileUser != null && profileUser.equals(currentUser);
     }
 }

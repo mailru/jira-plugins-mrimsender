@@ -1,6 +1,5 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
-import com.atlassian.crowd.embedded.api.User;
 import com.atlassian.event.api.EventListener;
 import com.atlassian.event.api.EventPublisher;
 import com.atlassian.jira.event.issue.IssueEvent;
@@ -14,7 +13,6 @@ import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.user.ApplicationUsers;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -126,11 +124,9 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     public void onMentionIssueEvent(MentionIssueEvent mentionIssueEvent) {
         try {
             List<ApplicationUser> recipients = new ArrayList<ApplicationUser>();
-            for (User directoryUser : mentionIssueEvent.getToUsers()) {
-                ApplicationUser user = ApplicationUsers.from(directoryUser);
+            for (ApplicationUser user : mentionIssueEvent.getToUsers())
                 if (!mentionIssueEvent.getCurrentRecipients().contains(new NotificationRecipient(user)))
                     recipients.add(user);
-            }
             sendMessage(recipients, mentionIssueEvent);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
