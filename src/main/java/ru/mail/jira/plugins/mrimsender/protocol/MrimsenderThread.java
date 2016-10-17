@@ -89,6 +89,8 @@ public class MrimsenderThread extends Thread {
                 log.error(e.getMessage(), e);
 
                 // Try to recover the state
+                sendEmail(false, 0);
+                log.info("Trying to reconnect...");
                 resetWorker();
                 if (worker == null) {
                     boolean reconnect = false;
@@ -97,17 +99,23 @@ public class MrimsenderThread extends Thread {
                         try {
                             sendEmail(false, (int)(sleepInterval / (60 * 1000)));
                             sleep(sleepInterval);
+                            log.info("Trying to reconnect...");
                             resetWorker();
-                            if (worker != null)
+                            if (worker != null) {
                                 reconnect = true;
+                                log.info("Successfully connected!");
+                            }
                             sleepInterval = sleepInterval * 2;
-                        } catch (InterruptedException ignore) {
+                        } catch (InterruptedException error) {
+                            log.error(error.getMessage(), error);
+                            instance.interrupt();
                         }
                     }
 
                     if (sleepInterval > MAX_SLEEP_INTERVAL)
                         sendEmail(true, 0);
-                }
+                } else
+                    log.info("Successfully connected!");
             }
         closeWorker();
     }
