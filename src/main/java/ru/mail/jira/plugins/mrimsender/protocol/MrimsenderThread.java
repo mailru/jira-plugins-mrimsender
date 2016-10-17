@@ -41,10 +41,12 @@ public class MrimsenderThread extends Thread {
     }
 
     public static synchronized void relogin() {
+        log.info("MrimsenderThread is " + instance);
         if (instance != null) {
             instance.doLogin = true;
             instance.interrupt();
-        }
+        } else
+            startInstance();
     }
 
     public static synchronized void sendMessage(String email, String message) {
@@ -112,7 +114,7 @@ public class MrimsenderThread extends Thread {
                             sendEmail(true, 0);
                     } catch (InterruptedException error) {
                         log.error(error.getMessage(), error);
-                        Thread.currentThread().interrupt();
+                        instance.interrupt();
                     }
                 } else
                     log.info("Successfully connected!");
