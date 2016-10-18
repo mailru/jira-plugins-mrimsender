@@ -41,10 +41,12 @@ public class MrimsenderThread extends Thread {
     }
 
     public static synchronized void relogin() {
+        log.info("MrimsenderThread is " + instance);
         if (instance != null) {
             instance.doLogin = true;
             instance.interrupt();
-        }
+        } else
+            startInstance();
     }
 
     public static synchronized void sendMessage(String email, String message) {
@@ -59,7 +61,7 @@ public class MrimsenderThread extends Thread {
 
     @Override
     public void run() {
-        while (true)
+        while (!doClose)
             try {
                 if (Thread.interrupted())
                     throw new InterruptedException();
@@ -89,25 +91,31 @@ public class MrimsenderThread extends Thread {
                 log.error(e.getMessage(), e);
 
                 // Try to recover the state
+                sendEmail(false, 0);
+                log.info("Trying to reconnect...");
                 resetWorker();
                 if (worker == null) {
-                    boolean reconnect = false;
-                    long sleepInterval = MIN_SLEEP_INTERVAL;
-                    while (!reconnect && sleepInterval < MAX_SLEEP_INTERVAL) {
-                        try {
-                            sendEmail(false, (int)(sleepInterval / (60 * 1000)));
+                    try {
+                        boolean reconnect = false;
+                        long sleepInterval = MIN_SLEEP_INTERVAL;
+                        while (!reconnect && sleepInterval < MAX_SLEEP_INTERVAL) {
+                            sendEmail(false, (int) (sleepInterval / (60 * 1000)));
                             sleep(sleepInterval);
+                            log.info("Trying to reconnect...");
                             resetWorker();
-                            if (worker != null)
+                            if (worker != null) {
                                 reconnect = true;
-                            sleepInterval = sleepInterval * 2;
-                        } catch (InterruptedException ignore) {
+                                log.info("Successfully connected!");
+                            } else
+                                sleepInterval = sleepInterval * 2;
                         }
-                    }
 
-                    if (sleepInterval > MAX_SLEEP_INTERVAL)
-                        sendEmail(true, 0);
-                }
+                        if (sleepInterval > MAX_SLEEP_INTERVAL)
+                            sendEmail(true, 0);
+                    } catch (InterruptedException ignore) {
+                    }
+                } else
+                    log.info("Successfully connected!");
             }
         closeWorker();
     }

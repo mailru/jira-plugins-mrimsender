@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>mrimsender</artifactId>
-    <version>3.14</version>
+    <version>3.15</version>
     <organization>
         <name>Andrey Molchanov | Mail.Ru Group</name>
         <url>http://corp.mail.ru/en</url>
