@@ -61,7 +61,7 @@ public class MrimsenderThread extends Thread {
 
     @Override
     public void run() {
-        while (true)
+        while (!doClose)
             try {
                 if (Thread.interrupted())
                     throw new InterruptedException();
@@ -106,15 +106,13 @@ public class MrimsenderThread extends Thread {
                             if (worker != null) {
                                 reconnect = true;
                                 log.info("Successfully connected!");
-                            }
-                            sleepInterval = sleepInterval * 2;
+                            } else
+                                sleepInterval = sleepInterval * 2;
                         }
 
                         if (sleepInterval > MAX_SLEEP_INTERVAL)
                             sendEmail(true, 0);
-                    } catch (InterruptedException error) {
-                        log.error(error.getMessage(), error);
-                        instance.interrupt();
+                    } catch (InterruptedException ignore) {
                     }
                 } else
                     log.info("Successfully connected!");
