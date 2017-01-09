@@ -302,7 +302,7 @@ require(['jquery',
 
                 this.$('#calendar-period-dropdown a').removeClass('aui-dropdown2-checked');
                 this.$('#calendar-period-dropdown a').removeClass('checked');
-                $periodItem.addClass('aui-dropdown2-checked');
+                $periodItem.addClass('aui-dropdown2-checked checked');
                 this.$('#calendar-period-btn .trigger-label').text($periodItem.text());
             },
             updateViewInterval: function() {
