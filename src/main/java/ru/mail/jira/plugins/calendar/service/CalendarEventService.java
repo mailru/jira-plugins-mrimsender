@@ -31,6 +31,7 @@ import com.atlassian.jira.project.version.Version;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.bean.PagerFilter;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.Calendar;
@@ -283,6 +284,8 @@ public class CalendarEventService {
         event.setTitle(issue.getSummary());
         event.setColor(calendar.getColor());
         event.setAllDay(isAllDay);
+        event.setStatusColor(issue.getStatusObject().getStatusCategory().getColorName());
+        event.setStatus(issue.getStatusObject().getName());
 
         if (startDate == null && endDate == null) { // Something unbelievable
             log.error("Event " + issue.getKey() + " doesn't contain startDate and endDate");
@@ -492,10 +495,12 @@ public class CalendarEventService {
         if (end != null && isDateFieldResizable(calendar.getEventEnd()) && !calendar.getEventStart().equals(calendar.getEventEnd())) {
             Date endDate = dateTimeFormat.parse(end);
             if (eventEndCF != null) {
-                DateTimeFormatter formatter = eventEndCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
-                issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), formatter.format(endDate));
+                if (eventEndCF.getCustomFieldType() instanceof DateTimeCFType)
+                    issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), dateTimePickerFormat.format(endDate));
+                else
+                    issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), datePickerFormat.format(new DateTime(endDate).minusDays(1).toLocalDate().toDate()));
             } else
-                issueInputParams.setDueDate(datePickerFormat.format(endDate));
+                issueInputParams.setDueDate(datePickerFormat.format(new DateTime(endDate).minusDays(1).toLocalDate().toDate()));
         }
 
         IssueService.UpdateValidationResult updateValidationResult = jiraDeprecatedService.issueService.validateUpdate(user, issue.getId(), issueInputParams);

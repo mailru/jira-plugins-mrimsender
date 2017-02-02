@@ -192,11 +192,12 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                 slotWidth: 100,
                 slotDuration: '01:00',
                 eventRender: function(event, $element) {
+                    $element.data('event-id', event.id);
                     $element.addClass('calendar-event-object');
                     if (event.datesError)
                         $element.addClass('calendar-event-dates-error');
                     $element.find('.fc-title').prepend(event.id + ' ');
-                    $element.data('event-id', event.id);
+                    $element.find('.fc-content').prepend('<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span>');
                 },
                 loading: $.proxy(function(isLoading, view) {
                     viewRenderFirstTime = false;

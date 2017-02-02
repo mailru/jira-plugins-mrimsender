@@ -587,6 +587,11 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     font-family: inherit;
 }
 
+.fc-content .jira-issue-status-lozenge {
+    margin: 0 2px;
+    font-size: .85em;
+}
+
 /* Issue Info Popup*/
 
 .calenar-issue-popup-key-header dl {

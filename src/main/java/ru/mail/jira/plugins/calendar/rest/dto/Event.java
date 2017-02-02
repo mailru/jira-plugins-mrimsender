@@ -11,6 +11,10 @@ public class Event {
     @XmlElement
     private String issueKey;
     @XmlElement
+    private String status;
+    @XmlElement
+    private String statusColor;
+    @XmlElement
     private long calendarId;
     @XmlElement
     private boolean allDay;
@@ -45,6 +49,22 @@ public class Event {
 
     public void setIssueKey(String issueKey) {
         this.issueKey = issueKey;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getStatusColor() {
+        return statusColor;
+    }
+
+    public void setStatusColor(String statusColor) {
+        this.statusColor = statusColor;
     }
 
     public long getCalendarId() {

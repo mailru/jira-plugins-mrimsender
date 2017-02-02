@@ -204,7 +204,7 @@
                         calendarId: event.calendarId,
                         start: event.start.clone().local().toDate(),
                         end: event.end && event.end.clone().local().toDate(),
-                        content: event.id + ' ' + AJS.escapeHTML(event.title),
+                        content: '<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span><span> '+ event.id + ' ' + AJS.escapeHTML(event.title) + '</span>',
                         className: this._getClassForColor(event.color),
                         style: event.datesError ? 'opacity: 0.4;border-color:#d04437;' : '',
                         startEditable: event.startEditable,
