@@ -1,7 +1,5 @@
-require(['calendar/calendar-view'], function(CalendarView) {
-    var gadget = AJS.Gadget({
-        baseUrl: atlassian.util.getRendererBaseUrl(),
-        useOauth: '/rest/gadget/1.0/currentUser',
+define('calendar/calendar-gadget-config', ['calendar/calendar-view'], function(CalendarView) {
+    return {
         config: {
             descriptor: function(args) {
                 var gadget = this;
@@ -212,5 +210,5 @@ require(['calendar/calendar-view'], function(CalendarView) {
                 ];
             }()
         }
-    });
+    };
 });

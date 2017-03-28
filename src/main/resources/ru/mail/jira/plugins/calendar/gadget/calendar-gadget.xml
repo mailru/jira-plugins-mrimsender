@@ -32,6 +32,17 @@
             #requireResource("jira.webresources:jira-global")
             #requireResource("ru.mail.jira.plugins.mailrucal:calendar-gadget-resources")
             #includeResources()
+
+            <script type="text/javascript">
+                require(['calendar/calendar-gadget-config'], function(CalendarGadgetConfig) {
+                    var gadget = AJS.Gadget({
+                        baseUrl: '__ATLASSIAN_BASE_URL__',
+                        useOauth: '/rest/gadget/1.0/currentUser',
+                        config: CalendarGadgetConfig.config,
+                        view: CalendarGadgetConfig.view
+                    });
+                });
+            </script>
         ]]>
     </Content>
 </Module>
