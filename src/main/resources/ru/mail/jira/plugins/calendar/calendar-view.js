@@ -197,7 +197,9 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     if (event.datesError)
                         $element.addClass('calendar-event-dates-error');
                     $element.find('.fc-title').prepend(event.id + ' ');
-                    $element.find('.fc-content').prepend('<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span>');
+                    $element.find('.fc-content')
+                        .prepend('<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span>')
+                        .prepend('<img class="calendar-event-issue-type" alt="" height="16" width="16" src="' + event.issueTypeImgUrl + '" />');
                 },
                 loading: $.proxy(function(isLoading, view) {
                     viewRenderFirstTime = false;

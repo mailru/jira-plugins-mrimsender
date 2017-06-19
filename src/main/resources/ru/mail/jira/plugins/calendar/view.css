@@ -556,6 +556,10 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     color: #fff !important;
 }
 
+.calendar-event-issue-type {
+    vertical-align: text-bottom;
+}
+
 .calendar-event-dates-error {
     opacity: 0.65;
     border-color: #d04437 !important;

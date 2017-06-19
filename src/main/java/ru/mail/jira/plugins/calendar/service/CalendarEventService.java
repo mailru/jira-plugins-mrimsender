@@ -285,6 +285,7 @@ public class CalendarEventService {
         event.setColor(calendar.getColor());
         event.setAllDay(isAllDay);
         event.setStatusColor(issue.getStatusObject().getStatusCategory().getColorName());
+        event.setIssueTypeImgUrl(issue.getIssueTypeObject().getIconUrl());
         event.setStatus(issue.getStatusObject().getName());
 
         if (startDate == null && endDate == null) { // Something unbelievable
