@@ -1,4 +1,15 @@
-define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/util/forms', 'jira/jql/jql-parser', 'jira/autocomplete/jql-autocomplete'], function($, _, Backbone, Forms, JQLParser, JQLAutoComplete) {
+define('calendar/calendar-dialog', [
+    'jquery',
+    'underscore',
+    'backbone',
+    'jira/util/forms',
+    'jira/jql/jql-parser',
+    'jira/autocomplete/jql-autocomplete',
+    'calendar/confirm-dialog',
+    'calendar/reminder'
+], function($, _, Backbone, Forms, JQLParser, JQLAutoComplete, ConfirmDialog, Reminder) {
+    var AVATARS = ['event', 'travel', 'leave', 'birthday'];
+
     var displayedFieldsData, dateFieldsData, autoCompleteData;
     AJS.toInit(function() {
         $.ajax({
@@ -13,7 +24,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 });
             },
             error: function(xhr) {
-                var msg = "Error while trying to load displayed fields.";
+                var msg = 'Error while trying to load displayed fields.';
                 if (xhr.responseText)
                     msg += xhr.responseText;
                 alert(msg);
@@ -26,7 +37,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 dateFieldsData = result;
             },
             error: function(xhr) {
-                var msg = "Error while trying to load date fields.";
+                var msg = 'Error while trying to load date fields.';
                 if (xhr.responseText)
                     msg += xhr.responseText;
                 alert(msg);
@@ -54,11 +65,16 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
             'click a[href=#calendar-dialog-common-tab]': '_selectCommonTab',
             'click a[href=#calendar-dialog-source-tab]': '_selectSourceTab',
             'click a[href=#calendar-dialog-permissions-tab]': '_selectPermissionTab',
+            'click a[href=#calendar-dialog-eventTypes-tab]': '_selectEventTypesTab',
             'change #calendar-dialog-permission-table-subject': '_onChangeSubjectSelect',
             'focus .calendar-dialog-permission-table-action a': '_onPermissionTableActionFocus',
             'blur .calendar-dialog-permission-table-action a': '_onPermissionTableActionBlur',
             'select2-open #calendar-dialog-permission-table-subject': '_onOpenSubjectSelect',
-            'change input[type=radio][name=calendar-dialog-source]': '_onSourceTypeChange'
+            'change input[type=radio][name=calendar-dialog-source]': '_onSourceTypeChange',
+            'click #calendar-dialog-eventTypes-content .edit-button': '_editEventTypeRow',
+            'click #calendar-dialog-eventTypes-content .delete-button': '_deleteEventType',
+            'click #calendar-dialog-eventTypes-create-button': '_addNewEventTypeRow',
+            'click #calendar-dialog-eventTypes-content .cancel-button': '_resetEventTypeEditing'
         },
         render: function() {
             this.$el.html(JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.dialog({
@@ -85,7 +101,6 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
             this._initDateFields();
             this._initDisplayedFieldsField();
             this._initPermissionSubjectField();
-
             this._fillForm();
 
             this.$('form').submit($.proxy(this._onFormSubmit, this));
@@ -224,7 +239,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 maxHeight: '195'
             });
             var jqlField = $('#advanced-search');
-            jqlField.unbind("keypress", Forms.submitOnEnter).keypress(function(e) {
+            jqlField.unbind('keypress', Forms.submitOnEnter).keypress(function(e) {
                 if (jqlAutoComplete.dropdownController === null || !jqlAutoComplete.dropdownController.displayed || jqlAutoComplete.selectedIndex < 0)
                     return true;
             });
@@ -255,7 +270,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                         var results = [];
                         if (data.users && data.users.length)
                             results.push({
-                                text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatching', AJS.I18n.getText('admin.common.words.users'), data.users.length, data.usersCount),
+                                text: AJS.I18n.getText('admin.common.words.users'),
                                 children: data.users
                             });
                         if (data.groups && data.groups.length)
@@ -361,13 +376,19 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
             this.sourceType = sourceType;
             this.$('#calendar-dialog-source-' + sourceType).attr('checked', true);
             if (sourceType == 'project' || sourceType == 'filter') {
+                this.$('.common-field').removeClass('hidden');
                 this.$('.search-field-container').addClass('hidden');
                 this.$('.calendar-dialog-source-field').addClass('hidden');
                 this.$('#calendar-dialog-source-' + this.sourceType + '-field').removeClass('hidden');
             } else if (sourceType == 'jql') {
+                this.$('.common-field').removeClass('hidden');
                 this.$('.calendar-dialog-source-field').addClass('hidden');
                 this.$('.search-field-container').removeClass('hidden');
                 this._onJqlChange();
+            } else if (sourceType == 'basic') {
+                this.$('.search-field-container').addClass('hidden');
+                this.$('.calendar-dialog-source-field').addClass('hidden');
+                this.$('.common-field').addClass('hidden');
             }
             this.$('.calendar-dialog-source-label').addClass('hidden');
             this.$('.calendar-dialog-source-' + sourceType + '-label').removeClass('hidden');
@@ -380,14 +401,14 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                 this.$('#calendar-dialog-event-end').auiSelect2('val', this.model.get('selectedEventEndId'));
 
                 this._showSourceField(this.model.get('selectedSourceType'));
-                if (this.sourceType == 'project' || this.sourceType == 'filter')
+                if (this.sourceType == 'project' || this.sourceType == 'filter') {
                     this.$('#calendar-dialog-source-' + this.sourceType + '-field').auiSelect2('data', {
                         id: this.model.get('selectedSourceValue'),
                         text: this.model.get('selectedSourceName'),
                         avatarId: this.model.get('selectedSourceAvatarId'),
                         unavailable: this.model.get('selectedSourceIsUnavailable')
                     });
-                else if (this.sourceType == 'jql') {
+                } else if (this.sourceType == 'jql') {
                     this.$('#advanced-search').val(this.model.get('selectedSourceValue'));
                     this._onJqlChange();
                 }
@@ -410,7 +431,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                     }, this));
                 }
             } else {
-                this._showSourceField('project');
+                this._showSourceField('basic');
                 this.$('#calendar-dialog-displayed-fields').auiSelect2('val', ['common.words.status', 'issue.field.assignee', 'issue.field.created', 'issue.field.duedate']);
                 this._addPermissionRow({
                     id: this.userData.id,
@@ -538,6 +559,219 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
 
             this.$('#calendar-dialog-permission-table-subject').auiSelect2('focus');
         },
+        _selectEventTypesTab: function(e) {
+            e && e.preventDefault();
+            this.$('.aui-navgroup li.aui-nav-selected').removeClass('aui-nav-selected');
+            this.$('.calendar-dialog-tab').addClass('hidden');
+
+            this.$('#calendar-dialog-eventTypes-tab').removeClass('hidden');
+            this.$('a[href=#calendar-dialog-eventTypes-tab]').closest('li').addClass('aui-nav-selected');
+
+            $.ajax({
+                type: 'GET',
+                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/customEvent/type/list',
+                data: {
+                    calendarId: this.model.id
+                },
+                success: $.proxy(function(result) {
+                    this.eventTypes = result;
+                    _.each(this.eventTypes, function(e) {
+                        if (e.reminder) {
+                            e.reminderDisplayName = Reminder.names[e.reminder];
+                        }
+                    });
+                    this._renderEventTypeTable();
+                }, this)
+            });
+        },
+        _renderEventTypeTable: function() {
+            $('#calendar-dialog-ok, #calendar-dialog-cancel, #calendar-dialog .aui-nav > li > a').attr('disabled', null);
+            $('#calendar-dialog-eventTypes-content').html(JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.eventTypesTable({
+                systemTypes: $.grep(this.eventTypes, function(e) {
+                    return e.system;
+                }),
+                customTypes: $.grep(this.eventTypes, function(e) {
+                    return !e.system;
+                }),
+                canAdmin: this.model.get('canAdmin')
+            }));
+        },
+        _resetEventTypeEditing: function(e) {
+            if (e) {
+                e.preventDefault();
+            }
+
+            $('#calendar-dialog-ok, #calendar-dialog-cancel, #calendar-dialog .aui-nav > li > a').removeAttr('disabled');
+            $('#calendar-dialog-eventTypes-content').find('tr.edit').each($.proxy(function(i, e) {
+                var $e = $(e);
+                var id = $e.data('id');
+                if (id) {
+                    $e.empty();
+                    $e.append(JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.eventRow({
+                        model: this._findEventTypeModel(id),
+                        canAdmin: this.model.get('canAdmin')
+                    }));
+                    $e.removeClass('edit');
+                } else {
+                    $e.remove();
+                }
+            }, this));
+        },
+        _addNewEventTypeRow: function() {
+            this._resetEventTypeEditing();
+
+            var $row = $('<tr id="calendar-dialog-custom-type-row-new" class="edit"></tr>');
+            $row.append(this._renderEventEdit({}));
+            $('#calendar-dialog-custom-type-tbody').append($row);
+            this._afterEditStarted($row, null);
+        },
+        _editEventTypeRow: function(event) {
+            this._resetEventTypeEditing();
+
+            var $row = $(event.currentTarget).closest('tr');
+            var typeId = $row.data('id');
+
+            $row.empty();
+            $row.append(this._renderEventEdit(this._findEventTypeModel(typeId)));
+            $row.addClass('edit');
+            this._afterEditStarted($row, typeId);
+        },
+        _renderEventEdit: function(model) {
+            return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.eventEdit({
+                model: model,
+                availableAvatars: AVATARS,
+                reminderOptions: Reminder.options
+            });
+        },
+        _deleteEventType: function(event) {
+            var $row = $(event.currentTarget).closest('tr');
+            var typeId = $row.data('id');
+
+            var confirmDialog = new ConfirmDialog({
+                okText: AJS.I18n.getText('common.words.delete'),
+                header: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.confirmDeleteTypeHeader'),
+                text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.confirmDeleteType', AJS.escapeHtml(this._findEventTypeModel(typeId).name)),
+                okHandler: $.proxy(function() {
+                    $.ajax({
+                        type: 'DELETE',
+                        url: AJS.contextPath() + '/rest/mailrucalendar/1.0/customEvent/type/' + typeId,
+                        success: $.proxy(function() {
+                            this.eventTypes = _.filter(this.eventTypes, function(e) {
+                                return e.id != typeId;
+                            });
+                            this._renderEventTypeTable();
+                        }, this),
+                        error: function (xhr) {
+                            alert(xhr.responseText);
+                        }
+                    });
+                }, this)
+            });
+
+            confirmDialog.show();
+        },
+        _findEventTypeModel: function(typeId) {
+            console.log(this.eventTypes, typeId);
+            return _.find(this.eventTypes, function(e) {
+                return e.id == typeId;
+            });
+        },
+        _afterEditStarted: function($row, typeId) {
+            $('#calendar-dialog-ok, #calendar-dialog-cancel, #calendar-dialog .aui-nav > li > a').attr('disabled', 'disabled');
+
+            var saveCallback = $.proxy(function(e) {
+                e.preventDefault();
+
+                var name = $('#calendar-dialog-customEvent-name').val();
+                var avatar = $('#calendar-dialog-customEvent-avatar').val();
+                var reminder = $('#calendar-dialog-customEvent-reminder').val();
+
+                $row.find('.save-button, .cancel-button').attr('disabled', 'disabled');
+
+                if (typeId) {
+                    $.ajax({
+                        type: 'PUT',
+                        url: AJS.contextPath() + '/rest/mailrucalendar/1.0/customEvent/type/' + typeId,
+                        contentType: 'application/json; charset=utf-8',
+                        data: JSON.stringify({
+                            calendarId: this.model.get('id'),
+                            name: name,
+                            avatar: avatar,
+                            reminder: reminder
+                        }),
+                        success: $.proxy(function(data) {
+                            if (data.reminder) {
+                                data.reminderDisplayName = Reminder.names[data.reminder];
+                            }
+                            this.eventTypes = _.map(this.eventTypes, function(e) {
+                                if (e.id == data.id) {
+                                    return data;
+                                } else {
+                                    return e;
+                                }
+                            });
+                            this._renderEventTypeTable();
+                        }, this),
+                        error: $.proxy(function(xhr) {
+                            this._handleEditError($row, xhr);
+                        }, this),
+                        complete: function() {
+                            $row.find('.save-button, .cancel-button').removeAttr('disabled');
+                        }
+                    });
+                } else {
+                    $.ajax({
+                        type: 'POST',
+                        url: AJS.contextPath() + '/rest/mailrucalendar/1.0/customEvent/type',
+                        contentType: 'application/json; charset=utf-8',
+                        data: JSON.stringify({
+                            calendarId: this.model.get('id'),
+                            name: name,
+                            avatar: avatar,
+                            reminder: reminder
+                        }),
+                        success: $.proxy(function(data) {
+                            if (data.reminder) {
+                                data.reminderDisplayName = Reminder.names[data.reminder];
+                            }
+                            this.eventTypes.push(data);
+                            this._renderEventTypeTable();
+                        }, this),
+                        error: $.proxy(function(xhr) {
+                            this._handleEditError($row, xhr);
+                        }, this),
+                        complete: function() {
+                            $row.find('.save-button, .cancel-button').removeAttr('disabled');
+                        }
+                    });
+                }
+            }, this);
+            $row.find('save-button').click(saveCallback);
+            $row.find('form').submit(saveCallback);
+
+            this._initAvatarPicker($row);
+
+            $('#calendar-dialog-customEvent-name').focus();
+        },
+        _handleEditError: function($row, xhr) {
+            $row.find('.error').addClass('hidden');
+
+            var field = xhr.getResponseHeader('X-Atlassian-Rest-Exception-Field');
+            if (field) {
+                this.$('#calendar-dialog-customEvent-' + field + '-error').removeClass('hidden').text(xhr.responseText);
+            } else
+                this.$('#calendar-dialog-customEvent-error-panel').removeClass('hidden').text(xhr.responseText);
+        },
+        _initAvatarPicker: function($container) {
+            $container.find('.avatar-picker .avatar').each(function(i, e) {
+                var $e = $(e);
+                $e.click(function() {
+                    $container.find('.avatar-picker .avatar.selected').removeClass('selected');
+                    $e.addClass('selected');
+                    $('#calendar-dialog-customEvent-avatar').val($e.data('id'));
+                });
+            });
+        },
         _onSourceTypeChange: function() {
             var sourceType = this.$('input[type=radio][name=calendar-dialog-source]:checked').val();
             this._showSourceField(sourceType);
@@ -576,7 +810,7 @@ define('calendar/calendar-dialog', ['jquery', 'underscore', 'backbone', 'jira/ut
                     text = AJS.format('{0}<span class="calendar-dialog-permission-project-role-separator">/</span>{1}', subjectData.project, subjectData.projectRole);
                 else if (subjectData.type == 'USER')
                     text = subjectData.userDisplayName;
-                this.$('.calendar-dialog-permission-table-error').removeClass('hidden').html(AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.alreadyHasAccess'), text));
+                this.$('.calendar-dialog-permission-table-error').removeClass('hidden').html(AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.alreadyHasAccess'), AJS.escapeHtml(text)));
             } else {
                 this._addPermissionRow($.extend({accessType: 'USE'}, subjectData));
                 $subjectSelect.auiSelect2('val', '');

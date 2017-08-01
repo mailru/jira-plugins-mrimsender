@@ -1,6 +1,9 @@
 package ru.mail.jira.plugins.calendar.rest;
 
 import com.atlassian.jira.security.JiraAuthenticationContext;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDataDto;
 import ru.mail.jira.plugins.calendar.service.UserDataService;
 import ru.mail.jira.plugins.commons.RestExecutor;
@@ -15,15 +18,22 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+@Scanned
 @Path("/calendar/userPreference")
 @Produces(MediaType.APPLICATION_JSON)
 public class RestUserPreferenceService {
     private final JiraAuthenticationContext jiraAuthenticationContext;
     private final UserDataService userDataService;
+    private final LicenseService licenseService;
 
-    public RestUserPreferenceService(JiraAuthenticationContext jiraAuthenticationContext, UserDataService userDataService) {
+    public RestUserPreferenceService(
+        @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+        UserDataService userDataService,
+        LicenseService licenseService
+    ) {
         this.jiraAuthenticationContext = jiraAuthenticationContext;
         this.userDataService = userDataService;
+        this.licenseService = licenseService;
     }
 
     @GET
@@ -41,6 +51,7 @@ public class RestUserPreferenceService {
         return new RestExecutor<UserDataDto>() {
             @Override
             protected UserDataDto doAction() throws Exception {
+                licenseService.checkLicense();
                 return userDataService.updateUserData(jiraAuthenticationContext.getUser(), userDataDto);
             }
         }.getResponse();
@@ -52,6 +63,7 @@ public class RestUserPreferenceService {
         return new RestExecutor<Void>() {
             @Override
             protected Void doAction() throws Exception {
+                licenseService.checkLicense();
                 userDataService.updateUserLikeData(jiraAuthenticationContext.getUser(), rated);
                 return null;
             }
@@ -64,6 +76,7 @@ public class RestUserPreferenceService {
         return new RestExecutor<UserDataDto>() {
             @Override
             protected UserDataDto doAction() throws Exception {
+                licenseService.checkLicense();
                 return userDataService.updateIcalUid(jiraAuthenticationContext.getUser());
             }
         }.getResponse();
@@ -75,6 +88,7 @@ public class RestUserPreferenceService {
         return new RestExecutor<Void>() {
             @Override
             protected Void doAction() throws Exception {
+                licenseService.checkLicense();
                 userDataService.removeUserCalendar(jiraAuthenticationContext.getUser(), calendarId);
                 return null;
             }

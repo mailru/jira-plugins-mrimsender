@@ -13,10 +13,14 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.ApplicationUsers;
 import com.atlassian.jira.util.BuildUtilsInfo;
 import com.atlassian.jira.util.MessageSet;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.InvocationTargetException;
 
+@Component
 public class JiraDeprecatedService {
     private final BuildUtilsInfo buildUtilsInfo;
 
@@ -25,7 +29,14 @@ public class JiraDeprecatedService {
     public final GroupManagerAdapter groupManager;
     public final SearchServiceAdapter searchService;
 
-    public JiraDeprecatedService(BuildUtilsInfo buildUtilsInfo, DateTimeFormatter dateTimeFormatter, IssueService issueService, GroupManager groupManager, SearchService searchService) {
+    @Autowired
+    public JiraDeprecatedService(
+        @ComponentImport BuildUtilsInfo buildUtilsInfo,
+        @ComponentImport DateTimeFormatter dateTimeFormatter,
+        @ComponentImport IssueService issueService,
+        @ComponentImport GroupManager groupManager,
+        @ComponentImport SearchService searchService
+    ) {
         this.buildUtilsInfo = buildUtilsInfo;
         this.dateTimeFormatter = new DateTimeFormatterAdapter(dateTimeFormatter);
         this.issueService = new IssueServiceAdapter(issueService);

@@ -18,6 +18,8 @@ public class CalendarDto {
     @XmlElement
     private String source;
     @XmlElement
+    private boolean eventsEditable;
+    @XmlElement
     private boolean changable;
     @XmlElement
     private boolean viewable;
@@ -62,6 +64,14 @@ public class CalendarDto {
 
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    public boolean isEventsEditable() {
+        return eventsEditable;
+    }
+
+    public void setEventsEditable(boolean eventsEditable) {
+        this.eventsEditable = eventsEditable;
     }
 
     public void setFavorite(boolean favorite) {

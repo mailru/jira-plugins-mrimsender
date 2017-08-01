@@ -23,11 +23,16 @@
                         <li>
                             <a href="#calendar-dialog-permissions-tab">{getText( 'admin.common.words.permissions' )}</a>
                         </li>
+                        {if $model.id}
+                            <li>
+                                <a href="#calendar-dialog-eventTypes-tab">{getText( 'ru.mail.jira.plugins.calendar.dialog.eventTypes' )}</a>
+                            </li>
+                        {/if}
                     </ul>
                 </div>
             </nav>
             <div id="calendar-dialog-common-tab" class="calendar-dialog-tab">
-                <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form">
+                <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form tab-form">
                     <input class="hidden" type="submit"/>
                     <div id="calendar-dialog-error-panel" class="aui-message aui-message-error hidden"></div>
                     <div class="field-group">
@@ -79,7 +84,7 @@
                 </form>
             </div>
             <div id="calendar-dialog-source-tab" class="calendar-dialog-tab hidden">
-                <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form">
+                <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form tab-form">
                     <input class="hidden" type="submit"/>
                     <div class="field-group">
                         <label>
@@ -87,7 +92,11 @@
                             {getText( 'ru.mail.jira.plugins.calendar.dialog.source' )}
                         </label>
                         <div class="radio">
-                            <input class="radio" type="radio" id="calendar-dialog-source-project" name="calendar-dialog-source" value="project" checked="checked" {not $canAdmin ? 'disabled' : ''}>
+                            <input class="radio" type="radio" id="calendar-dialog-source-basic" name="calendar-dialog-source" value="basic" checked="checked" {not $canAdmin ? 'disabled' : ''}>
+                            <label for="calendar-dialog-source-basic">{getText( 'ru.mail.jira.plugins.calendar.dialog.source.basic' )}</label>
+                        </div>
+                        <div class="radio">
+                            <input class="radio" type="radio" id="calendar-dialog-source-project" name="calendar-dialog-source" value="project" {not $canAdmin ? 'disabled' : ''}>
                             <label for="calendar-dialog-source-project">{getText( 'common.concepts.project' )}</label>
                         </div>
                         <div class="radio">
@@ -128,7 +137,7 @@
                         </div>
                         <div id="calendar-dialog-source-error" class="error hidden"></div>
                     </div>
-                    <div class="field-group">
+                    <div class="field-group common-field">
                         <label for="calendar-dialog-event-start">
                             <span class="aui-icon icon-required"></span>
                             {getText( 'ru.mail.jira.plugins.calendar.dialog.eventStart' )}
@@ -136,13 +145,13 @@
                         <input type="hidden" id="calendar-dialog-event-start" class="select medium-long-field calendar-dialog-select" {not $canAdmin ? 'disabled' : ''}>
                         <div id="calendar-dialog-event-start-error" class="error hidden"></div>
                     </div>
-                    <div class="field-group">
+                    <div class="field-group common-field">
                         <label for="calendar-dialog-event-end">{getText( 'ru.mail.jira.plugins.calendar.dialog.eventEnd' )}</label>
                         <input type="hidden" id="calendar-dialog-event-end" class="select medium-long-field calendar-dialog-select" {not $canAdmin ? 'disabled' : ''}>
                         <div class="description medium-long-field">{getText( 'ru.mail.jira.plugins.calendar.dialog.eventStartEndDescription' )}</div>
                         <div id="calendar-dialog-event-end-error" class="error hidden"></div>
                     </div>
-                    <div class="field-group">
+                    <div class="field-group common-field">
                         <label for="calendar-dialog-displayed-fields">{getText( 'ru.mail.jira.plugins.calendar.dialog.fields' )}</label>
                         <input type="hidden" id="calendar-dialog-displayed-fields" class="multi-select medium-long-field calendar-dialog-select" {not $canAdmin ? 'disabled' : ''}>
                         <div id="calendar-dialog-fields-error" class="error hidden"></div>
@@ -150,7 +159,7 @@
                 </form>
             </div>
             <div id="calendar-dialog-permissions-tab" class="calendar-dialog-tab hidden">
-                <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form">
+                <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form tab-form">
                     <table id="calendar-dialog-permission-table" class="aui aui-table-rowhover">
                         <thead>
                             <tr>
@@ -177,6 +186,10 @@
                     </table>
                     <input class="hidden" type="submit"/>
                 </form>
+            </div>
+            <div id="calendar-dialog-eventTypes-tab" class="calendar-dialog-tab hidden">
+                <div id="calendar-dialog-eventTypes-content" class="tab-form unsectioned">
+                </div>
             </div>
         </div>
         <footer class="aui-dialog2-footer" style="width: 100%">
@@ -371,4 +384,150 @@
             <a href="#" class="aui-icon aui-icon-small aui-iconfont-remove">{getText( 'common.words.delete' )}</a>
         </td>
     </tr>
+{/template}
+
+/**
+ * @param systemTypes
+ * @param customTypes
+ * @param canAdmin
+ */
+{template .eventTypesTable}
+    <table class="aui aui-table-rowhover">
+        <thead>
+            <tr>
+                <th style="width: 20px"></th>
+                <th>{getText('ru.mail.jira.plugins.calendar.dialog.systemTypes')}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {foreach $eventType in $systemTypes}
+                <tr data-id="{$eventType.id}" id="calendar-dialog-custom-type-row-{$eventType.id}">
+                    {call .eventRow}
+                        {param model: $eventType /}
+                        {param canAdmin: $canAdmin /}
+                    {/call}
+                </tr>
+            {/foreach}
+        </tbody>
+    </table>
+    <table class="aui aui-table-rowhover">
+        <thead>
+            <tr>
+                <th style="width: 20px"></th>
+                <th>{getText('ru.mail.jira.plugins.calendar.dialog.customTypes')}</th>
+                <th>{getText('ru.mail.jira.plugins.calendar.customEvents.reminder')}</th>
+                <th style="width: 20px"></th>
+                <th style="width: 20px"></th>
+            </tr>
+        </thead>
+        <tbody id="calendar-dialog-custom-type-tbody">
+            {foreach $eventType in $customTypes}
+                <tr data-id="{$eventType.id}" id="calendar-dialog-custom-type-row-{$eventType.id}">
+                    {call .eventRow}
+                        {param model: $eventType /}
+                        {param canAdmin: $canAdmin /}
+                    {/call}
+                </tr>
+            {/foreach}
+            {if $customTypes.length == 0}
+                <tr class="edit">
+                    <td colspan="5">
+                        {getText('ru.mail.jira.plugins.calendar.dialog.noCustomTypes')}
+                    </td>
+                </tr>
+            {/if}
+        </tbody>
+    </table>
+    {if $canAdmin}
+        <div class="aui-button aui-button-subtle create-button" id="calendar-dialog-eventTypes-create-button">
+            <span class="aui-icon aui-icon-small aui-iconfont-add"></span> {getText('ru.mail.jira.plugins.calendar.common.create')}
+        </div>
+    {/if}
+{/template}
+
+/**
+ * @param model
+ * @param canAdmin
+ */
+{template .eventRow}
+    <td>
+        <span class="custom-event-type-avatar custom-type-icon custom-type-icon-{$model.avatar}"></span>
+    </td>
+    <td>
+        {$model.name}
+    </td>
+    <td>
+        {if $model.reminder}
+            {$model.reminderDisplayName}
+        {/if}
+    </td>
+    <td>
+        {if $canAdmin}
+            <div class="customType-button edit-button">
+                <span class="aui-icon aui-icon-small aui-iconfont-edit">{getText('ru.mail.jira.plugins.calendar.common.edit')}</span>
+            </div>
+        {/if}
+    </td>
+    <td>
+        {if $canAdmin and not $model.system}
+            <div class="customType-button delete-button">
+                <span class="aui-icon aui-icon-small aui-iconfont-delete">{getText('ru.mail.jira.plugins.calendar.common.delete')}</span>
+            </div>
+        {/if}
+    </td>
+{/template}
+
+/**
+ * @param model
+ * @param availableAvatars
+ * @param reminderOptions
+ */
+{template .eventEdit}
+    <td colspan="4">
+        <form class="aui ajs-dirty-warning-exempt calendar-dialog-form">
+            <div id="calendar-dialog-customEvent-error-panel" class="aui-message aui-message-error hidden"></div>
+            <div class="field-group">
+                <label for="calendar-dialog-customEvent-name">
+                    {getText( 'common.words.name' )}
+                </label>
+                {if $model.system}
+                    <div class="readonly-value medium-long-field">{$model.name}</div>
+                {else}
+                    <input type="text" class="text medium-long-field" id="calendar-dialog-customEvent-name" {if $model.name}value="{$model.name}"{/if}/>
+                {/if}
+                <div id="calendar-dialog-customEvent-name-error" class="error hidden"></div>
+            </div>
+            {if not $model.system}
+                <div class="field-group">
+                    <label for="calendar-dialog-customEvent-avatar">
+                        {getText('ru.mail.jira.plugins.calendar.customEvents.avatar')}
+                    </label>
+                    <div class="avatar-picker">
+                        {foreach $avatar in $availableAvatars}
+                            <div class="avatar {if $model.avatar == $avatar}selected{/if}" data-id="{$avatar}">
+                                <span class="custom-type-icon custom-type-icon-{$avatar}"></span>
+                            </div>
+                        {/foreach}
+                    </div>
+                    <input type="text" class="text medium-long-field hidden" id="calendar-dialog-customEvent-avatar" {if $model.avatar}value="{$model.avatar}"{/if}/>
+                    <div id="calendar-dialog-customEvent-avatar-error" class="error hidden"></div>
+                </div>
+            {/if}
+            <div class="field-group">
+                <label for="calendar-dialog-customEvent-reminder">
+                    {getText('ru.mail.jira.plugins.calendar.customEvents.reminder')}
+                </label>
+                <select class="select medium-long-field" id="calendar-dialog-customEvent-reminder">
+                    <option value="">{getText('ru.mail.jira.plugins.calendar.customEvents.reminder.none')}</option>
+                    {foreach $option in $reminderOptions}
+                        <option value="{$option.value}" {if $model.reminder == $option.value}selected{/if}>{$option.name}</option>
+                    {/foreach}
+                </select>
+            </div>
+            <div class="field-group">
+                <button class="aui-button aui-button-primary save-button">{$model.id ? getText( 'common.forms.update') : getText( 'common.words.create')}</button>
+                <button class="aui-button aui-button-link cancel-button">{getText( 'common.words.cancel' )}</button>
+            </div>
+        </form>
+    </td>
 {/template}

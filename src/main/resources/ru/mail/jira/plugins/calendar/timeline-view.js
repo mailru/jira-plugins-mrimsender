@@ -138,36 +138,52 @@
 
             _onMove: function(item, callback) {
                 this.options.calendarView.eventDialog && this.options.calendarView.eventDialog.hide();
-                $.ajax({
-                    type: 'PUT',
-                    url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + item.calendarId + '/event/' + item.eventId + '/move',
-                    data: {
-                        start: moment(item.start).format(),
-                        end: item.end ? moment(item.end).format() : ''
-                    },
-                    error: function(xhr) {
-                        var msg = "Error while trying to drag event. Issue key => " + item.eventId;
-                        if (xhr.responseText)
-                            msg += xhr.responseText;
-                        alert(msg);
-                        callback(null);
-                    },
-                    success: $.proxy(function(event) {
-                        callback({
-                            id: event.calendarId + event.id,
-                            eventId: event.id,
-                            calendarId: event.calendarId,
-                            start: event.start.clone().local().toDate(),
-                            end: event.end && event.end.clone().local().toDate(),
-                            content: event.id + ' ' + AJS.escapeHTML(event.title),
-                            className: this._getClassForColor(event.color),
-                            style: event.datesError ? 'opacity: 0.4;border-color:#d04437;' : '',
-                            startEditable: event.startEditable,
-                            durationEditable: event.durationEditable,
-                            editable: event.startEditable || event.durationEditable
-                        });
-                    }, this)
-                });
+
+                var end = item.end;
+                var start = item.start;
+
+                if (item.eventType === 'ISSUE') {
+                    $.ajax({
+                        type: 'PUT',
+                        url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + item.calendarId + '/event/' + item.eventId + '/move',
+                        data: {
+                            start: moment(start).format(),
+                            end: end ? moment(end).format() : ''
+                        },
+                        error: function (xhr) {
+                            var msg = 'Error while trying to drag event. Issue key => ' + item.eventId;
+                            if (xhr.responseText)
+                                msg += xhr.responseText;
+                            alert(msg);
+                            callback(null);
+                        },
+                        success: $.proxy(function (event) {
+                            callback(this._transformEvent(event));
+                        }, this)
+                    });
+                } else if (item.eventType === 'CUSTOM') {
+                    var eventId = -1 * parseInt(item.eventId);
+                    $.ajax({
+                        type: 'PUT',
+                        url: contextPath + '/rest/mailrucalendar/1.0/customEvent/' + eventId + '/move',
+                        contentType: 'application/json; charset=utf-8',
+                        data: JSON.stringify({
+                            allDay: item.allDay,
+                            start: !item.allDay ? moment(start).format('x') : moment.utc(start).format('x'),
+                            end: end ? !item.allDay ? moment(end).format('x') : moment.utc(end).subtract(1, 'days').format('x') : null
+                        }),
+                        error: function (xhr) {
+                            var msg = 'Error while trying to drag event. Event id => ' + eventId;
+                            if (xhr.responseText)
+                                msg += xhr.responseText;
+                            alert(msg);
+                            callback(null);
+                        },
+                        success: $.proxy(function (event) {
+                            callback(this._transformEvent(event));
+                        }, this)
+                    });
+                }
             },
             _onMoving: function(item, callback) {
                 this.options.calendarView.eventDialog && this.options.calendarView.eventDialog.hide();
@@ -197,21 +213,47 @@
                 }
             },
             _transformToTimelineFormat: function(events) {
-                return _.map(events, $.proxy(function(event) {
-                    return {
-                        id: event.calendarId + event.id,
-                        eventId: event.id,
-                        calendarId: event.calendarId,
-                        start: event.start.clone().local().toDate(),
-                        end: event.end && event.end.clone().local().toDate(),
-                        content: '<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span><span> '+ event.id + ' ' + AJS.escapeHTML(event.title) + '</span>',
-                        className: this._getClassForColor(event.color),
-                        style: event.datesError ? 'opacity: 0.4;border-color:#d04437;' : '',
-                        startEditable: event.startEditable,
-                        durationEditable: event.durationEditable,
-                        editable: event.startEditable || event.durationEditable
-                    };
-                }, this));
+                return _.map(events, $.proxy(this._transformEvent, this));
+            },
+            _transformEvent: function(event) {
+                return {
+                    id: event.calendarId + event.id,
+                    eventId: event.id,
+                    calendarId: event.calendarId,
+                    start: moment(event.start).clone().local().toDate(),
+                    end: event.end && moment(event.end).clone().local().toDate(),
+                    content: this._buildContent(event),
+                    className: this._getClassForColor(event.color),
+                    style: event.datesError ? 'opacity: 0.4;border-color:#d04437;' : '',
+                    startEditable: event.startEditable,
+                    durationEditable: event.durationEditable,
+                    editable: event.startEditable || event.durationEditable,
+                    eventType: event.type,
+                    allDay: event.allDay
+                };
+            },
+            _buildContent: function(event) {
+                var content = null;
+
+                if (event.type === 'ISSUE') {
+                    content = '<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span><span> '+ event.id + ' ' + AJS.escapeHTML(event.title) + '</span>';
+                } else if (event.type === 'CUSTOM') {
+                    content = '';
+                    if (event.participants) {
+                        var formattedParticipants = null;
+                        if (event.participants.length === 1) {
+                            formattedParticipants = event.participants[0].displayName
+                        } else {
+                            formattedParticipants = $.map(event.participants, function(e) {
+                                return e.displayName.split(/\s+/)[0];
+                            }).join(', ');
+                        }
+                        content = AJS.escapeHTML(formattedParticipants) + ': ';
+                    }
+                    content = '<span class="calendar-event-issue-type custom-type-icon custom-type-icon-' + event.issueTypeImgUrl + '-cal"></span> ' + content + AJS.escapeHTML(event.title);
+                }
+
+                return content
             },
             // todo migrate color from hex to classes
             _getClassForColor: function(color) {

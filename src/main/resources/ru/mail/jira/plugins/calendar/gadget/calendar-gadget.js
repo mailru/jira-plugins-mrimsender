@@ -49,7 +49,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view'], function(C
                                     formatResult: format,
                                     formatSelection: format
                                 });
-                                $calendarSelect.on("change", function(data) {
+                                $calendarSelect.on('change', function(data) {
                                     gadgets.window.adjustHeight();
                                 });
                                 $calendarSelect.auiSelect2('val', selectedCalendars);
@@ -128,9 +128,24 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view'], function(C
             enableReload: true,
             onResizeReload: true,
             template: function(args) {
-                AJS.$(document).unbind("ajaxStart");
-                AJS.$(document).unbind("ajaxStop");
+                AJS.$(document).unbind('ajaxStart');
+                AJS.$(document).unbind('ajaxStop');
                 var gadget = this;
+
+                var licenseStatus = args.props.license;
+                if (!args.props.licenseValid) {
+                    gadgets.window.adjustHeight();
+                    gadget.getView().empty().html(
+                        '<div class="aui-message aui-message-error" style="margin: 15px;">' +
+                            '<p class="title">' +
+                                '<span class="aui-icon icon-error"></span>' +
+                                '<strong>' + AJS.I18n.getText('ru.mail.jira.plugins.license.gadgetUnavailable') + '</strong>' +
+                            '</p>' +
+                            '<p>' + args.props.licenseError + '</p>' +
+                        '</div>'
+                    );
+                    return;
+                }
 
                 var selectedCalendars = _.compact(gadget.getPref('calendars').split(','));
                 var selectedCalendarMap = _.object(selectedCalendars, selectedCalendars.slice(0).fill(true));
@@ -165,11 +180,14 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view'], function(C
                         contextPath: '',
                         el: '#mailru-calendar-gadget-full-calendar',
                         timeFormat: args.props.timeFormat,
+                        dateFormat: args.props.dateFormat,
+                        dateTimeFormat: args.props.dateTimeFormat,
                         customsButtonOptions: {
                             weekend: {
                                 visible: false
                             }
-                        }
+                        },
+                        disableCustomEventEditing: true
                     });
                     gadget.calendarView.on('render', function() {
                         gadget.showLoading();

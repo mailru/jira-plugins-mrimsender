@@ -15,6 +15,8 @@ import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 import com.atlassian.sal.api.transaction.TransactionCallback;
@@ -51,6 +53,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Scanned
 @SuppressWarnings({"deprecation"})
 public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
     private final static Logger log = LoggerFactory.getLogger(Version3UpgradeTask.class);
@@ -72,7 +75,16 @@ public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
     private final ProjectRoleManager projectRoleManager;
     private final UserManager userManager;
 
-    public Version3UpgradeTask(GlobalPermissionManager globalPermissionManager, GroupManager groupManager, JiraDeprecatedService jiraDeprecatedService, PermissionManager permissionManager, PluginSettingsFactory pluginSettingsFactory, ProjectManager projectManager, ProjectRoleManager projectRoleManager, UserManager userManager) {
+    public Version3UpgradeTask(
+        @ComponentImport GlobalPermissionManager globalPermissionManager,
+        @ComponentImport GroupManager groupManager,
+        JiraDeprecatedService jiraDeprecatedService,
+        @ComponentImport PermissionManager permissionManager,
+        @ComponentImport PluginSettingsFactory pluginSettingsFactory,
+        @ComponentImport ProjectManager projectManager,
+        @ComponentImport ProjectRoleManager projectRoleManager,
+        @ComponentImport UserManager userManager
+    ) {
         this.globalPermissionManager = globalPermissionManager;
         this.groupManager = groupManager;
         this.jiraDeprecatedService = jiraDeprecatedService;

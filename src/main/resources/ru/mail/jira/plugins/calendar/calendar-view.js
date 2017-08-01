@@ -1,5 +1,9 @@
-define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/timeline-view'], function($, _, Backbone) {
-
+define('calendar/calendar-view', [
+    'jquery',
+    'underscore',
+    'backbone',
+    'calendar/reminder'
+], function($, _, Backbone, Reminder) {
     return Backbone.View.extend({
         el: '#calendar-full-calendar',
         initialize: function(options) {
@@ -7,11 +11,16 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
             this.contextPath = options && _.has(options, 'contextPath') ? options.contextPath : AJS.contextPath();
             this.customsButtonOptions = options && _.has(options, 'contextPath') ? options.customsButtonOptions : {};
             this.timeFormat = options && _.has(options, 'timeFormat') ? options.timeFormat : AJS.Meta.get('date-time');
+            this.dateTimeFormat = JIRA.translateSimpleDateFormat(options.dateTimeFormat || AJS.Meta.get('date-complete'));
+            this.dateFormat = JIRA.translateSimpleDateFormat(options.dateFormat || AJS.Meta.get('date-dmy'));
             this.popupWidth = options && _.has(options, 'popupWidth') ? options.popupWidth : 400;
             this.enableFullscreen = options && _.has(options, 'enableFullscreen') ? options.enableFullscreen : false;
+            this.disableCustomEventEditing = options && _.has(options, 'disableCustomEventEditing') ? options.disableCustomEventEditing : false;
 
             var contextPath = this.contextPath;
+            var CustomEvent = Backbone.Model.extend({urlRoot: contextPath + '/rest/mailrucalendar/1.0/customEvent/'});
             var self = this;
+
             this.eventDialog = AJS.InlineDialog('.calendar-event-object,.vis-item', 'eventDialog', function(content, trigger, showPopup) {
                 var event;
                 if (self.getViewType() == 'timeline') {
@@ -25,23 +34,56 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     e.stopPropagation();
                 });
 
-                $.ajax({
-                    type: 'GET',
-                    url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.eventId || event.id),
-                    success: function(issue) {
-                        content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
-                            issue: issue,
-                            contextPath: AJS.contextPath()
-                        })).addClass('calendar-event-info-popup');
-                        showPopup();
-                    },
-                    error: function(xhr) {
-                        var msg = "Error while trying to view info about issue => " + event.eventId;
-                        if (xhr.responseText)
-                            msg += xhr.responseText;
-                        alert(msg);
-                    }
-                });
+                if (event.type === 'ISSUE') {
+                    $.ajax({
+                        type: 'GET',
+                        url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, event.calendarId, event.eventId || event.id),
+                        success: function (issue) {
+                            content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
+                                issue: issue,
+                                contextPath: AJS.contextPath()
+                            })).addClass('calendar-event-info-popup');
+                            showPopup();
+                        },
+                        error: function (xhr) {
+                            var msg = 'Error while trying to view info about issue => ' + event.eventId;
+                            if (xhr.responseText)
+                                msg += xhr.responseText;
+                            alert(msg);
+                        }
+                    });
+                } else if (event.type === 'CUSTOM') {
+                    var customEvent = new CustomEvent({id: -1 * parseInt(event.id)});
+                    customEvent.fetch({
+                        success: function(model) {
+                            console.log(Reminder);
+                            content.html(JIRA.Templates.Plugins.MailRuCalendar.customEventInfo({
+                                event: model.toJSON(),
+                                contextPath: AJS.contextPath(),
+                                startDateFormatted: moment(model.get('startDate')).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
+                                endDateFormatted: moment(model.get('endDate')).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
+                                editDisabled: self.disableCustomEventEditing,
+                                reminderName: model.get('reminder') ? Reminder.names[model.get('reminder')] : null
+                            })).addClass('calendar-event-info-popup');
+                            showPopup();
+
+                            content.find('.edit-button').click(function(e) {
+                                e.preventDefault();
+                                self.trigger('eventEditTriggered', model);
+                                self.eventDialog.hide();
+                            });
+
+                            content.find('.delete-button').click(function(e) {
+                                e.preventDefault();
+                                self.trigger('eventDeleteTriggered', model);
+                                self.eventDialog.hide();
+                            })
+                        },
+                        error: function(request) {
+                            alert(request.responseText);
+                        }
+                    });
+                }
             }, {
                 isRelativeToMouse: true,
                 cacheContent: false,
@@ -84,21 +126,67 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
         _eventMove: function(event, duration, revertFunc) {
             var start = event.start.toDate();
             var end = event.end && event.end.toDate();
-            $.ajax({
-                type: 'PUT',
-                url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.id + '/move',
-                data: {
-                    start: moment(start).format(),
-                    end: end ? moment(end).format() : ''
-                },
-                error: function(xhr) {
-                    var msg = "Error while trying to drag event. Issue key => " + event.id;
-                    if (xhr.responseText)
-                        msg += xhr.responseText;
-                    alert(msg);
-                    revertFunc();
+            if (event.type === 'ISSUE') {
+                $.ajax({
+                    type: 'PUT',
+                    url: this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + event.calendarId + '/event/' + event.id + '/move',
+                    data: {
+                        start: moment(start).format(),
+                        end: end ? moment(end).format() : ''
+                    },
+                    error: function (xhr) {
+                        var msg = 'Error while trying to drag event. Issue key => ' + event.id;
+                        if (xhr.responseText)
+                            msg += xhr.responseText;
+                        alert(msg);
+                        revertFunc();
+                    }
+                });
+            } else if (event.type === 'CUSTOM') {
+                var eventId = -1 * parseInt(event.id);
+
+                var startValue = null;
+                var endValue = null;
+                var allDay = event.allDay;
+
+                if (start) {
+                    var momentStart = event.start.clone();
+                    if (momentStart.hasTime()) {
+                        startValue = momentStart.format('x');
+                        allDay = false;
+                    } else {
+                        startValue = moment.utc(start).format('x');
+                        allDay = true;
+                    }
                 }
-            });
+
+                if (end) {
+                    var momentEnd = event.end.clone();
+                    if (momentEnd.hasTime()) {
+                        endValue = momentEnd.format('x');
+                    } else {
+                        endValue = moment.utc(end).subtract(1, 'days').format('x')
+                    }
+                }
+
+                $.ajax({
+                    type: 'PUT',
+                    url: this.contextPath + '/rest/mailrucalendar/1.0/customEvent/' + eventId + '/move',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({
+                        allDay: allDay,
+                        start: startValue,
+                        end: endValue
+                    }),
+                    error: function (xhr) {
+                        var msg = 'Error while trying to drag event. Event id => ' + eventId;
+                        if (xhr.responseText)
+                            msg += xhr.responseText;
+                        alert(msg);
+                        revertFunc();
+                    }
+                });
+            }
         },
         updateButtonsVisibility: function(view) {
             if (this._canButtonVisible('zoom-out') && this._canButtonVisible('zoom-in') && view.name === 'timeline')
@@ -196,11 +284,34 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     $element.addClass('calendar-event-object');
                     if (event.datesError)
                         $element.addClass('calendar-event-dates-error');
-                    $element.find('.fc-title').prepend(event.id + ' ');
-                    $element.find('.fc-content')
-                        .prepend('<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span>')
-                        .prepend('<img class="calendar-event-issue-type" alt="" height="16" width="16" src="' + event.issueTypeImgUrl + '" />');
+
+                    if (event.type === 'ISSUE') {
+                        $element.find('.fc-title').prepend(event.id + ' ');
+                        $element.find('.fc-content')
+                            .prepend('<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + AJS.escapeHtml(event.status) + '</span>')
+                            .prepend('<img class="calendar-event-issue-type" alt="" height="16" width="16" src="' + AJS.contextPath() + event.issueTypeImgUrl + '" />');
+                    } else if (event.type === 'CUSTOM') {
+                        if (event.participants) {
+                            var formattedParticipants = null;
+                            if (event.participants.length === 1) {
+                                formattedParticipants = event.participants[0].displayName
+                            } else {
+                                formattedParticipants = $.map(event.participants, function(e) {
+                                    return e.displayName.split(/\s+/)[0];
+                                }).join(', ');
+                            }
+                            $element.find('.fc-title').prepend(AJS.escapeHTML(formattedParticipants) + ': ');
+                        }
+                        $element.find('.fc-content')
+                            .prepend('<span class="calendar-event-issue-type custom-type-icon custom-type-icon-' + event.issueTypeImgUrl + '-cal" /> ');
+                    }
                 },
+                dayClick: $.proxy(function(date, jsEvent, view) {
+                    self.trigger('eventCreateTriggered', {
+                        allDay: !date.hasTime(),
+                        startDate: date.hasTime() ? date.format() : date.format('YYYY-MM-DD')
+                    });
+                }, this),
                 loading: $.proxy(function(isLoading, view) {
                     viewRenderFirstTime = false;
                     this.trigger(isLoading ? 'startLoading' : 'stopLoading', view.name);
@@ -222,7 +333,7 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                     var start = view.start.clone().startOf('month');
                     var end = view.end.clone();
                     for (; start.isBefore(end); start.add(1, 'M')) {
-                        this.$('.fc-day.fc-widget-content[data-date=' + start.format("YYYY-MM-DD") + ']').addClass('fc-first-day-of-month');
+                        this.$('.fc-day.fc-widget-content[data-date=' + start.format('YYYY-MM-DD') + ']').addClass('fc-first-day-of-month');
                     }
                 }, this),
                 eventDragStart: function(event) {
@@ -275,6 +386,9 @@ define('calendar/calendar-view', ['jquery', 'underscore', 'backbone', 'calendar/
                 this._getCalendarHeaderButton('weekend').text(hideWeekends ? AJS.I18n.getText('ru.mail.jira.plugins.calendar.showWeekends') : AJS.I18n.getText('ru.mail.jira.plugins.calendar.hideWeekends'));
                 this.$el.fullCalendar('option', 'weekends', !hideWeekends);
             }
+        },
+        reload: function() {
+            this.$el.fullCalendar('refetchEvents');
         }
     });
 });

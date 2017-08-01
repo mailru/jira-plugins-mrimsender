@@ -2,15 +2,24 @@ package ru.mail.jira.plugins.calendar.service;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.jira.exception.GetException;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import net.java.ao.ActiveObjectsException;
 import net.java.ao.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.UserCalendar;
 
-public class UserCalendarServiceImpl implements UserCalendarService {
-    private ActiveObjects ao;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
-    public void setAo(ActiveObjects ao) {
+@Component
+public class UserCalendarServiceImpl implements UserCalendarService {
+    private final ActiveObjects ao;
+
+    @Autowired
+    public UserCalendarServiceImpl(@ComponentImport ActiveObjects ao) {
         this.ao = ao;
     }
 
@@ -77,5 +86,13 @@ public class UserCalendarServiceImpl implements UserCalendarService {
 
     public int getUsersCount(final int calendarId) {
         return ao.find(UserCalendar.class, Query.select().where("CALENDAR_ID = ? ", calendarId)).length;
+    }
+
+    @Override
+    public Collection<String> getEnabledUsersKeys(final int calendarId) {
+        return Arrays
+            .stream(ao.find(UserCalendar.class, Query.select().where("CALENDAR_ID = ? AND ENABLED = ?", calendarId, Boolean.TRUE)))
+            .map(UserCalendar::getUserKey)
+            .collect(Collectors.toSet());
     }
 }

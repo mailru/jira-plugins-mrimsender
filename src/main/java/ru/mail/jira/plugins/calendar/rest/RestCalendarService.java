@@ -7,8 +7,10 @@ import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
-import com.atlassian.jira.util.I18nHelper;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.plugins.rest.common.security.AnonymousAllowed;
+import com.atlassian.sal.api.message.I18nResolver;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
@@ -25,10 +27,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarSettingDto;
-import ru.mail.jira.plugins.calendar.rest.dto.Event;
+import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.CalendarService;
 import ru.mail.jira.plugins.calendar.service.JiraDeprecatedService;
@@ -52,6 +55,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
 
+@Scanned
 @Path("/calendar")
 @Produces(MediaType.APPLICATION_JSON)
 public class RestCalendarService {
@@ -60,25 +64,31 @@ public class RestCalendarService {
     private final CalendarService calendarService;
     private final CalendarEventService calendarEventService;
 
-    private final I18nHelper i18nHelper;
+    private final I18nResolver i18nResolver;
     private final JiraAuthenticationContext jiraAuthenticationContext;
     private final JiraDeprecatedService jiraDeprecatedService;
     private final UserDataService userDataService;
     private final UserManager userManager;
+    private final LicenseService licenseService;
 
-
-    public RestCalendarService(CalendarService calendarService,
-                               CalendarEventService calendarEventService,
-                               I18nHelper i18nHelper,
-                               JiraAuthenticationContext jiraAuthenticationContext,
-                               JiraDeprecatedService jiraDeprecatedService, UserDataService userDataService, UserManager userManager) {
+    public RestCalendarService(
+        @ComponentImport I18nResolver i18nResolver,
+        @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+        @ComponentImport UserManager userManager,
+        CalendarService calendarService,
+        CalendarEventService calendarEventService,
+        JiraDeprecatedService jiraDeprecatedService,
+        UserDataService userDataService,
+        LicenseService licenseService
+    ) {
         this.calendarService = calendarService;
         this.calendarEventService = calendarEventService;
-        this.i18nHelper = i18nHelper;
+        this.i18nResolver = i18nResolver;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
         this.jiraDeprecatedService = jiraDeprecatedService;
         this.userDataService = userDataService;
         this.userManager = userManager;
+        this.licenseService = licenseService;
     }
 
     @POST
@@ -86,6 +96,7 @@ public class RestCalendarService {
         return new RestExecutor<CalendarDto>() {
             @Override
             protected CalendarDto doAction() throws Exception {
+                licenseService.checkLicense();
                 return calendarService.createCalendar(jiraAuthenticationContext.getUser(), calendarSettingDto);
             }
         }.getResponse();
@@ -108,6 +119,7 @@ public class RestCalendarService {
         return new RestExecutor<CalendarDto>() {
             @Override
             protected CalendarDto doAction() throws Exception {
+                licenseService.checkLicense();
                 return calendarService.updateCalendar(jiraAuthenticationContext.getUser(), calendarSettingDto);
             }
         }.getResponse();
@@ -119,6 +131,7 @@ public class RestCalendarService {
         return new RestExecutor<Void>() {
             @Override
             protected Void doAction() throws Exception {
+                licenseService.checkLicense();
                 calendarService.deleteCalendar(jiraAuthenticationContext.getUser(), id);
                 return null;
             }
@@ -165,6 +178,7 @@ public class RestCalendarService {
         return new RestExecutor<Void>() {
             @Override
             protected Void doAction() throws Exception {
+                licenseService.checkLicense();
                 calendarService.updateCalendarVisibility(calendarId, jiraAuthenticationContext.getUser(), visible);
                 return null;
             }
@@ -201,13 +215,13 @@ public class RestCalendarService {
                     LocalDate endSearch = LocalDate.now().plusMonths(1);
 
                     for (String calendarId : calendarIds) {
-                        List<Event> events = calendarEventService.findEvents(Integer.parseInt(calendarId),
+                        List<EventDto> events = calendarEventService.findEvents(Integer.parseInt(calendarId),
                                                                              startSearch.toString("yyyy-MM-dd"),
                                                                              endSearch.toString("yyyy-MM-dd"),
                                                                              userManager.getUserByKey(userData.getUserKey()),
                                                                              true);
 
-                        for (Event event : events) {
+                        for (EventDto event : events) {
                             Date start = new DateTime(true);
                             try {
                                 start.setTime(userDateTimeFormat.parse(event.getStart()).getTime());
@@ -226,9 +240,11 @@ public class RestCalendarService {
 
                             VEvent vEvent = end != null ? new VEvent(start, end, event.getTitle()) : new VEvent(start, event.getTitle());
                             vEvent.getProperties().add(new Uid(calendarId + "_" + event.getId()));
-                            vEvent.getProperties().add(new Url(Uris.create(ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/" + event.getId())));
-                            if (event.getIssueInfo() != null)
-                                vEvent.getProperties().add(new Description(event.getIssueInfo().toFormatString(i18nHelper)));
+                            if (event.getType() == EventDto.Type.ISSUE) {
+                                vEvent.getProperties().add(new Url(Uris.create(ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/" + event.getId())));
+                                if (event.getIssueInfo() != null)
+                                    vEvent.getProperties().add(new Description(event.getIssueInfo().toFormatString(i18nResolver)));
+                            }
                             calendar.getComponents().add(vEvent);
                         }
                     }

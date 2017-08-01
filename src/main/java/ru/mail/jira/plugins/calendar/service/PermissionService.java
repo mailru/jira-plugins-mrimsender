@@ -18,6 +18,8 @@ public interface PermissionService {
 
     boolean hasUsePermission(ApplicationUser user, Calendar calendar);
 
+    boolean hasEditEventsPermission(ApplicationUser user, Calendar calendar);
+
     void removeCalendarPermissions(Calendar calendar);
 
     Permission getOrCreate(Calendar calendar, PermissionType permissionType, String subject);

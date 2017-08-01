@@ -5,6 +5,8 @@ import com.atlassian.jira.exception.GetException;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.UserCalendar;
 
+import java.util.Collection;
+
 @Transactional
 public interface UserCalendarService {
     UserCalendar[] find(String userKey);
@@ -22,4 +24,6 @@ public interface UserCalendarService {
     void removeCalendar(String userKey, Integer calendarId);
 
     int getUsersCount(final int calendarId);
+
+    Collection<String> getEnabledUsersKeys(final int calendarId);
 }

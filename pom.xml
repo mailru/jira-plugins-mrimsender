@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>mailrucal</artifactId>
-    <version>2.6.0.80</version>
+    <version>3.0.0.rc1</version>
     <organization>
         <name>Mail.Ru Group</name>
         <url>http://mail.ru</url>
@@ -74,6 +74,39 @@
             <version>1.16.16</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.scheduler</groupId>
+            <artifactId>atlassian-scheduler-api</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.upm</groupId>
+            <artifactId>licensing-api</artifactId>
+            <version>2.21.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.upm</groupId>
+            <artifactId>upm-api</artifactId>
+            <version>2.21</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.atlassian.plugin</groupId>
+            <artifactId>atlassian-spring-scanner-annotation</artifactId>
+            <version>${atlassian.spring.scanner.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.atlassian.plugin</groupId>
+            <artifactId>atlassian-spring-scanner-runtime</artifactId>
+            <version>${atlassian.spring.scanner.version}</version>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -90,14 +123,23 @@
                         <atlassian.mail.senddisabled>false</atlassian.mail.senddisabled>
                         <fastdev.mvn.command>${fastdev.mvn.command}</fastdev.mvn.command>
                     </systemPropertyVariables>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.atlassian.maven.plugins</groupId>
-                <artifactId>maven-amps-plugin</artifactId>
-                <version>${amps.version}</version>
-                <extensions>true</extensions>
-                <configuration>
+                    <extractDependencies>true</extractDependencies>
+                    <instructions>
+                        <Atlassian-Plugin-Key>${atlassian.plugin.key}</Atlassian-Plugin-Key>
+                        <Spring-Context>*</Spring-Context>
+                        <Export-Package></Export-Package>
+                        <!-- explicitly exclude groovy imports, which may cause issues if groovyrunner is also installed -->
+                        <Import-Package>
+                            org.springframework.osgi.*;resolution:="optional",
+                            org.eclipse.gemini.blueprint.*;resolution:="optional",
+                            com.atlassian.plugin.osgi.bridge.external,
+                            com.atlassian.jira.plugin.webfragment.conditions,
+                            !org.codehaus.groovy.*,
+                            !groovy.lang,
+                            !groovy.util,
+                            *;resolution:=optional
+                        </Import-Package>
+                    </instructions>
                     <compressJs>false</compressJs>
                     <compressCss>false</compressCss>
                 </configuration>
@@ -105,8 +147,8 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -131,6 +173,22 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.atlassian.plugin</groupId>
+                <artifactId>atlassian-spring-scanner-maven-plugin</artifactId>
+                <version>${atlassian.spring.scanner.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>atlassian-spring-scanner</goal>
+                        </goals>
+                        <phase>process-classes</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <verbose>false</verbose>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <properties>
@@ -138,12 +196,14 @@
         <!--<jira.version>6.3.13</jira.version>-->
         <!--<jira.version>6.4.1</jira.version>-->
         <jira.version>7.3.7</jira.version>
-        <amps.version>6.2.6</amps.version>
-        <ao.version>0.19.7</ao.version>
+        <amps.version>6.2.11</amps.version>
+        <ao.version>1.2.0</ao.version>
+        <atlassian.spring.scanner.version>1.2.13</atlassian.spring.scanner.version>
         <!--<fastdev.mvn.command>/usr/share/atlassian-plugin-sdk-5.0.13/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>-->
         <fastdev.mvn.command>/Applications/Atlassian/atlassian-plugin-sdk-6.1.0/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>
         <useFastdevCli>false</useFastdevCli>
         <upm.license.compatibility.version>2.10</upm.license.compatibility.version>
+        <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
     </properties>
     <repositories>
         <repository>
