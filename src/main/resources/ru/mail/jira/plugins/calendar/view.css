@@ -949,3 +949,8 @@ div.vis-item.vis-box {
     margin: 0 2px;
     border: 2px solid black;
 }
+
+.fc .aui-buttons > button.aui-button {
+    font-size: 14px;
+    margin: 0;
+}
