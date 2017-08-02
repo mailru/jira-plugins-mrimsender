@@ -871,6 +871,8 @@ div.vis-item.vis-box {
     display: inline-block;
     height: 16px;
     width: 16px;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .custom-type-icon-event-cal,
