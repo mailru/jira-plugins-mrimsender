@@ -334,7 +334,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 }
 
 #calendar-custom-event-dialog {
-    width: 360px;
+    width: 370px;
     top: 140px;
 }
 
@@ -913,7 +913,7 @@ div.vis-item.vis-box {
 
 .time-field {
     margin-left: 10px !important;
-    width: 75px !important;
+    width: 85px !important;
 }
 
 .date-field {
