@@ -9,4 +9,6 @@
     <atlassian-scanner:scan-indexes/>
 
     <bean name="tx-processor" class="com.atlassian.activeobjects.external.TransactionalAnnotationProcessor" autowire="constructor"/>
+
+    <bean class="ru.mail.jira.plugins.calendar.service.licence.LicenseServiceStub" autowire="constructor"/>
 </beans>

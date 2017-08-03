@@ -1,5 +1,6 @@
 package ru.mail.jira.plugins.calendar.service.licence;
 
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.atlassian.upm.api.license.PluginLicenseManager;
@@ -11,13 +12,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-@Component
+@Scanned
 public class LicenseServiceImpl implements LicenseService {
     private final Logger logger = LoggerFactory.getLogger(LicenseServiceImpl.class);
     private final PluginLicenseManager pluginLicenseManager;
     private final I18nResolver i18nResolver;
 
-    @Autowired
     public LicenseServiceImpl(
         @ComponentImport PluginLicenseManager pluginLicenseManager,
         @ComponentImport I18nResolver i18nResolver
