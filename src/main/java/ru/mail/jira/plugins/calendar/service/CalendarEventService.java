@@ -30,11 +30,15 @@ import com.atlassian.jira.jql.builder.JqlQueryBuilder;
 import com.atlassian.jira.project.version.Version;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.bean.PagerFilter;
+import com.atlassian.query.clause.Clause;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.Calendar;
+import ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter;
+import ru.mail.jira.plugins.calendar.model.QuickFilter;
+import ru.mail.jira.plugins.calendar.model.UserCalendar;
 import ru.mail.jira.plugins.calendar.rest.dto.Event;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
 import ru.mail.jira.plugins.commons.CommonUtils;
@@ -67,6 +71,7 @@ public class CalendarEventService {
     private RendererManager rendererManager;
     private SearchRequestService searchRequestService;
     private SearchProvider searchProvider;
+    private UserCalendarService userCalendarService;
 
     public void setCalendarService(CalendarService calendarService) {
         this.calendarService = calendarService;
@@ -98,6 +103,10 @@ public class CalendarEventService {
 
     public void setSearchRequestService(SearchRequestService searchRequestService) {
         this.searchRequestService = searchRequestService;
+    }
+
+    public void setUserCalendarService(UserCalendarService userCalendarService) {
+        this.userCalendarService = userCalendarService;
     }
 
     public void setSearchProvider(SearchProvider searchProvider) {
@@ -149,6 +158,27 @@ public class CalendarEventService {
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder();
         jqlBuilder.project(projectId);
         return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo);
+    }
+
+    private Clause getSelectedQuickFilterClause(Calendar calendar, ApplicationUser user) {
+        JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder();
+        UserCalendar userCalendar = userCalendarService.find(calendar.getID(), user.getKey());
+        if (userCalendar != null) {
+            for (FavouriteQuickFilter favouriteQuickFilter : userCalendar.getFavouriteQuickFilters()) {
+                QuickFilter quickFilter = favouriteQuickFilter.getQuickFilter();
+                if (favouriteQuickFilter.isSelected() && (quickFilter.isShare() || quickFilter.getCreatorKey().equals(user.getKey()))) {
+                    Clause selectedQuickFiltersClause = null;
+                    SearchService.ParseResult parseResult = jiraDeprecatedService.searchService.parseQuery(user, quickFilter.getJql());
+                    if (parseResult.isValid())
+                        selectedQuickFiltersClause = parseResult.getQuery().getWhereClause();
+                    else
+                        log.error("JQL is invalid => {}", quickFilter.getJql());
+                    if (selectedQuickFiltersClause != null)
+                        jqlBuilder.and().sub().addClause(selectedQuickFiltersClause).endsub();
+                }
+            }
+        }
+        return jqlBuilder.buildClause();
     }
 
     private List<Event> getFilterEvents(Calendar calendar,
@@ -241,6 +271,10 @@ public class CalendarEventService {
             addEndGreaterCondition(endField, endTime, jqlBuilder, userDateFormat);
         }
         jqlBuilder.endsub();
+
+        Clause selectedQuickFiltersClause = getSelectedQuickFilterClause(calendar, user);
+        if (selectedQuickFiltersClause != null)
+            jqlBuilder.and().sub().addClause(selectedQuickFiltersClause).endsub();
 
         List<Issue> issues = searchProvider.search(jqlBuilder.buildQuery(), user, PagerFilter.getUnlimitedFilter()).getIssues();
         if (log.isDebugEnabled())

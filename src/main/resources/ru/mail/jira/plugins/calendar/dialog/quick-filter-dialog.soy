@@ -1,0 +1,188 @@
+{namespace JIRA.Templates.Plugins.MailRuCalendar.QuickFilterDialog}
+
+/**
+ * Quick Filter dialog
+ * * @param calendar
+ */
+{template .dialog}
+    <section role="dialog" id="mailrucalendar-quick-filter-dialog" class="aui-layer aui-dialog2" aria-hidden="true" data-aui-modal="true">
+        <header class="aui-dialog2-header">
+            <h2 id="calendar-dialog-header" class="aui-dialog2-header-main">{getText('ru.mail.jira.plugins.calendar.quick.filter.dialog.title', $calendar.name)}</h2>
+        </header>
+        <div class="aui-dialog2-content">
+            <form class="aui unsectioned ajs-dirty-warning-exempt mailrucalendar-quick-filter-dialog-form">
+                <div id="mailrucalendar-quick-filter-dialog-error-panel" class="aui-message aui-message-error hidden"></div>
+                <table id="mailrucalendar-quick-filter-table" class="aui aui aui-table-interactive">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>{getText('ru.mail.jira.plugins.calendar.quick.filter.dialog.name')}</th>
+                            <th>{getText('ru.mail.jira.plugins.calendar.quick.filter.dialog.jql')}</th>
+                            <th>{getText('ru.mail.jira.plugins.calendar.quick.filter.dialog.description')}</th>
+                            <th>{getText('ru.mail.jira.plugins.calendar.quick.filter.dialog.share')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="mailrucalendar-quick-filter-create-row" data-id="">
+                            <td></td>
+                            <td>
+                                <input type="text" class="text mailrucalendar-quick-filter-name">
+                                <div id="mailrucalendar-quick-filter-name-error" class="error hidden"></div>
+                            </td>
+                            <td>
+                                <div class="atlassian-autocomplete">
+                                    <label for="mailrucalendar-quick-filter-jql-create">
+                                        <span id="mailrucalendar-quick-filter-jql-error-create" class="icon jqlerrormsg jqlgood" title=""></span>
+                                    </label>
+                                    <textarea id="mailrucalendar-quick-filter-jql-create" class="textarea mailrucalendar-quick-filter-jql" rows="3"></textarea>
+                                    <a class="syntax-help" href="https://docs.atlassian.com/jira/docs-064/Advanced+Searching" title="{getText( 'navigator.advanced.query.syntax' )}" target="_jirahelp" tabindex="-1">
+                                        <span class="aui-icon aui-icon-small aui-iconfont-help">{getText( 'navigator.advanced.query.syntax' )}</span>
+                                    </a>
+                                </div>
+                                <div id="mailrucalendar-quick-filter-jql-error" class="error hidden"></div>
+                            </td>
+                            <td>
+                                <textarea class="textarea mailrucalendar-quick-filter-description" rows="3"></textarea>
+                                <div id="mailrucalendar-quick-filter-description-error" class="error hidden"></div>
+                            </td>
+                            <td>
+                                <input type="checkbox" class="checkbox mailrucalendar-quick-filter-share">
+                                <div id="mailrucalendar-quick-filter-share-error" class="error hidden"></div>
+                            </td>
+                            <td>
+                                <ul class="operations-list">
+                                    <li><a href="#" id="calendar-quick-filter-add">{getText('ru.mail.jira.plugins.calendar.common.add')}</a></li>
+                                </ul>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </form>
+        </div>
+        <footer class="aui-dialog2-footer" style="width: 100%">
+            <div class="aui-dialog2-footer-actions">
+                <button id="mailrucalendar-quick-filter-dialog-close" class="aui-button aui-button-link">{getText('ru.mail.jira.plugins.calendar.common.close')}</button>
+            </div>
+        </footer>
+    </section>
+{/template}
+
+
+/**
+ * Render quick filter row
+ * @param quickFilter
+ */
+{template .renderQuickFilterEntry}
+<tr class="mailrucalendar-quick-filter-row" data-id="{$quickFilter.id}">
+    <td>
+        <a class="calendar-quick-filter-favourite" href="#">
+            <span class="aui-icon aui-icon-small aui-iconfont-{if $quickFilter.favourite}star{else}unstar{/if}"></span>
+        </a>
+    </td>
+    <td>{$quickFilter.name}</td>
+    <td>{$quickFilter.jql}</td>
+    <td>{if $quickFilter.description}{$quickFilter.description}{/if}</td>
+    <td>
+        <input type="checkbox" class="checkbox" {if $quickFilter.share}checked{/if} disabled></input>
+    </td>
+    <td>
+        {if $quickFilter.canEdit}
+            <ul class="operations-list">
+                <li><a href="#" class="calendar-quick-filter-edit">{getText('ru.mail.jira.plugins.calendar.common.edit')}</a></li>
+                <li><a href="#" class="calendar-quick-filter-delete">{getText('ru.mail.jira.plugins.calendar.common.delete')}</a></li>
+            </ul>
+        {/if}
+    </td>
+</tr>
+{/template}
+
+/**
+ * Render quick filter row
+ * @param quickFilter
+ */
+{template .renderEditQuickFilterEntry}
+<tr class="mailrucalendar-quick-filter-row" data-id="{$quickFilter.id}">
+    <td></td>
+    <td>
+        <input type="text" class="text mailrucalendar-quick-filter-name" value="{$quickFilter.name}">
+        <div id="mailrucalendar-quick-filter-name-error" class="error hidden"></div>
+    </td>
+    <td>
+        <div class="atlassian-autocomplete">
+            <label for="mailrucalendar-quick-filter-jql-{$quickFilter.id}">
+                <span id="mailrucalendar-quick-filter-jql-error-{$quickFilter.id}" class="icon jqlerrormsg jqlgood" title=""></span>
+            </label>
+            <textarea id="mailrucalendar-quick-filter-jql-{$quickFilter.id}" class="textarea mailrucalendar-quick-filter-jql" rows="3">{$quickFilter.jql}</textarea>
+            <a class="syntax-help" href="https://docs.atlassian.com/jira/docs-064/Advanced+Searching" title="{getText( 'navigator.advanced.query.syntax' )}" target="_jirahelp" tabindex="-1">
+                <span class="aui-icon aui-icon-small aui-iconfont-help">{getText( 'navigator.advanced.query.syntax' )}</span>
+            </a>
+        </div>
+        <div id="mailrucalendar-quick-filter-jql-error" class="error hidden"></div>
+    </td>
+    <td>
+        <textarea class="textarea mailrucalendar-quick-filter-description" rows="3">{if $quickFilter.description}{$quickFilter.description}{/if}</textarea>
+        <div id="mailrucalendar-quick-filter-description-error" class="error hidden"></div>
+    </td>
+    <td>
+        <input type="checkbox" class="checkbox mailrucalendar-quick-filter-share" {if $quickFilter.share}checked{/if}>
+        <div id="mailrucalendar-quick-filter-share-error" class="error hidden"></div>
+    </td>
+    <td>
+        <ul class="operations-list">
+            <li><a href="#" class="calendar-quick-filter-update">{getText('ru.mail.jira.plugins.calendar.common.update')}</a></li>
+            <li><a href="#" class="calendar-quick-filter-edit-cancel">{getText('ru.mail.jira.plugins.calendar.common.cancel')}</a></li>
+        </ul>
+    </td>
+</tr>
+{/template}
+
+/**
+ * Render JQL autocomplete field
+ * @param name
+ * @param id
+ * @param? value
+ */
+{template .renderJQLAutocomplete}
+<div class="atlassian-autocomplete">
+    <label for="advanced-search">
+        <span id="jqlerrormsg-{$id}" class="icon jqlerrormsg jqlgood" title=""></span>
+    </label>
+    <textarea id="advanced-search-{$id}" class="textarea search-entry advanced-search" name={$name} rows="3">{if $value}{$value}{/if}</textarea>
+    <a class="syntax-help" href="https://docs.atlassian.com/jira/docs-064/Advanced+Searching" title="{getText( 'navigator.advanced.query.syntax' )}" target="_jirahelp" tabindex="-1">
+        <span class="aui-icon aui-icon-small aui-iconfont-help">{getText( 'navigator.advanced.query.syntax' )}</span>
+    </a>
+    <div data-field="advanced-search-{$id}" class="error hidden"></div>
+</div>
+{/template}
+
+
+/**
+ * Render description field
+ * @param name
+ * @param? value
+ */
+{template .renderDescription}
+<textarea class="textarea" name={$name} rows="3">{if $value}{$value}{/if}</textarea>
+{/template}
+
+/**
+ * Render checkbox field
+ * @param name
+ * @param? value
+ * @param disabled
+ */
+{template .renderCheckbox}
+<input id="{$name}" type="checkbox" class="checkbox calendar-quick-filter-checkbox" name="{$name}" {if $value}checked{/if} {if $disabled}disabled{/if} value="{if $value}{$value}{else}false{/if}"></input>
+{/template}
+
+/**
+ * Render checkbox field
+ * @param name
+ * @param? value
+ */
+{template .renderFavourite}
+<a class="calendar-quick-filter-favourite" href="#">
+    <span class="aui-icon aui-icon-small aui-iconfont-{if $value}star{else}unstar{/if}"></span>
+    <input type="hidden" name={$name} value="{if $value}{$value}{else}false{/if}"></input>
+</a>
+{/template}

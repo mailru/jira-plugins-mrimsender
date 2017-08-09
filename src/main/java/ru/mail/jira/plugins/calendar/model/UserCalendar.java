@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.calendar.model;
 
 import net.java.ao.Entity;
+import net.java.ao.OneToMany;
 
 public interface UserCalendar extends Entity {
     String getUserKey();
@@ -17,4 +18,7 @@ public interface UserCalendar extends Entity {
 
     boolean isEnabled();
     void setEnabled(boolean isEnabled);
+
+    @OneToMany
+    FavouriteQuickFilter[] getFavouriteQuickFilters();
 }

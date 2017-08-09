@@ -46,13 +46,20 @@
         <div id="calendar-add-dropdown" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
             <ul class="aui-list-truncate">
                 <li><a id="calendar-create" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.create" )</a></li>
-                <li><a id="calendar-import" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.add" )</a></li>
+                <li><a id="calendar-import" href="#">$i18n.getText( "ru.mail.jira.plugins.calendar.common.addExisting" )</a></li>
             </ul>
         </div>
     </div>
     <ol class="aui-nav aui-nav-breadcrumbs"></ol>
 </header>
 <div class="aui-page-panel calendar-view-page-panel">
+    <div id="calendar-quick-filters">
+        <dl class="calendar-quick-filters">
+            <dt>
+                <span class="calendar-quick-filters-label" title="$i18n.getText( "ru.mail.jira.plugins.calendar.quick.filter.tooltip" )">Quick Filters:</span>
+            </dt>
+        </dl>
+    </div>
     <div class="aui-page-panel-inner">
         <section class="aui-page-panel-content">
             <div id="calendar-full-calendar"></div>

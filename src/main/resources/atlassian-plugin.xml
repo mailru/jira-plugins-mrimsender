@@ -19,6 +19,8 @@
         <entity>ru.mail.jira.plugins.calendar.model.UserCalendar</entity>
         <entity>ru.mail.jira.plugins.calendar.model.UserData</entity>
         <entity>ru.mail.jira.plugins.calendar.model.Permission</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.QuickFilter</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter</entity>
 
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v3.Version3UpgradeTask</upgradeTask>
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v4.Version4UpgradeTask</upgradeTask>
@@ -36,6 +38,7 @@
     <component key="userData-service" class="ru.mail.jira.plugins.calendar.service.UserDataService" />
     <component key="userCalendar-service" class="ru.mail.jira.plugins.calendar.service.UserCalendarServiceImpl" />
     <component key="permission-service" class="ru.mail.jira.plugins.calendar.service.PermissionServiceImpl" />
+    <component key="quick-filter-service" class="ru.mail.jira.plugins.calendar.service.QuickFilterServiceImpl" />
 
     <webwork1 key="calendar-action" class="java.lang.Object" roles-required="use">
         <actions>
@@ -55,6 +58,7 @@
         <resource type="download" name="confirm-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/confirm-dialog.soy"/>
         <resource type="download" name="feed-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/feed-dialog.soy"/>
         <resource type="download" name="import-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/import-dialog.soy"/>
+        <resource type="download" name="quick-filter-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/quick-filter-dialog.soy"/>
     </web-resource>
 
     <web-resource key="calendar-gadget-resources">
@@ -96,6 +100,7 @@
         <dependency>com.atlassian.auiplugin:aui-inline-dialog2</dependency>
         <dependency>com.atlassian.auiplugin:aui-flag</dependency>
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
+        <dependency>com.atlassian.auiplugin:aui-experimental-tooltips</dependency>
         <dependency>jira.webresources:jqlautocomplete</dependency>
         <dependency>ru.mail.jira.plugins.mailrucal:mailru-calendar-soy-templates</dependency>
 
@@ -114,11 +119,14 @@
         <resource type="download" name="feed-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/feed-dialog.js"/>
         <resource type="download" name="import-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/import-dialog.js"/>
         <resource type="download" name="confirm-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/confirm-dialog.js"/>
+        <resource type="download" name="quick-filter-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/quick-filter-dialog.js"/>
         <resource type="download" name="feedback-flag.js" location="ru/mail/jira/plugins/calendar/feedback-flag.js"/>
 
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
         <resource type="download" name="view.js" location="ru/mail/jira/plugins/calendar/view.js"/>
+
+        <resource type="download" name="JQLAutoComplete.js" location="ru/mail/jira/plugins/calendar/utils/JQLAutoComplete.js" />
     </web-resource>
 
     <web-item key="calendar-link" name="Calendar Link" section="system.top.navigation.bar" weight="47">
