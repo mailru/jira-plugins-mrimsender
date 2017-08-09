@@ -5,7 +5,7 @@
         <version>${project.version}</version>
         <vendor name="${project.organization.name}" url="${project.organization.url}" />
         <param name="atlassian-data-center-compatible">true</param>
-        <param name="atlassian-licensing-enabled">${ru.mail.jira.plugins.license.enabled}</param>
+        <param name="atlassian-licensing-enabled">true</param>
     </plugin-info>
 
     <gadget key="mailru-calendar-gadget" location="ru/mail/jira/plugins/calendar/gadget/calendar-gadget.xml"/>

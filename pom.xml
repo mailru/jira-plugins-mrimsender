@@ -14,16 +14,6 @@
     <description>Calendar from Mail.Ru Company</description>
     <packaging>atlassian-plugin</packaging>
 
-    <profiles>
-        <profile>
-            <id>license-free</id>
-            <properties>
-                <ru.mail.jira.plugins.license.enabled>false</ru.mail.jira.plugins.license.enabled>
-                <spring.context>internal.xml</spring.context>
-            </properties>
-        </profile>
-    </profiles>
-
     <dependencies>
         <dependency>
             <groupId>com.atlassian.jira</groupId>
@@ -137,7 +127,7 @@
                     <extractDependencies>true</extractDependencies>
                     <instructions>
                         <Atlassian-Plugin-Key>${atlassian.plugin.key}</Atlassian-Plugin-Key>
-                        <Spring-Context>META-INF/spring/${spring.context}</Spring-Context>
+                        <Spring-Context>*</Spring-Context>
                         <Export-Package></Export-Package>
                         <!-- explicitly exclude groovy imports, which may cause issues if groovyrunner is also installed -->
                         <Import-Package>
@@ -215,8 +205,6 @@
         <useFastdevCli>false</useFastdevCli>
         <upm.license.compatibility.version>2.10</upm.license.compatibility.version>
         <atlassian.plugin.key>${project.groupId}.${project.artifactId}</atlassian.plugin.key>
-        <ru.mail.jira.plugins.license.enabled>true</ru.mail.jira.plugins.license.enabled>
-        <spring.context>marketplace.xml</spring.context>
     </properties>
     <repositories>
         <repository>
