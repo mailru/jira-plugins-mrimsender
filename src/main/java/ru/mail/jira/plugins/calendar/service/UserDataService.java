@@ -3,54 +3,47 @@ package ru.mail.jira.plugins.calendar.service;
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
-import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.transaction.TransactionCallback;
 import net.java.ao.ActiveObjectsException;
 import net.java.ao.Query;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDataDto;
 
 import java.util.UUID;
 
+@Component
 public class UserDataService {
     private final static Logger log = LoggerFactory.getLogger(UserDataService.class);
 
-    private ActiveObjects ao;
-    private ApplicationProperties applicationProperties;
-    private AvatarService avatarService;
-    private CalendarService calendarService;
-    private GlobalPermissionManager globalPermissionManager;
-    private UserCalendarService userCalendarService;
+    private final ActiveObjects ao;
+    private final AvatarService avatarService;
+    private final CalendarService calendarService;
+    private final GlobalPermissionManager globalPermissionManager;
+    private final UserCalendarService userCalendarService;
 
-    public void setAo(ActiveObjects ao) {
+    @Autowired
+    public UserDataService(
+        @ComponentImport AvatarService avatarService,
+        @ComponentImport GlobalPermissionManager globalPermissionManager,
+        @ComponentImport ActiveObjects ao,
+        CalendarService calendarService,
+        UserCalendarService userCalendarService
+    ) {
         this.ao = ao;
-    }
-
-    public void setApplicationProperties(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
-    }
-
-    public void setAvatarService(AvatarService avatarService) {
         this.avatarService = avatarService;
-    }
-
-    public void setGlobalPermissionManager(GlobalPermissionManager globalPermissionManager) {
-        this.globalPermissionManager = globalPermissionManager;
-    }
-
-    public void setCalendarService(CalendarService calendarService) {
         this.calendarService = calendarService;
-    }
-
-    public void setUserCalendarService(UserCalendarService userCalendarService) {
+        this.globalPermissionManager = globalPermissionManager;
         this.userCalendarService = userCalendarService;
     }
 

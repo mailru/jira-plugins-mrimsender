@@ -1,0 +1,68 @@
+#* @vtlvariable name="date" type="com.atlassian.jira.datetime.DateTimeFormatter" *#
+#* @vtlvariable name="event" type="ru.mail.jira.plugins.calendar.rest.dto.CustomEventDto" *#
+#disable_html_escaping()
+#parse( "templates/email/html/includes/emailconstants.vm" )
+#parse( "templates/email/html/includes/header.vm" )
+
+#rowWrapperNormal( "#parse( 'templates/email/html/includes/patterns/page-title.vm' )" )
+
+#rowWrapperNormalBegin( "", "wrapper-special-margin" )
+
+<table class="keyvalue-table">
+    <tr>
+        <th>#text("common.words.name"):</th>
+        <td>
+            $event.title
+        </td>
+    </tr>
+    <tr>
+        <th>#text("ru.mail.jira.plugins.calendar.customEvents.dialog.calendar"):</th>
+        <td>
+            $event.calendarName
+        </td>
+    </tr>
+    <tr>
+        <th>#text("ru.mail.jira.plugins.calendar.customEvents.type"):</th>
+        <td>
+            #if ($event.eventTypeI18nName)
+                #text($event.eventTypeI18nName)
+            #else
+                $event.eventTypeName
+            #end
+        </td>
+    </tr>
+    <tr>
+        <th>
+            #text("ru.mail.jira.plugins.calendar.dialog.eventStart"):
+        </th>
+        <td>
+            $date.format($event.startDate)
+        </td>
+    </tr>
+    #if ($event.endDate)
+        <tr>
+            <th>
+                #text("ru.mail.jira.plugins.calendar.dialog.eventEnd"):
+            </th>
+            <td>
+                $date.format($event.endDate)
+            </td>
+        </tr>
+    #end
+    #if ($event.participants)
+        <tr>
+            <th>
+                #text("ru.mail.jira.plugins.calendar.customEvents.participants"):
+            </th>
+            <td>
+                #foreach ($participant in $event.participants)
+                    ${participant.displayName}#if($velocityHasNext), #end
+                #end
+            </td>
+        </tr>
+    #end
+</table>
+
+#rowWrapperNormalEnd()
+
+#parse( "templates/email/html/includes/footer.vm" )

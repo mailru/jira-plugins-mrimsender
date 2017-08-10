@@ -1,3 +1,4 @@
+#* @vtlvariable name="licenseStatus" type="ru.mail.jira.plugins.calendar.service.licence.LicenseStatus" *#
 <html>
 <head>
     <title>$i18n.getText( "ru.mail.jira.plugins.calendar.linkTitle" )</title>
@@ -9,6 +10,16 @@
     $webResourceManager.requireResource( "ru.mail.jira.plugins.mailrucal:calendar-resources" )
 </head>
 <body>
+#if (!$licenseStatus.valid)
+    <div class="aui-banner aui-banner-error">
+        #text("ru.mail.jira.plugins.calendar.linkTitle") #text("ru.mail.jira.plugins.license.readOnly"): ${licenseStatus.error}
+        #if ($isAdmin)
+            <br/>
+            <a href="https://my.atlassian.com/purchase/buyaddon?key=ru.mail.jira.plugins.mailrucal">#text("ru.mail.jira.plugins.license.purchase")</a>
+            <a href="$baseurl/plugins/servlet/upm#manage/ru.mail.jira.plugins.mailrucal">#text("ru.mail.jira.plugins.license.upm")</a>
+        #end
+    </div>
+#end
 <header class="aui-page-header">
     <div class="aui-page-header-inner">
         <div class="aui-page-header-main">
