@@ -5,46 +5,42 @@ import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.ErrorCollection;
-import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.util.MessageSet;
 import com.atlassian.jira.util.SimpleErrorCollection;
 import com.atlassian.jira.util.json.JSONObject;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.message.I18nResolver;
 import net.java.ao.Query;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.model.QuickFilter;
 import ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter;
-import ru.mail.jira.plugins.calendar.model.UserCalendar;
 
 import java.util.Collection;
 import java.util.Map;
 
-
+@Component
 public class QuickFilterServiceImpl implements QuickFilterService {
     private static final int QUICK_FILTER_NAME_MAX_LENGTH = 255;
 
-    private ActiveObjects ao;
-    private I18nHelper i18nHelper;
-    private SearchService searchService;
-    private UserCalendarService userCalendarService;
+    private final ActiveObjects ao;
+    private final I18nResolver i18nResolver;
+    private final SearchService searchService;
 
-    public void setAo(ActiveObjects ao) {
+    @Autowired
+    public QuickFilterServiceImpl(
+        @ComponentImport ActiveObjects ao,
+        @ComponentImport I18nResolver i18nResolver,
+        @ComponentImport SearchService searchService
+    ) {
         this.ao = ao;
-    }
-
-    public void setI18nHelper(I18nHelper i18nHelper) {
-        this.i18nHelper = i18nHelper;
-    }
-
-    public void setSearchService(SearchService searchService) {
+        this.i18nResolver = i18nResolver;
         this.searchService = searchService;
     }
 
-    public void setUserCalendarService(UserCalendarService userCalendarService) {
-        this.userCalendarService = userCalendarService;
-    }
-
-    public static JSONObject formatErrorCollection(ErrorCollection errorCollection) {
+    private static JSONObject formatErrorCollection(ErrorCollection errorCollection) {
         JSONObject result = new JSONObject();
         try {
             JSONObject errorsObject = new JSONObject();
@@ -67,12 +63,12 @@ public class QuickFilterServiceImpl implements QuickFilterService {
         if (user == null)
             errors.addErrorMessage("User doesn't exist");
         if (StringUtils.isBlank(name))
-            errors.addError("name", i18nHelper.getText("issue.field.required", i18nHelper.getText("ru.mail.jira.plugins.calendar.quick.filter.dialog.name")));
+            errors.addError("name", i18nResolver.getText("issue.field.required", i18nResolver.getText("ru.mail.jira.plugins.calendar.quick.filter.dialog.name")));
         else if (name.length() > QUICK_FILTER_NAME_MAX_LENGTH)
-            errors.addError("name", i18nHelper.getText("admin.errors.userproperty.value.too.long"));
+            errors.addError("name", i18nResolver.getText("admin.errors.userproperty.value.too.long"));
 
         if (StringUtils.isBlank(jql))
-            errors.addError("jql", i18nHelper.getText("issue.field.required", "JQL"));
+            errors.addError("jql", i18nResolver.getText("issue.field.required", "JQL"));
         else {
             SearchService.ParseResult parseResult = searchService.parseQuery(user, jql);
             if (!parseResult.isValid())
