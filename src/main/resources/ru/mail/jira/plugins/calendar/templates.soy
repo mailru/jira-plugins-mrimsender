@@ -60,7 +60,7 @@
                     <dl>
                         <dt>{getText('common.words.status')}:</dt>
                         <dd>
-                            <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-{$issue.statusColor}">{$issue.status}</span>
+                            <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-{$issue.statusColor}">{$issue.status |escapeHtml}</span>
                         </dd>
                     </dl>
                 {/if}
@@ -92,7 +92,7 @@
                     <dl>
                         <dt>{getText('issue.field.priority')}:</dt>
                         <dd>
-                            <img class="calendar-priority-image-url" height="16" src="{$contextPath}{$issue.priorityIconUrl}"/>{$issue.priority}
+                            <img class="calendar-priority-image-url" height="16" src="{$contextPath}{$issue.priorityIconUrl |escapeHtml}"/>{$issue.priority |escapeHtml}
                         </dd>
                     </dl>
                 {/if}
@@ -137,6 +137,72 @@
 {/template}
 
 /**
+ * Issue info for popup in calendar
+ * @param event json object containing field values
+ * @param startDateFormatted formatted start date
+ * @param endDateFormatted formatted end date
+ * @param editDisabled
+ * @param reminderName
+ */
+{template .customEventInfo}
+    <div>
+        <div class="calenar-custom-event-popup-key-header">
+            <div>
+                <span class="custom-type-icon custom-type-icon-{$event.eventTypeAvatar}" alt="{$event.eventTypeName}" title="{$event.eventTypeName}"></span>
+                {sp}{$event.title}
+            </div>
+            {if $event.reminder}
+                <dl>
+                    <dt>
+                        {getText('ru.mail.jira.plugins.calendar.customEvents.reminder')}
+                    </dt>
+                    <dd>
+                        {$reminderName}
+                    </dd>
+                </dl>
+            {/if}
+            {if $event.allDay}
+                <dl>
+                    <dt>{getText('ru.mail.jira.plugins.calendar.customEvents.allDay')}</dt>
+                </dl>
+            {/if}
+            <dl>
+                <dt>{getText('ru.mail.jira.plugins.calendar.dialog.eventStart')}:</dt>
+                <dd>{$event.startDate ? $startDateFormatted : getText('ru.mail.jira.plugins.calendar.dialog.eventStart.empty')}</dd>
+            </dl>
+            {if $event.endDate}
+                <dl>
+                    <dt>{getText('ru.mail.jira.plugins.calendar.dialog.eventEnd')}:</dt>
+                    <dd>{$endDateFormatted}</dd>
+                </dl>
+            {/if}
+            {if $event.participants}
+                <dl>
+                    <dt>{getText('ru.mail.jira.plugins.calendar.customEvents.participants')}:</dt>
+                    <dd>
+                        {foreach $participant in $event.participants}
+                            <div class="tinylink">
+                                {if $participant.avatarUrl}
+                                    <img src="{$participant.avatarUrl}"/>{sp}
+                                {/if}
+                                <a class="user-hover" rel="{$participant.name}" href="/jira/secure/ViewProfile.jspa?name={$participant.name}">{$participant.displayName}</a>
+                            </div>
+                        {/foreach}
+                    </dd>
+                </dl>
+            {/if}
+            {if $event.editable and not $editDisabled}
+                <div>
+                    <a href="#" class="edit-button">{getText('ru.mail.jira.plugins.calendar.common.edit')}</a>
+                    {sp}&bull;{sp}
+                    <a href="#" class="delete-button">{getText('common.words.delete')}</a>
+                </div>
+            {/if}
+        </div>
+    </div>
+{/template}
+
+/**
  * Calendar entry in right list
  * @param calendar
  * @param enableButton
@@ -162,6 +228,13 @@
                 </button>
             </div>
             <div id="calendar-buttons-dropdown-{$calendar.id}" data-id="{$calendar.id}" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
+                {if $calendar.eventsEditable}
+                    <div class="aui-dropdown2-section">
+                        <ul>
+                            <li><a class="calendar-create-custom-event" href="#">{getText( 'ru.mail.jira.plugins.calendar.addCustomEvent' )}</a></li>
+                        </ul>
+                    </div>
+                {/if}
                 {if $calendar.viewable}
                     {if $calendar.source }
                         <div class="aui-dropdown2-section">
@@ -234,17 +307,29 @@
  */
 {template .calendarLegend}
     {foreach $calendar in $calendars}
-        {if $calendar.sourceType == 'project' }
-            <a href="{$contextPath}/issues/?jql=project%3D{$calendar.sourceId}" class="mailru-calendar-gadget-legend-entry">
+        {if $calendar.sourceType != 'basic'}
+            {if $calendar.sourceType == 'project' }
+                <a href="{$contextPath}/issues/?jql=project%3D{$calendar.sourceId}" class="mailru-calendar-gadget-legend-entry">
+                <a href="" class="mailru-calendar-gadget-legend-entry">
+            {else}
+                <a href="{$contextPath}/issues/?filter={$calendar.sourceId}" class="mailru-calendar-gadget-legend-entry">
+            {/if}
+            {if $calendar.hasError}
+                <span class="aui-icon aui-icon-small aui-iconfont-error calendar-view-color-box" title="{$calendar.error}"/>
+            {else}
+                <span class="calendar-view-color-box" style="background-color: {$calendar.color};"/>
+            {/if}
+            {$calendar.name}</a>
         {else}
-            <a href="{$contextPath}/issues/?filter={$calendar.sourceId}" class="mailru-calendar-gadget-legend-entry">
+            <span class="mailru-calendar-gadget-legend-entry">
+                {if $calendar.hasError}
+                    <span class="aui-icon aui-icon-small aui-iconfont-error calendar-view-color-box" title="{$calendar.error}"/>
+                {else}
+                    <span class="calendar-view-color-box" style="background-color: {$calendar.color};"/>
+                {/if}
+                {$calendar.name}
+            </span>
         {/if}
-        {if $calendar.hasError}
-            <span class="aui-icon aui-icon-small aui-iconfont-error calendar-view-color-box" title="{$calendar.error}"/>
-        {else}
-            <span class="calendar-view-color-box" style="background-color: {$calendar.color};"/>
-        {/if}
-        {$calendar.name}</a>
     {/foreach}
 {/template}
 

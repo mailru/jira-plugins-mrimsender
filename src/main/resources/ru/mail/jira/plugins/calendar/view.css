@@ -327,16 +327,54 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     top: 140px;
 }
 
+#calendar-dialog a[disabled] {
+    pointer-events: none;
+    cursor: default;
+    color: #707070;
+}
+
+#calendar-custom-event-dialog {
+    width: 370px;
+    top: 140px;
+}
+
+#calendar-custom-event-dialog .checkbox {
+    vertical-align: sub;
+}
+
+.custom-event-type-avatar {
+    float: left;
+    margin: 2px 5px 0 0;
+    height: 16px;
+}
+
+#calendar-custom-event-dialog label {
+    width: 90px;
+    margin-left: -105px;
+}
+
+.readonly-value {
+    padding: 5px 5px;
+}
+
+#calendar-custom-event-dialog .field-group {
+    padding: 4px 0 4px 105px;
+}
+
 #calendar-dialog .aui-dialog2-content {
     min-height: 350px;
 }
 
-#calendar-dialog form {
+#calendar-dialog .tab-form {
     margin: 0;
     height: 340px;
     padding: 10px 20px 20px 20px;
     overflow: hidden;
     overflow-y: scroll;
+}
+
+#calendar-dialog .create-button {
+    margin-top: 10px;
 }
 
 .calendar-dialog-color-option {
@@ -440,7 +478,8 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 
 #calendar-dialog-common-tab,
 #calendar-dialog-source-tab,
-#calendar-dialog-permissions-tab {
+#calendar-dialog-permissions-tab,
+#calendar-dialog-eventTypes-tab {
     display: table-cell;
     width: 600px;
 }
@@ -840,6 +879,94 @@ div.vis-item.vis-box {
 .mailrucalendar-feedback-flag-rating > input:checked ~ label:hover ~ label,
 .mailrucalendar-feedback-flag-rating > label:hover ~ input:checked ~ label {
     color: gold;
+}
+
+.custom-type-icon {
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.custom-type-icon-event-cal,
+.select2-highlighted .custom-type-icon-event {
+    background-image: url('calendar-img/event-cal.png');
+}
+
+.custom-type-icon-event {
+    background-image: url('calendar-img/event.png');
+}
+
+.custom-type-icon-travel-cal,
+.select2-highlighted .custom-type-icon-travel {
+    background-image: url('calendar-img/travel-cal.png');
+}
+
+.custom-type-icon-travel {
+    background-image: url('calendar-img/travel.png');
+}
+
+.custom-type-icon-birthday-cal,
+.select2-highlighted .custom-type-icon-birthday {
+    background-image: url('calendar-img/birthday-cal.png');
+}
+
+.custom-type-icon-birthday {
+    background-image: url('calendar-img/birthday.png');
+}
+
+.custom-type-icon-leave-cal,
+.select2-highlighted .custom-type-icon-leave {
+    background-image: url('calendar-img/leave-cal.png');
+}
+
+.custom-type-icon-leave {
+    background-image: url('calendar-img/leave.png');
+}
+
+.time-field {
+    margin-left: 10px !important;
+    width: 85px !important;
+}
+
+.date-field {
+    width: 130px !important;
+}
+
+.customType-button {
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.customType-button .aui-icon {
+    color: #707070;
+}
+
+.customType-button:hover .aui-icon {
+    color: black;
+}
+
+.avatar-picker .avatar {
+    cursor: pointer;
+    display: inline-block;
+    padding: 3px 4px 0;
+    margin: 2px 4px;
+}
+
+.avatar-picker .avatar:hover {
+    margin: 1px 3px;
+    border: 1px solid black;
+}
+
+.avatar-picker .avatar.selected {
+    margin: 0 2px;
+    border: 2px solid black;
+}
+
+.fc .aui-buttons > button.aui-button {
+    font-size: 14px;
+    margin: 0;
 }
 
 /* Quick filters */

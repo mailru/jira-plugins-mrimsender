@@ -1,0 +1,122 @@
+{namespace JIRA.Templates.Plugins.MailRuCalendar.CustomEventDialog}
+
+/**
+ * Calendar dialog
+ * @param model
+ * @param calendarId
+ * @param calendars
+ * @param formattedStartDate
+ * @param formattedEndDate
+ * @param formattedStartTime
+ * @param formattedEndTime
+ * @param reminderName
+ */
+{template .dialog}
+    <section role="dialog" id="calendar-custom-event-dialog" class="aui-layer aui-dialog2" aria-hidden="true" data-aui-modal="true">
+        <header class="aui-dialog2-header">
+            <h2 id="calendar-custom-event-dialog-header" class="aui-dialog2-header-main">{$model.id ? getText('ru.mail.jira.plugins.calendar.editEvent') : getText('ru.mail.jira.plugins.calendar.createEvent')}</h2>
+        </header>
+        <div class="aui-dialog2-content">
+            {if $calendars.length}
+                <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form">
+                    <input class="hidden" type="submit"/>
+                    <div id="custom-event-dialog-error-panel" class="aui-message aui-message-error hidden"></div>
+
+                    <div class="field-group">
+                        <label for="custom-event-dialog-calendar">
+                            <span class="aui-icon icon-required"></span>
+                            {getText( 'ru.mail.jira.plugins.calendar.customEvents.dialog.calendar' )}
+                        </label>
+                        <select class="select" id="custom-event-dialog-calendar" {if $model.id}disabled{/if}>
+                            {foreach $cal in $calendars}
+                                {if $cal.eventsEditable}
+                                    <option value="{$cal.id}" {if $cal.id == $calendarId}selected{/if}>{$cal.name}</option>
+                                {/if}
+                            {/foreach}
+                        </select>
+                        <div id="custom-event-dialog-calendar-error" class="error hidden"></div>
+                    </div>
+
+                    <hr/>
+
+                    <div class="field-group">
+                        <label for="custom-event-dialog-calendar">
+                            <span class="aui-icon icon-required"></span>
+                            {getText( 'ru.mail.jira.plugins.calendar.customEvents.type' )}
+                        </label>
+                        <input type="hidden" id="custom-event-dialog-type" class="select calendar-dialog-source-field medium-long-field"/>
+                        <div id="custom-event-dialog-type-error" class="error hidden"></div>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="custom-event-dialog-title">
+                            <span class="aui-icon icon-required"></span>
+                            {getText('common.words.name')}
+                        </label>
+                        <input class="text medium-long-field" type="text" id="custom-event-dialog-title" maxlength="254" value="{if $model.title}{$model.title}{/if}"/>
+                        <div id="custom-event-dialog-title-error" class="error hidden"></div>
+                    </div>
+                    <div class="field-group">
+                        <label>{getText('ru.mail.jira.plugins.calendar.customEvents.reminder')}</label>
+                        <div class="medium-long-field readonly-value" id="custom-event-dialog-reminder">{$reminderName}</div>
+                        <div class="description">{getText('ru.mail.jira.plugins.calendar.customEvents.reminder.description')}</div>
+                    </div>
+                    <div class="field-group">
+                        <label for="custom-event-dialog-allDay">
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.allDay')}
+                        </label>
+                        <input class="checkbox" type="checkbox" id="custom-event-dialog-allDay" {if $model.allDay}checked{/if}/>
+                    </div>
+                    <div class="field-group">
+                        <label for="custom-event-dialog-startDate">
+                            <span class="aui-icon icon-required"></span>
+                            {getText( 'ru.mail.jira.plugins.calendar.dialog.eventStart' )}
+                        </label>
+                        <input
+                            class="text medium-long-field date-field"
+                            id="custom-event-dialog-startDate"
+                            type="text"
+                            value="{if $model.startDate}{$formattedStartDate}{/if}"
+                        />
+                        <input class="text time-field" id="custom-event-dialog-startTime" type="text" value="{$formattedStartTime}"/>
+                        <div id="custom-event-dialog-startDate-error" class="error hidden"></div>
+                    </div>
+                    <div class="field-group">
+                        <label for="custom-event-dialog-endDate">
+                            {getText( 'ru.mail.jira.plugins.calendar.dialog.eventEnd' )}
+                        </label>
+                        <input
+                            class="text medium-long-field date-field"
+                            id="custom-event-dialog-endDate"
+                            type="text"
+                            value="{if $model.endDate}{$formattedEndDate}{/if}"
+                        />
+                        <input class="text time-field" id="custom-event-dialog-endTime" type="text" value="{if $model.endDate and not $model.allDay}{$formattedEndTime}{/if}"/>
+                        <div id="custom-event-dialog-endDate-error" class="error hidden"></div>
+                    </div>
+                    <div class="field-group">
+                        <label for="custom-event-dialog-participantNames">
+                            {getText( 'ru.mail.jira.plugins.calendar.customEvents.participants' )}
+                        </label>
+                        <select multiple="multiple" class="hidden multi-select" id="custom-event-dialog-participantNames">
+                            {if $model.participants}
+                                {foreach $participant in $model.participants}
+                                    <option value="{$participant.name}" title="{$participant.displayName}" selected>{$participant.displayName}</option>
+                                {/foreach}
+                            {/if}
+                        </select>
+                        <div id="custom-event-dialog-participantNames-error" class="error hidden"></div>
+                    </div>
+                </form>
+            {else}
+                <div class="aui-message aui-message-info">{getText('ru.mail.jira.plugins.calendar.customEvents.dialog.error.noCalendarsAvailable')}</div>
+            {/if}
+        </div>
+        <footer class="aui-dialog2-footer" style="width: 100%">
+            <div class="aui-dialog2-footer-actions">
+                <button {if not $calendars.length}disabled{/if} id="calendar-custom-event-dialog-ok" class="aui-button aui-button-primary">{$model.id ? getText( 'common.forms.update') : getText( 'common.words.create')}</button>
+                <button id="calendar-custom-event-dialog-cancel" class="aui-button aui-button-link">{getText( 'common.words.cancel' )}</button>
+            </div>
+        </footer>
+    </section>
+{/template}

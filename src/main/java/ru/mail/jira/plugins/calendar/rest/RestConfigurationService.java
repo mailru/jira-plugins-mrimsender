@@ -7,6 +7,8 @@ import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.bc.project.ProjectService;
+import com.atlassian.jira.bc.user.search.UserSearchParams;
+import com.atlassian.jira.bc.user.search.UserSearchService;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.CustomFieldManager;
@@ -27,8 +29,12 @@ import com.atlassian.jira.sharing.search.SharedEntitySearchParametersBuilder;
 import com.atlassian.jira.sharing.search.SharedEntitySearchResult;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
-import com.atlassian.jira.util.I18nHelper;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.message.I18nResolver;
 import org.apache.commons.lang3.StringUtils;
+import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
+import ru.mail.jira.plugins.calendar.service.licence.LicenseStatus;
 import ru.mail.jira.plugins.calendar.rest.dto.DateField;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueSourceDto;
 import ru.mail.jira.plugins.calendar.rest.dto.PermissionItemDto;
@@ -54,7 +60,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+@Scanned
 @Path("/calendar/config")
 @Produces(MediaType.APPLICATION_JSON)
 public class RestConfigurationService {
@@ -63,45 +71,66 @@ public class RestConfigurationService {
     private final CustomFieldManager customFieldManager;
     private final GlobalPermissionManager globalPermissionManager;
     private final GroupManager groupManager;
-    private final I18nHelper i18nHelper;
+    private final I18nResolver i18nHelper;
     private final JiraAuthenticationContext jiraAuthenticationContext;
     private final JiraDeprecatedService jiraDeprecatedService;
     private final ProjectManager projectManager;
     private final ProjectService projectService;
     private final ProjectRoleManager projectRoleManager;
     private final SearchRequestService searchRequestService;
-    private final SearchService searchService;
     private final UserManager userManager;
+    private final UserSearchService userSearchService;
+    private final LicenseService licenseService;
 
-    public RestConfigurationService(ApplicationProperties applicationProperties, AvatarService avatarService, CustomFieldManager customFieldManager,
-                                    GlobalPermissionManager globalPermissionManager, GroupManager groupManager, I18nHelper i18nHelper,
-                                    JiraAuthenticationContext jiraAuthenticationContext,
-                                    JiraDeprecatedService jiraDeprecatedService, ProjectManager projectManager, ProjectService projectService,
-                                    ProjectRoleManager projectRoleManager, SearchRequestService searchRequestService, SearchService searchService, UserManager userManager) {
+    public RestConfigurationService(
+        @ComponentImport("com.atlassian.jira.config.properties.ApplicationProperties") ApplicationProperties applicationProperties,
+        @ComponentImport AvatarService avatarService,
+        @ComponentImport CustomFieldManager customFieldManager,
+        @ComponentImport GlobalPermissionManager globalPermissionManager,
+        @ComponentImport GroupManager groupManager,
+        @ComponentImport I18nResolver i18nResolver,
+        @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+        @ComponentImport ProjectManager projectManager,
+        @ComponentImport ProjectService projectService,
+        @ComponentImport ProjectRoleManager projectRoleManager,
+        @ComponentImport SearchRequestService searchRequestService,
+        @ComponentImport UserManager userManager,
+        @ComponentImport UserSearchService userSearchService,
+        JiraDeprecatedService jiraDeprecatedService,
+        LicenseService licenseService
+    ) {
         this.applicationProperties = applicationProperties;
         this.avatarService = avatarService;
         this.customFieldManager = customFieldManager;
         this.globalPermissionManager = globalPermissionManager;
         this.groupManager = groupManager;
-        this.i18nHelper = i18nHelper;
+        this.i18nHelper = i18nResolver;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
         this.jiraDeprecatedService = jiraDeprecatedService;
         this.projectManager = projectManager;
         this.projectService = projectService;
         this.projectRoleManager = projectRoleManager;
         this.searchRequestService = searchRequestService;
-        this.searchService = searchService;
         this.userManager = userManager;
+        this.userSearchService = userSearchService;
+        this.licenseService = licenseService;
     }
 
     @GET
     @Path("/props")
     public Response getTimeFormat() {
-        return new RestExecutor<Map<String, String>>() {
+        return new RestExecutor<Map<String, Object>>() {
             @Override
-            protected Map<String, String> doAction() throws Exception {
-                Map<String, String> result = new HashMap<String, String>();
+            protected Map<String, Object> doAction() throws Exception {
+                Map<String, Object> result = new HashMap<>();
                 result.put("timeFormat", applicationProperties.getDefaultBackedString(APKeys.JIRA_LF_DATE_TIME));
+                result.put("dateFormat", applicationProperties.getDefaultBackedString(APKeys.JIRA_LF_DATE_DMY));
+                result.put("dateTimeFormat", applicationProperties.getDefaultBackedString(APKeys.JIRA_LF_DATE_COMPLETE));
+
+                LicenseStatus licenseStatus = licenseService.getLicenseStatus();
+                result.put("licenseValid", licenseStatus.isValid());
+                result.put("licenseError", licenseStatus.getError());
+
                 return result;
             }
         }.getResponse();
@@ -260,39 +289,33 @@ public class RestConfigurationService {
     }
 
     private void fillUsers(String filter, PermissionSubjectDto subjectDto) {
-        List<PermissionItemDto> result = new ArrayList<PermissionItemDto>();
         if (!globalPermissionManager.hasPermission(GlobalPermissionKey.USER_PICKER, jiraAuthenticationContext.getUser()))
             return;
         filter = filter.trim().toLowerCase();
 
-        Collection<ApplicationUser> users = userManager.getAllApplicationUsers();
+        List<PermissionItemDto> result = userSearchService
+            .findUsers(
+                filter,
+                filter,
+                UserSearchParams
+                    .builder()
+                    .allowEmptyQuery(true)
+                    .canMatchEmail(true)
+                    .includeActive(true)
+                    .includeInactive(false)
+                    .maxResults(10)
+                    .build()
+            )
+            .stream()
+            .map(user -> PermissionItemDto.buildUserDto(
+                user.getKey(),
+                user.getDisplayName(), user.getEmailAddress(), user.getName(),
+                null,
+                getUserAvatarSrc(user)
+            ))
+            .collect(Collectors.toList());
 
-        if (StringUtils.isEmpty(filter)) {
-            for (ApplicationUser user : users) {
-                result.add(PermissionItemDto.buildUserDto(user.getKey(),
-                                                          user.getDisplayName(), user.getEmailAddress(), user.getName(),
-                                                          null,
-                                                          getUserAvatarSrc(user)));
-                if (result.size() >= 10)
-                    break;
-            }
-            subjectDto.setUsersCount(users.size());
-        } else {
-            int count = 0;
-            for (ApplicationUser user : users) {
-                if (user.isActive() && (StringUtils.containsIgnoreCase(user.getDisplayName(), filter)
-                        || StringUtils.containsIgnoreCase(user.getName(), filter)
-                        || StringUtils.containsIgnoreCase(user.getEmailAddress(), filter))) {
-                    count++;
-                    if (result.size() < 10)
-                        result.add(PermissionItemDto.buildUserDto(user.getKey(),
-                                                                  user.getDisplayName(), user.getEmailAddress(), user.getName(),
-                                                                  null,
-                                                                  getUserAvatarSrc(user)));
-                }
-            }
-            subjectDto.setUsersCount(count);
-        }
+        subjectDto.setUsersCount(result.size());
         subjectDto.setUsers(result);
     }
 

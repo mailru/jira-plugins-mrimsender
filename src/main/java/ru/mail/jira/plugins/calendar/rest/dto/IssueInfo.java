@@ -1,7 +1,7 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
 import com.atlassian.core.util.HTMLUtils;
-import com.atlassian.jira.util.I18nHelper;
+import com.atlassian.sal.api.message.I18nResolver;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -224,7 +224,7 @@ public class IssueInfo {
         this.customFields.put(name, view);
     }
 
-    public String toFormatString(I18nHelper i18n) {
+    public String toFormatString(I18nResolver i18n) {
         StringBuilder str = new StringBuilder();
         if (StringUtils.isNotBlank(assignee))
             str.append(String.format("%s: %s\n", i18n.getText("issue.field.assignee"), HTMLUtils.stripTags(assignee).trim()));

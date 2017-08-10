@@ -8,8 +8,9 @@ require(['jquery',
     'calendar/feed-dialog',
     'calendar/import-dialog',
     'calendar/quick-filter-dialog',
-    'calendar/timeline-view'], function($, _, Backbone, LikeFlag, CalendarView,
-                                        CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog, QuickFilterDialog) {
+    'calendar/custom-event-dialog',
+    'calendar/timeline-view'
+], function($, _, Backbone, LikeFlag, CalendarView, CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog, QuickFilterDialog, CustomEventDialog) {
     // Override default texts for auiSelect2 messages
     $.fn.select2.defaults = $.extend($.fn.select2.defaults, {
         formatNoMatches: function() {
@@ -40,6 +41,7 @@ require(['jquery',
         /* Models and Collections*/
         var UserData = Backbone.Model.extend({url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference'});
         var Calendar = Backbone.Model.extend();
+        var CustomEvent = Backbone.Model.extend({urlRoot: AJS.contextPath() + '/rest/mailrucalendar/1.0/customEvent/'});
         var CalendarDetail = Backbone.Model.extend({urlRoot: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/'});
         var UserCalendarCollection = Backbone.Collection.extend({
             model: Calendar,
@@ -69,8 +71,9 @@ require(['jquery',
                 'click .calendar-issue-navigator': 'openIssueNavigator',
                 'click .calendar-delete': 'deleteCalendar',
                 'click .calendar-edit': 'editCalendar',
-                'click .calendar-configure-quick-filters': 'configureQuickFilters',
                 'click .calendar-remove': 'removeFavoriteCalendar',
+                'click .calendar-create-custom-event': '_createCustomEventFromMenu',
+                'click .calendar-configure-quick-filters': 'configureQuickFilters',
                 'click .calendar-quickfilter-button': 'toggleQuickFilter'
             },
             initialize: function() {
@@ -82,6 +85,9 @@ require(['jquery',
                 this.calendarView.on('render', this.updatePeriodButton, this);
                 this.calendarView.on('render', this.updateViewInterval, this);
                 this.calendarView.on('changeWeekendsVisibility', this.toggleWeekendsVisibility, this);
+                this.calendarView.on('eventCreateTriggered', $.proxy(this._createCustomEvent, this));
+                this.calendarView.on('eventEditTriggered', $.proxy(this._editCustomEvent, this));
+                this.calendarView.on('eventDeleteTriggered', $.proxy(this._deleteCustomEvent, this));
 
                 this.collection.on('remove', this._onDeleteCalendar, this);
                 this.collection.on('change', this._onChangeCalendar, this);
@@ -146,6 +152,9 @@ require(['jquery',
             loadFullCalendar: function(view, hideWeekends) {
                 this.updatePeriodButton(view);
                 this.calendarView.init(view, hideWeekends);
+                var $calendarEl = $("#calendar-full-calendar");
+                $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-state-default fc-button').addClass('aui-button');
+                $calendarEl.find('.fc-button-group').addClass('aui-buttons');
             },
             showCalendarFeedView: function(e) {
                 e.preventDefault();
@@ -168,7 +177,7 @@ require(['jquery',
 
                 var importView = new CalendarImportDialog({
                     model: this.model,
-                    collection: this.collection,//user calendars
+                    collection: this.collection//user calendars
                 });
                 importView.show();
             },
@@ -186,7 +195,7 @@ require(['jquery',
                     url = 'filter=' + calendar.get('source').split('_')[1];
                 else if (sourceType == 'jql')
                     url = 'jql=' + calendar.get('source').split('_')[1].replace(/"/g, '\'');
-                window.open(AJS.format("{0}/issues/?{1}", AJS.contextPath(), url));
+                window.open(AJS.format('{0}/issues/?{1}', AJS.contextPath(), url));
             },
             editCalendar: function(e) {
                 e.preventDefault();
@@ -199,8 +208,7 @@ require(['jquery',
                     success: $.proxy(function(model) {
                         var calendarDialogView = new CalendarDialog({
                             model: model,
-                            collection: this.collection,
-                            userData: this.model
+                            collection: this.collection
                         });
                         calendarDialogView.show();
                     }, this),
@@ -256,6 +264,7 @@ require(['jquery',
                         calendar.set('visible', !calendar.get('visible'));
                     },
                     error: function(request) {
+                        self.finishLoadingCalendarsCallback();
                         alert(request.responseText);
                     }
                 });
@@ -364,10 +373,10 @@ require(['jquery',
                     this.startLoadingCalendarsCallback();
                 $.ajax({
                     url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/favorite/' + calendar.id,
-                    type: "DELETE",
+                    type: 'DELETE',
                     error: $.proxy(function(xhr) {
                         this.finishLoadingCalendarsCallback();
-                        alert(xhr.responseText || "Internal error");
+                        alert(xhr.responseText || 'Internal error');
                     }, this),
                     success: $.proxy(function() {
                         calendar.set({favorite: false, visible: false, usersCount: calendar.get('usersCount') - 1});
@@ -378,27 +387,87 @@ require(['jquery',
                 e.preventDefault();
                 e.stopPropagation();
                 this.$('.aui-page-panel-nav').click();
-
                 var calendar = this.collection.get($(e.currentTarget).closest('div.aui-dropdown2').data('id'));
-                var confirmText = AJS.format('<p>{0}</p><p>{1}</p>',
-                    AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete1', '<b>' + calendar.get('name') + '</b>'),
-                    AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete2', calendar.get('usersCount') || 0));
+
+                $.getJSON(AJS.contextPath() + '/rest/mailrucalendar/1.0/customEvent/eventCount?calendarId=' + calendar.id, $.proxy(function(data) {
+                    var confirmText = AJS.format('<p>{0}</p><p>{1}</p>',
+                        AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete1', '<b>' + AJS.escapeHtml(calendar.get('name')) + '</b>'),
+                        AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete2', calendar.get('usersCount') || 0));
+
+                    if (data.count > 0) {
+                        confirmText += '<p>' + AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDelete3', data.count) + '</p>'
+                    }
+
+                    var confirmDialog = new ConfirmDialog({
+                        okText: AJS.I18n.getText('common.words.delete'),
+                        header: AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDeleteHeader'),
+                        text: confirmText,
+                        okHandler: $.proxy(function() {
+                            if (this.calendarView.isCalendarInSources(calendar.id))
+                                this.startLoadingCalendarsCallback();
+                            $.ajax({
+                                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendar.id,
+                                type: 'DELETE',
+                                error: $.proxy(function(xhr) {
+                                    this.finishLoadingCalendarsCallback();
+                                    alert(xhr.responseText || 'Internal error');
+                                }, this),
+                                success: $.proxy(function() {
+                                    this.collection.remove(calendar);
+                                }, this)
+                            });
+                        }, this)
+                    });
+
+                    confirmDialog.show();
+                }, this));
+            },
+            _createCustomEventFromMenu: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                var calendarId = $(e.currentTarget).closest('div.aui-dropdown2').data('id');
+
+                this._createCustomEvent({allDay: true, calendarId: calendarId, startDate: moment().format('YYYY-MM-DD')});
+            },
+            _createCustomEvent: function(model) {
+                var customEventDialogView = new CustomEventDialog({
+                    model: new CustomEvent(model),
+                    userData: this.model,
+                    calendars: this.collection.toJSON(),
+                    successHandler: $.proxy(function() {
+                        //todo: find if we can add event without reloading
+                        this.calendarView.reload();
+                    }, this)
+                });
+                customEventDialogView.show();
+            },
+            _editCustomEvent: function(model) {
+                var customEventDialogView = new CustomEventDialog({
+                    model: model,
+                    calendar: null,
+                    calendars: this.collection.toJSON(),
+                    successHandler: $.proxy(function() {
+                        //todo: find if we can change event without reloading
+                        this.calendarView.reload();
+                    }, this)
+                });
+                customEventDialogView.show();
+            },
+            _deleteCustomEvent: function(model) {
                 var confirmDialog = new ConfirmDialog({
                     okText: AJS.I18n.getText('common.words.delete'),
-                    header: AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDeleteHeader'),
-                    text: confirmText,
+                    header: AJS.I18n.getText('ru.mail.jira.plguins.calendar.customEvents.confirmDeleteHeader'),
+                    text: AJS.I18n.getText('ru.mail.jira.plguins.calendar.customEvents.confirmDelete', '<b>' + AJS.escapeHtml(model.get('title')) + '</b>'),
                     okHandler: $.proxy(function() {
-                        if (this.calendarView.isCalendarInSources(calendar.id))
-                            this.startLoadingCalendarsCallback();
                         $.ajax({
-                            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendar.id,
+                            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/customEvent/' + model.get('id'),
                             type: 'DELETE',
                             error: $.proxy(function(xhr) {
-                                this.finishLoadingCalendarsCallback();
                                 alert(xhr.responseText || 'Internal error');
                             }, this),
                             success: $.proxy(function() {
-                                this.collection.remove(calendar);
+                                this.calendarView.reload();
                             }, this)
                         });
                     }, this)
@@ -496,7 +565,7 @@ require(['jquery',
         mainView.model.fetch({
             success: function(model) {
                 model.set({
-                    hideWeekends: !!localStorage.getItem('mailrucalendar.hideWeekends'),
+                    hideWeekends: localStorage.getItem('mailrucalendar.hideWeekends') === 'true',
                     calendarView: localStorage.getItem('mailrucalendar.calendarView') || 'month'
                 });
                 var view = model.get('calendarView') || 'month';

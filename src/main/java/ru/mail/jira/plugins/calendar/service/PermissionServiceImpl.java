@@ -15,8 +15,11 @@ import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import net.java.ao.ActiveObjectsException;
 import net.java.ao.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.Permission;
 import ru.mail.jira.plugins.calendar.model.PermissionType;
@@ -26,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class PermissionServiceImpl implements PermissionService {
     private final ActiveObjects ao;
     private final AvatarService avatarService;
@@ -37,7 +41,18 @@ public class PermissionServiceImpl implements PermissionService {
     private final ProjectRoleManager projectRoleManager;
     private final UserManager userManager;
 
-    public PermissionServiceImpl(ActiveObjects ao, AvatarService avatarService, GlobalPermissionManager globalPermissionManager, GroupManager groupManager, JiraDeprecatedService jiraDeprecatedService, PermissionManager permissionManager, ProjectManager projectManager, ProjectRoleManager projectRoleManager, UserManager userManager) {
+    @Autowired
+    public PermissionServiceImpl(
+        @ComponentImport AvatarService avatarService,
+        @ComponentImport GlobalPermissionManager globalPermissionManager,
+        @ComponentImport PermissionManager permissionManager,
+        @ComponentImport ProjectManager projectManager,
+        @ComponentImport ProjectRoleManager projectRoleManager,
+        @ComponentImport UserManager userManager,
+        @ComponentImport GroupManager groupManager,
+        @ComponentImport ActiveObjects ao,
+        JiraDeprecatedService jiraDeprecatedService
+    ) {
         this.ao = ao;
         this.avatarService = avatarService;
         this.globalPermissionManager = globalPermissionManager;
@@ -137,6 +152,11 @@ public class PermissionServiceImpl implements PermissionService {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean hasEditEventsPermission(ApplicationUser user, Calendar calendar) {
+        return hasAdminPermission(user, calendar);
     }
 
     @Override

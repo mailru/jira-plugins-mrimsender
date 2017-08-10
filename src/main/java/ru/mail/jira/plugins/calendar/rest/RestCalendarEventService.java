@@ -2,10 +2,13 @@ package ru.mail.jira.plugins.calendar.rest;
 
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.mail.jira.plugins.calendar.rest.dto.Event;
+import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
+import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
 import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.commons.RestExecutor;
@@ -22,6 +25,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 
+@Scanned
 @Path("/calendar/events")
 @Produces(MediaType.APPLICATION_JSON)
 public class RestCalendarEventService {
@@ -29,11 +33,16 @@ public class RestCalendarEventService {
 
     private final CalendarEventService calendarEventService;
     private final JiraAuthenticationContext jiraAuthenticationContext;
+    private final LicenseService licenseService;
 
-    public RestCalendarEventService(CalendarEventService calendarEventService,
-                                    JiraAuthenticationContext jiraAuthenticationContext) {
-        this.calendarEventService = calendarEventService;
+    public RestCalendarEventService(
+        @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+        CalendarEventService calendarEventService,
+        LicenseService licenseService
+    ) {
         this.jiraAuthenticationContext = jiraAuthenticationContext;
+        this.calendarEventService = calendarEventService;
+        this.licenseService = licenseService;
     }
 
     @GET
@@ -56,7 +65,7 @@ public class RestCalendarEventService {
         try {
             if (log.isDebugEnabled())
                 log.debug("getEvents with params. calendarId={}, start={}, end={}", new Object[]{calendarId, start, end});
-            List<Event> result = calendarEventService.findEvents(calendarId, start, end, jiraAuthenticationContext.getUser());
+            List<EventDto> result = calendarEventService.findEvents(calendarId, start, end, jiraAuthenticationContext.getUser());
             CacheControl cacheControl = new CacheControl();
             cacheControl.setNoCache(true);
             cacheControl.setNoStore(true);
@@ -74,9 +83,10 @@ public class RestCalendarEventService {
                               @PathParam("eventId") final String eventId,
                               @FormParam("start") final String start,
                               @FormParam("end") final String end) {
-        return new RestExecutor<Event>() {
+        return new RestExecutor<EventDto>() {
             @Override
-            protected Event doAction() throws Exception {
+            protected EventDto doAction() throws Exception {
+                licenseService.checkLicense();
                 ApplicationUser user = jiraAuthenticationContext.getUser();
                 return calendarEventService.moveEvent(user, calendarId, eventId, StringUtils.trimToNull(start), StringUtils.trimToNull(end));
             }

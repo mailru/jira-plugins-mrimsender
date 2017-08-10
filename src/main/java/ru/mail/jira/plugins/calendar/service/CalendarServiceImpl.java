@@ -20,11 +20,16 @@ import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
-import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.util.MessageSet;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.message.I18nResolver;
+import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.calendar.model.*;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter;
 import ru.mail.jira.plugins.calendar.model.Permission;
@@ -43,6 +48,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
+@Component
 public class CalendarServiceImpl implements CalendarService {
     private final static Logger log = LoggerFactory.getLogger(CalendarServiceImpl.class);
 
@@ -77,76 +83,54 @@ public class CalendarServiceImpl implements CalendarService {
         add(AFFECT);
     }};
 
-    private ActiveObjects ao;
-    private CustomFieldManager customFieldManager;
-    private I18nHelper i18nHelper;
-    private GroupManager groupManager;
-    private JiraDeprecatedService jiraDeprecatedService;
-    private PermissionManager permissionManager;
-    private PermissionService permissionService;
-    private ProjectManager projectManager;
-    private ProjectRoleManager projectRoleManager;
-    private SearchRequestService searchRequestService;
-    private SearchRequestManager searchRequestManager;
-    private UserCalendarService userCalendarService;
-    private UserManager userManager;
-    private QuickFilterService quickFilterService;
+    private final ActiveObjects ao;
+    private final CustomFieldManager customFieldManager;
+    private final I18nResolver i18nResolver;
+    private final GroupManager groupManager;
+    private final JiraDeprecatedService jiraDeprecatedService;
+    private final PermissionManager permissionManager;
+    private final PermissionService permissionService;
+    private final ProjectManager projectManager;
+    private final ProjectRoleManager projectRoleManager;
+    private final QuickFilterService quickFilterService;
+    private final SearchRequestService searchRequestService;
+    private final SearchRequestManager searchRequestManager;
+    private final UserCalendarService userCalendarService;
+    private final UserManager userManager;
 
-    public void setAo(ActiveObjects ao) {
+    @Autowired
+    public CalendarServiceImpl(
+        @ComponentImport CustomFieldManager customFieldManager,
+        @ComponentImport I18nResolver i18nResolver,
+        @ComponentImport GroupManager groupManager,
+        @ComponentImport PermissionManager permissionManager,
+        @ComponentImport ProjectManager projectManager,
+        @ComponentImport ProjectRoleManager projectRoleManager,
+        @ComponentImport SearchRequestService searchRequestService,
+        @ComponentImport SearchRequestManager searchRequestManager,
+        @ComponentImport UserManager userManager,
+        @ComponentImport ActiveObjects ao,
+        JiraDeprecatedService jiraDeprecatedService,
+        PermissionService permissionService,
+        QuickFilterService quickFilterService,
+        UserCalendarService userCalendarService
+    ) {
         this.ao = ao;
-    }
-
-    public void setCustomFieldManager(CustomFieldManager customFieldManager) {
         this.customFieldManager = customFieldManager;
-    }
-
-    public void setI18nHelper(I18nHelper i18nHelper) {
-        this.i18nHelper = i18nHelper;
-    }
-
-    public void setJiraDeprecatedService(JiraDeprecatedService jiraDeprecatedService) {
-        this.jiraDeprecatedService = jiraDeprecatedService;
-    }
-
-    public void setPermissionManager(PermissionManager permissionManager) {
-        this.permissionManager = permissionManager;
-    }
-
-    public void setPermissionService(PermissionService permissionService) {
-        this.permissionService = permissionService;
-    }
-
-    public void setProjectManager(ProjectManager projectManager) {
-        this.projectManager = projectManager;
-    }
-
-    public void setSearchRequestService(SearchRequestService searchRequestService) {
-        this.searchRequestService = searchRequestService;
-    }
-
-    public void setSearchRequestManager(SearchRequestManager searchRequestManager) {
-        this.searchRequestManager = searchRequestManager;
-    }
-
-    public void setUserCalendarService(UserCalendarService userCalendarService) {
-        this.userCalendarService = userCalendarService;
-    }
-
-    public void setGroupManager(GroupManager groupManager) {
+        this.i18nResolver = i18nResolver;
         this.groupManager = groupManager;
-    }
-
-    public void setProjectRoleManager(ProjectRoleManager projectRoleManager) {
+        this.jiraDeprecatedService = jiraDeprecatedService;
+        this.permissionManager = permissionManager;
+        this.permissionService = permissionService;
+        this.projectManager = projectManager;
         this.projectRoleManager = projectRoleManager;
-    }
-
-    public void setUserManager(UserManager userManager) {
+        this.quickFilterService = quickFilterService;
+        this.searchRequestService = searchRequestService;
+        this.searchRequestManager = searchRequestManager;
+        this.userCalendarService = userCalendarService;
         this.userManager = userManager;
     }
 
-    public void setQuickFilterService(QuickFilterService quickFilterService) {
-        this.quickFilterService = quickFilterService;
-    }
 
     public Calendar getCalendar(final int id) throws GetException {
         Calendar calendar = ao.get(Calendar.class, id);
@@ -244,9 +228,10 @@ public class CalendarServiceImpl implements CalendarService {
         boolean canUse = canAdmin || permissionService.hasUsePermission(user, calendar);
         result.setChangable(canAdmin);
         result.setViewable(canUse);
+        result.setEventsEditable(canAdmin);
         if (!canAdmin && !canUse) {
             result.setHasError(true);
-            result.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
+            result.setError(i18nResolver.getText("ru.mail.jira.plugins.calendar.unavailable"));
         }
         return result;
     }
@@ -273,6 +258,9 @@ public class CalendarServiceImpl implements CalendarService {
         if (!permissionService.hasAdminPermission(user, calendar))
             throw new SecurityException("No permission to edit calendar");
         permissionService.removeCalendarPermissions(calendar);
+        ao.delete(ao.find(Event.class, Query.select().where("CALENDAR_ID = ?", calendarId)));
+        ao.delete(ao.find(EventTypeReminder.class, Query.select().where("CALENDAR_ID = ?", calendarId)));
+        ao.delete(ao.find(EventType.class, Query.select().where("CALENDAR_ID = ?", calendarId)));
         userCalendarService.removeCalendar(user.getKey(), calendarId);
         quickFilterService.deleteQuickFilterByCalendarId(calendarId);
         ao.delete(calendar);
@@ -307,7 +295,12 @@ public class CalendarServiceImpl implements CalendarService {
 
     private void setCalendarFields(Calendar calendar, CalendarSettingDto calendarSettingDto) {
         calendar.setName(calendarSettingDto.getSelectedName());
-        calendar.setSource(String.format("%s_%s", calendarSettingDto.getSelectedSourceType(), calendarSettingDto.getSelectedSourceValue()));
+        String selectedSourceValue = calendarSettingDto.getSelectedSourceValue();
+        if (selectedSourceValue != null) {
+            calendar.setSource(String.format("%s_%s", calendarSettingDto.getSelectedSourceType(), selectedSourceValue));
+        } else {
+            calendar.setSource(calendarSettingDto.getSelectedSourceType());
+        }
         calendar.setColor(calendarSettingDto.getSelectedColor());
         calendar.setEventStart(StringUtils.trimToNull(calendarSettingDto.getSelectedEventStartId()));
         calendar.setEventEnd(StringUtils.trimToNull(calendarSettingDto.getSelectedEventEndId()));
@@ -332,7 +325,7 @@ public class CalendarServiceImpl implements CalendarService {
             if (output == null) {
                 output = buildCalendarOutput(user, userCalendar, null, false, false, false, true, 0);
                 output.setHasError(true);
-                output.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
+                output.setError(i18nResolver.getText("ru.mail.jira.plugins.calendar.unavailable"));
             }
             result.add(output);
         }
@@ -360,6 +353,7 @@ public class CalendarServiceImpl implements CalendarService {
         output.setViewable(canUse);
         output.setChangable(changable);
         output.setVisible(visible);
+        output.setEventsEditable(changable);
         output.setFavorite(favorite);
         output.setUsersCount(usersCount);
 
@@ -382,7 +376,7 @@ public class CalendarServiceImpl implements CalendarService {
         }
         if (!changable && !canUse) {
             output.setHasError(true);
-            output.setError(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
+            output.setError(i18nResolver.getText("ru.mail.jira.plugins.calendar.unavailable"));
         }
         return output;
     }
@@ -392,10 +386,10 @@ public class CalendarServiceImpl implements CalendarService {
         if (calendar.getSource().startsWith("filter_")) {
             JiraServiceContext jiraServiceContext = new JiraServiceContextImpl(user);
             searchRequestService.getFilter(jiraServiceContext, Long.valueOf(calendar.getSource().substring("filter_".length())));
-            return jiraServiceContext.getErrorCollection().hasAnyErrors() ? i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailableFilterSource") : null;
+            return jiraServiceContext.getErrorCollection().hasAnyErrors() ? i18nResolver.getText("ru.mail.jira.plugins.calendar.unavailableFilterSource") : null;
         } else if (calendar.getSource().startsWith("project_")) {
             Project project = projectManager.getProjectObj(Long.parseLong(calendar.getSource().substring("project_".length())));
-            return project == null || !permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false) ? i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailableProjectSource") : null;
+            return project == null || !permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false) ? i18nResolver.getText("ru.mail.jira.plugins.calendar.unavailableProjectSource") : null;
         }
         return null;
     }
@@ -409,7 +403,7 @@ public class CalendarServiceImpl implements CalendarService {
             Project project = projectManager.getProjectObj(projectId);
             if (project == null || !permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false)) {
                 dto.setSelectedSourceIsUnavailable(true);
-                dto.setSelectedSourceName(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailableProjectSource"));
+                dto.setSelectedSourceName(i18nResolver.getText("ru.mail.jira.plugins.calendar.unavailableProjectSource"));
             } else {
                 dto.setSelectedSourceName(String.format("%s (%s)", project.getName(), project.getKey()));
                 dto.setSelectedSourceAvatarId(project.getAvatar().getId());
@@ -421,13 +415,14 @@ public class CalendarServiceImpl implements CalendarService {
             SearchRequest filter = searchRequestService.getFilter(new JiraServiceContextImpl(user), filterId);
             if (filter == null) {
                 dto.setSelectedSourceIsUnavailable(true);
-                dto.setSelectedSourceName(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailableFilterSource"));
+                dto.setSelectedSourceName(i18nResolver.getText("ru.mail.jira.plugins.calendar.unavailableFilterSource"));
             } else
                 dto.setSelectedSourceName(filter.getName());
         } else if (source.startsWith("jql_")) {
             dto.setSelectedSourceType("jql");
             dto.setSelectedSourceValue(StringUtils.substringAfter(source, "jql_"));
-
+        } else if (source.equals("basic")) {
+            dto.setSelectedSourceType("basic");
         } else { // theoretically it isn't possible
             dto.setSelectedSourceName("Unknown source");
         }
@@ -437,14 +432,17 @@ public class CalendarServiceImpl implements CalendarService {
         if (user == null)
             throw new IllegalArgumentException("User doesn't exist");
         if (StringUtils.isBlank(calendarSettingDto.getSelectedName()))
-            throw new RestFieldException(i18nHelper.getText("issue.field.required", i18nHelper.getText("common.words.name")), "name");
+            throw new RestFieldException(i18nResolver.getText("issue.field.required", i18nResolver.getText("common.words.name")), "name");
 
-        if (StringUtils.isBlank(calendarSettingDto.getSelectedSourceValue()))
-            throw new RestFieldException(i18nHelper.getText("issue.field.required", i18nHelper.getText("ru.mail.jira.plugins.calendar.dialog.source." + calendarSettingDto.getSelectedSourceType())), "source");
-        if (!calendarSettingDto.getSelectedSourceType().equals("project") && !calendarSettingDto.getSelectedSourceType().startsWith("filter") && !calendarSettingDto.getSelectedSourceType().startsWith("jql"))
-            throw new IllegalArgumentException("Bad source => " + calendarSettingDto.getSelectedSourceType());
+        String selectedSourceType = calendarSettingDto.getSelectedSourceType();
+
+        if (!selectedSourceType.equals("basic") && !selectedSourceType.equals("project") && !selectedSourceType.startsWith("filter") && !selectedSourceType.startsWith("jql"))
+            throw new IllegalArgumentException("Bad source => " + selectedSourceType);
+
+        if (StringUtils.isBlank(calendarSettingDto.getSelectedSourceValue()) && !selectedSourceType.equals("basic"))
+            throw new RestFieldException(i18nResolver.getText("issue.field.required", i18nResolver.getText("ru.mail.jira.plugins.calendar.dialog.source." + selectedSourceType)), "source");
         try {
-            if (calendarSettingDto.getSelectedSourceType().equals("project")) {
+            if (selectedSourceType.equals("project")) {
                 long projectId = Long.parseLong(calendarSettingDto.getSelectedSourceValue());
                 if (isCreate) {
                     Project project = projectManager.getProjectObj(projectId);
@@ -454,7 +452,7 @@ public class CalendarServiceImpl implements CalendarService {
                     if (!permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false))
                         throw new RestFieldException("No Permission to browse project " + project.getName(), "source");
                 }
-            } else if (calendarSettingDto.getSelectedSourceType().equals("filter")) {
+            } else if (selectedSourceType.equals("filter")) {
                 long filterId = Long.parseLong(calendarSettingDto.getSelectedSourceValue());
                 if (isCreate) {
                     if (searchRequestManager.getSearchRequestById(filterId) == null)
@@ -465,7 +463,7 @@ public class CalendarServiceImpl implements CalendarService {
                     if (serviceContext.getErrorCollection().hasAnyErrors())
                         throw new RestFieldException(serviceContext.getErrorCollection().getErrorMessages().toString(), "source");
                 }
-            } else if (calendarSettingDto.getSelectedSourceType().equals("jql")) {
+            } else if (selectedSourceType.equals("jql")) {
                 SearchService.ParseResult parseResult = jiraDeprecatedService.searchService.parseQuery(user, calendarSettingDto.getSelectedSourceValue());
                 if (!parseResult.isValid())
                     throw new RestFieldException(StringUtils.join(parseResult.getErrors().getErrorMessages(), "\n"), "source");
@@ -478,16 +476,19 @@ public class CalendarServiceImpl implements CalendarService {
         }
 
         if (StringUtils.isBlank(calendarSettingDto.getSelectedColor()))
-            throw new RestFieldException(i18nHelper.getText("issue.field.required", i18nHelper.getText("admin.common.words.color")), "color");
+            throw new RestFieldException(i18nResolver.getText("issue.field.required", i18nResolver.getText("admin.common.words.color")), "color");
         if (!COLOR_PATTERN.matcher(calendarSettingDto.getSelectedColor()).matches())
             throw new IllegalArgumentException("Bad color => " + calendarSettingDto.getSelectedColor());
-        if (StringUtils.isBlank(calendarSettingDto.getSelectedEventStartId()))
-            throw new RestFieldException(i18nHelper.getText("issue.field.required", i18nHelper.getText("ru.mail.jira.plugins.calendar.dialog.eventStart")), "event-start");
-        for (String field : calendarSettingDto.getSelectedDisplayedFields())
-            if (field.startsWith("customfield_")) {
-                if (customFieldManager.getCustomFieldObject(field) == null)
-                    throw new RestFieldException("Can not find custom field with id => " + field, "fields");
-            } else if (!DISPLAYED_FIELDS.contains(field))
-                throw new RestFieldException(String.format("Can not find field %s among standart fields", field), "fields");
+
+        if (!selectedSourceType.equals("basic")) {
+            if (StringUtils.isBlank(calendarSettingDto.getSelectedEventStartId()))
+                throw new RestFieldException(i18nResolver.getText("issue.field.required", i18nResolver.getText("ru.mail.jira.plugins.calendar.dialog.eventStart")), "event-start");
+            for (String field : calendarSettingDto.getSelectedDisplayedFields())
+                if (field.startsWith("customfield_")) {
+                    if (customFieldManager.getCustomFieldObject(field) == null)
+                        throw new RestFieldException("Can not find custom field with id => " + field, "fields");
+                } else if (!DISPLAYED_FIELDS.contains(field))
+                    throw new RestFieldException(String.format("Can not find field %s among standart fields", field), "fields");
+        }
     }
 }

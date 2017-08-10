@@ -6,14 +6,17 @@ import lombok.Setter;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
 @Getter
 @Setter
-public class Event {
+public class EventDto {
     @XmlElement
     private String id;
+    @XmlElement
+    private Type type;
     @XmlElement
     private String issueKey;
     @XmlElement
@@ -42,4 +45,11 @@ public class Event {
     private boolean datesError;
     @XmlElement
     private IssueInfo issueInfo;
+    @XmlElement
+    private List<UserDto> participants;
+
+    public enum Type {
+        ISSUE,
+        CUSTOM
+    }
 }
