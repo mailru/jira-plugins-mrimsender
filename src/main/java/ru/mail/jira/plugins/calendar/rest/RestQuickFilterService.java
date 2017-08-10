@@ -2,6 +2,8 @@ package ru.mail.jira.plugins.calendar.rest;
 
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import ru.mail.jira.plugins.calendar.model.QuickFilter;
 import ru.mail.jira.plugins.calendar.rest.dto.QuickFilterDto;
 import ru.mail.jira.plugins.calendar.service.QuickFilterService;
@@ -20,6 +22,7 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 
+@Scanned
 @Path("/calendar/{calendarId}/quickFilter")
 @Produces(MediaType.APPLICATION_JSON)
 public class RestQuickFilterService {
@@ -27,7 +30,11 @@ public class RestQuickFilterService {
     private final UserCalendarService userCalendarService;
     private final QuickFilterService quickFilterService;
 
-    public RestQuickFilterService(JiraAuthenticationContext jiraAuthenticationContext, UserCalendarService userCalendarService, QuickFilterService quickFilterService) {
+    public RestQuickFilterService(
+            @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+            UserCalendarService userCalendarService,
+            QuickFilterService quickFilterService
+    ) {
         this.jiraAuthenticationContext = jiraAuthenticationContext;
         this.userCalendarService = userCalendarService;
         this.quickFilterService = quickFilterService;
