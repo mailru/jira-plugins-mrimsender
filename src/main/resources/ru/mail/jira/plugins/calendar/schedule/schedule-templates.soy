@@ -1,0 +1,44 @@
+{namespace JIRA.Templates.Plugins.MailRuCalendar.Schedule}
+
+/**
+ * Schedule entry
+ * @param schedule schedule
+ * @param contextPath contextPath
+ */
+{template .scheduleEntry autoescape="false"}
+    <tr id="{$schedule.id}">
+        <td>{$schedule.name}</td>
+        <td>
+            <a href="{$contextPath}/browse/{$schedule.sourceIssue.key}" target="_blank" title="{$schedule.sourceIssue.summary}">{$schedule.sourceIssue.key}</a>
+        </td>
+        <td>{$schedule.cronExpression}</td>
+        <td>{$schedule.description}</td>
+        <td>
+            <a class="user-hover" rel="{$schedule.creator.name}" href="{$contextPath}/secure/ViewProfile.jspa?name={$schedule.creator.name}">{$schedule.creator.displayName}</a>
+        </td>
+        <td>
+            {if $schedule.lastRun}
+                {$schedule.lastRun}
+            {/if}
+        <td>
+            {if $schedule.lastCreatedIssue}
+                <a href="{$contextPath}/browse/{$schedule.lastCreatedIssue.key}" target="_blank" title="{$schedule.lastCreatedIssue.summary}">{$schedule.lastCreatedIssue.key}</a>
+            {/if}
+        </td>
+        <td>{$schedule.runCount}</td>
+        <td>
+            <button class="aui-button aui-button-subtle aui-button-compact aui-dropdown2-trigger aui-dropdown2-trigger-arrowless" aria-owns="calendar-schedule-buttons-dropdown-{$schedule.id}" aria-haspopup="true">
+                <span class="aui-icon aui-icon-small aui-iconfont-more"/>
+            </button>
+            <div id="calendar-schedule-buttons-dropdown-{$schedule.id}" data-id="{$schedule.id}" class="aui-style-default aui-dropdown2 calendar-schedule-buttons-dropdown" aria-hidden="true" data-dropdown2-alignment="left">
+                <div class="aui-dropdown2-section">
+                    <ul>
+                        <li><a class="calendar-schedule-run" href="#">{getText('ru.mail.jira.plugins.calendar.schedule.configuration.page.operation.run')}</a></li>
+                        <li><a class="calendar-schedule-edit" href="{$contextPath}/secure/MailRuCalendarEditSchedule!default.jspa?id={$schedule.id}&issueId={$schedule.sourceIssue.id}">{getText('common.words.edit')}</a></li>
+                        <li><a class="calendar-schedule-delete" href="{$contextPath}/secure/MailRuCalendarDeleteSchedule!default.jspa?id={$schedule.id}&issueId={$schedule.sourceIssue.id}">{getText('common.words.delete')}</a></li>
+                    </ul>
+                </div>
+            </div>
+        </td>
+    </tr>
+{/template}

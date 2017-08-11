@@ -1,0 +1,40 @@
+<html>
+    <head>
+        <title>$action.getText( "ru.mail.jira.plugins.calendar.schedule.configuration.title" )</title>
+        <meta name="decorator" content="atl.general" />
+        $webResourceManager.requireResource( "ru.mail.jira.plugins.mailrucal:schedules-configuration-page-resource" )
+    </head>
+    <body class="aui">
+        <header class="aui-page-header">
+            <div class="aui-page-header-inner">
+                <div class="aui-page-header-main">
+                    <h2>$action.getText( "ru.mail.jira.plugins.calendar.schedule.configuration.title" )</h2>
+                </div>
+            </div>
+        </header>
+
+        <div class="aui-page-panel">
+            <div class="aui-page-panel-inner">
+                <section class="aui-page-panel-content">
+                    <table class="aui aui-table-rowhover">
+                        <thead>
+                        <tr>
+                            <th>$i18n.getText( "common.words.name" )</th>
+                            <th>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.configuration.page.table.sourceIssue" )</th>
+                            <th>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.configuration.page.table.cronExpression" )</th>
+                            <th>$i18n.getText( "common.words.description" )</th>
+                            <th>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.configuration.page.table.creator" )</th>
+                            <th>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.configuration.page.table.lastRun" )</th>
+                            <th>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.configuration.page.table.lastCreatedIssue" )</th>
+                            <th>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.configuration.page.table.runCount" )</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody id="calendar-schedules-list">
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+        </div>
+    </body>
+</html>

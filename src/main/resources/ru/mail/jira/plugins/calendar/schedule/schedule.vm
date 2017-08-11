@@ -1,0 +1,146 @@
+<html>
+<head>
+    <title>Schedule issue</title>
+    <meta name="decorator" content="issueaction" />
+    $webResourceManager.requireResource( "ru.mail.jira.plugins.mailrucal:schedule-resource" )
+</head>
+<body>
+    #macro( fieldError $name )
+        #if( $action.hasErrors && $action.errors.get( $name ) )
+            <div class="error">$action.errors.get( $name )</div>
+        #end
+    #end
+    <form action="${action.actionName}.jspa" class="aui" id="calendar-schedule" method="post">
+        <div class="form-body">
+            <h2 class="dialog-title">
+                Schedule Issue: $action.issue.key
+            </h2>
+            <div class="hidden">
+                <input id="sheduleId" name="id" type="hidden" #if ($id) value="$id" #end>
+            </div>
+            <div class="hidden">
+                <input id="issueId" name="issueId" type="hidden" value="$issueId">
+            </div>
+            <fieldset>
+                <div class="field-group">
+                    <label for="calendar-schedule-name">
+                        $i18n.getText( "ru.mail.jira.plugins.calendar.schedule.name" )
+                        <span class="aui-icon icon-required"></span>
+                    </label>
+                    <input class="text long-field" type="text" id="calendar-schedule-name" name="name" value="$name">
+                    #fieldError( "calendar-schedule-name" )
+                </div>
+                <fieldset class="group calendar-schedule-type">
+                    <legend>
+                        <span>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule" )</span>
+                        <span class="aui-icon icon-required"></span>
+                    </legend>
+                    <div class="radio">
+                        <input class="radio" #if ($schedule == "daily") checked="checked" #end id="calendar-schedule-daily" name="schedule" type="radio" value="daily">
+                        <label for="calendar-schedule-daily">$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.daily" )</label>
+                    </div>
+                    <div class="radio">
+                        <input class="radio" #if ($schedule == "daysOfWeek") checked="checked" #end id="calendar-schedule-weekly" name="schedule" type="radio" value="daysOfWeek">
+                        <label for="calendar-schedule-weekly">$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.weekly" )</label>
+                    </div>
+                    <div class="radio">
+                        <input class="radio" #if ($schedule == "daysOfMonth") checked="checked" #end id="calendar-schedule-monthly" name="schedule" type="radio" value="daysOfMonth">
+                        <label for="calendar-schedule-monthly">$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.monthly" )</label>
+                    </div>
+                    <div class="radio">
+                        <input class="radio" #if ($schedule == "advanced") checked="checked" #end id="calendar-schedule-advanced" name="schedule" type="radio" value="advanced">
+                        <label for="calendar-schedule-advanced">$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.advanced" )</label>
+                    </div>
+                </fieldset>
+                <fieldset class="group field-group calendar-schedule-interval">
+                    <legend>
+                        <span>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.interval" )</span>
+                        <span class="aui-icon icon-required"></span>
+                    </legend>
+                    <div class="field-group calendar-schedule-interval-time">
+                        <span>
+                            <select class="medium-field" id="calendar-schedule-interval-hours" data-placeholder="$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.hours" )" name="hours">
+                                <option value=""></option>
+                                #foreach($i in [0..23])
+                                    <option value="$i" #if ($hours == $i) selected #end>$i</option>
+                                #end
+                            </select>
+                        </span>
+                        <span>
+                            <select class="medium-field" id="calendar-schedule-interval-minutes" data-placeholder="$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.minutes" )" name="minutes">
+                                <option value=""></option>
+                                #foreach($i in [0..59])
+                                    #if ($i % 5 == 0)
+                                        <option value="$i" #if ($minutes == $i) selected #end>$i</option>
+                                    #end
+                                #end
+                            </select>
+                        </span>
+                        #fieldError( "calendar-schedule-interval-time" )
+                    </div>
+                    <div class="field-group calendar-schedule-interval-weekdays">
+                        <span title="$i18n.getText( "cron.editor.monday" )">
+                            <input class="checkbox" #if ($action.weekdaysContains("2")) checked="checked" #end name="weekdays" type="checkbox" value="2">
+                            <span>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.mon" )</span>
+                        </span>
+                        <span title="$i18n.getText( "cron.editor.tuesday" )">
+                            <input class="checkbox" #if ($action.weekdaysContains("3")) checked="checked" #end name="weekdays" type="checkbox" value="3">
+                            <span>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.tue" )</span>
+                        </span>
+                        <span title="$i18n.getText( "cron.editor.wednesday" )">
+                            <input class="checkbox" #if ($action.weekdaysContains("4")) checked="checked" #end name="weekdays" type="checkbox" value="4">
+                            <span>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.wed" )</span>
+                        </span>
+                        <span title="$i18n.getText( "cron.editor.thursday" )">
+                            <input class="checkbox" #if ($action.weekdaysContains("5")) checked="checked" #end name="weekdays" type="checkbox" value="5">
+                            <span>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.thu" )</span>
+                        </span>
+                        <span title="$i18n.getText( "cron.editor.friday" )">
+                            <input class="checkbox" #if ($action.weekdaysContains("6")) checked="checked" #end name="weekdays" type="checkbox" value="6">
+                            <span>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.fri" )</span>
+                        </span>
+                        <span title="$i18n.getText( "cron.editor.saturday" )">
+                            <input class="checkbox" #if ($action.weekdaysContains("7")) checked="checked" #end name="weekdays" type="checkbox" value="7">
+                            <span>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.sat" )</span>
+                        </span>
+                        <span title="$i18n.getText( "cron.editor.sunday" )">
+                            <input class="checkbox" #if ($action.weekdaysContains("1")) checked="checked" #end name="weekdays" type="checkbox" value="1">
+                            <span>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.sun" )</span>
+                        </span>
+                        #fieldError( "calendar-schedule-interval-weekdays" )
+                    </div>
+                    <div class="field-group calendar-schedule-interval-month-days">
+                        <select class="medium-field" id="calendar-schedule-interval-month-days" data-placeholder="$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.dayOfTheMonth" )" name="monthDay">
+                            <option value=""></option>
+                            #foreach($i in [1..31])
+                                <option value="$i" #if ($monthDay == $i) selected #end>$i</option>
+                            #end
+                        </select>
+                        #fieldError( "calendar-schedule-interval-month-days" )
+                    </div>
+                    <div class="field-group calendar-schedule-interval-advanced">
+                        <input class="text medium-field" type="text" id="calendar-schedule-interval-advanced" name="advanced" placeholder="$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.cronExpression" )"  value="$advanced">
+                        <a style="margin: 5px;" class="help-lnk" href="http://www.quartz-scheduler.org/documentation/quartz-2.2.x/tutorials/tutorial-lesson-06.html" title="Get external help about Cron Expressions">
+                            <span class="aui-icon aui-icon-small aui-iconfont-help">$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.cronExpression.help" )</span>
+                        </a>
+                        #fieldError( "calendar-schedule-interval-advanced" )
+                    </div>
+                </fieldset>
+            </fieldset>
+            <div class="hidden">
+                <input name="atl_token" type="hidden" value="$atl_token">
+            </div>
+        </div>
+        <div class="buttons-container form-footer">
+            <div class="buttons">
+                #if ($id)
+                    <input class="aui-button" id="calendar-schedule-submit" title="Press Ctrl+Alt+s to submit this form" type="submit" value="$i18n.getText( "common.words.edit" )">
+                #else
+                    <input class="aui-button" id="calendar-schedule-submit" title="Press Ctrl+Alt+s to submit this form" type="submit" value="$i18n.getText( "common.words.create" )">
+                #end
+                <a class="aui-button aui-button-link cancel" href="/browse/$action.issue.key" id="calendar-schedule-cancel" title="Press Ctrl+Alt+` to cancel">$i18n.getText("common.words.cancel")</a>
+            </div>
+        </div>
+    </form>
+</body>
+</html>
