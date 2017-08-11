@@ -23,11 +23,18 @@ define('calendar/calendar-view', [
 
             this.eventDialog = AJS.InlineDialog('.calendar-event-object,.vis-item', 'eventDialog', function(content, trigger, showPopup) {
                 var event;
-                if (self.getViewType() == 'timeline') {
+                if (self.getViewType() === 'timeline') {
                     var timeline = self.getView().timeline;
                     event = timeline.itemsData.get(timeline.getEventProperties({target: trigger}).item);
-                } else
+                    event = {
+                        type: event.eventType,
+                        id: event.eventId,
+                        eventId: event.eventId,
+                        calendarId: event.calendarId
+                    }
+                } else {
                     event = self.$el.fullCalendar('clientEvents', $(trigger).data('event-id'))[0];
+                }
 
                 // Atlassian bug workaround
                 content.click(function(e) {
