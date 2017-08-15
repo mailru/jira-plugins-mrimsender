@@ -160,9 +160,6 @@
         <dependency>com.atlassian.auiplugin:ajs</dependency>
         <dependency>com.atlassian.auiplugin:aui-select</dependency>
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
-        <dependency>jira.webresources:calendar</dependency>
-        <dependency>jira.webresources:calendar-en</dependency>
-        <dependency>jira.webresources:calendar-ru</dependency>
         <resource type="download" name="schedule.js" location="ru/mail/jira/plugins/calendar/schedule/schedule.js" />
         <resource type="download" name="schedule.css" location="ru/mail/jira/plugins/calendar/schedule/schedule.css" />
         <context>atl.general</context>
