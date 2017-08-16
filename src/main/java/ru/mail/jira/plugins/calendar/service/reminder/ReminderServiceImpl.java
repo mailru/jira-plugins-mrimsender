@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.calendar.service.reminder;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
+import com.atlassian.activeobjects.spi.DatabaseType;
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.config.LocaleManager;
@@ -87,6 +88,15 @@ public class ReminderServiceImpl implements ReminderService {
             long correctedSince = since + reminderType.getDurationMillis();
             long correctedUntil = until + reminderType.getDurationMillis();
 
+            //workaround for https://my-com.atlassian.net/browse/MCS-9
+            String calendarIdFieldName = "EVENT.CALENDAR_ID";
+            DatabaseType databaseType = ao.moduleMetaData().getDatabaseType();
+            if (databaseType == DatabaseType.POSTGRESQL) {
+                calendarIdFieldName = "EVENT.\"CALENDAR_ID\"";
+            } else if (databaseType == DatabaseType.ORACLE) {
+                calendarIdFieldName = "\"EVENT\".\"CALENDAR_ID\"";
+            }
+
             Event[] foundEvents = ao.find(
                 Event.class,
                 Query
@@ -97,7 +107,7 @@ public class ReminderServiceImpl implements ReminderService {
                     .join(EventType.class, "EVENT.EVENT_TYPE_ID = TYPE.ID")
                     .join(EventTypeReminder.class, "REMINDER.EVENT_TYPE_ID = TYPE.ID")
                     .where(
-                        "REMINDER.CALENDAR_ID = EVENT.CALENDAR_ID AND EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND REMINDER.REMINDER_TYPE = ? AND ALL_DAY = ?",
+                        "REMINDER.CALENDAR_ID = " + calendarIdFieldName + " AND EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND REMINDER.REMINDER_TYPE = ? AND ALL_DAY = ?",
                         new Timestamp(correctedSince),
                         new Timestamp(correctedUntil),
                         reminderType.name(),
@@ -121,7 +131,7 @@ public class ReminderServiceImpl implements ReminderService {
                     .join(EventType.class, "EVENT.EVENT_TYPE_ID = TYPE.ID")
                     .join(EventTypeReminder.class, "REMINDER.EVENT_TYPE_ID = TYPE.ID")
                     .where(
-                        "REMINDER.CALENDAR_ID = EVENT.CALENDAR_ID AND EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND REMINDER.REMINDER_TYPE = ? AND ALL_DAY = ?",
+                        "REMINDER.CALENDAR_ID = " + calendarIdFieldName + " AND EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND REMINDER.REMINDER_TYPE = ? AND ALL_DAY = ?",
                         new Timestamp(correctedSince + systemTimeZone.getOffset(correctedSince)),
                         new Timestamp(correctedUntil + systemTimeZone.getOffset(correctedUntil)),
                         reminderType.name(),
