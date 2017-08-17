@@ -1,0 +1,33 @@
+<html>
+<head>
+    <title>Schedule issue</title>
+    <meta name="decorator" content="issueaction" />
+</head>
+<body>
+<form action="${action.actionName}.jspa" class="aui" id="calendar-delete-schedule" method="post">
+    <div class="form-body">
+        <h2 class="dialog-title">
+            $i18n.getText( "ru.mail.jira.plugins.calendar.schedule.delete.action.title", $name )
+        </h2>
+        <div class="hidden">
+            <input id="sheduleId" name="id" type="hidden" #if ($id) value="$id" #end>
+        </div>
+        <div class="hidden">
+            <input id="issueId" name="issueId" type="hidden" value="$issueId">
+        </div>
+        <div class="aui-message">
+            <p>$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.delete.action.message" )</p>
+        </div>
+        <div class="hidden">
+            <input name="atl_token" type="hidden" value="$atl_token">
+        </div>
+    </div>
+    <div class="buttons-container form-footer">
+        <div class="buttons">
+            <input class="aui-button" id="calendar-schedule-submit" title="Press Ctrl+Alt+s to submit this form" type="submit" value="Delete">
+            <a class="aui-button aui-button-link cancel" href="/browse/$action.issue.key" id="calendar-schedule-cancel" title="Press Ctrl+Alt+` to cancel">Cancel</a>
+        </div>
+    </div>
+</form>
+</body>
+</html>

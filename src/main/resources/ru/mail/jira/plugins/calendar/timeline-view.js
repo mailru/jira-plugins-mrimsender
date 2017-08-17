@@ -70,8 +70,8 @@
                 }
             },
             renderEvents: function(_events) {
-                var events = this._transformToTimelineFormat(_events);
-                this.timeline.setData({items: events})
+                var events = _.map(_events, $.proxy(this._transformEvent, this));
+                this.timeline.setData({items: events});
             },
             getRangeInterval: function() {
                 var diff;
@@ -142,6 +142,13 @@
                 var end = item.end;
                 var start = item.start;
 
+                if (item.allDay) {
+                    start = moment.utc(moment(start).format('YYYY-MM-DD'));
+                    if (end) {
+                        end = moment.utc(moment(end).format('YYYY-MM-DD'));
+                    }
+                }
+
                 if (item.eventType === 'ISSUE') {
                     $.ajax({
                         type: 'PUT',
@@ -158,7 +165,7 @@
                             callback(null);
                         },
                         success: $.proxy(function (event) {
-                            callback(this._transformEvent(event));
+                            callback(this._transformEvent(event, true));
                         }, this)
                     });
                 } else if (item.eventType === 'CUSTOM') {
@@ -180,7 +187,7 @@
                             callback(null);
                         },
                         success: $.proxy(function (event) {
-                            callback(this._transformEvent(event));
+                            callback(this._transformEvent(event, true));
                         }, this)
                     });
                 }
@@ -212,16 +219,28 @@
                     this.calendar.getAndRenderEvents();
                 }
             },
-            _transformToTimelineFormat: function(events) {
-                return _.map(events, $.proxy(this._transformEvent, this));
-            },
-            _transformEvent: function(event) {
+            _transformEvent: function(event, raw) {
+                var start = event.start;
+                var end = event.end;
+
+                if (raw) {
+                    start = moment(start);
+                    if (end) {
+                        end = moment(end);
+                    }
+                } else {
+                    start = start.clone().local();
+                    if (end) {
+                        end = end.clone().local();
+                    }
+                }
+
                 return {
                     id: event.calendarId + event.id,
                     eventId: event.id,
                     calendarId: event.calendarId,
-                    start: moment(event.start).clone().local().toDate(),
-                    end: event.end && moment(event.end).clone().local().toDate(),
+                    start: start,
+                    end: end,
                     content: this._buildContent(event),
                     className: this._getClassForColor(event.color),
                     style: event.datesError ? 'opacity: 0.4;border-color:#d04437;' : '',

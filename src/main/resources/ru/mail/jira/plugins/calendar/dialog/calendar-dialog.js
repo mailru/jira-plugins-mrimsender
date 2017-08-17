@@ -671,7 +671,6 @@ define('calendar/calendar-dialog', [
             confirmDialog.show();
         },
         _findEventTypeModel: function(typeId) {
-            console.log(this.eventTypes, typeId);
             return _.find(this.eventTypes, function(e) {
                 return e.id == typeId;
             });

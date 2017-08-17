@@ -24,6 +24,7 @@
         <entity>ru.mail.jira.plugins.calendar.model.EventTypeReminder</entity>
         <entity>ru.mail.jira.plugins.calendar.model.QuickFilter</entity>
         <entity>ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter</entity>
+        <entity>ru.mail.jira.plugins.calendar.schedule.model.Schedule</entity>
 
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v3.Version3UpgradeTask</upgradeTask>
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v4.Version4UpgradeTask</upgradeTask>
@@ -148,5 +149,85 @@
     <servlet key="calendar-view-sevlet" class="ru.mail.jira.plugins.calendar.MailRuCalendarServlet">
         <url-pattern>/mailrucal/view</url-pattern>
     </servlet>
+
+    <!-- Schedule -->
+
+    <web-resource key="schedule-soy-templates">
+        <dependency>com.atlassian.soy.soy-template-plugin:soy-deps</dependency>
+        <transformation extension="soy">
+            <transformer key="soyTransformer"/>
+        </transformation>
+        <resource type="download" name="schedule-templates.soy.js" location="ru/mail/jira/plugins/calendar/schedule/schedule-templates.soy"/>
+    </web-resource>
+
+    <web-resource key="schedule-resource">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <dependency>com.atlassian.auiplugin:aui-select</dependency>
+        <dependency>com.atlassian.auiplugin:aui-select2</dependency>
+        <resource type="download" name="schedule.js" location="ru/mail/jira/plugins/calendar/schedule/schedule.js" />
+        <resource type="download" name="schedule.css" location="ru/mail/jira/plugins/calendar/schedule/schedule.css" />
+        <context>atl.general</context>
+    </web-resource>
+
+    <webwork1 key="schedule-actions" class="java.lang.Object" roles-required="use">
+        <actions>
+            <action name="ru.mail.jira.plugins.calendar.schedule.MailRuCalendarCreateSchedule" alias="MailRuCalendarCreateSchedule">
+                <view name="input">/ru/mail/jira/plugins/calendar/schedule/schedule.vm</view>
+                <view name="securitybreach">/secure/views/securitybreach.jsp</view>
+            </action>
+            <action name="ru.mail.jira.plugins.calendar.schedule.MailRuCalendarEditSchedule" alias="MailRuCalendarEditSchedule">
+                <view name="input">/ru/mail/jira/plugins/calendar/schedule/schedule.vm</view>
+                <view name="securitybreach">/secure/views/securitybreach.jsp</view>
+            </action>
+            <action name="ru.mail.jira.plugins.calendar.schedule.MailRuCalendarDeleteSchedule" alias="MailRuCalendarDeleteSchedule">
+                <view name="input">/ru/mail/jira/plugins/calendar/schedule/delete-schedule.vm</view>
+                <view name="securitybreach">/secure/views/securitybreach.jsp</view>
+            </action>
+        </actions>
+    </webwork1>
+
+    <web-resource key="schedules-configuration-page-resource">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <dependency>com.atlassian.auiplugin:aui-dropdown2</dependency>
+        <dependency>ru.mail.jira.plugins.mailrucal:schedule-soy-templates</dependency>
+        <resource type="download" name="schedules-configuration-page.js" location="ru/mail/jira/plugins/calendar/schedule/schedules-configuration-page.js" />
+    </web-resource>
+
+    <webwork1 key="schedules-configuration-page-action" class="java.lang.Object" roles-required="use">
+        <actions>
+            <action name="ru.mail.jira.plugins.calendar.schedule.MailRuCalendarSchedulesConfigurationPageAction" alias="MailRuCalendarSchedulesConfigurationPage">
+                <view name="success">/ru/mail/jira/plugins/calendar/schedule/schedules-configuration-page.vm</view>
+                <view name="securitybreach">/secure/views/securitybreach.jsp</view>
+            </action>
+        </actions>
+    </webwork1>
+
+    <web-resource key="schedules-dialog-register-resource">
+        <resource type="download" name="schedule-dialog-register.js" location="ru/mail/jira/plugins/calendar/schedule/schedule-dialog-register.js" />
+        <context>atl.general</context>
+    </web-resource>
+
+    <web-item key="schedule-issue" name="Schedule Issue" section="operations-operations" weight="40">
+        <label key="ru.mail.jira.plugins.calendar.schedule.title"/>
+        <styleClass>calendar-schedule-create</styleClass>
+        <link><![CDATA[/secure/MailRuCalendarCreateSchedule!default.jspa?issueId=$issue.id]]></link>
+    </web-item>
+
+    <web-section key="calendar-user-section" location="system.user.options" weight="250">
+        <label key="ru.mail.jira.plugins.calendar.linkTitleShort" />
+        <condition class="com.atlassian.jira.plugin.webfragment.conditions.UserLoggedInCondition" />
+    </web-section>
+
+    <web-item key="schedule-configuration-link" section="system.user.options/calendar-user-section">
+        <label key="ru.mail.jira.plugins.calendar.schedule.configuration.title" />
+        <condition class="com.atlassian.jira.plugin.webfragment.conditions.UserLoggedInCondition" />
+        <link>/secure/MailRuCalendarSchedulesConfigurationPage.jspa</link>
+    </web-item>
 
 </atlassian-plugin>
