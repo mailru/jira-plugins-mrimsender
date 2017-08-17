@@ -97,39 +97,23 @@ public class ReminderServiceImpl implements ReminderService {
             for (EventTypeReminder reminder : reminders) {
                 EventType eventType = reminder.getEventType();
 
+                TimeZone systemTimeZone = timeZoneManager.getDefaultTimezone();
+
                 Event[] foundEvents = ao.find(
                     Event.class,
                     Query
                         .select()
                         .alias(Event.class, "EVENT")
                         .where(
-                            "EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND EVENT.EVENT_TYPE_ID = ? AND EVENT.CALENDAR_ID = ? AND EVENT.ALL_DAY = ?",
+                            "(EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND EVENT.ALL_DAY = ? OR EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND EVENT.ALL_DAY = ?) AND EVENT.EVENT_TYPE_ID = ? AND EVENT.CALENDAR_ID = ?",
                             new Timestamp(correctedSince),
                             new Timestamp(correctedUntil),
-                            eventType.getID(),
-                            reminder.getCalendarId(),
-                            Boolean.FALSE
-                        )
-                );
-
-                for (Event event : foundEvents) {
-                    events.put(event.getCalendarId(), buildEvent(event));
-                }
-
-                TimeZone systemTimeZone = timeZoneManager.getDefaultTimezone();
-
-                foundEvents = ao.find(
-                    Event.class,
-                    Query
-                        .select()
-                        .alias(Event.class, "EVENT")
-                        .where(
-                            "EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND EVENT.EVENT_TYPE_ID = ? AND EVENT.CALENDAR_ID = ? AND EVENT.ALL_DAY = ?",
+                            Boolean.FALSE,
                             new Timestamp(correctedSince + systemTimeZone.getOffset(correctedSince)),
                             new Timestamp(correctedUntil + systemTimeZone.getOffset(correctedUntil)),
+                            Boolean.TRUE,
                             eventType.getID(),
-                            reminder.getCalendarId(),
-                            Boolean.TRUE
+                            reminder.getCalendarId()
                         )
                 );
 
