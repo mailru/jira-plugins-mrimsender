@@ -149,7 +149,7 @@ public class QuickFilterServiceImpl implements QuickFilterService {
     }
 
     @Override
-    public QuickFilter[] getQuickFilters(int calendarId, ApplicationUser user) {
-        return ao.find(QuickFilter.class, Query.select().where("CALENDAR_ID = ? AND (CREATOR_KEY = ? OR SHARE = true)", calendarId, user.getKey()));
+    public QuickFilter[] getQuickFilters(int calendarId, ApplicationUser user, boolean share) {
+        return ao.find(QuickFilter.class, Query.select().where("CALENDAR_ID = ? AND (CREATOR_KEY = ? OR SHARE = ?)", calendarId, user.getKey(), share));
     }
 }

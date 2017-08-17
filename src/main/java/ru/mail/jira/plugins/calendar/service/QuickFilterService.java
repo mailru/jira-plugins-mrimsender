@@ -19,5 +19,5 @@ public interface QuickFilterService {
 
     void deleteQuickFilterByCalendarId(int calendarId) throws GetException;
 
-    QuickFilter[] getQuickFilters(int calendarId, ApplicationUser user);
+    QuickFilter[] getQuickFilters(int calendarId, ApplicationUser user, boolean share);
 }

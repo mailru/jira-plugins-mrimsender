@@ -102,7 +102,7 @@ public class RestQuickFilterService {
                 List<QuickFilterDto> result = new ArrayList<QuickFilterDto>();
                 ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
                 List<QuickFilter> favouriteQuickFilters = userCalendarService.getFavouriteQuickFilters(calendarId, user.getKey());
-                for (QuickFilter quickFilter : quickFilterService.getQuickFilters(calendarId, jiraAuthenticationContext.getLoggedInUser()))
+                for (QuickFilter quickFilter : quickFilterService.getQuickFilters(calendarId, jiraAuthenticationContext.getLoggedInUser(), true))
                     result.add(new QuickFilterDto(quickFilter, quickFilter.getCreatorKey().equals(user.getKey()), favouriteQuickFilters != null && favouriteQuickFilters.contains(quickFilter)));
                 return result;
             }

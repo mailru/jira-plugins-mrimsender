@@ -276,7 +276,7 @@ public class CalendarServiceImpl implements CalendarService {
     }
 
     @Override
-    public void addToFavouriteQuickFilter(int calendarId, ApplicationUser user, int id, boolean addToFavourite) throws GetException, UpdateException {
+    public void addToFavouriteQuickFilter(int calendarId, ApplicationUser user, int id, boolean addToFavourite) throws UpdateException {
         try {
             userCalendarService.addToFavouriteQuickFilter(calendarId, user.getKey(), id, addToFavourite);
         } catch (GetException e) {

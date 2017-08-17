@@ -18,7 +18,7 @@ public interface CalendarService {
 
     void updateCalendarVisibility(int calendarId, ApplicationUser user, boolean visible);
 
-    void addToFavouriteQuickFilter(int calendarId, ApplicationUser user, int id, boolean addToFavourite) throws GetException, UpdateException;
+    void addToFavouriteQuickFilter(int calendarId, ApplicationUser user, int id, boolean addToFavourite) throws UpdateException;
 
     void selectQuickFilter(int calendarId, ApplicationUser user, int id, boolean selected);
 
