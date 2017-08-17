@@ -63,7 +63,6 @@ define('calendar/calendar-view', [
                     var customEvent = new CustomEvent({id: -1 * parseInt(event.id)});
                     customEvent.fetch({
                         success: function(model) {
-                            console.log(Reminder);
                             content.html(JIRA.Templates.Plugins.MailRuCalendar.customEventInfo({
                                 event: model.toJSON(),
                                 contextPath: AJS.contextPath(),

@@ -154,7 +154,6 @@ define('calendar/custom-event-dialog', [
             $('#custom-event-dialog-reminder').text(Reminder.none);
         },
         _handleTypeChange: function() {
-            console.log('type changed', this.$('#custom-event-dialog-type').auiSelect2('data'));
             var reminder = $('#custom-event-dialog-type').auiSelect2('data').reminder;
             $('#custom-event-dialog-reminder').text(reminder ? Reminder.names[reminder] : Reminder.none);
         },
