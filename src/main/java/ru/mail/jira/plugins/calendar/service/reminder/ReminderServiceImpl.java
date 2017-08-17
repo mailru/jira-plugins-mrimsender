@@ -1,7 +1,6 @@
 package ru.mail.jira.plugins.calendar.service.reminder;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
-import com.atlassian.activeobjects.spi.DatabaseType;
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.config.LocaleManager;
@@ -88,59 +87,55 @@ public class ReminderServiceImpl implements ReminderService {
             long correctedSince = since + reminderType.getDurationMillis();
             long correctedUntil = until + reminderType.getDurationMillis();
 
-            //workaround for https://my-com.atlassian.net/browse/MCS-9
-            String calendarIdFieldName = "EVENT.CALENDAR_ID";
-            DatabaseType databaseType = ao.moduleMetaData().getDatabaseType();
-            if (databaseType == DatabaseType.POSTGRESQL) {
-                calendarIdFieldName = "EVENT.\"CALENDAR_ID\"";
-            } else if (databaseType == DatabaseType.ORACLE) {
-                calendarIdFieldName = "\"EVENT\".\"CALENDAR_ID\"";
-            }
-
-            Event[] foundEvents = ao.find(
-                Event.class,
-                Query
-                    .select()
-                    .alias(Event.class, "EVENT")
-                    .alias(EventType.class, "TYPE")
+            EventTypeReminder[] reminders = ao.find(
+                EventTypeReminder.class,
+                Query.select()
                     .alias(EventTypeReminder.class, "REMINDER")
-                    .join(EventType.class, "EVENT.EVENT_TYPE_ID = TYPE.ID")
-                    .join(EventTypeReminder.class, "REMINDER.EVENT_TYPE_ID = TYPE.ID")
-                    .where(
-                        "REMINDER.CALENDAR_ID = " + calendarIdFieldName + " AND EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND REMINDER.REMINDER_TYPE = ? AND ALL_DAY = ?",
-                        new Timestamp(correctedSince),
-                        new Timestamp(correctedUntil),
-                        reminderType.name(),
-                        Boolean.FALSE
-                    )
+                    .where("REMINDER_TYPE = ?", reminderType.name())
             );
 
-            for (Event event : foundEvents) {
-                events.put(event.getCalendarId(), buildEvent(event));
-            }
+            for (EventTypeReminder reminder : reminders) {
+                EventType eventType = reminder.getEventType();
 
-            TimeZone systemTimeZone = timeZoneManager.getDefaultTimezone();
+                Event[] foundEvents = ao.find(
+                    Event.class,
+                    Query
+                        .select()
+                        .alias(Event.class, "EVENT")
+                        .where(
+                            "EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND EVENT.EVENT_TYPE_ID = ? AND EVENT.CALENDAR_ID = ? AND EVENT.ALL_DAY = ?",
+                            new Timestamp(correctedSince),
+                            new Timestamp(correctedUntil),
+                            eventType.getID(),
+                            reminder.getCalendarId(),
+                            Boolean.FALSE
+                        )
+                );
 
-            foundEvents = ao.find(
-                Event.class,
-                Query
-                    .select()
-                    .alias(Event.class, "EVENT")
-                    .alias(EventType.class, "TYPE")
-                    .alias(EventTypeReminder.class, "REMINDER")
-                    .join(EventType.class, "EVENT.EVENT_TYPE_ID = TYPE.ID")
-                    .join(EventTypeReminder.class, "REMINDER.EVENT_TYPE_ID = TYPE.ID")
-                    .where(
-                        "REMINDER.CALENDAR_ID = " + calendarIdFieldName + " AND EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND REMINDER.REMINDER_TYPE = ? AND ALL_DAY = ?",
-                        new Timestamp(correctedSince + systemTimeZone.getOffset(correctedSince)),
-                        new Timestamp(correctedUntil + systemTimeZone.getOffset(correctedUntil)),
-                        reminderType.name(),
-                        Boolean.TRUE
-                    )
-            );
+                for (Event event : foundEvents) {
+                    events.put(event.getCalendarId(), buildEvent(event));
+                }
 
-            for (Event event : foundEvents) {
-                events.put(event.getCalendarId(), buildEvent(event));
+                TimeZone systemTimeZone = timeZoneManager.getDefaultTimezone();
+
+                foundEvents = ao.find(
+                    Event.class,
+                    Query
+                        .select()
+                        .alias(Event.class, "EVENT")
+                        .where(
+                            "EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND EVENT.EVENT_TYPE_ID = ? AND EVENT.CALENDAR_ID = ? AND EVENT.ALL_DAY = ?",
+                            new Timestamp(correctedSince + systemTimeZone.getOffset(correctedSince)),
+                            new Timestamp(correctedUntil + systemTimeZone.getOffset(correctedUntil)),
+                            eventType.getID(),
+                            reminder.getCalendarId(),
+                            Boolean.TRUE
+                        )
+                );
+
+                for (Event event : foundEvents) {
+                    events.put(event.getCalendarId(), buildEvent(event));
+                }
             }
         }
 
