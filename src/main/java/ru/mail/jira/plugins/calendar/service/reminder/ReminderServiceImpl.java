@@ -87,50 +87,39 @@ public class ReminderServiceImpl implements ReminderService {
             long correctedSince = since + reminderType.getDurationMillis();
             long correctedUntil = until + reminderType.getDurationMillis();
 
-            Event[] foundEvents = ao.find(
-                Event.class,
-                Query
-                    .select()
-                    .alias(Event.class, "EVENT")
-                    .alias(EventType.class, "TYPE")
+            EventTypeReminder[] reminders = ao.find(
+                EventTypeReminder.class,
+                Query.select()
                     .alias(EventTypeReminder.class, "REMINDER")
-                    .join(EventType.class, "EVENT.EVENT_TYPE_ID = TYPE.ID")
-                    .join(EventTypeReminder.class, "REMINDER.EVENT_TYPE_ID = TYPE.ID")
-                    .where(
-                        "REMINDER.CALENDAR_ID = EVENT.CALENDAR_ID AND EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND REMINDER.REMINDER_TYPE = ? AND ALL_DAY = ?",
-                        new Timestamp(correctedSince),
-                        new Timestamp(correctedUntil),
-                        reminderType.name(),
-                        Boolean.FALSE
-                    )
+                    .where("REMINDER_TYPE = ?", reminderType.name())
             );
 
-            for (Event event : foundEvents) {
-                events.put(event.getCalendarId(), buildEvent(event));
-            }
+            for (EventTypeReminder reminder : reminders) {
+                EventType eventType = reminder.getEventType();
 
-            TimeZone systemTimeZone = timeZoneManager.getDefaultTimezone();
+                TimeZone systemTimeZone = timeZoneManager.getDefaultTimezone();
 
-            foundEvents = ao.find(
-                Event.class,
-                Query
-                    .select()
-                    .alias(Event.class, "EVENT")
-                    .alias(EventType.class, "TYPE")
-                    .alias(EventTypeReminder.class, "REMINDER")
-                    .join(EventType.class, "EVENT.EVENT_TYPE_ID = TYPE.ID")
-                    .join(EventTypeReminder.class, "REMINDER.EVENT_TYPE_ID = TYPE.ID")
-                    .where(
-                        "REMINDER.CALENDAR_ID = EVENT.CALENDAR_ID AND EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND REMINDER.REMINDER_TYPE = ? AND ALL_DAY = ?",
-                        new Timestamp(correctedSince + systemTimeZone.getOffset(correctedSince)),
-                        new Timestamp(correctedUntil + systemTimeZone.getOffset(correctedUntil)),
-                        reminderType.name(),
-                        Boolean.TRUE
-                    )
-            );
+                Event[] foundEvents = ao.find(
+                    Event.class,
+                    Query
+                        .select()
+                        .alias(Event.class, "EVENT")
+                        .where(
+                            "(EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND EVENT.ALL_DAY = ? OR EVENT.START_DATE >= ? AND EVENT.START_DATE < ? AND EVENT.ALL_DAY = ?) AND EVENT.EVENT_TYPE_ID = ? AND EVENT.CALENDAR_ID = ?",
+                            new Timestamp(correctedSince),
+                            new Timestamp(correctedUntil),
+                            Boolean.FALSE,
+                            new Timestamp(correctedSince + systemTimeZone.getOffset(correctedSince)),
+                            new Timestamp(correctedUntil + systemTimeZone.getOffset(correctedUntil)),
+                            Boolean.TRUE,
+                            eventType.getID(),
+                            reminder.getCalendarId()
+                        )
+                );
 
-            for (Event event : foundEvents) {
-                events.put(event.getCalendarId(), buildEvent(event));
+                for (Event event : foundEvents) {
+                    events.put(event.getCalendarId(), buildEvent(event));
+                }
             }
         }
 
