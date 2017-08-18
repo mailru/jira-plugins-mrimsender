@@ -1,7 +1,6 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
 import com.atlassian.core.util.HTMLUtils;
-import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.sal.api.message.I18nResolver;
 import org.apache.commons.lang3.StringUtils;
 

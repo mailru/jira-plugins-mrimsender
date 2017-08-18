@@ -31,6 +31,7 @@ import com.atlassian.jira.project.version.Version;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.query.clause.Clause;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -39,6 +40,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
+import ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter;
+import ru.mail.jira.plugins.calendar.model.QuickFilter;
+import ru.mail.jira.plugins.calendar.model.UserCalendar;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
 import ru.mail.jira.plugins.commons.CommonUtils;
 
@@ -62,39 +66,42 @@ public class CalendarEventService {
     public static final String DUE_DATE_KEY = "due_date";
 
     private final CalendarService calendarService;
+    private final CustomEventService customEventService;
     private final CustomFieldManager customFieldManager;
     private final DateTimeFormatter dateTimeFormatter;
-    private final FieldLayoutManager fieldLayoutManager;
     private final IssueService issueService;
+    private final FieldLayoutManager fieldLayoutManager;
     private final JiraDeprecatedService jiraDeprecatedService;
     private final RendererManager rendererManager;
     private final SearchRequestService searchRequestService;
     private final SearchProvider searchProvider;
-    private final CustomEventService customEventService;
+    private final UserCalendarService userCalendarService;
 
     @Autowired
     public CalendarEventService(
         @ComponentImport CustomFieldManager customFieldManager,
         @ComponentImport DateTimeFormatter dateTimeFormatter,
-        @ComponentImport FieldLayoutManager fieldLayoutManager,
         @ComponentImport IssueService issueService,
+        @ComponentImport FieldLayoutManager fieldLayoutManager,
         @ComponentImport RendererManager rendererManager,
         @ComponentImport SearchRequestService searchRequestService,
         @ComponentImport SearchProvider searchProvider,
-        JiraDeprecatedService jiraDeprecatedService,
         CalendarService calendarService,
-        CustomEventService customEventService
+        CustomEventService customEventService,
+        JiraDeprecatedService jiraDeprecatedService,
+        UserCalendarService userCalendarService
     ) {
         this.calendarService = calendarService;
+        this.customEventService = customEventService;
         this.customFieldManager = customFieldManager;
         this.dateTimeFormatter = dateTimeFormatter;
-        this.fieldLayoutManager = fieldLayoutManager;
         this.issueService = issueService;
+        this.fieldLayoutManager = fieldLayoutManager;
         this.jiraDeprecatedService = jiraDeprecatedService;
         this.rendererManager = rendererManager;
         this.searchRequestService = searchRequestService;
         this.searchProvider = searchProvider;
-        this.customEventService = customEventService;
+        this.userCalendarService =userCalendarService;
     }
 
     public List<EventDto> findEvents(final int calendarId,
@@ -151,6 +158,27 @@ public class CalendarEventService {
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder();
         jqlBuilder.project(projectId);
         return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo);
+    }
+
+    private Clause getSelectedQuickFilterClause(Calendar calendar, ApplicationUser user) {
+        JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder();
+        UserCalendar userCalendar = userCalendarService.find(calendar.getID(), user.getKey());
+        if (userCalendar != null) {
+            for (FavouriteQuickFilter favouriteQuickFilter : userCalendar.getFavouriteQuickFilters()) {
+                QuickFilter quickFilter = favouriteQuickFilter.getQuickFilter();
+                if (favouriteQuickFilter.isSelected() && (quickFilter.isShare() || quickFilter.getCreatorKey().equals(user.getKey()))) {
+                    Clause selectedQuickFiltersClause = null;
+                    SearchService.ParseResult parseResult = jiraDeprecatedService.searchService.parseQuery(user, quickFilter.getJql());
+                    if (parseResult.isValid())
+                        selectedQuickFiltersClause = parseResult.getQuery().getWhereClause();
+                    else
+                        log.error("JQL is invalid => {}", quickFilter.getJql());
+                    if (selectedQuickFiltersClause != null)
+                        jqlBuilder.and().sub().addClause(selectedQuickFiltersClause).endsub();
+                }
+            }
+        }
+        return jqlBuilder.buildClause();
     }
 
     private List<EventDto> getFilterEvents(Calendar calendar,
@@ -243,6 +271,10 @@ public class CalendarEventService {
             addEndGreaterCondition(endField, endTime, jqlBuilder, userDateFormat);
         }
         jqlBuilder.endsub();
+
+        Clause selectedQuickFiltersClause = getSelectedQuickFilterClause(calendar, user);
+        if (selectedQuickFiltersClause != null)
+            jqlBuilder.and().sub().addClause(selectedQuickFiltersClause).endsub();
 
         List<Issue> issues = searchProvider.search(jqlBuilder.buildQuery(), user, PagerFilter.getUnlimitedFilter()).getIssues();
         if (log.isDebugEnabled())

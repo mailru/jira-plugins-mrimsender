@@ -7,9 +7,10 @@ require(['jquery',
     'calendar/confirm-dialog',
     'calendar/feed-dialog',
     'calendar/import-dialog',
+    'calendar/quick-filter-dialog',
     'calendar/custom-event-dialog',
     'calendar/timeline-view'
-], function($, _, Backbone, LikeFlag, CalendarView, CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog, CustomEventDialog) {
+], function($, _, Backbone, LikeFlag, CalendarView, CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog, QuickFilterDialog, CustomEventDialog) {
     // Override default texts for auiSelect2 messages
     $.fn.select2.defaults = $.extend($.fn.select2.defaults, {
         formatNoMatches: function() {
@@ -47,6 +48,17 @@ require(['jquery',
             url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/forUser'
         });
 
+        var QuickFilter = Backbone.Model.extend();
+        var QuickFilterCollection = Backbone.Collection.extend({
+            model: QuickFilter,
+            initialize: function(models, options) {
+                this.calendarId = options.calendarId;
+            },
+            url: function() {
+                return AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + this.calendarId + '/quickFilter/all';
+            }
+        });
+
         var MainView = Backbone.View.extend({
             el: 'body',
             events: {
@@ -60,10 +72,13 @@ require(['jquery',
                 'click .calendar-delete': 'deleteCalendar',
                 'click .calendar-edit': 'editCalendar',
                 'click .calendar-remove': 'removeFavoriteCalendar',
-                'click .calendar-create-custom-event': '_createCustomEventFromMenu'
+                'click .calendar-create-custom-event': '_createCustomEventFromMenu',
+                'click .calendar-configure-quick-filters': 'configureQuickFilters',
+                'click .calendar-quickfilter-button': 'toggleQuickFilter'
             },
             initialize: function() {
                 this.calendarView = new CalendarView({enableFullscreen: true});
+                this.initializeTooltips();
 
                 this.calendarView.on('addSource render', this.startLoadingCalendarsCallback, this);
                 this.calendarView.on('renderComplete', this.finishLoadingCalendarsCallback, this);
@@ -81,6 +96,9 @@ require(['jquery',
                 this.model.on('change:hideWeekends', this.onHideWeekendsHandler, this);
                 this.model.on('change:calendarView', this._onUserDataViewChange, this);
             },
+            initializeTooltips: function() {
+                this.$('.calendar-quick-filters-label').tooltip({gravity: 'w'});
+            },
             _onUserDataViewChange: function(model) {
                 var view = model.get('calendarView') || 'month';
                 this.setCalendarView(view);
@@ -94,6 +112,7 @@ require(['jquery',
             },
             _onChangeCalendar: function(calendar) {
                 this.buildCalendarList();
+                this.buildQuickFilterList();
 
                 this.calendarView.removeEventSource(calendar.id);
                 if (calendar.get('favorite') && calendar.get('visible') && !calendar.get('hasError'))
@@ -223,7 +242,7 @@ require(['jquery',
                         success: function() {
                             self.collection.fetch({
                                 success: function() {
-                                    self.setUrlCalendars()
+                                    self.setUrlCalendars();
                                 }
                             });
                         },
@@ -319,6 +338,29 @@ require(['jquery',
                 var todayRange = view.computeRange(this.calendarView.getNow());
                 localStorage.setItem('mailrucalendar.start', !todayRange.start.isSame(view.start) ? view.start.format() : '');
                 localStorage.setItem('mailrucalendar.end', !todayRange.end.isSame(view.end) ? view.end.format() : '');
+            },
+            configureQuickFilters: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.$('.aui-page-panel-nav').click();
+
+                var calendarId = $(e.currentTarget).closest('div.aui-dropdown2').data('id');
+                var calendar = this.collection.get(calendarId);
+
+                var quickFilterCollection = new QuickFilterCollection([], {calendarId: calendarId});
+                quickFilterCollection.fetch({
+                    success: function(collection) {
+                        var quickFilterDialog = new QuickFilterDialog({
+                            collection: collection,
+                            calendar: calendar,
+                            calendars: mainView.collection
+                        });
+                        quickFilterDialog.show();
+                    },
+                    error: function(request) {
+                        alert(request.responseText);
+                    }
+                });
             },
             removeFavoriteCalendar: function(e) {
                 e.preventDefault();
@@ -433,6 +475,33 @@ require(['jquery',
 
                 confirmDialog.show();
             },
+            toggleQuickFilter: function(e) {
+                var self = this;
+                var $element = $(e.currentTarget);
+                var calendarId = $element.data('calendar-id');
+                var filterId = $element.data('filter-id');
+                var selected = !$element.data('selected');
+
+                $.ajax({
+                    type: 'PUT',
+                    context: this,
+                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendarId + '/selectQuickFilter/' + filterId,
+                    data: {
+                        selected: selected
+                    },
+                    success: $.proxy(function() {
+                        self.collection.fetch({
+                            success: function() {
+                                self.setUrlCalendars();
+                            }
+                        });
+                    }, this),
+                    error: $.proxy(function(xhr) {
+                        this.finishLoadingCalendarsCallback();
+                        alert(xhr.responseText || 'Internal error');
+                    }, this)
+                });
+            },
             buildCalendarList: function() {
                 var htmlFavoriteCalendars = '';
                 var sorted = this.collection.sortBy(function(calendar) {
@@ -462,6 +531,20 @@ require(['jquery',
                             'aui-dropdown2-hide': this._onCalendarDropdownHide
                         });
                 }, this);
+            },
+            buildQuickFilterList: function() {
+                this.$('.calendar-quick-filters dd').remove();
+                var htmlQuickFilters = '';
+                this.collection.each(function(calendar) {
+                    if (calendar.get('visible') && !calendar.get('hasError'))
+                        htmlQuickFilters += JIRA.Templates.Plugins.MailRuCalendar.quickFilters({
+                            calendar: calendar.toJSON()
+                        });
+                }, this);
+                console.log(htmlQuickFilters);
+                if (htmlQuickFilters.length === 0)
+                    htmlQuickFilters = '<dd>' + AJS.I18n.getText('ru.mail.jira.plugins.calendar.quick.filter.empty') + '</dd>';
+                this.$('#calendar-quick-filters dt').after(htmlQuickFilters);
             }
         });
 
@@ -517,6 +600,7 @@ require(['jquery',
             success: function(collection) {
                 var hasEnabledCalendar = false;
                 mainView.buildCalendarList();
+                mainView.buildQuickFilterList();
                 collection.each(function(calendar) {
                     if (calendar.get('visible') && !calendar.get('hasError')) {
                         mainView.calendarView.addEventSource(calendar.id, true);

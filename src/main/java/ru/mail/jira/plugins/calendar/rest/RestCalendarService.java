@@ -39,6 +39,7 @@ import ru.mail.jira.plugins.calendar.service.UserDataService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -180,6 +181,34 @@ public class RestCalendarService {
             protected Void doAction() throws Exception {
                 licenseService.checkLicense();
                 calendarService.updateCalendarVisibility(calendarId, jiraAuthenticationContext.getUser(), visible);
+                return null;
+            }
+        }.getResponse();
+    }
+
+    @PUT
+    @Path("/{calendarId}/addToFavouriteQuickFilter/{id}")
+    public Response addToFavouriteQuickFilter(@PathParam("calendarId") final int calendarId,
+                                              @PathParam("id") final int id,
+                                              @FormParam("addToFavourite") final boolean addToFavourite) {
+        return new RestExecutor<Void>() {
+            @Override
+            protected Void doAction() throws Exception {
+                calendarService.addToFavouriteQuickFilter(calendarId, jiraAuthenticationContext.getLoggedInUser(), id, addToFavourite);
+                return null;
+            }
+        }.getResponse();
+    }
+
+    @PUT
+    @Path("/{calendarId}/selectQuickFilter/{id}")
+    public Response selectQuickFilter(@PathParam("calendarId") final int calendarId,
+                                      @PathParam("id") final int id,
+                                      @FormParam("selected") final boolean selected) {
+        return new RestExecutor<Void>() {
+            @Override
+            protected Void doAction() throws Exception {
+                calendarService.selectQuickFilter(calendarId, jiraAuthenticationContext.getLoggedInUser(), id, selected);
                 return null;
             }
         }.getResponse();

@@ -7,6 +7,7 @@ import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.exception.GetException;
+import com.atlassian.jira.exception.UpdateException;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.issue.search.SearchRequestManager;
@@ -29,9 +30,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.model.*;
+import ru.mail.jira.plugins.calendar.model.Calendar;
+import ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter;
+import ru.mail.jira.plugins.calendar.model.Permission;
+import ru.mail.jira.plugins.calendar.model.PermissionType;
+import ru.mail.jira.plugins.calendar.model.QuickFilter;
+import ru.mail.jira.plugins.calendar.model.UserCalendar;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarSettingDto;
 import ru.mail.jira.plugins.calendar.rest.dto.PermissionItemDto;
+import ru.mail.jira.plugins.calendar.rest.dto.QuickFilterDto;
 import ru.mail.jira.plugins.commons.RestFieldException;
 
 import javax.annotation.Nullable;
@@ -84,6 +92,7 @@ public class CalendarServiceImpl implements CalendarService {
     private final PermissionService permissionService;
     private final ProjectManager projectManager;
     private final ProjectRoleManager projectRoleManager;
+    private final QuickFilterService quickFilterService;
     private final SearchRequestService searchRequestService;
     private final SearchRequestManager searchRequestManager;
     private final UserCalendarService userCalendarService;
@@ -102,8 +111,9 @@ public class CalendarServiceImpl implements CalendarService {
         @ComponentImport UserManager userManager,
         @ComponentImport ActiveObjects ao,
         JiraDeprecatedService jiraDeprecatedService,
-        UserCalendarService userCalendarService,
-        PermissionService permissionService
+        PermissionService permissionService,
+        QuickFilterService quickFilterService,
+        UserCalendarService userCalendarService
     ) {
         this.ao = ao;
         this.customFieldManager = customFieldManager;
@@ -114,6 +124,7 @@ public class CalendarServiceImpl implements CalendarService {
         this.permissionService = permissionService;
         this.projectManager = projectManager;
         this.projectRoleManager = projectRoleManager;
+        this.quickFilterService = quickFilterService;
         this.searchRequestService = searchRequestService;
         this.searchRequestManager = searchRequestManager;
         this.userCalendarService = userCalendarService;
@@ -251,6 +262,7 @@ public class CalendarServiceImpl implements CalendarService {
         ao.delete(ao.find(EventTypeReminder.class, Query.select().where("CALENDAR_ID = ?", calendarId)));
         ao.delete(ao.find(EventType.class, Query.select().where("CALENDAR_ID = ?", calendarId)));
         userCalendarService.removeCalendar(user.getKey(), calendarId);
+        quickFilterService.deleteQuickFilterByCalendarId(calendarId);
         ao.delete(calendar);
     }
 
@@ -260,6 +272,24 @@ public class CalendarServiceImpl implements CalendarService {
         } catch (GetException e) {
             log.error("Can't get UserCalendar for calendar={} and user={}", calendarId, user.getKey());
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void addToFavouriteQuickFilter(int calendarId, ApplicationUser user, int id, boolean addToFavourite) throws UpdateException {
+        try {
+            userCalendarService.addToFavouriteQuickFilter(calendarId, user.getKey(), id, addToFavourite);
+        } catch (GetException e) {
+            log.error("Can't get UserCalendar for calendar={} and user={}", calendarId, user.getKey());
+        }
+    }
+
+    @Override
+    public void selectQuickFilter(int calendarId, ApplicationUser user, int id, boolean selected) {
+        try {
+            userCalendarService.selectQuickFilter(calendarId, user.getKey(), id, selected);
+        } catch (Exception e) {
+            log.error("Can't get UserCalendar for calendar={} and user={}", calendarId, user.getKey());
         }
     }
 
@@ -333,6 +363,16 @@ public class CalendarServiceImpl implements CalendarService {
                 output.setHasError(true);
                 output.setError(filterHasNotAvailableError);
             }
+
+            List<QuickFilterDto> favouriteQuickFilters = new ArrayList<QuickFilterDto>();
+            if (userCalendar != null) {
+                for (FavouriteQuickFilter favouriteQuickFilter : userCalendar.getFavouriteQuickFilters()) {
+                    QuickFilter quickFilter = favouriteQuickFilter.getQuickFilter();
+                    if (quickFilter.isShare() || quickFilter.getCreatorKey().equals(user.getKey()))
+                        favouriteQuickFilters.add(new QuickFilterDto(quickFilter.getID(), quickFilter.getName(), favouriteQuickFilter.isSelected()));
+                }
+            }
+            output.setFavouriteQuickFilters(favouriteQuickFilters);
         }
         if (!changable && !canUse) {
             output.setHasError(true);

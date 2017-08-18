@@ -5,6 +5,7 @@ import ru.mail.jira.plugins.calendar.model.UserCalendar;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
@@ -33,6 +34,10 @@ public class CalendarDto {
     private String error;
     @XmlElement
     private Integer usersCount;
+    @XmlElement
+    private List<QuickFilterDto> favouriteQuickFilters;
+    @XmlElement
+    private List<QuickFilterDto> selectedQuickFilters;
 
     public CalendarDto() {
     }
@@ -92,5 +97,13 @@ public class CalendarDto {
 
     public Integer getUsersCount() {
         return usersCount;
+    }
+
+    public void setFavouriteQuickFilters(List<QuickFilterDto> favouriteQuickFilters) {
+        this.favouriteQuickFilters = favouriteQuickFilters;
+    }
+
+    public void setSelectedQuickFilters(List<QuickFilterDto> selectedQuickFilters) {
+        this.selectedQuickFilters = selectedQuickFilters;
     }
 }

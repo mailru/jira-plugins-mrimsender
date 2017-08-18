@@ -245,6 +245,11 @@
                     {/if}
                     <div class="aui-dropdown2-section">
                         <ul>
+                            <li><a class="calendar-configure-quick-filters" href="#">{getText( 'ru.mail.jira.plugins.calendar.quick.filter.configure' )}</a></li>
+                        </ul>
+                    </div>
+                    <div class="aui-dropdown2-section">
+                        <ul>
                             <li><a class="calendar-edit" href="#">{getText( 'ru.mail.jira.plugins.calendar.common.edit' )}</a></li>
                             {if $calendar.changable }
                                 <li><a class="calendar-delete" href="#">{getText( 'common.words.delete' )}</a></li>
@@ -325,6 +330,19 @@
                 {$calendar.name}
             </span>
         {/if}
+    {/foreach}
+{/template}
+
+
+/**
+ * Quick Filter in panel above calendar
+ * @param calendar
+ */
+{template .quickFilters}
+    {foreach $quickFilter in $calendar.favouriteQuickFilters}
+        <dd>
+            <a role="button" href="#" class="calendar-quickfilter-button" style="color: {$calendar.color}; {if $quickFilter.selected}border-color: {$calendar.color};{/if}" data-calendar-id="{$calendar.id}" data-filter-id="{$quickFilter.id}" data-selected="{$quickFilter.selected}">{$quickFilter.name}</a>
+        </dd>
     {/foreach}
 {/template}
 

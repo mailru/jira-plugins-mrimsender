@@ -413,38 +413,52 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     vertical-align: top;
 }
 
-#calendar-dialog #advanced-search {
+#calendar-dialog #advanced-search,
+#mailrucalendar-quick-filter-table .mailrucalendar-quick-filter-jql {
     padding: 4px 26px 4px 26px;
     resize: none;
 }
 
-#calendar-dialog .atlassian-autocomplete {
+#calendar-dialog .atlassian-autocomplete,
+#mailrucalendar-quick-filter-table .atlassian-autocomplete {
     height: 70px;
 }
 
 #calendar-dialog .atlassian-autocomplete > .syntax-help,
-#calendar-dialog .atlassian-autocomplete > .syntax-help:hover {
+#calendar-dialog .atlassian-autocomplete > .syntax-help:hover{
     position: absolute;
     color: #707070;
     right: 56px;
     top: 6px;
 }
 
+#mailrucalendar-quick-filter-table .atlassian-autocomplete > .syntax-help,
+#mailrucalendar-quick-filter-table .atlassian-autocomplete > .syntax-help:hover {
+    position: absolute;
+    color: #707070;
+    right: 6px;
+    top: 6px;
+}
+
 #calendar-dialog .atlassian-autocomplete > .mailrucalendar-jql-link,
-#calendar-dialog .atlassian-autocomplete > .mailrucalendar-jql-link:hover {
+#calendar-dialog .atlassian-autocomplete > .mailrucalendar-jql-link:hover,
+#mailrucalendar-quick-filter-table .atlassian-autocomplete > .mailrucalendar-jql-link,
+#mailrucalendar-quick-filter-table .atlassian-autocomplete > .mailrucalendar-jql-link:hover {
     position: absolute;
     right: 26px;
     top: 4px;
     color: #707070;
 }
 
-#calendar-dialog .atlassian-autocomplete label .icon {
+#calendar-dialog .atlassian-autocomplete label .icon,
+#mailrucalendar-quick-filter-table .atlassian-autocomplete label .icon {
     position: absolute;
     top: 7px;
     left: 6px;
 }
 
-#calendar-dialog .atlassian-autocomplete label .jql-label {
+#calendar-dialog .atlassian-autocomplete label .jql-label,
+#mailrucalendar-quick-filter-table .atlassian-autocomplete label .jql-label {
     border: 1px solid #cccccc;
     display: none;
     position: absolute;
@@ -953,4 +967,73 @@ div.vis-item.vis-box {
 .fc .aui-buttons > button.aui-button {
     font-size: 14px;
     margin: 0;
+}
+
+/* Quick filters */
+
+#calendar-quick-filters {
+    padding: 10px 20px;
+    border-bottom: 1px solid #cccccc;
+    border-right: 1px solid #cccccc;
+}
+
+#calendar-quick-filters .calendar-quick-filters-label {
+    color: #707070;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+#calendar-quick-filters .calendar-quick-filters-label:hover {
+    cursor: help;
+}
+
+#mailrucalendar-quick-filter-dialog {
+    width: 1000px;
+    top: 140px;
+}
+
+#mailrucalendar-quick-filter-dialog .aui-dialog2-content {
+    min-height: 350px
+}
+
+#mailrucalendar-quick-filter-create-row > td {
+    background: #f5f5f5;
+}
+
+#mailrucalendar-quick-filter-table .atlassian-autocomplete,
+#mailrucalendar-quick-filter-jql-error {
+    width: 300px;
+}
+
+#mailrucalendar-quick-filter-table textarea {
+    max-width: none;
+    width: 100%;
+}
+
+.calendar-quick-filters dt {
+    padding-right: 10px;
+    display: inline-block;
+}
+
+.calendar-quick-filters dd {
+    margin: 0 0 0 0;
+    display: inline-block;
+}
+
+.calendar-quick-filters dd a {
+    border: 1px solid transparent;
+    -webkit-border-radius: 3px 3px 3px 3px;
+    border-radius: 3px 3px 3px 3px;
+    display: inline-block;
+    line-height: 1;
+    margin: 0 5px 0 0;
+    padding: 7px 10px;
+}
+
+.calendar-quick-filters dd a:hover,
+.calendar-quick-filters dd a:visited,
+.calendar-quick-filters dd a:active,
+.calendar-quick-filters dd a:link {
+    text-decoration: none;
 }
