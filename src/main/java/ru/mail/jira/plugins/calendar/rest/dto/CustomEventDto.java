@@ -43,4 +43,10 @@ public class CustomEventDto {
     private String reminder;
     @XmlElement
     private List<UserDto> participants;
+    @XmlElement
+    private String recurrenceType;
+    @XmlElement
+    private String recurrenceExpression;
+    @XmlElement
+    private int recurrencePeriod;
 }

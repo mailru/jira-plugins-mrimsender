@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.calendar.rest.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -12,6 +13,7 @@ import java.util.List;
 @XmlRootElement
 @Getter
 @Setter
+@ToString
 public class EventDto {
     @XmlElement
     private String id;
