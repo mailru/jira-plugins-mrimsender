@@ -48,5 +48,9 @@ public class CustomEventDto {
     @XmlElement
     private String recurrenceExpression;
     @XmlElement
-    private int recurrencePeriod;
+    private Integer recurrencePeriod;
+    @XmlElement
+    private Timestamp recurrenceEndDate;
+    @XmlElement
+    private Integer recurrenceCount;
 }

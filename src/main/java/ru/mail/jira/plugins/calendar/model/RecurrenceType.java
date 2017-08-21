@@ -18,7 +18,6 @@ public enum RecurrenceType {
     MON_WED_FRI(new FixedDaysOfWeekRecurrenceStrategy(ImmutableSet.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY))),
     TUE_THU(new FixedDaysOfWeekRecurrenceStrategy(ImmutableSet.of(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY))),
     DAYS_OF_WEEK(new CustomDaysOfWeekRecurrenceStrategy()),
-    WEEKLY(new ChronoUnitRecurrenceStrategy(ChronoUnit.WEEKS)),
     MONTHLY(new ChronoUnitRecurrenceStrategy(ChronoUnit.MONTHS)),
     YEARLY(new ChronoUnitRecurrenceStrategy(ChronoUnit.YEARS)),
     CRON(new CronRecurrenceStrategy());

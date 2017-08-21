@@ -6,6 +6,7 @@ import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.exception.GetException;
+import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
@@ -19,9 +20,11 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.model.*;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.*;
+import ru.mail.jira.plugins.calendar.service.recurrent.EventContext;
 import ru.mail.jira.plugins.commons.RestFieldException;
 
 import java.sql.Timestamp;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -38,6 +41,7 @@ public class CustomEventServiceImpl implements CustomEventService {
     private final AvatarService avatarService;
     private final CalendarService calendarService;
     private final PermissionService permissionService;
+    private final TimeZoneManager timeZoneManager;
 
     @Autowired
     public CustomEventServiceImpl(
@@ -45,6 +49,7 @@ public class CustomEventServiceImpl implements CustomEventService {
         @ComponentImport UserManager userManager,
         @ComponentImport AvatarService avatarService,
         @ComponentImport ActiveObjects ao,
+        @ComponentImport TimeZoneManager timeZoneManager,
         JiraDeprecatedService jiraDeprecatedService,
         CalendarService calendarService,
         PermissionService permissionService
@@ -56,6 +61,7 @@ public class CustomEventServiceImpl implements CustomEventService {
         this.avatarService = avatarService;
         this.calendarService = calendarService;
         this.permissionService = permissionService;
+        this.timeZoneManager = timeZoneManager;
     }
 
     @Override
@@ -75,6 +81,20 @@ public class CustomEventServiceImpl implements CustomEventService {
 
         validateAndNormalize(eventDto, calendar, eventType);
 
+        RecurrenceType recurrenceType = null;
+        Integer recurrencePeriod = null;
+        String recurrenceExpression = null;
+        Timestamp recurrenceEndDate = null;
+        Integer recurrenceCount = null;
+
+        if (eventDto.getRecurrenceType() != null) {
+            recurrenceType = RecurrenceType.valueOf(eventDto.getRecurrenceType());
+            recurrencePeriod = eventDto.getRecurrencePeriod();
+            recurrenceExpression = eventDto.getRecurrenceExpression();
+            recurrenceEndDate = eventDto.getRecurrenceEndDate();
+            recurrenceCount = eventDto.getRecurrenceCount();
+        }
+
         Event customEvent = ao.create(
             Event.class,
             new DBParam("TITLE", eventDto.getTitle()),
@@ -84,7 +104,12 @@ public class CustomEventServiceImpl implements CustomEventService {
             new DBParam("EVENT_TYPE_ID", eventType.getID()),
             new DBParam("CREATOR_KEY", user.getKey()),
             new DBParam("PARTICIPANTS", eventDto.getParticipantNames()),
-            new DBParam("ALL_DAY", eventDto.isAllDay())
+            new DBParam("ALL_DAY", eventDto.isAllDay()),
+            new DBParam("RECURRENCE_TYPE", recurrenceType),
+            new DBParam("RECURRENCE_PERIOD", recurrencePeriod),
+            new DBParam("RECURRENCE_EXPRESSION", recurrenceExpression),
+            new DBParam("RECURRENCE_END_DATE", recurrenceEndDate),
+            new DBParam("RECURRENCE_COUNT", recurrenceCount)
         );
 
         return buildEvent(user, customEvent, calendar, true);
@@ -105,9 +130,24 @@ public class CustomEventServiceImpl implements CustomEventService {
 
         validateAndNormalize(eventDto, calendar, eventType);
 
-        //keep type if deleted, but not modified
+        //keep type if deleted, but not modified in event
         if (eventType.isDeleted() && eventDto.getEventTypeId() != event.getEventType().getID()) {
             throw new IllegalArgumentException(i18nResolver.getText("ru.mail.jira.plguins.calendar.customEvents.eventTypeIsDeleted"));
+        }
+
+        //todo: edit only this issue, edit following events
+        RecurrenceType recurrenceType = null;
+        Integer recurrencePeriod = null;
+        String recurrenceExpression = null;
+        Timestamp recurrenceEndDate = null;
+        Integer recurrenceCount = null;
+
+        if (eventDto.getRecurrenceType() != null) {
+            recurrenceType = RecurrenceType.valueOf(eventDto.getRecurrenceType());
+            recurrencePeriod = eventDto.getRecurrencePeriod();
+            recurrenceExpression = eventDto.getRecurrenceExpression();
+            recurrenceEndDate = eventDto.getRecurrenceEndDate();
+            recurrenceCount = eventDto.getRecurrenceCount();
         }
 
         event.setStartDate(eventDto.getStartDate());
@@ -116,6 +156,11 @@ public class CustomEventServiceImpl implements CustomEventService {
         event.setEventType(eventType);
         event.setParticipants(eventDto.getParticipantNames());
         event.setAllDay(eventDto.isAllDay());
+        event.setRecurrenceType(recurrenceType);
+        event.setRecurrencePeriod(recurrencePeriod);
+        event.setRecurrenceExpression(recurrenceExpression);
+        event.setRecurrenceEndDate(recurrenceEndDate);
+        event.setRecurrenceCount(recurrenceCount);
         event.save();
 
         return buildEvent(user, event, calendar, true);
@@ -190,6 +235,15 @@ public class CustomEventServiceImpl implements CustomEventService {
         result.setEditable(hasEditPermission);
         result.setAllDay(event.isAllDay());
 
+        RecurrenceType recurrenceType = event.getRecurrenceType();
+        if (recurrenceType != null) {
+            result.setRecurrenceType(recurrenceType.name());
+            result.setRecurrenceExpression(event.getRecurrenceExpression());
+            result.setRecurrencePeriod(event.getRecurrencePeriod());
+            result.setRecurrenceCount(event.getRecurrenceCount());
+            result.setRecurrenceEndDate(event.getRecurrenceEndDate());
+        }
+
         EventTypeReminder reminder = getEventReminderOption(eventType.getID(), calendar.getID());
         if (reminder != null) {
             result.setReminder(reminder.getReminderType().name());
@@ -247,6 +301,20 @@ public class CustomEventServiceImpl implements CustomEventService {
                 keys.add(participant.getKey());
             }
         }
+
+        String recurrenceTypeString = StringUtils.trimToNull(eventDto.getRecurrenceType());
+        eventDto.setRecurrenceType(recurrenceTypeString);
+
+        if (recurrenceTypeString != null) {
+            RecurrenceType recurrenceType;
+            try {
+                recurrenceType = RecurrenceType.valueOf(recurrenceTypeString);
+            } catch (IllegalArgumentException e) {
+                throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.dialog.error.unknownRecurrenceType"), "recurrenceType");
+            }
+            recurrenceType.getRecurrenceStrategy().validateDto(i18nResolver, eventDto);
+        }
+
         if (keys.size() > 0) {
             eventDto.setParticipantNames(keys.stream().collect(Collectors.joining(", ")));
         } else {
@@ -296,7 +364,7 @@ public class CustomEventServiceImpl implements CustomEventService {
             Query
                 .select()
                 .where(
-                    "(START_DATE >= ? AND (END_DATE <= ? OR END_DATE IS NULL AND START_DATE <= ?) OR (START_DATE <= ? AND END_DATE >= ?) OR (START_DATE <= ? AND END_DATE >= ?)) AND CALENDAR_ID = ?",
+                    "(START_DATE >= ? AND (END_DATE <= ? OR END_DATE IS NULL AND START_DATE <= ?) OR (START_DATE <= ? AND END_DATE >= ?) OR (START_DATE <= ? AND END_DATE >= ?)) AND CALENDAR_ID = ? AND RECURRENCE_TYPE IS NULL",
                     start, end, end, start, start, end, end, calendar.getID()
                 )
         );
@@ -304,7 +372,38 @@ public class CustomEventServiceImpl implements CustomEventService {
         for (Event customEvent : customEvents) {
             result.add(buildEvent(user, customEvent, calendar, canEditEvents));
         }
+        result.addAll(collectRecurringEvents(user, calendar, start, end));
         return result;
+    }
+
+    private List<EventDto> collectRecurringEvents(ApplicationUser user, Calendar calendar, Date start, Date end) {
+        Event[] recurringEvents = ao.find(
+            Event.class,
+            Query
+                .select()
+                .where(
+                    //todo ???
+                    "(START_DATE <= ?) AND CALENDAR_ID = ? AND RECURRENCE_TYPE IS NOT NULL",
+                    end, calendar.getID()
+                )
+        );
+
+        boolean canEditEvents = permissionService.hasEditEventsPermission(user, calendar);
+        ZoneId zoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
+
+        return Arrays
+            .stream(recurringEvents)
+            .flatMap(event -> event
+                .getRecurrenceType()
+                .getRecurrenceStrategy()
+                .getEventsInRange(
+                    event,
+                    start.toInstant().atZone(zoneId), end.toInstant().atZone(zoneId),
+                    new EventContext(calendar, getDateFormatter(user, event.isAllDay()), canEditEvents, parseParticipants(event.getParticipants()), zoneId)
+                )
+                .stream()
+            )
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -491,12 +590,7 @@ public class CustomEventServiceImpl implements CustomEventService {
     }
 
     private EventDto buildEvent(ApplicationUser user, Event event, Calendar calendar, boolean canEditEvents) {
-        DateTimeFormatter dateFormatter;
-        if (event.isAllDay()) {
-            dateFormatter = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE).withZone(UTC_TZ);
-        } else {
-            dateFormatter = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-        }
+        DateTimeFormatter dateFormatter = getDateFormatter(user, event.isAllDay());
 
         EventDto result = new EventDto();
         result.setCalendarId(event.getCalendarId());
@@ -556,5 +650,13 @@ public class CustomEventServiceImpl implements CustomEventService {
         }
 
         return dto;
+    }
+
+    private DateTimeFormatter getDateFormatter(ApplicationUser user, boolean allDay) {
+        if (allDay) {
+            return jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE).withZone(UTC_TZ);
+        } else {
+            return jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+        }
     }
 }

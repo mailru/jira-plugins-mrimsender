@@ -12,7 +12,9 @@ import java.util.Set;
 
 public abstract class AbstractDaysOfWeekRecurrenceStrategy extends AbstractRecurrenceStrategy {
     @Override
-    public List<EventDto> getEventsInRange(Event event, ZonedDateTime since, ZonedDateTime until, ZoneId zoneId) {
+    public List<EventDto> getEventsInRange(Event event, ZonedDateTime since, ZonedDateTime until, EventContext eventContext) {
+        ZoneId zoneId = eventContext.getZoneId();
+
         ZonedDateTime startDate = event.getStartDate().toInstant().atZone(zoneId);
         ZonedDateTime endDate = null;
         if (event.getEndDate() != null) {
@@ -34,7 +36,7 @@ public abstract class AbstractDaysOfWeekRecurrenceStrategy extends AbstractRecur
         while (startDate.isBefore(until) && isBeforeEnd(startDate, recurrenceEndDate) && isCountOk(number, recurrenceCount)) {
             if (daysOfWeek.contains(startDate.getDayOfWeek()) || number == 0) {
                 if (startDate.isAfter(since) || endDate != null && endDate.isAfter(since)) {
-                    result.add(buildEvent(event, number, startDate, endDate));
+                    result.add(buildEvent(event, number, startDate, endDate, eventContext));
                 }
 
                 number++;
@@ -48,6 +50,10 @@ public abstract class AbstractDaysOfWeekRecurrenceStrategy extends AbstractRecur
             startDate = startDate.plusDays(plusDays);
             if (endDate != null) {
                 endDate = endDate.plusDays(plusDays);
+            }
+
+            if (isLimitExceeded(result.size())) {
+                break;
             }
         }
 

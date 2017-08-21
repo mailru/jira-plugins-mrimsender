@@ -1,9 +1,11 @@
 package ru.mail.jira.plugins.calendar.service.recurrent;
 
+import com.atlassian.sal.api.message.I18nResolver;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 import ru.mail.jira.plugins.calendar.model.Event;
 import ru.mail.jira.plugins.calendar.rest.dto.CustomEventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
+import ru.mail.jira.plugins.commons.RestFieldException;
 
 import java.sql.Date;
 import java.time.ZoneId;
@@ -15,7 +17,9 @@ import java.util.TimeZone;
 
 public class CronRecurrenceStrategy extends AbstractRecurrenceStrategy {
     @Override
-    public List<EventDto> getEventsInRange(Event event, ZonedDateTime since, ZonedDateTime until, ZoneId zoneId) {
+    public List<EventDto> getEventsInRange(Event event, ZonedDateTime since, ZonedDateTime until, EventContext eventContext) {
+        ZoneId zoneId = eventContext.getZoneId();
+
         CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(event.getRecurrenceExpression(), TimeZone.getTimeZone(zoneId));
 
         ZonedDateTime startDate = event.getStartDate().toInstant().atZone(zoneId);
@@ -38,7 +42,7 @@ public class CronRecurrenceStrategy extends AbstractRecurrenceStrategy {
 
         while (startDate.isBefore(until) && isBeforeEnd(startDate, recurrenceEndDate) && isCountOk(number, recurrenceCount)) {
             if (startDate.isAfter(since) || endDate != null && endDate.isAfter(since)) {
-                result.add(buildEvent(event, number, startDate, endDate));
+                result.add(buildEvent(event, number, startDate, endDate, eventContext));
             }
 
             number++;
@@ -46,13 +50,23 @@ public class CronRecurrenceStrategy extends AbstractRecurrenceStrategy {
             if (duration != null) {
                 endDate = startDate.plus(duration, ChronoUnit.MILLIS);
             }
+
+            if (isLimitExceeded(result.size())) {
+                break;
+            }
         }
 
         return result;
     }
 
     @Override
-    public void validateDto(CustomEventDto customEventDto) {
-        //todo
+    public void validate(I18nResolver i18nResolver, CustomEventDto customEventDto) {
+        try {
+            new CronSequenceGenerator(customEventDto.getRecurrenceExpression()); //no way to validate otherwise in this version of spring
+        } catch (IllegalArgumentException e) {
+            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.dialog.error.invalidCronExpression", e.getMessage()), "recurrenceExpression");
+        }
+
+        customEventDto.setRecurrencePeriod(null);
     }
 }

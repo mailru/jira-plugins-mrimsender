@@ -79,6 +79,7 @@
         <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
 
         <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
+        <resource type="download" name="recurrence.js" location="ru/mail/jira/plugins/calendar/recurrence.js"/>
         <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
@@ -117,6 +118,7 @@
         <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
 
         <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
+        <resource type="download" name="recurrence.js" location="ru/mail/jira/plugins/calendar/recurrence.js"/>
         <resource type="download" name="calendar-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/calendar-dialog.js"/>
         <resource type="download" name="feed-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/feed-dialog.js"/>
         <resource type="download" name="import-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/import-dialog.js"/>

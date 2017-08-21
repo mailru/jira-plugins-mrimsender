@@ -60,7 +60,8 @@ define('calendar/calendar-view', [
                         }
                     });
                 } else if (event.type === 'CUSTOM') {
-                    var customEvent = new CustomEvent({id: -1 * parseInt(event.id)});
+                    var id = event.recurring ? event.originalId : -1 * parseInt(event.id);
+                    var customEvent = new CustomEvent({id: id});
                     customEvent.fetch({
                         success: function(model) {
                             content.html(JIRA.Templates.Plugins.MailRuCalendar.customEventInfo({

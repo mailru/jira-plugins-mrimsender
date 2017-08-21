@@ -348,7 +348,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     height: 16px;
 }
 
-#calendar-custom-event-dialog label {
+#calendar-custom-event-dialog .field-group > label {
     width: 90px;
     margin-left: -105px;
 }
@@ -1036,4 +1036,17 @@ div.vis-item.vis-box {
 .calendar-quick-filters dd a:active,
 .calendar-quick-filters dd a:link {
     text-decoration: none;
+}
+
+#calendar-custom-event-dialog .dayOfWeek-checkbox {
+    display: inline-block;
+    padding: 0 0 0 15px;
+}
+
+#calendar-custom-event-dialog .dayOfWeek-checkbox:not(:last-child) {
+    margin-right: 8px;
+}
+
+#recurrence-end-count {
+    height: 100%;
 }

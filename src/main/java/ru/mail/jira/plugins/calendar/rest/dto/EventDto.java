@@ -49,6 +49,10 @@ public class EventDto {
     private IssueInfo issueInfo;
     @XmlElement
     private List<UserDto> participants;
+    @XmlElement
+    private boolean recurring;
+    @XmlElement
+    private String originalId;
 
     public enum Type {
         ISSUE,

@@ -1,5 +1,6 @@
 package ru.mail.jira.plugins.calendar.service.recurrent;
 
+import com.atlassian.sal.api.message.I18nResolver;
 import ru.mail.jira.plugins.calendar.model.Event;
 import ru.mail.jira.plugins.calendar.rest.dto.CustomEventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
@@ -18,7 +19,9 @@ public class ChronoUnitRecurrenceStrategy extends AbstractRecurrenceStrategy {
     }
 
     @Override
-    public List<EventDto> getEventsInRange(Event event, ZonedDateTime since, ZonedDateTime until, ZoneId zoneId) {
+    public List<EventDto> getEventsInRange(Event event, ZonedDateTime since, ZonedDateTime until, EventContext eventContext) {
+        ZoneId zoneId = eventContext.getZoneId();
+
         ZonedDateTime startDate = event.getStartDate().toInstant().atZone(zoneId);
         ZonedDateTime endDate = null;
         if (event.getEndDate() != null) {
@@ -37,7 +40,7 @@ public class ChronoUnitRecurrenceStrategy extends AbstractRecurrenceStrategy {
 
         while (startDate.isBefore(until) && isBeforeEnd(startDate, recurrenceEndDate) && isCountOk(number, recurrenceCount)) {
             if (startDate.isAfter(since) || endDate != null && endDate.isAfter(since)) {
-                result.add(buildEvent(event, number, startDate, endDate));
+                result.add(buildEvent(event, number, startDate, endDate, eventContext));
             }
 
             number++;
@@ -45,13 +48,19 @@ public class ChronoUnitRecurrenceStrategy extends AbstractRecurrenceStrategy {
             if (endDate != null) {
                 endDate = startDate.plus(period, chronoUnit);
             }
+
+            if (isLimitExceeded(result.size())) {
+                break;
+            }
         }
 
         return result;
     }
 
     @Override
-    public void validateDto(CustomEventDto customEventDto) {
-        //todo
+    public void validate(I18nResolver i18nResolver, CustomEventDto customEventDto) {
+        validatePeriod(i18nResolver, customEventDto);
+
+        customEventDto.setRecurrenceExpression(null);
     }
 }

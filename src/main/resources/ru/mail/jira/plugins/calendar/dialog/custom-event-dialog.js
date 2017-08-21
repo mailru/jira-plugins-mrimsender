@@ -4,8 +4,9 @@ define('calendar/custom-event-dialog', [
     'underscore',
     'backbone',
     'jira/ajs/select/multi-select',
-    'calendar/reminder'
-], function(require, $, _, Backbone, MultiSelect, Reminder) {
+    'calendar/reminder',
+    'calendar/recurrence'
+], function(require, $, _, Backbone, MultiSelect, Reminder, Recurrence) {
     var UserPickerUtil = JIRA ? JIRA.UserPickerUtil : null; //workaround for jira 7.0
     require(['jira/field/user-picker-util'], function(object) {
         UserPickerUtil = object;
@@ -17,7 +18,8 @@ define('calendar/custom-event-dialog', [
             'click #calendar-custom-event-dialog-cancel': 'hide',
             'change #custom-event-dialog-allDay': '_initTimeFields',
             'change #custom-event-dialog-calendar': '_handleCalendarChange',
-            'change #custom-event-dialog-type': '_handleTypeChange'
+            'change #custom-event-dialog-type': '_handleTypeChange',
+            'change #recurrence-type': '_handleRecurrenceTypeChange'
         },
         render: function() {
             var defaultTime = moment({hour: 12, minute: 0}).format(this.timeFormat);
@@ -29,7 +31,10 @@ define('calendar/custom-event-dialog', [
                 formattedEndDate: moment(this.jsonModel.endDate).format('YYYY-MM-DD'),
                 formattedStartTime: !this.jsonModel.allDay ? moment(this.jsonModel.startDate).format(this.timeFormat) : defaultTime,
                 formattedEndTime: !this.jsonModel.allDay ? moment(this.jsonModel.endDate).format(this.timeFormat) : null,
-                reminderName: this.jsonModel.reminder ? Reminder.names[this.jsonModel.reminder] : Reminder.none
+                reminderName: this.jsonModel.reminder ? Reminder.names[this.jsonModel.reminder] : Reminder.none,
+                recurrenceOptions: Recurrence.options,
+                formattedRecurrenceEndDate: moment(this.jsonModel.recurrenceEndDate).format('YYYY-MM-DD'),
+                formattedRecurrenceEndTime: !this.jsonModel.allDay ? moment(this.jsonModel.recurrenceEndDate).format(this.timeFormat) : null
             }));
             $(document.body).append(this.$el);
             this.setElement($('#calendar-custom-event-dialog').unwrap());
@@ -39,6 +44,14 @@ define('calendar/custom-event-dialog', [
             this.timeFormat = AJS.Meta.get('date-time');
             this.calendars = options.calendars;
             this.jsonModel = this.model.toJSON();
+            this.jsonModel.days = {};
+
+            if (this.jsonModel.recurrenceType === 'DAYS_OF_WEEK') {
+                _.each(this.jsonModel.recurrenceExpression.split(","), $.proxy(function(e) {
+                    this.jsonModel.days[e] = true;
+                }, this));
+                console.log(this.jsonModel)
+            }
 
             this.render();
             this.$okButton = this.$('#calendar-custom-event-dialog-ok');
@@ -51,6 +64,7 @@ define('calendar/custom-event-dialog', [
                 this._initFieldsFromModel();
                 this._initTimeFields();
                 this._initParticipantsPicker();
+                this._handleRecurrenceTypeChange();
             }
 
             this.$('form').submit($.proxy(this._onFormSubmit, this));
@@ -72,6 +86,7 @@ define('calendar/custom-event-dialog', [
         _initDateFields: function() {
             var $startDateField = $('#custom-event-dialog-startDate');
             var $endDateField = $('#custom-event-dialog-endDate');
+            var $recurrenceEndDateField = $('#recurrence-end-date-value');
 
             $startDateField.datePicker({
                 'overrideBrowserDefault': true,
@@ -81,17 +96,24 @@ define('calendar/custom-event-dialog', [
                 'overrideBrowserDefault': true,
                 'dateFormat': 'yy-mm-dd'
             });
+            $recurrenceEndDateField.datePicker({
+                'overrideBrowserDefault': true,
+                'dateFormat': 'yy-mm-dd'
+            });
 
             $startDateField.attr('placeholder', AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.dialog.datePlaceholder'));
-            $endDateField.attr('placeholder', AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.dialog.datePlaceholder'))
+            $endDateField.attr('placeholder', AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.dialog.datePlaceholder'));
+            $recurrenceEndDateField.attr('placeholder', AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.dialog.datePlaceholder'))
         },
         _initTimeFields: function() {
             if ($('#custom-event-dialog-allDay').prop('checked')) {
                 $('#custom-event-dialog-startTime').hide();
                 $('#custom-event-dialog-endTime').hide();
+                $('#recurrence-end-time-value').hide();
             } else {
                 $('#custom-event-dialog-startTime').show();
                 $('#custom-event-dialog-endTime').show();
+                $('#recurrence-end-time-value').show();
             }
         },
         _initParticipantsPicker: function() {
@@ -148,6 +170,36 @@ define('calendar/custom-event-dialog', [
                 escapeMarkup: function(m) { return m; },
                 dropdownCssClass: 'calendar-dialog-source-dropdown'
             });
+        },
+        _handleRecurrenceTypeChange: function() {
+            this.$('.recurrence-field').hide();
+            var value = $('#recurrence-type').val();
+            var periodTypeName = Recurrence.periods[value];
+
+            switch (value) {
+                case 'DAYS_OF_WEEK':
+                    $('#recurrence-days-of-week-group').show();
+                case 'WEEKDAYS':
+                case 'MON_WED_FRI':
+                case 'TUE_THU':
+                case 'DAILY':
+                case 'MONTHLY':
+                case 'YEARLY': {
+                    $('#recurrence-period-group').show();
+                    $('#recurrence-end-group').show();
+                    if (periodTypeName) {
+                        $("#recurrence-period-name").text(periodTypeName);
+                    }
+                    break;
+                }
+                case 'CRON': {
+                    $('#recurrence-cron-group').show();
+                    $('#recurrence-end-group').show();
+                    break;
+                }
+            }
+
+
         },
         _handleCalendarChange: function() {
             $('#custom-event-dialog-type').auiSelect2('data', null);
@@ -248,6 +300,44 @@ define('calendar/custom-event-dialog', [
             var participants = $('#custom-event-dialog-participantNames').val();
             var allDay = $('#custom-event-dialog-allDay').prop('checked');
 
+            var recurrenceType = $('#recurrence-type').val();
+            var recurrencePeriod = null;
+            var recurrenceExpression = null;
+            var recurrenceEndDate = null;
+            var recurrenceCount = null;
+
+            if (recurrenceType) {
+                if (recurrenceType === 'DAYS_OF_WEEK') { //todo
+                    recurrenceExpression = $('.dayOfWeek-checkbox > input:checked')
+                        .map(function () {
+                            return $(this).attr('value');
+                        })
+                        .get()
+                        .join(",");
+                }
+                if (recurrenceType === 'CRON') {
+                    recurrenceExpression = $('#recurrence-cron').val();
+                } else {
+                    recurrencePeriod = $('#recurrence-period').val();
+                }
+
+                var recurrenceEndType = $('#recurrence-end-group').find('input[name=recurrenceEnd]:checked').val();
+                if (recurrenceEndType === 'count') {
+                    recurrenceCount = $('#recurrence-end-count-value').val();
+                }
+                if (recurrenceEndType === 'date') {
+                    var date = $('#recurrence-end-date-value').val();
+                    var time = $('#recurrence-end-time-value').val();
+
+                    if (allDay) {
+                        recurrenceEndDate = moment.utc(date).format('x');
+                    } else {
+                        var parsedTime = moment(time, this.timeFormat);
+                        recurrenceEndDate = moment(date).hours(parsedTime.hours()).minutes(parsedTime.minutes()).format('x');
+                    }
+                }
+            }
+
             var start = null;
             if (startDate) {
                 if (allDay) {
@@ -275,7 +365,12 @@ define('calendar/custom-event-dialog', [
                 endDate: end,
                 eventTypeId: eventTypeId,
                 participantNames: participants ? participants.join(', ') : null,
-                allDay: allDay
+                allDay: allDay,
+                recurrenceType: recurrenceType,
+                recurrencePeriod: recurrencePeriod,
+                recurrenceExpression: recurrenceExpression,
+                recurrenceEndDate: recurrenceEndDate,
+                recurrenceCount: recurrenceCount
             };
         },
         /* Public methods */
