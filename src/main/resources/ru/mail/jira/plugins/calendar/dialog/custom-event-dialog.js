@@ -297,6 +297,16 @@ define('calendar/custom-event-dialog', [
                 return;
             }
 
+            if (serializedData.recurrenceEndDate === 'Invalid date') {
+                this.$('#custom-event-dialog-recurrenceEndDate-error')
+                    .removeClass('hidden')
+                    .text(AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.dialog.error.invalidDate'));
+                this.$('#recurrence-end-date-value').focus();
+                this.$okButton.removeAttr('disabled');
+                this.$cancelButton.removeAttr('disabled');
+                return;
+            }
+
             this.model.save(serializedData, {
                 success: $.proxy(this._ajaxSuccessHandler, this),
                 error: $.proxy(this._ajaxErrorHandler, this)
@@ -314,8 +324,12 @@ define('calendar/custom-event-dialog', [
         },
         _ajaxErrorHandler: function(model, response) {
             var $recurrenceError = $("#custom-event-dialog-recurrence-error");
+            var $error = this.$('#custom-event-dialog-error-panel');
+
             this.$el.find('.error').addClass('hidden');
+            $error.addClass('hidden');
             $recurrenceError.addClass('hidden');
+
             var field = response.getResponseHeader('X-Atlassian-Rest-Exception-Field');
             if (field) {
                 if (field.startsWith("recurrence")) { //todo: show field errors
@@ -330,7 +344,7 @@ define('calendar/custom-event-dialog', [
                         this.$('#custom-event-dialog-' + field).focus();
                 }
             } else {
-                this.$('#custom-event-dialog-error-panel').removeClass('hidden').text(response.responseText);
+                $error.removeClass('hidden').text(response.responseText);
             }
             this.$okButton.removeAttr('disabled');
             this.$cancelButton.removeAttr('disabled');
