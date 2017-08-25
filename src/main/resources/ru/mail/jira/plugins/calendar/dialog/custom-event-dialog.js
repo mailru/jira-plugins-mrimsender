@@ -26,8 +26,6 @@ define('calendar/custom-event-dialog', [
         render: function() {
             var defaultTime = moment({hour: 12, minute: 0}).format(this.timeFormat);
 
-            console.log(this.jsonModel);
-
             this.$el.html(JIRA.Templates.Plugins.MailRuCalendar.CustomEventDialog.dialog({
                 model: this.jsonModel,
                 calendarId: this.model.get('calendarId'),

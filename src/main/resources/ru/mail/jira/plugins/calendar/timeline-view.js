@@ -215,8 +215,6 @@
                                         }
                                     }
 
-                                    console.log(moment(parseInt(data.start)), moment(parseInt(data.end)));
-
                                     if (item.parentId) {
                                         eventId = item.parentId;
                                     }

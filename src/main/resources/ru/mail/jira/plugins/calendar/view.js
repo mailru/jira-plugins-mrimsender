@@ -555,7 +555,6 @@ require(['jquery',
                             calendar: calendar.toJSON()
                         });
                 }, this);
-                console.log(htmlQuickFilters);
                 if (htmlQuickFilters.length === 0)
                     htmlQuickFilters = '<dd>' + AJS.I18n.getText('ru.mail.jira.plugins.calendar.quick.filter.empty') + '</dd>';
                 this.$('#calendar-quick-filters dt').after(htmlQuickFilters);

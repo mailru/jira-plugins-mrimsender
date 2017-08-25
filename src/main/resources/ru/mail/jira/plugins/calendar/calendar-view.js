@@ -101,7 +101,6 @@ define('calendar/calendar-view', [
                                     }
                                 }
                             }
-                            console.log(jsonEvent, event);
 
                             content.html(JIRA.Templates.Plugins.MailRuCalendar.customEventInfo({
                                 event: jsonEvent,
@@ -271,7 +270,6 @@ define('calendar/calendar-view', [
                                 }
                             }
 
-                            console.log(data);
                             this._moveCustomEvent(eventId, event, data, revertFunc);
                         }, this),
                         cancelHandler: function() {
@@ -295,7 +293,6 @@ define('calendar/calendar-view', [
                     if (data.editMode === 'SINGLE_EVENT') {
                         if (data.parentId !== null) {
                             var e = $.extend(event, updatedEvent);
-                            console.log(e);
                             this.$el.fullCalendar('updateEvent', e);
                         }
                     } else {
