@@ -442,6 +442,10 @@ public class CustomEventServiceImpl implements CustomEventService {
     }
 
     private void validateAndNormalize(CustomEventDto eventDto, Event event, Event parent, Calendar calendar, EventType eventType) {
+        if (eventDto.getEditMode() == null) {
+            throw new IllegalArgumentException("editMode is empty");
+        }
+
         Timestamp startDate = eventDto.getStartDate();
         Timestamp endDate = eventDto.getEndDate();
 
