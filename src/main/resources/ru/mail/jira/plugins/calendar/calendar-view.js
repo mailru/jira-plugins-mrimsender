@@ -67,7 +67,7 @@ define('calendar/calendar-view', [
                         }
                     });
                 } else if (event.type === 'CUSTOM') {
-                    var id = event.recurring ? event.originalId : -1 * parseInt(event.id);
+                    var id = event.originalId;
                     var customEvent = new CustomEvent({id: id});
                     customEvent.fetch({
                         success: function(model) {
@@ -194,7 +194,7 @@ define('calendar/calendar-view', [
                     }
                 });
             } else if (event.type === 'CUSTOM') {
-                var eventId = -1 * parseInt(event.id);
+                var eventId = event.originalId;
 
                 var startValue = null;
                 var endValue = null;
@@ -291,10 +291,10 @@ define('calendar/calendar-view', [
                 data: JSON.stringify(data),
                 success: $.proxy(function(updatedEvent) {
                     if (data.editMode === 'SINGLE_EVENT') {
-                        if (data.parentId !== null) {
-                            var e = $.extend(event, updatedEvent);
-                            this.$el.fullCalendar('updateEvent', e);
-                        }
+                        console.log(event, updatedEvent);
+                        var e = $.extend(event, updatedEvent);
+                        console.log(e);
+                        this.$el.fullCalendar('updateEvent', e);
                     } else {
                         this.reload();
                     }

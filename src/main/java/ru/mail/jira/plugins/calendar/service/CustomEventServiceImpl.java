@@ -241,7 +241,11 @@ public class CustomEventServiceImpl implements CustomEventService {
         event.setRecurrenceCount(recurrenceCount);
         event.save();
 
-        return buildEvent(user, event, calendar, true);
+        if (event.getParent() != null && event.getRecurrenceNumber() != null) {
+            return buildRecurrentEvent(event.getParent(), event.getRecurrenceNumber(), event, null, null, calendar, user, true);
+        } else {
+            return buildEvent(user, event, calendar, true);
+        }
     }
 
     @Override
@@ -349,7 +353,11 @@ public class CustomEventServiceImpl implements CustomEventService {
             event.save();
         }
 
-        return buildEvent(user, event, calendar, true);
+        if (event.getParent() != null && event.getRecurrenceNumber() != null) {
+            return buildRecurrentEvent(event.getParent(), event.getRecurrenceNumber(), event, null, null, calendar, user, true);
+        } else {
+            return buildEvent(user, event, calendar, true);
+        }
     }
 
     @Override
@@ -887,6 +895,7 @@ public class CustomEventServiceImpl implements CustomEventService {
         } else {
             result.setId(String.valueOf(-1 * event.getID()));
         }
+        result.setOriginalId(String.valueOf(event.getID()));
         result.setTitle(event.getTitle());
         result.setColor(calendar.getColor());
         result.setAllDay(event.isAllDay());

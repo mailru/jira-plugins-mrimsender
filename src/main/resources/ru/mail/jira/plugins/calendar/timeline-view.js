@@ -170,7 +170,7 @@
                         }, this)
                     });
                 } else if (item.eventType === 'CUSTOM') {
-                    var eventId = -1 * parseInt(item.eventId);
+                    var eventId = item.originalId;
 
                     var data = {
                         allDay: item.allDay,
@@ -191,7 +191,6 @@
                                     data.parentId = item.originalId;
                                     data.recurrenceNumber = item.recurrenceNumber;
                                 }
-                                eventId = item.originalId;
 
                                 if (editMode === 'ALL_EVENTS') {
                                     var originalItem = this.timeline.itemsData.get(item.id);
