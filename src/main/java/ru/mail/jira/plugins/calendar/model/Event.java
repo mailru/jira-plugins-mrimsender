@@ -65,4 +65,12 @@ public interface Event extends Entity {
     void setRecurrenceCount(Integer recurrenceCount);
 
     Integer getRecurrenceCount();
+
+    void setParent(Event event);
+
+    Event getParent();
+
+    void setRecurrenceNumber(Integer recurrenceNumber);
+
+    Integer getRecurrenceNumber();
 }

@@ -1,35 +1,30 @@
-package ru.mail.jira.plugins.calendar.service.recurrent;
+package ru.mail.jira.plugins.calendar.service.recurrent.validation;
 
 import com.atlassian.sal.api.message.I18nResolver;
-import ru.mail.jira.plugins.calendar.model.Event;
+import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.calendar.rest.dto.CustomEventDto;
 import ru.mail.jira.plugins.commons.RestFieldException;
 
 import java.time.DayOfWeek;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class CustomDaysOfWeekRecurrenceStrategy extends AbstractDaysOfWeekRecurrenceStrategy {
+public class CustomDaysOfWeekRecurrenceValidator extends PeriodAwareRecurrenceValidator {
     @Override
-    protected Set<DayOfWeek> getDaysOfWeek(Event event) {
-        return Arrays
-            .stream(event.getRecurrenceExpression().split(","))
-            .map(DayOfWeek::valueOf)
-            .collect(Collectors.toSet());
-    }
-
-    @Override
-    public void validate(I18nResolver i18nResolver, CustomEventDto event) {
+    public void validateDto(I18nResolver i18nResolver, CustomEventDto event) {
         validatePeriod(i18nResolver, event);
 
         Set<DayOfWeek> collect = Arrays
             .stream(event.getRecurrenceExpression().split(","))
+            .map(StringUtils::trimToNull)
+            .filter(Objects::nonNull)
             .map(value -> tryParseDayOfWeek(i18nResolver, value))
             .collect(Collectors.toSet());
 
         if (collect.size() == 0) {
-            throw new RestFieldException("At least one day of week should be selected", "daysOfWeek"); //todo
+            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurrence.error.atLeastOneDayOfWeek"), "recurrenceDaysOfWeek");
         }
 
         event.setRecurrenceExpression(collect.stream().map(DayOfWeek::toString).collect(Collectors.joining(",")));
@@ -39,7 +34,7 @@ public class CustomDaysOfWeekRecurrenceStrategy extends AbstractDaysOfWeekRecurr
         try {
             return DayOfWeek.valueOf(value);
         } catch (IllegalArgumentException e) {
-            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.dialog.error.unknownRecurrenceType"), "recurrenceType");
+            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurrence.error.unknownDayOfWeek", value), "recurrenceDaysOfWeek");
         }
     }
 }

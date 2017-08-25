@@ -16,4 +16,10 @@ public class EventMoveDto {
     private Timestamp end;
     @XmlElement
     private boolean allDay;
+    @XmlElement
+    private Integer parentId;
+    @XmlElement
+    private Integer recurrenceNumber;
+    @XmlElement
+    private EditMode editMode;
 }

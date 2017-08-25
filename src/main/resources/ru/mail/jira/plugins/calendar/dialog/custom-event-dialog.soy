@@ -111,9 +111,31 @@
                         <div id="custom-event-dialog-participantNames-error" class="error hidden"></div>
                     </div>
 
-                    <hr/>
+                    {if $model.recurring}
+                        <div class="field-group">
+                            <label>
+                                {getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.editMode')}
+                            </label>
+                            <div class="radio">
+                                <input class="radio" type="radio" name="editMode" id="custom-event-dialog-onlyThisInstance" value="SINGLE_EVENT" checked>
+                                <label for="custom-event-dialog-onlyThisInstance">{getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.onlyThisInstance')}</label>
+                            </div>
+                            <div class="radio">
+                                <input class="radio" type="radio" name="editMode" id="custom-event-dialog-followingEvents" value="FOLLOWING_EVENTS">
+                                <label for="custom-event-dialog-followingEvents">{getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.followingEvents')}</label>
+                            </div>
+                            <div class="radio">
+                                <input class="radio" type="radio" name="editMode" id="custom-event-dialog-allEvents" value="ALL_EVENTS">
+                                <label for="custom-event-dialog-allEvents">{getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.allEvents')}</label>
+                            </div>
+                        </div>
+                    {/if}
 
-                    <div class="field-group">
+                    <hr class="recurrence-type-field"/>
+
+                    <div id="custom-event-dialog-recurrence-error" class="aui-message aui-message-error hidden"></div>
+
+                    <div class="field-group recurrence-type-field">
                         <label for="custom-event-dialog-recurrenceType" for="recurrence-type">
                             {getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.type')}
                         </label>
@@ -125,14 +147,16 @@
                         </select>
                     </div>
                     <div class="field-group recurrence-field" id="recurrence-period-group">
-                        <label>
+                        <label for="recurrence-period">
                             {getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.period')}
                         </label>
                         <input type="number" min="1" class="text short-field" value="{if $model.recurrencePeriod}{$model.recurrencePeriod}{else}1{/if}" id="recurrence-period"/>
                         {sp}<span id="recurrence-period-name">{getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.period.days')}</span>
                     </div>
                     <div class="field-group recurrence-field" id="recurrence-cron-group">
-                        <label>{getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.cron')}</label>
+                        <label for="recurrence-cron">
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.cron')}
+                        </label>
                         <input type="text" class="text long-medium-field" id="recurrence-cron" {if $model.recurrenceType == 'CRON' and $model.recurrenceExpression}value="{$model.recurrenceExpression}"{/if}/>
                     </div>
                     <div class="field-group recurrence-field" id="recurrence-days-of-week-group">

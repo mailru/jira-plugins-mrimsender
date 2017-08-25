@@ -7,6 +7,7 @@ import lombok.ToString;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.sql.Timestamp;
 import java.util.List;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
@@ -52,7 +53,17 @@ public class EventDto {
     @XmlElement
     private boolean recurring;
     @XmlElement
+    private Integer recurrenceNumber;
+    @XmlElement
     private String originalId;
+    @XmlElement
+    private String parentId;
+    @XmlElement
+    private Timestamp originalStart;
+    @XmlElement
+    private Timestamp originalEnd;
+    @XmlElement
+    private Boolean originalAllDay;
 
     public enum Type {
         ISSUE,

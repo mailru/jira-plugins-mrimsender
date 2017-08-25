@@ -22,9 +22,19 @@ public class CustomEventDto {
     @XmlElement
     private String title;
     @XmlElement
+    private String originalTitle;
+    @XmlElement
     private Timestamp startDate;
     @XmlElement
     private Timestamp endDate;
+    @XmlElement
+    private Timestamp parentStartDate;
+    @XmlElement
+    private Timestamp parentEndDate;
+    @XmlElement
+    private Boolean parentAllDay;
+    @XmlElement
+    private Integer parentId;
     @XmlElement
     private int eventTypeId;
     @XmlElement
@@ -53,4 +63,8 @@ public class CustomEventDto {
     private Timestamp recurrenceEndDate;
     @XmlElement
     private Integer recurrenceCount;
+    @XmlElement
+    private EditMode editMode;
+    @XmlElement
+    private Integer recurrenceNumber;
 }

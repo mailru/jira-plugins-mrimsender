@@ -2,8 +2,9 @@ define('calendar/calendar-view', [
     'jquery',
     'underscore',
     'backbone',
-    'calendar/reminder'
-], function($, _, Backbone, Reminder) {
+    'calendar/reminder',
+    'calendar/edit-type-dialog'
+], function($, _, Backbone, Reminder, EditTypeDialog) {
     return Backbone.View.extend({
         el: '#calendar-full-calendar',
         initialize: function(options) {
@@ -30,7 +31,13 @@ define('calendar/calendar-view', [
                         type: event.eventType,
                         id: event.eventId,
                         eventId: event.eventId,
-                        calendarId: event.calendarId
+                        calendarId: event.calendarId,
+                        recurring: event.recurring,
+                        recurrenceNumber: event.recurrenceNumber,
+                        originalId: event.originalId,
+                        allDay: event.allDay,
+                        start: event.start,
+                        end: event.end
                     }
                 } else {
                     event = self.$el.fullCalendar('clientEvents', $(trigger).data('event-id'))[0];
@@ -64,19 +71,51 @@ define('calendar/calendar-view', [
                     var customEvent = new CustomEvent({id: id});
                     customEvent.fetch({
                         success: function(model) {
+                            var jsonEvent = model.toJSON();
+                            if (event.recurring) {
+                                jsonEvent.recurring = {
+                                    recurring: event.recurring,
+                                    number: event.recurrenceNumber,
+                                    parentId: jsonEvent.id
+                                };
+
+                                if (!jsonEvent.parentId) {
+                                    jsonEvent.parentStartDate = jsonEvent.startDate;
+                                    jsonEvent.parentEndDate = jsonEvent.endDate;
+                                    jsonEvent.parentAllDay = jsonEvent.allDay;
+
+                                    if (event.allDay) {
+                                        jsonEvent.startDate = moment(event.start).format('YYYY-MM-DD');
+                                        if (event.end) {
+                                            jsonEvent.endDate = moment(event.end).subtract(1, 'days').format('YYYY-MM-DD');
+                                        } else {
+                                            jsonEvent.endDate = null;
+                                        }
+                                    } else {
+                                        jsonEvent.startDate = parseInt(moment(event.start).format('x'));
+                                        if (event.end) {
+                                            jsonEvent.endDate = parseInt(moment(event.end).format('x'));
+                                        } else {
+                                            jsonEvent.endDate = null;
+                                        }
+                                    }
+                                }
+                            }
+                            console.log(jsonEvent, event);
+
                             content.html(JIRA.Templates.Plugins.MailRuCalendar.customEventInfo({
-                                event: model.toJSON(),
+                                event: jsonEvent,
                                 contextPath: AJS.contextPath(),
-                                startDateFormatted: moment(model.get('startDate')).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
-                                endDateFormatted: moment(model.get('endDate')).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
+                                startDateFormatted: moment(jsonEvent.startDate).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
+                                endDateFormatted: moment(jsonEvent.endDate).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
                                 editDisabled: self.disableCustomEventEditing,
-                                reminderName: model.get('reminder') ? Reminder.names[model.get('reminder')] : null
+                                reminderName: jsonEvent.reminder ? Reminder.names[jsonEvent.reminder] : null
                             })).addClass('calendar-event-info-popup');
                             showPopup();
 
                             content.find('.edit-button').click(function(e) {
                                 e.preventDefault();
-                                self.trigger('eventEditTriggered', model);
+                                self.trigger('eventEditTriggered', model, jsonEvent);
                                 self.eventDialog.hide();
                             });
 
@@ -130,7 +169,13 @@ define('calendar/calendar-view', [
         _canButtonVisible: function(name) {
             return this.customsButtonOptions[name] == undefined || this.customsButtonOptions[name].visible !== false;
         },
-        _eventMove: function(event, duration, revertFunc) {
+        _eventDrop: function(event, duration, revertFunc) {
+            this._eventMove(event, duration, revertFunc, false);
+        },
+        _eventResize: function(event, duration, revertFunc) {
+            this._eventMove(event, duration, revertFunc, true);
+        },
+        _eventMove: function(event, delta, revertFunc, isResize) {
             var start = event.start.toDate();
             var end = event.end && event.end.toDate();
             if (event.type === 'ISSUE') {
@@ -176,24 +221,95 @@ define('calendar/calendar-view', [
                     }
                 }
 
-                $.ajax({
-                    type: 'PUT',
-                    url: this.contextPath + '/rest/mailrucalendar/1.0/customEvent/' + eventId + '/move',
-                    contentType: 'application/json; charset=utf-8',
-                    data: JSON.stringify({
-                        allDay: allDay,
-                        start: startValue,
-                        end: endValue
-                    }),
-                    error: function (xhr) {
-                        var msg = 'Error while trying to drag event. Event id => ' + eventId;
-                        if (xhr.responseText)
-                            msg += xhr.responseText;
-                        alert(msg);
-                        revertFunc();
-                    }
-                });
+                var data = {
+                    allDay: allDay,
+                    start: startValue,
+                    end: endValue,
+                    editMode: 'SINGLE_EVENT',
+                    parentId: null,
+                    recurrenceNumber: null
+                };
+
+                if (event.recurring) {
+                    var typeDialog = new EditTypeDialog({
+                        header: "Edit type",
+                        okHandler: $.proxy(function(editMode) {
+                            data.editMode = editMode;
+
+                            if (editMode === 'SINGLE_EVENT' && !event.parentId) {
+                                data.parentId = event.originalId;
+                                data.recurrenceNumber = event.recurrenceNumber;
+                            }
+                            eventId = event.originalId;
+
+                            if (editMode === 'ALL_EVENTS') {
+                                var startMoment = moment(event.originalStart);
+                                if (isResize) {
+                                    data.start = startMoment.format('x');
+                                    if (endValue) {
+                                        data.end = moment(event.originalEnd || event.originalStart).add(delta).format('x');
+                                    } else {
+                                        data.end = null;
+                                    }
+                                } else {
+                                    if (data.allDay && !event.originalAllDay) {
+                                        startMoment = moment.utc(startMoment.format('YYYY-MM-DD')).startOf('day');
+                                    } else if (!data.allDay && event.originalAllDay) {
+                                        startMoment = moment(startMoment.format('YYYY-MM-DD')).local().startOf('day');
+                                    }
+                                    data.start = startMoment.add(delta).format('x');
+                                    if (endValue) {
+                                        var diff = moment.utc(parseInt(endValue)).diff(moment.utc(parseInt(startValue)), 'ms');
+                                        data.end = startMoment.clone().add(diff, 'ms').format('x');
+                                    } else {
+                                        data.end = null;
+                                    }
+                                }
+
+                                if (event.parentId) {
+                                    eventId = event.parentId;
+                                }
+                            }
+
+                            console.log(data);
+                            this._moveCustomEvent(eventId, event, data, revertFunc);
+                        }, this),
+                        cancelHandler: function() {
+                            revertFunc();
+                        }
+                    });
+
+                    typeDialog.show();
+                } else {
+                    this._moveCustomEvent(eventId, event, data, revertFunc);
+                }
             }
+        },
+        _moveCustomEvent: function(eventId, event, data, revertFunc) {
+            $.ajax({
+                type: 'PUT',
+                url: this.contextPath + '/rest/mailrucalendar/1.0/customEvent/' + eventId + '/move',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(data),
+                success: $.proxy(function(updatedEvent) {
+                    if (data.editMode === 'SINGLE_EVENT') {
+                        if (data.parentId !== null) {
+                            var e = $.extend(event, updatedEvent);
+                            console.log(e);
+                            this.$el.fullCalendar('updateEvent', e);
+                        }
+                    } else {
+                        this.reload();
+                    }
+                }, this),
+                error: function (xhr) {
+                    var msg = 'Error while trying to drag event. Event id => ' + eventId;
+                    if (xhr.responseText)
+                        msg += xhr.responseText;
+                    alert(msg);
+                    revertFunc();
+                }
+            });
         },
         updateButtonsVisibility: function(view) {
             if (this._canButtonVisible('zoom-out') && this._canButtonVisible('zoom-in') && view.name === 'timeline')
@@ -273,7 +389,7 @@ define('calendar/calendar-view', [
                 lazyFetching: true,
                 editable: true,
                 draggable: true,
-                firstDay: 1,
+                firstDay: AJS.Meta.get('mailrucal-use-iso8601') ? 1 : 0,
                 allDayText: AJS.I18n.getText('ru.mail.jira.plugins.calendar.allDay'),
                 monthNames: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.January'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.February'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.March'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.April'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.May'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.June'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.July'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.August'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.September'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.October'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.November'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.December')],
                 monthNamesShort: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jan'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Feb'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Mar'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Apr'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.May'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jun'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jul'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Aug'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sep'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Oct'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Nov'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Dec')],
@@ -309,8 +425,27 @@ define('calendar/calendar-view', [
                             }
                             $element.find('.fc-title').prepend(AJS.escapeHTML(formattedParticipants) + ': ');
                         }
-                        $element.find('.fc-content')
-                            .prepend('<span class="calendar-event-issue-type custom-type-icon custom-type-icon-' + event.issueTypeImgUrl + '-cal" /> ');
+
+                        var iconContent = '<span class="calendar-event-issue-type custom-type-icon custom-type-icon-' + event.issueTypeImgUrl + '-cal" />';
+
+                        if (event.recurring) {
+                            var editedIcon = '';
+
+                            if (event.parentId) {
+                                editedIcon =
+                                    '<span class="recurring-edited-icon-bg" style="background-color: ' + event.color + '"></span>' +
+                                    '<span class="aui-icon aui-icon-small aui-iconfont-edit recurring-edited-icon"></span>';
+                            }
+
+                            iconContent =
+                                '<span>' +
+                                    iconContent + editedIcon +
+                                    '<span class="recurring-icon-bg" style="background-color: ' + event.color + '"></span>' +
+                                    '<span class="aui-icon aui-icon-small aui-iconfont-build recurring-icon"></span>' +
+                                '</span>';
+                        }
+
+                        $element.find('.fc-content').prepend(iconContent + ' ');
                     }
                 },
                 dayClick: $.proxy(function(date, jsEvent, view) {
@@ -346,8 +481,8 @@ define('calendar/calendar-view', [
                 eventDragStart: function(event) {
                     self.eventDialog && self.eventDialog.hide();
                 },
-                eventDrop: $.proxy(this._eventMove, this),
-                eventResize: $.proxy(this._eventMove, this)
+                eventDrop: $.proxy(this._eventDrop, this),
+                eventResize: $.proxy(this._eventResize, this)
             });
         },
         addEventSource: function(calendarId, silent) {
@@ -396,6 +531,25 @@ define('calendar/calendar-view', [
         },
         reload: function() {
             this.$el.fullCalendar('refetchEvents');
+        },
+        addEvent: function(event) {
+            this.$el.fullCalendar('renderEvent', event);
+        },
+        updateEvent: function(event) {
+            var found = this.$el.fullCalendar('clientEvents', event.id);
+            if (found && found.length === 1) {
+                var originalEvent = found[0];
+
+                if (originalEvent.recurrenceType) {
+                    this.reload();
+                    return;
+                }
+
+                this.$el.fullCalendar('updateEvent', _.extend(originalEvent, event));
+            } else {
+                //assume it was recurrent event
+                this.reload();
+            }
         }
     });
 });
