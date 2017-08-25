@@ -8,7 +8,7 @@ public class DaysOfWeekDateGenerator extends DateGenerator {
     private final Set<DayOfWeek> daysOfWeek;
     private final int period;
 
-    protected DaysOfWeekDateGenerator(Set<DayOfWeek> daysOfWeek, int period, ZonedDateTime startDate) {
+    public DaysOfWeekDateGenerator(Set<DayOfWeek> daysOfWeek, int period, ZonedDateTime startDate) {
         super(startDate);
         this.daysOfWeek = daysOfWeek;
         this.period = period-1;

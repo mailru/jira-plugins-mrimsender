@@ -22,11 +22,14 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.model.*;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.*;
+import ru.mail.jira.plugins.calendar.service.recurrent.generation.ChronoUnitDateGenerator;
+import ru.mail.jira.plugins.calendar.service.recurrent.generation.CronDateGenerator;
 import ru.mail.jira.plugins.calendar.service.recurrent.generation.DateGenerator;
-import ru.mail.jira.plugins.calendar.service.recurrent.generation.DateGeneratorFactory;
+import ru.mail.jira.plugins.calendar.service.recurrent.generation.DaysOfWeekDateGenerator;
 import ru.mail.jira.plugins.commons.RestFieldException;
 
 import java.sql.*;
+import java.time.DayOfWeek;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -465,7 +468,8 @@ public class CustomEventServiceImpl implements CustomEventService {
             if (parent != null) {
                 eventDto.setRecurrenceType(null);
 
-                if (eventDto.getStartDate().after(parent.getRecurrenceEndDate())) {
+                Timestamp recurrenceEndDate = parent.getRecurrenceEndDate();
+                if (recurrenceEndDate != null && eventDto.getStartDate().after(recurrenceEndDate)) {
                     throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurrence.error.startDateAfterRecurrenceEnd"), "startDate");
                 }
             }
@@ -609,7 +613,7 @@ public class CustomEventServiceImpl implements CustomEventService {
     }
 
     private List<EventDto> generateRecurringEvents(Event event, Calendar calendar, ApplicationUser user, boolean canEditEvents, ZonedDateTime since, ZonedDateTime until, ZoneId zoneId) {
-        DateGenerator dateGenerator = DateGeneratorFactory.getDateGenerator(event, zoneId);
+        DateGenerator dateGenerator = getDateGenerator(event, zoneId);
 
         Map<Integer, Event> children = Arrays
             .stream(getChildEvents(Date.from(since.toInstant()), Date.from(until.toInstant()), event))
@@ -1015,5 +1019,76 @@ public class CustomEventServiceImpl implements CustomEventService {
             return true;
         }
         return false;
+    }
+
+    private DateGenerator getDateGenerator(Event event, ZoneId zoneId) {
+        ZonedDateTime startDate = event.getStartDate().toInstant().atZone(zoneId);
+        switch (event.getRecurrenceType()) {
+            case DAILY:
+                return new ChronoUnitDateGenerator(
+                    ChronoUnit.DAYS,
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case WEEKDAYS:
+                return new DaysOfWeekDateGenerator(
+                    ImmutableSet.of(
+                        DayOfWeek.MONDAY,
+                        DayOfWeek.TUESDAY,
+                        DayOfWeek.WEDNESDAY,
+                        DayOfWeek.THURSDAY,
+                        DayOfWeek.FRIDAY
+                    ),
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case MON_WED_FRI:
+                return new DaysOfWeekDateGenerator(
+                    ImmutableSet.of(
+                        DayOfWeek.MONDAY,
+                        DayOfWeek.WEDNESDAY,
+                        DayOfWeek.FRIDAY
+                    ),
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case TUE_THU:
+                return new DaysOfWeekDateGenerator(
+                    ImmutableSet.of(
+                        DayOfWeek.TUESDAY,
+                        DayOfWeek.THURSDAY
+                    ),
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case DAYS_OF_WEEK:
+                return new DaysOfWeekDateGenerator(
+                    Arrays
+                        .stream(event.getRecurrenceExpression().split(","))
+                        .map(DayOfWeek::valueOf)
+                        .collect(Collectors.toSet()),
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case MONTHLY:
+                return new ChronoUnitDateGenerator(
+                    ChronoUnit.MONTHS,
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case YEARLY:
+                return new ChronoUnitDateGenerator(
+                    ChronoUnit.YEARS,
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case CRON:
+                return new CronDateGenerator(
+                    event.getRecurrenceExpression(),
+                    zoneId,
+                    startDate
+                );
+        }
+        return null;
     }
 }
