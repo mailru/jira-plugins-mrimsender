@@ -118,7 +118,7 @@ public class CustomEventServiceImpl implements CustomEventService {
             ao.deleteWithSQL(Event.class, "PARENT_ID = ? AND RECURRENCE_NUMBER = ?", parent.getID(), eventDto.getRecurrenceNumber());
         }
 
-        Event customEvent = ao.create(
+        Event event = ao.create(
             Event.class,
             new DBParam("TITLE", eventDto.getTitle()),
             new DBParam("CALENDAR_ID", eventDto.getCalendarId()),
@@ -137,7 +137,11 @@ public class CustomEventServiceImpl implements CustomEventService {
             new DBParam("RECURRENCE_NUMBER", eventDto.getRecurrenceNumber())
         );
 
-        return buildEvent(user, customEvent, calendar, true);
+        if (eventDto.getParentId() != null) {
+            return buildRecurrentEvent(parent, eventDto.getRecurrenceNumber(), event, null, null, calendar, user, true);
+        } else {
+            return buildEvent(user, event, calendar, true);
+        }
     }
 
     @Override

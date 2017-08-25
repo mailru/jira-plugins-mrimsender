@@ -365,7 +365,7 @@ define('calendar/custom-event-dialog', [
             var recurrenceEndDate = null;
             var recurrenceCount = null;
 
-            if (editMode === 'SINGLE_EVENT') {
+            if (editMode === 'SINGLE_EVENT' && !this.jsonModel.parentId) {
                 recurrenceType = null;
                 recurrenceNumber = this.jsonModel.recurring.number;
                 id = null;

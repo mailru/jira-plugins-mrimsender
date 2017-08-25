@@ -545,7 +545,8 @@ define('calendar/calendar-view', [
                     return;
                 }
 
-                this.$el.fullCalendar('updateEvent', _.extend(originalEvent, event));
+                var extend = $.extend(originalEvent, event);
+                this.$el.fullCalendar('updateEvent', extend);
             } else {
                 //assume it was recurrent event
                 this.reload();
