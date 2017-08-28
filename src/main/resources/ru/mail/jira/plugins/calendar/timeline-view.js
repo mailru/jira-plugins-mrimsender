@@ -201,7 +201,7 @@
                                     if (item.allDay) {
                                         data.start = moment.utc(start.format('YYYY-MM-DD')).format('x')
                                     } else {
-                                        data.start = moment.format('x');
+                                        data.start = start.format('x');
                                     }
 
                                     if (data.end) {
@@ -210,7 +210,7 @@
                                         if (item.allDay) {
                                             data.end = moment.utc(end.format('YYYY-MM-DD')).format('x')
                                         } else {
-                                            data.end = moment.format('x');
+                                            data.end = end.format('x');
                                         }
                                     }
 
