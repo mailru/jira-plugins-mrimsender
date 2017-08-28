@@ -166,7 +166,7 @@ define('calendar/custom-event-dialog', [
             });
         },
         _onEditModeChange: function() {
-            if (!this.jsonModel.recurring) {
+            if (!this.jsonModel.recurrenceType) {
                 return;
             }
 
@@ -185,12 +185,12 @@ define('calendar/custom-event-dialog', [
                 allDay = this.jsonModel.allDay;
             } else if (editMode === 'ALL_EVENTS') {
                 $('.recurrence-type-field').show();
-                startMoment = moment(this.jsonModel.parentStartDate);
-                endMoment = this.jsonModel.parentEndDate || null;
+                startMoment = moment(this.jsonModel.originalStartDate);
+                endMoment = this.jsonModel.originalEndDate || null;
                 if (endMoment) {
                     endMoment = moment(endMoment);
                 }
-                allDay = this.jsonModel.parentAllDay;
+                allDay = this.jsonModel.originalAllDay;
                 this._handleRecurrenceTypeChange();
             }
 
@@ -379,7 +379,7 @@ define('calendar/custom-event-dialog', [
 
             if (editMode === 'SINGLE_EVENT' && !this.jsonModel.parentId) {
                 recurrenceType = null;
-                recurrenceNumber = this.jsonModel.recurring.number;
+                recurrenceNumber = this.jsonModel.recurrenceNumber;
                 id = null;
                 parentId = this.jsonModel.id;
             }

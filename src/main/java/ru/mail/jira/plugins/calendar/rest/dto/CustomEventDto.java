@@ -28,11 +28,11 @@ public class CustomEventDto {
     @XmlElement
     private Timestamp endDate;
     @XmlElement
-    private Timestamp parentStartDate;
+    private Timestamp originalStartDate;
     @XmlElement
-    private Timestamp parentEndDate;
+    private Timestamp originalEndDate;
     @XmlElement
-    private Boolean parentAllDay;
+    private Boolean originalAllDay;
     @XmlElement
     private Integer parentId;
     @XmlElement

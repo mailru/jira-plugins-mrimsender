@@ -319,6 +319,10 @@ public class CustomEventServiceImpl implements CustomEventService {
 
             Event originalEvent = event;
 
+            if (originalEvent.getParent() != null) {
+                originalEvent = originalEvent.getParent();
+            }
+
             event = ao.create(
                 Event.class,
                 new DBParam("TITLE", event.getTitle()),
@@ -390,9 +394,9 @@ public class CustomEventServiceImpl implements CustomEventService {
             Event parent = event.getParent();
             recurringEvent = event.getParent();
 
-            result.setParentStartDate(parent.getStartDate());
-            result.setParentEndDate(parent.getEndDate());
-            result.setParentAllDay(parent.isAllDay());
+            result.setOriginalStartDate(parent.getStartDate());
+            result.setOriginalEndDate(parent.getEndDate());
+            result.setOriginalAllDay(parent.isAllDay());
             result.setParentId(parent.getID());
         }
 

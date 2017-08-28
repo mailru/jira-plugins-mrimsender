@@ -74,17 +74,9 @@ define('calendar/calendar-view', [
                         success: function(model) {
                             var jsonEvent = model.toJSON();
                             if (event.recurring) {
-                                jsonEvent.recurring = {
-                                    recurring: event.recurring,
-                                    number: event.recurrenceNumber,
-                                    parentId: jsonEvent.id
-                                };
+                                jsonEvent.recurrenceNumber = event.recurrenceNumber;
 
                                 if (!jsonEvent.parentId) {
-                                    jsonEvent.parentStartDate = jsonEvent.startDate;
-                                    jsonEvent.parentEndDate = jsonEvent.endDate;
-                                    jsonEvent.parentAllDay = jsonEvent.allDay;
-
                                     if (event.allDay) {
                                         jsonEvent.startDate = moment(event.start).format('YYYY-MM-DD');
                                         if (event.end) {
@@ -108,12 +100,12 @@ define('calendar/calendar-view', [
                                 contextPath: AJS.contextPath(),
                                 startDateFormatted: moment(jsonEvent.startDate).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
                                 endDateFormatted: moment(jsonEvent.endDate).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
-                                parentStartDateFormatted: moment(jsonEvent.parentStartDate).format(jsonEvent.parentAllDay ? self.dateFormat : self.dateTimeFormat),
+                                parentStartDateFormatted: moment(jsonEvent.originalStartDate).format(jsonEvent.originalAllDay ? self.dateFormat : self.dateTimeFormat),
                                 editDisabled: self.disableCustomEventEditing,
                                 reminderName: jsonEvent.reminder ? Reminder.names[jsonEvent.reminder] : null,
                                 recurrenceTypeName: Recurring.names[jsonEvent.recurrenceType],
                                 periodName: Recurring.periodNames[Recurring.periods[jsonEvent.recurrenceType]],
-                                recurrenceEndDateFormatted: moment(jsonEvent.recurrenceEndDate).format(jsonEvent.parentAllDay ? self.dateFormat : self.dateTimeFormat),
+                                recurrenceEndDateFormatted: moment(jsonEvent.recurrenceEndDate).format(jsonEvent.originalAllDay ? self.dateFormat : self.dateTimeFormat),
                                 daysOfWeek: jsonEvent.recurrenceType === 'DAYS_OF_WEEK' ?
                                     jsonEvent.recurrenceExpression.split(',').map(function(dayOfWeek) {
                                         return Recurring.daysOfWeek[dayOfWeek];
@@ -300,10 +292,7 @@ define('calendar/calendar-view', [
                 data: JSON.stringify(data),
                 success: $.proxy(function(updatedEvent) {
                     if (data.editMode === 'SINGLE_EVENT') {
-                        console.log(event, updatedEvent);
-                        var e = $.extend(event, updatedEvent);
-                        console.log(e);
-                        this.$el.fullCalendar('updateEvent', e);
+                        this.$el.fullCalendar('updateEvent', $.extend(event, updatedEvent));
                     } else {
                         this.reload();
                     }
