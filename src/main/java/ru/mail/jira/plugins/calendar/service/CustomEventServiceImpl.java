@@ -486,13 +486,13 @@ public class CustomEventServiceImpl implements CustomEventService {
 
                 Timestamp recurrenceEndDate = parent.getRecurrenceEndDate();
                 if (recurrenceEndDate != null && eventDto.getStartDate().after(recurrenceEndDate)) {
-                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurrence.error.startDateAfterRecurrenceEnd"), "startDate");
+                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.startDateAfterRecurrenceEnd"), "startDate");
                 }
             }
         } else if (editMode == EditMode.FOLLOWING_EVENTS) {
             Event e = parent != null ? parent : event;
             if (!e.getStartDate().before(eventDto.getStartDate())) {
-                throw new RestFieldException("ru.mail.jira.plugins.calendar.customEvents.recurrence.error.startDateBeforeOldStart", "startDate");
+                throw new RestFieldException("ru.mail.jira.plugins.calendar.customEvents.recurring.error.startDateBeforeOldStart", "startDate");
             }
         }
 
@@ -521,18 +521,18 @@ public class CustomEventServiceImpl implements CustomEventService {
             Timestamp recurrenceEndDate = eventDto.getRecurrenceEndDate();
 
             if (recurrenceCount != null && recurrenceEndDate != null) {
-                throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurrence.error.countAndEndDate"), "recurrenceEnd");
+                throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.countAndEndDate"), "recurrenceEnd");
             }
 
             if (recurrenceCount != null) {
                 if (recurrenceCount <= 0) {
-                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurrence.error.countPositive"), "recurrenceCount");
+                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.countPositive"), "recurrenceCount");
                 }
             }
 
             if (recurrenceEndDate != null) {
                 if (recurrenceEndDate.before(eventDto.getStartDate())) {
-                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurrence.error.endDateBeforeStart"), "recurrenceEndDate");
+                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.endDateBeforeStart"), "recurrenceEndDate");
                 }
             }
             recurrenceType.getValidator().validateDto(i18nResolver, eventDto);
@@ -605,7 +605,6 @@ public class CustomEventServiceImpl implements CustomEventService {
             Query
                 .select()
                 .where(
-                    //todo ???
                     "(START_DATE <= ?) AND CALENDAR_ID = ? AND RECURRENCE_TYPE IS NOT NULL",
                     end, calendar.getID()
                 )

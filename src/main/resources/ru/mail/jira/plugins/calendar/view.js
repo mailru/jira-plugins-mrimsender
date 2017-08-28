@@ -466,7 +466,7 @@ require(['jquery',
                 var text = AJS.I18n.getText('ru.mail.jira.plguins.calendar.customEvents.confirmDelete', '<b>' + AJS.escapeHtml(model.get('title')) + '</b>');
 
                 if (model.get('parentId')) {
-                    text = AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.deleteInstance') + '<br/>' + text;
+                    text = AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.deleteInstance') + '<br/>' + text;
                 }
 
                 var confirmDialog = new ConfirmDialog({

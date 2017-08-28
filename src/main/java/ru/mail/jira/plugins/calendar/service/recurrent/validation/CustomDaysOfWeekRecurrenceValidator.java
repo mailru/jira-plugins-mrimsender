@@ -24,7 +24,7 @@ public class CustomDaysOfWeekRecurrenceValidator extends PeriodAwareRecurrenceVa
             .collect(Collectors.toSet());
 
         if (collect.size() == 0) {
-            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurrence.error.atLeastOneDayOfWeek"), "recurrenceDaysOfWeek");
+            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.atLeastOneDayOfWeek"), "recurrenceDaysOfWeek");
         }
 
         event.setRecurrenceExpression(collect.stream().map(DayOfWeek::toString).collect(Collectors.joining(",")));
@@ -34,7 +34,7 @@ public class CustomDaysOfWeekRecurrenceValidator extends PeriodAwareRecurrenceVa
         try {
             return DayOfWeek.valueOf(value);
         } catch (IllegalArgumentException e) {
-            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurrence.error.unknownDayOfWeek", value), "recurrenceDaysOfWeek");
+            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.unknownDayOfWeek", value), "recurrenceDaysOfWeek");
         }
     }
 }

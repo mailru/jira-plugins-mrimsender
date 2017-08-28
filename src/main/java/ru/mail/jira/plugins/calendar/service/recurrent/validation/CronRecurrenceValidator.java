@@ -11,7 +11,7 @@ public class CronRecurrenceValidator implements RecurrenceValidator {
         try {
             new CronSequenceGenerator(customEventDto.getRecurrenceExpression()); //no way to validate otherwise in this version of spring
         } catch (IllegalArgumentException e) {
-            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurrence.error.invalidCronExpression", e.getMessage()), "recurrenceExpression");
+            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.invalidCronExpression", e.getMessage()), "recurrenceExpression");
         }
 
         customEventDto.setRecurrencePeriod(null);

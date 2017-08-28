@@ -1,14 +1,14 @@
 define('calendar/recurrence', ['underscore'], function(_) {
     var
         names = {
-            'DAILY': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.DAILY'),
-            'WEEKDAYS': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.WEEKDAYS'),
-            'MON_WED_FRI': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.MON_WED_FRI'),
-            'TUE_THU': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.TUE_THU'),
-            'DAYS_OF_WEEK': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.DAYS_OF_WEEK'),
-            'MONTHLY': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.MONTHLY'),
-            'YEARLY': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.YEARLY'),
-            'CRON': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.CRON')
+            'DAILY': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.DAILY'),
+            'WEEKDAYS': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.WEEKDAYS'),
+            'MON_WED_FRI': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.MON_WED_FRI'),
+            'TUE_THU': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.TUE_THU'),
+            'DAYS_OF_WEEK': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.DAYS_OF_WEEK'),
+            'MONTHLY': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.MONTHLY'),
+            'YEARLY': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.YEARLY'),
+            'CRON': AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.CRON')
         },
         periods = {
             'DAILY': 'days',
@@ -55,10 +55,10 @@ define('calendar/recurrence', ['underscore'], function(_) {
         options: options,
         none: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.reminder.none'),
         periodNames: {
-            days: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.period.days'),
-            weeks: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.period.weeks'),
-            months: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.period.months'),
-            years: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurrence.period.years')
+            days: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.period.days'),
+            weeks: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.period.weeks'),
+            months: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.period.months'),
+            years: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.period.years')
         },
         periods: periods
     }
