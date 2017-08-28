@@ -11,6 +11,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import com.atlassian.scheduler.cron.CronSyntaxException;
 import com.google.common.collect.ImmutableSet;
 import net.java.ao.DBParam;
 import net.java.ao.Query;
@@ -398,6 +399,10 @@ public class CustomEventServiceImpl implements CustomEventService {
             result.setOriginalEndDate(parent.getEndDate());
             result.setOriginalAllDay(parent.isAllDay());
             result.setParentId(parent.getID());
+        } else {
+            result.setOriginalStartDate(event.getStartDate());
+            result.setOriginalEndDate(event.getEndDate());
+            result.setOriginalAllDay(event.isAllDay());
         }
 
         result.setId(event.getID());
@@ -1103,11 +1108,18 @@ public class CustomEventServiceImpl implements CustomEventService {
                     startDate
                 );
             case CRON:
-                return new CronDateGenerator(
-                    event.getRecurrenceExpression(),
-                    zoneId,
-                    startDate
-                );
+                try {
+                    return new CronDateGenerator(
+                        event.getRecurrenceExpression(),
+                        zoneId,
+                        startDate
+                    );
+                } catch (CronSyntaxException e) {
+                    logger.error(
+                        "unable to create cron date generator for event {} with expression {}",
+                        event.getID(), event.getRecurrenceExpression(), e
+                    );
+                }
         }
         return null;
     }

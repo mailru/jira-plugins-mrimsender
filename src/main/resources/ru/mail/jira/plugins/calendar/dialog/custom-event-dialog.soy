@@ -157,7 +157,10 @@
                         <label for="recurrence-cron">
                             {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.cron')}
                         </label>
-                        <input type="text" class="text long-medium-field" id="recurrence-cron" {if $model.recurrenceType == 'CRON' and $model.recurrenceExpression}value="{$model.recurrenceExpression}"{/if}/>
+                        <input type="text" class="text long-medium-field" style="width: 195px;" id="recurrence-cron" {if $model.recurrenceType == 'CRON' and $model.recurrenceExpression}value="{$model.recurrenceExpression}"{/if}/>
+                        <a style="margin: 5px; float: right;" class="help-lnk" href="http://www.quartz-scheduler.org/documentation/quartz-2.2.x/tutorials/tutorial-lesson-06.html" title="Get external help about Cron Expressions" target="_blank">
+                            <span class="aui-icon aui-icon-small aui-iconfont-help">$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.cronExpression.help" )</span>
+                        </a>
                     </div>
                     <div class="field-group recurrence-field" id="recurrence-days-of-week-group">
                         <label>
