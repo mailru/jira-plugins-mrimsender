@@ -3,8 +3,9 @@ define('calendar/calendar-view', [
     'underscore',
     'backbone',
     'calendar/reminder',
-    'calendar/edit-type-dialog'
-], function($, _, Backbone, Reminder, EditTypeDialog) {
+    'calendar/edit-type-dialog',
+    'calendar/recurrence'
+], function($, _, Backbone, Reminder, EditTypeDialog, Recurring) {
     return Backbone.View.extend({
         el: '#calendar-full-calendar',
         initialize: function(options) {
@@ -107,8 +108,16 @@ define('calendar/calendar-view', [
                                 contextPath: AJS.contextPath(),
                                 startDateFormatted: moment(jsonEvent.startDate).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
                                 endDateFormatted: moment(jsonEvent.endDate).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
+                                parentStartDateFormatted: moment(jsonEvent.parentStartDate).format(jsonEvent.parentAllDay ? self.dateFormat : self.dateTimeFormat),
                                 editDisabled: self.disableCustomEventEditing,
-                                reminderName: jsonEvent.reminder ? Reminder.names[jsonEvent.reminder] : null
+                                reminderName: jsonEvent.reminder ? Reminder.names[jsonEvent.reminder] : null,
+                                recurrenceTypeName: Recurring.names[jsonEvent.recurrenceType],
+                                periodName: Recurring.periodNames[Recurring.periods[jsonEvent.recurrenceType]],
+                                recurrenceEndDateFormatted: moment(jsonEvent.recurrenceEndDate).format(jsonEvent.parentAllDay ? self.dateFormat : self.dateTimeFormat),
+                                daysOfWeek: jsonEvent.recurrenceType === 'DAYS_OF_WEEK' ?
+                                    jsonEvent.recurrenceExpression.split(',').map(function(dayOfWeek) {
+                                        return Recurring.daysOfWeek[dayOfWeek];
+                                    }).join(', ') : ''
                             })).addClass('calendar-event-info-popup');
                             showPopup();
 

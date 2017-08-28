@@ -46,6 +46,10 @@ public interface Event extends Entity {
 
     Timestamp getEndDate();
 
+    void setParent(Event event);
+
+    Event getParent();
+
     void setRecurrenceType(RecurrenceType recurrenceType);
 
     RecurrenceType getRecurrenceType();
@@ -65,10 +69,6 @@ public interface Event extends Entity {
     void setRecurrenceCount(Integer recurrenceCount);
 
     Integer getRecurrenceCount();
-
-    void setParent(Event event);
-
-    Event getParent();
 
     void setRecurrenceNumber(Integer recurrenceNumber);
 

@@ -141,6 +141,11 @@
  * @param event json object containing field values
  * @param startDateFormatted formatted start date
  * @param endDateFormatted formatted end date
+ * @param parentStartDateFormatted
+ * @param recurrenceTypeName
+ * @param recurrenceEndDateFormatted
+ * @param daysOfWeek
+ * @param periodName
  * @param editDisabled
  * @param reminderName
  */
@@ -188,6 +193,61 @@
                                 <a class="user-hover" rel="{$participant.name}" href="/jira/secure/ViewProfile.jspa?name={$participant.name}">{$participant.displayName}</a>
                             </div>
                         {/foreach}
+                    </dd>
+                </dl>
+            {/if}
+            {if $event.recurring}
+                <dl>
+                    <dt>{getText('ru.mail.jira.plugins.calendar.customEvents.recurring')}</dt>
+                    <dd>
+                        {$recurrenceTypeName}
+                        {if $event.recurrencePeriod}{sp}(
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.every')}{sp}
+                            {$event.recurrencePeriod}{sp}{$periodName}
+                        ){/if}
+                    </dd>
+                </dl>
+                {if $event.recurrenceType == 'CRON'}
+                    <dl>
+                        <dt>
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.cron')}
+                        </dt>
+                        <dd>
+                            {$event.recurrenceExpression}
+                        </dd>
+                    </dl>
+                {elseif $event.recurrenceType == 'DAYS_OF_WEEK'}
+                    <dl>
+                        <dt>
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek')}
+                        </dt>
+                        <dd>
+                            {$daysOfWeek}
+                        </dd>
+                    </dl>
+                {/if}
+                <dl>
+                    <dt>
+                        {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.startDate')}
+                    </dt>
+                    <dd>
+                        {$parentStartDateFormatted}
+                    </dd>
+                </dl>
+                <dl>
+                    <dt>
+                        {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.endView')}
+                    </dt>
+                    <dd>
+                        {if not $event.recurrenceEndDate and not $event.recurrenceCount}
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.end.never')}
+                        {elseif $event.recurrenceEndDate}
+                            {$recurrenceEndDateFormatted}
+                        {elseif $event.recurrenceCount}
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.end.afterCount')}
+                            {sp}{$event.recurrenceCount}{sp}
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.end.afterCount2')}
+                        {/if}
                     </dd>
                 </dl>
             {/if}

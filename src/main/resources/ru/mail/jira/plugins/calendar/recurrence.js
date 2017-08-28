@@ -60,6 +60,24 @@ define('calendar/recurrence', ['underscore'], function(_) {
             months: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.period.months'),
             years: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.period.years')
         },
-        periods: periods
+        periods: periods,
+        shortDaysOfWeek: {
+            MONDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.MONDAY'),
+            TUESDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.TUESDAY'),
+            WEDNESDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.WEDNESDAY'),
+            THURSDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.THURSDAY'),
+            FRIDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.FRIDAY'),
+            SATURDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.SATURDAY'),
+            SUNDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.SUNDAY')
+        },
+        daysOfWeek: {
+            MONDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.Monday'),
+            TUESDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.Tuesday'),
+            WEDNESDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.Wednesday'),
+            THURSDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.Thursday'),
+            FRIDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.Friday'),
+            SATURDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.Saturday'),
+            SUNDAY: AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sunday')
+        }
     }
 });

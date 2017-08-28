@@ -7,8 +7,9 @@ import ru.mail.jira.plugins.commons.RestFieldException;
 
 import java.time.DayOfWeek;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CustomDaysOfWeekRecurrenceValidator extends PeriodAwareRecurrenceValidator {
@@ -16,12 +17,14 @@ public class CustomDaysOfWeekRecurrenceValidator extends PeriodAwareRecurrenceVa
     public void validateDto(I18nResolver i18nResolver, CustomEventDto event) {
         validatePeriod(i18nResolver, event);
 
-        Set<DayOfWeek> collect = Arrays
+        List<DayOfWeek> collect = Arrays
             .stream(event.getRecurrenceExpression().split(","))
             .map(StringUtils::trimToNull)
             .filter(Objects::nonNull)
             .map(value -> tryParseDayOfWeek(i18nResolver, value))
-            .collect(Collectors.toSet());
+            .distinct()
+            .sorted(Comparator.comparing(DayOfWeek::getValue))
+            .collect(Collectors.toList());
 
         if (collect.size() == 0) {
             throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.atLeastOneDayOfWeek"), "recurrenceDaysOfWeek");
