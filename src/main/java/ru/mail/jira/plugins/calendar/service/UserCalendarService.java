@@ -24,6 +24,8 @@ public interface UserCalendarService {
 
     void selectQuickFilter(int calendarId, String userKey, int id, boolean selected) throws Exception;
 
+    void updateQuickFilterJoin(int calendarId, String userKey, String join) throws GetException;
+
     void addCalendarToUser(String userKey, Calendar calendar, boolean visible);
 
     UserCalendar get(int calendarId, String userKey) throws GetException;

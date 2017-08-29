@@ -38,6 +38,8 @@ public class CalendarDto {
     private List<QuickFilterDto> favouriteQuickFilters;
     @XmlElement
     private List<QuickFilterDto> selectedQuickFilters;
+    @XmlElement
+    private String quickFilterJoin;
 
     public CalendarDto() {
     }
@@ -105,5 +107,13 @@ public class CalendarDto {
 
     public void setSelectedQuickFilters(List<QuickFilterDto> selectedQuickFilters) {
         this.selectedQuickFilters = selectedQuickFilters;
+    }
+
+    public String getQuickFilterJoin() {
+        return quickFilterJoin;
+    }
+
+    public void setQuickFilterJoin(String quickFilterJoin) {
+        this.quickFilterJoin = quickFilterJoin;
     }
 }

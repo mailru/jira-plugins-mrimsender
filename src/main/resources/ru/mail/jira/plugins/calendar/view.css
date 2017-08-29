@@ -971,6 +971,26 @@ div.vis-item.vis-box {
 
 /* Quick filters */
 
+#calendar-quick-filters-join {
+    display: table-cell;
+    vertical-align: middle;
+    text-align: right;
+}
+
+#calendar-quick-filters-join .aui-iconfont-help {
+    margin-left: 5px;
+}
+
+#calendar-quick-filters-join button {
+    border-color: #3b73af;
+    outline: none;
+}
+
+#calendar-quick-filters-join button[aria-pressed='true'] {
+    background: #3b73af;
+    color: #ffffff;
+}
+
 #calendar-quick-filters {
     padding: 10px 20px;
     border-bottom: 1px solid #cccccc;

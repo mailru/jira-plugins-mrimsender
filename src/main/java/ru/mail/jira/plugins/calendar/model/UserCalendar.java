@@ -2,6 +2,8 @@ package ru.mail.jira.plugins.calendar.model;
 
 import net.java.ao.Entity;
 import net.java.ao.OneToMany;
+import net.java.ao.schema.Default;
+import net.java.ao.schema.NotNull;
 
 public interface UserCalendar extends Entity {
     String getUserKey();
@@ -21,4 +23,9 @@ public interface UserCalendar extends Entity {
 
     @OneToMany
     FavouriteQuickFilter[] getFavouriteQuickFilters();
+
+    @Default("AND")
+    @NotNull
+    String getQuickFilterJoin();
+    void setQuickFilterJoin(String quickFilterJoin);
 }

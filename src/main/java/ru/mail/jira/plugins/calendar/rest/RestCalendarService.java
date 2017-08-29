@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.mail.jira.plugins.calendar.rest.dto.UserDataDto;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
@@ -209,6 +210,19 @@ public class RestCalendarService {
             @Override
             protected Void doAction() throws Exception {
                 calendarService.selectQuickFilter(calendarId, jiraAuthenticationContext.getLoggedInUser(), id, selected);
+                return null;
+            }
+        }.getResponse();
+    }
+
+    @PUT
+    @Path("/{calendarId}/quickFilterJoin")
+    public Response changeQuickFilterJoin(@PathParam("calendarId") final int calendarId,
+                                          @FormParam("join") final String join) {
+        return new RestExecutor<Void>() {
+            @Override
+            protected Void doAction() throws Exception {
+                calendarService.updateQuickFilterJoin(calendarId, jiraAuthenticationContext.getLoggedInUser(), join);
                 return null;
             }
         }.getResponse();

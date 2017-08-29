@@ -174,7 +174,10 @@ public class CalendarEventService {
                     else
                         log.error("JQL is invalid => {}", quickFilter.getJql());
                     if (selectedQuickFiltersClause != null)
-                        jqlBuilder.and().sub().addClause(selectedQuickFiltersClause).endsub();
+                        if (userCalendar.getQuickFilterJoin().equals("AND"))
+                            jqlBuilder.and().sub().addClause(selectedQuickFiltersClause).endsub();
+                        else
+                            jqlBuilder.or().sub().addClause(selectedQuickFiltersClause).endsub();
                 }
             }
         }

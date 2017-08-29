@@ -293,6 +293,15 @@ public class CalendarServiceImpl implements CalendarService {
         }
     }
 
+    @Override
+    public void updateQuickFilterJoin(int calendarId, ApplicationUser user, String join) {
+        try {
+            userCalendarService.updateQuickFilterJoin(calendarId, user.getKey(), join);
+        } catch (Exception e) {
+            log.error("Can't get UserCalendar for calendar={} and user={}", calendarId, user.getKey());
+        }
+    }
+
     private void setCalendarFields(Calendar calendar, CalendarSettingDto calendarSettingDto) {
         calendar.setName(calendarSettingDto.getSelectedName());
         String selectedSourceValue = calendarSettingDto.getSelectedSourceValue();
@@ -373,6 +382,7 @@ public class CalendarServiceImpl implements CalendarService {
                 }
             }
             output.setFavouriteQuickFilters(favouriteQuickFilters);
+            output.setQuickFilterJoin(userCalendar.getQuickFilterJoin());
         }
         if (!changable && !canUse) {
             output.setHasError(true);
