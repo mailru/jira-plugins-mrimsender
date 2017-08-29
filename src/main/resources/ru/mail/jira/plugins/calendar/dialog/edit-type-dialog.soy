@@ -1,0 +1,33 @@
+{namespace JIRA.Templates.Plugins.MailRuCalendar.EditTypeDialog}
+
+/**
+ * Confirm dialog
+ */
+{template .dialog autoescape="false"}
+    <section role="dialog" id="mailrucalendar-edit-type-dialog" class="aui-layer aui-dialog2 aui-dialog2-small" aria-hidden="true" data-aui-focus-selector=".type-button:first-of-type">
+        <header class="aui-dialog2-header">
+            <h2 class="aui-dialog2-header-main">{getText('ru.mail.jira.plugins.calendar.customEvents.recurring.editModeTitle')}</h2>
+        </header>
+        <div class="aui-dialog2-content" style="width: 100%">
+            <button data-type="SINGLE_EVENT" class="aui-button type-button" style="width: 100%;">
+                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.editMode')}{sp}
+                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.onlyThisInstance')}
+            </button>
+            <button data-type="FOLLOWING_EVENTS" class="aui-button type-button" style="width: 100%; margin-left: 0; margin-top: 10px;">
+                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.editMode')}{sp}
+                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.followingEvents')}
+            </button>
+            <button data-type="ALL_EVENTS" class="aui-button type-button" style="width: 100%; margin-left: 0; margin-top: 10px;">
+                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.editMode')}{sp}
+                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.allEvents')}
+            </button>
+        </div>
+        <footer class="aui-dialog2-footer" style="width: 100%">
+            <div class="aui-dialog2-footer-actions" style="width: 100%;">
+                <button id="mailrucalendar-edit-type-dialog-cancel" class="aui-button aui-button-link" style="width: 100%;">
+                    {getText('admin.common.words.cancel')}
+                </button>
+            </div>
+        </footer>
+    </section>
+{/template}

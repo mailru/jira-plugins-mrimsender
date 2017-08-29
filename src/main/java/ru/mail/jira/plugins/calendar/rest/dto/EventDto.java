@@ -3,15 +3,18 @@ package ru.mail.jira.plugins.calendar.rest.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.sql.Timestamp;
 import java.util.List;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
 @Getter
 @Setter
+@ToString
 public class EventDto {
     @XmlElement
     private String id;
@@ -47,6 +50,20 @@ public class EventDto {
     private IssueInfo issueInfo;
     @XmlElement
     private List<UserDto> participants;
+    @XmlElement
+    private boolean recurring;
+    @XmlElement
+    private Integer recurrenceNumber;
+    @XmlElement
+    private String originalId;
+    @XmlElement
+    private String parentId;
+    @XmlElement
+    private Timestamp originalStart;
+    @XmlElement
+    private Timestamp originalEnd;
+    @XmlElement
+    private Boolean originalAllDay;
 
     public enum Type {
         ISSUE,
