@@ -15,7 +15,7 @@ public class DaysOfWeekDateGenerator extends DateGenerator {
     }
 
     @Override
-    public void incrementDate() {
+    protected void incrementDate() {
         doIncrement();
         while (!daysOfWeek.contains(date.getDayOfWeek())) {
             doIncrement();

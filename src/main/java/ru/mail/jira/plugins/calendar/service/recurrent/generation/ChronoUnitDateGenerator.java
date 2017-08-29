@@ -14,7 +14,7 @@ public class ChronoUnitDateGenerator extends DateGenerator {
     }
 
     @Override
-    public void incrementDate() {
+    protected void incrementDate() {
         date = date.plus(period, chronoUnit);
     }
 }
