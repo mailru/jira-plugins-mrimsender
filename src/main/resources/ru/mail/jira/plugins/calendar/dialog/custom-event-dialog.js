@@ -87,9 +87,9 @@ define('calendar/custom-event-dialog', [
             }
         },
         _initDateFields: function() {
-            this._initDateField($('#custom-event-dialog-startDate'));
-            this._initDateField($('#custom-event-dialog-endDate'));
-            this._initDateField($('#recurrence-end-date-value'));
+            this._initDateField(this.$('#custom-event-dialog-startDate'));
+            this._initDateField(this.$('#custom-event-dialog-endDate'));
+            this._initDateField(this.$('#recurrence-end-date-value'));
         },
         _initDateField: function($field) {
             $field.datePicker({
@@ -100,18 +100,18 @@ define('calendar/custom-event-dialog', [
             $field.attr('placeholder', AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.dialog.datePlaceholder'));
         },
         _initTimeFields: function() {
-            if ($('#custom-event-dialog-allDay').prop('checked')) {
-                $('#custom-event-dialog-startTime').hide();
-                $('#custom-event-dialog-endTime').hide();
-                $('#recurrence-end-time-value').hide();
+            if (this.$('#custom-event-dialog-allDay').prop('checked')) {
+                this.$('#custom-event-dialog-startTime').hide();
+                this.$('#custom-event-dialog-endTime').hide();
+                this.$('#recurrence-end-time-value').hide();
             } else {
-                $('#custom-event-dialog-startTime').show();
-                $('#custom-event-dialog-endTime').show();
-                $('#recurrence-end-time-value').show();
+                this.$('#custom-event-dialog-startTime').show();
+                this.$('#custom-event-dialog-endTime').show();
+                this.$('#recurrence-end-time-value').show();
             }
         },
         _initParticipantsPicker: function() {
-            var $el = $('#custom-event-dialog-participantNames');
+            var $el = this.$('#custom-event-dialog-participantNames');
             this.participantsSelect = new MultiSelect({
                 element: $el,
                 showDropdownButton: false,
@@ -142,7 +142,7 @@ define('calendar/custom-event-dialog', [
                     dataType: 'json',
                     quietMillis: 100,
                     data: function(term) {
-                        return {calendarId: $('#custom-event-dialog-calendar').val()};
+                        return {calendarId: this.$('#custom-event-dialog-calendar').val()};
                     },
                     results: function(data) {
                         return {
@@ -176,7 +176,7 @@ define('calendar/custom-event-dialog', [
             var startMoment = null;
             var endMoment = null;
             if (editMode === 'SINGLE_EVENT' || editMode === 'FOLLOWING_EVENTS') {
-                $('.recurrence-type-field, .recurrence-field').hide();
+                this.$('.recurrence-type-field, .recurrence-field').hide();
                 startMoment = moment(this.jsonModel.startDate);
                 endMoment = this.jsonModel.endDate || null;
                 if (endMoment) {
@@ -184,7 +184,7 @@ define('calendar/custom-event-dialog', [
                 }
                 allDay = this.jsonModel.allDay;
             } else if (editMode === 'ALL_EVENTS') {
-                $('.recurrence-type-field').show();
+                this.$('.recurrence-type-field').show();
                 startMoment = moment(this.jsonModel.originalStartDate);
                 endMoment = this.jsonModel.originalEndDate || null;
                 if (endMoment) {
@@ -195,64 +195,64 @@ define('calendar/custom-event-dialog', [
             }
 
             if (editMode === 'FOLLOWING_EVENTS') {
-                $('.recurrence-type-field').show();
+                this.$('.recurrence-type-field').show();
                 this._handleRecurrenceTypeChange();
             }
 
-            $('#custom-event-dialog-startDate').val(startMoment.format('YYYY-MM-DD'));
+            this.$('#custom-event-dialog-startDate').val(startMoment.format('YYYY-MM-DD'));
             if (endMoment) {
-                $('#custom-event-dialog-endDate').val(endMoment.format('YYYY-MM-DD'));
+                this.$('#custom-event-dialog-endDate').val(endMoment.format('YYYY-MM-DD'));
             }
 
             if (allDay) {
-                $('#custom-event-dialog-allDay').prop('checked', 'checked');
+                this.$('#custom-event-dialog-allDay').prop('checked', 'checked');
             } else {
-                $('#custom-event-dialog-allDay').prop('checked', null);
-                $('#custom-event-dialog-startTime').val(startMoment.format(this.timeFormat));
+                this.$('#custom-event-dialog-allDay').prop('checked', null);
+                this.$('#custom-event-dialog-startTime').val(startMoment.format(this.timeFormat));
                 if (endMoment) {
-                    $('#custom-event-dialog-endTime').val(endMoment.format(this.timeFormat));
+                    this.$('#custom-event-dialog-endTime').val(endMoment.format(this.timeFormat));
                 }
             }
             this._initTimeFields();
         },
         _focusRecurrenceEndOption: function(event) {
-            $('#' + $(event.target).closest('label').attr('for')).attr('checked', 'checked');
+            this.$('#' + this.$(event.target).closest('label').attr('for')).attr('checked', 'checked');
         },
         _handleRecurrenceTypeChange: function() {
             this.$('.recurrence-field').hide();
-            var value = $('#recurrence-type').val();
+            var value = this.$('#recurrence-type').val();
             var periodTypeName = Recurrence.periodNames[Recurrence.periods[value]];
 
             switch (value) {
                 case 'DAYS_OF_WEEK':
-                    $('#recurrence-days-of-week-group').show();
+                    this.$('#recurrence-days-of-week-group').show();
                 case 'WEEKDAYS':
                 case 'MON_WED_FRI':
                 case 'TUE_THU':
                 case 'DAILY':
                 case 'MONTHLY':
                 case 'YEARLY': {
-                    $('#recurrence-period-group').show();
-                    $('#recurrence-end-group').show();
+                    this.$('#recurrence-period-group').show();
+                    this.$('#recurrence-end-group').show();
                     if (periodTypeName) {
-                        $("#recurrence-period-name").text(periodTypeName);
+                        this.$("#recurrence-period-name").text(periodTypeName);
                     }
                     break;
                 }
                 case 'CRON': {
-                    $('#recurrence-cron-group').show();
-                    $('#recurrence-end-group').show();
+                    this.$('#recurrence-cron-group').show();
+                    this.$('#recurrence-end-group').show();
                     break;
                 }
             }
         },
         _handleCalendarChange: function() {
-            $('#custom-event-dialog-type').auiSelect2('data', null);
-            $('#custom-event-dialog-reminder').text(Reminder.none);
+            this.$('#custom-event-dialog-type').auiSelect2('data', null);
+            this.$('#custom-event-dialog-reminder').text(Reminder.none);
         },
         _handleTypeChange: function() {
-            var reminder = $('#custom-event-dialog-type').auiSelect2('data').reminder;
-            $('#custom-event-dialog-reminder').text(reminder ? Reminder.names[reminder] : Reminder.none);
+            var reminder = this.$('#custom-event-dialog-type').auiSelect2('data').reminder;
+            this.$('#custom-event-dialog-reminder').text(reminder ? Reminder.names[reminder] : Reminder.none);
         },
         _formatTypeField: function(type) {
             return '<span class="custom-event-type-avatar custom-type-icon custom-type-icon-' + type.avatar + '"></span>' +
@@ -321,7 +321,7 @@ define('calendar/custom-event-dialog', [
             }
         },
         _ajaxErrorHandler: function(model, response) {
-            var $recurrenceError = $("#custom-event-dialog-recurrence-error");
+            var $recurrenceError = this.$("#custom-event-dialog-recurrence-error");
             var $error = this.$('#custom-event-dialog-error-panel');
 
             this.$el.find('.error').addClass('hidden');
@@ -357,20 +357,20 @@ define('calendar/custom-event-dialog', [
             }
         },
         _serialize: function(isComparison) {
-            var title = $('#custom-event-dialog-title').val();
-            var startDate = $('#custom-event-dialog-startDate').val();
-            var startTime = $('#custom-event-dialog-startTime').val();
-            var endDate = $('#custom-event-dialog-endDate').val();
-            var endTime = $('#custom-event-dialog-endTime').val();
-            var calendarId = $('#custom-event-dialog-calendar').val();
-            var eventTypeId = $('#custom-event-dialog-type').val();
-            var participants = $('#custom-event-dialog-participantNames').val();
-            var allDay = $('#custom-event-dialog-allDay').prop('checked');
+            var title = this.$('#custom-event-dialog-title').val();
+            var startDate = this.$('#custom-event-dialog-startDate').val();
+            var startTime = this.$('#custom-event-dialog-startTime').val();
+            var endDate = this.$('#custom-event-dialog-endDate').val();
+            var endTime = this.$('#custom-event-dialog-endTime').val();
+            var calendarId = this.$('#custom-event-dialog-calendar').val();
+            var eventTypeId = this.$('#custom-event-dialog-type').val();
+            var participants = this.$('#custom-event-dialog-participantNames').val();
+            var allDay = this.$('#custom-event-dialog-allDay').prop('checked');
             var editMode = this.$('input[name=editMode]:checked').val();
 
             var id = this.jsonModel.id;
             var parentId = null;
-            var recurrenceType = $('#recurrence-type').val();
+            var recurrenceType = this.$('#recurrence-type').val();
             var recurrenceNumber = null;
             var recurrencePeriod = null;
             var recurrenceExpression = null;
@@ -386,7 +386,7 @@ define('calendar/custom-event-dialog', [
 
             if (recurrenceType) {
                 if (recurrenceType === 'DAYS_OF_WEEK') {
-                    recurrenceExpression = $('.dayOfWeek-checkbox > input:checked')
+                    recurrenceExpression = this.$('.dayOfWeek-checkbox > input:checked')
                         .map(function () {
                             return $(this).attr('value');
                         })
@@ -394,18 +394,18 @@ define('calendar/custom-event-dialog', [
                         .join(",");
                 }
                 if (recurrenceType === 'CRON') {
-                    recurrenceExpression = $('#recurrence-cron').val();
+                    recurrenceExpression = this.$('#recurrence-cron').val();
                 } else {
-                    recurrencePeriod = $('#recurrence-period').val();
+                    recurrencePeriod = this.$('#recurrence-period').val();
                 }
 
-                var recurrenceEndType = $('#recurrence-end-group').find('input[name=recurrenceEnd]:checked').val();
+                var recurrenceEndType = this.$('#recurrence-end-group').find('input[name=recurrenceEnd]:checked').val();
                 if (recurrenceEndType === 'count') {
-                    recurrenceCount = $('#recurrence-end-count-value').val();
+                    recurrenceCount = this.$('#recurrence-end-count-value').val();
                 }
                 if (recurrenceEndType === 'date') {
-                    var date = $('#recurrence-end-date-value').val();
-                    var time = $('#recurrence-end-time-value').val();
+                    var date = this.$('#recurrence-end-date-value').val();
+                    var time = this.$('#recurrence-end-time-value').val();
 
                     if (allDay) {
                         recurrenceEndDate = moment.utc(date).format('x');

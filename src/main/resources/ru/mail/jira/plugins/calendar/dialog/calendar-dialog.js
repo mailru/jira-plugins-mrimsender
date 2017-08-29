@@ -212,14 +212,14 @@ define('calendar/calendar-dialog', [
             });
         },
         _initDateFields: function() {
-            $('#calendar-dialog-event-start').auiSelect2({data: dateFieldsData});
-            $('#calendar-dialog-event-end').auiSelect2({
+            this.$('#calendar-dialog-event-start').auiSelect2({data: dateFieldsData});
+            this.$('#calendar-dialog-event-end').auiSelect2({
                 allowClear: true,
                 data: [{id: '', text: ' '}].concat(dateFieldsData)
             });
         },
         _initDisplayedFieldsField: function() {
-            $('#calendar-dialog-displayed-fields').auiSelect2({
+            this.$('#calendar-dialog-displayed-fields').auiSelect2({
                 allowClear: true,
                 multiple: true,
                 data: displayedFieldsData
@@ -238,7 +238,7 @@ define('calendar/calendar-dialog', [
                 autoSelectFirst: false,
                 maxHeight: '195'
             });
-            var jqlField = $('#advanced-search');
+            var jqlField = this.$('#advanced-search');
             jqlField.unbind('keypress', Forms.submitOnEnter).keypress(function(e) {
                 if (jqlAutoComplete.dropdownController === null || !jqlAutoComplete.dropdownController.displayed || jqlAutoComplete.selectedIndex < 0)
                     return true;
@@ -247,7 +247,7 @@ define('calendar/calendar-dialog', [
             jqlAutoComplete.buildResponseContainer();
             jqlAutoComplete.parse(jqlField.val());
 
-            $('.atlassian-autocomplete .suggestions').css('top', '68px');
+            this.$('.atlassian-autocomplete .suggestions').css('top', '68px');
 
             jqlField.click(function() {
                 jqlAutoComplete.dropdownController.hideDropdown();
@@ -368,7 +368,7 @@ define('calendar/calendar-dialog', [
                     this.oldJql = currentJql;
                 }, this),
                 error: function() {
-                    $('.search-field-container .description').fadeOut(250);
+                    this.$('.search-field-container .description').fadeOut(250);
                 }
             });
         },
@@ -585,8 +585,8 @@ define('calendar/calendar-dialog', [
             });
         },
         _renderEventTypeTable: function() {
-            $('#calendar-dialog-ok, #calendar-dialog-cancel, #calendar-dialog .aui-nav > li > a').attr('disabled', null);
-            $('#calendar-dialog-eventTypes-content').html(JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.eventTypesTable({
+            this.$('#calendar-dialog-ok, #calendar-dialog-cancel, #calendar-dialog .aui-nav > li > a').attr('disabled', null);
+            this.$('#calendar-dialog-eventTypes-content').html(JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.eventTypesTable({
                 systemTypes: $.grep(this.eventTypes, function(e) {
                     return e.system;
                 }),
@@ -601,8 +601,8 @@ define('calendar/calendar-dialog', [
                 e.preventDefault();
             }
 
-            $('#calendar-dialog-ok, #calendar-dialog-cancel, #calendar-dialog .aui-nav > li > a').removeAttr('disabled');
-            $('#calendar-dialog-eventTypes-content').find('tr.edit').each($.proxy(function(i, e) {
+            this.$('#calendar-dialog-ok, #calendar-dialog-cancel, #calendar-dialog .aui-nav > li > a').removeAttr('disabled');
+            this.$('#calendar-dialog-eventTypes-content').find('tr.edit').each($.proxy(function(i, e) {
                 var $e = $(e);
                 var id = $e.data('id');
                 if (id) {
@@ -622,7 +622,7 @@ define('calendar/calendar-dialog', [
 
             var $row = $('<tr id="calendar-dialog-custom-type-row-new" class="edit"></tr>');
             $row.append(this._renderEventEdit({}));
-            $('#calendar-dialog-custom-type-tbody').append($row);
+            this.$('#calendar-dialog-custom-type-tbody').append($row);
             this._afterEditStarted($row, null);
         },
         _editEventTypeRow: function(event) {
@@ -676,14 +676,14 @@ define('calendar/calendar-dialog', [
             });
         },
         _afterEditStarted: function($row, typeId) {
-            $('#calendar-dialog-ok, #calendar-dialog-cancel, #calendar-dialog .aui-nav > li > a').attr('disabled', 'disabled');
+            this.$('#calendar-dialog-ok, #calendar-dialog-cancel, #calendar-dialog .aui-nav > li > a').attr('disabled', 'disabled');
 
             var saveCallback = $.proxy(function(e) {
                 e.preventDefault();
 
-                var name = $('#calendar-dialog-customEvent-name').val();
-                var avatar = $('#calendar-dialog-customEvent-avatar').val();
-                var reminder = $('#calendar-dialog-customEvent-reminder').val();
+                var name = this.$('#calendar-dialog-customEvent-name').val();
+                var avatar = this.$('#calendar-dialog-customEvent-avatar').val();
+                var reminder = this.$('#calendar-dialog-customEvent-reminder').val();
 
                 $row.find('.save-button, .cancel-button').attr('disabled', 'disabled');
 
@@ -750,7 +750,7 @@ define('calendar/calendar-dialog', [
 
             this._initAvatarPicker($row);
 
-            $('#calendar-dialog-customEvent-name').focus();
+            this.$('#calendar-dialog-customEvent-name').focus();
         },
         _handleEditError: function($row, xhr) {
             $row.find('.error').addClass('hidden');
@@ -767,7 +767,7 @@ define('calendar/calendar-dialog', [
                 $e.click(function() {
                     $container.find('.avatar-picker .avatar.selected').removeClass('selected');
                     $e.addClass('selected');
-                    $('#calendar-dialog-customEvent-avatar').val($e.data('id'));
+                    this.$('#calendar-dialog-customEvent-avatar').val($e.data('id'));
                 });
             });
         },
@@ -794,7 +794,7 @@ define('calendar/calendar-dialog', [
             this.$('.calendar-dialog-permission-table-error').addClass('hidden');
         },
         _onOpenSubjectSelect: function() {
-            $('.calendar-dialog-permission-table-subject-dropdown input.select2-input').addClass('ajs-dirty-warning-exempt');
+            this.$('.calendar-dialog-permission-table-subject-dropdown input.select2-input').addClass('ajs-dirty-warning-exempt');
         },
         _addPermission: function(e) {
             e.preventDefault();
