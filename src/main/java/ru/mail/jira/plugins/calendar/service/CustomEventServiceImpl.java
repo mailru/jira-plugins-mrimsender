@@ -11,6 +11,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import com.atlassian.scheduler.caesium.cron.CaesiumCronExpressionValidator;
 import com.atlassian.scheduler.cron.CronSyntaxException;
 import com.google.common.collect.ImmutableSet;
 import net.java.ao.DBParam;
@@ -47,6 +48,7 @@ public class CustomEventServiceImpl implements CustomEventService {
     private static final long GENERATION_LIMIT_PER_REQUEST = 1000;
 
     private final Logger logger = LoggerFactory.getLogger(CustomEventServiceImpl.class);
+    private final CaesiumCronExpressionValidator caesiumCronExpressionValidator = new CaesiumCronExpressionValidator();
     private final ActiveObjects ao;
     private final I18nResolver i18nResolver;
     private final JiraDeprecatedService jiraDeprecatedService;
@@ -544,13 +546,74 @@ public class CustomEventServiceImpl implements CustomEventService {
                     throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.endDateBeforeStart"), "recurrenceEndDate");
                 }
             }
-            recurrenceType.getValidator().validateDto(i18nResolver, eventDto);
+
+            switch (recurrenceType) {
+                case DAILY:
+                case MONTHLY:
+                case YEARLY:
+                case WEEKDAYS:
+                case MON_WED_FRI:
+                case TUE_THU:
+                    validateRecurrencePeriod(eventDto);
+                    eventDto.setRecurrenceExpression(null);
+                    break;
+                case DAYS_OF_WEEK:
+                    validateRecurrencePeriod(eventDto);
+
+                    eventDto.setRecurrenceExpression(StringUtils.trimToNull(eventDto.getRecurrenceExpression()));
+                    if (eventDto.getRecurrenceExpression() == null) {
+                        throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.atLeastOneDayOfWeek"), "recurrenceDaysOfWeek");
+                    }
+
+                    List<DayOfWeek> collect = Arrays
+                        .stream(eventDto.getRecurrenceExpression().split(","))
+                        .map(StringUtils::trimToNull)
+                        .filter(Objects::nonNull)
+                        .map(value -> tryParseDayOfWeek(i18nResolver, value))
+                        .distinct()
+                        .sorted(Comparator.comparing(DayOfWeek::getValue))
+                        .collect(Collectors.toList());
+
+                    if (collect.size() == 0) {
+                        throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.atLeastOneDayOfWeek"), "recurrenceDaysOfWeek");
+                    }
+
+                    eventDto.setRecurrenceExpression(collect.stream().map(DayOfWeek::toString).collect(Collectors.joining(",")));
+                    break;
+                case CRON:
+                    try {
+                        caesiumCronExpressionValidator.validate(eventDto.getRecurrenceExpression());
+                    } catch (CronSyntaxException e) {
+                        throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.invalidCronExpression", e.getMessage()), "recurrenceExpression");
+                    }
+
+                    eventDto.setRecurrencePeriod(null);
+                    break;
+            }
         }
 
         if (keys.size() > 0) {
             eventDto.setParticipantNames(keys.stream().collect(Collectors.joining(", ")));
         } else {
             eventDto.setParticipantNames(null);
+        }
+    }
+
+    protected void validateRecurrencePeriod(CustomEventDto eventDto) {
+        if (eventDto.getRecurrencePeriod() == null) {
+            throw new RestFieldException(i18nResolver.getText("issue.field.required", i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.period")), "recurrencePeriod");
+        }
+
+        if (eventDto.getRecurrencePeriod() <= 0) {
+            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.dialog.error.incorrectPeriod"), "recurrencePeriod");
+        }
+    }
+
+    private static DayOfWeek tryParseDayOfWeek(I18nResolver i18nResolver, String value) {
+        try {
+            return DayOfWeek.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.unknownDayOfWeek", value), "recurrenceDaysOfWeek");
         }
     }
 
