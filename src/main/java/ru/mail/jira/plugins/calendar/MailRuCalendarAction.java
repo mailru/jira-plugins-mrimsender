@@ -1,5 +1,7 @@
 package ru.mail.jira.plugins.calendar;
 
+import com.atlassian.jira.config.properties.APKeys;
+import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
@@ -10,15 +12,18 @@ import ru.mail.jira.plugins.calendar.service.licence.LicenseStatus;
 
 @Scanned
 public class MailRuCalendarAction extends JiraWebActionSupport {
-    private final LicenseService licenseService;
+    private final ApplicationProperties applicationProperties;
     private final GlobalPermissionManager globalPermissionManager;
+    private final LicenseService licenseService;
 
     public MailRuCalendarAction(
-        LicenseService licenseService,
-        @ComponentImport GlobalPermissionManager globalPermissionManager
+        @ComponentImport("com.atlassian.jira.config.properties.ApplicationProperties") ApplicationProperties applicationProperties,
+        @ComponentImport GlobalPermissionManager globalPermissionManager,
+        LicenseService licenseService
     ) {
-        this.licenseService = licenseService;
+        this.applicationProperties = applicationProperties;
         this.globalPermissionManager = globalPermissionManager;
+        this.licenseService = licenseService;
     }
 
     @Override
@@ -28,11 +33,16 @@ public class MailRuCalendarAction extends JiraWebActionSupport {
 
     @SuppressWarnings("unused")
     public boolean getIsAdmin() {
-        return globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, getLoggedInApplicationUser());
+        return globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, getLoggedInUser());
     }
 
     @SuppressWarnings("unused")
     public LicenseStatus getLicenseStatus() {
         return licenseService.getLicenseStatus();
+    }
+
+    @SuppressWarnings("unused")
+    public boolean isIso8601Used() {
+        return applicationProperties.getOption(APKeys.JIRA_DATE_TIME_PICKER_USE_ISO8601);
     }
 }

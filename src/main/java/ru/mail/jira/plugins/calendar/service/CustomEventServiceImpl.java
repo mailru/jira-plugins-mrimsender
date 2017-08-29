@@ -6,31 +6,49 @@ import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.exception.GetException;
+import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import com.atlassian.scheduler.caesium.cron.CaesiumCronExpressionValidator;
+import com.atlassian.scheduler.cron.CronSyntaxException;
 import com.google.common.collect.ImmutableSet;
 import net.java.ao.DBParam;
 import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.model.*;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.*;
+import ru.mail.jira.plugins.calendar.service.recurrent.generation.ChronoUnitDateGenerator;
+import ru.mail.jira.plugins.calendar.service.recurrent.generation.CronDateGenerator;
+import ru.mail.jira.plugins.calendar.service.recurrent.generation.DateGenerator;
+import ru.mail.jira.plugins.calendar.service.recurrent.generation.DaysOfWeekDateGenerator;
 import ru.mail.jira.plugins.commons.RestFieldException;
 
-import java.sql.Timestamp;
+import java.sql.*;
+import java.time.DayOfWeek;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
 public class CustomEventServiceImpl implements CustomEventService {
     private static final Set<String> SUPPORTED_AVATAR_NAMES = ImmutableSet.of("event", "travel", "birthday", "leave");
     private static final TimeZone UTC_TZ = TimeZone.getTimeZone("UTC");
+    private static final long GENERATION_LIMIT_PER_REQUEST = 1000;
 
+    private final Logger logger = LoggerFactory.getLogger(CustomEventServiceImpl.class);
+    private final CaesiumCronExpressionValidator caesiumCronExpressionValidator = new CaesiumCronExpressionValidator();
     private final ActiveObjects ao;
     private final I18nResolver i18nResolver;
     private final JiraDeprecatedService jiraDeprecatedService;
@@ -38,6 +56,7 @@ public class CustomEventServiceImpl implements CustomEventService {
     private final AvatarService avatarService;
     private final CalendarService calendarService;
     private final PermissionService permissionService;
+    private final TimeZoneManager timeZoneManager;
 
     @Autowired
     public CustomEventServiceImpl(
@@ -45,6 +64,7 @@ public class CustomEventServiceImpl implements CustomEventService {
         @ComponentImport UserManager userManager,
         @ComponentImport AvatarService avatarService,
         @ComponentImport ActiveObjects ao,
+        @ComponentImport TimeZoneManager timeZoneManager,
         JiraDeprecatedService jiraDeprecatedService,
         CalendarService calendarService,
         PermissionService permissionService
@@ -56,6 +76,7 @@ public class CustomEventServiceImpl implements CustomEventService {
         this.avatarService = avatarService;
         this.calendarService = calendarService;
         this.permissionService = permissionService;
+        this.timeZoneManager = timeZoneManager;
     }
 
     @Override
@@ -65,6 +86,12 @@ public class CustomEventServiceImpl implements CustomEventService {
         EventType eventType = getEventType(eventDto.getEventTypeId());
         Calendar calendar = calendarService.getCalendar(eventDto.getCalendarId());
 
+        Event parent = null;
+
+        if (eventDto.getParentId() != null) {
+            parent = getEvent(eventDto.getParentId());
+        }
+
         if (!permissionService.hasEditEventsPermission(user, calendar)) {
             throw new SecurityException("No permission to create events");
         }
@@ -73,9 +100,28 @@ public class CustomEventServiceImpl implements CustomEventService {
             throw new IllegalArgumentException(i18nResolver.getText("ru.mail.jira.plguins.calendar.customEvents.eventTypeIsDeleted"));
         }
 
-        validateAndNormalize(eventDto, calendar, eventType);
+        validateAndNormalize(eventDto, null, parent, calendar, eventType);
 
-        Event customEvent = ao.create(
+        RecurrenceType recurrenceType = null;
+        Integer recurrencePeriod = null;
+        String recurrenceExpression = null;
+        Timestamp recurrenceEndDate = null;
+        Integer recurrenceCount = null;
+
+        if (eventDto.getRecurrenceType() != null) {
+            recurrenceType = RecurrenceType.valueOf(eventDto.getRecurrenceType());
+            recurrencePeriod = eventDto.getRecurrencePeriod();
+            recurrenceExpression = eventDto.getRecurrenceExpression();
+            recurrenceEndDate = eventDto.getRecurrenceEndDate();
+            recurrenceCount = eventDto.getRecurrenceCount();
+        }
+
+        if (parent != null) {
+            //delete event with same parent & recurrence number, since we are unable to create unique index (parent_id, recurrence_number)
+            ao.deleteWithSQL(Event.class, "PARENT_ID = ? AND RECURRENCE_NUMBER = ?", parent.getID(), eventDto.getRecurrenceNumber());
+        }
+
+        Event event = ao.create(
             Event.class,
             new DBParam("TITLE", eventDto.getTitle()),
             new DBParam("CALENDAR_ID", eventDto.getCalendarId()),
@@ -84,10 +130,21 @@ public class CustomEventServiceImpl implements CustomEventService {
             new DBParam("EVENT_TYPE_ID", eventType.getID()),
             new DBParam("CREATOR_KEY", user.getKey()),
             new DBParam("PARTICIPANTS", eventDto.getParticipantNames()),
-            new DBParam("ALL_DAY", eventDto.isAllDay())
+            new DBParam("ALL_DAY", eventDto.isAllDay()),
+            new DBParam("RECURRENCE_TYPE", recurrenceType),
+            new DBParam("RECURRENCE_PERIOD", recurrencePeriod),
+            new DBParam("RECURRENCE_EXPRESSION", recurrenceExpression),
+            new DBParam("RECURRENCE_END_DATE", recurrenceEndDate),
+            new DBParam("RECURRENCE_COUNT", recurrenceCount),
+            new DBParam("PARENT_ID", eventDto.getParentId()),
+            new DBParam("RECURRENCE_NUMBER", eventDto.getRecurrenceNumber())
         );
 
-        return buildEvent(user, customEvent, calendar, true);
+        if (eventDto.getParentId() != null) {
+            return buildRecurrentEvent(parent, eventDto.getRecurrenceNumber(), event, null, null, calendar, user, true);
+        } else {
+            return buildEvent(user, event, calendar, true);
+        }
     }
 
     @Override
@@ -103,11 +160,75 @@ public class CustomEventServiceImpl implements CustomEventService {
 
         EventType eventType = getEventType(eventDto.getEventTypeId());
 
-        validateAndNormalize(eventDto, calendar, eventType);
+        validateAndNormalize(eventDto, event, event.getParent(), calendar, eventType);
 
-        //keep type if deleted, but not modified
+        EditMode editMode = eventDto.getEditMode();
+
+        //keep type if deleted, but not modified in event
         if (eventType.isDeleted() && eventDto.getEventTypeId() != event.getEventType().getID()) {
             throw new IllegalArgumentException(i18nResolver.getText("ru.mail.jira.plguins.calendar.customEvents.eventTypeIsDeleted"));
+        }
+
+        if (event.getParent() != null && (editMode == EditMode.ALL_EVENTS || editMode == EditMode.FOLLOWING_EVENTS)) {
+            event = event.getParent();
+        }
+
+        RecurrenceType recurrenceType = null;
+        Integer recurrencePeriod = null;
+        String recurrenceExpression = null;
+        Timestamp recurrenceEndDate = null;
+        Integer recurrenceCount = null;
+
+        if (eventDto.getRecurrenceType() != null) {
+            recurrenceType = RecurrenceType.valueOf(eventDto.getRecurrenceType());
+            recurrencePeriod = eventDto.getRecurrencePeriod();
+            recurrenceExpression = eventDto.getRecurrenceExpression();
+            recurrenceEndDate = eventDto.getRecurrenceEndDate();
+            recurrenceCount = eventDto.getRecurrenceCount();
+        }
+
+        if (editMode == EditMode.FOLLOWING_EVENTS) {
+            Timestamp startDate = eventDto.getStartDate();
+            ao.deleteWithSQL(Event.class, "PARENT_ID = ? AND START_DATE >= ?", event.getID(), startDate);
+
+            event.setRecurrenceEndDate(startDate);
+            event.save();
+
+            event = ao.create(
+                Event.class,
+                new DBParam("TITLE", eventDto.getTitle()),
+                new DBParam("CALENDAR_ID", eventDto.getCalendarId()),
+                new DBParam("START_DATE", eventDto.getStartDate()),
+                new DBParam("END_DATE", eventDto.getEndDate()),
+                new DBParam("EVENT_TYPE_ID", eventType.getID()),
+                new DBParam("CREATOR_KEY", user.getKey()),
+                new DBParam("PARTICIPANTS", eventDto.getParticipantNames()),
+                new DBParam("ALL_DAY", eventDto.isAllDay()),
+                new DBParam("RECURRENCE_TYPE", recurrenceType),
+                new DBParam("RECURRENCE_PERIOD", recurrencePeriod),
+                new DBParam("RECURRENCE_EXPRESSION", recurrenceExpression),
+                new DBParam("RECURRENCE_END_DATE", recurrenceEndDate),
+                new DBParam("RECURRENCE_COUNT", recurrenceCount),
+                new DBParam("PARENT_ID", null),
+                new DBParam("RECURRENCE_NUMBER", null)
+            );
+
+            return buildEvent(user, event, calendar, true);
+        }
+
+        if (
+            !Objects.equals(recurrenceType, event.getRecurrenceType()) ||
+            !Objects.equals(recurrencePeriod, event.getRecurrencePeriod()) ||
+            !Objects.equals(recurrenceExpression, event.getRecurrenceExpression())
+        ) {
+            ao.deleteWithSQL(Event.class, "PARENT_ID = ?", event.getID());
+        } else if (recurrenceType != null) {
+            if (recurrenceEndDate != null) {
+                ao.deleteWithSQL(Event.class, "PARENT_ID = ? AND START_DATE > ?", event.getID(), recurrenceEndDate);
+            }
+            if (recurrenceCount != null) {
+                ao.deleteWithSQL(Event.class, "PARENT_ID = ? AND RECURRENCE_NUMBER > ?", event.getID(), recurrenceCount);
+            }
         }
 
         event.setStartDate(eventDto.getStartDate());
@@ -116,9 +237,18 @@ public class CustomEventServiceImpl implements CustomEventService {
         event.setEventType(eventType);
         event.setParticipants(eventDto.getParticipantNames());
         event.setAllDay(eventDto.isAllDay());
+        event.setRecurrenceType(recurrenceType);
+        event.setRecurrencePeriod(recurrencePeriod);
+        event.setRecurrenceExpression(recurrenceExpression);
+        event.setRecurrenceEndDate(recurrenceEndDate);
+        event.setRecurrenceCount(recurrenceCount);
         event.save();
 
-        return buildEvent(user, event, calendar, true);
+        if (event.getParent() != null && event.getRecurrenceNumber() != null) {
+            return buildRecurrentEvent(event.getParent(), event.getRecurrenceNumber(), event, null, null, calendar, user, true);
+        } else {
+            return buildEvent(user, event, calendar, true);
+        }
     }
 
     @Override
@@ -130,6 +260,7 @@ public class CustomEventServiceImpl implements CustomEventService {
             throw new SecurityException("No permission to edit event");
         }
 
+        ao.deleteWithSQL(Event.class, "PARENT_ID = ?", eventId);
         ao.delete(event);
     }
 
@@ -145,12 +276,95 @@ public class CustomEventServiceImpl implements CustomEventService {
 
         validateDates(moveDto.getStart(), moveDto.getEnd());
 
-        event.setAllDay(moveDto.isAllDay());
-        event.setStartDate(moveDto.getStart());
-        event.setEndDate(moveDto.getEnd());
-        event.save();
+        EditMode editMode = moveDto.getEditMode();
 
-        return buildEvent(user, event, calendar, true);
+        if (editMode == EditMode.SINGLE_EVENT) {
+            if (moveDto.getParentId() != null) {
+                if (event.getParent() != null) {
+                    throw new IllegalArgumentException("event has parent");
+                }
+                if (moveDto.getRecurrenceNumber() == null) {
+                    throw new IllegalArgumentException("recurrence number is null");
+                }
+
+                Event parent = getEvent(moveDto.getParentId());
+
+                //delete event with same parent & recurrence number, since we are unable to create unique index (parent_id, recurrence_number)
+                ao.deleteWithSQL(Event.class, "PARENT_ID = ? AND RECURRENCE_NUMBER = ?", parent.getID(), moveDto.getRecurrenceNumber());
+
+                event = ao.create(
+                    Event.class,
+                    new DBParam("TITLE", parent.getTitle()),
+                    new DBParam("CALENDAR_ID", parent.getCalendarId()),
+                    new DBParam("START_DATE", moveDto.getStart()),
+                    new DBParam("END_DATE", moveDto.getEnd()),
+                    new DBParam("EVENT_TYPE_ID", parent.getEventType().getID()),
+                    new DBParam("CREATOR_KEY", user.getKey()),
+                    new DBParam("PARTICIPANTS", parent.getParticipants()),
+                    new DBParam("ALL_DAY", moveDto.isAllDay()),
+                    new DBParam("RECURRENCE_TYPE", null),
+                    new DBParam("RECURRENCE_PERIOD", null),
+                    new DBParam("RECURRENCE_EXPRESSION", null),
+                    new DBParam("RECURRENCE_END_DATE", null),
+                    new DBParam("RECURRENCE_COUNT", null),
+                    new DBParam("PARENT_ID", parent.getID()),
+                    new DBParam("RECURRENCE_NUMBER", moveDto.getRecurrenceNumber())
+                );
+                return buildRecurrentEvent(parent, event.getRecurrenceNumber(), event, null, null, calendar, user, true);
+            } else {
+                event.setAllDay(moveDto.isAllDay());
+                event.setStartDate(moveDto.getStart());
+                event.setEndDate(moveDto.getEnd());
+                event.save();
+            }
+        } else if (editMode == EditMode.FOLLOWING_EVENTS) {
+            Timestamp startDate = moveDto.getStart();
+
+            Event originalEvent = event;
+
+            if (originalEvent.getParent() != null) {
+                originalEvent = originalEvent.getParent();
+            }
+
+            event = ao.create(
+                Event.class,
+                new DBParam("TITLE", event.getTitle()),
+                new DBParam("CALENDAR_ID", event.getCalendarId()),
+                new DBParam("START_DATE", startDate),
+                new DBParam("END_DATE", moveDto.getEnd()),
+                new DBParam("ALL_DAY", moveDto.isAllDay()),
+                new DBParam("EVENT_TYPE_ID", event.getEventType().getID()),
+                new DBParam("CREATOR_KEY", user.getKey()),
+                new DBParam("PARTICIPANTS", event.getParticipants()),
+                new DBParam("RECURRENCE_TYPE", event.getRecurrenceType()),
+                new DBParam("RECURRENCE_PERIOD", event.getRecurrencePeriod()),
+                new DBParam("RECURRENCE_EXPRESSION", event.getRecurrenceExpression()),
+                new DBParam("RECURRENCE_END_DATE", event.getRecurrenceEndDate()),
+                new DBParam("RECURRENCE_COUNT", event.getRecurrenceCount()),
+                new DBParam("PARENT_ID", null),
+                new DBParam("RECURRENCE_NUMBER", null)
+            );
+
+            ao.deleteWithSQL(Event.class, "PARENT_ID = ? AND START_DATE >= ?", originalEvent.getID(), startDate);
+            originalEvent.setRecurrenceEndDate(startDate);
+            originalEvent.save();
+
+            return buildEvent(user, event, calendar, true);
+        } else if (editMode == EditMode.ALL_EVENTS) {
+            if (event.getParent() != null || event.getRecurrenceType() == null) {
+                throw new IllegalArgumentException("wrong event");
+            }
+            event.setAllDay(moveDto.isAllDay());
+            event.setStartDate(moveDto.getStart());
+            event.setEndDate(moveDto.getEnd());
+            event.save();
+        }
+
+        if (event.getParent() != null && event.getRecurrenceNumber() != null) {
+            return buildRecurrentEvent(event.getParent(), event.getRecurrenceNumber(), event, null, null, calendar, user, true);
+        } else {
+            return buildEvent(user, event, calendar, true);
+        }
     }
 
     @Override
@@ -167,6 +381,7 @@ public class CustomEventServiceImpl implements CustomEventService {
     @Override
     public CustomEventDto getEventDto(ApplicationUser user, int id) throws GetException {
         Event event = getEvent(id);
+        Event recurringEvent = event;
 
         Calendar calendar = calendarService.getCalendar(event.getCalendarId());
 
@@ -177,6 +392,20 @@ public class CustomEventServiceImpl implements CustomEventService {
 
         CustomEventDto result = new CustomEventDto();
         EventType eventType = event.getEventType();
+
+        if (event.getParent() != null) {
+            Event parent = event.getParent();
+            recurringEvent = event.getParent();
+
+            result.setOriginalStartDate(parent.getStartDate());
+            result.setOriginalEndDate(parent.getEndDate());
+            result.setOriginalAllDay(parent.isAllDay());
+            result.setParentId(parent.getID());
+        } else {
+            result.setOriginalStartDate(event.getStartDate());
+            result.setOriginalEndDate(event.getEndDate());
+            result.setOriginalAllDay(event.isAllDay());
+        }
 
         result.setId(event.getID());
         result.setTitle(event.getTitle());
@@ -189,6 +418,15 @@ public class CustomEventServiceImpl implements CustomEventService {
         result.setEventTypeAvatar(eventType.getAvatar());
         result.setEditable(hasEditPermission);
         result.setAllDay(event.isAllDay());
+
+        RecurrenceType recurrenceType = recurringEvent.getRecurrenceType();
+        if (recurrenceType != null) {
+            result.setRecurrenceType(recurrenceType.name());
+            result.setRecurrenceExpression(recurringEvent.getRecurrenceExpression());
+            result.setRecurrencePeriod(recurringEvent.getRecurrencePeriod());
+            result.setRecurrenceCount(recurringEvent.getRecurrenceCount());
+            result.setRecurrenceEndDate(recurringEvent.getRecurrenceEndDate());
+        }
 
         EventTypeReminder reminder = getEventReminderOption(eventType.getID(), calendar.getID());
         if (reminder != null) {
@@ -222,7 +460,11 @@ public class CustomEventServiceImpl implements CustomEventService {
         }
     }
 
-    private void validateAndNormalize(CustomEventDto eventDto, Calendar calendar, EventType eventType) {
+    private void validateAndNormalize(CustomEventDto eventDto, Event event, Event parent, Calendar calendar, EventType eventType) {
+        if (eventDto.getEditMode() == null) {
+            throw new IllegalArgumentException("editMode is empty");
+        }
+
         Timestamp startDate = eventDto.getStartDate();
         Timestamp endDate = eventDto.getEndDate();
 
@@ -247,10 +489,131 @@ public class CustomEventServiceImpl implements CustomEventService {
                 keys.add(participant.getKey());
             }
         }
+
+        EditMode editMode = eventDto.getEditMode();
+        if (editMode == EditMode.SINGLE_EVENT) {
+            if (parent != null) {
+                eventDto.setRecurrenceType(null);
+
+                Timestamp recurrenceEndDate = parent.getRecurrenceEndDate();
+                if (recurrenceEndDate != null && eventDto.getStartDate().after(recurrenceEndDate)) {
+                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.startDateAfterRecurrenceEnd"), "startDate");
+                }
+            }
+        } else if (editMode == EditMode.FOLLOWING_EVENTS) {
+            Event e = parent != null ? parent : event;
+            if (!e.getStartDate().before(eventDto.getStartDate())) {
+                throw new RestFieldException("ru.mail.jira.plugins.calendar.customEvents.recurring.error.startDateBeforeOldStart", "startDate");
+            }
+        }
+
+        if (event == null && parent != null) {
+            if (eventDto.getRecurrenceNumber() == null) {
+                throw new IllegalArgumentException("Recurrence number is required");
+            }
+
+            if (parent.getRecurrenceType() == null) {
+                throw new IllegalArgumentException("Parent event must be recurrent");
+            }
+        }
+
+        String recurrenceTypeString = StringUtils.trimToNull(eventDto.getRecurrenceType());
+        eventDto.setRecurrenceType(recurrenceTypeString);
+
+        if (recurrenceTypeString != null) {
+            RecurrenceType recurrenceType;
+            try {
+                recurrenceType = RecurrenceType.valueOf(recurrenceTypeString);
+            } catch (IllegalArgumentException e) {
+                throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.dialog.error.unknownRecurrenceType"), "recurrenceType");
+            }
+
+            Integer recurrenceCount = eventDto.getRecurrenceCount();
+            Timestamp recurrenceEndDate = eventDto.getRecurrenceEndDate();
+
+            if (recurrenceCount != null && recurrenceEndDate != null) {
+                throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.countAndEndDate"), "recurrenceEnd");
+            }
+
+            if (recurrenceCount != null) {
+                if (recurrenceCount <= 0) {
+                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.countPositive"), "recurrenceCount");
+                }
+            }
+
+            if (recurrenceEndDate != null) {
+                if (recurrenceEndDate.before(eventDto.getStartDate())) {
+                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.endDateBeforeStart"), "recurrenceEndDate");
+                }
+            }
+
+            switch (recurrenceType) {
+                case DAILY:
+                case MONTHLY:
+                case YEARLY:
+                case WEEKDAYS:
+                case MON_WED_FRI:
+                case TUE_THU:
+                    validateRecurrencePeriod(eventDto);
+                    eventDto.setRecurrenceExpression(null);
+                    break;
+                case DAYS_OF_WEEK:
+                    validateRecurrencePeriod(eventDto);
+
+                    eventDto.setRecurrenceExpression(StringUtils.trimToNull(eventDto.getRecurrenceExpression()));
+                    if (eventDto.getRecurrenceExpression() == null) {
+                        throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.atLeastOneDayOfWeek"), "recurrenceDaysOfWeek");
+                    }
+
+                    List<DayOfWeek> collect = Arrays
+                        .stream(eventDto.getRecurrenceExpression().split(","))
+                        .map(StringUtils::trimToNull)
+                        .filter(Objects::nonNull)
+                        .map(value -> tryParseDayOfWeek(i18nResolver, value))
+                        .distinct()
+                        .sorted(Comparator.comparing(DayOfWeek::getValue))
+                        .collect(Collectors.toList());
+
+                    if (collect.size() == 0) {
+                        throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.atLeastOneDayOfWeek"), "recurrenceDaysOfWeek");
+                    }
+
+                    eventDto.setRecurrenceExpression(collect.stream().map(DayOfWeek::toString).collect(Collectors.joining(",")));
+                    break;
+                case CRON:
+                    try {
+                        caesiumCronExpressionValidator.validate(eventDto.getRecurrenceExpression());
+                    } catch (CronSyntaxException e) {
+                        throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.invalidCronExpression", e.getMessage()), "recurrenceExpression");
+                    }
+
+                    eventDto.setRecurrencePeriod(null);
+                    break;
+            }
+        }
+
         if (keys.size() > 0) {
             eventDto.setParticipantNames(keys.stream().collect(Collectors.joining(", ")));
         } else {
             eventDto.setParticipantNames(null);
+        }
+    }
+
+    protected void validateRecurrencePeriod(CustomEventDto eventDto) {
+        if (eventDto.getRecurrencePeriod() == null) {
+            throw new RestFieldException(i18nResolver.getText("issue.field.required", i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.period")), "recurrencePeriod");
+        }
+
+        if (eventDto.getRecurrencePeriod() <= 0) {
+            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.dialog.error.incorrectPeriod"), "recurrencePeriod");
+        }
+    }
+
+    private static DayOfWeek tryParseDayOfWeek(I18nResolver i18nResolver, String value) {
+        try {
+            return DayOfWeek.valueOf(value);
+        } catch (IllegalArgumentException e) {
+            throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.customEvents.recurring.error.unknownDayOfWeek", value), "recurrenceDaysOfWeek");
         }
     }
 
@@ -296,7 +659,7 @@ public class CustomEventServiceImpl implements CustomEventService {
             Query
                 .select()
                 .where(
-                    "(START_DATE >= ? AND (END_DATE <= ? OR END_DATE IS NULL AND START_DATE <= ?) OR (START_DATE <= ? AND END_DATE >= ?) OR (START_DATE <= ? AND END_DATE >= ?)) AND CALENDAR_ID = ?",
+                    "(START_DATE >= ? AND (END_DATE <= ? OR END_DATE IS NULL AND START_DATE <= ?) OR (START_DATE <= ? AND END_DATE >= ?) OR (START_DATE <= ? AND END_DATE >= ?)) AND CALENDAR_ID = ? AND RECURRENCE_TYPE IS NULL AND PARENT_ID IS NULL",
                     start, end, end, start, start, end, end, calendar.getID()
                 )
         );
@@ -304,6 +667,97 @@ public class CustomEventServiceImpl implements CustomEventService {
         for (Event customEvent : customEvents) {
             result.add(buildEvent(user, customEvent, calendar, canEditEvents));
         }
+        result.addAll(collectRecurringEvents(user, calendar, start, end));
+        return result;
+    }
+
+    private List<EventDto> collectRecurringEvents(ApplicationUser user, Calendar calendar, Date start, Date end) {
+        Event[] recurringEvents = ao.find(
+            Event.class,
+            Query
+                .select()
+                .where(
+                    "(START_DATE <= ?) AND CALENDAR_ID = ? AND RECURRENCE_TYPE IS NOT NULL",
+                    end, calendar.getID()
+                )
+        );
+
+        boolean canEditEvents = permissionService.hasEditEventsPermission(user, calendar);
+        ZoneId zoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
+
+        return Arrays
+            .stream(recurringEvents)
+            .flatMap(event -> generateRecurringEvents(
+                    event,
+                    calendar,
+                    user, canEditEvents,
+                    start.toInstant().atZone(zoneId), end.toInstant().atZone(zoneId),
+                    event.isAllDay() ? UTC_TZ.toZoneId() : zoneId
+                )
+                .stream()
+            )
+            .collect(Collectors.toList());
+    }
+
+    private List<EventDto> generateRecurringEvents(Event event, Calendar calendar, ApplicationUser user, boolean canEditEvents, ZonedDateTime since, ZonedDateTime until, ZoneId zoneId) {
+        DateGenerator dateGenerator = getDateGenerator(event, zoneId);
+
+        Map<Integer, Event> children = Arrays
+            .stream(getChildEvents(Date.from(since.toInstant()), Date.from(until.toInstant()), event))
+            .collect(Collectors.toMap(
+                Event::getRecurrenceNumber,
+                Function.identity(),
+                (a, b) -> {
+                    logger.warn(
+                        "found events ({}, {}) with same parent ({}) and recurrent number ({})",
+                        a.getID(), b.getID(), event.getID(), a.getRecurrenceNumber()
+                    );
+                    if (a.getID() > b.getID()) {
+                        return a;
+                    }
+                    return b;
+                }
+            ));
+
+        if (dateGenerator == null) {
+            logger.error("Unable to create date generator for event {} with recurrence type {}", event.getID(), event.getRecurrenceType().name());
+            return new ArrayList<>();
+        }
+
+        ZonedDateTime startDate = dateGenerator.nextDate();
+
+        Long duration = null;
+        ZonedDateTime endDate = null;
+        if (event.getEndDate() != null) {
+            duration = event.getEndDate().getTime() - event.getStartDate().getTime();
+            endDate = event.getEndDate().toInstant().atZone(zoneId); //get initial end date from event
+        }
+
+        Integer recurrenceCount = event.getRecurrenceCount();
+        ZonedDateTime recurrenceEndDate = null;
+        if (event.getRecurrenceEndDate() != null) {
+            recurrenceEndDate = event.getRecurrenceEndDate().toInstant().atZone(zoneId);
+        }
+
+        List<EventDto> result = new ArrayList<>();
+        int number = 0;
+
+        while (startDate.isBefore(until) && isBeforeEnd(startDate, recurrenceEndDate) && isCountOk(number, recurrenceCount)) {
+            if (startDate.isAfter(since) || endDate != null && endDate.isAfter(since)) {
+                result.add(buildRecurrentEvent(event, number, children.get(number), startDate, endDate, calendar, user, canEditEvents));
+            }
+
+            number++;
+            startDate = dateGenerator.nextDate();
+            if (duration != null) {
+                endDate = startDate.plus(duration, ChronoUnit.MILLIS);
+            }
+
+            if (isLimitExceeded(result.size())) {
+                break;
+            }
+        }
+
         return result;
     }
 
@@ -340,6 +794,18 @@ public class CustomEventServiceImpl implements CustomEventService {
         }
 
         return buildEventType(eventType, reminder);
+    }
+
+    private Event[] getChildEvents(Date start, Date end, Event event) {
+        return ao.find(
+            Event.class,
+            Query
+                .select()
+                .where(
+                    "(START_DATE >= ? AND (END_DATE <= ? OR END_DATE IS NULL AND START_DATE <= ?) OR (START_DATE <= ? AND END_DATE >= ?) OR (START_DATE <= ? AND END_DATE >= ?)) AND PARENT_ID = ? AND RECURRENCE_TYPE IS NULL",
+                    start, end, end, start, start, end, end, event.getID()
+                )
+        );
     }
 
     @Override
@@ -491,16 +957,16 @@ public class CustomEventServiceImpl implements CustomEventService {
     }
 
     private EventDto buildEvent(ApplicationUser user, Event event, Calendar calendar, boolean canEditEvents) {
-        DateTimeFormatter dateFormatter;
-        if (event.isAllDay()) {
-            dateFormatter = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE).withZone(UTC_TZ);
-        } else {
-            dateFormatter = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-        }
+        DateTimeFormatter dateFormatter = getDateFormatter(user, event.isAllDay());
 
         EventDto result = new EventDto();
         result.setCalendarId(event.getCalendarId());
-        result.setId(String.valueOf(-1 * event.getID()));
+        if (event.getRecurrenceNumber() != null && event.getParent() != null) {
+            result.setId(event.getParent().getID() + "-" + event.getRecurrenceNumber());
+        } else {
+            result.setId(String.valueOf(-1 * event.getID()));
+        }
+        result.setOriginalId(String.valueOf(event.getID()));
         result.setTitle(event.getTitle());
         result.setColor(calendar.getColor());
         result.setAllDay(event.isAllDay());
@@ -518,6 +984,67 @@ public class CustomEventServiceImpl implements CustomEventService {
                 result.setEnd(dateFormatter.format(event.getEndDate()));
             }
         }
+
+        result.setStartEditable(canEditEvents);
+        result.setDurationEditable(canEditEvents);
+
+        return result;
+    }
+
+    protected EventDto buildRecurrentEvent(
+        Event event, int number, Event childEvent,
+        ZonedDateTime startDate, ZonedDateTime endDate,
+        Calendar calendar, ApplicationUser user, boolean canEditEvents
+    ) {
+        EventDto result = new EventDto();
+        if (childEvent != null) {
+            DateTimeFormatter dateTimeFormatter = getDateFormatter(user, childEvent.isAllDay());
+
+            result.setTitle(childEvent.getTitle());
+            result.setOriginalId(String.valueOf(childEvent.getID()));
+            result.setParentId(String.valueOf(event.getID()));
+
+            result.setAllDay(childEvent.isAllDay());
+            result.setStart(dateTimeFormatter.format(childEvent.getStartDate()));
+            if (childEvent.getEndDate() != null) {
+                if (childEvent.isAllDay()) {
+                    result.setEnd(dateTimeFormatter.format(new Date(childEvent.getEndDate().getTime() + TimeUnit.DAYS.toMillis(1))));
+                } else {
+                    result.setEnd(dateTimeFormatter.format(childEvent.getEndDate()));
+                }
+            }
+
+            result.setParticipants(parseParticipants(childEvent.getParticipants()));
+        } else {
+            DateTimeFormatter dateTimeFormatter = getDateFormatter(user, event.isAllDay());
+
+            result.setTitle(event.getTitle());
+            result.setOriginalId(String.valueOf(event.getID()));
+
+            result.setAllDay(event.isAllDay());
+            result.setStart(dateTimeFormatter.format(Date.from(startDate.toInstant())));
+            if (endDate != null) {
+                if (event.isAllDay()) {
+                    result.setEnd(dateTimeFormatter.format(Date.from(endDate.plusDays(1).toInstant())));
+                } else {
+                    result.setEnd(dateTimeFormatter.format(Date.from(endDate.toInstant())));
+                }
+            }
+
+            result.setParticipants(parseParticipants(event.getParticipants()));
+        }
+        result.setOriginalStart(event.getStartDate());
+        result.setOriginalEnd(event.getEndDate());
+        result.setOriginalAllDay(event.isAllDay());
+
+        result.setId(event.getID() + "-" + number);
+        result.setCalendarId(event.getCalendarId());
+        result.setRecurrenceNumber(number);
+
+        result.setColor(calendar.getColor());
+        result.setType(EventDto.Type.CUSTOM);
+        result.setIssueTypeImgUrl(event.getEventType().getAvatar());
+        result.setRecurring(true);
 
         result.setStartEditable(canEditEvents);
         result.setDurationEditable(canEditEvents);
@@ -556,5 +1083,107 @@ public class CustomEventServiceImpl implements CustomEventService {
         }
 
         return dto;
+    }
+
+    private DateTimeFormatter getDateFormatter(ApplicationUser user, boolean allDay) {
+        if (allDay) {
+            return jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE).withZone(UTC_TZ);
+        } else {
+            return jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+        }
+    }
+
+    private boolean isBeforeEnd(ZonedDateTime time, ZonedDateTime endTime) {
+        return endTime == null || time.isBefore(endTime);
+    }
+
+    private boolean isCountOk(int number, Integer recurrenceCount) {
+        return recurrenceCount == null || number <= recurrenceCount;
+    }
+
+    private boolean isLimitExceeded(int currentEventCount) {
+        if (currentEventCount > GENERATION_LIMIT_PER_REQUEST) {
+            logger.warn("Recurrent event limit per request exceeded");
+            return true;
+        }
+        return false;
+    }
+
+    private DateGenerator getDateGenerator(Event event, ZoneId zoneId) {
+        ZonedDateTime startDate = event.getStartDate().toInstant().atZone(zoneId);
+        switch (event.getRecurrenceType()) {
+            case DAILY:
+                return new ChronoUnitDateGenerator(
+                    ChronoUnit.DAYS,
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case WEEKDAYS:
+                return new DaysOfWeekDateGenerator(
+                    ImmutableSet.of(
+                        DayOfWeek.MONDAY,
+                        DayOfWeek.TUESDAY,
+                        DayOfWeek.WEDNESDAY,
+                        DayOfWeek.THURSDAY,
+                        DayOfWeek.FRIDAY
+                    ),
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case MON_WED_FRI:
+                return new DaysOfWeekDateGenerator(
+                    ImmutableSet.of(
+                        DayOfWeek.MONDAY,
+                        DayOfWeek.WEDNESDAY,
+                        DayOfWeek.FRIDAY
+                    ),
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case TUE_THU:
+                return new DaysOfWeekDateGenerator(
+                    ImmutableSet.of(
+                        DayOfWeek.TUESDAY,
+                        DayOfWeek.THURSDAY
+                    ),
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case DAYS_OF_WEEK:
+                return new DaysOfWeekDateGenerator(
+                    Arrays
+                        .stream(event.getRecurrenceExpression().split(","))
+                        .map(DayOfWeek::valueOf)
+                        .collect(Collectors.toSet()),
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case MONTHLY:
+                return new ChronoUnitDateGenerator(
+                    ChronoUnit.MONTHS,
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case YEARLY:
+                return new ChronoUnitDateGenerator(
+                    ChronoUnit.YEARS,
+                    event.getRecurrencePeriod(),
+                    startDate
+                );
+            case CRON:
+                try {
+                    return new CronDateGenerator(
+                        event.getRecurrenceExpression(),
+                        zoneId,
+                        startDate
+                    );
+                } catch (CronSyntaxException e) {
+                    logger.error(
+                        "unable to create cron date generator for event {} with expression {}",
+                        event.getID(), event.getRecurrenceExpression(), e
+                    );
+                }
+        }
+        return null;
     }
 }

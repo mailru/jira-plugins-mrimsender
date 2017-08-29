@@ -5,6 +5,7 @@
     <meta name="decorator" content="atl.general"/>
     <meta name="ajs-advanced-search-help-url" content="https://docs.atlassian.com/jira/docs-064/Advanced+Searching"/>
     <meta name="ajs-advanced-search-help-title" content="$i18n.getText( "navigator.advanced.query.syntax" )"/>
+    <meta name="ajs-mailrucal-use-iso8601" content="$iso8601Used"/>
     $webResourceManager.requireResource( "jira.webresources:global-static" )
     $webResourceManager.requireResource( "jira.webresources:jira-global" )
     $webResourceManager.requireResource( "ru.mail.jira.plugins.mailrucal:calendar-resources" )

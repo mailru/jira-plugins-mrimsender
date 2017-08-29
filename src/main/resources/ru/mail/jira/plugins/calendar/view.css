@@ -348,7 +348,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     height: 16px;
 }
 
-#calendar-custom-event-dialog label {
+#calendar-custom-event-dialog .field-group > label {
     width: 90px;
     margin-left: -105px;
 }
@@ -887,6 +887,7 @@ div.vis-item.vis-box {
     width: 16px;
     background-position: center;
     background-repeat: no-repeat;
+    background-size: 16px 16px;
 }
 
 .custom-type-icon-event-cal,
@@ -923,6 +924,46 @@ div.vis-item.vis-box {
 
 .custom-type-icon-leave {
     background-image: url('calendar-img/leave.png');
+}
+
+@media
+only screen and (min-device-pixel-ratio: 1.25),
+only screen and (min-resolution: 1.25dppx) {
+    .custom-type-icon-event-cal,
+    .select2-highlighted .custom-type-icon-event {
+        background-image: url('calendar-img/event-cal.2x.png');
+    }
+
+    .custom-type-icon-event {
+        background-image: url('calendar-img/event.2x.png');
+    }
+
+    .custom-type-icon-travel-cal,
+    .select2-highlighted .custom-type-icon-travel {
+        background-image: url('calendar-img/travel-cal.2x.png');
+    }
+
+    .custom-type-icon-travel {
+        background-image: url('calendar-img/travel.2x.png');
+    }
+
+    .custom-type-icon-birthday-cal,
+    .select2-highlighted .custom-type-icon-birthday {
+        background-image: url('calendar-img/birthday-cal.2x.png');
+    }
+
+    .custom-type-icon-birthday {
+        background-image: url('calendar-img/birthday.2x.png');
+    }
+
+    .custom-type-icon-leave-cal,
+    .select2-highlighted .custom-type-icon-leave {
+        background-image: url('calendar-img/leave-cal.2x.png');
+    }
+
+    .custom-type-icon-leave {
+        background-image: url('calendar-img/leave.2x.png');
+    }
 }
 
 .time-field {
@@ -1036,4 +1077,81 @@ div.vis-item.vis-box {
 .calendar-quick-filters dd a:active,
 .calendar-quick-filters dd a:link {
     text-decoration: none;
+}
+
+#calendar-custom-event-dialog .dayOfWeek-checkbox {
+    display: inline-block;
+    padding: 0 0 0 15px;
+}
+
+#calendar-custom-event-dialog .dayOfWeek-checkbox:not(:last-child) {
+    margin-right: 8px;
+}
+
+#recurrence-end-count {
+    height: 100%;
+}
+
+.recurring-icon {
+    position: absolute;
+    left: 9px;
+    top: 9px;
+    color: white;
+    z-index: 2;
+}
+
+.vis-item-content .recurring-icon {
+    left: 14px;
+    top: 14px;
+}
+
+.recurring-edited-icon {
+    position: absolute;
+    left: 9px;
+    top: 0;
+    color: white;
+    z-index: 2;
+}
+
+.vis-item-content .recurring-edited-icon {
+    left: 14px;
+    top: 5px;
+}
+
+.recurring-icon:before, .recurring-edited-icon:before  {
+    font-size: 10px;
+}
+
+.recurring-icon-bg {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    z-index: 1;
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+}
+
+.fc-content {
+    min-height: 19px;
+}
+
+.vis-item-content .recurring-icon-bg {
+    left: 13px;
+    top: 13px;
+}
+
+.recurring-edited-icon-bg {
+    position: absolute;
+    left: 8px;
+    top: -1px;
+    z-index: 1;
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+}
+
+.vis-item-content .recurring-edited-icon-bg {
+    left: 13px;
+    top: 4px;
 }

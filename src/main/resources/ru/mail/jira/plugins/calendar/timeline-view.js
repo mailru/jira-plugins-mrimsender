@@ -1,7 +1,7 @@
 (function(factory) {
     factory(moment);
 })(function(moment) {
-    define('calendar/timeline-view', ['jquery', 'underscore'], function($, _) {
+    define('calendar/timeline-view', ['jquery', 'underscore', 'calendar/edit-type-dialog'], function($, _, EditTypeDialog) {
         var FC = $.fullCalendar;
         var View = FC.View;
         var TimelineView;
@@ -70,7 +70,9 @@
                 }
             },
             renderEvents: function(_events) {
-                var events = _.map(_events, $.proxy(this._transformEvent, this));
+                var events = _.map(_events, $.proxy(function(event) {
+                    return this._transformEvent(event, false);
+                }, this));
                 this.timeline.setData({items: events});
             },
             getRangeInterval: function() {
@@ -135,7 +137,6 @@
                 this.timeline.range.zoom(1 / 1.5);
                 return this.timelineOptions.zoomMin < this.getRangeInterval();
             },
-
             _onMove: function(item, callback) {
                 this.options.calendarView.eventDialog && this.options.calendarView.eventDialog.hide();
 
@@ -169,28 +170,92 @@
                         }, this)
                     });
                 } else if (item.eventType === 'CUSTOM') {
-                    var eventId = -1 * parseInt(item.eventId);
-                    $.ajax({
-                        type: 'PUT',
-                        url: contextPath + '/rest/mailrucalendar/1.0/customEvent/' + eventId + '/move',
-                        contentType: 'application/json; charset=utf-8',
-                        data: JSON.stringify({
-                            allDay: item.allDay,
-                            start: !item.allDay ? moment(start).format('x') : moment.utc(start).format('x'),
-                            end: end ? !item.allDay ? moment(end).format('x') : moment.utc(end).subtract(1, 'days').format('x') : null
-                        }),
-                        error: function (xhr) {
-                            var msg = 'Error while trying to drag event. Event id => ' + eventId;
-                            if (xhr.responseText)
-                                msg += xhr.responseText;
-                            alert(msg);
-                            callback(null);
-                        },
-                        success: $.proxy(function (event) {
-                            callback(this._transformEvent(event, true));
-                        }, this)
-                    });
+                    var eventId = item.originalId;
+
+                    var data = {
+                        allDay: item.allDay,
+                        start: !item.allDay ? moment(start).format('x') : moment.utc(start).format('x'),
+                        end: end ? !item.allDay ? moment(end).format('x') : moment.utc(end).subtract(1, 'days').format('x') : null,
+                        editMode: 'SINGLE_EVENT',
+                        parentId: null,
+                        recurrenceNumber: null
+                    };
+
+                    if (item.recurring) {
+                        var typeDialog = new EditTypeDialog({
+                            header: "Edit type",
+                            okHandler: $.proxy(function(editMode) {
+                                data.editMode = editMode;
+
+                                if (editMode === 'SINGLE_EVENT' && !item.parentId) {
+                                    data.parentId = item.originalId;
+                                    data.recurrenceNumber = item.recurrenceNumber;
+                                }
+
+                                if (editMode === 'ALL_EVENTS') {
+                                    var originalItem = this.timeline.itemsData.get(item.id);
+
+                                    var startDiff = moment(item.start).diff(moment(originalItem.start), 'ms');
+                                    var start = moment(item.originalStart).add(startDiff, 'ms');
+
+                                    if (item.allDay) {
+                                        data.start = moment.utc(start.format('YYYY-MM-DD')).format('x')
+                                    } else {
+                                        data.start = start.format('x');
+                                    }
+
+                                    if (data.end) {
+                                        var endDiff = moment(item.end).diff(moment(originalItem.end), 'ms');
+                                        var end = moment(item.originalEnd).add(endDiff, 'ms');
+                                        if (item.allDay) {
+                                            data.end = moment.utc(end.format('YYYY-MM-DD')).format('x')
+                                        } else {
+                                            data.end = end.format('x');
+                                        }
+                                    }
+
+                                    if (item.parentId) {
+                                        eventId = item.parentId;
+                                    }
+                                }
+
+                                this._moveCustomEvent(eventId, data, callback);
+                            }, this),
+                            cancelHandler: function() {
+                                callback(null);
+                            }
+                        });
+
+                        _.defer($.proxy(function() {
+                            this.options.calendarView.eventDialog && this.options.calendarView.eventDialog.hide();
+                            typeDialog.show();
+                        }, this));
+                    } else {
+                        this._moveCustomEvent(eventId, data, callback);
+                    }
                 }
+            },
+            _moveCustomEvent: function(eventId, data, callback) {
+                $.ajax({
+                    type: 'PUT',
+                    url: contextPath + '/rest/mailrucalendar/1.0/customEvent/' + eventId + '/move',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(data),
+                    error: function (xhr) {
+                        var msg = 'Error while trying to drag event. Event id => ' + eventId;
+                        if (xhr.responseText)
+                            msg += xhr.responseText;
+                        alert(msg);
+                        callback(null);
+                    },
+                    success: $.proxy(function (event) {
+                        if (data.editMode === 'SINGLE_EVENT') {
+                            callback(this._transformEvent(event, true));
+                        } else {
+                            this.calendar.refetchEvents();
+                        }
+                    }, this)
+                });
             },
             _onMoving: function(item, callback) {
                 this.options.calendarView.eventDialog && this.options.calendarView.eventDialog.hide();
@@ -248,7 +313,13 @@
                     durationEditable: event.durationEditable,
                     editable: event.startEditable || event.durationEditable,
                     eventType: event.type,
-                    allDay: event.allDay
+                    allDay: event.allDay,
+                    recurring: event.recurring,
+                    recurrenceNumber: event.recurrenceNumber,
+                    originalId: event.originalId,
+                    originalStart: event.originalStart,
+                    originalEnd: event.originalEnd,
+                    originalAllDay: event.originalAllDay
                 };
             },
             _buildContent: function(event) {
@@ -269,7 +340,27 @@
                         }
                         content = AJS.escapeHTML(formattedParticipants) + ': ';
                     }
-                    content = '<span class="calendar-event-issue-type custom-type-icon custom-type-icon-' + event.issueTypeImgUrl + '-cal"></span> ' + content + AJS.escapeHTML(event.title);
+
+                    var iconContent = '<span class="calendar-event-issue-type custom-type-icon custom-type-icon-' + event.issueTypeImgUrl + '-cal" /></span>';
+
+                    if (event.recurring) {
+                        var editedIcon = '';
+
+                        if (event.parentId) {
+                            editedIcon =
+                                '<span class="recurring-edited-icon-bg" style="background-color: ' + event.color + '"></span>' +
+                                '<span class="aui-icon aui-icon-small aui-iconfont-edit recurring-edited-icon"></span>';
+                        }
+
+                        iconContent =
+                            '<span>' +
+                                iconContent + editedIcon +
+                                '<span class="recurring-icon-bg" style="background-color: ' + event.color + '"></span>' +
+                                '<span class="aui-icon aui-icon-small aui-iconfont-build recurring-icon"></span>' +
+                            '</span>';
+                    }
+
+                    content = iconContent + ' ' + content + AJS.escapeHTML(event.title);
                 }
 
                 return content

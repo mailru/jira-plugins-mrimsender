@@ -10,6 +10,9 @@
  * @param formattedStartTime
  * @param formattedEndTime
  * @param reminderName
+ * @param recurrenceOptions
+ * @param formattedRecurrenceEndDate
+ * @param formattedRecurrenceEndTime
  */
 {template .dialog}
     <section role="dialog" id="calendar-custom-event-dialog" class="aui-layer aui-dialog2" aria-hidden="true" data-aui-modal="true">
@@ -106,6 +109,139 @@
                             {/if}
                         </select>
                         <div id="custom-event-dialog-participantNames-error" class="error hidden"></div>
+                    </div>
+
+                    {if $model.recurrenceType}
+                        <div class="field-group">
+                            <label>
+                                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.editMode')}
+                            </label>
+                            <div class="radio">
+                                <input class="radio" type="radio" name="editMode" id="custom-event-dialog-onlyThisInstance" value="SINGLE_EVENT" checked>
+                                <label for="custom-event-dialog-onlyThisInstance">{getText('ru.mail.jira.plugins.calendar.customEvents.recurring.onlyThisInstance')}</label>
+                            </div>
+                            <div class="radio">
+                                <input class="radio" type="radio" name="editMode" id="custom-event-dialog-followingEvents" value="FOLLOWING_EVENTS">
+                                <label for="custom-event-dialog-followingEvents">{getText('ru.mail.jira.plugins.calendar.customEvents.recurring.followingEvents')}</label>
+                            </div>
+                            <div class="radio">
+                                <input class="radio" type="radio" name="editMode" id="custom-event-dialog-allEvents" value="ALL_EVENTS">
+                                <label for="custom-event-dialog-allEvents">{getText('ru.mail.jira.plugins.calendar.customEvents.recurring.allEvents')}</label>
+                            </div>
+                        </div>
+                    {/if}
+
+                    <hr class="recurrence-type-field"/>
+
+                    <div id="custom-event-dialog-recurrence-error" class="aui-message aui-message-error hidden"></div>
+
+                    <div class="field-group recurrence-type-field">
+                        <label for="custom-event-dialog-recurrenceType" for="recurrence-type">
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.type')}
+                        </label>
+                        <select class="select" id="recurrence-type">
+                            <option value="">{getText('ru.mail.jira.plugins.calendar.customEvents.reminder.none')}</option>
+                            {foreach $option in $recurrenceOptions}
+                                <option value="{$option.value}" {if $model.recurrenceType == $option.value}selected{/if}>{$option.name}</option>
+                            {/foreach}
+                        </select>
+                    </div>
+                    <div class="field-group recurrence-field" id="recurrence-period-group">
+                        <label for="recurrence-period">
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.period')}
+                        </label>
+                        <input type="number" min="1" class="text short-field" value="{if $model.recurrencePeriod}{$model.recurrencePeriod}{else}1{/if}" id="recurrence-period"/>
+                        {sp}<span id="recurrence-period-name">{getText('ru.mail.jira.plugins.calendar.customEvents.recurring.period.days')}</span>
+                    </div>
+                    <div class="field-group recurrence-field" id="recurrence-cron-group">
+                        <label for="recurrence-cron">
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.cron')}
+                        </label>
+                        <input type="text" class="text long-medium-field" style="width: 195px;" id="recurrence-cron" {if $model.recurrenceType == 'CRON' and $model.recurrenceExpression}value="{$model.recurrenceExpression}"{/if}/>
+                        <a style="margin: 5px; float: right;" class="help-lnk" href="http://www.quartz-scheduler.org/documentation/quartz-2.2.x/tutorials/tutorial-lesson-06.html" title="Get external help about Cron Expressions" target="_blank">
+                            <span class="aui-icon aui-icon-small aui-iconfont-help">$i18n.getText( "ru.mail.jira.plugins.calendar.schedule.cronExpression.help" )</span>
+                        </a>
+                    </div>
+                    <div class="field-group recurrence-field" id="recurrence-days-of-week-group">
+                        <label>
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek')}
+                        </label>
+                        <div class="dayOfWeek-checkbox checkbox" title="{getText('ru.mail.jira.plugins.calendar.Monday')}">
+                            <input class="checkbox" type="checkbox" name="day-of-week" id="daysOfWeek-mon" value="MONDAY" {if $model.days.MONDAY}checked{/if}>
+                            <label for="daysOfWeek-mon">
+                                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.MONDAY')}
+                            </label>
+                        </div>
+                        <div class="dayOfWeek-checkbox checkbox" title="{getText('ru.mail.jira.plugins.calendar.Tuesday')}">
+                            <input class="checkbox" type="checkbox" name="day-of-week" id="daysOfWeek-tue" value="TUESDAY" {if $model.days.TUESDAY}checked{/if}>
+                            <label for="daysOfWeek-tue">
+                                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.TUESDAY')}
+                            </label>
+                        </div>
+                        <div class="dayOfWeek-checkbox checkbox" title="{getText('ru.mail.jira.plugins.calendar.Wednesday')}">
+                            <input class="checkbox" type="checkbox" name="day-of-week" id="daysOfWeek-wed" value="WEDNESDAY" {if $model.days.WEDNESDAY}checked{/if}>
+                            <label for="daysOfWeek-wed">
+                                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.WEDNESDAY')}
+                            </label>
+                        </div>
+                        <div class="dayOfWeek-checkbox checkbox" title="{getText('ru.mail.jira.plugins.calendar.Thursday')}">
+                            <input class="checkbox" type="checkbox" name="day-of-week" id="daysOfWeek-thu" value="THURSDAY" {if $model.days.THURSDAY}checked{/if}>
+                            <label for="daysOfWeek-thu">
+                                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.THURSDAY')}
+                            </label>
+                        </div>
+                        <div class="dayOfWeek-checkbox checkbox" title="{getText('ru.mail.jira.plugins.calendar.Friday')}">
+                            <input class="checkbox" type="checkbox" name="day-of-week" id="daysOfWeek-fri" value="FRIDAY" {if $model.days.FRIDAY}checked{/if}>
+                            <label for="daysOfWeek-fri">
+                                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.FRIDAY')}
+                            </label>
+                        </div>
+                        <div class="dayOfWeek-checkbox checkbox" title="{getText('ru.mail.jira.plugins.calendar.Saturday')}">
+                            <input class="checkbox" type="checkbox" name="day-of-week" id="daysOfWeek-sat" value="SATURDAY" {if $model.days.SATURDAY}checked{/if}>
+                            <label for="daysOfWeek-sat">
+                                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.SATURDAY')}
+                            </label>
+                        </div>
+                        <div class="dayOfWeek-checkbox checkbox" title="{getText('ru.mail.jira.plugins.calendar.Sunday')}">
+                            <input class="checkbox" type="checkbox" name="day-of-week" id="daysOfWeek-sun" value="SUNDAY" {if $model.days.SUNDAY}checked{/if}>
+                            <label for="daysOfWeek-sun">
+                                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.daysOfWeek.short.SUNDAY')}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="field-group recurrence-field" id="recurrence-end-group">
+                        <label>
+                            {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.end')}
+                        </label>
+                        <div class="radio">
+                            <input class="radio" type="radio" name="recurrenceEnd" id="recurrence-end-never" value="" {if not $model.recurrenceEndDate and not $model.recurrenceCount}checked{/if}>
+                            <label for="recurrence-end-never">{getText('ru.mail.jira.plugins.calendar.customEvents.recurring.end.never')}</label>
+                        </div>
+                        <div class="radio">
+                            <input class="radio" type="radio" name="recurrenceEnd" id="recurrence-end-count" value="count" {if $model.recurrenceCount}checked{/if}>
+                            <label for="recurrence-end-count">
+                                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.end.afterCount')}
+                                {sp}<input type="number" class="text short-field" min="1" value="{if $model.recurrenceCount}{$model.recurrenceCount}{else}1{/if}" id="recurrence-end-count-value"/>
+                                {sp}<span>{getText('ru.mail.jira.plugins.calendar.customEvents.recurring.end.afterCount2')}</span>
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <input class="radio" type="radio" name="recurrenceEnd" id="recurrence-end-date" value="date" {if $model.recurrenceEndDate}checked{/if}>
+                            <label for="recurrence-end-date">
+                                {getText('ru.mail.jira.plugins.calendar.customEvents.recurring.end.onDate')}
+                                <br/>
+                                <div style="margin-left: -20px;">
+                                    <input
+                                        class="text medium-long-field date-field"
+                                        type="text"
+                                        value="{if $model.recurrenceEndDate}{$formattedRecurrenceEndDate}{/if}"
+                                        id="recurrence-end-date-value"
+                                    />
+                                    <input class="text time-field" id="recurrence-end-time-value" type="text" value="{if $model.recurrenceEndDate and not $model.allDay}{$formattedRecurrenceEndTime}{/if}"/>
+                                    <div id="custom-event-dialog-recurrenceEndDate-error" class="error hidden"></div>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                 </form>
             {else}

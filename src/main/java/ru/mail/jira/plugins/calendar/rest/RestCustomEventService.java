@@ -37,6 +37,7 @@ public class RestCustomEventService {
             @Override
             protected EventDto doAction() throws Exception {
                 licenseService.checkLicense();
+                customEventDto.setEditMode(EditMode.SINGLE_EVENT);
                 return customEventService.createEvent(jiraAuthenticationContext.getLoggedInUser(), customEventDto);
             }
         }.getResponse();
@@ -60,6 +61,9 @@ public class RestCustomEventService {
             @Override
             protected EventDto doAction() throws Exception {
                 eventDto.setId(eventId);
+                if (eventDto.getEditMode() == null) {
+                    eventDto.setEditMode(EditMode.SINGLE_EVENT);
+                }
                 return customEventService.editEvent(jiraAuthenticationContext.getLoggedInUser(), eventDto);
             }
         }.getResponse();
@@ -85,6 +89,9 @@ public class RestCustomEventService {
             @Override
             protected EventDto doAction() throws Exception {
                 licenseService.checkLicense();
+                if (moveDto.getEditMode() == null) {
+                    moveDto.setEditMode(EditMode.SINGLE_EVENT);
+                }
                 return customEventService.moveEvent(jiraAuthenticationContext.getLoggedInUser(), eventId, moveDto);
             }
         }.getResponse();

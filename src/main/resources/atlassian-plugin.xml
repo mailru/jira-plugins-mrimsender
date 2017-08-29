@@ -47,6 +47,7 @@
         <resource type="download" name="templates.soy.js" location="ru/mail/jira/plugins/calendar/templates.soy"/>
         <resource type="download" name="calendar-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/calendar-dialog.soy"/>
         <resource type="download" name="confirm-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/confirm-dialog.soy"/>
+        <resource type="download" name="edit-type-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/edit-type-dialog.soy"/>
         <resource type="download" name="feed-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/feed-dialog.soy"/>
         <resource type="download" name="import-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/import-dialog.soy"/>
         <resource type="download" name="custom-event-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/custom-event-dialog.soy"/>
@@ -79,6 +80,8 @@
         <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
 
         <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
+        <resource type="download" name="recurrence.js" location="ru/mail/jira/plugins/calendar/recurrence.js"/>
+        <resource type="download" name="edit-type-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/edit-type-dialog.js"/>
         <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
@@ -117,10 +120,12 @@
         <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
 
         <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
+        <resource type="download" name="recurrence.js" location="ru/mail/jira/plugins/calendar/recurrence.js"/>
         <resource type="download" name="calendar-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/calendar-dialog.js"/>
         <resource type="download" name="feed-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/feed-dialog.js"/>
         <resource type="download" name="import-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/import-dialog.js"/>
         <resource type="download" name="confirm-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/confirm-dialog.js"/>
+        <resource type="download" name="edit-type-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/edit-type-dialog.js"/>
         <resource type="download" name="custom-event-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/custom-event-dialog.js"/>
         <resource type="download" name="quick-filter-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/quick-filter-dialog.js"/>
         <resource type="download" name="feedback-flag.js" location="ru/mail/jira/plugins/calendar/feedback-flag.js"/>

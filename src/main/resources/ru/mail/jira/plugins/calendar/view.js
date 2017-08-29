@@ -433,32 +433,46 @@ require(['jquery',
             _createCustomEvent: function(model) {
                 var customEventDialogView = new CustomEventDialog({
                     model: new CustomEvent(model),
+                    jsonModel: model,
                     userData: this.model,
                     calendars: this.collection.toJSON(),
-                    successHandler: $.proxy(function() {
-                        //todo: find if we can add event without reloading
-                        this.calendarView.reload();
+                    successHandler: $.proxy(function(createdEvent) {
+                        if (createdEvent.recurrenceType) {
+                            this.calendarView.reload();
+                        } else {
+                            this.calendarView.addEvent(createdEvent);
+                        }
                     }, this)
                 });
                 customEventDialogView.show();
             },
-            _editCustomEvent: function(model) {
+            _editCustomEvent: function(model, jsonModel) {
                 var customEventDialogView = new CustomEventDialog({
                     model: model,
+                    jsonModel: jsonModel,
                     calendar: null,
                     calendars: this.collection.toJSON(),
-                    successHandler: $.proxy(function() {
-                        //todo: find if we can change event without reloading
-                        this.calendarView.reload();
+                    successHandler: $.proxy(function(updatedEvent) {
+                        if (updatedEvent.recurrenceType) {
+                            this.calendarView.reload();
+                        } else {
+                            this.calendarView.updateEvent(updatedEvent);
+                        }
                     }, this)
                 });
                 customEventDialogView.show();
             },
             _deleteCustomEvent: function(model) {
+                var text = AJS.I18n.getText('ru.mail.jira.plguins.calendar.customEvents.confirmDelete', '<b>' + AJS.escapeHtml(model.get('title')) + '</b>');
+
+                if (model.get('parentId')) {
+                    text = AJS.I18n.getText('ru.mail.jira.plugins.calendar.customEvents.recurring.deleteInstance') + '<br/>' + text;
+                }
+
                 var confirmDialog = new ConfirmDialog({
                     okText: AJS.I18n.getText('common.words.delete'),
                     header: AJS.I18n.getText('ru.mail.jira.plguins.calendar.customEvents.confirmDeleteHeader'),
-                    text: AJS.I18n.getText('ru.mail.jira.plguins.calendar.customEvents.confirmDelete', '<b>' + AJS.escapeHtml(model.get('title')) + '</b>'),
+                    text: text,
                     okHandler: $.proxy(function() {
                         $.ajax({
                             url: AJS.contextPath() + '/rest/mailrucalendar/1.0/customEvent/' + model.get('id'),
@@ -541,7 +555,6 @@ require(['jquery',
                             calendar: calendar.toJSON()
                         });
                 }, this);
-                console.log(htmlQuickFilters);
                 if (htmlQuickFilters.length === 0)
                     htmlQuickFilters = '<dd>' + AJS.I18n.getText('ru.mail.jira.plugins.calendar.quick.filter.empty') + '</dd>';
                 this.$('#calendar-quick-filters dt').after(htmlQuickFilters);
