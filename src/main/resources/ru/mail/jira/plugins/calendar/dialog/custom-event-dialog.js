@@ -141,9 +141,9 @@ define('calendar/custom-event-dialog', [
                     url: AJS.contextPath() + '/rest/mailrucalendar/1.0/customEvent/type/list',
                     dataType: 'json',
                     quietMillis: 100,
-                    data: function(term) {
+                    data: $.proxy(function(term) {
                         return {calendarId: this.$('#custom-event-dialog-calendar').val()};
-                    },
+                    }, this),
                     results: function(data) {
                         return {
                             results: $.map(data, function(e) {
