@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.calendar.common.FieldUtils;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter;
@@ -565,7 +566,7 @@ public class CalendarEventService {
     private Date retrieveDateByField(Issue issue, CustomField customField) {
         if (log.isDebugEnabled())
             log.debug("retrieveDateByField with params. issue={}, customField={}, customFieldType={}", new Object[]{issue, customField, customField.getClass()});
-        if (!(customField.getCustomFieldType() instanceof com.atlassian.jira.issue.fields.DateField))
+        if (!FieldUtils.isDateField(customField))
             throw new IllegalArgumentException("Bad date time => " + customField.getName());
         return (Date) issue.getCustomFieldValue(customField);
     }

@@ -33,6 +33,7 @@ import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import org.apache.commons.lang3.StringUtils;
+import ru.mail.jira.plugins.calendar.common.FieldUtils;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseStatus;
 import ru.mail.jira.plugins.calendar.rest.dto.DateField;
@@ -156,9 +157,10 @@ public class RestConfigurationService {
         dateFields.add(DateField.of(CalendarEventService.RESOLVED_DATE_KEY, i18nHelper.getText("common.concepts.resolved")));
         dateFields.add(DateField.of(CalendarEventService.DUE_DATE_KEY, i18nHelper.getText("issue.field.duedate")));
 
-        for (CustomField customField : customFieldManager.getCustomFieldObjects())
-            if (customField.getCustomFieldType() instanceof com.atlassian.jira.issue.fields.DateField)
+        for (CustomField customField : customFieldManager.getCustomFieldObjects()) {
+            if (FieldUtils.isDateField(customField))
                 dateFields.add(DateField.of(customField.getId(), customField.getName()));
+        }
 
         return dateFields;
     }
