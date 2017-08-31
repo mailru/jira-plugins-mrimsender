@@ -113,6 +113,11 @@
             <version>${atlassian.spring.scanner.version}</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>com.atlassian.scheduler</groupId>
+            <artifactId>atlassian-scheduler-api</artifactId>
+            <version>1.6.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -202,7 +207,7 @@
         <!-- Check compilation for version 6.3.4 - 7.1.6 - 7.3.2-->
         <!--<jira.version>6.3.13</jira.version>-->
         <!--<jira.version>6.4.1</jira.version>-->
-        <jira.version>7.3.7</jira.version>
+        <jira.version>7.0.0</jira.version>
         <amps.version>6.2.11</amps.version>
         <ao.version>1.2.0</ao.version>
         <atlassian.spring.scanner.version>1.2.13</atlassian.spring.scanner.version>
