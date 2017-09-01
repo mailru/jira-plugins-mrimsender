@@ -14,6 +14,7 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueInputParameters;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.RendererManager;
+import com.atlassian.jira.issue.customfields.impl.CalculatedCFType;
 import com.atlassian.jira.issue.customfields.impl.DateCFType;
 import com.atlassian.jira.issue.customfields.impl.DateTimeCFType;
 import com.atlassian.jira.issue.fields.AssigneeSystemField;
@@ -309,7 +310,7 @@ public class CalendarEventService {
         boolean isAllDay = isAllDayEvent(startCF, endCF, startField, endField);
         if (log.isDebugEnabled())
             log.debug("Issue isAllDay={}", isAllDay);
-        boolean dateFieldsIsDraggable = isDateFieldsDraggable(startField, endField);
+        boolean dateFieldsIsDraggable = isDateFieldsDraggable(startField, startCF, endField, endCF);
         if (log.isDebugEnabled())
             log.debug("dateFieldsIsDraggable={}", dateFieldsIsDraggable);
 
@@ -360,7 +361,7 @@ public class CalendarEventService {
         }
 
         event.setStartEditable(dateFieldsIsDraggable && jiraDeprecatedService.issueService.isEditable(issue, user));
-        event.setDurationEditable(isDateFieldResizable(endField) && startDate != null && endDate != null && jiraDeprecatedService.issueService.isEditable(issue, user));
+        event.setDurationEditable(isDateFieldResizable(endField, endCF) && startDate != null && endDate != null && jiraDeprecatedService.issueService.isEditable(issue, user));
 
         if (includeIssueInfo)
             event.setIssueInfo(getEventInfo(calendar, issue, user));
@@ -502,8 +503,7 @@ public class CalendarEventService {
         Calendar calendar = calendarService.getCalendar(calendarId);
         CustomField eventStartCF = null;
         CustomField eventEndCF = null;
-        if (isDateFieldNotDraggable(calendar.getEventStart()) && isDateFieldNotDraggable(calendar.getEventEnd()))
-            throw new IllegalArgumentException(String.format("Can not move event with key => %s, because it contains not draggable event date field", issue.getKey()));
+
         if (calendar.getEventStart().startsWith("customfield_")) {
             eventStartCF = customFieldManager.getCustomFieldObject(calendar.getEventStart());
             if (eventStartCF == null)
@@ -515,13 +515,16 @@ public class CalendarEventService {
                 throw new IllegalStateException("Can not find custom field => " + calendar.getEventEnd()); //todo:xxx may be not stateException
         }
 
+        if (isDateFieldNotDraggable(calendar.getEventStart(), eventStartCF) && isDateFieldNotDraggable(calendar.getEventEnd(), eventEndCF))
+            throw new IllegalArgumentException(String.format("Can not move event with key => %s, because it contains not draggable event date field", issue.getKey()));
+
         DateTimeFormatter dateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
         DateTimeFormatter datePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.DATE_PICKER);
         DateTimeFormatter dateTimePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.DATE_TIME_PICKER);
 
         IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
 
-        if (start != null && isDateFieldResizable(calendar.getEventStart())) {
+        if (start != null && isDateFieldResizable(calendar.getEventStart(), eventStartCF)) {
             Date startDate = dateTimeFormat.parse(start);
             if (eventStartCF != null) {
                 DateTimeFormatter formatter = eventStartCF.getCustomFieldType() instanceof DateTimeCFType ? dateTimePickerFormat : datePickerFormat;
@@ -529,7 +532,7 @@ public class CalendarEventService {
             } else
                 issueInputParams.setDueDate(datePickerFormat.format(startDate));
         }
-        if (end != null && isDateFieldResizable(calendar.getEventEnd()) && !calendar.getEventStart().equals(calendar.getEventEnd())) {
+        if (end != null && isDateFieldResizable(calendar.getEventEnd(), eventEndCF) && !calendar.getEventStart().equals(calendar.getEventEnd())) {
             Date endDate = dateTimeFormat.parse(end);
             if (eventEndCF != null) {
                 if (eventEndCF.getCustomFieldType() instanceof DateTimeCFType)
@@ -579,20 +582,19 @@ public class CalendarEventService {
         return !isDateTimeField(cf);
     }
 
-    private boolean isDateFieldResizable(String field) {
+    private boolean isDateFieldResizable(String field, CustomField customField) {
+        if (customField != null) {
+            return !(customField.getCustomFieldType() instanceof CalculatedCFType);
+        }
         return !CREATED_DATE_KEY.equals(field) && !UPDATED_DATE_KEY.equals(field) && !RESOLVED_DATE_KEY.equals(field);
     }
 
-    private boolean isDateFieldNotDraggable(String field) {
-        return !isDateFieldResizable(field);
+    private boolean isDateFieldNotDraggable(String field, CustomField customField) {
+        return !isDateFieldResizable(field, customField);
     }
 
-    private boolean isDateFieldsDraggable(String startField, String endField) {
-        return isDateFieldResizable(startField) && (isDateFieldResizable(endField) || StringUtils.isEmpty(endField));
-    }
-
-    private boolean isDateFieldsNotDraggable(String startField, String endField) {
-        return !isDateFieldsDraggable(startField, endField);
+    private boolean isDateFieldsDraggable(String startField, CustomField startCf, String endField, CustomField endCf) {
+        return isDateFieldResizable(startField, startCf) && (isDateFieldResizable(endField, endCf) || StringUtils.isEmpty(endField));
     }
 
     private void fillDisplayedFields(IssueInfo issueInfo, String[] extraFields, Issue issue) {
