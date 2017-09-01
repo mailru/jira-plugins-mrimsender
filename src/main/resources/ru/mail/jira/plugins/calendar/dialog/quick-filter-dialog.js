@@ -1,7 +1,6 @@
 define('calendar/quick-filter-dialog', ['jquery', 'underscore', 'backbone', 'calendar/jql-auto-complete-utils'], function($, _, Backbone, CalendarJQLAutoComplete) {
     return Backbone.View.extend({
         events: {
-            'click .calendar-quick-filters-join' : 'changeQuickFiltersJoin',
             'click #calendar-quick-filter-add': 'addQuickFilter',
             'click .calendar-quick-filter-edit': 'editQuickFilter',
             'click .calendar-quick-filter-update': 'updateQuickFilter',
@@ -15,7 +14,6 @@ define('calendar/quick-filter-dialog', ['jquery', 'underscore', 'backbone', 'cal
             $(document.body).append(this.$el);
             CalendarJQLAutoComplete.initialize('mailrucalendar-quick-filter-jql-create', 'mailrucalendar-quick-filter-jql-error-create');
             this.setElement($('#mailrucalendar-quick-filter-dialog').unwrap());
-            this.initializeTooltips();
             var htmlQuickFilters = '';
             this.collection.each(function(quickFilter) {
                 htmlQuickFilters += JIRA.Templates.Plugins.MailRuCalendar.QuickFilterDialog.renderQuickFilterEntry({
@@ -40,9 +38,6 @@ define('calendar/quick-filter-dialog', ['jquery', 'underscore', 'backbone', 'cal
             this.collection.on('change', this._onChangeQuickFilter, this);
             this.collection.on('remove', this._onDeleteQuickFilter, this);
         },
-        initializeTooltips: function() {
-            this.$('#calendar-quick-filters-join .aui-iconfont-help').tooltip({gravity: 'w'});
-        },
         _keypressHandler: function(e) {
             switch (e.which) {
                 // esc
@@ -61,31 +56,6 @@ define('calendar/quick-filter-dialog', ['jquery', 'underscore', 'backbone', 'cal
             if (id.length > 0)
                 quickFilter.id = id;
             return quickFilter;
-        },
-        changeQuickFiltersJoin: function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var join = $(e.currentTarget).val();
-            var self = this;
-            $.ajax({
-                type: 'PUT',
-                context: this,
-                data: {
-                    join: join
-                },
-                url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/{1}/quickFilterJoin', AJS.contextPath(), this.calendar.id),
-                success: function() {
-                    this.$('.calendar-quick-filters-join').each(function() {
-                        $(this).attr("aria-pressed", false);
-                        if ($(this).val() === join)
-                            $(this).attr("aria-pressed", true);
-
-                    });
-                },
-                error: function(request) {
-                    alert(request.responseText);
-                }
-            });
         },
         addQuickFilter: function(e) {
             e && e.preventDefault();

@@ -7,14 +7,7 @@
 {template .dialog}
     <section role="dialog" id="mailrucalendar-quick-filter-dialog" class="aui-layer aui-dialog2" aria-hidden="true" data-aui-modal="true">
         <header class="aui-dialog2-header">
-            <h2 id="calendar-quick-filters-dialog-header" class="aui-dialog2-header-main">{getText('ru.mail.jira.plugins.calendar.quick.filter.dialog.title', $calendar.name)}</h2>
-            <div id="calendar-quick-filters-join">
-                <div class="aui-buttons">
-                    <button class="aui-button aui-button-compact calendar-quick-filters-join" {if $calendar.quickFilterJoin == 'AND'}aria-pressed="true"{/if} resolved="" value="AND">{getText('ru.mail.jira.plugins.calendar.quick.filter.dialog.join.and')}</button>
-            		<button class="aui-button aui-button-compact calendar-quick-filters-join" {if $calendar.quickFilterJoin == 'OR'}aria-pressed="true"{/if} resolved="" value="OR">{getText('ru.mail.jira.plugins.calendar.quick.filter.dialog.join.or')}</button>
-                </div>
-                <span class="aui-icon aui-icon-small aui-iconfont-help js-copy-clipboard" title="{getText('ru.mail.jira.plugins.calendar.quick.filter.dialog.join.title')}"></span>
-            </div>
+            <h2 id="calendar-dialog-header" class="aui-dialog2-header-main">{getText('ru.mail.jira.plugins.calendar.quick.filter.dialog.title', $calendar.name)}</h2>
         </header>
         <div class="aui-dialog2-content">
             <form class="aui unsectioned ajs-dirty-warning-exempt mailrucalendar-quick-filter-dialog-form">

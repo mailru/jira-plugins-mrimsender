@@ -46,9 +46,8 @@ public class RestQuickFilterService {
             @Override
             protected QuickFilterDto doAction() throws Exception {
                 ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-                QuickFilter quickFilter = quickFilterService.createQuickFilter(calendarId, quickFilterDto.getName(), quickFilterDto.getJql(), quickFilterDto.getDescription(), quickFilterDto.isShare(), user);
-                userCalendarService.addToFavouriteQuickFilter(calendarId, user.getKey(), quickFilter.getID(), true);
                 List<QuickFilter> favouriteQuickFilters = userCalendarService.getFavouriteQuickFilters(calendarId, user.getKey());
+                QuickFilter quickFilter = quickFilterService.createQuickFilter(calendarId, quickFilterDto.getName(), quickFilterDto.getJql(), quickFilterDto.getDescription(), quickFilterDto.isShare(), user);
                 return new QuickFilterDto(quickFilter, quickFilter.getCreatorKey().equals(user.getKey()), favouriteQuickFilters != null && favouriteQuickFilters.contains(quickFilter));
             }
         }.getResponse();

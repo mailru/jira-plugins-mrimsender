@@ -22,8 +22,6 @@ public interface CalendarService {
 
     void selectQuickFilter(int calendarId, ApplicationUser user, int id, boolean selected);
 
-    void updateQuickFilterJoin(int calendarId, ApplicationUser user, String join);
-
     void deleteCalendar(ApplicationUser user, int calendarId) throws GetException;
 
     CalendarDto[] getAllCalendars(ApplicationUser user);

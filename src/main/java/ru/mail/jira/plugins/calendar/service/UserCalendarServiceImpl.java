@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.calendar.service;
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.exception.UpdateException;
-import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import net.java.ao.ActiveObjectsException;
 import net.java.ao.Query;
@@ -13,8 +12,6 @@ import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter;
 import ru.mail.jira.plugins.calendar.model.QuickFilter;
 import ru.mail.jira.plugins.calendar.model.UserCalendar;
-import ru.mail.jira.plugins.calendar.model.UserData;
-import ru.mail.jira.plugins.calendar.rest.dto.UserDataDto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,12 +84,6 @@ public class UserCalendarServiceImpl implements UserCalendarService {
             favouriteQuickFilters[0].setSelected(selected);
             favouriteQuickFilters[0].save();
         }
-    }
-
-    public void updateQuickFilterJoin(int calendarId, String userKey, String join) throws GetException {
-        UserCalendar userCalendar = get(calendarId, userKey);
-        userCalendar.setQuickFilterJoin(join);
-        userCalendar.save();
     }
 
     @Override
