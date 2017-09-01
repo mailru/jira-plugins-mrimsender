@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>mailrucal</artifactId>
-    <version>3.3.0</version>
+    <version>3.3.1</version>
     <organization>
         <name>Mail.Ru Group</name>
         <url>http://mail.ru</url>
@@ -152,8 +152,9 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>net.sf.alchim</groupId>
+                <groupId>net.alchim31.maven</groupId>
                 <artifactId>yuicompressor-maven-plugin</artifactId>
+                <version>1.5.1</version>
                 <executions>
                     <execution>
                         <goals>

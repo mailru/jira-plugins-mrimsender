@@ -367,9 +367,9 @@ define('calendar/calendar-dialog', [
                         this.$('.search-field-container .description').fadeOut(250);
                     this.oldJql = currentJql;
                 }, this),
-                error: function() {
+                error: $.proxy(function() {
                     this.$('.search-field-container .description').fadeOut(250);
-                }
+                }, this)
             });
         },
         _showSourceField: function(sourceType) {
