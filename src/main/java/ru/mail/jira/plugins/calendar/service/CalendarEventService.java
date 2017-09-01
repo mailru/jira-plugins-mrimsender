@@ -575,7 +575,7 @@ public class CalendarEventService {
     }
 
     private boolean isDateTimeField(CustomField cf) {
-        return cf.getCustomFieldType() instanceof DateTimeCFType;
+        return cf.getCustomFieldType() instanceof DateTimeCFType || FieldUtils.isScriptRunnerField(cf);
     }
 
     private boolean isDateField(CustomField cf) {

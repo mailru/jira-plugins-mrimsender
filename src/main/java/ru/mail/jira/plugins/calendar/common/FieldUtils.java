@@ -17,7 +17,11 @@ public class FieldUtils {
 
     public static boolean isDateField(CustomField customField) {
         CustomFieldType customFieldType = customField.getCustomFieldType();
-        return customFieldType instanceof com.atlassian.jira.issue.fields.DateField ||
-            Consts.SR_FIELD_KEY.equals(customFieldType.getKey()) && Consts.SR_DATE_SEARCHER_KEY.equals(FieldUtils.getSearcherKey(customField));
+        return customFieldType instanceof com.atlassian.jira.issue.fields.DateField || isScriptRunnerField(customField);
+    }
+
+    public static boolean isScriptRunnerField(CustomField customField) {
+        return Consts.SR_FIELD_KEY.equals(customField.getCustomFieldType().getKey()) &&
+            Consts.SR_DATE_SEARCHER_KEY.equals(FieldUtils.getSearcherKey(customField));
     }
 }
