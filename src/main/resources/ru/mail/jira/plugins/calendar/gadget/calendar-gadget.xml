@@ -28,8 +28,6 @@
     <Content type="html">
         <![CDATA[
             #requireResource("com.atlassian.gadgets.publisher:ajs-gadgets")
-            #requireResource("jira.webresources:global-static")
-            #requireResource("jira.webresources:jira-global")
             #requireResource("ru.mail.jira.plugins.mailrucal:calendar-gadget-resources")
             #includeResources()
 

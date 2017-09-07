@@ -1,4 +1,4 @@
-define('calendar/calendar-gadget-config', ['calendar/calendar-view'], function(CalendarView) {
+define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/timeline-view'], function(CalendarView) {
     return {
         config: {
             descriptor: function(args) {

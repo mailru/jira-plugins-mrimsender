@@ -58,9 +58,15 @@
         <transformation extension="js">
             <transformer key="jsI18n"/>
         </transformation>
+        <dependency>jira.webresources:almond</dependency>
+        <dependency>jira.webresources:util-lite</dependency>
+        <dependency>jira.webresources:jquery</dependency>
+        <dependency>jira.webresources:momentjs</dependency>
+        <dependency>jira.webresources:jira-formatter</dependency>
+        <dependency>jira.webresources:autocomplete</dependency>
+
         <dependency>com.atlassian.auiplugin:ajs</dependency>
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
-        <dependency>jira.webresources:mentions-feature</dependency>
         <dependency>jira.webresources:jquery-livestamp</dependency>
         <dependency>ru.mail.jira.plugins.mailrucal:mailru-calendar-soy-templates</dependency>
 
