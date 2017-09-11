@@ -1,4 +1,10 @@
-define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/timeline-view'], function(CalendarView) {
+define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/timeline-view', 'underscore'], function(CalendarView, TimeLineView, _) {
+    function genArray(size, object) {
+        return _.map(_.range(size), function(i) {
+            return object;
+        });
+    }
+
     return {
         config: {
             descriptor: function(args) {
@@ -14,7 +20,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                             type: 'callbackBuilder',
                             callback: function(parentDiv) {
                                 var selectedCalendars = _.compact(gadget.getPref('calendars').split(','));
-                                var selectedCalendarMap = _.object(selectedCalendars, selectedCalendars.slice(0).fill(true));
+                                var selectedCalendarMap = _.object(selectedCalendars, genArray(selectedCalendars.length, true));
                                 var data = [];
                                 _.each(args.calendars, function(calendar) {
                                     data.push({
@@ -148,7 +154,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                 }
 
                 var selectedCalendars = _.compact(gadget.getPref('calendars').split(','));
-                var selectedCalendarMap = _.object(selectedCalendars, selectedCalendars.slice(0).fill(true));
+                var selectedCalendarMap = _.object(selectedCalendars, genArray(selectedCalendars.length, true));
                 var gadgetCalendars = _.filter(args.calendars, function(calendar) {
                     return !!selectedCalendarMap[calendar.id];
                 });
