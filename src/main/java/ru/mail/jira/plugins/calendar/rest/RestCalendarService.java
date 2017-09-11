@@ -282,7 +282,7 @@ public class RestCalendarService {
                         @Override
                         public void write(OutputStream output) throws IOException, WebApplicationException {
                             try {
-                                new CalendarOutputter().output(calendar, output);
+                                new CalendarOutputter(false).output(calendar, output);
                             } catch (ValidationException e) {
                                 throw new IOException(e);
                             }
