@@ -30,6 +30,8 @@ public interface Calendar extends Entity {
     @Accessor("Share")
     Permission[] getPermissions();
 
+    String getTimelineGroup();
+    void setTimelineGroup(String timelineGroup);
 
     @Deprecated
     String getAuthorKey();

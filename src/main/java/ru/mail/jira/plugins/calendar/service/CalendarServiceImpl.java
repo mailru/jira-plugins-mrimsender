@@ -373,6 +373,7 @@ public class CalendarServiceImpl implements CalendarService {
                 }
             }
             output.setFavouriteQuickFilters(favouriteQuickFilters);
+            output.setTimelineGroup(calendar.getTimelineGroup());
         }
         if (!changable && !canUse) {
             output.setHasError(true);

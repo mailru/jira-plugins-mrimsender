@@ -44,6 +44,11 @@ define('calendar/calendar-view', [
                     event = self.$el.fullCalendar('clientEvents', $(trigger).data('event-id'))[0];
                 }
 
+                console.log(event, trigger);
+
+                //todo: filter issues where event start field is not empty
+                //todo: group collapse doesnt work
+                //todo: event popover doesn't work properly
                 // Atlassian bug workaround
                 content.click(function(e) {
                     e.stopPropagation();
@@ -157,7 +162,7 @@ define('calendar/calendar-view', [
                 $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer').slideUp(400);
                 $('.aui-page-panel-nav').animate({width: 'toggle', 'padding': 'toggle'}, 400, $.proxy(function() {
                     if (this.getViewType() == 'timeline')
-                        this.$el.fullCalendar('getView').timeline.setOptions({height: $(window).height() - 93 + 'px'});
+                        this.$el.fullCalendar('getView').timeline.setOptions({height: $(window).height() - 134 + 'px'});
                 }, this));
             } else {
                 $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer,.aui-page-panel-nav').fadeIn(400);

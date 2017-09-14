@@ -1,6 +1,12 @@
 (function(factory) {
     factory(moment);
 })(function(moment) {
+    var groupFieldNames = {
+        "assignee": AJS.I18n.getText('issue.field.assignee'),
+        "issueType": "Issue type", //todo
+        "components": AJS.I18n.getText('issue.field.components')
+    };
+
     define('calendar/timeline-view', ['jquery', 'underscore', 'calendar/edit-type-dialog'], function($, _, EditTypeDialog) {
         var FC = $.fullCalendar;
         var View = FC.View;
@@ -16,7 +22,7 @@
         });
 
         // Display today red-line for scale == 'day' and step = 1
-        var oldTimeStepGetClassName = vis.TimeStep.prototype.getClassName;
+        /*var oldTimeStepGetClassName = vis.TimeStep.prototype.getClassName;
         vis.TimeStep.prototype.getClassName = function() {
             var m = this.moment(this.current);
             var current = m.locale ? m.locale('en') : m.lang('en'); // old versions of moment have .lang() function
@@ -26,15 +32,14 @@
 
             var className = oldTimeStepGetClassName.call(this);
             return this.scale == 'day' && this.step == 1 ? className + today(current) + ' vis-' + current.format('dddd').toLowerCase() : className;
-        };
+        };*/ //todo
 
         /**
          * Extend Fullcalendar View class to implement Timeline
          */
         TimelineView = View.extend({
-            defaultInterval: moment.duration(7, 'd'),
+            defaultInterval: moment.duration(14, 'd'),
             timelineOptions: {
-                //autoResize: false,
                 height: 450,
                 multiselect: false,
                 zoomable: false,
@@ -45,7 +50,9 @@
                     updateTime: true,
                     updateGroup: false,
                     remove: false
-                }
+                },
+                verticalScroll: true,
+                zoomKey: 'ctrlKey'
             },
             initialize: function() {
             },
@@ -73,6 +80,37 @@
                 var events = _.map(_events, $.proxy(function(event) {
                     return this._transformEvent(event, false);
                 }, this));
+
+                //todo: show issues without group
+                var groups = _.uniq(
+                    _.filter(
+                        _.map(events, function(e) {
+                            var avatarPrefix = '';
+
+                            if (e.groupAvatar) {
+                                avatarPrefix = '<img src="' + AJS.escapeHtml(e.groupAvatar) + '" class="timeline-group-avatar"/>';
+                            }
+
+                            return {
+                                id: e.group,
+                                content: '<div class="flex flex-row">' + avatarPrefix + '<div>' + e.groupName + '</div></div>', //todo: vertically center group name
+                                field: e.groupField
+                            }
+                        }),
+                        function(e) {return e}
+                    ),
+                    function(e) {return e.id}
+                );
+
+                var parentGroups = _.map(_.uniq(_.map(groups, function(e) {return e.field})), function(e) {return {id: e, content: groupFieldNames[e]}});
+
+                _.each(parentGroups, function(parent) {
+                    parent.nestedGroups = _.map(_.filter(groups, function(group) {
+                        return group.field === parent.id;
+                    }), function(e) {return e.id;});
+                });
+
+                this.timeline.setGroups(parentGroups.concat(groups));
                 this.timeline.setData({items: events});
             },
             getRangeInterval: function() {
@@ -319,7 +357,12 @@
                     originalId: event.originalId,
                     originalStart: event.originalStart,
                     originalEnd: event.originalEnd,
-                    originalAllDay: event.originalAllDay
+                    originalAllDay: event.originalAllDay,
+                    group: event.group,
+                    groupName: event.groupName,
+                    groupField: event.groupField,
+                    groupAvatar: event.groupAvatar,
+                    type: end ? 'range' : 'box'
                 };
             },
             _buildContent: function(event) {

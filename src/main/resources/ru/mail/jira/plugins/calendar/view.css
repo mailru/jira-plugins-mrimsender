@@ -1155,3 +1155,18 @@ only screen and (min-resolution: 1.25dppx) {
     left: 13px;
     top: 4px;
 }
+
+.timeline-group-avatar {
+    margin-right: 5px;
+    height: 36px;
+    width: auto;
+    float: left;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-row {
+    flex-direction: row;
+}

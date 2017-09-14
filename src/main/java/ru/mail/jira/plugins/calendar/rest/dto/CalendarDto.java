@@ -1,5 +1,6 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
+import lombok.Setter;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.UserCalendar;
 
@@ -7,6 +8,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
+@Setter
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
 public class CalendarDto {
@@ -35,6 +37,8 @@ public class CalendarDto {
     @XmlElement
     private Integer usersCount;
     @XmlElement
+    private String timelineGroup;
+    @XmlElement
     private List<QuickFilterDto> favouriteQuickFilters;
     @XmlElement
     private List<QuickFilterDto> selectedQuickFilters;
@@ -55,55 +59,7 @@ public class CalendarDto {
         }
     }
 
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    public void setChangable(boolean changable) {
-        this.changable = changable;
-    }
-
-    public void setViewable(boolean viewable) {
-        this.viewable = viewable;
-    }
-
-    public void setVisible(boolean visible) {
-        this.visible = visible;
-    }
-
-    public boolean isEventsEditable() {
-        return eventsEditable;
-    }
-
-    public void setEventsEditable(boolean eventsEditable) {
-        this.eventsEditable = eventsEditable;
-    }
-
-    public void setFavorite(boolean favorite) {
-        this.favorite = favorite;
-    }
-
-    public void setHasError(boolean withErrors) {
-        this.hasError = withErrors;
-    }
-
-    public void setError(String error) {
-        this.error = error;
-    }
-
-    public void setUsersCount(Integer usersCount) {
-        this.usersCount = usersCount;
-    }
-
     public Integer getUsersCount() {
         return usersCount;
-    }
-
-    public void setFavouriteQuickFilters(List<QuickFilterDto> favouriteQuickFilters) {
-        this.favouriteQuickFilters = favouriteQuickFilters;
-    }
-
-    public void setSelectedQuickFilters(List<QuickFilterDto> selectedQuickFilters) {
-        this.selectedQuickFilters = selectedQuickFilters;
     }
 }
