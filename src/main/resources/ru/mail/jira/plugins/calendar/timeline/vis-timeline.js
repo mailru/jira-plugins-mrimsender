@@ -22289,6 +22289,7 @@
              * @private
              */
             ItemSet.prototype._onSelectItem = function (event) {
+                event.target.click();
                 if (!this.options.selectable) return;
 
                 var ctrlKey = event.srcEvent && (event.srcEvent.ctrlKey || event.srcEvent.metaKey);

@@ -146,6 +146,7 @@ public class CalendarServiceImpl implements CalendarService {
         result.setSelectedColor(calendar.getColor());
         result.setSelectedEventStartId(calendar.getEventStart());
         result.setSelectedEventEndId(calendar.getEventEnd());
+        result.setTimelineGroup(calendar.getTimelineGroup());
 
         if (StringUtils.isNotEmpty(calendar.getDisplayedFields()))
             result.setSelectedDisplayedFields(Arrays.asList(calendar.getDisplayedFields().split(",")));
@@ -305,6 +306,7 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setEventStart(StringUtils.trimToNull(calendarSettingDto.getSelectedEventStartId()));
         calendar.setEventEnd(StringUtils.trimToNull(calendarSettingDto.getSelectedEventEndId()));
         calendar.setDisplayedFields(StringUtils.join(calendarSettingDto.getSelectedDisplayedFields(), ","));
+        calendar.setTimelineGroup(StringUtils.trimToNull(calendarSettingDto.getTimelineGroup()));
         calendar.save();
     }
 
@@ -417,8 +419,9 @@ public class CalendarServiceImpl implements CalendarService {
             if (filter == null) {
                 dto.setSelectedSourceIsUnavailable(true);
                 dto.setSelectedSourceName(i18nResolver.getText("ru.mail.jira.plugins.calendar.unavailableFilterSource"));
-            } else
+            } else {
                 dto.setSelectedSourceName(filter.getName());
+            }
         } else if (source.startsWith("jql_")) {
             dto.setSelectedSourceType("jql");
             dto.setSelectedSourceValue(StringUtils.substringAfter(source, "jql_"));

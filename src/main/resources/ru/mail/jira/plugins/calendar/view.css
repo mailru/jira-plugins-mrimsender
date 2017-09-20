@@ -1157,10 +1157,17 @@ only screen and (min-resolution: 1.25dppx) {
 }
 
 .timeline-group-avatar {
+    border-radius: 5px;
     margin-right: 5px;
-    height: 36px;
+    height: 32px;
     width: auto;
-    float: left;
+}
+
+.timeline-group-avatar-sm {
+    margin-right: 5px;
+    margin-top: 2px;
+    height: 16px;
+    width: auto;
 }
 
 .flex {
@@ -1169,4 +1176,18 @@ only screen and (min-resolution: 1.25dppx) {
 
 .flex-row {
     flex-direction: row;
+}
+
+.flex-column {
+    flex-direction: column;
+}
+
+.flex-center {
+    justify-content: center;
+}
+
+.vis-labelset .vis-label.vis-nested-group {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
 }

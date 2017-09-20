@@ -399,6 +399,7 @@ define('calendar/calendar-dialog', [
                 this.$('#calendar-dialog-color').auiSelect2('val', this.model.get('selectedColor'));
                 this.$('#calendar-dialog-event-start').auiSelect2('val', this.model.get('selectedEventStartId'));
                 this.$('#calendar-dialog-event-end').auiSelect2('val', this.model.get('selectedEventEndId'));
+                this.$('#calendar-dialog-timelineGroup').val(this.model.get('timelineGroup'));
 
                 this._showSourceField(this.model.get('selectedSourceType'));
                 if (this.sourceType == 'project' || this.sourceType == 'filter') {
@@ -483,6 +484,7 @@ define('calendar/calendar-dialog', [
             var permissions = _.filter(_.values(this.permissionIds), function(obj) {
                 return !!obj;
             });
+            var timelineGroup = this.$("#calendar-dialog-timelineGroup").val();
 
             return {
                 selectedName: name,
@@ -492,6 +494,7 @@ define('calendar/calendar-dialog', [
                 selectedEventStartId: eventStart,
                 selectedEventEndId: eventEnd,
                 selectedDisplayedFields: displayedFields ? displayedFields.split(',') : [],
+                timelineGroup: timelineGroup,
                 permissions: permissions && permissions.length ? permissions : []
             };
         },

@@ -5,6 +5,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
         });
     }
 
+    //todo: store timeline scale in gadget settings
     return {
         config: {
             descriptor: function(args) {

@@ -156,6 +156,23 @@
                         <input type="hidden" id="calendar-dialog-displayed-fields" class="multi-select medium-long-field calendar-dialog-select" {not $canAdmin ? 'disabled' : ''}>
                         <div id="calendar-dialog-fields-error" class="error hidden"></div>
                     </div>
+                    <div class="field-group common-field">
+                        <label for="calendar-dialog-displayed-fields">{getText('ru.mail.jira.plugins.calendar.dialog.timelineGrouping')}</label>
+                        <select class="select medium-long-field" id="calendar-dialog-timelineGroup" {not $canAdmin ? 'disabled' : ''}>
+                            <option value="">None</option>
+                            <option value="assignee">Assignee</option>
+                            <option value="reporter">Reporter</option>
+                            <option value="issueType">Issue type</option>
+                            <option value="priority">Priority</option>
+                            <option value="project">Project</option>
+                            <option value="component">Component</option>
+                            <option value="fixVersion">Fix version</option>
+                            <option value="affectsVersion">Affects version</option>
+                            <option value="labels">Labels</option>
+                            <option value="epicLink">Epic Link</option>
+                        </select>
+                        <div id="calendar-dialog-fields-error" class="error hidden"></div>
+                    </div>
                 </form>
             </div>
             <div id="calendar-dialog-permissions-tab" class="calendar-dialog-tab hidden">

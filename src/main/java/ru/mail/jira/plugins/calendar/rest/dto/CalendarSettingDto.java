@@ -1,5 +1,8 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
@@ -32,6 +35,8 @@ public class CalendarSettingDto {
     private String selectedEventEndId;
     @XmlElement
     private String selectedEventEndName;
+    @XmlElement @Getter @Setter
+    private String timelineGroup;
 
     @XmlElement
     private Map<String, String> displayedFields;

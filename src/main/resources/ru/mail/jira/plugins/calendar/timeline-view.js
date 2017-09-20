@@ -3,8 +3,23 @@
 })(function(moment) {
     var groupFieldNames = {
         "assignee": AJS.I18n.getText('issue.field.assignee'),
-        "issueType": "Issue type", //todo
-        "components": AJS.I18n.getText('issue.field.components')
+        "reporter": AJS.I18n.getText('issue.field.reporter'),
+        "issueType": AJS.I18n.getText('issue.field.issuetype'),
+        "priority": AJS.I18n.getText('issue.field.priority'),
+        "project": AJS.I18n.getText('issue.field.project'),
+        "component": AJS.I18n.getText('issue.field.component'),
+        "fixVersion": AJS.I18n.getText('issue.field.fixversion'),
+        "affectsVersion": AJS.I18n.getText('issue.field.affectsversions'),
+        "labels": AJS.I18n.getText('issue.field.labels'),
+        "epicLink": AJS.I18n.getText('gh.epic.link.name')
+    };
+
+    var groupAvatarClass = {
+        'assignee': 'timeline-group-avatar',
+        'reporter': 'timeline-group-avatar',
+        'project': 'timeline-group-avatar',
+        'issueType': 'timeline-group-avatar-sm',
+        'priority': 'timeline-group-avatar-sm'
     };
 
     define('calendar/timeline-view', ['jquery', 'underscore', 'calendar/edit-type-dialog'], function($, _, EditTypeDialog) {
@@ -51,8 +66,10 @@
                     updateGroup: false,
                     remove: false
                 },
+                //selectable: false,
                 verticalScroll: true,
-                zoomKey: 'ctrlKey'
+                zoomKey: 'ctrlKey',
+                groupOrder: 'id' //todo: custom comparator
             },
             initialize: function() {
             },
@@ -77,23 +94,37 @@
                 }
             },
             renderEvents: function(_events) {
-                var events = _.map(_events, $.proxy(function(event) {
-                    return this._transformEvent(event, false);
-                }, this));
+                var events = _.flatten(_.map(_events, $.proxy(function(event) {
+                    var result = this._transformEvent(event, false);
+                    if (result.groups) {
+                        return _.map(result.groups, function(group) {
+                            return _.extend(
+                                {}, result,
+                                {
+                                    id: group.id + '-' + result.id,
+                                    group: group.id,
+                                    groupName: group.name,
+                                    groupAvatar: group.avatar
+                                }
+                            );
+                        });
+                    } else {
+                        return result
+                    }
+                }, this)));
 
-                //todo: show issues without group
                 var groups = _.uniq(
                     _.filter(
                         _.map(events, function(e) {
                             var avatarPrefix = '';
 
                             if (e.groupAvatar) {
-                                avatarPrefix = '<img src="' + AJS.escapeHtml(e.groupAvatar) + '" class="timeline-group-avatar"/>';
+                                avatarPrefix = '<img src="' + AJS.escapeHtml(e.groupAvatar) + '" class="' + groupAvatarClass[e.groupField] + '"/>';
                             }
 
                             return {
                                 id: e.group,
-                                content: '<div class="flex flex-row">' + avatarPrefix + '<div>' + e.groupName + '</div></div>', //todo: vertically center group name
+                                content: '<div class="flex flex-row">' + avatarPrefix + '<div class="flex flex-column flex-center">' + e.groupName + '</div></div>', //todo: vertically center group name
                                 field: e.groupField
                             }
                         }),
@@ -102,15 +133,31 @@
                     function(e) {return e.id}
                 );
 
-                var parentGroups = _.map(_.uniq(_.map(groups, function(e) {return e.field})), function(e) {return {id: e, content: groupFieldNames[e]}});
+                var parentGroups = _.map(_.filter(_.uniq(_.map(groups, function(e) {return e.field})), function(e) {return e;}), function(e) {return {id: e, content: groupFieldNames[e], subgroupOrder: 'id'}});
 
-                _.each(parentGroups, function(parent) {
+                _.each(parentGroups, $.proxy(function(parent) {
                     parent.nestedGroups = _.map(_.filter(groups, function(group) {
                         return group.field === parent.id;
                     }), function(e) {return e.id;});
-                });
+                    events.push({
+                        id: "bg-" + parent.id,
+                        style: 'background-color: white; border-bottom: 1px solid #bfbfbf;',
+                        group: parent.id,
+                        start: moment(0),
+                        end: this.end.clone(),
+                        type: 'background'
+                    });
+                }, this));
 
-                this.timeline.setGroups(parentGroups.concat(groups));
+                if (parentGroups.length === 0) {
+                    this.timeline.setGroups(new vis.DataSet([{
+                        id: 'zzz-default',
+                        content: ''
+                    }]));
+                } else {
+                    this.timeline.setGroups(new vis.DataSet(parentGroups.concat(groups)));
+                }
+
                 this.timeline.setData({items: events});
             },
             getRangeInterval: function() {
@@ -354,14 +401,12 @@
                     allDay: event.allDay,
                     recurring: event.recurring,
                     recurrenceNumber: event.recurrenceNumber,
-                    originalId: event.originalId,
+                    originalId: event.originalId || event.id,
                     originalStart: event.originalStart,
                     originalEnd: event.originalEnd,
                     originalAllDay: event.originalAllDay,
-                    group: event.group,
-                    groupName: event.groupName,
+                    groups: event.groups, //todo:  || 'zzz-default'
                     groupField: event.groupField,
-                    groupAvatar: event.groupAvatar,
                     type: end ? 'range' : 'box'
                 };
             },
@@ -369,7 +414,13 @@
                 var content = null;
 
                 if (event.type === 'ISSUE') {
-                    content = '<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span><span> '+ event.id + ' ' + AJS.escapeHTML(event.title) + '</span>';
+                    var typeIcon =
+                        '<span class="aui-avatar aui-avatar-xsmall">' +
+                            '<span class="aui-avatar-inner">' +
+                                '<img src="' + contextPath + '/' + event.issueTypeImgUrl +'" />' +
+                            '</span>' +
+                        '</span>';
+                    content = typeIcon + ' <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span><span> '+ event.id + ' ' + AJS.escapeHTML(event.title) + '</span>';
                 } else if (event.type === 'CUSTOM') {
                     content = '';
                     if (event.participants) {
