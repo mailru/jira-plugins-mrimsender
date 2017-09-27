@@ -94,7 +94,9 @@
                 $('#inline-dialog-eventTimelineDialog').remove();
                 this.timeline.off('rangechanged');
                 this.timeline.off('rangechange');
+                this.timeline.off('select');
                 this.timeline = undefined;
+                $("#calendar-full-calendar, #mailru-calendar-gadget-full-calendar").removeClass('no-tooltips');
             },
             render: function() {
                 if (!this.timeline) {
@@ -107,6 +109,14 @@
                     $(this.el).on('remove', $.proxy(this._destroy, this));
                     this.timeline.on('rangechanged', $.proxy(this._onRangeChanged, this));
                     this.timeline.on('rangechange', $.proxy(this._onRangeChange, this));
+                    this.timeline.on('select', $.proxy(function(properties) {
+                        var $calendar = $("#calendar-full-calendar, #mailru-calendar-gadget-full-calendar");
+                        if (properties.items && properties.items.length) {
+                            $calendar.addClass('no-tooltips');
+                        } else {
+                            $calendar.removeClass('no-tooltips');
+                        }
+                    }, this));
                     this.setRange();
 
                     this._initGroupPicker();
@@ -280,7 +290,7 @@
                             callback(null);
                         },
                         success: $.proxy(function (event) {
-                            if (event.groups) {
+                            if (event.groups && event.groups.length) {
                                 this.calendar.refetchEvents();
                             } else {
                                 callback(this._transformEvent(event, true));
@@ -425,6 +435,7 @@
                     start: start,
                     end: end,
                     content: this._buildContent(event),
+                    title: this._buildTitle(event),
                     className: this._getClassForColor(event.color),
                     style: event.datesError ? 'opacity: 0.4;border-color:#d04437;' : '',
                     startEditable: event.startEditable,
@@ -491,6 +502,13 @@
                 }
 
                 return content
+            },
+            _buildTitle: function(event) {
+                if (event.type === 'ISSUE') {
+                    return event.id + ' ' + AJS.escapeHTML(event.title);
+                } else if (event.type === 'CUSTOM') {
+                    return AJS.escapeHTML(event.title);
+                }
             },
             _initGroupPicker: function() {
                 $.getJSON(contextPath + '/rest/mailrucalendar/1.0/calendar/config/applicationStatus', $.proxy(function(data) {

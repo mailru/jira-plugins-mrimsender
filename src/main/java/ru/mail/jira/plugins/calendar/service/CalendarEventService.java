@@ -740,9 +740,9 @@ public class CalendarEventService {
                 if (eventEndCF.getCustomFieldType() instanceof DateTimeCFType)
                     issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), dateTimePickerFormat.format(endDate));
                 else
-                    issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), datePickerFormat.format(new DateTime(endDate).minusDays(1).toLocalDate().toDate()));
+                    issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), datePickerFormat.format(new DateTime(endDate).toLocalDate().toDate()));
             } else
-                issueInputParams.setDueDate(datePickerFormat.format(new DateTime(endDate).minusDays(1).toLocalDate().toDate()));
+                issueInputParams.setDueDate(datePickerFormat.format(new DateTime(endDate).toLocalDate().toDate()));
         }
 
         IssueService.UpdateValidationResult updateValidationResult = jiraDeprecatedService.issueService.validateUpdate(user, issue.getId(), issueInputParams);
