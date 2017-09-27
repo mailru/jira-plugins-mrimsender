@@ -1,6 +1,8 @@
 (function(factory) {
     factory(moment);
 })(function(moment) {
+    var DEFAULT_GROUP = 'zzz-default';
+
     var groupFieldNames = {
         "assignee": AJS.I18n.getText('issue.field.assignee'),
         "reporter": AJS.I18n.getText('issue.field.reporter'),
@@ -11,7 +13,8 @@
         "fixVersion": AJS.I18n.getText('issue.field.fixversion'),
         "affectsVersion": AJS.I18n.getText('issue.field.affectsversions'),
         "labels": AJS.I18n.getText('issue.field.labels'),
-        "epicLink": AJS.I18n.getText('gh.epic.link.name')
+        "epicLink": AJS.I18n.getText('gh.epic.link.name'),
+        "resolution": AJS.I18n.getText('issue.field.resolution')
     };
 
     var groupAvatarClass = {
@@ -22,7 +25,7 @@
         'priority': 'timeline-group-avatar-sm'
     };
 
-    define('calendar/timeline-view', ['jquery', 'underscore', 'calendar/edit-type-dialog'], function($, _, EditTypeDialog) {
+    define('calendar/timeline-view', ['jquery', 'underscore', 'calendar/edit-type-dialog', 'calendar/preferences'], function($, _, EditTypeDialog, Preferences) {
         var FC = $.fullCalendar;
         var View = FC.View;
         var TimelineView;
@@ -66,10 +69,24 @@
                     updateGroup: false,
                     remove: false
                 },
-                //selectable: false,
+                format: {
+                    minorLabels: {
+                        millisecond:'SSS',
+                        second:     's',
+                        minute:     'HH:mm',
+                        hour:       'HH:mm',
+                        weekday:    'ddd D',
+                        day:        'D MMM',
+                        week:       'w',
+                        month:      'MMM YY',
+                        year:       'YYYY'
+                    }
+                },
                 verticalScroll: true,
                 zoomKey: 'ctrlKey',
-                groupOrder: 'id' //todo: custom comparator
+                groupOrder: 'id',
+                showMajorLabels: false,
+                orientation: 'top'
             },
             initialize: function() {
             },
@@ -91,71 +108,83 @@
                     this.timeline.on('rangechanged', $.proxy(this._onRangeChanged, this));
                     this.timeline.on('rangechange', $.proxy(this._onRangeChange, this));
                     this.setRange();
+
+                    this._initGroupPicker();
                 }
             },
             renderEvents: function(_events) {
+                var groupBy = Preferences.get('groupBy');
+
                 var events = _.flatten(_.map(_events, $.proxy(function(event) {
                     var result = this._transformEvent(event, false);
+                    if (!groupBy || groupBy === 'none') {
+                        return result;
+                    }
+
                     if (result.groups) {
                         return _.map(result.groups, function(group) {
-                            return _.extend(
-                                {}, result,
-                                {
-                                    id: group.id + '-' + result.id,
-                                    group: group.id,
-                                    groupName: group.name,
-                                    groupAvatar: group.avatar
-                                }
-                            );
+                            return _.extend({}, result, {
+                                id: group.id + '-' + result.id,
+                                group: group.id,
+                                groupName: group.name,
+                                groupAvatar: group.avatar
+                            });
                         });
                     } else {
+                        result.group = DEFAULT_GROUP;
+                        result.groupName = AJS.I18n.getText('ru.mail.jira.plugins.calendar.timeline.defaultGroup');
                         return result
                     }
                 }, this)));
 
-                var groups = _.uniq(
-                    _.filter(
-                        _.map(events, function(e) {
-                            var avatarPrefix = '';
+                var groups =
+                    _.uniq(
+                        _.filter(
+                            _.map(events, function(e) {
+                                var avatarPrefix = '';
 
-                            if (e.groupAvatar) {
-                                avatarPrefix = '<img src="' + AJS.escapeHtml(e.groupAvatar) + '" class="' + groupAvatarClass[e.groupField] + '"/>';
-                            }
+                                if (e.groupAvatar) {
+                                    avatarPrefix = '<img src="' + AJS.escapeHtml(e.groupAvatar) + '" class="' + groupAvatarClass[e.groupField] + '"/>';
+                                }
 
+                                return {
+                                    id: e.group,
+                                    content: '<div class="flex flex-row">' + avatarPrefix + '<div class="flex flex-column flex-center">' + e.groupName + '</div></div>',
+                                    field: e.groupField
+                                }
+                            }),
+                            function(e) {return e && e.id}
+                        ),
+                        function(e) {return e.id}
+                    );
+
+                var parentGroups =
+                    _.map(
+                        _.filter(
+                            _.uniq(
+                                _.map(groups, function(e) {
+                                    return e.field
+                                })
+                            ),
+                            function(e) { return e; }
+                        ),
+                        function(e) {
                             return {
-                                id: e.group,
-                                content: '<div class="flex flex-row">' + avatarPrefix + '<div class="flex flex-column flex-center">' + e.groupName + '</div></div>', //todo: vertically center group name
-                                field: e.groupField
+                                id: e,
+                                content: groupFieldNames[e],
+                                subgroupOrder: 'id'
                             }
-                        }),
-                        function(e) {return e}
-                    ),
-                    function(e) {return e.id}
-                );
+                        }
+                    );
 
-                var parentGroups = _.map(_.filter(_.uniq(_.map(groups, function(e) {return e.field})), function(e) {return e;}), function(e) {return {id: e, content: groupFieldNames[e], subgroupOrder: 'id'}});
-
-                _.each(parentGroups, $.proxy(function(parent) {
-                    parent.nestedGroups = _.map(_.filter(groups, function(group) {
-                        return group.field === parent.id;
-                    }), function(e) {return e.id;});
-                    events.push({
-                        id: "bg-" + parent.id,
-                        style: 'background-color: white; border-bottom: 1px solid #bfbfbf;',
-                        group: parent.id,
-                        start: moment(0),
-                        end: this.end.clone(),
-                        type: 'background'
-                    });
-                }, this));
-
-                if (parentGroups.length === 0) {
-                    this.timeline.setGroups(new vis.DataSet([{
-                        id: 'zzz-default',
-                        content: ''
-                    }]));
+                if (groupBy && groupBy !== 'none') {
+                    if (parentGroups.length > 1) {
+                        this.timeline.setGroups(new vis.DataSet(parentGroups.concat(groups)));
+                    } else {
+                        this.timeline.setGroups(new vis.DataSet(groups));
+                    }
                 } else {
-                    this.timeline.setGroups(new vis.DataSet(parentGroups.concat(groups)));
+                    this.timeline.setGroups(null);
                 }
 
                 this.timeline.setData({items: events});
@@ -238,7 +267,7 @@
                 if (item.eventType === 'ISSUE') {
                     $.ajax({
                         type: 'PUT',
-                        url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + item.calendarId + '/event/' + item.eventId + '/move',
+                        url: this.options.calendarView.contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + item.calendarId + '/event/' + item.eventId + '/move',
                         data: {
                             start: moment(start).format(),
                             end: end ? moment(end).format() : ''
@@ -251,7 +280,11 @@
                             callback(null);
                         },
                         success: $.proxy(function (event) {
-                            callback(this._transformEvent(event, true));
+                            if (event.groups) {
+                                this.calendar.refetchEvents();
+                            } else {
+                                callback(this._transformEvent(event, true));
+                            }
                         }, this)
                     });
                 } else if (item.eventType === 'CUSTOM') {
@@ -323,7 +356,7 @@
             _moveCustomEvent: function(eventId, data, callback) {
                 $.ajax({
                     type: 'PUT',
-                    url: contextPath + '/rest/mailrucalendar/1.0/customEvent/' + eventId + '/move',
+                    url: this.options.calendarView.contextPath + '/rest/mailrucalendar/1.0/customEvent/' + eventId + '/move',
                     contentType: 'application/json; charset=utf-8',
                     data: JSON.stringify(data),
                     error: function (xhr) {
@@ -405,7 +438,7 @@
                     originalStart: event.originalStart,
                     originalEnd: event.originalEnd,
                     originalAllDay: event.originalAllDay,
-                    groups: event.groups, //todo:  || 'zzz-default'
+                    groups: event.groups,
                     groupField: event.groupField,
                     type: end ? 'range' : 'box'
                 };
@@ -458,6 +491,53 @@
                 }
 
                 return content
+            },
+            _initGroupPicker: function() {
+                $.getJSON(contextPath + '/rest/mailrucalendar/1.0/calendar/config/applicationStatus', $.proxy(function(data) {
+                    this._doInitGroupPicker(data.SOFTWARE);
+                }, this));
+            },
+            _doInitGroupPicker: function(jswAvailable) {
+                var $calendar = $("#calendar-full-calendar, #mailru-calendar-gadget-full-calendar");
+                $calendar.find('.vis-timeline').prepend(JIRA.Templates.Plugins.MailRuCalendar.groupSelect());
+
+                var $groupByParent = $('#calendar-group-by-parent');
+                var $top = $calendar.find('.vis-top');
+                $top.mouseover(function() {
+                    var groupBy = Preferences.get("groupBy");
+                    if (!groupBy || groupBy === "none") {
+                        $groupByParent.hide();
+                    }
+                });
+                $top.mouseout(function() {
+                    $groupByParent.show();
+                });
+
+                var $groupByField = $('#calendar-group-by-field');
+
+                if (!jswAvailable) {
+                    $groupByField.find('option[value=epicLink]').remove();
+                }
+
+                $groupByField.auiSelect2({
+                    minimumInputLength: 0,
+                    minimumResultsForSearch: -1,
+                    placeholder: AJS.I18n.getText('ru.mail.jira.plugins.calendar.groupBy'),
+                    allowClear: true
+                });
+                $('#s2id_calendar-group-by-field').click(function() {
+                    $groupByField.auiSelect2('open');
+                });
+                $groupByField.auiSelect2('val', Preferences.get('groupBy'));
+                $groupByField.change($.proxy(function() {
+                    var value = $groupByField.val();
+                    if (value === 'none') {
+                        $groupByField.auiSelect2('val', null);
+                        value = null;
+                    }
+                    Preferences.set('groupBy', $groupByField.val());
+                    this.calendar.refetchEvents();
+                }, this));
             },
             // todo migrate color from hex to classes
             _getClassForColor: function(color) {

@@ -1,6 +1,9 @@
 package ru.mail.jira.plugins.calendar.rest;
 
+import com.atlassian.application.api.ApplicationKey;
 import com.atlassian.crowd.embedded.api.Group;
+import com.atlassian.jira.application.ApplicationAuthorizationService;
+import com.atlassian.jira.application.ApplicationKeys;
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
@@ -32,6 +35,7 @@ import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.calendar.common.FieldUtils;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
@@ -67,6 +71,7 @@ import java.util.stream.Collectors;
 @Path("/calendar/config")
 @Produces(MediaType.APPLICATION_JSON)
 public class RestConfigurationService {
+    private final ApplicationAuthorizationService applicationAuthorizationService;
     private final ApplicationProperties applicationProperties;
     private final AvatarService avatarService;
     private final CustomFieldManager customFieldManager;
@@ -84,6 +89,7 @@ public class RestConfigurationService {
     private final LicenseService licenseService;
 
     public RestConfigurationService(
+        @ComponentImport ApplicationAuthorizationService applicationAuthorizationService,
         @ComponentImport("com.atlassian.jira.config.properties.ApplicationProperties") ApplicationProperties applicationProperties,
         @ComponentImport AvatarService avatarService,
         @ComponentImport CustomFieldManager customFieldManager,
@@ -100,6 +106,7 @@ public class RestConfigurationService {
         JiraDeprecatedService jiraDeprecatedService,
         LicenseService licenseService
     ) {
+        this.applicationAuthorizationService = applicationAuthorizationService;
         this.applicationProperties = applicationProperties;
         this.avatarService = avatarService;
         this.customFieldManager = customFieldManager;
@@ -135,6 +142,20 @@ public class RestConfigurationService {
                 return result;
             }
         }.getResponse();
+    }
+
+    @GET
+    @Path("/applicationStatus")
+    public Map<String, Boolean> getApplicationStatus() {
+        ApplicationUser currentUser = jiraAuthenticationContext.getLoggedInUser();
+        return ImmutableMap.of(
+            "SOFTWARE", canUseApp(currentUser, ApplicationKeys.SOFTWARE)
+        );
+    }
+
+    private boolean canUseApp(ApplicationUser user, ApplicationKey applicationKey) {
+        return applicationAuthorizationService.isApplicationInstalledAndLicensed(applicationKey) &&
+            applicationAuthorizationService.canUseApplication(user, applicationKey);
     }
 
     @GET

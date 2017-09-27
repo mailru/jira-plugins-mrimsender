@@ -4,8 +4,9 @@ define('calendar/calendar-view', [
     'backbone',
     'calendar/reminder',
     'calendar/edit-type-dialog',
-    'calendar/recurrence'
-], function($, _, Backbone, Reminder, EditTypeDialog, Recurring) {
+    'calendar/recurrence',
+    'calendar/preferences'
+], function($, _, Backbone, Reminder, EditTypeDialog, Recurring, Preferences) {
     return Backbone.View.extend({
         el: '#calendar-full-calendar',
         initialize: function(options) {
@@ -27,18 +28,20 @@ define('calendar/calendar-view', [
                 var event;
                 if (self.getViewType() === 'timeline') {
                     var timeline = self.getView().timeline;
-                    event = timeline.itemsData.get(timeline.getEventProperties({target: trigger}).item);
-                    event = {
-                        type: event.eventType,
-                        id: event.eventId,
-                        eventId: event.eventId,
-                        calendarId: event.calendarId,
-                        recurring: event.recurring,
-                        recurrenceNumber: event.recurrenceNumber,
-                        originalId: event.originalId,
-                        allDay: event.allDay,
-                        start: event.start,
-                        end: event.end
+                    var timelineEvent = timeline.itemsData.get(timeline.getEventProperties({target: trigger}).item);
+                    if (timelineEvent.id) {
+                        event = {
+                            type: timelineEvent.eventType,
+                            id: timelineEvent.eventId,
+                            eventId: timelineEvent.eventId,
+                            calendarId: timelineEvent.calendarId,
+                            recurring: timelineEvent.recurring,
+                            recurrenceNumber: timelineEvent.recurrenceNumber,
+                            originalId: timelineEvent.originalId,
+                            allDay: timelineEvent.allDay,
+                            start: timelineEvent.start,
+                            end: timelineEvent.end
+                        }
                     }
                 } else {
                     event = self.$el.fullCalendar('clientEvents', $(trigger).data('event-id'))[0];
@@ -46,13 +49,20 @@ define('calendar/calendar-view', [
 
                 console.log(event, trigger);
 
-                //todo: filter issues where event start field is not empty
-                //todo: group collapse doesnt work
-                //todo: event popover doesn't work properly
                 // Atlassian bug workaround
                 content.click(function(e) {
                     e.stopPropagation();
                 });
+
+                if (!event) {
+                    content.html('');
+                    showPopup();
+                    self.eventDialog.hide();
+                    return;
+                }
+
+                content.html('<span class="aui-icon aui-icon-wait">Loading...</span>');
+                showPopup();
 
                 if (event.type === 'ISSUE') {
                     $.ajax({
@@ -63,7 +73,7 @@ define('calendar/calendar-view', [
                                 issue: issue,
                                 contextPath: AJS.contextPath()
                             })).addClass('calendar-event-info-popup');
-                            showPopup();
+                            self.eventDialog.refresh();
                         },
                         error: function (xhr) {
                             var msg = 'Error while trying to view info about issue => ' + event.eventId;
@@ -116,7 +126,7 @@ define('calendar/calendar-view', [
                                         return Recurring.daysOfWeek[dayOfWeek];
                                     }).join(', ') : ''
                             })).addClass('calendar-event-info-popup');
-                            showPopup();
+                            self.eventDialog.refresh();
 
                             content.find('.edit-button').click(function(e) {
                                 e.preventDefault();
@@ -161,14 +171,20 @@ define('calendar/calendar-view', [
             if (this.fullscreenMode) {
                 $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer').slideUp(400);
                 $('.aui-page-panel-nav').animate({width: 'toggle', 'padding': 'toggle'}, 400, $.proxy(function() {
-                    if (this.getViewType() == 'timeline')
-                        this.$el.fullCalendar('getView').timeline.setOptions({height: $(window).height() - 134 + 'px'});
+                    if (this.getViewType() === 'timeline') {
+                        var timeline = this.$el.fullCalendar('getView').timeline;
+                        timeline.setOptions({height: $(window).height() - 134 + 'px'});
+                        timeline.redraw();
+                    }
                 }, this));
             } else {
                 $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer,.aui-page-panel-nav').fadeIn(400);
                 $(window).trigger('resize');
-                if (this.getViewType() == 'timeline')
-                    this.$el.fullCalendar('getView').timeline.setOptions({height: '450px'});
+                if (this.getViewType() === 'timeline') {
+                    var timeline = this.$el.fullCalendar('getView').timeline;
+                    timeline.setOptions({height: '450px'});
+                    timeline.redraw();
+                }
             }
         },
         _canButtonVisible: function(name) {
@@ -491,6 +507,11 @@ define('calendar/calendar-view', [
                 url: this._eventSource(calendarId),
                 success: $.proxy(function() {
                     !silent && this.trigger('addSourceSuccess', calendarId, true);
+                }, this),
+                data: $.proxy(function() {
+                    return {
+                        groupBy: Preferences.get('groupBy')
+                    };
                 }, this)
             });
             this.eventSources['' + calendarId] = this._eventSource(calendarId);

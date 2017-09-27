@@ -466,7 +466,6 @@ div.vis-tooltip {
 
 .vis-item.vis-selected {
     border-color: #ffc200;
-    background-color: #fff785;
     z-index: 2
 }
 
@@ -973,4 +972,8 @@ div.vis-tooltip {
     padding: 0;
     margin: 0;
     box-sizing: border-box
+}
+
+.vis-inner:not(.vis-hidden) {
+    width: 138px;
 }

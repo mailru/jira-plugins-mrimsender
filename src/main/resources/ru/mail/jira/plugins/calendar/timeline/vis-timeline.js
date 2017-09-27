@@ -20976,6 +20976,10 @@
                 if (ids == undefined) ids = [];
                 if (!Array.isArray(ids)) ids = [ids];
 
+                if (this.selection.length === ids.length && ids.length === 1 && this.selection[0] === ids[0]) {
+                    return;
+                }
+
                 // unselect currently selected items
                 for (i = 0, ii = this.selection.length; i < ii; i++) {
                     id = this.selection[i];
@@ -22289,7 +22293,7 @@
              * @private
              */
             ItemSet.prototype._onSelectItem = function (event) {
-                event.target.click();
+                //event.target.click();
                 if (!this.options.selectable) return;
 
                 var ctrlKey = event.srcEvent && (event.srcEvent.ctrlKey || event.srcEvent.metaKey);
@@ -22306,6 +22310,7 @@
                 this.setSelection(selection);
 
                 var newSelection = this.getSelection();
+
 
                 // emit a select event,
                 // except when old selection is empty and new selection is still empty

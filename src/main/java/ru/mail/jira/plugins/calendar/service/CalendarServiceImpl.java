@@ -23,6 +23,7 @@ import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.MessageSet;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import com.google.common.collect.ImmutableSet;
 import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -46,6 +47,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @Component
@@ -53,6 +55,18 @@ public class CalendarServiceImpl implements CalendarService {
     private final static Logger log = LoggerFactory.getLogger(CalendarServiceImpl.class);
 
     private final static Pattern COLOR_PATTERN = Pattern.compile("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+    private static final Set<String> SUPPORTED_GROUPS = ImmutableSet.of(
+        "component",
+        "fixVersion",
+        "affectsVersion",
+        "labels",
+        "assignee",
+        "reporter",
+        "issueType",
+        "project",
+        "priority",
+        "epicLink"
+    );
 
     public static final String DESCRIPTION = "common.words.description";
     public static final String STATUS = "common.words.status";
@@ -146,7 +160,6 @@ public class CalendarServiceImpl implements CalendarService {
         result.setSelectedColor(calendar.getColor());
         result.setSelectedEventStartId(calendar.getEventStart());
         result.setSelectedEventEndId(calendar.getEventEnd());
-        result.setTimelineGroup(calendar.getTimelineGroup());
 
         if (StringUtils.isNotEmpty(calendar.getDisplayedFields()))
             result.setSelectedDisplayedFields(Arrays.asList(calendar.getDisplayedFields().split(",")));
@@ -306,7 +319,6 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setEventStart(StringUtils.trimToNull(calendarSettingDto.getSelectedEventStartId()));
         calendar.setEventEnd(StringUtils.trimToNull(calendarSettingDto.getSelectedEventEndId()));
         calendar.setDisplayedFields(StringUtils.join(calendarSettingDto.getSelectedDisplayedFields(), ","));
-        calendar.setTimelineGroup(StringUtils.trimToNull(calendarSettingDto.getTimelineGroup()));
         calendar.save();
     }
 
@@ -375,7 +387,6 @@ public class CalendarServiceImpl implements CalendarService {
                 }
             }
             output.setFavouriteQuickFilters(favouriteQuickFilters);
-            output.setTimelineGroup(calendar.getTimelineGroup());
         }
         if (!changable && !canUse) {
             output.setHasError(true);

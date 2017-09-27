@@ -35,8 +35,6 @@ public class CalendarSettingDto {
     private String selectedEventEndId;
     @XmlElement
     private String selectedEventEndName;
-    @XmlElement @Getter @Setter
-    private String timelineGroup;
 
     @XmlElement
     private Map<String, String> displayedFields;

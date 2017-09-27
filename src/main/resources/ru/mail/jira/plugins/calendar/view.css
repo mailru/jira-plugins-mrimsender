@@ -1186,8 +1186,20 @@ only screen and (min-resolution: 1.25dppx) {
     justify-content: center;
 }
 
-.vis-labelset .vis-label.vis-nested-group {
+.vis-labelset .vis-label {
     display: flex;
     justify-content: center;
     flex-direction: column;
+}
+
+#s2id_calendar-group-by-field {
+    width: 150px;
+    margin-top: -1px;
+    margin-left: -1px;
+}
+
+#s2id_calendar-group-by-field > a {
+    height: 28px;
+    border-radius: 0;
+    padding: 2px 10px;
 }

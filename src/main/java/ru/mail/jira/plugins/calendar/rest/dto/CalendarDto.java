@@ -37,8 +37,6 @@ public class CalendarDto {
     @XmlElement
     private Integer usersCount;
     @XmlElement
-    private String timelineGroup;
-    @XmlElement
     private List<QuickFilterDto> favouriteQuickFilters;
     @XmlElement
     private List<QuickFilterDto> selectedQuickFilters;
