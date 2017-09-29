@@ -113,14 +113,14 @@ define('calendar/calendar-view', [
                             content.html(JIRA.Templates.Plugins.MailRuCalendar.customEventInfo({
                                 event: jsonEvent,
                                 contextPath: AJS.contextPath(),
-                                startDateFormatted: moment(jsonEvent.startDate).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
-                                endDateFormatted: moment(jsonEvent.endDate).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
-                                parentStartDateFormatted: moment(jsonEvent.originalStartDate).format(jsonEvent.originalAllDay ? self.dateFormat : self.dateTimeFormat),
+                                startDateFormatted: event.allDay ? moment.utc(jsonEvent.startDate).format( self.dateFormat) : moment(jsonEvent.startDate).format(self.dateTimeFormat),
+                                endDateFormatted: event.allDay ? moment.utc(jsonEvent.endDate).format(self.dateFormat) : moment(jsonEvent.endDate).format(self.dateTimeFormat),
                                 editDisabled: self.disableCustomEventEditing,
                                 reminderName: jsonEvent.reminder ? Reminder.names[jsonEvent.reminder] : null,
                                 recurrenceTypeName: Recurring.names[jsonEvent.recurrenceType],
                                 periodName: Recurring.periodNames[Recurring.periods[jsonEvent.recurrenceType]],
-                                recurrenceEndDateFormatted: moment(jsonEvent.recurrenceEndDate).format(jsonEvent.originalAllDay ? self.dateFormat : self.dateTimeFormat),
+                                parentStartDateFormatted: jsonEvent.originalAllDay ? moment.utc(jsonEvent.originalStartDate).format(self.dateFormat) : moment(jsonEvent.originalStartDate).format(self.dateTimeFormat),
+                                recurrenceEndDateFormatted: jsonEvent.originalAllDay ? moment.utc(jsonEvent.recurrenceEndDate).format(self.dateFormat) : moment(jsonEvent.recurrenceEndDate).format(self.dateTimeFormat),
                                 daysOfWeek: jsonEvent.recurrenceType === 'DAYS_OF_WEEK' ?
                                     jsonEvent.recurrenceExpression.split(',').map(function(dayOfWeek) {
                                         return Recurring.daysOfWeek[dayOfWeek];

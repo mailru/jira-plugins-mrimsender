@@ -26,18 +26,19 @@ define('calendar/custom-event-dialog', [
         render: function() {
             var defaultTime = moment({hour: 12, minute: 0}).format(this.timeFormat);
 
+            var allDay = this.jsonModel.allDay;
             this.$el.html(JIRA.Templates.Plugins.MailRuCalendar.CustomEventDialog.dialog({
                 model: this.jsonModel,
                 calendarId: this.model.get('calendarId'),
                 calendars: this.calendars,
-                formattedStartDate: moment(this.jsonModel.startDate).format('YYYY-MM-DD'),
-                formattedEndDate: moment(this.jsonModel.endDate).format('YYYY-MM-DD'),
-                formattedStartTime: !this.jsonModel.allDay ? moment(this.jsonModel.startDate).format(this.timeFormat) : defaultTime,
-                formattedEndTime: !this.jsonModel.allDay ? moment(this.jsonModel.endDate).format(this.timeFormat) : null,
+                formattedStartDate: allDay ? moment.utc(this.jsonModel.startDate).format('YYYY-MM-DD') : moment(this.jsonModel.startDate).format('YYYY-MM-DD'),
+                formattedEndDate: allDay ? moment.utc(this.jsonModel.endDate).format('YYYY-MM-DD') : moment(this.jsonModel.endDate).format('YYYY-MM-DD'),
+                formattedStartTime: !allDay ? moment(this.jsonModel.startDate).format(this.timeFormat) : defaultTime,
+                formattedEndTime: !allDay ? moment(this.jsonModel.endDate).format(this.timeFormat) : null,
                 reminderName: this.jsonModel.reminder ? Reminder.names[this.jsonModel.reminder] : Reminder.none,
                 recurrenceOptions: Recurrence.options,
-                formattedRecurrenceEndDate: moment(this.jsonModel.recurrenceEndDate).format('YYYY-MM-DD'),
-                formattedRecurrenceEndTime: !this.jsonModel.allDay ? moment(this.jsonModel.recurrenceEndDate).format(this.timeFormat) : null
+                formattedRecurrenceEndDate: allDay ? moment.utc(this.jsonModel.recurrenceEndDate).format('YYYY-MM-DD') : moment(this.jsonModel.recurrenceEndDate).format('YYYY-MM-DD'),
+                formattedRecurrenceEndTime: !allDay ? moment(this.jsonModel.recurrenceEndDate).format(this.timeFormat) : null
             }));
             $(document.body).append(this.$el);
             this.setElement($('#calendar-custom-event-dialog').unwrap());
