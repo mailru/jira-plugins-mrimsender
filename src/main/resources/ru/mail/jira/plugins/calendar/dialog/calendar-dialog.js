@@ -765,14 +765,14 @@ define('calendar/calendar-dialog', [
                 this.$('#calendar-dialog-customEvent-error-panel').removeClass('hidden').text(xhr.responseText);
         },
         _initAvatarPicker: function($container) {
-            $container.find('.avatar-picker .avatar').each(function(i, e) {
+            $container.find('.avatar-picker .avatar').each($.proxy(function(i, e) {
                 var $e = $(e);
-                $e.click(function() {
+                $e.click($.proxy(function() {
                     $container.find('.avatar-picker .avatar.selected').removeClass('selected');
                     $e.addClass('selected');
                     this.$('#calendar-dialog-customEvent-avatar').val($e.data('id'));
-                });
-            });
+                }, this));
+            }, this));
         },
         _onSourceTypeChange: function() {
             var sourceType = this.$('input[type=radio][name=calendar-dialog-source]:checked').val();
