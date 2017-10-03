@@ -361,8 +361,8 @@ define('calendar/calendar-view', [
             var viewRenderFirstTime = true;
             var contextPath = this.contextPath;
             var self = this;
-            var start = localStorage.getItem('mailrucalendar.start');
-            var end = localStorage.getItem('mailrucalendar.end');
+            var start = Preferences.getItem('mailrucalendar.start');
+            var end = Preferences.getItem('mailrucalendar.end');
             this.$el.fullCalendar({
                 contentHeight: 'auto',
                 defaultView: view,
@@ -518,7 +518,7 @@ define('calendar/calendar-view', [
                 }, this),
                 data: $.proxy(function() {
                     return {
-                        groupBy: Preferences.get('groupBy')
+                        groupBy: Preferences.getItem('groupBy')
                     };
                 }, this)
             });

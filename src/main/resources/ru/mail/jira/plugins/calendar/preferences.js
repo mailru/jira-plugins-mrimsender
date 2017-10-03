@@ -7,7 +7,7 @@ define(
         };
 
         InMemoryStorage.prototype.setItem = function(key, value) {
-            this._data[key] = value;
+            this._data[key] = value ? value.toString() : "";
         };
 
         InMemoryStorage.prototype.getItem = function(key) {
@@ -19,19 +19,25 @@ define(
         };
 
         var Preferences = function() {
+            this._fallBackStorage = new InMemoryStorage();
             if (localStorage) {
                 this._storage = localStorage;
             } else {
-                this._storage = new InMemoryStorage();
+                this._storage = this._fallBackStorage;
             }
         };
 
-        Preferences.prototype.set = function(key, value) {
-            this._storage.setItem(key, value);
+        Preferences.prototype.setItem = function(key, value) {
+            try {
+                this._storage.setItem(key, value);
+            } catch (err) {
+                console.error("unable to update preference \"" + key + "\": \n", err)
+            }
+            this._fallBackStorage.setItem(key, value);
         };
 
-        Preferences.prototype.get = function(key) {
-            return this._storage.getItem(key);
+        Preferences.prototype.getItem = function(key) {
+            return this._fallBackStorage.getItem(key) || this._storage.getItem(key);
         };
 
         return new Preferences();

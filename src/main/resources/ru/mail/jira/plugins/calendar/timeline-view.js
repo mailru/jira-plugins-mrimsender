@@ -131,7 +131,7 @@
                 }
             },
             renderEvents: function(_events) {
-                var groupBy = Preferences.get('groupBy');
+                var groupBy = Preferences.getItem('groupBy');
 
                 var events = _.flatten(_.map(_events, $.proxy(function(event) {
                     var result = this._transformEvent(event, false);
@@ -530,7 +530,7 @@
                 var $groupByParent = $('#calendar-group-by-parent');
                 var $top = $calendar.find('.vis-top');
                 $top.mouseover(function() {
-                    var groupBy = Preferences.get("groupBy");
+                    var groupBy = Preferences.getItem("groupBy");
                     if (!groupBy || groupBy === "none") {
                         $groupByParent.hide();
                     }
@@ -554,14 +554,14 @@
                 $('#s2id_calendar-group-by-field').click(function() {
                     $groupByField.auiSelect2('open');
                 });
-                $groupByField.auiSelect2('val', Preferences.get('groupBy'));
+                $groupByField.auiSelect2('val', Preferences.getItem('groupBy'));
                 $groupByField.change($.proxy(function() {
                     var value = $groupByField.val();
                     if (value === 'none') {
                         $groupByField.auiSelect2('val', null);
                         value = null;
                     }
-                    Preferences.set('groupBy', $groupByField.val());
+                    Preferences.setItem('groupBy', $groupByField.val());
                     this.calendar.refetchEvents();
                 }, this));
             },
