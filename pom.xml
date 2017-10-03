@@ -124,7 +124,7 @@
                 <configuration>
                     <productVersion>${jira.version}</productVersion>
                     <productDataVersion>${jira.version}</productDataVersion>
-                    <jvmArgs>-Duser.timezone=GMT+3</jvmArgs>
+                    <jvmArgs>-Duser.timezone=GMT+3 -Xmx2g</jvmArgs>
                     <systemPropertyVariables>
                         <atlassian.mail.senddisabled>false</atlassian.mail.senddisabled>
                         <fastdev.mvn.command>${fastdev.mvn.command}</fastdev.mvn.command>

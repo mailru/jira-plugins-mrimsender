@@ -7,6 +7,14 @@ define('calendar/calendar-view', [
     'calendar/recurrence',
     'calendar/preferences'
 ], function($, _, Backbone, Reminder, EditTypeDialog, Recurring, Preferences) {
+    function getContextPath() {
+        if (AJS.gadget) {
+            return AJS.gadget.getBaseUrl();
+        } else {
+            return AJS.contextPath();
+        }
+    }
+
     return Backbone.View.extend({
         el: '#calendar-full-calendar',
         initialize: function(options) {
@@ -71,7 +79,7 @@ define('calendar/calendar-view', [
                         success: function (issue) {
                             content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
                                 issue: issue,
-                                contextPath: AJS.contextPath()
+                                contextPath: getContextPath()
                             })).addClass('calendar-event-info-popup');
                             self.eventDialog.refresh();
                         },
@@ -112,7 +120,7 @@ define('calendar/calendar-view', [
 
                             content.html(JIRA.Templates.Plugins.MailRuCalendar.customEventInfo({
                                 event: jsonEvent,
-                                contextPath: AJS.contextPath(),
+                                contextPath: getContextPath(),
                                 startDateFormatted: event.allDay ? moment.utc(jsonEvent.startDate).format( self.dateFormat) : moment(jsonEvent.startDate).format(self.dateTimeFormat),
                                 endDateFormatted: event.allDay ? moment.utc(jsonEvent.endDate).format(self.dateFormat) : moment(jsonEvent.endDate).format(self.dateTimeFormat),
                                 editDisabled: self.disableCustomEventEditing,
@@ -428,7 +436,7 @@ define('calendar/calendar-view', [
                         $element.find('.fc-title').prepend(event.id + ' ');
                         $element.find('.fc-content')
                             .prepend('<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + AJS.escapeHtml(event.status) + '</span>')
-                            .prepend('<img class="calendar-event-issue-type" alt="" height="16" width="16" src="' + AJS.contextPath() + event.issueTypeImgUrl + '" />');
+                            .prepend('<img class="calendar-event-issue-type" alt="" height="16" width="16" src="' + getContextPath() + event.issueTypeImgUrl + '" />');
                     } else if (event.type === 'CUSTOM') {
                         if (event.participants) {
                             var formattedParticipants = null;

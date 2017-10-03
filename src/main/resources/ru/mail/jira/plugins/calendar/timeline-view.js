@@ -1,6 +1,14 @@
 (function(factory) {
     factory(moment);
 })(function(moment) {
+    function getContextPath() {
+        if (AJS.gadget) {
+            return AJS.gadget.getBaseUrl();
+        } else {
+            return AJS.contextPath();
+        }
+    }
+
     var DEFAULT_GROUP = 'zzz-default';
 
     var groupFieldNames = {
@@ -461,7 +469,7 @@
                     var typeIcon =
                         '<span class="aui-avatar aui-avatar-xsmall">' +
                             '<span class="aui-avatar-inner">' +
-                                '<img src="' + contextPath + '/' + event.issueTypeImgUrl +'" />' +
+                                '<img src="' + getContextPath() + '/' + event.issueTypeImgUrl +'" />' +
                             '</span>' +
                         '</span>';
                     content = typeIcon + ' <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span><span> '+ event.id + ' ' + AJS.escapeHTML(event.title) + '</span>';
@@ -511,7 +519,7 @@
                 }
             },
             _initGroupPicker: function() {
-                $.getJSON(contextPath + '/rest/mailrucalendar/1.0/calendar/config/applicationStatus', $.proxy(function(data) {
+                $.getJSON(this.options.calendarView.contextPath + '/rest/mailrucalendar/1.0/calendar/config/applicationStatus', $.proxy(function(data) {
                     this._doInitGroupPicker(data.SOFTWARE);
                 }, this));
             },
