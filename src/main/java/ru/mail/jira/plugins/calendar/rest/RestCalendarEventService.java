@@ -59,13 +59,16 @@ public class RestCalendarEventService {
 
     @GET
     @Path("{calendarId}")
-    public Response getEvents(@PathParam("calendarId") final int calendarId,
-                              @QueryParam("start") final String start,
-                              @QueryParam("end") final String end) {
+    public Response getEvents(
+        @PathParam("calendarId") final int calendarId,
+        @QueryParam("start") final String start,
+        @QueryParam("end") final String end,
+        @QueryParam("groupBy") final String groupBy
+    ) {
         try {
             if (log.isDebugEnabled())
-                log.debug("getEvents with params. calendarId={}, start={}, end={}", new Object[]{calendarId, start, end});
-            List<EventDto> result = calendarEventService.findEvents(calendarId, start, end, jiraAuthenticationContext.getUser());
+                log.debug("getEvents with params. calendarId={}, start={}, end={}", calendarId, start, end);
+            List<EventDto> result = calendarEventService.findEvents(calendarId, StringUtils.trimToNull(groupBy), start, end, jiraAuthenticationContext.getUser());
             CacheControl cacheControl = new CacheControl();
             cacheControl.setNoCache(true);
             cacheControl.setNoStore(true);

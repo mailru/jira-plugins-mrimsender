@@ -22,7 +22,7 @@
         <div class="calenar-issue-popup-key-header">
             <a target="_blank" href="{$contextPath}/browse/{$issue.key}">
                 {if $issue.avatarUrl}
-                    <span class="aui-avatar aui-avatar-project aui-avatar-xsmall">
+                    <span class="aui-avatar aui-avatar-xsmall">
                         <span class="aui-avatar-inner">
                             <img src="{$contextPath}/{$issue.avatarUrl}" />
                         </span>
@@ -370,7 +370,6 @@
         {if $calendar.sourceType != 'basic'}
             {if $calendar.sourceType == 'project' }
                 <a href="{$contextPath}/issues/?jql=project%3D{$calendar.sourceId}" class="mailru-calendar-gadget-legend-entry">
-                <a href="" class="mailru-calendar-gadget-legend-entry">
             {else}
                 <a href="{$contextPath}/issues/?filter={$calendar.sourceId}" class="mailru-calendar-gadget-legend-entry">
             {/if}
@@ -379,7 +378,8 @@
             {else}
                 <span class="calendar-view-color-box" style="background-color: {$calendar.color};"/>
             {/if}
-            {$calendar.name}</a>
+            {$calendar.name}
+            </a>
         {else}
             <span class="mailru-calendar-gadget-legend-entry">
                 {if $calendar.hasError}
@@ -406,3 +406,25 @@
     {/foreach}
 {/template}
 
+/**
+ *
+ */
+{template .groupSelect}
+<form id="calendar-group-by-parent" class="vis-panel" style="top: 0; left: 0; width: 150px; height: 30px; z-index: 100;">
+    <select id="calendar-group-by-field" name="wtf" placeholder="Group by">
+        <option></option>
+        <option value="none">{getText('ru.mail.jira.plugins.calendar.customEvents.reminder.none')}</option>
+        <option value="assignee">{getText('issue.field.assignee')}</option>
+        <option value="reporter">{getText('issue.field.reporter')}</option>
+        <option value="issueType">{getText('issue.field.issuetype')}</option>
+        <option value="priority">{getText('issue.field.priority')}</option>
+        <option value="project">{getText('issue.field.project')}</option>
+        <option value="resolution">{getText('issue.field.resolution')}</option>
+        <option value="component">{getText('issue.field.component')}</option>
+        <option value="fixVersion">{getText('issue.field.fixversion')}</option>
+        <option value="affectsVersion">{getText('issue.field.affectsversions')}</option>
+        <option value="labels">{getText('issue.field.labels')}</option>
+        <option value="epicLink">{getText('gh.epic.link.name')}</option>
+    </select>
+</form>
+{/template}

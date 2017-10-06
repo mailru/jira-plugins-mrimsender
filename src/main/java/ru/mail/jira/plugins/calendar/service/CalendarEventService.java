@@ -1,5 +1,7 @@
 package ru.mail.jira.plugins.calendar.service;
 
+import com.atlassian.jira.avatar.Avatar;
+import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.bc.JiraServiceContext;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
@@ -23,16 +25,25 @@ import com.atlassian.jira.issue.fields.LabelsSystemField;
 import com.atlassian.jira.issue.fields.ReporterSystemField;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
+import com.atlassian.jira.issue.issuetype.IssueType;
+import com.atlassian.jira.issue.label.Label;
+import com.atlassian.jira.issue.priority.Priority;
+import com.atlassian.jira.issue.resolution.Resolution;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchProvider;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.jql.builder.JqlClauseBuilder;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
+import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.version.Version;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.clause.Clause;
+import com.atlassian.sal.api.ApplicationProperties;
+import com.atlassian.sal.api.UrlMode;
+import com.atlassian.sal.api.message.I18nResolver;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -45,28 +56,30 @@ import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter;
 import ru.mail.jira.plugins.calendar.model.QuickFilter;
 import ru.mail.jira.plugins.calendar.model.UserCalendar;
+import ru.mail.jira.plugins.calendar.rest.dto.EventGroup;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
+import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
 import ru.mail.jira.plugins.commons.CommonUtils;
 
 import javax.annotation.Nullable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class CalendarEventService {
     private final static Logger log = LoggerFactory.getLogger(CalendarEventService.class);
 
-    private final static int MILLIS_IN_DAY = 86400000;
+    private static final int MILLIS_IN_DAY = 86400000;
+    private static final TimeZone UTC_TZ = TimeZone.getTimeZone("UTC");
 
     public static final String CREATED_DATE_KEY = "created";
     public static final String UPDATED_DATE_KEY = "updated";
     public static final String RESOLVED_DATE_KEY = "resolved";
     public static final String DUE_DATE_KEY = "due_date";
 
+    private final ApplicationProperties applicationProperties;
     private final CalendarService calendarService;
     private final CustomEventService customEventService;
     private final CustomFieldManager customFieldManager;
@@ -78,9 +91,13 @@ public class CalendarEventService {
     private final SearchRequestService searchRequestService;
     private final SearchProvider searchProvider;
     private final UserCalendarService userCalendarService;
+    private final I18nResolver i18nResolver;
+    private final AvatarService avatarService;
+    private final JiraSoftwareHelper jiraSoftwareHelper;
 
     @Autowired
     public CalendarEventService(
+        @ComponentImport ApplicationProperties applicationProperties,
         @ComponentImport CustomFieldManager customFieldManager,
         @ComponentImport DateTimeFormatter dateTimeFormatter,
         @ComponentImport IssueService issueService,
@@ -88,11 +105,15 @@ public class CalendarEventService {
         @ComponentImport RendererManager rendererManager,
         @ComponentImport SearchRequestService searchRequestService,
         @ComponentImport SearchProvider searchProvider,
+        @ComponentImport I18nResolver i18nResolver,
+        @ComponentImport AvatarService avatarService,
         CalendarService calendarService,
         CustomEventService customEventService,
         JiraDeprecatedService jiraDeprecatedService,
-        UserCalendarService userCalendarService
+        UserCalendarService userCalendarService,
+        JiraSoftwareHelper jiraSoftwareHelper
     ) {
+        this.applicationProperties = applicationProperties;
         this.calendarService = calendarService;
         this.customEventService = customEventService;
         this.customFieldManager = customFieldManager;
@@ -104,22 +125,28 @@ public class CalendarEventService {
         this.searchRequestService = searchRequestService;
         this.searchProvider = searchProvider;
         this.userCalendarService =userCalendarService;
+        this.i18nResolver = i18nResolver;
+        this.avatarService = avatarService;
+        this.jiraSoftwareHelper = jiraSoftwareHelper;
     }
 
-    public List<EventDto> findEvents(final int calendarId,
+    public List<EventDto> findEvents(final int calendarId, String groupBy,
                                      final String start,
                                      final String end,
                                      final ApplicationUser user) throws ParseException, SearchException, GetException {
-        return findEvents(calendarId, start, end, user, false);
+        return findEvents(calendarId, groupBy, start, end, user, false);
     }
 
-    public List<EventDto> findEvents(final int calendarId,
+    public List<EventDto> findEvents(final int calendarId, String groupBy,
                                      final String start,
                                      final String end,
                                      final ApplicationUser user,
                                      final boolean includeIssueInfo) throws ParseException, SearchException, GetException {
         if (log.isDebugEnabled())
-            log.debug("findEvents with params. calendarId={}, start={}, end={}, user={}, includeIssueInfo={}", new Object[]{calendarId, start, end, user.toString(), includeIssueInfo});
+            log.debug(
+                "findEvents with params. calendarId={}, start={}, end={}, user={}, includeIssueInfo={}",
+                calendarId, start, end, user.toString(), includeIssueInfo
+            );
         Calendar calendarModel = calendarService.getCalendar(calendarId);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String source = calendarModel.getSource();
@@ -129,13 +156,13 @@ public class CalendarEventService {
         Date parsedEnd = dateFormat.parse(end);
 
         if (source.startsWith("project_"))
-            result = getProjectEvents(calendarModel, Long.parseLong(source.substring("project_".length())),
+            result = getProjectEvents(calendarModel, groupBy, Long.parseLong(source.substring("project_".length())),
                                     calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo);
         else if (source.startsWith("filter_"))
-            result = getFilterEvents(calendarModel, Long.parseLong(source.substring("filter_".length())),
+            result = getFilterEvents(calendarModel, groupBy, Long.parseLong(source.substring("filter_".length())),
                                    calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo);
         else if (source.startsWith("jql_"))
-            result = getJqlEvents(calendarModel, StringUtils.substringAfter(source, "jql_"),
+            result = getJqlEvents(calendarModel, groupBy, StringUtils.substringAfter(source, "jql_"),
                                 calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo);
         else {
             result = new ArrayList<>();
@@ -153,13 +180,13 @@ public class CalendarEventService {
         return getEventInfo(calendar, issue, user);
     }
 
-    private List<EventDto> getProjectEvents(Calendar calendar, long projectId,
+    private List<EventDto> getProjectEvents(Calendar calendar, String groupBy, long projectId,
                                             String startField, String endField,
                                             Date startTime, Date endTime,
                                             ApplicationUser user, boolean includeIssueInfo) throws SearchException {
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder();
         jqlBuilder.project(projectId);
-        return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo);
+        return getEvents(calendar, groupBy, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo);
     }
 
     private Clause getSelectedQuickFilterClause(Calendar calendar, ApplicationUser user) {
@@ -183,7 +210,7 @@ public class CalendarEventService {
         return jqlBuilder.buildClause();
     }
 
-    private List<EventDto> getFilterEvents(Calendar calendar,
+    private List<EventDto> getFilterEvents(Calendar calendar, String groupBy,
                                            long filterId,
                                            String startField,
                                            String endField,
@@ -191,8 +218,10 @@ public class CalendarEventService {
                                            Date endTime,
                                            ApplicationUser user, boolean includeIssueInfo) throws SearchException {
         if (log.isDebugEnabled())
-            log.debug("getFilterEvents with params. calendar={}, filterId={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
-                      new Object[]{calendar, filterId, startField, endField, startTime, endTime, user, includeIssueInfo});
+            log.debug(
+                "getFilterEvents with params. calendar={}, filterId={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
+                calendar, filterId, startField, endField, startTime, endTime, user, includeIssueInfo
+            );
         JiraServiceContext jsCtx = new JiraServiceContextImpl(user);
         SearchRequest filter = searchRequestService.getFilter(jsCtx, filterId);
 
@@ -200,14 +229,14 @@ public class CalendarEventService {
             log.debug("find filter by id. filter={}", filter);
         if (filter == null) {
             log.error("Filter with id => " + filterId + " is null. Maybe it was deleted");
-            return new ArrayList<EventDto>(0);
+            return new ArrayList<>(0);
         }
 
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder(filter.getQuery());
-        return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo);
+        return getEvents(calendar, groupBy, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo);
     }
 
-    private List<EventDto> getJqlEvents(Calendar calendar,
+    private List<EventDto> getJqlEvents(Calendar calendar, String groupBy,
                                         String jql,
                                         String startField,
                                         String endField,
@@ -215,33 +244,35 @@ public class CalendarEventService {
                                         Date endTime,
                                         ApplicationUser user, boolean includeIssueInfo) throws SearchException {
         if (log.isDebugEnabled())
-            log.debug("getJqlEvents with params. calendar={}, jql={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
-                      new Object[]{calendar, jql, startField, endField, startTime, endTime, user, includeIssueInfo});
+            log.debug(
+                "getJqlEvents with params. calendar={}, jql={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
+                calendar, jql, startField, endField, startTime, endTime, user, includeIssueInfo
+            );
         if (log.isDebugEnabled())
             log.debug("find filter by jql. jql={}", jql);
         if (jql == null) {
-            log.error("JQL => {} is null.", jql);
-            return new ArrayList<EventDto>(0);
+            log.error("JQL => is null.");
+            return new ArrayList<>(0);
         }
         SearchService.ParseResult parseResult = jiraDeprecatedService.searchService.parseQuery(user, jql);
 
         if (parseResult.isValid()) {
             JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder(parseResult.getQuery());
-            return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo);
+            return getEvents(calendar, groupBy, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo);
         } else {
             log.error("JQL is invalid => {}", jql);
-            return new ArrayList<EventDto>(0);
+            return new ArrayList<>(0);
         }
     }
 
-    private List<EventDto> getEvents(Calendar calendar,
+    private List<EventDto> getEvents(Calendar calendar, String groupBy,
                                      JqlClauseBuilder jqlBuilder,
                                      String startField,
                                      String endField,
                                      Date startTime,
                                      Date endTime,
                                      ApplicationUser user, boolean includeIssueInfo) throws SearchException {
-        List<EventDto> result = new ArrayList<EventDto>();
+        List<EventDto> result = new ArrayList<>();
 
         CustomField startCF = null;
         if (startField.startsWith("customfield_")) {
@@ -280,12 +311,10 @@ public class CalendarEventService {
 
         List<Issue> issues = searchProvider.search(jqlBuilder.buildQuery(), user, PagerFilter.getUnlimitedFilter()).getIssues();
         if (log.isDebugEnabled())
-            log.debug("searchProvider.search(). query={}, user={}, issues.size()={}", new Object[]{jqlBuilder.buildQuery().toString(), user, issues.size()});
+            log.debug("searchProvider.search(). query={}, user={}, issues.size()={}", jqlBuilder.buildQuery().toString(), user, issues.size());
         for (Issue issue : issues) {
             try {
-                EventDto event = buildEvent(calendar, user, issue, includeIssueInfo, startField, startCF, endField, endCF);
-                if (event != null)
-                    result.add(event);
+                buildEventWithGroups(calendar, groupBy, user, issue, includeIssueInfo, startField, startCF, endField, endCF).ifPresent(result::add);
             } catch (Exception e) {
                 log.error(String.format("Error while trying to translate issue => %s to event", issue.getKey()), e);
             }
@@ -293,8 +322,172 @@ public class CalendarEventService {
         return result;
     }
 
-    private EventDto buildEvent(Calendar calendar, ApplicationUser user, Issue issue, boolean includeIssueInfo,
-                                String startField, CustomField startCF, String endField, CustomField endCF) {
+    private Optional<EventDto> buildEventWithGroups(
+        Calendar calendar, String groupBy, ApplicationUser user, Issue issue, boolean includeIssueInfo,
+        String startField, CustomField startCF, String endField, CustomField endCF
+    ) {
+        if (calendar == null || issue == null) {
+            return Optional.empty();
+        }
+
+        List<EventGroup> groups = null;
+        if ("component".equals(groupBy)) {
+            Collection<ProjectComponent> components = issue.getComponents();
+
+            if (components != null && components.size() > 0) {
+                groups = components
+                    .stream()
+                    .map(component -> EventGroup.builder().id("component/" + component.getId()).name(component.getName()).build())
+                    .collect(Collectors.toList());
+            }
+        } else if ("fixVersion".equals(groupBy)) {
+            Collection<Version> versions = issue.getFixVersions();
+
+            if (versions != null && versions.size() > 0) {
+                groups = versions
+                    .stream()
+                    .map(version -> EventGroup.builder().id("fixVersion/" + version.getId()).name(version.getName()).build())
+                    .collect(Collectors.toList());
+            }
+        } else if ("affectsVersion".equals(groupBy)) {
+            Collection<Version> versions = issue.getAffectedVersions();
+
+            if (versions != null && versions.size() > 0) {
+                groups = versions
+                    .stream()
+                    .map(version -> EventGroup.builder().id("fixVersion/" + version.getId()).name(version.getName()).build())
+                    .collect(Collectors.toList());
+            }
+        } else if ("labels".equals(groupBy)) {
+            Collection<Label> labels = issue.getLabels();
+
+            if (labels != null && labels.size() > 0) {
+                groups = labels
+                    .stream()
+                    .map(label -> EventGroup.builder().id("labels/" + label.getLabel()).name(label.getLabel()).build())
+                    .collect(Collectors.toList());
+            }
+        } else if ("assignee".equals(groupBy)) {
+            String group;
+            String groupName;
+
+            ApplicationUser assignee = issue.getAssignee();
+            if (assignee != null) {
+                group = "assignee/" + assignee.getName();
+                groupName = assignee.getDisplayName();
+            } else {
+                group = "assignee/zz-unassigned";
+                groupName = i18nResolver.getText("assignee.types.unassigned");
+            }
+
+            groups = ImmutableList.of(
+                EventGroup
+                    .builder()
+                    .id(group)
+                    .name(groupName)
+                    .avatar(avatarService.getAvatarURL(user, assignee, Avatar.Size.LARGE).toString())
+                    .build()
+            );
+        } else if ("reporter".equals(groupBy)) {
+            String group;
+            String groupName;
+
+            ApplicationUser reporter = issue.getReporter();
+            if (reporter != null) {
+                group = "reporter/" + reporter.getName();
+                groupName = reporter.getDisplayName();
+            } else {
+                group = "reporter/zz-anonymous";
+                groupName = i18nResolver.getText("common.words.anonymous");
+            }
+
+            groups = ImmutableList.of(
+                EventGroup
+                    .builder()
+                    .id(group)
+                    .name(groupName)
+                    .avatar(avatarService.getAvatarURL(user, reporter, Avatar.Size.LARGE).toString())
+                    .build()
+            );
+        } else if ("issueType".equals(groupBy)) {
+            IssueType issueType = issue.getIssueType();
+            groups = ImmutableList.of(
+                EventGroup
+                    .builder()
+                    .id("issueType/" + issueType.getId())
+                    .name(issueType.getNameTranslation())
+                    .avatar(getBaseUrl() + issueType.getIconUrl())
+                    .build()
+            );
+        } else if ("project".equals(groupBy)) {
+            Project project = issue.getProjectObject();
+            groups = ImmutableList.of(
+                EventGroup
+                    .builder()
+                    .id("project/" + project.getId())
+                    .name(project.getName())
+                    .avatar(avatarService.getProjectAvatarURL(project, Avatar.Size.LARGE).toString())
+                    .build()
+            );
+        } else if ("priority".equals(groupBy)) {
+            Priority priority = issue.getPriority();
+            groups = ImmutableList.of(
+                EventGroup
+                    .builder()
+                    .id("priority/" + priority.getSequence())
+                    .name(priority.getNameTranslation())
+                    .avatar(priority.getCompleteIconUrl())
+                    .build()
+            );
+        } else if ("epicLink".equals(groupBy)) {
+            if (jiraSoftwareHelper.isAvailable()) {
+                Issue epicLink = (Issue) issue.getCustomFieldValue(jiraSoftwareHelper.getEpicLinkField());
+
+                if (epicLink != null) {
+                    groups = ImmutableList.of(
+                        EventGroup
+                            .builder()
+                            .id("epic/" + epicLink.getKey())
+                            .name(issue.getKey() + " - " + epicLink.getSummary())
+                            .build()
+                    );
+                } else {
+                    if (jiraSoftwareHelper.getEpicIssueType().equals(issue.getIssueType())) {
+                        groups = ImmutableList.of(
+                            EventGroup
+                                .builder()
+                                .id("epic/" + issue.getKey())
+                                .name(issue.getKey() + " - " + issue.getSummary())
+                                .build()
+                        );
+                    }
+                }
+            }
+        } else if ("resolution".equals(groupBy)) {
+            Resolution resolution = issue.getResolution();
+            if (resolution != null) {
+                groups = ImmutableList.of(
+                    EventGroup
+                        .builder()
+                        .id("resolution/" + resolution.getId())
+                        .name(resolution.getNameTranslation())
+                        .build()
+                );
+            } else {
+                groups = ImmutableList.of(
+                    EventGroup
+                        .builder()
+                        .id("resolution/zz-unresolved")
+                        .name(i18nResolver.getText("common.concepts.unresolved"))
+                        .build()
+                );
+            }
+        }
+        return Optional.of(buildEvent(calendar, groupBy, user, issue, includeIssueInfo, startField, startCF, endField, endCF, groups));
+    }
+
+    private EventDto buildEvent(Calendar calendar, String groupBy, ApplicationUser user, Issue issue, boolean includeIssueInfo,
+                                String startField, CustomField startCF, String endField, CustomField endCF, List<EventGroup> groups) {
         if (calendar == null || issue == null)
             return null;
         DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
@@ -320,10 +513,15 @@ public class CalendarEventService {
         event.setTitle(issue.getSummary());
         event.setColor(calendar.getColor());
         event.setAllDay(isAllDay);
-        event.setStatusColor(issue.getStatusObject().getStatusCategory().getColorName());
-        event.setIssueTypeImgUrl(issue.getIssueTypeObject().getIconUrl());
-        event.setStatus(issue.getStatusObject().getName());
+        event.setStatusColor(issue.getStatus().getStatusCategory().getColorName());
+        event.setIssueTypeImgUrl(issue.getIssueType().getIconUrl());
+        event.setStatus(issue.getStatus().getName());
         event.setType(EventDto.Type.ISSUE);
+
+        if (groups != null) {
+            event.setGroupField(groupBy);
+            event.setGroups(groups);
+        }
 
         if (startDate == null && endDate == null) { // Something unbelievable
             log.error("Event " + issue.getKey() + " doesn't contain startDate and endDate");
@@ -369,11 +567,15 @@ public class CalendarEventService {
         return event;
     }
 
+    private String getBaseUrl() {
+        return applicationProperties.getBaseUrl(UrlMode.ABSOLUTE);
+    }
+
     private IssueInfo getEventInfo(Calendar calendar, Issue issue, ApplicationUser user) {
         IssueInfo result = new IssueInfo(issue.getKey(), issue.getSummary());
-        result.setStatusColor(issue.getStatusObject().getStatusCategory().getColorName());
-        if (issue.getIssueTypeObject().getAvatar() != null)
-            result.setAvatarUrl(String.format("secure/viewavatar?size=xsmall&avatarId=%d&avatarType=issuetype", issue.getIssueTypeObject().getAvatar().getId()));
+        result.setStatusColor(issue.getStatus().getStatusCategory().getColorName());
+        if (issue.getIssueType().getAvatar() != null)
+            result.setAvatarUrl(String.format("secure/viewavatar?size=xsmall&avatarId=%d&avatarType=issuetype", issue.getIssueType().getAvatar().getId()));
 
         DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
         DateTimeFormatter userDateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user);
@@ -425,7 +627,7 @@ public class CalendarEventService {
         else if (field.startsWith("customfield_")) {
             CustomField customField = customFieldManager.getCustomFieldObject(field);
             if (log.isDebugEnabled())
-                log.debug("add DateRangeCondition for customfield. customField={}, start={}, end={}", new Object[]{customField, startTime, endTime});
+                log.debug("add DateRangeCondition for customfield. customField={}, start={}, end={}", customField, startTime, endTime);
             if (customField == null)
                 throw new IllegalArgumentException("Bad custom field id => " + field);
             jcb.customField(customField.getIdAsLong()).range(dateTimeFormatter.format(startTime), dateTimeFormatter.format(endTime));
@@ -519,7 +721,7 @@ public class CalendarEventService {
             throw new IllegalArgumentException(String.format("Can not move event with key => %s, because it contains not draggable event date field", issue.getKey()));
 
         DateTimeFormatter dateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-        DateTimeFormatter datePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.DATE_PICKER);
+        DateTimeFormatter datePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withZone(UTC_TZ).withStyle(DateTimeStyle.DATE_PICKER);
         DateTimeFormatter dateTimePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.DATE_TIME_PICKER);
 
         IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
@@ -538,9 +740,9 @@ public class CalendarEventService {
                 if (eventEndCF.getCustomFieldType() instanceof DateTimeCFType)
                     issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), dateTimePickerFormat.format(endDate));
                 else
-                    issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), datePickerFormat.format(new DateTime(endDate).minusDays(1).toLocalDate().toDate()));
+                    issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), datePickerFormat.format(new DateTime(endDate).toLocalDate().toDate()));
             } else
-                issueInputParams.setDueDate(datePickerFormat.format(new DateTime(endDate).minusDays(1).toLocalDate().toDate()));
+                issueInputParams.setDueDate(datePickerFormat.format(new DateTime(endDate).toLocalDate().toDate()));
         }
 
         IssueService.UpdateValidationResult updateValidationResult = jiraDeprecatedService.issueService.validateUpdate(user, issue.getId(), issueInputParams);
@@ -551,7 +753,7 @@ public class CalendarEventService {
         if (!updateResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
 
-        return buildEvent(calendar, user, jiraDeprecatedService.issueService.getIssue(user, eventId).getIssue(), false, calendar.getEventStart(), eventStartCF, calendar.getEventEnd(), eventEndCF);
+        return buildEvent(calendar, null, user, jiraDeprecatedService.issueService.getIssue(user, eventId).getIssue(), false, calendar.getEventStart(), eventStartCF, calendar.getEventEnd(), eventEndCF, ImmutableList.of());
     }
 
     private Date retrieveDateByField(Issue issue, String field) {
@@ -568,7 +770,7 @@ public class CalendarEventService {
 
     private Date retrieveDateByField(Issue issue, CustomField customField) {
         if (log.isDebugEnabled())
-            log.debug("retrieveDateByField with params. issue={}, customField={}, customFieldType={}", new Object[]{issue, customField, customField.getClass()});
+            log.debug("retrieveDateByField with params. issue={}, customField={}, customFieldType={}", issue, customField, customField.getClass());
         if (!FieldUtils.isDateField(customField))
             throw new IllegalArgumentException("Bad date time => " + customField.getName());
         return (Date) issue.getCustomFieldValue(customField);
@@ -604,14 +806,13 @@ public class CalendarEventService {
                 CustomField customField = customFieldManager.getCustomFieldObject(extraField);
                 FieldLayoutItem fieldLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem(customField);
                 if (customField != null) {
-                    String columnViewHtml = customField.getColumnViewHtml(fieldLayoutItem, new HashMap<String, Object>(), issue);
+                    String columnViewHtml = customField.getColumnViewHtml(fieldLayoutItem, new HashMap<>(), issue);
                     if (StringUtils.isNotEmpty(columnViewHtml))
                         issueInfo.addCustomField(customField.getName(), columnViewHtml);
                 }
             } else if (extraField.equals(CalendarServiceImpl.REPORTER)) {
                 if (issue.getReporter() != null) {
                     FieldLayoutItem reporterLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("reporter");
-
 
                     String columnViewHtml = ((ReporterSystemField) reporterLayoutItem.getOrderableField()).getColumnViewHtml(reporterLayoutItem, new HashMap(), issue);
                     issueInfo.setReporter(columnViewHtml);
@@ -623,29 +824,29 @@ public class CalendarEventService {
                     issueInfo.setAssignee(columnViewHtml);
                 }
             } else if (extraField.equals(CalendarServiceImpl.STATUS))
-                issueInfo.setStatus(issue.getStatusObject().getName());
+                issueInfo.setStatus(issue.getStatus().getName());
             else if (extraField.equals(CalendarServiceImpl.LABELS)) {
                 if (issue.getLabels() != null && !issue.getLabels().isEmpty()) {
                     FieldLayoutItem labelsLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem("labels");
                     String columnViewHtml = ((LabelsSystemField) labelsLayoutItem.getOrderableField()).getColumnViewHtml(labelsLayoutItem, new HashMap(), issue);
                     issueInfo.setLabels(columnViewHtml);
                 }
-            } else if (extraField.equals(CalendarServiceImpl.COMPONENTS) && issue.getComponentObjects() != null && !issue.getComponentObjects().isEmpty()) {
-                List<String> components = new ArrayList<String>();
-                for (ProjectComponent pc : issue.getComponentObjects())
+            } else if (extraField.equals(CalendarServiceImpl.COMPONENTS) && issue.getComponents() != null && !issue.getComponents().isEmpty()) {
+                List<String> components = new ArrayList<>();
+                for (ProjectComponent pc : issue.getComponents())
                     components.add(pc.getName());
                 issueInfo.setComponents(components.toString());
             } else if (extraField.equals(CalendarServiceImpl.DUEDATE) && issue.getDueDate() != null)
                 issueInfo.setDueDate(userDateTimeFormatter.forLoggedInUser().withSystemZone().withStyle(DateTimeStyle.ISO_8601_DATE).format(issue.getDueDate()));
             else if (extraField.equals(CalendarServiceImpl.ENVIRONMENT) && issue.getEnvironment() != null)
                 issueInfo.setEnvironment(issue.getEnvironment());
-            else if (extraField.equals(CalendarServiceImpl.PRIORITY) && issue.getPriorityObject() != null) {
-                issueInfo.setPriority(issue.getPriorityObject().getName());
-                issueInfo.setPriorityIconUrl(issue.getPriorityObject().getIconUrl());
-            } else if (extraField.equals(CalendarServiceImpl.RESOLUTION) && issue.getResolutionObject() != null)
-                issueInfo.setResolution(issue.getResolutionObject().getName());
+            else if (extraField.equals(CalendarServiceImpl.PRIORITY) && issue.getPriority() != null) {
+                issueInfo.setPriority(issue.getPriority().getName());
+                issueInfo.setPriorityIconUrl(issue.getPriority().getIconUrl());
+            } else if (extraField.equals(CalendarServiceImpl.RESOLUTION) && issue.getResolution() != null)
+                issueInfo.setResolution(issue.getResolution().getName());
             else if (extraField.equals(CalendarServiceImpl.AFFECT) && issue.getAffectedVersions() != null && !issue.getAffectedVersions().isEmpty()) {
-                List<String> affectVersions = new ArrayList<String>();
+                List<String> affectVersions = new ArrayList<>();
                 for (Version ver : issue.getAffectedVersions())
                     affectVersions.add(ver.getName());
                 issueInfo.setAffect(affectVersions.toString());

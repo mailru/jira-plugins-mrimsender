@@ -64,6 +64,10 @@ public class EventDto {
     private Timestamp originalEnd;
     @XmlElement
     private Boolean originalAllDay;
+    @XmlElement
+    private String groupField;
+    @XmlElement
+    private List<EventGroup> groups;
 
     public enum Type {
         ISSUE,

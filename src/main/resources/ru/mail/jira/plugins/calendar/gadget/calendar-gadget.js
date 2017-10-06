@@ -5,6 +5,15 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
         });
     }
 
+    function getContextPath() {
+        if (AJS.gadget) {
+            return AJS.gadget.getBaseUrl();
+        } else {
+            return AJS.contextPath();
+        }
+    }
+
+    //todo: store timeline scale in gadget settings
     return {
         config: {
             descriptor: function(args) {
@@ -48,7 +57,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
 
                                 var $calendarSelect = AJS.$('<input type="hidden" class="select multi-select" id="calendars" name="calendars"/>');
                                 parentDiv.append($calendarSelect);
-                                parentDiv.closest('.field-group').append('<div class="description">' + AJS.format(gadget.getMsg('ru.mail.jira.plugins.calendar.gadget.config.calendars.description'), '<a href="' + AJS.contextPath() + '/secure/MailRuCalendar.jspa">', '</a>') + '</div>');
+                                parentDiv.closest('.field-group').append('<div class="description">' + AJS.format(gadget.getMsg('ru.mail.jira.plugins.calendar.gadget.config.calendars.description'), '<a href="' + getContextPath() + '/secure/MailRuCalendar.jspa">', '</a>') + '</div>');
                                 $calendarSelect.auiSelect2({
                                     multiple: true,
                                     data: data,
@@ -71,11 +80,11 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                             }
                         },
                         {
-                            id: 'view',
-                            userpref: 'view',
+                            id: 'calendarView',
+                            userpref: 'calendarView',
                             label: gadget.getMsg('ru.mail.jira.plugins.calendar.gadget.config.view'),
                             type: 'select',
-                            selected: gadget.getPref('view') || 'month',
+                            selected: gadget.getPref('calendarView') || gadget.getPref('view') || 'month',
                             options: [
                                 {
                                     label: gadget.getMsg('ru.mail.jira.plugins.calendar.quarter'),
@@ -138,6 +147,8 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                 AJS.$(document).unbind('ajaxStop');
                 var gadget = this;
 
+                console.log(gadget);
+
                 var licenseStatus = args.props.license;
                 if (!args.props.licenseValid) {
                     gadgets.window.adjustHeight();
@@ -173,7 +184,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                     return calendar.hasError ? '' : calendar.name;
                 });
 
-                var view = gadget.getPref('view') || 'month';
+                var view = gadget.getPref('calendarView') || gadget.getPref('view') || 'month';
                 var hideWeekends = gadget.getPref('hideWeekends') == 'hideWeekends';
                 gadget.showView();
                 if (!AJS.$('#mailru-calendar-gadget-full-calendar').length) {
@@ -203,6 +214,9 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                         gadget.hideLoading();
                     });
                     gadget.calendarView.init(view, hideWeekends);
+                    var $calendarEl = AJS.$("#mailru-calendar-gadget-full-calendar");
+                    $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-state-default fc-button').addClass('aui-button');
+                    $calendarEl.find('.fc-button-group').addClass('aui-buttons');
                 } else {
                     gadget.calendarView.removeAllEventSource();
                     gadget.calendarView.setView(view);
@@ -217,7 +231,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                 });
                 AJS.$('#mailru-calendar-gadget-legend').html(JIRA.Templates.Plugins.MailRuCalendar.calendarLegend({
                     calendars: gadgetCalendars,
-                    contextPath: AJS.contextPath()
+                    contextPath: getContextPath()
                 }));
                 gadgets.window.adjustHeight();
             },

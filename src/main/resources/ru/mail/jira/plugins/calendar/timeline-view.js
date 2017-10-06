@@ -1,7 +1,39 @@
 (function(factory) {
     factory(moment);
 })(function(moment) {
-    define('calendar/timeline-view', ['jquery', 'underscore', 'calendar/edit-type-dialog'], function($, _, EditTypeDialog) {
+    function getContextPath() {
+        if (AJS.gadget) {
+            return AJS.gadget.getBaseUrl();
+        } else {
+            return AJS.contextPath();
+        }
+    }
+
+    var DEFAULT_GROUP = 'zzz-default';
+
+    var groupFieldNames = {
+        "assignee": AJS.I18n.getText('issue.field.assignee'),
+        "reporter": AJS.I18n.getText('issue.field.reporter'),
+        "issueType": AJS.I18n.getText('issue.field.issuetype'),
+        "priority": AJS.I18n.getText('issue.field.priority'),
+        "project": AJS.I18n.getText('issue.field.project'),
+        "component": AJS.I18n.getText('issue.field.component'),
+        "fixVersion": AJS.I18n.getText('issue.field.fixversion'),
+        "affectsVersion": AJS.I18n.getText('issue.field.affectsversions'),
+        "labels": AJS.I18n.getText('issue.field.labels'),
+        "epicLink": AJS.I18n.getText('gh.epic.link.name'),
+        "resolution": AJS.I18n.getText('issue.field.resolution')
+    };
+
+    var groupAvatarClass = {
+        'assignee': 'timeline-group-avatar',
+        'reporter': 'timeline-group-avatar',
+        'project': 'timeline-group-avatar',
+        'issueType': 'timeline-group-avatar-sm',
+        'priority': 'timeline-group-avatar-sm'
+    };
+
+    define('calendar/timeline-view', ['jquery', 'underscore', 'calendar/edit-type-dialog', 'calendar/preferences'], function($, _, EditTypeDialog, Preferences) {
         var FC = $.fullCalendar;
         var View = FC.View;
         var TimelineView;
@@ -16,7 +48,7 @@
         });
 
         // Display today red-line for scale == 'day' and step = 1
-        var oldTimeStepGetClassName = vis.TimeStep.prototype.getClassName;
+        /*var oldTimeStepGetClassName = vis.TimeStep.prototype.getClassName;
         vis.TimeStep.prototype.getClassName = function() {
             var m = this.moment(this.current);
             var current = m.locale ? m.locale('en') : m.lang('en'); // old versions of moment have .lang() function
@@ -26,15 +58,14 @@
 
             var className = oldTimeStepGetClassName.call(this);
             return this.scale == 'day' && this.step == 1 ? className + today(current) + ' vis-' + current.format('dddd').toLowerCase() : className;
-        };
+        };*/ //todo
 
         /**
          * Extend Fullcalendar View class to implement Timeline
          */
         TimelineView = View.extend({
-            defaultInterval: moment.duration(7, 'd'),
+            defaultInterval: moment.duration(14, 'd'),
             timelineOptions: {
-                //autoResize: false,
                 height: 450,
                 multiselect: false,
                 zoomable: false,
@@ -45,7 +76,25 @@
                     updateTime: true,
                     updateGroup: false,
                     remove: false
-                }
+                },
+                format: {
+                    minorLabels: {
+                        millisecond:'SSS',
+                        second:     's',
+                        minute:     'HH:mm',
+                        hour:       'HH:mm',
+                        weekday:    'ddd D',
+                        day:        'D MMM',
+                        week:       'w',
+                        month:      'MMM YY',
+                        year:       'YYYY'
+                    }
+                },
+                verticalScroll: true,
+                zoomKey: 'ctrlKey',
+                groupOrder: 'id',
+                showMajorLabels: false,
+                orientation: 'top'
             },
             initialize: function() {
             },
@@ -53,7 +102,9 @@
                 $('#inline-dialog-eventTimelineDialog').remove();
                 this.timeline.off('rangechanged');
                 this.timeline.off('rangechange');
+                this.timeline.off('select');
                 this.timeline = undefined;
+                $("#calendar-full-calendar, #mailru-calendar-gadget-full-calendar").removeClass('no-tooltips');
             },
             render: function() {
                 if (!this.timeline) {
@@ -66,13 +117,94 @@
                     $(this.el).on('remove', $.proxy(this._destroy, this));
                     this.timeline.on('rangechanged', $.proxy(this._onRangeChanged, this));
                     this.timeline.on('rangechange', $.proxy(this._onRangeChange, this));
+                    this.timeline.on('select', $.proxy(function(properties) {
+                        var $calendar = $("#calendar-full-calendar, #mailru-calendar-gadget-full-calendar");
+                        if (properties.items && properties.items.length) {
+                            $calendar.addClass('no-tooltips');
+                        } else {
+                            $calendar.removeClass('no-tooltips');
+                        }
+                    }, this));
                     this.setRange();
+
+                    this._initGroupPicker();
                 }
             },
             renderEvents: function(_events) {
-                var events = _.map(_events, $.proxy(function(event) {
-                    return this._transformEvent(event, false);
-                }, this));
+                var groupBy = Preferences.getItem('groupBy');
+
+                var events = _.flatten(_.map(_events, $.proxy(function(event) {
+                    var result = this._transformEvent(event, false);
+                    if (!groupBy || groupBy === 'none') {
+                        return result;
+                    }
+
+                    if (result.groups) {
+                        return _.map(result.groups, function(group) {
+                            return _.extend({}, result, {
+                                id: group.id + '-' + result.id,
+                                group: group.id,
+                                groupName: group.name,
+                                groupAvatar: group.avatar
+                            });
+                        });
+                    } else {
+                        result.group = DEFAULT_GROUP;
+                        result.groupName = AJS.I18n.getText('ru.mail.jira.plugins.calendar.timeline.defaultGroup');
+                        return result
+                    }
+                }, this)));
+
+                var groups =
+                    _.uniq(
+                        _.filter(
+                            _.map(events, function(e) {
+                                var avatarPrefix = '';
+
+                                if (e.groupAvatar) {
+                                    avatarPrefix = '<img src="' + AJS.escapeHtml(e.groupAvatar) + '" class="' + groupAvatarClass[e.groupField] + '"/>';
+                                }
+
+                                return {
+                                    id: e.group,
+                                    content: '<div class="flex flex-row">' + avatarPrefix + '<div class="flex flex-column flex-center">' + e.groupName + '</div></div>',
+                                    field: e.groupField
+                                }
+                            }),
+                            function(e) {return e && e.id}
+                        ),
+                        function(e) {return e.id}
+                    );
+
+                var parentGroups =
+                    _.map(
+                        _.filter(
+                            _.uniq(
+                                _.map(groups, function(e) {
+                                    return e.field
+                                })
+                            ),
+                            function(e) { return e; }
+                        ),
+                        function(e) {
+                            return {
+                                id: e,
+                                content: groupFieldNames[e],
+                                subgroupOrder: 'id'
+                            }
+                        }
+                    );
+
+                if (groupBy && groupBy !== 'none') {
+                    if (parentGroups.length > 1) {
+                        this.timeline.setGroups(new vis.DataSet(parentGroups.concat(groups)));
+                    } else {
+                        this.timeline.setGroups(new vis.DataSet(groups));
+                    }
+                } else {
+                    this.timeline.setGroups(null);
+                }
+
                 this.timeline.setData({items: events});
             },
             getRangeInterval: function() {
@@ -153,7 +285,7 @@
                 if (item.eventType === 'ISSUE') {
                     $.ajax({
                         type: 'PUT',
-                        url: contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + item.calendarId + '/event/' + item.eventId + '/move',
+                        url: this.options.calendarView.contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + item.calendarId + '/event/' + item.eventId + '/move',
                         data: {
                             start: moment(start).format(),
                             end: end ? moment(end).format() : ''
@@ -166,7 +298,11 @@
                             callback(null);
                         },
                         success: $.proxy(function (event) {
-                            callback(this._transformEvent(event, true));
+                            if (event.groups && event.groups.length) {
+                                this.calendar.refetchEvents();
+                            } else {
+                                callback(this._transformEvent(event, true));
+                            }
                         }, this)
                     });
                 } else if (item.eventType === 'CUSTOM') {
@@ -238,7 +374,7 @@
             _moveCustomEvent: function(eventId, data, callback) {
                 $.ajax({
                     type: 'PUT',
-                    url: contextPath + '/rest/mailrucalendar/1.0/customEvent/' + eventId + '/move',
+                    url: this.options.calendarView.contextPath + '/rest/mailrucalendar/1.0/customEvent/' + eventId + '/move',
                     contentType: 'application/json; charset=utf-8',
                     data: JSON.stringify(data),
                     error: function (xhr) {
@@ -307,6 +443,7 @@
                     start: start,
                     end: end,
                     content: this._buildContent(event),
+                    title: this._buildTitle(event),
                     className: this._getClassForColor(event.color),
                     style: event.datesError ? 'opacity: 0.4;border-color:#d04437;' : '',
                     startEditable: event.startEditable,
@@ -316,17 +453,26 @@
                     allDay: event.allDay,
                     recurring: event.recurring,
                     recurrenceNumber: event.recurrenceNumber,
-                    originalId: event.originalId,
+                    originalId: event.originalId || event.id,
                     originalStart: event.originalStart,
                     originalEnd: event.originalEnd,
-                    originalAllDay: event.originalAllDay
+                    originalAllDay: event.originalAllDay,
+                    groups: event.groups,
+                    groupField: event.groupField,
+                    type: end ? 'range' : 'box'
                 };
             },
             _buildContent: function(event) {
                 var content = null;
 
                 if (event.type === 'ISSUE') {
-                    content = '<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span><span> '+ event.id + ' ' + AJS.escapeHTML(event.title) + '</span>';
+                    var typeIcon =
+                        '<span class="aui-avatar aui-avatar-xsmall">' +
+                            '<span class="aui-avatar-inner">' +
+                                '<img src="' + getContextPath() + '/' + event.issueTypeImgUrl +'" />' +
+                            '</span>' +
+                        '</span>';
+                    content = typeIcon + ' <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span><span> '+ event.id + ' ' + AJS.escapeHTML(event.title) + '</span>';
                 } else if (event.type === 'CUSTOM') {
                     content = '';
                     if (event.participants) {
@@ -364,6 +510,60 @@
                 }
 
                 return content
+            },
+            _buildTitle: function(event) {
+                if (event.type === 'ISSUE') {
+                    return event.id + ' ' + AJS.escapeHTML(event.title);
+                } else if (event.type === 'CUSTOM') {
+                    return AJS.escapeHTML(event.title);
+                }
+            },
+            _initGroupPicker: function() {
+                $.getJSON(this.options.calendarView.contextPath + '/rest/mailrucalendar/1.0/calendar/config/applicationStatus', $.proxy(function(data) {
+                    this._doInitGroupPicker(data.SOFTWARE);
+                }, this));
+            },
+            _doInitGroupPicker: function(jswAvailable) {
+                var $calendar = $("#calendar-full-calendar, #mailru-calendar-gadget-full-calendar");
+                $calendar.find('.vis-timeline').prepend(JIRA.Templates.Plugins.MailRuCalendar.groupSelect());
+
+                var $groupByParent = $('#calendar-group-by-parent');
+                var $top = $calendar.find('.vis-top');
+                $top.mouseover(function() {
+                    var groupBy = Preferences.getItem("groupBy");
+                    if (!groupBy || groupBy === "none") {
+                        $groupByParent.hide();
+                    }
+                });
+                $top.mouseout(function() {
+                    $groupByParent.show();
+                });
+
+                var $groupByField = $('#calendar-group-by-field');
+
+                if (!jswAvailable) {
+                    $groupByField.find('option[value=epicLink]').remove();
+                }
+
+                $groupByField.auiSelect2({
+                    minimumInputLength: 0,
+                    minimumResultsForSearch: -1,
+                    placeholder: AJS.I18n.getText('ru.mail.jira.plugins.calendar.groupBy'),
+                    allowClear: true
+                });
+                $('#s2id_calendar-group-by-field').click(function() {
+                    $groupByField.auiSelect2('open');
+                });
+                $groupByField.auiSelect2('val', Preferences.getItem('groupBy'));
+                $groupByField.change($.proxy(function() {
+                    var value = $groupByField.val();
+                    if (value === 'none') {
+                        $groupByField.auiSelect2('val', null);
+                        value = null;
+                    }
+                    Preferences.setItem('groupBy', $groupByField.val());
+                    this.calendar.refetchEvents();
+                }, this));
             },
             // todo migrate color from hex to classes
             _getClassForColor: function(color) {
