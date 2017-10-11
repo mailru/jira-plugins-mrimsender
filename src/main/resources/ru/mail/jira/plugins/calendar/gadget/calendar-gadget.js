@@ -202,7 +202,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                         gadgets.window.adjustHeight();
                         gadget.hideLoading();
                     });
-                    gadget.calendarView.init(view, hideWeekends);
+                    gadget.calendarView.init(view, hideWeekends, args.props.workingDays);
                 } else {
                     gadget.calendarView.removeAllEventSource();
                     gadget.calendarView.setView(view);

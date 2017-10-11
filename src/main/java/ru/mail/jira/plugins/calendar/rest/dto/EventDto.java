@@ -55,6 +55,8 @@ public class EventDto {
     @XmlElement
     private Integer recurrenceNumber;
     @XmlElement
+    private String rendering;
+    @XmlElement
     private String originalId;
     @XmlElement
     private String parentId;
@@ -67,6 +69,7 @@ public class EventDto {
 
     public enum Type {
         ISSUE,
-        CUSTOM
+        CUSTOM,
+        HOLIDAY
     }
 }

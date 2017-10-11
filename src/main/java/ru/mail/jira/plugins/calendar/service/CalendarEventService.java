@@ -40,6 +40,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.common.FieldUtils;
+import ru.mail.jira.plugins.calendar.configuration.NonWorkingDay;
+import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter;
@@ -74,6 +76,7 @@ public class CalendarEventService {
     private final IssueService issueService;
     private final FieldLayoutManager fieldLayoutManager;
     private final JiraDeprecatedService jiraDeprecatedService;
+    private final WorkingDaysService workingDaysService;
     private final RendererManager rendererManager;
     private final SearchRequestService searchRequestService;
     private final SearchProvider searchProvider;
@@ -81,17 +84,18 @@ public class CalendarEventService {
 
     @Autowired
     public CalendarEventService(
-        @ComponentImport CustomFieldManager customFieldManager,
-        @ComponentImport DateTimeFormatter dateTimeFormatter,
-        @ComponentImport IssueService issueService,
-        @ComponentImport FieldLayoutManager fieldLayoutManager,
-        @ComponentImport RendererManager rendererManager,
-        @ComponentImport SearchRequestService searchRequestService,
-        @ComponentImport SearchProvider searchProvider,
-        CalendarService calendarService,
-        CustomEventService customEventService,
-        JiraDeprecatedService jiraDeprecatedService,
-        UserCalendarService userCalendarService
+            @ComponentImport CustomFieldManager customFieldManager,
+            @ComponentImport DateTimeFormatter dateTimeFormatter,
+            @ComponentImport IssueService issueService,
+            @ComponentImport FieldLayoutManager fieldLayoutManager,
+            @ComponentImport RendererManager rendererManager,
+            @ComponentImport SearchRequestService searchRequestService,
+            @ComponentImport SearchProvider searchProvider,
+            CalendarService calendarService,
+            CustomEventService customEventService,
+            JiraDeprecatedService jiraDeprecatedService,
+            WorkingDaysService workingDaysService,
+            UserCalendarService userCalendarService
     ) {
         this.calendarService = calendarService;
         this.customEventService = customEventService;
@@ -100,6 +104,7 @@ public class CalendarEventService {
         this.issueService = issueService;
         this.fieldLayoutManager = fieldLayoutManager;
         this.jiraDeprecatedService = jiraDeprecatedService;
+        this.workingDaysService = workingDaysService;
         this.rendererManager = rendererManager;
         this.searchRequestService = searchRequestService;
         this.searchProvider = searchProvider;
@@ -553,6 +558,23 @@ public class CalendarEventService {
 
         return buildEvent(calendar, user, jiraDeprecatedService.issueService.getIssue(user, eventId).getIssue(), false, calendar.getEventStart(), eventStartCF, calendar.getEventEnd(), eventEndCF);
     }
+
+    public List<EventDto> getHolidays(ApplicationUser user) throws GetException {
+        List<EventDto> result = new ArrayList<>();
+        DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
+        for (NonWorkingDay day : workingDaysService.getNonWorkingDays()) {
+            EventDto eventDto = new EventDto();
+            eventDto.setType(EventDto.Type.HOLIDAY);
+            eventDto.setColor("#d7d7d7");
+            eventDto.setTitle(day.getDescription());
+            eventDto.setStart(userDateFormat.withSystemZone().format(day.getDate()));
+            eventDto.setEnd(userDateFormat.withSystemZone().format(day.getDate()));
+            eventDto.setRendering("background");
+            eventDto.setAllDay(true);
+            result.add(eventDto);
+        }
+        return result;
+    };
 
     private Date retrieveDateByField(Issue issue, String field) {
         if (field.equals(DUE_DATE_KEY))

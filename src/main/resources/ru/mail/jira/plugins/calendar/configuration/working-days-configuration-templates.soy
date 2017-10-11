@@ -1,0 +1,54 @@
+{namespace JIRA.Templates.Plugins.MailRuCalendar.Configuration.WorkingDays}
+
+/**
+ * Non working day configuration dialog
+ */
+{template .dialog autoescape="false"}
+    <section role="dialog" id="calendar-non-working-day-configuration-dialog" class="aui-layer aui-dialog2 aui-dialog2-medium" aria-hidden="true">
+        <header class="aui-dialog2-header">
+            <h2 class="aui-dialog2-header-main">Add day</h2>
+        </header>
+        <div class="aui-dialog2-content">
+            <form class="aui ajs-dirty-warning-exempt">
+                <div id="calendar-non-working-day-configuration-dialog-error-panel" class="aui-message aui-message-error hidden"></div>
+                <div class="field-group">
+                    <label for="calendar-non-working-date">{getText('template.common.date')}</label>
+                    <input class="text medium-field" id="calendar-non-working-date" type="text"/>
+                    <span id="calendar-non-working-date_trigger" class="aui-icon aui-icon-small aui-iconfont-calendar">{getText('date.picker.select.date')}</span>
+                    <div id="calendar-non-working-date-error" class="error hidden"></div>
+                </div>
+                <div class="field-group">
+                    <label for="calendar-non-working-day-description">{getText('common.words.description')}</label>
+                    <textarea id="calendar-non-working-day-description" class="textarea full-width-field" rows="4"></textarea>
+                    <div id="calendar-non-working-day-description-error" class="error hidden"></div>
+                </div>
+                <input class="hidden" type="submit" />
+            </form>
+        </div>
+        <footer class="aui-dialog2-footer">
+            <div class="aui-dialog2-footer-actions">
+                <button id="calendar-non-working-day-add" class="aui-button aui-button-primary">{getText('common.words.add')}</button>
+                <button id="calendar-non-working-day-cancel" class="aui-button aui-button-link">{getText('common.words.cancel')}</button>
+           </div>
+        </footer>
+   </section>
+{/template}
+
+
+/**
+ * Non working day entry
+ * @param day day
+ */
+{template .nonWorkingDay autoescape="false"}
+    <tr id="{$day.id}" class="non-working-day">
+        <td>{$day.date}</td>
+        <td>
+            <i>{$day.description}</i>
+        </td>
+        <td class="non-working-day-operations">
+            <ul class="operations-list">
+                <li><a href="#" class="non-working-day-delete">{getText('common.words.delete')}</a></li>
+            </ul>
+        </td>
+    </tr>
+{/template}

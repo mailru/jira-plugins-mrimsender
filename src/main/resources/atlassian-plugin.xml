@@ -25,6 +25,7 @@
         <entity>ru.mail.jira.plugins.calendar.model.QuickFilter</entity>
         <entity>ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter</entity>
         <entity>ru.mail.jira.plugins.calendar.schedule.model.Schedule</entity>
+        <entity>ru.mail.jira.plugins.calendar.configuration.NonWorkingDay</entity>
 
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v3.Version3UpgradeTask</upgradeTask>
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v4.Version4UpgradeTask</upgradeTask>
@@ -240,5 +241,52 @@
         <condition class="com.atlassian.jira.plugin.webfragment.conditions.UserLoggedInCondition" />
         <link>/secure/MailRuCalendarSchedulesConfigurationPage.jspa</link>
     </web-item>
+
+
+    <!-- Configuration -->
+
+    <web-section key="calendar-configuration-section" location="admin_plugins_menu">
+        <label key="ru.mail.jira.plugins.calendar.configuration.section.title" />
+        <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
+            <param name="permission">admin</param>
+        </condition>
+    </web-section>
+
+    <web-item key="calendar-working-days-configuration-web-item" section="admin_plugins_menu/calendar-configuration-section">
+        <label key="ru.mail.jira.plugins.calendar.configuration.workingDays.title" />
+        <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
+            <param name="permission">admin</param>
+        </condition>
+        <link linkId="working-days-configuration-link">/secure/MailRuCalendarWorkingDaysConfiguration.jspa</link>
+    </web-item>
+
+    <webwork1 key="working-days-configuration-action" class="java.lang.Object" roles-required="use">
+        <actions>
+            <action name="ru.mail.jira.plugins.calendar.configuration.MailRuCalendarWorkingDaysConfigurationAction" alias="MailRuCalendarWorkingDaysConfiguration">
+                <view name="success">/ru/mail/jira/plugins/calendar/configuration/working-days-configuration.vm</view>
+            </action>
+        </actions>
+    </webwork1>
+
+    <web-resource key="working-days-configuration-soy-templates">
+        <dependency>com.atlassian.soy.soy-template-plugin:soy-deps</dependency>
+        <transformation extension="soy">
+            <transformer key="soyTransformer"/>
+        </transformation>
+        <resource type="download" name="working-days-configuration-templates.soy.js" location="ru/mail/jira/plugins/calendar/configuration/working-days-configuration-templates.soy"/>
+    </web-resource>
+
+    <web-resource key="working-days-configuration-resource">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <dependency>jira.webresources:calendar</dependency>
+        <dependency>jira.webresources:calendar-en</dependency>
+        <dependency>jira.webresources:calendar-localisation-moment</dependency>
+        <dependency>ru.mail.jira.plugins.mailrucal:working-days-configuration-soy-templates</dependency>
+        <resource type="download" name="working-days-configuration.js" location="/ru/mail/jira/plugins/calendar/configuration/working-days-configuration.js" />
+        <resource type="download" name="non-working-day-configuration-dialog.js" location="/ru/mail/jira/plugins/calendar/configuration/non-working-day-configuration-dialog.js" />
+    </web-resource>
 
 </atlassian-plugin>

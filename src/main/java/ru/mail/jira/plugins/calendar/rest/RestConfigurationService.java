@@ -34,6 +34,7 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.calendar.common.FieldUtils;
+import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseStatus;
 import ru.mail.jira.plugins.calendar.rest.dto.DateField;
@@ -82,6 +83,7 @@ public class RestConfigurationService {
     private final UserManager userManager;
     private final UserSearchService userSearchService;
     private final LicenseService licenseService;
+    private final WorkingDaysService workingDaysService;
 
     public RestConfigurationService(
         @ComponentImport("com.atlassian.jira.config.properties.ApplicationProperties") ApplicationProperties applicationProperties,
@@ -98,7 +100,8 @@ public class RestConfigurationService {
         @ComponentImport UserManager userManager,
         @ComponentImport UserSearchService userSearchService,
         JiraDeprecatedService jiraDeprecatedService,
-        LicenseService licenseService
+        LicenseService licenseService,
+        WorkingDaysService workingDaysService
     ) {
         this.applicationProperties = applicationProperties;
         this.avatarService = avatarService;
@@ -115,6 +118,7 @@ public class RestConfigurationService {
         this.userManager = userManager;
         this.userSearchService = userSearchService;
         this.licenseService = licenseService;
+        this.workingDaysService = workingDaysService;
     }
 
     @GET
@@ -127,6 +131,7 @@ public class RestConfigurationService {
                 result.put("timeFormat", applicationProperties.getDefaultBackedString(APKeys.JIRA_LF_DATE_TIME));
                 result.put("dateFormat", applicationProperties.getDefaultBackedString(APKeys.JIRA_LF_DATE_DMY));
                 result.put("dateTimeFormat", applicationProperties.getDefaultBackedString(APKeys.JIRA_LF_DATE_COMPLETE));
+                result.put("workingDays", workingDaysService.getWorkingDays().stream().mapToInt(i -> i).toArray());
 
                 LicenseStatus licenseStatus = licenseService.getLicenseStatus();
                 result.put("licenseValid", licenseStatus.isValid());

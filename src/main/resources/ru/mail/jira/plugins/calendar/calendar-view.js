@@ -328,7 +328,7 @@ define('calendar/calendar-view', [
             !canZoomIn && view.calendar.header.disableButton('zoom-in');
             view.calendar.header.enableButton('zoom-out');
         },
-        init: function(view, hideWeekends) {
+        init: function(view, hideWeekends, workingDays) {
             var viewRenderFirstTime = true;
             var contextPath = this.contextPath;
             var self = this;
@@ -372,6 +372,7 @@ define('calendar/calendar-view', [
                     }
                 },
                 businessHours: {
+                    dow: workingDays,
                     start: '10:00',
                     end: '19:00'
                 },
@@ -390,6 +391,9 @@ define('calendar/calendar-view', [
                 monthNamesShort: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jan'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Feb'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Mar'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Apr'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.May'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jun'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Jul'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Aug'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sep'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Oct'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Nov'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Dec')],
                 dayNames: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sunday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Monday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Tuesday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Wednesday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Thursday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Friday'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Saturday')],
                 dayNamesShort: [AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sun'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Mon'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Tue'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Wed'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Thu'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Fri'), AJS.I18n.getText('ru.mail.jira.plugins.calendar.Sat')],
+                dayRender: function (date, cell) {
+                    // cell.css("background-color", "red");
+                },
                 buttonText: {
                     today: AJS.I18n.getText('ru.mail.jira.plugins.calendar.today')
                 },
@@ -397,6 +401,7 @@ define('calendar/calendar-view', [
                 weekMode: 'liquid',
                 slotWidth: 100,
                 slotDuration: '01:00',
+                eventSources: [{url: this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/holidays'}],
                 eventRender: function(event, $element) {
                     $element.data('event-id', event.id);
                     $element.addClass('calendar-event-object');
@@ -441,6 +446,8 @@ define('calendar/calendar-view', [
                         }
 
                         $element.find('.fc-content').prepend(iconContent + ' ');
+                    } else if (event.type === 'HOLIDAY') {
+                        $element.append(event.title).addClass('holiday-item-content');
                     }
                 },
                 dayClick: $.proxy(function(date, jsEvent, view) {

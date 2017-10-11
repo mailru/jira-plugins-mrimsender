@@ -1155,3 +1155,12 @@ only screen and (min-resolution: 1.25dppx) {
     left: 13px;
     top: 4px;
 }
+
+.calendar-event-object.holiday-item-content {
+    color: black !important;
+    padding-left: 5px;
+    padding-right: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

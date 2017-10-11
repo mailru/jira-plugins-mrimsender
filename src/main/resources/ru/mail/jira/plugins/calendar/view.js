@@ -149,9 +149,9 @@ require(['jquery',
                 if (!$('.aui-dialog2[aria-hidden=false]').length)
                     AJS.undim();
             },
-            loadFullCalendar: function(view, hideWeekends) {
+            loadFullCalendar: function(view, hideWeekends, workingDays) {
                 this.updatePeriodButton(view);
-                this.calendarView.init(view, hideWeekends);
+                this.calendarView.init(view, hideWeekends, workingDays);
                 var $calendarEl = $("#calendar-full-calendar");
                 $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-state-default fc-button').addClass('aui-button');
                 $calendarEl.find('.fc-button-group').addClass('aui-buttons');
@@ -584,7 +584,7 @@ require(['jquery',
                 var view = model.get('calendarView') || 'month';
                 if (view == 'basicWeek')
                     view = 'agendaWeek';
-                mainView.loadFullCalendar(view, model.get('hideWeekends'));
+                mainView.loadFullCalendar(view, model.get('hideWeekends'), model.get('workingDays'));
 
                 Backbone.history.start();
 
@@ -602,7 +602,7 @@ require(['jquery',
                 if (response.responseText)
                     msg += response.responseText;
                 alert(msg);
-                mainView.loadFullCalendar('month', false);
+                mainView.loadFullCalendar('month', false, [1, 2, 3, 4, 5]);
 
                 Backbone.history.start();
             }

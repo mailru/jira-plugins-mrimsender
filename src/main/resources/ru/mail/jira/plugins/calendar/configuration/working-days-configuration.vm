@@ -1,0 +1,84 @@
+<html>
+    <head>
+        <title>$i18n.getText( "ru.mail.jira.plugins.calendar.configuration.workingDays.title" )</title>
+        <meta name="decorator" content="atl.admin" />
+        $webResourceManager.requireResource( "ru.mail.jira.plugins.mailrucal:working-days-configuration-resource" )
+    </head>
+    <body>
+        <header class="aui-page-header">
+            <div class="aui-page-header-inner">
+                <div class="aui-page-header-main">
+                    <h1>$i18n.getText( "ru.mail.jira.plugins.calendar.configuration.workingDays.title" )</h1>
+                    <p>These settings allow you to highlight non-working days on calendar view.</p>
+                </div>
+            </div>
+        </header>
+        <div class="module">
+            <div class="mod-content">
+                <h2>Standard Working Days</h2>
+                <form class="aui">
+                    <fieldset class="group">
+                        <legend>
+                            <span>Working Days</span>
+                        </legend>
+                        <div class="checkbox">
+                            <input class="checkbox calendar-working-day" type="checkbox" name="monday" id="1" #if($action.workingDays.contains(1)) checked #end>
+                            <label for="monday">$i18n.getText( "ru.mail.jira.plugins.calendar.Monday" )</label>
+                        </div>
+                        <div class="checkbox">
+                            <input class="checkbox calendar-working-day" type="checkbox" name="tuesday" id="2" #if($action.workingDays.contains(2)) checked #end>
+                            <label for="tuesday">$i18n.getText( "ru.mail.jira.plugins.calendar.Tuesday" )</label>
+                        </div>
+                        <div class="checkbox">
+                            <input class="checkbox calendar-working-day" type="checkbox" name="wednesday" id="3" #if($action.workingDays.contains(3)) checked #end>
+                            <label for="wednesday">$i18n.getText( "ru.mail.jira.plugins.calendar.Wednesday" )</label>
+                        </div>
+                        <div class="checkbox">
+                            <input class="checkbox calendar-working-day" type="checkbox" name="thursday" id="4" #if($action.workingDays.contains(4)) checked #end>
+                            <label for="thursday">$i18n.getText( "ru.mail.jira.plugins.calendar.Thursday" )</label>
+                        </div>
+                        <div class="checkbox">
+                            <input class="checkbox calendar-working-day" type="checkbox" name="friday" id="5" #if($action.workingDays.contains(5)) checked #end>
+                            <label for="friday">$i18n.getText( "ru.mail.jira.plugins.calendar.Friday" )</label>
+                        </div>
+                        <div class="checkbox">
+                            <input class="checkbox calendar-working-day" type="checkbox" name="saturday" id="6" #if($action.workingDays.contains(6)) checked #end>
+                            <label for="saturday">$i18n.getText( "ru.mail.jira.plugins.calendar.Saturday" )</label>
+                        </div>
+                        <div class="checkbox">
+                            <input class="checkbox calendar-working-day" type="checkbox" name="sunday" id="0" #if($action.workingDays.contains(0)) checked #end>
+                            <label for="sunday">$i18n.getText( "ru.mail.jira.plugins.calendar.Sunday" )</label>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+        <div class="module">
+            <div class="mod-content">
+                <header class="aui-page-header">
+                    <div class="aui-page-header-inner">
+                        <div class="aui-page-header-main">
+                            <h2>$i18n.getText( "Non-Working Days" )</h2>
+                        </div>
+                        <div class="aui-page-header-actions">
+                            <div class="aui-buttons">
+                                <button class="aui-button" id="calendar-add-date">
+                                    <span>Add Date</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                <table class="aui aui-table-rowhove">
+                    <thead>
+                        <tr>
+                            <th>$i18n.getText( "template.common.date" )</th>
+                            <th>$i18n.getText( "common.words.description" )</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendar-non-working-days"></tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>
