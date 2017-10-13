@@ -206,7 +206,9 @@ define('calendar/calendar-view', [
         },
         _eventMove: function(event, delta, revertFunc, isResize) {
             var start = event.start.toDate();
+            start = moment(start.toISOString(), 'YYYY-MM-DDTHH:mm:ss').tz(event.timezone).toDate();
             var end = event.end && event.end.toDate();
+            end = event.end && moment(end.toISOString(), 'YYYY-MM-DDTHH:mm:ss').tz(event.timezone).toDate();
             if (event.type === 'ISSUE') {
                 $.ajax({
                     type: 'PUT',
@@ -232,6 +234,7 @@ define('calendar/calendar-view', [
 
                 if (start) {
                     var momentStart = event.start.clone();
+                    momentStart = moment(momentStart.toDate().toISOString(), 'YYYY-MM-DDTHH:mm:ss').tz(event.timezone);
                     if (momentStart.hasTime()) {
                         startValue = momentStart.format('x');
                         allDay = false;
@@ -243,6 +246,7 @@ define('calendar/calendar-view', [
 
                 if (end) {
                     var momentEnd = event.end.clone();
+                    momentEnd = moment(momentEnd.toDate().toISOString(), 'YYYY-MM-DDTHH:mm:ss').tz(event.timezone);
                     if (momentEnd.hasTime()) {
                         endValue = momentEnd.format('x');
                     } else {
@@ -299,7 +303,6 @@ define('calendar/calendar-view', [
                                     eventId = event.parentId;
                                 }
                             }
-
                             this._moveCustomEvent(eventId, event, data, revertFunc);
                         }, this),
                         cancelHandler: function() {
@@ -357,7 +360,7 @@ define('calendar/calendar-view', [
             !canZoomIn && view.calendar.header.disableButton('zoom-in');
             view.calendar.header.enableButton('zoom-out');
         },
-        init: function(view, hideWeekends) {
+        init: function(view, hideWeekends, timezone) {
             var viewRenderFirstTime = true;
             var contextPath = this.contextPath;
             var self = this;
@@ -407,7 +410,7 @@ define('calendar/calendar-view', [
                 weekNumberTitle: '',
                 weekNumbers: true,
                 weekNumberCalculation: 'ISO',
-                timezone: 'local',
+                timezone: timezone,
                 timeFormat: this.timeFormat,
                 slotLabelFormat: this.timeFormat,
                 lazyFetching: true,

@@ -68,6 +68,8 @@ public class EventDto {
     private String groupField;
     @XmlElement
     private List<EventGroup> groups;
+    @XmlElement
+    private String timezone;
 
     public enum Type {
         ISSUE,

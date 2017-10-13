@@ -31,6 +31,8 @@ public class UserDataDto {
     private boolean pluginRated;
     @XmlElement
     private int feedbackShowCount;
+    @XmlElement
+    private String timezone;
 
     public UserDataDto() {
     }
@@ -114,5 +116,9 @@ public class UserDataDto {
 
     public void setFeedbackShowCount(int feedbackShowCount) {
         this.feedbackShowCount = feedbackShowCount;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 }
