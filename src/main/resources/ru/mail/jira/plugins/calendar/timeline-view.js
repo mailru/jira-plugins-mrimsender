@@ -144,7 +144,7 @@
                             return _.extend({}, result, {
                                 id: group.id + '-' + result.id,
                                 group: group.id,
-                                groupName: group.name,
+                                groupName: AJS.escapeHtml(group.name),
                                 groupAvatar: group.avatar
                             });
                         });
