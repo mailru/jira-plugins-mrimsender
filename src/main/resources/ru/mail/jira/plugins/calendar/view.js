@@ -9,8 +9,9 @@ require(['jquery',
     'calendar/import-dialog',
     'calendar/quick-filter-dialog',
     'calendar/custom-event-dialog',
+    'calendar/preferences',
     'calendar/timeline-view'
-], function($, _, Backbone, LikeFlag, CalendarView, CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog, QuickFilterDialog, CustomEventDialog) {
+], function($, _, Backbone, LikeFlag, CalendarView, CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog, QuickFilterDialog, CustomEventDialog, Preferences) {
     // Override default texts for auiSelect2 messages
     $.fn.select2.defaults = $.extend($.fn.select2.defaults, {
         formatNoMatches: function() {
@@ -218,7 +219,7 @@ require(['jquery',
                 });
             },
             toggleWeekendsVisibility: function() {
-                localStorage.setItem('mailrucalendar.hideWeekends', !this.model.get('hideWeekends'));
+                Preferences.setItem('mailrucalendar.hideWeekends', !this.model.get('hideWeekends'));
                 this.model.set({hideWeekends: !this.model.get('hideWeekends')});
             },
             onHideWeekendsHandler: function(model) {
@@ -273,7 +274,7 @@ require(['jquery',
                 if (this.calendarView.getViewType() != viewName)
                     this.calendarView.setView(viewName);
                 if (this.model.get('calendarView') != viewName) {
-                    localStorage.setItem('mailrucalendar.calendarView', viewName);
+                    Preferences.setItem('mailrucalendar.calendarView', viewName);
                     this.model.set({calendarView: viewName});
                 }
             },
@@ -336,8 +337,8 @@ require(['jquery',
             updateViewInterval: function() {
                 var view = this.calendarView.getView();
                 var todayRange = view.computeRange(this.calendarView.getNow());
-                localStorage.setItem('mailrucalendar.start', !todayRange.start.isSame(view.start) ? view.start.format() : '');
-                localStorage.setItem('mailrucalendar.end', !todayRange.end.isSame(view.end) ? view.end.format() : '');
+                Preferences.setItem('mailrucalendar.start', !todayRange.start.isSame(view.start) ? view.start.format() : '');
+                Preferences.setItem('mailrucalendar.end', !todayRange.end.isSame(view.end) ? view.end.format() : '');
             },
             configureQuickFilters: function(e) {
                 e.preventDefault();
@@ -578,8 +579,8 @@ require(['jquery',
         mainView.model.fetch({
             success: function(model) {
                 model.set({
-                    hideWeekends: localStorage.getItem('mailrucalendar.hideWeekends') === 'true',
-                    calendarView: localStorage.getItem('mailrucalendar.calendarView') || 'month'
+                    hideWeekends: Preferences.getItem('mailrucalendar.hideWeekends') === 'true',
+                    calendarView: Preferences.getItem('mailrucalendar.calendarView') || 'month'
                 });
                 var view = model.get('calendarView') || 'month';
                 if (view == 'basicWeek')

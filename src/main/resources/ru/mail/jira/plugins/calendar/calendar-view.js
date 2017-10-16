@@ -4,8 +4,17 @@ define('calendar/calendar-view', [
     'backbone',
     'calendar/reminder',
     'calendar/edit-type-dialog',
-    'calendar/recurrence'
-], function($, _, Backbone, Reminder, EditTypeDialog, Recurring) {
+    'calendar/recurrence',
+    'calendar/preferences'
+], function($, _, Backbone, Reminder, EditTypeDialog, Recurring, Preferences) {
+    function getContextPath() {
+        if (AJS.gadget) {
+            return AJS.gadget.getBaseUrl();
+        } else {
+            return AJS.contextPath();
+        }
+    }
+
     return Backbone.View.extend({
         el: '#calendar-full-calendar',
         initialize: function(options) {
@@ -27,27 +36,41 @@ define('calendar/calendar-view', [
                 var event;
                 if (self.getViewType() === 'timeline') {
                     var timeline = self.getView().timeline;
-                    event = timeline.itemsData.get(timeline.getEventProperties({target: trigger}).item);
-                    event = {
-                        type: event.eventType,
-                        id: event.eventId,
-                        eventId: event.eventId,
-                        calendarId: event.calendarId,
-                        recurring: event.recurring,
-                        recurrenceNumber: event.recurrenceNumber,
-                        originalId: event.originalId,
-                        allDay: event.allDay,
-                        start: event.start,
-                        end: event.end
+                    var timelineEvent = timeline.itemsData.get(timeline.getEventProperties({target: trigger}).item);
+                    if (timelineEvent.id) {
+                        event = {
+                            type: timelineEvent.eventType,
+                            id: timelineEvent.eventId,
+                            eventId: timelineEvent.eventId,
+                            calendarId: timelineEvent.calendarId,
+                            recurring: timelineEvent.recurring,
+                            recurrenceNumber: timelineEvent.recurrenceNumber,
+                            originalId: timelineEvent.originalId,
+                            allDay: timelineEvent.allDay,
+                            start: timelineEvent.start,
+                            end: timelineEvent.end
+                        }
                     }
                 } else {
                     event = self.$el.fullCalendar('clientEvents', $(trigger).data('event-id'))[0];
                 }
 
+                console.log(event, trigger);
+
                 // Atlassian bug workaround
                 content.click(function(e) {
                     e.stopPropagation();
                 });
+
+                if (!event) {
+                    content.html('');
+                    showPopup();
+                    self.eventDialog.hide();
+                    return;
+                }
+
+                content.html('<span class="aui-icon aui-icon-wait">Loading...</span>');
+                showPopup();
 
                 if (event.type === 'ISSUE') {
                     $.ajax({
@@ -56,9 +79,9 @@ define('calendar/calendar-view', [
                         success: function (issue) {
                             content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
                                 issue: issue,
-                                contextPath: AJS.contextPath()
+                                contextPath: getContextPath()
                             })).addClass('calendar-event-info-popup');
-                            showPopup();
+                            self.eventDialog.refresh();
                         },
                         error: function (xhr) {
                             var msg = 'Error while trying to view info about issue => ' + event.eventId;
@@ -97,21 +120,21 @@ define('calendar/calendar-view', [
 
                             content.html(JIRA.Templates.Plugins.MailRuCalendar.customEventInfo({
                                 event: jsonEvent,
-                                contextPath: AJS.contextPath(),
-                                startDateFormatted: moment(jsonEvent.startDate).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
-                                endDateFormatted: moment(jsonEvent.endDate).format(event.allDay ? self.dateFormat : self.dateTimeFormat),
-                                parentStartDateFormatted: moment(jsonEvent.originalStartDate).format(jsonEvent.originalAllDay ? self.dateFormat : self.dateTimeFormat),
+                                contextPath: getContextPath(),
+                                startDateFormatted: event.allDay ? moment.utc(jsonEvent.startDate).format( self.dateFormat) : moment(jsonEvent.startDate).format(self.dateTimeFormat),
+                                endDateFormatted: event.allDay ? moment.utc(jsonEvent.endDate).format(self.dateFormat) : moment(jsonEvent.endDate).format(self.dateTimeFormat),
                                 editDisabled: self.disableCustomEventEditing,
                                 reminderName: jsonEvent.reminder ? Reminder.names[jsonEvent.reminder] : null,
                                 recurrenceTypeName: Recurring.names[jsonEvent.recurrenceType],
                                 periodName: Recurring.periodNames[Recurring.periods[jsonEvent.recurrenceType]],
-                                recurrenceEndDateFormatted: moment(jsonEvent.recurrenceEndDate).format(jsonEvent.originalAllDay ? self.dateFormat : self.dateTimeFormat),
+                                parentStartDateFormatted: jsonEvent.originalAllDay ? moment.utc(jsonEvent.originalStartDate).format(self.dateFormat) : moment(jsonEvent.originalStartDate).format(self.dateTimeFormat),
+                                recurrenceEndDateFormatted: jsonEvent.originalAllDay ? moment.utc(jsonEvent.recurrenceEndDate).format(self.dateFormat) : moment(jsonEvent.recurrenceEndDate).format(self.dateTimeFormat),
                                 daysOfWeek: jsonEvent.recurrenceType === 'DAYS_OF_WEEK' ?
                                     jsonEvent.recurrenceExpression.split(',').map(function(dayOfWeek) {
                                         return Recurring.daysOfWeek[dayOfWeek];
                                     }).join(', ') : ''
                             })).addClass('calendar-event-info-popup');
-                            showPopup();
+                            self.eventDialog.refresh();
 
                             content.find('.edit-button').click(function(e) {
                                 e.preventDefault();
@@ -156,14 +179,20 @@ define('calendar/calendar-view', [
             if (this.fullscreenMode) {
                 $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer').slideUp(400);
                 $('.aui-page-panel-nav').animate({width: 'toggle', 'padding': 'toggle'}, 400, $.proxy(function() {
-                    if (this.getViewType() == 'timeline')
-                        this.$el.fullCalendar('getView').timeline.setOptions({height: $(window).height() - 93 + 'px'});
+                    if (this.getViewType() === 'timeline') {
+                        var timeline = this.$el.fullCalendar('getView').timeline;
+                        timeline.setOptions({height: $(window).height() - 134 + 'px'});
+                        timeline.redraw();
+                    }
                 }, this));
             } else {
                 $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer,.aui-page-panel-nav').fadeIn(400);
                 $(window).trigger('resize');
-                if (this.getViewType() == 'timeline')
-                    this.$el.fullCalendar('getView').timeline.setOptions({height: '450px'});
+                if (this.getViewType() === 'timeline') {
+                    var timeline = this.$el.fullCalendar('getView').timeline;
+                    timeline.setOptions({height: '450px'});
+                    timeline.redraw();
+                }
             }
         },
         _canButtonVisible: function(name) {
@@ -332,8 +361,8 @@ define('calendar/calendar-view', [
             var viewRenderFirstTime = true;
             var contextPath = this.contextPath;
             var self = this;
-            var start = localStorage.getItem('mailrucalendar.start');
-            var end = localStorage.getItem('mailrucalendar.end');
+            var start = Preferences.getItem('mailrucalendar.start');
+            var end = Preferences.getItem('mailrucalendar.end');
             this.$el.fullCalendar({
                 contentHeight: 'auto',
                 defaultView: view,
@@ -412,7 +441,7 @@ define('calendar/calendar-view', [
                         $element.find('.fc-title').prepend(event.id + ' ');
                         $element.find('.fc-content')
                             .prepend('<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + AJS.escapeHtml(event.status) + '</span>')
-                            .prepend('<img class="calendar-event-issue-type" alt="" height="16" width="16" src="' + AJS.contextPath() + event.issueTypeImgUrl + '" />');
+                            .prepend('<img class="calendar-event-issue-type" alt="" height="16" width="16" src="' + getContextPath() + event.issueTypeImgUrl + '" />');
                     } else if (event.type === 'CUSTOM') {
                         if (event.participants) {
                             var formattedParticipants = null;
@@ -493,6 +522,11 @@ define('calendar/calendar-view', [
                 url: this._eventSource(calendarId),
                 success: $.proxy(function() {
                     !silent && this.trigger('addSourceSuccess', calendarId, true);
+                }, this),
+                data: $.proxy(function() {
+                    return {
+                        groupBy: Preferences.getItem('groupBy')
+                    };
                 }, this)
             });
             this.eventSources['' + calendarId] = this._eventSource(calendarId);

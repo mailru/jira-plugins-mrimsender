@@ -30,7 +30,6 @@ public interface Calendar extends Entity {
     @Accessor("Share")
     Permission[] getPermissions();
 
-
     @Deprecated
     String getAuthorKey();
     @Deprecated

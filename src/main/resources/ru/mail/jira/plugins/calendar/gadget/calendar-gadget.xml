@@ -22,6 +22,7 @@
     </ModulePrefs>
     <UserPref name="isConfigured" datatype="hidden" default_value="false"/>
     <UserPref name="calendars" datatype="hidden" default_value=""/>
+    <UserPref name="calendarView" datatype="hidden"/>
     <UserPref name="view" datatype="hidden" default_value="month"/>
     <UserPref name="hideWeekends" datatype="hidden" default_value="showWeekends"/>
     <UserPref name="refresh" datatype="hidden" default_value="false"/>

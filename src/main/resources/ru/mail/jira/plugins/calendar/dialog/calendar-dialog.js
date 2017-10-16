@@ -399,6 +399,7 @@ define('calendar/calendar-dialog', [
                 this.$('#calendar-dialog-color').auiSelect2('val', this.model.get('selectedColor'));
                 this.$('#calendar-dialog-event-start').auiSelect2('val', this.model.get('selectedEventStartId'));
                 this.$('#calendar-dialog-event-end').auiSelect2('val', this.model.get('selectedEventEndId'));
+                this.$('#calendar-dialog-timelineGroup').val(this.model.get('timelineGroup'));
 
                 this._showSourceField(this.model.get('selectedSourceType'));
                 if (this.sourceType == 'project' || this.sourceType == 'filter') {
@@ -483,6 +484,7 @@ define('calendar/calendar-dialog', [
             var permissions = _.filter(_.values(this.permissionIds), function(obj) {
                 return !!obj;
             });
+            var timelineGroup = this.$("#calendar-dialog-timelineGroup").val();
 
             return {
                 selectedName: name,
@@ -492,6 +494,7 @@ define('calendar/calendar-dialog', [
                 selectedEventStartId: eventStart,
                 selectedEventEndId: eventEnd,
                 selectedDisplayedFields: displayedFields ? displayedFields.split(',') : [],
+                timelineGroup: timelineGroup,
                 permissions: permissions && permissions.length ? permissions : []
             };
         },
@@ -762,14 +765,14 @@ define('calendar/calendar-dialog', [
                 this.$('#calendar-dialog-customEvent-error-panel').removeClass('hidden').text(xhr.responseText);
         },
         _initAvatarPicker: function($container) {
-            $container.find('.avatar-picker .avatar').each(function(i, e) {
+            $container.find('.avatar-picker .avatar').each($.proxy(function(i, e) {
                 var $e = $(e);
-                $e.click(function() {
+                $e.click($.proxy(function() {
                     $container.find('.avatar-picker .avatar.selected').removeClass('selected');
                     $e.addClass('selected');
                     this.$('#calendar-dialog-customEvent-avatar').val($e.data('id'));
-                });
-            });
+                }, this));
+            }, this));
         },
         _onSourceTypeChange: function() {
             var sourceType = this.$('input[type=radio][name=calendar-dialog-source]:checked').val();

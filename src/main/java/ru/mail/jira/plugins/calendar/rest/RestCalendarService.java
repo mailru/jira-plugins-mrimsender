@@ -244,7 +244,7 @@ public class RestCalendarService {
                     LocalDate endSearch = LocalDate.now().plusMonths(1);
 
                     for (String calendarId : calendarIds) {
-                        List<EventDto> events = calendarEventService.findEvents(Integer.parseInt(calendarId),
+                        List<EventDto> events = calendarEventService.findEvents(Integer.parseInt(calendarId), null,
                                                                              startSearch.toString("yyyy-MM-dd"),
                                                                              endSearch.toString("yyyy-MM-dd"),
                                                                              userManager.getUserByKey(userData.getUserKey()),
