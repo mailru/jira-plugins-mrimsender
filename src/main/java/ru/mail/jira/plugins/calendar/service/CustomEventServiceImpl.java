@@ -975,7 +975,6 @@ public class CustomEventServiceImpl implements CustomEventService {
         result.setType(EventDto.Type.CUSTOM);
         result.setParticipants(parseParticipants(event.getParticipants()));
         result.setStart(dateFormatter.format(event.getStartDate()));
-        result.setTimezone(timeZoneManager.getTimeZoneforUser(user).getID());
 
         Date end = event.getEndDate();
         if (end != null) {
@@ -1049,7 +1048,6 @@ public class CustomEventServiceImpl implements CustomEventService {
 
         result.setStartEditable(canEditEvents);
         result.setDurationEditable(canEditEvents);
-        result.setTimezone(timeZoneManager.getTimeZoneforUser(user).getID());
 
         return result;
     }

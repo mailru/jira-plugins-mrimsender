@@ -24,6 +24,7 @@ define('calendar/calendar-view', [
             this.timeFormat = options && _.has(options, 'timeFormat') ? options.timeFormat : AJS.Meta.get('date-time');
             this.dateTimeFormat = JIRA.translateSimpleDateFormat(options.dateTimeFormat || AJS.Meta.get('date-complete'));
             this.dateFormat = JIRA.translateSimpleDateFormat(options.dateFormat || AJS.Meta.get('date-dmy'));
+            this.timezone = 'local';
             this.popupWidth = options && _.has(options, 'popupWidth') ? options.popupWidth : 400;
             this.enableFullscreen = options && _.has(options, 'enableFullscreen') ? options.enableFullscreen : false;
             this.disableCustomEventEditing = options && _.has(options, 'disableCustomEventEditing') ? options.disableCustomEventEditing : false;
@@ -206,9 +207,9 @@ define('calendar/calendar-view', [
         },
         _eventMove: function(event, delta, revertFunc, isResize) {
             var start = event.start.toDate();
-            start = moment(start.toISOString(), 'YYYY-MM-DDTHH:mm:ss').tz(event.timezone).toDate();
+            start = moment(start.toISOString(), 'YYYY-MM-DDTHH:mm:ss').tz(this.timezone).toDate();
             var end = event.end && event.end.toDate();
-            end = event.end && moment(end.toISOString(), 'YYYY-MM-DDTHH:mm:ss').tz(event.timezone).toDate();
+            end = event.end && moment(end.toISOString(), 'YYYY-MM-DDTHH:mm:ss').tz(this.timezone).toDate();
             if (event.type === 'ISSUE') {
                 $.ajax({
                     type: 'PUT',
@@ -234,7 +235,7 @@ define('calendar/calendar-view', [
 
                 if (start) {
                     var momentStart = event.start.clone();
-                    momentStart = moment(momentStart.toDate().toISOString(), 'YYYY-MM-DDTHH:mm:ss').tz(event.timezone);
+                    momentStart = moment(momentStart.toDate().toISOString(), 'YYYY-MM-DDTHH:mm:ss').tz(this.timezone);
                     if (momentStart.hasTime()) {
                         startValue = momentStart.format('x');
                         allDay = false;
@@ -246,7 +247,7 @@ define('calendar/calendar-view', [
 
                 if (end) {
                     var momentEnd = event.end.clone();
-                    momentEnd = moment(momentEnd.toDate().toISOString(), 'YYYY-MM-DDTHH:mm:ss').tz(event.timezone);
+                    momentEnd = moment(momentEnd.toDate().toISOString(), 'YYYY-MM-DDTHH:mm:ss').tz(this.timezone);
                     if (momentEnd.hasTime()) {
                         endValue = momentEnd.format('x');
                     } else {
@@ -360,12 +361,13 @@ define('calendar/calendar-view', [
             !canZoomIn && view.calendar.header.disableButton('zoom-in');
             view.calendar.header.enableButton('zoom-out');
         },
-        init: function(view, hideWeekends, timezone) {
+        init: function(view, hideWeekends) {
             var viewRenderFirstTime = true;
             var contextPath = this.contextPath;
             var self = this;
             var start = Preferences.getItem('mailrucalendar.start');
             var end = Preferences.getItem('mailrucalendar.end');
+            console.log(self.timezone);
             this.$el.fullCalendar({
                 contentHeight: 'auto',
                 defaultView: view,
@@ -410,7 +412,7 @@ define('calendar/calendar-view', [
                 weekNumberTitle: '',
                 weekNumbers: true,
                 weekNumberCalculation: 'ISO',
-                timezone: timezone,
+                timezone: self.timezone,
                 timeFormat: this.timeFormat,
                 slotLabelFormat: this.timeFormat,
                 lazyFetching: true,
@@ -583,6 +585,9 @@ define('calendar/calendar-view', [
                 //assume it was recurrent event
                 this.reload();
             }
+        },
+        setTimezone: function(timezone) {
+            this.timezone = timezone;
         }
     });
 });

@@ -152,7 +152,8 @@ require(['jquery',
             },
             loadFullCalendar: function(view, hideWeekends, timezone) {
                 this.updatePeriodButton(view);
-                this.calendarView.init(view, hideWeekends, timezone);
+                this.calendarView.setTimezone(timezone);
+                this.calendarView.init(view, hideWeekends);
                 var $calendarEl = $("#calendar-full-calendar");
                 $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-state-default fc-button').addClass('aui-button');
                 $calendarEl.find('.fc-button-group').addClass('aui-buttons');
