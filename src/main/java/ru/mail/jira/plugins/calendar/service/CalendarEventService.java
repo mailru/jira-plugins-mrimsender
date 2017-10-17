@@ -97,22 +97,22 @@ public class CalendarEventService {
 
     @Autowired
     public CalendarEventService(
-        @ComponentImport ApplicationProperties applicationProperties,
-        @ComponentImport CustomFieldManager customFieldManager,
-        @ComponentImport DateTimeFormatter dateTimeFormatter,
-        @ComponentImport IssueService issueService,
-        @ComponentImport FieldLayoutManager fieldLayoutManager,
-        @ComponentImport RendererManager rendererManager,
-        @ComponentImport SearchRequestService searchRequestService,
-        @ComponentImport SearchProvider searchProvider,
-        @ComponentImport I18nResolver i18nResolver,
-        @ComponentImport AvatarService avatarService,
-        CalendarService calendarService,
-        CustomEventService customEventService,
-        JiraDeprecatedService jiraDeprecatedService,
-        UserCalendarService userCalendarService,
-        JiraSoftwareHelper jiraSoftwareHelper
-    ) {
+            @ComponentImport ApplicationProperties applicationProperties,
+            @ComponentImport CustomFieldManager customFieldManager,
+            @ComponentImport DateTimeFormatter dateTimeFormatter,
+            @ComponentImport IssueService issueService,
+            @ComponentImport FieldLayoutManager fieldLayoutManager,
+            @ComponentImport RendererManager rendererManager,
+            @ComponentImport SearchRequestService searchRequestService,
+            @ComponentImport SearchProvider searchProvider,
+            @ComponentImport I18nResolver i18nResolver,
+            @ComponentImport AvatarService avatarService,
+            CalendarService calendarService,
+            CustomEventService customEventService,
+            JiraDeprecatedService jiraDeprecatedService,
+            UserCalendarService userCalendarService,
+            JiraSoftwareHelper jiraSoftwareHelper)
+    {
         this.applicationProperties = applicationProperties;
         this.calendarService = calendarService;
         this.customEventService = customEventService;

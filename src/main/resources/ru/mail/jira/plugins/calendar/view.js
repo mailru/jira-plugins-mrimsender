@@ -150,8 +150,9 @@ require(['jquery',
                 if (!$('.aui-dialog2[aria-hidden=false]').length)
                     AJS.undim();
             },
-            loadFullCalendar: function(view, hideWeekends) {
+            loadFullCalendar: function(view, hideWeekends, timezone) {
                 this.updatePeriodButton(view);
+                this.calendarView.setTimezone(timezone);
                 this.calendarView.init(view, hideWeekends);
                 var $calendarEl = $("#calendar-full-calendar");
                 $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-state-default fc-button').addClass('aui-button');
@@ -585,7 +586,8 @@ require(['jquery',
                 var view = model.get('calendarView') || 'month';
                 if (view == 'basicWeek')
                     view = 'agendaWeek';
-                mainView.loadFullCalendar(view, model.get('hideWeekends'));
+                moment.tz.setDefault(model.get('timezone'));
+                mainView.loadFullCalendar(view, model.get('hideWeekends'), model.get('timezone'));
 
                 Backbone.history.start();
 
@@ -603,7 +605,7 @@ require(['jquery',
                 if (response.responseText)
                     msg += response.responseText;
                 alert(msg);
-                mainView.loadFullCalendar('month', false);
+                mainView.loadFullCalendar('month', false, 'local');
 
                 Backbone.history.start();
             }

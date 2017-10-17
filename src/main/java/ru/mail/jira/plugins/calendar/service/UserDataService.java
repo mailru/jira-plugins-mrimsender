@@ -6,6 +6,7 @@ import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.security.GlobalPermissionManager;
+import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.transaction.TransactionCallback;
@@ -31,20 +32,22 @@ public class UserDataService {
     private final CalendarService calendarService;
     private final GlobalPermissionManager globalPermissionManager;
     private final UserCalendarService userCalendarService;
+    private final TimeZoneManager timeZoneManager;
 
     @Autowired
     public UserDataService(
-        @ComponentImport AvatarService avatarService,
-        @ComponentImport GlobalPermissionManager globalPermissionManager,
-        @ComponentImport ActiveObjects ao,
-        CalendarService calendarService,
-        UserCalendarService userCalendarService
-    ) {
+            @ComponentImport AvatarService avatarService,
+            @ComponentImport GlobalPermissionManager globalPermissionManager,
+            @ComponentImport ActiveObjects ao,
+            CalendarService calendarService,
+            UserCalendarService userCalendarService,
+            @ComponentImport TimeZoneManager timeZoneManager) {
         this.ao = ao;
         this.avatarService = avatarService;
         this.calendarService = calendarService;
         this.globalPermissionManager = globalPermissionManager;
         this.userCalendarService = userCalendarService;
+        this.timeZoneManager = timeZoneManager;
     }
 
     public UserDataDto getUserDataDto(ApplicationUser user) {
@@ -56,6 +59,7 @@ public class UserDataService {
         userDataDto.setName(user.getName());
         userDataDto.setDisplayName(user.getDisplayName());
         userDataDto.setAvatarUrl(getUserAvatarSrc(user));
+        userDataDto.setTimezone(timeZoneManager.getTimeZoneforUser(user).getID());
         if (isAdministrator(user)) {
             userDataDto.setNextFeedbackShow(userData.getNextFeedbackShow());
             userDataDto.setPluginRated(userData.getNextFeedbackShow() == -1);
