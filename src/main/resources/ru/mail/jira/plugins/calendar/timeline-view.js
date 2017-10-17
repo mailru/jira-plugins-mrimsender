@@ -473,6 +473,10 @@
                             '</span>' +
                         '</span>';
                     content = typeIcon + ' <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span><span> '+ event.id + ' ' + AJS.escapeHTML(event.title) + '</span>';
+                    if (event.hasOwnProperty('timeSpent'))
+                        content += '<aui-badge class="time-spent" title="' + AJS.I18n.getText('timetracking.time.spent') + '">' + event.timeSpent + '</aui-badge>';
+                    if (event.hasOwnProperty('originalEstimate'))
+                        content += '<aui-badge class="original-estimate" title="' + AJS.I18n.getText('timetracking.original.estimate') + '">' + event.originalEstimate + '</aui-badge>';
                 } else if (event.type === 'CUSTOM') {
                     content = '';
                     if (event.participants) {

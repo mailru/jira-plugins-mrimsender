@@ -1,5 +1,6 @@
 package ru.mail.jira.plugins.calendar.service;
 
+import bsh.StringUtil;
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.bc.JiraServiceContext;
@@ -8,6 +9,7 @@ import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.bc.project.component.ProjectComponent;
+import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.exception.GetException;
@@ -62,6 +64,7 @@ import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
 import ru.mail.jira.plugins.commons.CommonUtils;
 
 import javax.annotation.Nullable;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -506,6 +509,8 @@ public class CalendarEventService {
         boolean dateFieldsIsDraggable = isDateFieldsDraggable(startField, startCF, endField, endCF);
         if (log.isDebugEnabled())
             log.debug("dateFieldsIsDraggable={}", dateFieldsIsDraggable);
+        Long originalEstimate = issue.getOriginalEstimate();
+        Long timeSpent = issue.getTimeSpent();
 
         EventDto event = new EventDto();
         event.setCalendarId(calendar.getID());
@@ -517,6 +522,8 @@ public class CalendarEventService {
         event.setIssueTypeImgUrl(issue.getIssueType().getIconUrl());
         event.setStatus(issue.getStatus().getName());
         event.setType(EventDto.Type.ISSUE);
+        event.setOriginalEstimate(originalEstimate != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(originalEstimate) : null);
+        event.setTimeSpent(timeSpent != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(timeSpent) : null);
 
         if (groups != null) {
             event.setGroupField(groupBy);
