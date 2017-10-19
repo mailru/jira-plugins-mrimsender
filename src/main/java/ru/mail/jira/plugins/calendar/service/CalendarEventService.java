@@ -38,6 +38,7 @@ import com.atlassian.jira.jql.builder.JqlClauseBuilder;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.version.Version;
+import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
@@ -97,25 +98,27 @@ public class CalendarEventService {
     private final I18nResolver i18nResolver;
     private final AvatarService avatarService;
     private final JiraSoftwareHelper jiraSoftwareHelper;
+    private final TimeZoneManager timeZoneManager;
 
     @Autowired
     public CalendarEventService(
-        @ComponentImport ApplicationProperties applicationProperties,
-        @ComponentImport CustomFieldManager customFieldManager,
-        @ComponentImport DateTimeFormatter dateTimeFormatter,
-        @ComponentImport IssueService issueService,
-        @ComponentImport FieldLayoutManager fieldLayoutManager,
-        @ComponentImport RendererManager rendererManager,
-        @ComponentImport SearchRequestService searchRequestService,
-        @ComponentImport SearchProvider searchProvider,
-        @ComponentImport I18nResolver i18nResolver,
-        @ComponentImport AvatarService avatarService,
-        CalendarService calendarService,
-        CustomEventService customEventService,
-        JiraDeprecatedService jiraDeprecatedService,
-        UserCalendarService userCalendarService,
-        JiraSoftwareHelper jiraSoftwareHelper
-    ) {
+            @ComponentImport ApplicationProperties applicationProperties,
+            @ComponentImport CustomFieldManager customFieldManager,
+            @ComponentImport DateTimeFormatter dateTimeFormatter,
+            @ComponentImport IssueService issueService,
+            @ComponentImport FieldLayoutManager fieldLayoutManager,
+            @ComponentImport RendererManager rendererManager,
+            @ComponentImport SearchRequestService searchRequestService,
+            @ComponentImport SearchProvider searchProvider,
+            @ComponentImport I18nResolver i18nResolver,
+            @ComponentImport AvatarService avatarService,
+            CalendarService calendarService,
+            CustomEventService customEventService,
+            JiraDeprecatedService jiraDeprecatedService,
+            UserCalendarService userCalendarService,
+            JiraSoftwareHelper jiraSoftwareHelper,
+            @ComponentImport TimeZoneManager timeZoneManager)
+    {
         this.applicationProperties = applicationProperties;
         this.calendarService = calendarService;
         this.customEventService = customEventService;
@@ -131,6 +134,7 @@ public class CalendarEventService {
         this.i18nResolver = i18nResolver;
         this.avatarService = avatarService;
         this.jiraSoftwareHelper = jiraSoftwareHelper;
+        this.timeZoneManager = timeZoneManager;
     }
 
     public List<EventDto> findEvents(final int calendarId, String groupBy,
@@ -152,6 +156,7 @@ public class CalendarEventService {
             );
         Calendar calendarModel = calendarService.getCalendar(calendarId);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setTimeZone(timeZoneManager.getTimeZoneforUser(user));
         String source = calendarModel.getSource();
 
         List<EventDto> result;

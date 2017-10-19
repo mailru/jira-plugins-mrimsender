@@ -213,6 +213,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                         gadgets.window.adjustHeight();
                         gadget.hideLoading();
                     });
+                    gadget.calendarView.setTimezone(args.props.timezone);
                     gadget.calendarView.init(view, hideWeekends);
                     var $calendarEl = AJS.$("#mailru-calendar-gadget-full-calendar");
                     $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-state-default fc-button').addClass('aui-button');
