@@ -878,7 +878,6 @@ public class CustomEventServiceImpl implements CustomEventService {
         }
 
         typeDto.setName(StringUtils.trimToNull(typeDto.getName()));
-        typeDto.setReminder(StringUtils.trimToNull(typeDto.getReminder()));
 
         if (typeDto.getName() == null) {
             throw new RestFieldException(i18nResolver.getText("issue.field.required", i18nResolver.getText("common.words.name")), "name");
@@ -896,6 +895,8 @@ public class CustomEventServiceImpl implements CustomEventService {
     }
 
     private void validateReminder(EventTypeDto typeDto) {
+        typeDto.setReminder(StringUtils.trimToNull(typeDto.getReminder()));
+
         String reminderOption = typeDto.getReminder();
         if (reminderOption != null) {
             try {
