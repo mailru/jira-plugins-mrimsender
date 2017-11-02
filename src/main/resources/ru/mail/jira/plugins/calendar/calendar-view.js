@@ -367,7 +367,6 @@ define('calendar/calendar-view', [
             var self = this;
             var start = Preferences.getItem('mailrucalendar.start');
             var end = Preferences.getItem('mailrucalendar.end');
-            console.log(self.timezone);
             this.$el.fullCalendar({
                 contentHeight: 'auto',
                 defaultView: view,

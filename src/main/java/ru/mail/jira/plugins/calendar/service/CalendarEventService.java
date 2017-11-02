@@ -726,7 +726,7 @@ public class CalendarEventService {
             throw new IllegalArgumentException(String.format("Can not move event with key => %s, because it contains not draggable event date field", issue.getKey()));
 
         DateTimeFormatter dateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-        DateTimeFormatter datePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withZone(UTC_TZ).withStyle(DateTimeStyle.DATE_PICKER);
+        DateTimeFormatter datePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withZone(timeZoneManager.getTimeZoneforUser(user)).withStyle(DateTimeStyle.DATE_PICKER);
         DateTimeFormatter dateTimePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.DATE_TIME_PICKER);
 
         IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
@@ -745,7 +745,7 @@ public class CalendarEventService {
                 if (eventEndCF.getCustomFieldType() instanceof DateTimeCFType)
                     issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), dateTimePickerFormat.format(endDate));
                 else
-                    issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), datePickerFormat.format(new DateTime(endDate).toLocalDate().toDate()));
+                    issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), datePickerFormat.format(new Date(endDate.getTime() - MILLIS_IN_DAY)));
             } else
                 issueInputParams.setDueDate(datePickerFormat.format(new DateTime(endDate).toLocalDate().toDate()));
         }
