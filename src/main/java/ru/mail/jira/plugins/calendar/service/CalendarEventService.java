@@ -747,7 +747,7 @@ public class CalendarEventService {
                 else
                     issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), datePickerFormat.format(new Date(endDate.getTime() - MILLIS_IN_DAY)));
             } else
-                issueInputParams.setDueDate(datePickerFormat.format(new DateTime(endDate).toLocalDate().toDate()));
+                issueInputParams.setDueDate(datePickerFormat.format(new Date(endDate.getTime() - MILLIS_IN_DAY)));
         }
 
         IssueService.UpdateValidationResult updateValidationResult = jiraDeprecatedService.issueService.validateUpdate(user, issue.getId(), issueInputParams);
