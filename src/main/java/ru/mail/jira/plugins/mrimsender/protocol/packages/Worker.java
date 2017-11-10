@@ -1,12 +1,15 @@
 package ru.mail.jira.plugins.mrimsender.protocol.packages;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
 import ru.mail.jira.plugins.mrimsender.protocol.CommandProcessor;
 
 import java.io.IOException;
 import java.net.Socket;
 
 public class Worker {
+    private static final Logger log = Logger.getLogger(Worker.class);
+
     private static final String ADDRESS_RESOLVER_HOST = "mrim.mail.ru";
     private static final int ADDRESS_RESOLVER_PORT = 2042;
 
@@ -60,6 +63,8 @@ public class Worker {
     }
 
     public boolean login(String login, String password) throws IOException {
+        if (log.isDebugEnabled())
+            log.debug("[SEND] Trying to login. Login = " + login);
         writeBytes(PackageFactory.getMrimCsLogin2(messageSeq++, login, password));
 
         MrimCsHeader answer = readNextPackage(true);
@@ -74,6 +79,8 @@ public class Worker {
     }
 
     public void sendMessage(String email, String message) throws IOException {
+        if (log.isDebugEnabled())
+            log.debug(String.format("[SEND] To = %s Message = %s", email, message));
         writeBytes(PackageFactory.getMrimCsMessage(messageSeq++, 0, email, message));
     }
 
@@ -88,23 +95,34 @@ public class Worker {
                 MrimCsMessageAck mrimCsMessageAck = (MrimCsMessageAck) mrimCsHeader;
 
                 // Indicate that we received the message
-                if (!mrimCsMessageAck.checkFlag(Consts.MESSAGE_FLAG_NORECV))
+                if (!mrimCsMessageAck.checkFlag(Consts.MESSAGE_FLAG_NORECV)) {
+                    if (log.isDebugEnabled())
+                        log.debug("[SEND] Indication that we received the message");
                     writeBytes(PackageFactory.getMrimCsMessageRecv(messageSeq++, mrimCsMessageAck.getFromEmail(), mrimCsMessageAck.getMsgId()));
+                }
 
                 // User requested authorization from mrimsender account
-                if (mrimCsMessageAck.checkFlag(Consts.MESSAGE_FLAG_AUTHORIZE))
+                if (mrimCsMessageAck.checkFlag(Consts.MESSAGE_FLAG_AUTHORIZE)) {
+                    if (log.isDebugEnabled())
+                        log.debug("[SEND] User requested authorization from mrimsender account");
                     writeBytes(PackageFactory.getMrimCsAuthorize(messageSeq++, mrimCsMessageAck.getFromEmail()));
+                }
 
                 // Process incoming message
                 if (!mrimCsMessageAck.checkFlag(Consts.MESSAGE_FLAG_OFFLINE) &&
                         !mrimCsMessageAck.checkFlag(Consts.MESSAGE_FLAG_AUTHORIZE) &&
-                        !mrimCsMessageAck.checkFlag(Consts.MESSAGE_FLAG_NOTIFY))
+                        !mrimCsMessageAck.checkFlag(Consts.MESSAGE_FLAG_NOTIFY)) {
+                    if (log.isDebugEnabled())
+                        log.debug(String.format("[RECEIVE] From = %s Message = %s", mrimCsMessageAck.getFromEmail(), mrimCsMessageAck.getMessage()));
                     CommandProcessor.processMessage(mrimCsMessageAck.getFromEmail(), mrimCsMessageAck.getMessage());
+                }
             }
 
             // Remove offline messages from the server
             if (mrimCsHeader instanceof MrimCsOfflineMessageAck) {
                 MrimCsOfflineMessageAck mrimCsOfflineMessageAck = (MrimCsOfflineMessageAck) mrimCsHeader;
+                if (log.isDebugEnabled())
+                    log.debug("[SEND] Remove offline messages from server command");
                 writeBytes(PackageFactory.getMrimCsDeleteOfflineMessage(messageSeq++, mrimCsOfflineMessageAck.getUidl()));
             }
         }

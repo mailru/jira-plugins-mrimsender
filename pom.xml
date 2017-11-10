@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>mrimsender</artifactId>
-    <version>3.16</version>
+    <version>3.17</version>
     <organization>
         <name>Andrey Molchanov | Mail.Ru Group</name>
         <url>http://corp.mail.ru/en</url>
@@ -75,4 +75,11 @@
         <fastdev.mvn.command>/usr/share/atlassian-plugin-sdk-5.0.4/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>
         <useFastdevCli>false</useFastdevCli>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>atlassian</id>
+            <url>https://maven.atlassian.com/repository/public</url>
+        </repository>
+    </repositories>
 </project>
