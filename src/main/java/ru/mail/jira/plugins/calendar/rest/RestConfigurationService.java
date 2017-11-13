@@ -30,6 +30,7 @@ import com.atlassian.jira.sharing.search.SharedEntitySearchContext;
 import com.atlassian.jira.sharing.search.SharedEntitySearchParameters;
 import com.atlassian.jira.sharing.search.SharedEntitySearchParametersBuilder;
 import com.atlassian.jira.sharing.search.SharedEntitySearchResult;
+import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
@@ -89,26 +90,27 @@ public class RestConfigurationService {
     private final UserSearchService userSearchService;
     private final LicenseService licenseService;
     private final WorkingDaysService workingDaysService;
+    private final TimeZoneManager timeZoneManager;
 
     public RestConfigurationService(
-        @ComponentImport ApplicationAuthorizationService applicationAuthorizationService,
-        @ComponentImport("com.atlassian.jira.config.properties.ApplicationProperties") ApplicationProperties applicationProperties,
-        @ComponentImport AvatarService avatarService,
-        @ComponentImport CustomFieldManager customFieldManager,
-        @ComponentImport GlobalPermissionManager globalPermissionManager,
-        @ComponentImport GroupManager groupManager,
-        @ComponentImport I18nResolver i18nResolver,
-        @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-        @ComponentImport ProjectManager projectManager,
-        @ComponentImport ProjectService projectService,
-        @ComponentImport ProjectRoleManager projectRoleManager,
-        @ComponentImport SearchRequestService searchRequestService,
-        @ComponentImport UserManager userManager,
-        @ComponentImport UserSearchService userSearchService,
-        JiraDeprecatedService jiraDeprecatedService,
-        LicenseService licenseService,
-        WorkingDaysService workingDaysService
-    ) {
+            @ComponentImport ApplicationAuthorizationService applicationAuthorizationService,
+            @ComponentImport("com.atlassian.jira.config.properties.ApplicationProperties") ApplicationProperties applicationProperties,
+            @ComponentImport AvatarService avatarService,
+            @ComponentImport CustomFieldManager customFieldManager,
+            @ComponentImport GlobalPermissionManager globalPermissionManager,
+            @ComponentImport GroupManager groupManager,
+            @ComponentImport I18nResolver i18nResolver,
+            @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+            @ComponentImport ProjectManager projectManager,
+            @ComponentImport ProjectService projectService,
+            @ComponentImport ProjectRoleManager projectRoleManager,
+            @ComponentImport SearchRequestService searchRequestService,
+            @ComponentImport UserManager userManager,
+            @ComponentImport UserSearchService userSearchService,
+            @ComponentImport TimeZoneManager timeZoneManager,
+            WorkingDaysService workingDaysService,
+            JiraDeprecatedService jiraDeprecatedService,
+            LicenseService licenseService) {
         this.applicationAuthorizationService = applicationAuthorizationService;
         this.applicationProperties = applicationProperties;
         this.avatarService = avatarService;
@@ -126,6 +128,7 @@ public class RestConfigurationService {
         this.userSearchService = userSearchService;
         this.licenseService = licenseService;
         this.workingDaysService = workingDaysService;
+        this.timeZoneManager = timeZoneManager;
     }
 
     @GET
@@ -138,6 +141,7 @@ public class RestConfigurationService {
                 result.put("timeFormat", applicationProperties.getDefaultBackedString(APKeys.JIRA_LF_DATE_TIME));
                 result.put("dateFormat", applicationProperties.getDefaultBackedString(APKeys.JIRA_LF_DATE_DMY));
                 result.put("dateTimeFormat", applicationProperties.getDefaultBackedString(APKeys.JIRA_LF_DATE_COMPLETE));
+                result.put("timezone", timeZoneManager.getTimeZoneforUser(jiraAuthenticationContext.getLoggedInUser()).getID());
                 result.put("workingDays", workingDaysService.getWorkingDays().stream().mapToInt(i -> i).toArray());
 
                 LicenseStatus licenseStatus = licenseService.getLicenseStatus();

@@ -99,7 +99,7 @@ public class RestCustomEventService {
 
     @POST
     @Path("/type")
-    public Response createType(EventTypeDto eventTypeDto) {
+    public Response updateType(EventTypeDto eventTypeDto) {
         return new RestExecutor<EventTypeDto>() {
             @Override
             protected EventTypeDto doAction() throws Exception {
@@ -111,7 +111,7 @@ public class RestCustomEventService {
 
     @PUT
     @Path("/type/{typeId}")
-    public Response createType(@PathParam("typeId") int typeId, EventTypeDto eventTypeDto) {
+    public Response updateType(@PathParam("typeId") int typeId, EventTypeDto eventTypeDto) {
         return new RestExecutor<EventTypeDto>() {
             @Override
             protected EventTypeDto doAction() throws Exception {

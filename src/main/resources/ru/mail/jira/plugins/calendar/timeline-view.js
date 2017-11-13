@@ -144,7 +144,7 @@
                             return _.extend({}, result, {
                                 id: group.id + '-' + result.id,
                                 group: group.id,
-                                groupName: group.name,
+                                groupName: AJS.escapeHtml(group.name),
                                 groupAvatar: group.avatar
                             });
                         });
@@ -469,10 +469,14 @@
                     var typeIcon =
                         '<span class="aui-avatar aui-avatar-xsmall">' +
                             '<span class="aui-avatar-inner">' +
-                                '<img src="' + getContextPath() + '/' + event.issueTypeImgUrl +'" />' +
+                                '<img src="' + getContextPath() + event.issueTypeImgUrl +'" />' +
                             '</span>' +
                         '</span>';
                     content = typeIcon + ' <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span><span> '+ event.id + ' ' + AJS.escapeHTML(event.title) + '</span>';
+                    if (event.hasOwnProperty('timeSpent'))
+                        content += '<aui-badge class="time-spent" title="' + AJS.I18n.getText('timetracking.time.spent') + '">' + event.timeSpent + '</aui-badge>';
+                    if (event.hasOwnProperty('originalEstimate'))
+                        content += '<aui-badge class="original-estimate" title="' + AJS.I18n.getText('timetracking.original.estimate') + '">' + event.originalEstimate + '</aui-badge>';
                 } else if (event.type === 'CUSTOM') {
                     content = '';
                     if (event.participants) {

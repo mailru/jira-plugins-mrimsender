@@ -70,6 +70,10 @@ public class EventDto {
     private String groupField;
     @XmlElement
     private List<EventGroup> groups;
+    @XmlElement
+    private String originalEstimate;
+    @XmlElement
+    private String timeSpent;
 
     public enum Type {
         ISSUE,

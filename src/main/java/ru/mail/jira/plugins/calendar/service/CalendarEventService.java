@@ -1,5 +1,6 @@
 package ru.mail.jira.plugins.calendar.service;
 
+import bsh.StringUtil;
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.bc.JiraServiceContext;
@@ -8,6 +9,7 @@ import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.bc.project.component.ProjectComponent;
+import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.exception.GetException;
@@ -36,6 +38,7 @@ import com.atlassian.jira.jql.builder.JqlClauseBuilder;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.version.Version;
+import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
@@ -64,6 +67,7 @@ import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
 import ru.mail.jira.plugins.commons.CommonUtils;
 
 import javax.annotation.Nullable;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -97,26 +101,28 @@ public class CalendarEventService {
     private final I18nResolver i18nResolver;
     private final AvatarService avatarService;
     private final JiraSoftwareHelper jiraSoftwareHelper;
+    private final TimeZoneManager timeZoneManager;
 
     @Autowired
     public CalendarEventService(
-        @ComponentImport ApplicationProperties applicationProperties,
-        @ComponentImport CustomFieldManager customFieldManager,
-        @ComponentImport DateTimeFormatter dateTimeFormatter,
-        @ComponentImport IssueService issueService,
-        @ComponentImport FieldLayoutManager fieldLayoutManager,
-        @ComponentImport RendererManager rendererManager,
-        @ComponentImport SearchRequestService searchRequestService,
-        @ComponentImport SearchProvider searchProvider,
-        @ComponentImport I18nResolver i18nResolver,
-        @ComponentImport AvatarService avatarService,
-        CalendarService calendarService,
-        CustomEventService customEventService,
-        JiraDeprecatedService jiraDeprecatedService,
-        UserCalendarService userCalendarService,
-        WorkingDaysService workingDaysService,
-        JiraSoftwareHelper jiraSoftwareHelper
-    ) {
+            @ComponentImport ApplicationProperties applicationProperties,
+            @ComponentImport CustomFieldManager customFieldManager,
+            @ComponentImport DateTimeFormatter dateTimeFormatter,
+            @ComponentImport IssueService issueService,
+            @ComponentImport FieldLayoutManager fieldLayoutManager,
+            @ComponentImport RendererManager rendererManager,
+            @ComponentImport SearchRequestService searchRequestService,
+            @ComponentImport SearchProvider searchProvider,
+            @ComponentImport I18nResolver i18nResolver,
+            @ComponentImport AvatarService avatarService,
+            CalendarService calendarService,
+            CustomEventService customEventService,
+            JiraDeprecatedService jiraDeprecatedService,
+            UserCalendarService userCalendarService,
+            JiraSoftwareHelper jiraSoftwareHelper,
+            WorkingDaysService workingDaysService,
+            @ComponentImport TimeZoneManager timeZoneManager)
+    {
         this.applicationProperties = applicationProperties;
         this.calendarService = calendarService;
         this.customEventService = customEventService;
@@ -133,6 +139,7 @@ public class CalendarEventService {
         this.i18nResolver = i18nResolver;
         this.avatarService = avatarService;
         this.jiraSoftwareHelper = jiraSoftwareHelper;
+        this.timeZoneManager = timeZoneManager;
     }
 
     public List<EventDto> findEvents(final int calendarId, String groupBy,
@@ -154,6 +161,7 @@ public class CalendarEventService {
             );
         Calendar calendarModel = calendarService.getCalendar(calendarId);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setTimeZone(timeZoneManager.getTimeZoneforUser(user));
         String source = calendarModel.getSource();
 
         List<EventDto> result;
@@ -511,6 +519,8 @@ public class CalendarEventService {
         boolean dateFieldsIsDraggable = isDateFieldsDraggable(startField, startCF, endField, endCF);
         if (log.isDebugEnabled())
             log.debug("dateFieldsIsDraggable={}", dateFieldsIsDraggable);
+        Long originalEstimate = issue.getOriginalEstimate();
+        Long timeSpent = issue.getTimeSpent();
 
         EventDto event = new EventDto();
         event.setCalendarId(calendar.getID());
@@ -522,6 +532,8 @@ public class CalendarEventService {
         event.setIssueTypeImgUrl(issue.getIssueType().getIconUrl());
         event.setStatus(issue.getStatus().getName());
         event.setType(EventDto.Type.ISSUE);
+        event.setOriginalEstimate(originalEstimate != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(originalEstimate) : null);
+        event.setTimeSpent(timeSpent != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(timeSpent) : null);
 
         if (groups != null) {
             event.setGroupField(groupBy);
@@ -726,7 +738,7 @@ public class CalendarEventService {
             throw new IllegalArgumentException(String.format("Can not move event with key => %s, because it contains not draggable event date field", issue.getKey()));
 
         DateTimeFormatter dateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-        DateTimeFormatter datePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withZone(UTC_TZ).withStyle(DateTimeStyle.DATE_PICKER);
+        DateTimeFormatter datePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withZone(timeZoneManager.getTimeZoneforUser(user)).withStyle(DateTimeStyle.DATE_PICKER);
         DateTimeFormatter dateTimePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.DATE_TIME_PICKER);
 
         IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
@@ -745,9 +757,9 @@ public class CalendarEventService {
                 if (eventEndCF.getCustomFieldType() instanceof DateTimeCFType)
                     issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), dateTimePickerFormat.format(endDate));
                 else
-                    issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), datePickerFormat.format(new DateTime(endDate).toLocalDate().toDate()));
+                    issueInputParams.addCustomFieldValue(eventEndCF.getIdAsLong(), datePickerFormat.format(new Date(endDate.getTime() - MILLIS_IN_DAY)));
             } else
-                issueInputParams.setDueDate(datePickerFormat.format(new DateTime(endDate).toLocalDate().toDate()));
+                issueInputParams.setDueDate(datePickerFormat.format(new Date(endDate.getTime() - MILLIS_IN_DAY)));
         }
 
         IssueService.UpdateValidationResult updateValidationResult = jiraDeprecatedService.issueService.validateUpdate(user, issue.getId(), issueInputParams);
