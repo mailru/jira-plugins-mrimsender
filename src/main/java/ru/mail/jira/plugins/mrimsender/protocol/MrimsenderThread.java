@@ -11,7 +11,9 @@ import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import ru.mail.jira.plugins.mrimsender.protocol.packages.Worker;
 
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 public class MrimsenderThread extends Thread {
     private static final int MAX_QUEUE_SIZE = 10000;

@@ -5,7 +5,10 @@ import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.issue.comment.CommentService;
 import com.atlassian.jira.bc.issue.search.SearchService;
-import com.atlassian.jira.bc.issue.worklog.*;
+import com.atlassian.jira.bc.issue.worklog.WorklogInputParameters;
+import com.atlassian.jira.bc.issue.worklog.WorklogInputParametersImpl;
+import com.atlassian.jira.bc.issue.worklog.WorklogResult;
+import com.atlassian.jira.bc.issue.worklog.WorklogService;
 import com.atlassian.jira.bc.project.ProjectService;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.issue.Issue;
@@ -26,11 +29,14 @@ import com.atlassian.jira.workflow.WorkflowManager;
 import com.opensymphony.workflow.loader.ActionDescriptor;
 import com.opensymphony.workflow.loader.StepDescriptor;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 import ru.mail.jira.plugins.commons.CommonUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,7 +44,7 @@ public class CommandProcessor extends Thread {
     private static final Locale DEFAULT_LOCALE = new Locale("ru");
     private static final String ISSUES_JQL = "assignee = currentUser() AND status not in (Closed, Done, Ready)";
 
-    private static final Logger log = LoggerFactory.getLogger(CommandProcessor.class);
+    private static final Logger log = Logger.getLogger(CommandProcessor.class);
 
     private final CommentService commentService = ComponentAccessor.getComponent(CommentService.class);
     private final I18nHelper.BeanFactory i18nHelperFactory = ComponentAccessor.getI18nHelperFactory();
