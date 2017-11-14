@@ -133,7 +133,10 @@
             renderEvents: function(_events) {
                 var groupBy = Preferences.getItem('groupBy');
 
-                var events = _.flatten(_.map(_events, $.proxy(function(event) {
+                var _eventsWithoutHolidays = _.filter(_events, function(event) {
+                    return event.type !== 'HOLIDAY';
+                });
+                var events = _.flatten(_.map(_eventsWithoutHolidays, $.proxy(function(event) {
                     var result = this._transformEvent(event, false);
                     if (!groupBy || groupBy === 'none') {
                         return result;
