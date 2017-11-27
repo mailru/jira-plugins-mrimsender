@@ -145,6 +145,9 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
             template: function(args) {
                 AJS.$(document).unbind('ajaxStart');
                 AJS.$(document).unbind('ajaxStop');
+
+                moment.tz.setDefault(args.props.timezone);
+
                 var gadget = this;
 
                 console.log(gadget);
