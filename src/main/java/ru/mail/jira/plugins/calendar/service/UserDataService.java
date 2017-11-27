@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDataDto;
@@ -33,6 +34,7 @@ public class UserDataService {
     private final GlobalPermissionManager globalPermissionManager;
     private final UserCalendarService userCalendarService;
     private final TimeZoneManager timeZoneManager;
+    private final WorkingDaysService workingDaysService;
 
     @Autowired
     public UserDataService(
@@ -41,13 +43,16 @@ public class UserDataService {
             @ComponentImport ActiveObjects ao,
             CalendarService calendarService,
             UserCalendarService userCalendarService,
-            @ComponentImport TimeZoneManager timeZoneManager) {
+            @ComponentImport TimeZoneManager timeZoneManager,
+            WorkingDaysService workingDaysService
+    ) {
         this.ao = ao;
         this.avatarService = avatarService;
         this.calendarService = calendarService;
         this.globalPermissionManager = globalPermissionManager;
         this.userCalendarService = userCalendarService;
         this.timeZoneManager = timeZoneManager;
+        this.workingDaysService = workingDaysService;
     }
 
     public UserDataDto getUserDataDto(ApplicationUser user) {
@@ -65,6 +70,7 @@ public class UserDataService {
             userDataDto.setPluginRated(userData.getNextFeedbackShow() == -1);
             userDataDto.setFeedbackShowCount(userData.getFeedbackShowCount());
         }
+        userDataDto.setWorkingDays(workingDaysService.getWorkingDays().stream().mapToInt(i -> i).toArray());
         return userDataDto;
     }
 

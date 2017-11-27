@@ -39,6 +39,7 @@ import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.calendar.common.FieldUtils;
+import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseStatus;
 import ru.mail.jira.plugins.calendar.rest.dto.DateField;
@@ -88,6 +89,7 @@ public class RestConfigurationService {
     private final UserManager userManager;
     private final UserSearchService userSearchService;
     private final LicenseService licenseService;
+    private final WorkingDaysService workingDaysService;
     private final TimeZoneManager timeZoneManager;
 
     public RestConfigurationService(
@@ -106,6 +108,7 @@ public class RestConfigurationService {
             @ComponentImport UserManager userManager,
             @ComponentImport UserSearchService userSearchService,
             @ComponentImport TimeZoneManager timeZoneManager,
+            WorkingDaysService workingDaysService,
             JiraDeprecatedService jiraDeprecatedService,
             LicenseService licenseService) {
         this.applicationAuthorizationService = applicationAuthorizationService;
@@ -124,6 +127,7 @@ public class RestConfigurationService {
         this.userManager = userManager;
         this.userSearchService = userSearchService;
         this.licenseService = licenseService;
+        this.workingDaysService = workingDaysService;
         this.timeZoneManager = timeZoneManager;
     }
 
@@ -138,6 +142,7 @@ public class RestConfigurationService {
                 result.put("dateFormat", applicationProperties.getDefaultBackedString(APKeys.JIRA_LF_DATE_DMY));
                 result.put("dateTimeFormat", applicationProperties.getDefaultBackedString(APKeys.JIRA_LF_DATE_COMPLETE));
                 result.put("timezone", timeZoneManager.getTimeZoneforUser(jiraAuthenticationContext.getLoggedInUser()).getID());
+                result.put("workingDays", workingDaysService.getWorkingDays().stream().mapToInt(i -> i).toArray());
 
                 LicenseStatus licenseStatus = licenseService.getLicenseStatus();
                 result.put("licenseValid", licenseStatus.isValid());

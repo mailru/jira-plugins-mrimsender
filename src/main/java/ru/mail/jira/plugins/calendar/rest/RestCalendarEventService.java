@@ -46,6 +46,22 @@ public class RestCalendarEventService {
     }
 
     @GET
+    @Path("/holidays")
+    public Response getHolidays() {
+        try {
+            List<EventDto> result = calendarEventService.getHolidays(jiraAuthenticationContext.getUser());
+            CacheControl cacheControl = new CacheControl();
+            cacheControl.setNoCache(true);
+            cacheControl.setNoStore(true);
+            cacheControl.setMaxAge(0);
+            return Response.ok(result).cacheControl(cacheControl).build();
+        } catch (Exception e) {
+            log.error("Error while trying to get events", e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+        }
+    }
+
+    @GET
     @Path("{calendarId}/event/{eventId}/info")
     public Response getEventInfo(@PathParam("calendarId") final int calendarId,
                                  @PathParam("eventId") final String eventId) {

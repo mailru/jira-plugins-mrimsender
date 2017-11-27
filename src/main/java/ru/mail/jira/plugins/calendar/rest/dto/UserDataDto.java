@@ -33,6 +33,8 @@ public class UserDataDto {
     private int feedbackShowCount;
     @XmlElement
     private String timezone;
+    @XmlElement
+    private int[] workingDays;
 
     public UserDataDto() {
     }
@@ -120,5 +122,9 @@ public class UserDataDto {
 
     public void setTimezone(String timezone) {
         this.timezone = timezone;
+    }
+
+    public void setWorkingDays(int[] workingDays) {
+        this.workingDays = workingDays;
     }
 }
