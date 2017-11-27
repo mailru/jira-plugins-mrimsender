@@ -162,6 +162,9 @@ public class CalendarEventService {
         Calendar calendarModel = calendarService.getCalendar(calendarId);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         dateFormat.setTimeZone(timeZoneManager.getTimeZoneforUser(user));
+        SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd");
+        utcFormat.setTimeZone(UTC_TZ);
+
         String source = calendarModel.getSource();
 
         List<EventDto> result;
@@ -181,7 +184,7 @@ public class CalendarEventService {
             result = new ArrayList<>();
         }
 
-        result.addAll(customEventService.getEvents(user, calendarModel, parsedStart, parsedEnd));
+        result.addAll(customEventService.getEvents(user, calendarModel, parsedStart, parsedEnd, utcFormat.parse(start), utcFormat.parse(end)));
 
         return result;
     }

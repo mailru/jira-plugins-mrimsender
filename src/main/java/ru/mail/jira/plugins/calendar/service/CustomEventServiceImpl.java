@@ -652,15 +652,19 @@ public class CustomEventServiceImpl implements CustomEventService {
     }
 
     @Override
-    public List<EventDto> getEvents(ApplicationUser user, Calendar calendar, Date start, Date end) {
+    public List<EventDto> getEvents(ApplicationUser user, Calendar calendar, Date start, Date end, Date startUtc, Date endUtc) {
         List<EventDto> result = new ArrayList<>();
         Event[] customEvents = ao.find(
             Event.class,
             Query
                 .select()
                 .where(
-                    "(START_DATE >= ? AND (END_DATE <= ? OR END_DATE IS NULL AND START_DATE <= ?) OR (START_DATE <= ? AND END_DATE >= ?) OR (START_DATE <= ? AND END_DATE >= ?)) AND CALENDAR_ID = ? AND RECURRENCE_TYPE IS NULL AND PARENT_ID IS NULL",
-                    start, end, end, start, start, end, end, calendar.getID()
+                    "(ALL_DAY = ? AND (START_DATE >= ? AND (END_DATE <= ? OR END_DATE IS NULL AND START_DATE <= ?) OR (START_DATE <= ? AND END_DATE >= ?) OR (START_DATE <= ? AND END_DATE >= ?)) OR " +
+                    "ALL_DAY = ? AND (START_DATE >= ? AND (END_DATE <= ? OR END_DATE IS NULL AND START_DATE <= ?) OR (START_DATE <= ? AND END_DATE >= ?) OR (START_DATE <= ? AND END_DATE >= ?))) AND " +
+                        "CALENDAR_ID = ? AND RECURRENCE_TYPE IS NULL AND PARENT_ID IS NULL",
+                    false, start, end, end, start, start, end, end,
+                    true, startUtc, endUtc, endUtc, startUtc, startUtc, endUtc, endUtc,
+                    calendar.getID()
                 )
         );
         boolean canEditEvents = permissionService.hasEditEventsPermission(user, calendar);

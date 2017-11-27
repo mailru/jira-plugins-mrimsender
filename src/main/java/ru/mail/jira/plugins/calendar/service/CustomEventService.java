@@ -26,7 +26,7 @@ public interface CustomEventService {
 
     CustomEventDto getEventDto(ApplicationUser user, int id) throws GetException;
 
-    List<EventDto> getEvents(ApplicationUser user, Calendar calendar, Date start, Date end);
+    List<EventDto> getEvents(ApplicationUser user, Calendar calendar, Date start, Date end, Date startUtc, Date endUtc);
 
     List<EventTypeDto> getTypes(ApplicationUser user, int calendarId) throws GetException;
 
