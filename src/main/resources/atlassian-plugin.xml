@@ -4,6 +4,7 @@
         <description>${project.description}</description>
         <version>${project.version}</version>
         <vendor name="${project.organization.name}" url="${project.organization.url}"/>
+        <param name="atlassian-data-center-compatible">true</param>
     </plugin-info>
 
     <resource type="i18n" name="i18n" location="/ru/mail/jira/plugins/mrimsender/mrimsender" />

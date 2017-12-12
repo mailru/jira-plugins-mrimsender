@@ -49,12 +49,14 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     @Override
     public void afterPropertiesSet() throws Exception {
         MrimsenderThread.startInstance();
+        CommandProcessor.startup();
         eventPublisher.register(this);
     }
 
     @Override
     public void destroy() throws Exception {
         MrimsenderThread.stopInstance();
+        CommandProcessor.shutdown();
         eventPublisher.unregister(this);
     }
 

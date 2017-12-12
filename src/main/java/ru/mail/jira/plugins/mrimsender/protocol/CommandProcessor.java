@@ -1,5 +1,7 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
+import com.atlassian.beehive.ClusterLock;
+import com.atlassian.beehive.ClusterLockService;
 import com.atlassian.jira.bc.JiraServiceContext;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.issue.IssueService;
@@ -37,15 +39,25 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CommandProcessor extends Thread {
+    private static final String LOCK_NAME = CommandProcessor.class.getName() + ".myLockedTask";
+
     private static final Locale DEFAULT_LOCALE = new Locale("ru");
     private static final String ISSUES_JQL = "assignee = currentUser() AND status not in (Closed, Done, Ready)";
 
     private static final Logger log = Logger.getLogger(CommandProcessor.class);
 
+    private static CommandProcessor COMMAND_PROCESSOR;
+    private final static BlockingQueue<Command> COMMANDS_QUEUE = new LinkedBlockingQueue<Command>();
+
+    private final ClusterLockService clusterLockService = ComponentAccessor.getComponent(ClusterLockService.class);
     private final CommentService commentService = ComponentAccessor.getComponent(CommentService.class);
     private final I18nHelper.BeanFactory i18nHelperFactory = ComponentAccessor.getI18nHelperFactory();
     private final IssueService issueService = ComponentAccessor.getIssueService();
@@ -55,151 +67,198 @@ public class CommandProcessor extends Thread {
     private final WorkflowManager workflowManager = ComponentAccessor.getWorkflowManager();
     private final WorklogService worklogService = ComponentAccessor.getComponent(WorklogService.class);
 
-    private final String message;
-    private final String fromEmail;
-    private I18nHelper i18n;
-    private ApplicationUser fromUser;
+    private final AtomicBoolean state = new AtomicBoolean(true);
+    private final AtomicBoolean canProcessMessages = new AtomicBoolean(false);
 
     public static void processMessage(String email, String message) {
-        CommandProcessor commandProcessor = new CommandProcessor(message, email);
-        commandProcessor.start();
+        if (COMMAND_PROCESSOR.canProcessMessages.get())
+            COMMANDS_QUEUE.add(new Command(email, message.trim()));
+        else
+            COMMANDS_QUEUE.clear();
     }
 
-    private CommandProcessor(String message, String fromEmail) {
-        this.message = message.trim();
-        this.fromEmail = fromEmail;
-        this.i18n = i18nHelperFactory.getInstance(DEFAULT_LOCALE);
+    public synchronized static void startup() {
+        if (COMMAND_PROCESSOR != null) {
+            log.warn("Can't start one more command processor");
+        }
+        COMMAND_PROCESSOR = new CommandProcessor();
+        COMMAND_PROCESSOR.start();
+    }
+
+    public synchronized static void shutdown() {
+        try {
+            COMMAND_PROCESSOR.state.set(false);
+            COMMAND_PROCESSOR.canProcessMessages.set(false);
+            COMMAND_PROCESSOR.interrupt();
+        } catch (Exception e) {
+            log.warn("Command processor shutdown failed", e);
+        }
     }
 
     @Override
     public void run() {
+        ClusterLock lock = clusterLockService.getLockForName(LOCK_NAME);
         try {
-            // Check that message is not empty
-            if (StringUtils.isEmpty(message))
-                return;
-
-            // Find the corresponding user
-            fromUser = UserSearcher.INSTANCE.getUserByMrimLogin(fromEmail);
-            if (fromUser == null)
-                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.unauthorized"));
-            i18n = i18nHelperFactory.getInstance(fromUser);
-
-            ApplicationUser storedUser = jiraAuthenticationContext.getUser();
-            try {
-                jiraAuthenticationContext.setLoggedInUser(fromUser);
-
-                // Process #help command
-                if ("#help".equalsIgnoreCase(message)) {
-                    MrimsenderThread.sendMessage(fromEmail, i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.help"));
-                    return;
-                }
-
-                // Process #issues command
-                if ("#issues".equalsIgnoreCase(message)) {
-                    SearchService searchService = ComponentAccessor.getComponent(SearchService.class);
-
-                    SearchService.ParseResult parseResult = searchService.parseQuery(fromUser, ISSUES_JQL);
-                    if (!parseResult.isValid())
-                        throw new Exception("Unable to parse search query");
-
-                    SearchResults searchResults = searchService.search(fromUser, parseResult.getQuery(), PagerFilter.getUnlimitedFilter());
-
-                    StringBuilder sb = new StringBuilder();
-                    if (!searchResults.getIssues().isEmpty())
-                        for (Issue issue : searchResults.getIssues()) {
-                            if (sb.length() > 0)
-                                sb.append("\n");
-                            sb.append(String.format("[%s] %s", issue.getKey(), issue.getSummary()));
-                        }
-                    else
-                        sb.append(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.emptySearchResult"));
-
-                    MrimsenderThread.sendMessage(fromEmail, sb.toString());
-                    return;
-                }
-
-                // Process #create command
-                if (message.matches("^#create\\b.*")) {
-                    Matcher commandMatcher = Pattern.compile("^#create\\s+([A-Za-z]+)\\s+(.+)").matcher(message);
-                    if (!commandMatcher.matches())
-                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.invalidSyntax"));
-
-                    String projectKey = commandMatcher.group(1);
-                    String issueTypeNameAndSummary = commandMatcher.group(2);
-
-                    ProjectService.GetProjectResult getProjectResult = projectService.getProjectByKey(fromUser, projectKey.toUpperCase());
-                    if (!getProjectResult.isValid())
-                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.unableToAccessProject", projectKey, CommonUtils.formatErrorCollection(getProjectResult.getErrorCollection())));
-                    Project project = getProjectResult.getProject();
-
-                    IssueType issueType = null;
-                    String summary = null;
-
-                    Collection<IssueType> issueTypes = issueTypeSchemeManager.getIssueTypesForProject(project);
-                    List<String> issueTypeNames = new ArrayList<String>();
-                    for (IssueType currentIssueType : issueTypes) {
-                        if (StringUtils.startsWithIgnoreCase(issueTypeNameAndSummary, currentIssueType.getName())) {
-                            String s = issueTypeNameAndSummary.substring(currentIssueType.getName().length());
-                            if (StringUtils.isEmpty(s)) {
-                                issueType = currentIssueType;
-                                break;
-                            }
-                            Matcher paramMatcher = Pattern.compile("^\\s+(.+)").matcher(s);
-                            if (paramMatcher.matches()) {
-                                issueType = currentIssueType;
-                                summary = paramMatcher.group(1);
-                                break;
-                            }
-                        }
-                        issueTypeNames.add(currentIssueType.getName());
-                    }
-                    if (issueType == null)
-                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.unableToFindIssueType", StringUtils.join(issueTypeNames, ", ")));
-                    if (summary == null)
-                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.summaryIsNotSpecified"));
-
-                    IssueInputParameters issueInputParameters = issueService.newIssueInputParameters();
-                    issueInputParameters.setProjectId(project.getId());
-                    issueInputParameters.setIssueTypeId(issueType.getId());
-                    issueInputParameters.setReporterId(fromUser.getName());
-                    issueInputParameters.setAssigneeId("-1");
-                    issueInputParameters.setSummary(summary);
-
-                    IssueService.CreateValidationResult createValidationResult = issueService.validateCreate(fromUser, issueInputParameters);
-                    if (!createValidationResult.isValid())
-                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.error", CommonUtils.formatErrorCollection(createValidationResult.getErrorCollection())));
-
-                    IssueService.IssueResult issueResult = issueService.create(fromUser, createValidationResult);
-                    if (!issueResult.isValid())
-                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.error", CommonUtils.formatErrorCollection(issueResult.getErrorCollection())));
-
-                    MrimsenderThread.sendMessage(fromEmail, i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.success", issueResult.getIssue().getKey()));
-                    return;
-                }
-
-                // Process issue commands
-                if (message.matches("^([A-Za-z]+-\\d+\\s+)+#\\b.+")) {
-                    StringBuilder sb = new StringBuilder();
-                    try {
-                        for (IssueCommand issueCommand : parseIssueCommands()) {
-                            if (sb.length() > 0)
-                                sb.append("\n");
-                            sb.append(issueCommand.execute(false));
-                        }
-                        MrimsenderThread.sendMessage(fromEmail, sb.toString());
-                        return;
-                    } catch (Exception e) {
-                        throw new Exception(sb.append(e.getMessage()).toString(), e);
-                    }
-                }
-
-                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.commandIsNotFound"));
-            } finally {
-                jiraAuthenticationContext.setLoggedInUser(storedUser);
+            while (!lock.tryLock(5, TimeUnit.SECONDS)) {
+                if (log.isDebugEnabled())
+                    log.debug("This is second node. It doesn't process messages.");
             }
-        } catch (Exception e) {
-            log.warn(String.format("Error processing command <%s> from <%s>", message, fromEmail), e);
-            MrimsenderThread.sendMessage(fromEmail, e.getMessage());
+        } catch (InterruptedException e) {
+            log.warn("Command processor interrupted", e);
+            return;
+        }
+
+        try {
+            log.info("Start command processing");
+            canProcessMessages.set(true);
+            while (state.get()) {
+                Command command;
+                try {
+                    command = COMMANDS_QUEUE.poll(5, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    log.warn("Command processor interrupted", e);
+                    break;
+                }
+                if (command == null)
+                    continue;
+
+                String fromEmail = command.getEmail();
+                String message = command.getMessage();
+                try {
+                    // Check that message is not empty
+                    if (StringUtils.isEmpty(message))
+                        continue;
+
+                    // Find the corresponding user
+                    ApplicationUser fromUser = UserSearcher.INSTANCE.getUserByMrimLogin(fromEmail);
+                    if (fromUser == null) {
+                        I18nHelper i18n = i18nHelperFactory.getInstance(DEFAULT_LOCALE);
+                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.unauthorized"));
+                    }
+                    I18nHelper i18n = i18nHelperFactory.getInstance(fromUser);
+
+                    ApplicationUser storedUser = jiraAuthenticationContext.getLoggedInUser();
+                    try {
+                        jiraAuthenticationContext.setLoggedInUser(fromUser);
+
+                        // Process #help command
+                        if ("#help".equalsIgnoreCase(message)) {
+                            MrimsenderThread.sendMessage(fromEmail, i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.help"));
+                            continue;
+                        }
+
+                        // Process #issues command
+                        if ("#issues".equalsIgnoreCase(message)) {
+                            SearchService searchService = ComponentAccessor.getComponent(SearchService.class);
+
+                            SearchService.ParseResult parseResult = searchService.parseQuery(fromUser, ISSUES_JQL);
+                            if (!parseResult.isValid())
+                                throw new Exception("Unable to parse search query");
+
+                            SearchResults searchResults = searchService.search(fromUser, parseResult.getQuery(), PagerFilter.getUnlimitedFilter());
+
+                            StringBuilder sb = new StringBuilder();
+                            if (!searchResults.getIssues().isEmpty())
+                                for (Issue issue : searchResults.getIssues()) {
+                                    if (sb.length() > 0)
+                                        sb.append("\n");
+                                    sb.append(String.format("[%s] %s", issue.getKey(), issue.getSummary()));
+                                }
+                            else
+                                sb.append(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.emptySearchResult"));
+
+                            MrimsenderThread.sendMessage(fromEmail, sb.toString());
+                            continue;
+                        }
+
+                        // Process #create command
+                        if (message.matches("^#create\\b.*")) {
+                            Matcher commandMatcher = Pattern.compile("^#create\\s+([A-Za-z]+)\\s+(.+)").matcher(message);
+                            if (!commandMatcher.matches())
+                                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.invalidSyntax"));
+
+                            String projectKey = commandMatcher.group(1);
+                            String issueTypeNameAndSummary = commandMatcher.group(2);
+
+                            ProjectService.GetProjectResult getProjectResult = projectService.getProjectByKey(fromUser, projectKey.toUpperCase());
+                            if (!getProjectResult.isValid())
+                                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.unableToAccessProject", projectKey, CommonUtils.formatErrorCollection(getProjectResult.getErrorCollection())));
+                            Project project = getProjectResult.getProject();
+
+                            IssueType issueType = null;
+                            String summary = null;
+
+                            Collection<IssueType> issueTypes = issueTypeSchemeManager.getIssueTypesForProject(project);
+                            List<String> issueTypeNames = new ArrayList<String>();
+                            for (IssueType currentIssueType : issueTypes) {
+                                if (StringUtils.startsWithIgnoreCase(issueTypeNameAndSummary, currentIssueType.getName())) {
+                                    String s = issueTypeNameAndSummary.substring(currentIssueType.getName().length());
+                                    if (StringUtils.isEmpty(s)) {
+                                        issueType = currentIssueType;
+                                        break;
+                                    }
+                                    Matcher paramMatcher = Pattern.compile("^\\s+(.+)").matcher(s);
+                                    if (paramMatcher.matches()) {
+                                        issueType = currentIssueType;
+                                        summary = paramMatcher.group(1);
+                                        break;
+                                    }
+                                }
+                                issueTypeNames.add(currentIssueType.getName());
+                            }
+                            if (issueType == null)
+                                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.unableToFindIssueType", StringUtils.join(issueTypeNames, ", ")));
+                            if (summary == null)
+                                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.summaryIsNotSpecified"));
+
+                            IssueInputParameters issueInputParameters = issueService.newIssueInputParameters();
+                            issueInputParameters.setProjectId(project.getId());
+                            issueInputParameters.setIssueTypeId(issueType.getId());
+                            issueInputParameters.setReporterId(fromUser.getName());
+                            issueInputParameters.setAssigneeId("-1");
+                            issueInputParameters.setSummary(summary);
+
+                            IssueService.CreateValidationResult createValidationResult = issueService.validateCreate(fromUser, issueInputParameters);
+                            if (!createValidationResult.isValid())
+                                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.error", CommonUtils.formatErrorCollection(createValidationResult.getErrorCollection())));
+
+                            IssueService.IssueResult issueResult = issueService.create(fromUser, createValidationResult);
+                            if (!issueResult.isValid())
+                                throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.error", CommonUtils.formatErrorCollection(issueResult.getErrorCollection())));
+
+                            MrimsenderThread.sendMessage(fromEmail, i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.createCommand.success", issueResult.getIssue().getKey()));
+                            continue;
+                        }
+
+                        // Process issue commands
+                        if (message.matches("^([A-Za-z]+-\\d+\\s+)+#\\b.+")) {
+                            StringBuilder sb = new StringBuilder();
+                            try {
+                                for (IssueCommand issueCommand : parseIssueCommands(fromUser, message, i18n)) {
+                                    if (sb.length() > 0)
+                                        sb.append("\n");
+                                    sb.append(issueCommand.execute(false));
+                                }
+                                MrimsenderThread.sendMessage(fromEmail, sb.toString());
+                                continue;
+                            } catch (Exception e) {
+                                throw new Exception(sb.append(e.getMessage()).toString(), e);
+                            }
+                        }
+
+                        throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.commandIsNotFound"));
+                    } finally {
+                        jiraAuthenticationContext.setLoggedInUser(storedUser);
+                    }
+                } catch (Exception e) {
+                    log.warn(String.format("Error processing command <%s> from <%s>", message, fromEmail), e);
+                    MrimsenderThread.sendMessage(fromEmail, e.getMessage());
+                }
+            }
+        } finally {
+            canProcessMessages.set(false);
+            log.info("Stop command processing");
+            lock.unlock();
         }
     }
 
@@ -210,7 +269,7 @@ public class CommandProcessor extends Thread {
         return stepDescriptor.getActions();
     }
 
-    private ActionDescriptor getActionDescriptor(Issue issue, String actionNamePrefix) throws Exception {
+    private ActionDescriptor getActionDescriptor(Issue issue, String actionNamePrefix, I18nHelper i18n) throws Exception {
         List<ActionDescriptor> likelyActions = new ArrayList<ActionDescriptor>();
         for (ActionDescriptor actionDescriptor : getAvailableActions(issue))
             if (StringUtils.startsWithIgnoreCase(actionDescriptor.getName(), actionNamePrefix))
@@ -226,7 +285,7 @@ public class CommandProcessor extends Thread {
         }
     }
 
-    private List<IssueCommand> parseIssueCommands() throws Exception {
+    private List<IssueCommand> parseIssueCommands(ApplicationUser fromUser, String message, I18nHelper i18n) throws Exception {
         String[] tokens = message.split("\\s+#\\b");
 
         // Parse issues list
@@ -250,7 +309,7 @@ public class CommandProcessor extends Thread {
             if ("#view".equalsIgnoreCase(commandName)) {
 
                 for (Issue issue : issues)
-                    result.add(new ViewCommand(issue));
+                    result.add(new ViewCommand(issue, i18n, fromUser));
 
             } else if ("#comment".equalsIgnoreCase(commandName)) {
 
@@ -258,7 +317,7 @@ public class CommandProcessor extends Thread {
                     throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.commentTextIsNotSpecified"));
 
                 for (Issue issue : issues)
-                    result.add(new CommentCommand(issue, commandParams));
+                    result.add(new CommentCommand(issue, commandParams, i18n, fromUser));
 
             } else if ("#assign".equalsIgnoreCase(commandName)) {
 
@@ -270,7 +329,7 @@ public class CommandProcessor extends Thread {
                     throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.assigneeIsNotFound", commandParams));
 
                 for (Issue issue : issues)
-                    result.add(new AssignCommand(issue, assignee));
+                    result.add(new AssignCommand(issue, assignee, i18n, fromUser));
 
             } else if ("#time".equalsIgnoreCase(commandName)) {
 
@@ -279,7 +338,7 @@ public class CommandProcessor extends Thread {
                     throw new Exception(i18n.getText("ru.mail.jira.plugins.mrimsender.commandProcessor.timeIsNotSpecified"));
 
                 for (Issue issue : issues)
-                    result.add(new TimeCommand(issue, matcher.group(1), matcher.group(4)));
+                    result.add(new TimeCommand(issue, matcher.group(1), matcher.group(4), i18n, fromUser));
 
             } else {
 
@@ -289,8 +348,8 @@ public class CommandProcessor extends Thread {
 
                 String workflowCommand = commandName.substring(1).replaceAll("-", " ");
                 for (Issue issue : issues) {
-                    ActionDescriptor actionDescriptor = getActionDescriptor(issue, workflowCommand);
-                    result.add(new WorkflowCommand(issue, actionDescriptor, commandParams));
+                    ActionDescriptor actionDescriptor = getActionDescriptor(issue, workflowCommand, i18n);
+                    result.add(new WorkflowCommand(issue, actionDescriptor, commandParams, i18n, fromUser));
                 }
 
             }
@@ -301,17 +360,21 @@ public class CommandProcessor extends Thread {
 
     private abstract class IssueCommand {
         final Issue issue;
+        final I18nHelper i18n;
+        final ApplicationUser fromUser;
 
-        IssueCommand(Issue issue) {
+        IssueCommand(Issue issue, I18nHelper i18nHelper, ApplicationUser fromUser) {
             this.issue = issue;
+            this.i18n = i18nHelper;
+            this.fromUser = fromUser;
         }
 
         abstract String execute(boolean validation) throws Exception;
     }
 
     private class ViewCommand extends IssueCommand {
-        ViewCommand(Issue issue) {
-            super(issue);
+        ViewCommand(Issue issue, I18nHelper i18nHelper, ApplicationUser fromUser) {
+            super(issue, i18nHelper, fromUser);
         }
 
         @Override
@@ -333,8 +396,8 @@ public class CommandProcessor extends Thread {
     private class CommentCommand extends IssueCommand {
         final String commentText;
 
-        CommentCommand(Issue issue, String commentText) throws Exception {
-            super(issue);
+        CommentCommand(Issue issue, String commentText, I18nHelper i18nHelper, ApplicationUser fromUser) throws Exception {
+            super(issue, i18nHelper, fromUser);
             this.commentText = commentText;
             execute(true);
         }
@@ -366,8 +429,8 @@ public class CommandProcessor extends Thread {
     private class AssignCommand extends IssueCommand {
         final ApplicationUser assignee;
 
-        AssignCommand(Issue issue, ApplicationUser assignee) throws Exception {
-            super(issue);
+        AssignCommand(Issue issue, ApplicationUser assignee, I18nHelper i18nHelper, ApplicationUser fromUser) throws Exception {
+            super(issue, i18nHelper, fromUser);
             this.assignee = assignee;
             execute(true);
         }
@@ -396,8 +459,8 @@ public class CommandProcessor extends Thread {
         final String timeSpent;
         final String commentText;
 
-        TimeCommand(Issue issue, String timeSpent, String commentText) throws Exception {
-            super(issue);
+        TimeCommand(Issue issue, String timeSpent, String commentText, I18nHelper i18nHelper, ApplicationUser fromUser) throws Exception {
+            super(issue, i18nHelper, fromUser);
             this.timeSpent = timeSpent;
             this.commentText = commentText;
             execute(true);
@@ -429,8 +492,8 @@ public class CommandProcessor extends Thread {
         final ActionDescriptor actionDescriptor;
         final String commentText;
 
-        WorkflowCommand(Issue issue, ActionDescriptor actionDescriptor, String commentText) throws Exception {
-            super(issue);
+        WorkflowCommand(Issue issue, ActionDescriptor actionDescriptor, String commentText, I18nHelper i18nHelper, ApplicationUser fromUser) throws Exception {
+            super(issue, i18nHelper, fromUser);
             this.actionDescriptor = actionDescriptor;
             this.commentText = commentText;
             execute(true);
