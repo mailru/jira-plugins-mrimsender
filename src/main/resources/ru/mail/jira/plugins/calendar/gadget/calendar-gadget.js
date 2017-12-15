@@ -181,7 +181,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                 }
                 var calendarsInTitle = _.pluck(gadgetCalendars, 'name').join(', ');
                 if (calendarsInTitle)
-                    gadgets.window.setTitle(gadget.getMsg('ru.mail.jira.plugins.calendar.linkTitle') + ': ' + calendarsInTitle);
+                    gadgets.window.setTitle(gadget.getMsg('ru.mail.jira.plugins.calendar.linkTitleShort') + ': ' + calendarsInTitle);
 
                 gadgetCalendars = _.sortBy(gadgetCalendars, function(calendar) {
                     return calendar.hasError ? '' : calendar.name;

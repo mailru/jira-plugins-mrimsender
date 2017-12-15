@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Module>
-    <ModulePrefs title="__MSG_ru.mail.jira.plugins.calendar.linkTitle__"
-                 directory_title="__MSG_ru.mail.jira.plugins.calendar.linkTitle__"
+    <ModulePrefs title="__MSG_ru.mail.jira.plugins.calendar.linkTitleShort__"
+                 directory_title="__MSG_ru.mail.jira.plugins.calendar.linkTitleShort__"
                  description="__MSG_ru.mail.jira.plugins.calendar.gadget.info.description__"
                  author="Mail.Ru Group"
                  author_affiliation="Mail.Ru Group"
