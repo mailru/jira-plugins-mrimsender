@@ -34,6 +34,10 @@ public class MailRuCalendarEditSchedule extends MailRuCalendarAbstractScheduleAc
         int scheduleId = getId();
         if (getId() != null) {
             Schedule schedule = scheduleService.getSchedule(scheduleId);
+
+            if (!scheduleService.hasPermissionToEditAndDelete(schedule, getLoggedInUser()))
+                return SECURITY_BREACH;
+
             Map<String, String[]> scheduleParams = scheduleService.getScheduleParams(scheduleId);
             this.setName(schedule.getName());
             if (scheduleParams.containsKey("schedule"))
@@ -62,6 +66,11 @@ public class MailRuCalendarEditSchedule extends MailRuCalendarAbstractScheduleAc
     public String doExecute() throws Exception {
         if (getLoggedInUser() == null)
             return SECURITY_BREACH;
+
+        Schedule schedule = scheduleService.getSchedule(getId());
+        if (!scheduleService.hasPermissionToEditAndDelete(schedule, getLoggedInUser()))
+            return SECURITY_BREACH;
+
         scheduleService.updateSchedule(getId(), getName(), getSchedule(), buildCronEditorBeanParams());
 
         if (isInlineDialogMode())

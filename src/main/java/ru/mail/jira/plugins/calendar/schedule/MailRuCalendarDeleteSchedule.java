@@ -27,9 +27,12 @@ public class MailRuCalendarDeleteSchedule extends MailRuCalendarAbstractSchedule
 
     @Override
     public String doDefault() throws Exception {
+        if (getLoggedInUser() == null)
+            return SECURITY_BREACH;
+
         Schedule schedule = scheduleService.getSchedule(getId());
         if (schedule == null) {
-            addErrorMessage("Такого планировщика не существует");
+            addErrorMessage(getText("ru.mail.jira.plugins.calendar.schedule.notExist"));
             return ERROR;
         }
         this.setName(schedule.getName());
@@ -48,6 +51,10 @@ public class MailRuCalendarDeleteSchedule extends MailRuCalendarAbstractSchedule
     @RequiresXsrfCheck
     public String doExecute() throws Exception {
         if (getLoggedInUser() == null)
+            return SECURITY_BREACH;
+
+        Schedule schedule = scheduleService.getSchedule(getId());
+        if (!scheduleService.hasPermissionToEditAndDelete(schedule, getLoggedInUser()))
             return SECURITY_BREACH;
 
         scheduleService.deleteSchedule(getId());
