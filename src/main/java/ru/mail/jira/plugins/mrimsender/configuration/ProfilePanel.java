@@ -51,7 +51,7 @@ public class ProfilePanel implements ContextProvider {
                 if (enabled && StringUtils.isBlank(mrimLogin))
                     throw new IllegalArgumentException(jiraAuthenticationContext.getI18nHelper().getText("ru.mail.jira.plugins.mrimsender.profilePanel.mrimLoginMustBeSpecified"));
 
-                ApplicationUser user = jiraAuthenticationContext.getUser();
+                ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
                 userData.setMrimLogin(user, StringUtils.defaultString(mrimLogin).trim());
                 userData.setEnabled(user, enabled);
                 UserSearcher.INSTANCE.updateUser(user);
