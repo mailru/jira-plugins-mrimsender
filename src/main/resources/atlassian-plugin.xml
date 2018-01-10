@@ -59,4 +59,8 @@
         <interface>ru.mail.jira.plugins.mrimsender.protocol.MrimService</interface>
     </component>
 
+    <component key="command-processor-scheduler" class="ru.mail.jira.plugins.mrimsender.CommandProcessorScheduler" public="true">
+        <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
+    </component>
+
 </atlassian-plugin>

@@ -1,7 +1,5 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
-import com.atlassian.beehive.ClusterLock;
-import com.atlassian.beehive.ClusterLockService;
 import com.atlassian.jira.bc.JiraServiceContext;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.issue.IssueService;
@@ -57,7 +55,6 @@ public class CommandProcessor extends Thread {
     private static CommandProcessor COMMAND_PROCESSOR;
     private final static BlockingQueue<Command> COMMANDS_QUEUE = new LinkedBlockingQueue<Command>();
 
-    private final ClusterLockService clusterLockService = ComponentAccessor.getComponent(ClusterLockService.class);
     private final CommentService commentService = ComponentAccessor.getComponent(CommentService.class);
     private final I18nHelper.BeanFactory i18nHelperFactory = ComponentAccessor.getI18nHelperFactory();
     private final IssueService issueService = ComponentAccessor.getIssueService();
@@ -70,19 +67,14 @@ public class CommandProcessor extends Thread {
     private final AtomicBoolean state = new AtomicBoolean(true);
     private final AtomicBoolean canProcessMessages = new AtomicBoolean(false);
 
+    private CommandProcessor() {
+    }
+
     public static void processMessage(String email, String message) {
-        if (COMMAND_PROCESSOR.canProcessMessages.get())
+        if (COMMAND_PROCESSOR != null && COMMAND_PROCESSOR.canProcessMessages.get())
             COMMANDS_QUEUE.add(new Command(email, message.trim()));
         else
             COMMANDS_QUEUE.clear();
-    }
-
-    public synchronized static void startup() {
-        if (COMMAND_PROCESSOR != null) {
-            log.warn("Can't start one more command processor");
-        }
-        COMMAND_PROCESSOR = new CommandProcessor();
-        COMMAND_PROCESSOR.start();
     }
 
     public synchronized static void shutdown() {
@@ -90,24 +82,22 @@ public class CommandProcessor extends Thread {
             COMMAND_PROCESSOR.state.set(false);
             COMMAND_PROCESSOR.canProcessMessages.set(false);
             COMMAND_PROCESSOR.interrupt();
+            COMMAND_PROCESSOR = null;
         } catch (Exception e) {
             log.warn("Command processor shutdown failed", e);
         }
     }
 
+    public synchronized static void restart() {
+        if (COMMAND_PROCESSOR != null)
+            shutdown();
+
+        COMMAND_PROCESSOR = new CommandProcessor();
+        COMMAND_PROCESSOR.start();
+    }
+
     @Override
     public void run() {
-        ClusterLock lock = clusterLockService.getLockForName(LOCK_NAME);
-        try {
-            while (!lock.tryLock(5, TimeUnit.SECONDS)) {
-                if (log.isDebugEnabled())
-                    log.debug("This is second node. It doesn't process messages.");
-            }
-        } catch (InterruptedException e) {
-            log.warn("Command processor interrupted", e);
-            return;
-        }
-
         try {
             log.info("Start command processing");
             canProcessMessages.set(true);
@@ -258,7 +248,6 @@ public class CommandProcessor extends Thread {
         } finally {
             canProcessMessages.set(false);
             log.info("Stop command processing");
-            lock.unlock();
         }
     }
 
