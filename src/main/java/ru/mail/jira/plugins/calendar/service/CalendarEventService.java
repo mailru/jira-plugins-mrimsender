@@ -1,6 +1,5 @@
 package ru.mail.jira.plugins.calendar.service;
 
-import bsh.StringUtil;
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.bc.JiraServiceContext;
@@ -27,6 +26,7 @@ import com.atlassian.jira.issue.fields.LabelsSystemField;
 import com.atlassian.jira.issue.fields.ReporterSystemField;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
+import com.atlassian.jira.issue.fields.renderer.JiraRendererPlugin;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.label.Label;
 import com.atlassian.jira.issue.priority.Priority;
@@ -48,7 +48,6 @@ import com.atlassian.sal.api.UrlMode;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,20 +56,25 @@ import ru.mail.jira.plugins.calendar.common.FieldUtils;
 import ru.mail.jira.plugins.calendar.configuration.NonWorkingDay;
 import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
 import ru.mail.jira.plugins.calendar.model.Calendar;
-import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter;
 import ru.mail.jira.plugins.calendar.model.QuickFilter;
 import ru.mail.jira.plugins.calendar.model.UserCalendar;
+import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventGroup;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
 import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
 import ru.mail.jira.plugins.commons.CommonUtils;
 
 import javax.annotation.Nullable;
-import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Component
@@ -121,8 +125,7 @@ public class CalendarEventService {
             UserCalendarService userCalendarService,
             JiraSoftwareHelper jiraSoftwareHelper,
             WorkingDaysService workingDaysService,
-            @ComponentImport TimeZoneManager timeZoneManager)
-    {
+            @ComponentImport TimeZoneManager timeZoneManager) {
         this.applicationProperties = applicationProperties;
         this.calendarService = calendarService;
         this.customEventService = customEventService;
@@ -135,7 +138,7 @@ public class CalendarEventService {
         this.rendererManager = rendererManager;
         this.searchRequestService = searchRequestService;
         this.searchProvider = searchProvider;
-        this.userCalendarService =userCalendarService;
+        this.userCalendarService = userCalendarService;
         this.i18nResolver = i18nResolver;
         this.avatarService = avatarService;
         this.jiraSoftwareHelper = jiraSoftwareHelper;
@@ -156,8 +159,8 @@ public class CalendarEventService {
                                      final boolean includeIssueInfo) throws ParseException, SearchException, GetException {
         if (log.isDebugEnabled())
             log.debug(
-                "findEvents with params. calendarId={}, start={}, end={}, user={}, includeIssueInfo={}",
-                calendarId, start, end, user.toString(), includeIssueInfo
+                    "findEvents with params. calendarId={}, start={}, end={}, user={}, includeIssueInfo={}",
+                    calendarId, start, end, user.toString(), includeIssueInfo
             );
         Calendar calendarModel = calendarService.getCalendar(calendarId);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -173,13 +176,13 @@ public class CalendarEventService {
 
         if (source.startsWith("project_"))
             result = getProjectEvents(calendarModel, groupBy, Long.parseLong(source.substring("project_".length())),
-                                    calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo);
+                                      calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo);
         else if (source.startsWith("filter_"))
             result = getFilterEvents(calendarModel, groupBy, Long.parseLong(source.substring("filter_".length())),
-                                   calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo);
+                                     calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo);
         else if (source.startsWith("jql_"))
             result = getJqlEvents(calendarModel, groupBy, StringUtils.substringAfter(source, "jql_"),
-                                calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo);
+                                  calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo);
         else {
             result = new ArrayList<>();
         }
@@ -235,8 +238,8 @@ public class CalendarEventService {
                                            ApplicationUser user, boolean includeIssueInfo) throws SearchException {
         if (log.isDebugEnabled())
             log.debug(
-                "getFilterEvents with params. calendar={}, filterId={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
-                calendar, filterId, startField, endField, startTime, endTime, user, includeIssueInfo
+                    "getFilterEvents with params. calendar={}, filterId={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
+                    calendar, filterId, startField, endField, startTime, endTime, user, includeIssueInfo
             );
         JiraServiceContext jsCtx = new JiraServiceContextImpl(user);
         SearchRequest filter = searchRequestService.getFilter(jsCtx, filterId);
@@ -261,8 +264,8 @@ public class CalendarEventService {
                                         ApplicationUser user, boolean includeIssueInfo) throws SearchException {
         if (log.isDebugEnabled())
             log.debug(
-                "getJqlEvents with params. calendar={}, jql={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
-                calendar, jql, startField, endField, startTime, endTime, user, includeIssueInfo
+                    "getJqlEvents with params. calendar={}, jql={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
+                    calendar, jql, startField, endField, startTime, endTime, user, includeIssueInfo
             );
         if (log.isDebugEnabled())
             log.debug("find filter by jql. jql={}", jql);
@@ -339,8 +342,8 @@ public class CalendarEventService {
     }
 
     private Optional<EventDto> buildEventWithGroups(
-        Calendar calendar, String groupBy, ApplicationUser user, Issue issue, boolean includeIssueInfo,
-        String startField, CustomField startCF, String endField, CustomField endCF
+            Calendar calendar, String groupBy, ApplicationUser user, Issue issue, boolean includeIssueInfo,
+            String startField, CustomField startCF, String endField, CustomField endCF
     ) {
         if (calendar == null || issue == null) {
             return Optional.empty();
@@ -352,36 +355,36 @@ public class CalendarEventService {
 
             if (components != null && components.size() > 0) {
                 groups = components
-                    .stream()
-                    .map(component -> EventGroup.builder().id("component/" + component.getId()).name(component.getName()).build())
-                    .collect(Collectors.toList());
+                        .stream()
+                        .map(component -> EventGroup.builder().id("component/" + component.getId()).name(component.getName()).build())
+                        .collect(Collectors.toList());
             }
         } else if ("fixVersion".equals(groupBy)) {
             Collection<Version> versions = issue.getFixVersions();
 
             if (versions != null && versions.size() > 0) {
                 groups = versions
-                    .stream()
-                    .map(version -> EventGroup.builder().id("fixVersion/" + version.getId()).name(version.getName()).build())
-                    .collect(Collectors.toList());
+                        .stream()
+                        .map(version -> EventGroup.builder().id("fixVersion/" + version.getId()).name(version.getName()).build())
+                        .collect(Collectors.toList());
             }
         } else if ("affectsVersion".equals(groupBy)) {
             Collection<Version> versions = issue.getAffectedVersions();
 
             if (versions != null && versions.size() > 0) {
                 groups = versions
-                    .stream()
-                    .map(version -> EventGroup.builder().id("fixVersion/" + version.getId()).name(version.getName()).build())
-                    .collect(Collectors.toList());
+                        .stream()
+                        .map(version -> EventGroup.builder().id("fixVersion/" + version.getId()).name(version.getName()).build())
+                        .collect(Collectors.toList());
             }
         } else if ("labels".equals(groupBy)) {
             Collection<Label> labels = issue.getLabels();
 
             if (labels != null && labels.size() > 0) {
                 groups = labels
-                    .stream()
-                    .map(label -> EventGroup.builder().id("labels/" + label.getLabel()).name(label.getLabel()).build())
-                    .collect(Collectors.toList());
+                        .stream()
+                        .map(label -> EventGroup.builder().id("labels/" + label.getLabel()).name(label.getLabel()).build())
+                        .collect(Collectors.toList());
             }
         } else if ("assignee".equals(groupBy)) {
             String group;
@@ -397,12 +400,12 @@ public class CalendarEventService {
             }
 
             groups = ImmutableList.of(
-                EventGroup
-                    .builder()
-                    .id(group)
-                    .name(groupName)
-                    .avatar(avatarService.getAvatarURL(user, assignee, Avatar.Size.LARGE).toString())
-                    .build()
+                    EventGroup
+                            .builder()
+                            .id(group)
+                            .name(groupName)
+                            .avatar(avatarService.getAvatarURL(user, assignee, Avatar.Size.LARGE).toString())
+                            .build()
             );
         } else if ("reporter".equals(groupBy)) {
             String group;
@@ -418,42 +421,42 @@ public class CalendarEventService {
             }
 
             groups = ImmutableList.of(
-                EventGroup
-                    .builder()
-                    .id(group)
-                    .name(groupName)
-                    .avatar(avatarService.getAvatarURL(user, reporter, Avatar.Size.LARGE).toString())
-                    .build()
+                    EventGroup
+                            .builder()
+                            .id(group)
+                            .name(groupName)
+                            .avatar(avatarService.getAvatarURL(user, reporter, Avatar.Size.LARGE).toString())
+                            .build()
             );
         } else if ("issueType".equals(groupBy)) {
             IssueType issueType = issue.getIssueType();
             groups = ImmutableList.of(
-                EventGroup
-                    .builder()
-                    .id("issueType/" + issueType.getId())
-                    .name(issueType.getNameTranslation())
-                    .avatar(getBaseUrl() + issueType.getIconUrl())
-                    .build()
+                    EventGroup
+                            .builder()
+                            .id("issueType/" + issueType.getId())
+                            .name(issueType.getNameTranslation())
+                            .avatar(getBaseUrl() + issueType.getIconUrl())
+                            .build()
             );
         } else if ("project".equals(groupBy)) {
             Project project = issue.getProjectObject();
             groups = ImmutableList.of(
-                EventGroup
-                    .builder()
-                    .id("project/" + project.getId())
-                    .name(project.getName())
-                    .avatar(avatarService.getProjectAvatarURL(project, Avatar.Size.LARGE).toString())
-                    .build()
+                    EventGroup
+                            .builder()
+                            .id("project/" + project.getId())
+                            .name(project.getName())
+                            .avatar(avatarService.getProjectAvatarURL(project, Avatar.Size.LARGE).toString())
+                            .build()
             );
         } else if ("priority".equals(groupBy)) {
             Priority priority = issue.getPriority();
             groups = ImmutableList.of(
-                EventGroup
-                    .builder()
-                    .id("priority/" + priority.getSequence())
-                    .name(priority.getNameTranslation())
-                    .avatar(priority.getCompleteIconUrl())
-                    .build()
+                    EventGroup
+                            .builder()
+                            .id("priority/" + priority.getSequence())
+                            .name(priority.getNameTranslation())
+                            .avatar(priority.getCompleteIconUrl())
+                            .build()
             );
         } else if ("epicLink".equals(groupBy)) {
             if (jiraSoftwareHelper.isAvailable()) {
@@ -461,20 +464,20 @@ public class CalendarEventService {
 
                 if (epicLink != null) {
                     groups = ImmutableList.of(
-                        EventGroup
-                            .builder()
-                            .id("epic/" + epicLink.getKey())
-                            .name(issue.getKey() + " - " + epicLink.getSummary())
-                            .build()
+                            EventGroup
+                                    .builder()
+                                    .id("epic/" + epicLink.getKey())
+                                    .name(issue.getKey() + " - " + epicLink.getSummary())
+                                    .build()
                     );
                 } else {
                     if (jiraSoftwareHelper.getEpicIssueType().equals(issue.getIssueType())) {
                         groups = ImmutableList.of(
-                            EventGroup
-                                .builder()
-                                .id("epic/" + issue.getKey())
-                                .name(issue.getKey() + " - " + issue.getSummary())
-                                .build()
+                                EventGroup
+                                        .builder()
+                                        .id("epic/" + issue.getKey())
+                                        .name(issue.getKey() + " - " + issue.getSummary())
+                                        .build()
                         );
                     }
                 }
@@ -483,19 +486,19 @@ public class CalendarEventService {
             Resolution resolution = issue.getResolution();
             if (resolution != null) {
                 groups = ImmutableList.of(
-                    EventGroup
-                        .builder()
-                        .id("resolution/" + resolution.getId())
-                        .name(resolution.getNameTranslation())
-                        .build()
+                        EventGroup
+                                .builder()
+                                .id("resolution/" + resolution.getId())
+                                .name(resolution.getNameTranslation())
+                                .build()
                 );
             } else {
                 groups = ImmutableList.of(
-                    EventGroup
-                        .builder()
-                        .id("resolution/zz-unresolved")
-                        .name(i18nResolver.getText("common.concepts.unresolved"))
-                        .build()
+                        EventGroup
+                                .builder()
+                                .id("resolution/zz-unresolved")
+                                .name(i18nResolver.getText("common.concepts.unresolved"))
+                                .build()
                 );
             }
         }
@@ -531,9 +534,11 @@ public class CalendarEventService {
         event.setTitle(issue.getSummary());
         event.setColor(calendar.getColor());
         event.setAllDay(isAllDay);
-        event.setStatusColor(issue.getStatus().getStatusCategory().getColorName());
         event.setIssueTypeImgUrl(issue.getIssueType().getIconUrl());
-        event.setStatus(issue.getStatus().getName());
+        if (calendar.isShowIssueStatus()) {
+            event.setStatus(issue.getStatus().getName());
+            event.setStatusColor(issue.getStatus().getStatusCategory().getColorName());
+        }
         event.setType(EventDto.Type.ISSUE);
         event.setOriginalEstimate(originalEstimate != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(originalEstimate) : null);
         event.setTimeSpent(timeSpent != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(timeSpent) : null);
@@ -791,7 +796,9 @@ public class CalendarEventService {
             result.add(eventDto);
         }
         return result;
-    };
+    }
+
+    ;
 
     private Date retrieveDateByField(Issue issue, String field) {
         if (field.equals(DUE_DATE_KEY))
@@ -893,7 +900,13 @@ public class CalendarEventService {
                 issueInfo.setUpdated(userDateTimeFormatter.format(issue.getUpdated()));
             else if (extraField.equals(CalendarServiceImpl.DESCRIPTION)) {
                 if (StringUtils.isNotEmpty(issue.getDescription())) {
-                    String renderedDescription = rendererManager.getRendererForType("atlassian-wiki-renderer").render(issue.getDescription(), null);
+                    JiraRendererPlugin defaultRenderer = rendererManager.getRendererForType("default-renderer");
+                    JiraRendererPlugin jeditorRenderer = rendererManager.getRendererForType("jeditor-renderer");
+                    String renderedDescription;
+                    if (defaultRenderer != jeditorRenderer)
+                        renderedDescription = jeditorRenderer.render(issue.getDescription(), null);
+                    else
+                        renderedDescription = rendererManager.getRendererForType("atlassian-wiki-renderer").render(issue.getDescription(), null);
                     issueInfo.setDescription(renderedDescription);
                 }
             }

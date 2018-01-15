@@ -155,6 +155,10 @@
                         <label for="calendar-dialog-displayed-fields">{getText( 'ru.mail.jira.plugins.calendar.dialog.fields' )}</label>
                         <input type="hidden" id="calendar-dialog-displayed-fields" class="multi-select medium-long-field calendar-dialog-select" {not $canAdmin ? 'disabled' : ''}>
                         <div id="calendar-dialog-fields-error" class="error hidden"></div>
+                        <div class="checkbox">
+                            <input class="checkbox" type="checkbox" id="calendar-dialog-show-issue-status" name="calendar-dialog-showIssueStatus" checked="checked">
+                            <label for="calendar-dialog-show-issue-status">{getText( 'ru.mail.jira.plugins.calendar.dialog.showStatus' )}</label>
+                        </div>
                     </div>
                 </form>
             </div>

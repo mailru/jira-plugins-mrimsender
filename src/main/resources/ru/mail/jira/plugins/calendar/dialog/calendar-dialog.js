@@ -417,6 +417,8 @@ define('calendar/calendar-dialog', [
                 if (this.model.has('selectedDisplayedFields'))
                     this.$('#calendar-dialog-displayed-fields').auiSelect2('val', this.model.get('selectedDisplayedFields'));
 
+                this.$('#calendar-dialog-show-issue-status').attr('checked', !!this.model.get('showIssueStatus'));
+
                 if (this.model.has('permissions')) {
                     var sortOrder = {'USER': 1, 'GROUP': 2, 'PROJECT_ROLE': 3};
                     var permissions = _.sortBy(this.model.get('permissions'), function(a) {
@@ -481,6 +483,7 @@ define('calendar/calendar-dialog', [
             var eventStart = this.$('#calendar-dialog-event-start').val();
             var eventEnd = this.$('#calendar-dialog-event-end').val();
             var displayedFields = this.$('#calendar-dialog-displayed-fields').val();
+            var showIssueStatus = !!this.$('#calendar-dialog-show-issue-status:checked').length;
             var permissions = _.filter(_.values(this.permissionIds), function(obj) {
                 return !!obj;
             });
@@ -494,6 +497,7 @@ define('calendar/calendar-dialog', [
                 selectedEventStartId: eventStart,
                 selectedEventEndId: eventEnd,
                 selectedDisplayedFields: displayedFields ? displayedFields.split(',') : [],
+                showIssueStatus: showIssueStatus,
                 timelineGroup: timelineGroup,
                 permissions: permissions && permissions.length ? permissions : []
             };

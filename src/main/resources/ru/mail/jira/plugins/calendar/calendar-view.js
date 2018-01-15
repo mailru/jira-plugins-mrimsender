@@ -443,9 +443,10 @@ define('calendar/calendar-view', [
 
                     if (event.type === 'ISSUE') {
                         $element.find('.fc-title').prepend(event.id + ' ');
-                        $element.find('.fc-content')
-                            .prepend('<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + AJS.escapeHtml(event.status) + '</span>')
-                            .prepend('<img class="calendar-event-issue-type" alt="" height="16" width="16" src="' + getContextPath() + event.issueTypeImgUrl + '" />');
+                        var $eventContent = $element.find('.fc-content');
+                        if (event.status)
+                            $eventContent.prepend('<span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + AJS.escapeHtml(event.status) + '</span>')
+                        $eventContent.prepend('<img class="calendar-event-issue-type" alt="" height="16" width="16" src="' + getContextPath() + event.issueTypeImgUrl + '" />');
                     } else if (event.type === 'CUSTOM') {
                         if (event.participants) {
                             var formattedParticipants = null;

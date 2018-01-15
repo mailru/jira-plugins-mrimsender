@@ -26,6 +26,9 @@ public interface Calendar extends Entity {
     String getDisplayedFields();
     void setDisplayedFields(String displayedFields);
 
+    boolean isShowIssueStatus();
+    void setShowIssueStatus(boolean showIssueStatus);
+
     @OneToMany
     @Accessor("Share")
     Permission[] getPermissions();

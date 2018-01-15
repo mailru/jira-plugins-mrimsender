@@ -163,6 +163,7 @@ public class CalendarServiceImpl implements CalendarService {
 
         if (StringUtils.isNotEmpty(calendar.getDisplayedFields()))
             result.setSelectedDisplayedFields(Arrays.asList(calendar.getDisplayedFields().split(",")));
+        result.setShowIssueStatus(calendar.isShowIssueStatus());
 
         fillSelectedSourceFields(user, result, calendar);
 
@@ -228,6 +229,7 @@ public class CalendarServiceImpl implements CalendarService {
         validateCalendar(user, calendarSettingDto, true);
         Calendar calendar = ao.create(Calendar.class);
         calendar.setAuthorKey(user.getKey());
+        calendar.setShowIssueStatus(calendarSettingDto.isShowIssueStatus());
         setCalendarFields(calendar, calendarSettingDto);
 
         permissionService.updatePermissions(calendar, calendarSettingDto.getPermissions());
@@ -256,6 +258,7 @@ public class CalendarServiceImpl implements CalendarService {
             throw new SecurityException("No permission to edit calendar");
 
         validateCalendar(user, calendarSettingDto, false);
+        calendar.setShowIssueStatus(calendarSettingDto.isShowIssueStatus());
         setCalendarFields(calendar, calendarSettingDto);
         permissionService.updatePermissions(calendar, calendarSettingDto.getPermissions());
 
