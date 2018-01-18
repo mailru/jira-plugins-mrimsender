@@ -40,8 +40,9 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.calendar.common.FieldUtils;
 import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
-import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
-import ru.mail.jira.plugins.calendar.service.licence.LicenseStatus;
+import ru.mail.jira.plugins.calendar.customfield.IssueDurationCFType;
+import ru.mail.jira.plugins.calendar.customfield.IssueParentCFType;
+import ru.mail.jira.plugins.calendar.customfield.IssueProgressCFType;
 import ru.mail.jira.plugins.calendar.rest.dto.DateField;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueSourceDto;
 import ru.mail.jira.plugins.calendar.rest.dto.PermissionItemDto;
@@ -49,8 +50,10 @@ import ru.mail.jira.plugins.calendar.rest.dto.PermissionSubjectDto;
 import ru.mail.jira.plugins.calendar.rest.dto.SelectItemDto;
 import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.CalendarServiceImpl;
-import ru.mail.jira.plugins.calendar.service.PermissionUtils;
 import ru.mail.jira.plugins.calendar.service.JiraDeprecatedService;
+import ru.mail.jira.plugins.calendar.service.PermissionUtils;
+import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
+import ru.mail.jira.plugins.calendar.service.licence.LicenseStatus;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.GET;
@@ -158,13 +161,13 @@ public class RestConfigurationService {
     public Map<String, Boolean> getApplicationStatus() {
         ApplicationUser currentUser = jiraAuthenticationContext.getLoggedInUser();
         return ImmutableMap.of(
-            "SOFTWARE", canUseApp(currentUser, ApplicationKeys.SOFTWARE)
+                "SOFTWARE", canUseApp(currentUser, ApplicationKeys.SOFTWARE)
         );
     }
 
     private boolean canUseApp(ApplicationUser user, ApplicationKey applicationKey) {
         return applicationAuthorizationService.isApplicationInstalledAndLicensed(applicationKey) &&
-            applicationAuthorizationService.canUseApplication(user, applicationKey);
+                applicationAuthorizationService.canUseApplication(user, applicationKey);
     }
 
     @GET
@@ -193,6 +196,36 @@ public class RestConfigurationService {
         }
 
         return dateFields;
+    }
+
+    @GET
+    @Path("/durationFields")
+    public List<SelectItemDto> getDurationFields() {
+        return customFieldManager.getCustomFieldObjects()
+                                 .stream()
+                                 .filter(customField -> customField.getCustomFieldType() instanceof IssueDurationCFType)
+                                 .map(customField -> new SelectItemDto(customField.getId(), customField.getName()))
+                                 .collect(Collectors.toList());
+    }
+
+    @GET
+    @Path("/progressFields")
+    public List<SelectItemDto> getProgressFields() {
+        return customFieldManager.getCustomFieldObjects()
+                                 .stream()
+                                 .filter(customField -> customField.getCustomFieldType() instanceof IssueProgressCFType)
+                                 .map(customField -> new SelectItemDto(customField.getId(), customField.getName()))
+                                 .collect(Collectors.toList());
+    }
+
+    @GET
+    @Path("/parentFields")
+    public List<SelectItemDto> getParentFields() {
+        return customFieldManager.getCustomFieldObjects()
+                                 .stream()
+                                 .filter(customField -> customField.getCustomFieldType() instanceof IssueParentCFType)
+                                 .map(customField -> new SelectItemDto(customField.getId(), customField.getName()))
+                                 .collect(Collectors.toList());
     }
 
     @GET
@@ -326,26 +359,26 @@ public class RestConfigurationService {
         filter = filter.trim().toLowerCase();
 
         List<PermissionItemDto> result = userSearchService
-            .findUsers(
-                filter,
-                filter,
-                UserSearchParams
-                    .builder()
-                    .allowEmptyQuery(true)
-                    .canMatchEmail(true)
-                    .includeActive(true)
-                    .includeInactive(false)
-                    .maxResults(10)
-                    .build()
-            )
-            .stream()
-            .map(user -> PermissionItemDto.buildUserDto(
-                user.getKey(),
-                user.getDisplayName(), user.getEmailAddress(), user.getName(),
-                null,
-                getUserAvatarSrc(user)
-            ))
-            .collect(Collectors.toList());
+                .findUsers(
+                        filter,
+                        filter,
+                        UserSearchParams
+                                .builder()
+                                .allowEmptyQuery(true)
+                                .canMatchEmail(true)
+                                .includeActive(true)
+                                .includeInactive(false)
+                                .maxResults(10)
+                                .build()
+                )
+                .stream()
+                .map(user -> PermissionItemDto.buildUserDto(
+                        user.getKey(),
+                        user.getDisplayName(), user.getEmailAddress(), user.getName(),
+                        null,
+                        getUserAvatarSrc(user)
+                ))
+                .collect(Collectors.toList());
 
         subjectDto.setUsersCount(result.size());
         subjectDto.setUsers(result);

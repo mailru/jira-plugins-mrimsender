@@ -164,6 +164,10 @@ public class CalendarServiceImpl implements CalendarService {
         if (StringUtils.isNotEmpty(calendar.getDisplayedFields()))
             result.setSelectedDisplayedFields(Arrays.asList(calendar.getDisplayedFields().split(",")));
         result.setShowIssueStatus(calendar.isShowIssueStatus());
+        result.setGanttEnabled(calendar.isGanttEnabled());
+        result.setEventDurationField(calendar.getEventDurationField());
+        result.setEventProgressField(calendar.getEventProgressField());
+        result.setEventParentField(calendar.getEventParentField());
 
         fillSelectedSourceFields(user, result, calendar);
 
@@ -229,7 +233,6 @@ public class CalendarServiceImpl implements CalendarService {
         validateCalendar(user, calendarSettingDto, true);
         Calendar calendar = ao.create(Calendar.class);
         calendar.setAuthorKey(user.getKey());
-        calendar.setShowIssueStatus(calendarSettingDto.isShowIssueStatus());
         setCalendarFields(calendar, calendarSettingDto);
 
         permissionService.updatePermissions(calendar, calendarSettingDto.getPermissions());
@@ -258,7 +261,6 @@ public class CalendarServiceImpl implements CalendarService {
             throw new SecurityException("No permission to edit calendar");
 
         validateCalendar(user, calendarSettingDto, false);
-        calendar.setShowIssueStatus(calendarSettingDto.isShowIssueStatus());
         setCalendarFields(calendar, calendarSettingDto);
         permissionService.updatePermissions(calendar, calendarSettingDto.getPermissions());
 
@@ -322,6 +324,11 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setEventStart(StringUtils.trimToNull(calendarSettingDto.getSelectedEventStartId()));
         calendar.setEventEnd(StringUtils.trimToNull(calendarSettingDto.getSelectedEventEndId()));
         calendar.setDisplayedFields(StringUtils.join(calendarSettingDto.getSelectedDisplayedFields(), ","));
+        calendar.setShowIssueStatus(calendarSettingDto.isShowIssueStatus());
+        calendar.setGanttEnabled(calendarSettingDto.isGanttEnabled());
+        calendar.setEventDurationField(StringUtils.trimToNull(calendarSettingDto.getEventDurationField()));
+        calendar.setEventProgressField(StringUtils.trimToNull(calendarSettingDto.getEventProgressField()));
+        calendar.setEventParentField(StringUtils.trimToNull(calendarSettingDto.getEventParentField()));
         calendar.save();
     }
 

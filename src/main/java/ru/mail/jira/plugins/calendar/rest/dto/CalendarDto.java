@@ -33,6 +33,8 @@ public class CalendarDto {
     @XmlElement
     private boolean hasError;
     @XmlElement
+    private boolean ganttEnabled;
+    @XmlElement
     private String error;
     @XmlElement
     private Integer usersCount;
@@ -54,6 +56,7 @@ public class CalendarDto {
             this.name = calendar.getName();
             this.color = calendar.getColor();
             this.source = calendar.getSource();
+            this.ganttEnabled = calendar.isGanttEnabled();
         }
     }
 

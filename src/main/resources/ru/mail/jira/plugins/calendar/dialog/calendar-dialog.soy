@@ -137,6 +137,12 @@
                         </div>
                         <div id="calendar-dialog-source-error" class="error hidden"></div>
                     </div>
+                    <div class="field-group">
+                        <div class="checkbox">
+                            <input class="checkbox" type="checkbox" id="calendar-dialog-project-gantt-enabled" name="calendar-dialog-projectGanttEnabled">
+                            <label for="calendar-dialog-project-gantt-enabled">{getText( 'ru.mail.jira.plugins.calendar.dialog.projectGantt' )}</label>
+                        </div>
+                    </div>
                     <div class="field-group common-field">
                         <label for="calendar-dialog-event-start">
                             <span class="aui-icon icon-required"></span>
@@ -150,6 +156,26 @@
                         <input type="hidden" id="calendar-dialog-event-end" class="select medium-long-field calendar-dialog-select" {not $canAdmin ? 'disabled' : ''}>
                         <div class="description medium-long-field">{getText( 'ru.mail.jira.plugins.calendar.dialog.eventStartEndDescription' )}</div>
                         <div id="calendar-dialog-event-end-error" class="error hidden"></div>
+                    </div>
+                    <div class="field-group common-field calendar-dialog-project-gantt-field hidden">
+                        <label for="calendar-dialog-event-duration">
+                            <span class="aui-icon icon-required"></span>
+                            {getText( 'ru.mail.jira.plugins.calendar.dialog.eventDuration' )}
+                        </label>
+                        <input type="hidden" id="calendar-dialog-event-duration" class="select medium-long-field calendar-dialog-select" {not $canAdmin ? 'disabled' : ''}>
+                        <div id="calendar-dialog-event-duration-error" class="error hidden"></div>
+                    </div>
+                    <div class="field-group common-field calendar-dialog-project-gantt-field hidden">
+                        <label for="calendar-dialog-event-progress">{getText( 'ru.mail.jira.plugins.calendar.dialog.eventProgress' )}</label>
+                        <input type="hidden" id="calendar-dialog-event-progress" class="select medium-long-field calendar-dialog-select" {not $canAdmin ? 'disabled' : ''}>
+                        <div class="description medium-long-field">{getText( 'ru.mail.jira.plugins.calendar.dialog.eventStartProgressDescription' )}</div>
+                        <div id="calendar-dialog-event-progress-error" class="error hidden"></div>
+                    </div>
+                    <div class="field-group common-field calendar-dialog-project-gantt-field hidden">
+                        <label for="calendar-dialog-event-parent">{getText( 'ru.mail.jira.plugins.calendar.dialog.eventParent' )}</label>
+                        <input type="hidden" id="calendar-dialog-event-parent" class="select medium-long-field calendar-dialog-select" {not $canAdmin ? 'disabled' : ''}>
+                        <div class="description medium-long-field">{getText( 'ru.mail.jira.plugins.calendar.dialog.eventStartParentDescription' )}</div>
+                        <div id="calendar-dialog-event-parent-error" class="error hidden"></div>
                     </div>
                     <div class="field-group common-field">
                         <label for="calendar-dialog-displayed-fields">{getText( 'ru.mail.jira.plugins.calendar.dialog.fields' )}</label>

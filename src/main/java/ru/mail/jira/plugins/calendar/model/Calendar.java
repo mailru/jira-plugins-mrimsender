@@ -33,6 +33,18 @@ public interface Calendar extends Entity {
     @Accessor("Share")
     Permission[] getPermissions();
 
+    boolean isGanttEnabled();
+    void setGanttEnabled(boolean ganttEnabled);
+
+    String getEventDurationField();
+    void setEventDurationField(String eventDurationField);
+
+    String getEventProgressField();
+    void setEventProgressField(String eventProgressField);
+
+    String getEventParentField();
+    void setEventParentField(String eventParentField);
+
     @Deprecated
     String getAuthorKey();
     @Deprecated

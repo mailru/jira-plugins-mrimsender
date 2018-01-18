@@ -301,6 +301,11 @@
                             <ul>
                                 <li><a class="calendar-issue-navigator" href="#">{getText( 'common.concepts.issues' )}</a></li>
                             </ul>
+                            {if $calendar.ganttEnabled }
+                                <ul>
+                                    <li><a class="calendar-open-gantt" href="#">{getText( 'ru.mail.jira.plugins.calendar.gantt.openDiagram' )}</a></li>
+                                </ul>
+                            {/if}
                         </div>
                     {/if}
                     <div class="aui-dropdown2-section">

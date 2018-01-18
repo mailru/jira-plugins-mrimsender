@@ -46,6 +46,15 @@ public class CalendarSettingDto {
     private boolean showIssueStatus;
 
     @XmlElement
+    private boolean ganttEnabled;
+    @XmlElement
+    private String eventDurationField;
+    @XmlElement
+    private String eventProgressField;
+    @XmlElement
+    private String eventParentField;
+
+    @XmlElement
     private boolean canAdmin;
     @XmlElement
     private List<PermissionItemDto> permissions;

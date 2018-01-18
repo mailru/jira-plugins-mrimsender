@@ -475,7 +475,10 @@
                                 '<img src="' + getContextPath() + event.issueTypeImgUrl +'" />' +
                             '</span>' +
                         '</span>';
-                    content = typeIcon + ' <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span><span> '+ event.id + ' ' + AJS.escapeHTML(event.title) + '</span>';
+                    content = typeIcon;
+                    if (event.status)
+                        content += ' <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-' + event.statusColor + '">' + event.status + '</span>';
+                    content += '<span> ' + event.id + ' ' + AJS.escapeHTML(event.title) + '</span>';
                     if (event.hasOwnProperty('timeSpent'))
                         content += '<aui-badge class="time-spent" title="' + AJS.I18n.getText('timetracking.time.spent') + '">' + event.timeSpent + '</aui-badge>';
                     if (event.hasOwnProperty('originalEstimate'))

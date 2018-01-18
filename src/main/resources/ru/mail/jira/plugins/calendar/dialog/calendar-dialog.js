@@ -10,7 +10,7 @@ define('calendar/calendar-dialog', [
 ], function($, _, Backbone, Forms, JQLParser, JQLAutoComplete, ConfirmDialog, Reminder) {
     var AVATARS = ['event', 'travel', 'leave', 'birthday'];
 
-    var displayedFieldsData, dateFieldsData, autoCompleteData;
+    var displayedFieldsData, dateFieldsData, autoCompleteData, durationFieldsData, progressFieldsData, parentFieldsData;
     AJS.toInit(function() {
         $.ajax({
             type: 'GET',
@@ -50,6 +50,45 @@ define('calendar/calendar-dialog', [
                 autoCompleteData = data;
             }
         });
+        $.ajax({
+            type: 'GET',
+            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/config/durationFields',
+            success: function(result) {
+                durationFieldsData = result;
+            },
+            error: function(xhr) {
+                var msg = 'Error while trying to load duration fields.';
+                if (xhr.responseText)
+                    msg += xhr.responseText;
+                alert(msg);
+            }
+        });
+        $.ajax({
+            type: 'GET',
+            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/config/progressFields',
+            success: function(result) {
+                progressFieldsData = result;
+            },
+            error: function(xhr) {
+                var msg = 'Error while trying to load progress fields.';
+                if (xhr.responseText)
+                    msg += xhr.responseText;
+                alert(msg);
+            }
+        });
+        $.ajax({
+            type: 'GET',
+            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/config/parentFields',
+            success: function(result) {
+                parentFieldsData = result;
+            },
+            error: function(xhr) {
+                var msg = 'Error while trying to load parent fields.';
+                if (xhr.responseText)
+                    msg += xhr.responseText;
+                alert(msg);
+            }
+        });
     });
 
     return Backbone.View.extend({
@@ -71,6 +110,7 @@ define('calendar/calendar-dialog', [
             'blur .calendar-dialog-permission-table-action a': '_onPermissionTableActionBlur',
             'select2-open #calendar-dialog-permission-table-subject': '_onOpenSubjectSelect',
             'change input[type=radio][name=calendar-dialog-source]': '_onSourceTypeChange',
+            'change #calendar-dialog-project-gantt-enabled': '_onProjectGanttEnabledChange',
             'click #calendar-dialog-eventTypes-content .edit-button': '_editEventTypeRow',
             'click #calendar-dialog-eventTypes-content .delete-button': '_deleteEventType',
             'click #calendar-dialog-eventTypes-create-button': '_addNewEventTypeRow',
@@ -99,6 +139,7 @@ define('calendar/calendar-dialog', [
             this._initSourceFields();
             this._initJqlField();
             this._initDateFields();
+            this._initGanttFields();
             this._initDisplayedFieldsField();
             this._initPermissionSubjectField();
             this._fillForm();
@@ -127,7 +168,7 @@ define('calendar/calendar-dialog', [
                     dataType: 'json',
                     quietMillis: 100,
                     data: function(term) {
-                        return {filter: term};
+                        return { filter: term };
                     },
                     results: function(data) {
                         var results = [];
@@ -136,7 +177,7 @@ define('calendar/calendar-dialog', [
                                 text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.itemOfAllMatchingShort', data.projects.length, data.totalProjectsCount),
                                 children: data.projects
                             });
-                        return {results: results};
+                        return { results: results };
                     },
                     cache: true
                 },
@@ -172,7 +213,7 @@ define('calendar/calendar-dialog', [
                     quietMillis: 100,
                     data: function(term) {
                         filterSourceTerm = term;
-                        return {filter: term};
+                        return { filter: term };
                     },
                     results: function(data) {
                         var results = [];
@@ -191,7 +232,7 @@ define('calendar/calendar-dialog', [
                                 text: AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.source.favouriteFilters'),
                                 children: data.favouriteFilters
                             });
-                        return {results: results};
+                        return { results: results };
                     },
                     cache: true
                 },
@@ -201,21 +242,26 @@ define('calendar/calendar-dialog', [
                     if (query.term)
                         text = text.replace(new RegExp('(' + query.term + ')', 'gi'), '{b}$1{/b}');
                     text = AJS.escapeHTML(text).replace(new RegExp('{b}', 'gi'), '<b>').replace(new RegExp('{/b}', 'gi'), '</b>');
-                    return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(_.defaults({text: text}, item));
+                    return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(_.defaults({ text: text }, item));
                 },
                 formatSelection: function format(item) {
                     var text = item.text ? AJS.escapeHTML(item.text) : '';
-                    return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(_.defaults({text: text}, item));
+                    return JIRA.Templates.Plugins.MailRuCalendar.CalendarDialog.sourceField(_.defaults({ text: text }, item));
                 },
                 initSelection: function(element, callback) {
                 }
             });
         },
+        _initGanttFields: function() {
+            this.$('#calendar-dialog-event-duration').auiSelect2({ data: durationFieldsData });
+            this.$('#calendar-dialog-event-progress').auiSelect2({ data: progressFieldsData });
+            this.$('#calendar-dialog-event-parent').auiSelect2({ data: parentFieldsData });
+        },
         _initDateFields: function() {
-            this.$('#calendar-dialog-event-start').auiSelect2({data: dateFieldsData});
+            this.$('#calendar-dialog-event-start').auiSelect2({ data: dateFieldsData });
             this.$('#calendar-dialog-event-end').auiSelect2({
                 allowClear: true,
-                data: [{id: '', text: ' '}].concat(dateFieldsData)
+                data: [{ id: '', text: ' ' }].concat(dateFieldsData)
             });
         },
         _initDisplayedFieldsField: function() {
@@ -264,7 +310,7 @@ define('calendar/calendar-dialog', [
                     delay: 250,
                     quietMillis: 100,
                     data: function(term) {
-                        return {filter: term};
+                        return { filter: term };
                     },
                     results: function(data, params) {
                         var results = [];
@@ -419,8 +465,14 @@ define('calendar/calendar-dialog', [
 
                 this.$('#calendar-dialog-show-issue-status').attr('checked', !!this.model.get('showIssueStatus'));
 
+                this.$('#calendar-dialog-project-gantt-enabled').attr('checked', !!this.model.get('ganttEnabled'));
+                this._onProjectGanttEnabledChange();
+                this.$('#calendar-dialog-event-duration').auiSelect2('val', this.model.get('eventDurationField'));
+                this.$('#calendar-dialog-event-progress').auiSelect2('val', this.model.get('eventProgressField'));
+                this.$('#calendar-dialog-event-parent').auiSelect2('val', this.model.get('eventParentField'));
+
                 if (this.model.has('permissions')) {
-                    var sortOrder = {'USER': 1, 'GROUP': 2, 'PROJECT_ROLE': 3};
+                    var sortOrder = { 'USER': 1, 'GROUP': 2, 'PROJECT_ROLE': 3 };
                     var permissions = _.sortBy(this.model.get('permissions'), function(a) {
                         if (a.type == 'USER')
                             return sortOrder[a.type] + a.userDisplayName;
@@ -484,10 +536,14 @@ define('calendar/calendar-dialog', [
             var eventEnd = this.$('#calendar-dialog-event-end').val();
             var displayedFields = this.$('#calendar-dialog-displayed-fields').val();
             var showIssueStatus = !!this.$('#calendar-dialog-show-issue-status:checked').length;
+            var ganttEnabled = !!this.$('#calendar-dialog-project-gantt-enabled:checked').length;
+            var eventDurationField = this.$('#calendar-dialog-event-duration').val();
+            var eventProgressField = this.$('#calendar-dialog-event-progress').val();
+            var eventParentField = this.$('#calendar-dialog-event-parent').val();
             var permissions = _.filter(_.values(this.permissionIds), function(obj) {
                 return !!obj;
             });
-            var timelineGroup = this.$("#calendar-dialog-timelineGroup").val();
+            var timelineGroup = this.$('#calendar-dialog-timelineGroup').val();
 
             return {
                 selectedName: name,
@@ -498,12 +554,16 @@ define('calendar/calendar-dialog', [
                 selectedEventEndId: eventEnd,
                 selectedDisplayedFields: displayedFields ? displayedFields.split(',') : [],
                 showIssueStatus: showIssueStatus,
+                ganttEnabled: ganttEnabled,
+                eventDurationField: eventDurationField,
+                eventProgressField: eventProgressField,
+                eventParentField: eventParentField,
                 timelineGroup: timelineGroup,
                 permissions: permissions && permissions.length ? permissions : []
             };
         },
         _ajaxSuccessHandler: function(model, response) {
-            this.collection.add(response, {merge: true});
+            this.collection.add(response, { merge: true });
             this.model.trigger('change', this.model);
             this.$okButton.removeAttr('disabled');
             this.$cancelButton.removeAttr('disabled');
@@ -668,7 +728,7 @@ define('calendar/calendar-dialog', [
                             });
                             this._renderEventTypeTable();
                         }, this),
-                        error: function (xhr) {
+                        error: function(xhr) {
                             alert(xhr.responseText);
                         }
                     });
@@ -783,6 +843,12 @@ define('calendar/calendar-dialog', [
             this._showSourceField(sourceType);
             this.$('#calendar-dialog-source-error').addClass('hidden');
         },
+        _onProjectGanttEnabledChange: function() {
+            this._toggleVisibilityGanttFields(!!this.$('#calendar-dialog-project-gantt-enabled:checked').length);
+        },
+        _toggleVisibilityGanttFields: function(projectGanttEnabled) {
+            this.$('.calendar-dialog-project-gantt-field').toggleClass('hidden', !projectGanttEnabled);
+        },
         _onPermissionTableActionFocus: function(e) {
             $(e.target).closest('tr').addClass('calendar-dialog-permission-table-row-hover');
         },
@@ -818,7 +884,7 @@ define('calendar/calendar-dialog', [
                     text = subjectData.userDisplayName;
                 this.$('.calendar-dialog-permission-table-error').removeClass('hidden').html(AJS.format(AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.alreadyHasAccess'), AJS.escapeHtml(text)));
             } else {
-                this._addPermissionRow($.extend({accessType: 'USE'}, subjectData));
+                this._addPermissionRow($.extend({ accessType: 'USE' }, subjectData));
                 $subjectSelect.auiSelect2('val', '');
                 this.isPermissionTableChanged = true;
             }
