@@ -81,7 +81,7 @@ import java.util.stream.Collectors;
 public class CalendarEventService {
     private final static Logger log = LoggerFactory.getLogger(CalendarEventService.class);
 
-    private static final int MILLIS_IN_DAY = 86400000;
+    private static final int MILLIS_IN_DAY = 86_400_000;
     private static final TimeZone UTC_TZ = TimeZone.getTimeZone("UTC");
 
     public static final String CREATED_DATE_KEY = "created";
@@ -325,7 +325,7 @@ public class CalendarEventService {
         jqlBuilder.endsub();
 
         Clause selectedQuickFiltersClause = getSelectedQuickFilterClause(calendar, user);
-        if (selectedQuickFiltersClause != null)
+            if (selectedQuickFiltersClause != null)
             jqlBuilder.and().sub().addClause(selectedQuickFiltersClause).endsub();
 
         List<Issue> issues = searchProvider.search(jqlBuilder.buildQuery(), user, PagerFilter.getUnlimitedFilter()).getIssues();

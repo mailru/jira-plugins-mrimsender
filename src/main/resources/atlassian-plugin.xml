@@ -24,6 +24,7 @@
         <entity>ru.mail.jira.plugins.calendar.model.EventTypeReminder</entity>
         <entity>ru.mail.jira.plugins.calendar.model.QuickFilter</entity>
         <entity>ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.GanttLink</entity>
         <entity>ru.mail.jira.plugins.calendar.schedule.model.Schedule</entity>
         <entity>ru.mail.jira.plugins.calendar.configuration.NonWorkingDay</entity>
 
@@ -324,38 +325,15 @@
 
         <resource type="download" name="calendar-img/" location="ru/mail/jira/plugins/calendar/img"/>
 
-        <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/gantt/view.css"/>
-        <resource type="download" name="view.js" location="ru/mail/jira/plugins/calendar/gantt/view.js"/>
-<!--
+        <resource type="download" name="dhtmlxgantt.css" location="ru/mail/jira/plugins/calendar/gantt/dhtmlxgantt.css"/>
+        <resource type="download" name="dhtmlxgantt-min.js" location="ru/mail/jira/plugins/calendar/gantt/dhtmlxgantt-min.js"/>
+        <resource type="download" name="dhtmlxgantt-min.js.map" location="ru/mail/jira/plugins/calendar/gantt/dhtmlxgantt-min.js.map"/>
+
         <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>
         <resource type="download" name="moment-timezone-with-data.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment-timezone-with-data.js"/>
-        <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/libs/clipboard-min.js"/>
 
-        <resource type="download" name="vis.css" location="ru/mail/jira/plugins/calendar/timeline/vis.css"/>
-        <resource type="download" name="vis-timeline.js" location="ru/mail/jira/plugins/calendar/timeline/vis-timeline.js"/>
-        <resource type="download" name="img/" location="ru/mail/jira/plugins/calendar/timeline/img"/>
-
-        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
-        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
-
-        <resource type="download" name="preferences.js" location="ru/mail/jira/plugins/calendar/preferences.js"/>
-        <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
-        <resource type="download" name="recurrence.js" location="ru/mail/jira/plugins/calendar/recurrence.js"/>
-        <resource type="download" name="calendar-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/calendar-dialog.js"/>
-        <resource type="download" name="feed-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/feed-dialog.js"/>
-        <resource type="download" name="import-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/import-dialog.js"/>
-        <resource type="download" name="confirm-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/confirm-dialog.js"/>
-        <resource type="download" name="edit-type-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/edit-type-dialog.js"/>
-        <resource type="download" name="custom-event-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/custom-event-dialog.js"/>
-        <resource type="download" name="quick-filter-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/quick-filter-dialog.js"/>
-        <resource type="download" name="feedback-flag.js" location="ru/mail/jira/plugins/calendar/feedback-flag.js"/>
-
-        <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>
-        <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
-
-
-        <resource type="download" name="JQLAutoComplete.js" location="ru/mail/jira/plugins/calendar/utils/JQLAutoComplete.js" />
-        -->
+        <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/gantt/view.css"/>
+        <resource type="download" name="view.js" location="ru/mail/jira/plugins/calendar/gantt/view.js"/>
     </web-resource>
 
     <!--Custom Fields-->

@@ -1,7 +1,7 @@
 #* @vtlvariable name="licenseStatus" type="ru.mail.jira.plugins.calendar.service.licence.LicenseStatus" *#
 <html>
 <head>
-    <title>$i18n.getText( "ru.mail.jira.plugins.calendar.gantt.linkTitle" )</title>
+    <title>$i18n.getText( "ru.mail.jira.plugins.calendar.gantt.linkTitleShort" )</title>
     <meta name="decorator" content="atl.general"/>
     <meta name="ajs-advanced-search-help-url" content="https://docs.atlassian.com/jira/docs-064/Advanced+Searching"/>
     <meta name="ajs-advanced-search-help-title" content="$i18n.getText( "navigator.advanced.query.syntax" )"/>
@@ -13,7 +13,7 @@
 <body>
     #if (!$licenseStatus.valid)
         <div class="aui-banner aui-banner-error">
-            #text("ru.mail.jira.plugins.calendar.gantt.linkTitle") #text("ru.mail.jira.plugins.license.readOnly"): ${licenseStatus.error}
+            #text("ru.mail.jira.plugins.calendar.gantt.linkTitleShort") #text("ru.mail.jira.plugins.license.readOnly"): ${licenseStatus.error}
             #if ($isAdmin)
                 <br/>
                 <a href="https://my.atlassian.com/purchase/buyaddon?key=ru.mail.jira.plugins.mailrucal">#text("ru.mail.jira.plugins.license.purchase")</a>
@@ -24,14 +24,19 @@
     <header class="aui-page-header">
         <div class="aui-page-header-inner">
             <div class="aui-page-header-main">
-                <h1>$i18n.getText( "ru.mail.jira.plugins.calendar.gantt.linkTitleShort" ) todo For calendar #32</h1>
+                <h1 id="gantt-diagram-title"/>
             </div>
         </div>
     </header>
     <div class="aui-page-panel gantt-view-page-panel">
         <div class="aui-page-panel-inner">
             <section class="aui-page-panel-content">
-                <div id="gantt-diagram-calendar"></div>
+                <div class="aui-buttons gantt-diagram-zoom-buttons">
+                    <button id="gantt-diagram-zoom-in" class="aui-button">Zoom In</button>
+                    <button id="gantt-diagram-zoom-fit" class="aui-button">Zoom Fit</button>
+                    <button id="gantt-diagram-zoom-out" class="aui-button">Zoom Out</button>
+                </div>
+                <div id="gantt-diagram-calendar" />
             </section>
         </div>
     </div>

@@ -1,318 +1,269 @@
 require(['jquery',
     'underscore',
-    'backbone',
-    'calendar/feedback-flag',
-    'calendar/calendar-view',
-    'calendar/calendar-dialog',
-    'calendar/confirm-dialog',
-    'calendar/feed-dialog',
-    'calendar/import-dialog',
-    'calendar/quick-filter-dialog',
-    'calendar/custom-event-dialog',
-    'calendar/preferences',
-    'calendar/timeline-view'
-], function($, _, Backbone, LikeFlag, CalendarView, CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog, QuickFilterDialog, CustomEventDialog, Preferences) {
+    'backbone'
+], function($, _, Backbone) {
+    gantt.config.xml_date = '%Y-%m-%dT%H:%i:%s';
+    gantt.templates.xml_date = function(date) {
+        return moment(date).toDate();
+    };
+    // gantt.config.autosize = 'y';
+    gantt.templates.scale_cell_class = function(date) {
+        if (date.getDay() === 0 || date.getDay() === 6)
+            return 'weekend';
+    };
+    gantt.config.columns = [
+        { name: 'text', label: ' ', tree: true, width: '*' },
+        // { name: 'start_date', label: 'Начало', align: 'center' },
+        { name: 'duration', label: 'Продолжительность', align: 'center', width: '*' }
+    ];
+
+    //Setting available scales
+    var scaleConfigs = [
+        // minutes
+        {
+            unit: 'minute', step: 1, scale_unit: 'hour', date_scale: '%H',
+            subscales: [
+                { unit: 'minute', step: 1, date: '%H:%i' }
+            ]
+        },
+        // hours
+        {
+            unit: 'hour', step: 1, scale_unit: 'day', date_scale: '%j %M',
+            subscales: [
+                { unit: 'hour', step: 1, date: '%H:%i' }
+            ]
+        },
+        // days
+        {
+            unit: 'day', step: 1, scale_unit: 'month', date_scale: '%F',
+            subscales: [
+                { unit: 'day', step: 1, date: '%j' }
+            ]
+        },
+        // weeks
+        {
+            unit: 'week', step: 1, scale_unit: 'month', date_scale: '%F',
+            subscales: [
+                {
+                    unit: 'week', step: 1,
+                    template: function(date) {
+                        var dateToStr = gantt.date.date_to_str('%d %M');
+                        var endDate = gantt.date.add(gantt.date.add(date, 1, 'week'), -1, 'day');
+                        return dateToStr(date) + ' - ' + dateToStr(endDate);
+                    }
+                }
+            ]
+        },
+        // months
+        {
+            unit: 'month', step: 1, scale_unit: 'year', date_scale: '%Y',
+            subscales: [
+                { unit: 'month', step: 1, date: '%M' }
+            ]
+        },
+        // quarters
+        {
+            unit: 'month', step: 3, scale_unit: 'year', date_scale: '%Y',
+            subscales: [
+                {
+                    unit: 'month', step: 3,
+                    template: function(date) {
+                        var dateToStr = gantt.date.date_to_str('%M');
+                        var endDate = gantt.date.add(gantt.date.add(date, 3, 'month'), -1, 'day');
+                        return dateToStr(date) + ' - ' + dateToStr(endDate);
+                    }
+                }
+            ]
+        },
+        // years
+        {
+            unit: 'year', step: 1, scale_unit: 'year', date_scale: '%Y',
+            subscales: [
+                {
+                    unit: 'year', step: 5,
+                    template: function(date) {
+                        var dateToStr = gantt.date.date_to_str('%Y');
+                        var endDate = gantt.date.add(gantt.date.add(date, 5, 'year'), -1, 'day');
+                        return dateToStr(date) + ' - ' + dateToStr(endDate);
+                    }
+                }
+            ]
+        },
+        // decades
+        {
+            unit: 'year', step: 10, scale_unit: 'year',
+            template: function(date) {
+                var dateToStr = gantt.date.date_to_str('%Y');
+                var endDate = gantt.date.add(gantt.date.add(date, 10, 'year'), -1, 'day');
+                return dateToStr(date) + ' - ' + dateToStr(endDate);
+            },
+            subscales: [
+                {
+                    unit: 'year', step: 100,
+                    template: function(date) {
+                        var dateToStr = gantt.date.date_to_str('%Y');
+                        var endDate = gantt.date.add(gantt.date.add(date, 100, 'year'), -1, 'day');
+                        return dateToStr(date) + ' - ' + dateToStr(endDate);
+                    }
+                }
+            ]
+        }
+    ];
 
     AJS.toInit(function() {
         collectTopMailCounterScript();
 
         /* Models and Collections*/
-        var UserData = Backbone.Model.extend({url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference'});
-        var Calendar = Backbone.Model.extend();
-        var CustomEvent = Backbone.Model.extend({urlRoot: AJS.contextPath() + '/rest/mailrucalendar/1.0/customEvent/'});
-        var CalendarDetail = Backbone.Model.extend({urlRoot: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/'});
-        var UserCalendarCollection = Backbone.Collection.extend({
-            model: Calendar,
-            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/forUser'
-        });
-
-        var QuickFilter = Backbone.Model.extend();
-        var QuickFilterCollection = Backbone.Collection.extend({
-            model: QuickFilter,
-            initialize: function(models, options) {
-                this.calendarId = options.calendarId;
-            },
-            url: function() {
-                return AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + this.calendarId + '/quickFilter/all';
-            }
-        });
+        var UserData = Backbone.Model.extend({ url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference' });
+        var Calendar = Backbone.Model.extend({ urlRoot: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' });
 
         var MainView = Backbone.View.extend({
             el: 'body',
             events: {
-                'click #calendar-create-feed': 'showCalendarFeedView',
-                'click #calendar-create': 'createCalendar',
-                'click #calendar-import': 'importCalendar',
-                'click #mailrucalendar-add-url-calendars': 'addUrlCalendars',
-                'click #calendar-period-dropdown a': 'changeCalendarView',
-                'click .calendar-name': 'toggleCalendarVisibility',
-                'click .calendar-issue-navigator': 'openIssueNavigator',
-                'click .calendar-open-gantt': 'openGanttDiagram',
-                'click .calendar-delete': 'deleteCalendar',
-                'click .calendar-edit': 'editCalendar',
-                'click .calendar-remove': 'removeFavoriteCalendar',
-                'click .calendar-create-custom-event': '_createCustomEventFromMenu',
-                'click .calendar-configure-quick-filters': 'configureQuickFilters',
-                'click .calendar-quickfilter-button': 'toggleQuickFilter'
+                'click #gantt-diagram-zoom-in': 'zoomIn',
+                'click #gantt-diagram-zoom-out': 'zoomOut',
+                'click #gantt-diagram-zoom-fit': 'zoomToFit',
             },
             initialize: function() {
-                this.calendarView = new CalendarView({enableFullscreen: true});
-                this.initializeTooltips();
-
-                this.calendarView.on('addSource render', this.startLoadingCalendarsCallback, this);
-                this.calendarView.on('renderComplete', this.finishLoadingCalendarsCallback, this);
-                this.calendarView.on('render', this.updatePeriodButton, this);
-                this.calendarView.on('render', this.updateViewInterval, this);
-                this.calendarView.on('changeWeekendsVisibility', this.toggleWeekendsVisibility, this);
-                this.calendarView.on('eventCreateTriggered', $.proxy(this._createCustomEvent, this));
-                this.calendarView.on('eventEditTriggered', $.proxy(this._editCustomEvent, this));
-                this.calendarView.on('eventDeleteTriggered', $.proxy(this._deleteCustomEvent, this));
-
-                this.collection.on('remove', this._onDeleteCalendar, this);
-                this.collection.on('change', this._onChangeCalendar, this);
-                this.collection.on('add', this._onAddCalendar, this);
-
-                this.model.on('change:hideWeekends', this.onHideWeekendsHandler, this);
-                this.model.on('change:calendarView', this._onUserDataViewChange, this);
             },
-            initializeTooltips: function() {
-                this.$('.calendar-quick-filters-label').tooltip({gravity: 'w'});
+            loadGantt: function() {
+                gantt.init('gantt-diagram-calendar');
+                gantt.load(AJS.contextPath() + '/rest/mailrucalendar/1.0/gantt/' + this.calendar.id);
+
+                var dp = new gantt.dataProcessor(AJS.contextPath() + '/rest/mailrucalendar/1.0/gantt/' + this.calendar.id);
+                dp.init(gantt);
+                dp.setTransactionMode("REST");
+
+                this.isActive = true;
+                this.current = 1;
             },
-            _onUserDataViewChange: function(model) {
-                var view = model.get('calendarView') || 'month';
-                this.setCalendarView(view);
-            },
-            fillCalendarsInUrl: function() {
-                var calendars = _.pluck(this.collection.where({visible: true}), 'id');
-                router.navigate('calendars=' + calendars.join(','), {
-                    replace: true,
-                    trigger: false
+            recalculateDiagramPeriod: function() {
+                var minStartDate, maxEndDate;
+                gantt.eachTask(function(task) {
+                    if (!minStartDate || moment(task.start_date).isBefore(minStartDate))//todo date format
+                        minStartDate = moment(task.start_date);
+                    if (!maxEndDate || moment(task.end_date).isAfter(maxEndDate))//todo date format
+                        maxEndDate = moment(task.end_date);
                 });
+                if (minStartDate && maxEndDate)
+                    this.setDiagramPeriod(minStartDate.toDate(), maxEndDate.toDate());
             },
-            _onChangeCalendar: function(calendar) {
-                this.buildCalendarList();
-                this.buildQuickFilterList();
+            setDiagramPeriod: function(startDate, endDate) {
+                gantt.config.start_date = startDate;
+                gantt.config.end_date = endDate;
 
-                this.calendarView.removeEventSource(calendar.id);
-                if (calendar.get('favorite') && calendar.get('visible') && !calendar.get('hasError'))
-                    this.calendarView.addEventSource(calendar.id);
-                this.fillCalendarsInUrl();
+                gantt.render();
             },
-            _onAddCalendar: function(calendar) {
-                this.buildCalendarList();
-                this.calendarView.removeEventSource(calendar.id);
-                if (calendar.get('visible') && !calendar.get('hasError'))
-                    this.calendarView.addEventSource(calendar.id);
-                this.fillCalendarsInUrl();
-            },
-            _onDeleteCalendar: function(calendar) {
-                this.buildCalendarList();
-                this.calendarView.removeEventSource(calendar.id);
-                this.fillCalendarsInUrl();
-            },
-            _onCalendarDropdownShow: function() {
-                var calendarId = $(this).data('id');
-                $('div.calendar-list-item-block[data-id=' + calendarId + ']').toggleClass('calendar-list-item-selected', true);
-            },
-            _onCalendarDropdownHide: function() {
-                var calendarId = $(this).data('id');
-                $('div.calendar-list-item-block[data-id=' + calendarId + ']').toggleClass('calendar-list-item-selected', false);
-            },
-            startLoadingCalendarsCallback: function() {
-                AJS.dim();
-                JIRA.Loading.showLoadingIndicator();
-            },
-            finishLoadingCalendarsCallback: function() {
-                this.$('.calendar-name').removeClass('not-active');
-                JIRA.Loading.hideLoadingIndicator();
-                if (!$('.aui-dialog2[aria-hidden=false]').length)
-                    AJS.undim();
-            },
-            loadFullCalendar: function(view, hideWeekends, timezone, workingDays) {
-                this.updatePeriodButton(view);
-                this.calendarView.setTimezone(timezone);
-                this.calendarView.init(view, hideWeekends, workingDays);
-                var $calendarEl = $("#calendar-full-calendar");
-                $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-state-default fc-button').addClass('aui-button');
-                $calendarEl.find('.fc-button-group').addClass('aui-buttons');
-            },
-            showCalendarFeedView: function(e) {
-                e.preventDefault();
-                new CalendarFeedDialog({model: this.model, collection: this.collection}).show();
-            },
-            createCalendar: function(e) {
-                e.preventDefault();
-                this.$('.aui-page-panel-nav').click();
-
-                var calendarDialogView = new CalendarDialog({
-                    model: new CalendarDetail(),
-                    collection: this.collection,
-                    userData: this.model
-                });
-                calendarDialogView.show();
-            },
-            importCalendar: function(e) {
-                e.preventDefault();
-                this.$('.aui-page-panel-nav').click();
-
-                var importView = new CalendarImportDialog({
-                    model: this.model,
-                    collection: this.collection//user calendars
-                });
-                importView.show();
-            },
-            openIssueNavigator: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                this.$('.aui-page-panel-nav').click();
-
-                var calendar = this.collection.get($(e.currentTarget).closest('div.aui-dropdown2').data('id'));
-                var sourceType = calendar.get('source').split('_')[0];
-                var url;
-                if (sourceType == 'project')
-                    url = 'jql=project%3D' + calendar.get('source').split('_')[1];
-                else if (sourceType == 'filter')
-                    url = 'filter=' + calendar.get('source').split('_')[1];
-                else if (sourceType == 'jql')
-                    url = 'jql=' + calendar.get('source').split('_')[1].replace(/"/g, '\'');
-                window.open(AJS.format('{0}/issues/?{1}', AJS.contextPath(), url));
-            },
-            openGanttDiagram: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                this.$('.aui-page-panel-nav').click();
-
-                var calendarId = $(e.currentTarget).closest('div.aui-dropdown2').data('id');
-                window.open(AJS.format('{0}/secure/MailRuGanttDiagram.jspa#calendar={1}', AJS.contextPath(), calendarId));
-            },
-            editCalendar: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                this.$('.aui-page-panel-nav').click();
-
-                var calendarId = $(e.currentTarget).closest('div.aui-dropdown2').data('id');
-                var calendarDetail = new CalendarDetail({id: calendarId});
-                calendarDetail.fetch({
-                    success: $.proxy(function(model) {
-                        var calendarDialogView = new CalendarDialog({
-                            model: model,
-                            collection: this.collection
-                        });
-                        calendarDialogView.show();
-                    }, this),
-                    error: function(request) {
-                        alert(request.responseText);
-                    }
-                });
-            },
-            toggleWeekendsVisibility: function() {
-                Preferences.setItem('mailrucalendar.hideWeekends', !this.model.get('hideWeekends'));
-                this.model.set({hideWeekends: !this.model.get('hideWeekends')});
-            },
-            onHideWeekendsHandler: function(model) {
-                this.calendarView.toggleWeekends(model.get('hideWeekends'));
-            },
-            changeCalendarView: function(e) {
-                e.preventDefault();
-                this.setCalendarView(this.$(e.currentTarget).data('view-type'));
-            },
-            toggleCalendarVisibility: function(e) {
-                e.preventDefault();
-                var self = this;
-                var $calendarNameLink = this.$(e.currentTarget);
-                if ($calendarNameLink.hasClass('not-working'))
-                    return;
-
-                var calendarId = $calendarNameLink.closest('div.calendar-list-item-block').data('id');
-                var calendar = this.collection.get(calendarId);
-                if (!calendar || !calendar.get('favorite')) {
-                    this.model.save({calendars: [calendarId]}, {
-                        success: function() {
-                            self.collection.fetch({
-                                success: function() {
-                                    self.setUrlCalendars();
-                                }
-                            });
-                        },
-                        error: function(model, response) {
-                            alert(response.responseText);
-                        }
-                    });
-                    return;
-                }
-
-                if (calendar.get('visible'))
-                    this.startLoadingCalendarsCallback();
-                $calendarNameLink.addClass('not-active');
-
-                $.ajax({
-                    type: 'PUT',
-                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendarId + '/visibility/' + !calendar.get('visible'),
-                    success: function() {
-                        calendar.set('visible', !calendar.get('visible'));
+            setCalendar: function(calendarId) {
+                this.calendar = new Calendar({ id: calendarId });
+                this.calendar.fetch({
+                    success: function(model) {
+                        mainView.loadGantt();
+                        $('#gantt-diagram-title').text(AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.calendarTitle', model.get('selectedName')))
                     },
-                    error: function(request) {
-                        self.finishLoadingCalendarsCallback();
-                        alert(request.responseText);
+                    error: function(model, response) {
+                        var msg = 'Error while trying to load calendar. ';
+                        if (response.responseText)
+                            msg += response.responseText;
+                        alert(msg);
                     }
                 });
             },
-            setCalendarView: function(viewName) {
-                if (this.calendarView.getViewType() != viewName)
-                    this.calendarView.setView(viewName);
-                if (this.model.get('calendarView') != viewName) {
-                    Preferences.setItem('mailrucalendar.calendarView', viewName);
-                    this.model.set({calendarView: viewName});
+            zoomToFit: function() {
+                var project = gantt.getSubtaskDates(),
+                    areaWidth = gantt.$task.offsetWidth;
+
+                for (var i = 0; i < scaleConfigs.length; i++) {
+                    var columnCount = this._getUnitsBetween(project.start_date, project.end_date, scaleConfigs[i].unit, scaleConfigs[i].step);
+                    if ((columnCount + 2) * gantt.config.min_column_width <= areaWidth) {
+                        break;
+                    }
+                }
+
+                if (i === scaleConfigs.length) {
+                    i--;
+                }
+
+                this._applyConfig(scaleConfigs[i], project);
+                this.refresh();
+                this.current = i;
+                this.$('#gantt-diagram-zoom-out').prop('disabled', !this.canZoomOut());
+                this.$('#gantt-diagram-zoom-in').prop('disabled', !this.canZoomIn());
+            },
+            zoomOut: function(e) {
+                e.preventDefault();
+                this.$('#gantt-diagram-zoom-in').prop('disabled', false);
+                if (this.canZoomOut()) {
+                    this.isActive = true;
+                    this.current = (this.current + 1);
+                    if (!scaleConfigs[this.current])
+                        this.current = 6;
+
+                    this._setScaleConfig(this.current);
+                    this.refresh();
+                }
+                this.$('#gantt-diagram-zoom-out').prop('disabled', !this.canZoomOut());
+                this.$('#gantt-diagram-zoom-in').prop('disabled', !this.canZoomIn());
+            },
+            zoomIn: function(e) {
+                e.preventDefault();
+                this.$('#gantt-diagram-zoom-out').prop('disabled', false);
+                if (this.canZoomIn()) {
+                    this.isActive = true;
+                    this.current = (this.current - 1);
+                    if (!scaleConfigs[this.current])
+                        this.current = 1;
+                    this._setScaleConfig(this.current);
+                    this.refresh();
+                }
+                this.$('#gantt-diagram-zoom-out').prop('disabled', !this.canZoomOut());
+                this.$('#gantt-diagram-zoom-in').prop('disabled', !this.canZoomIn());
+            },
+            canZoomOut: function() {
+                return !this.isActive || scaleConfigs.length > this.current + 1;
+            },
+            canZoomIn: function() {
+                return !this.isActive || 0 < this.current - 1;
+            },
+            _setScaleConfig: function(config) {
+                var project = gantt.getSubtaskDates();
+                this._applyConfig(scaleConfigs[config], project);
+                this.current = config;
+            },
+            refresh: function() {
+                gantt.render();
+            },
+            _applyConfig: function(config, dates) {
+                gantt.config.scale_unit = config.scale_unit;
+                if (config.date_scale) {
+                    gantt.config.date_scale = config.date_scale;
+                    gantt.templates.date_scale = null;
+                }
+                else {
+                    gantt.templates.date_scale = config.template;
+                }
+
+                gantt.config.step = config.step;
+                gantt.config.subscales = config.subscales;
+
+                if (dates) {
+                    gantt.config.start_date = gantt.date.add(dates.start_date, -1, config.unit);
+                    gantt.config.end_date = gantt.date.add(gantt.date[config.unit + '_start'](dates.end_date), 2, config.unit);
+                } else {
+                    gantt.config.start_date = gantt.config.end_date = null;
                 }
             },
-            setUrlCalendar: function(calendar) {
-                if (calendar !== undefined)
-                    this.urlCalendars = calendar;
-                if (mainView.calendarsLoaded && this.urlCalendars !== undefined) {
-                    if (calendar !== undefined)
-                        this.collection.each(function(calendar) {
-                            calendar.set({visible: false}, {silent: !!this.urlCalendars.length});
-                        }, this);
-
-                    var notInCollection = [];
-                    _.each(this.urlCalendars, function(calendarId) {
-                        var calendar = this.collection.get(calendarId);
-                        if (calendar && calendar.get('favorite'))
-                            $.ajax({
-                                context: this,
-                                type: 'PUT',
-                                url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendarId + '/visibility/true',
-                                success: function() {
-                                    calendar.set({visible: true});
-                                }
-                            });
-                        else
-                            notInCollection.push(calendarId);
-                    }, this);
-
-                    if (notInCollection.length)
-                        $.ajax({
-                            context: this,
-                            type: 'GET',
-                            url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/find',
-                            data: {
-                                id: notInCollection
-                            },
-                            success: function(response) {
-                                var html = AJS.I18n.getText('ru.mail.jira.plugins.calendar.addSharedCalendars');
-                                _.each(response, function(calendar) {
-                                    html += JIRA.Templates.Plugins.MailRuCalendar.calendarEntry({
-                                        calendar: calendar,
-                                        enableButton: false
-                                    });
-                                });
-                                this.$('#mailrucalendar-message-calendar-list').html(html).removeClass('hidden');
-                            }
-                        });
-                    else
-                        this.$('#mailrucalendar-message-calendar-list').empty().addClass('hidden');
+            // get number of columns in timeline
+            _getUnitsBetween: function(from, to, unit, step) {
+                var start = new Date(from),
+                    end = new Date(to);
+                var units = 0;
+                while (start.valueOf() < end.valueOf()) {
+                    units++;
+                    start = gantt.date.add(start, step, unit);
                 }
-            },
+                return units;
+            }
         });
 
         /* Router */
@@ -321,67 +272,27 @@ require(['jquery',
                 'calendar=:calendar': 'setCalendar'
             },
             setCalendar: function(calendar) {
-                mainView.setUrlCalendar(calendar);
+                mainView.setCalendar(calendar);
             }
         });
 
-        var mainView = new MainView({collection: new UserCalendarCollection(), model: new UserData()});
+        var mainView = new MainView({ model: new UserData() });
         var router = new ViewRouter();
 
         /* Fetch data */
         mainView.model.fetch({
             success: function(model) {
-                model.set({
-                    hideWeekends: Preferences.getItem('mailrucalendar.hideWeekends') === 'true',
-                    calendarView: Preferences.getItem('mailrucalendar.calendarView') || 'month'
-                });
-                var view = model.get('calendarView') || 'month';
-                if (view == 'basicWeek')
-                    view = 'agendaWeek';
                 moment.tz.setDefault(model.get('timezone'));
-                mainView.loadFullCalendar(view, model.get('hideWeekends'), model.get('timezone'), model.get('workingDays'));
 
                 Backbone.history.start();
-
-                if (model.has('nextFeedbackShow') && model.get('feedbackShowCount') == 0)
-                    $.ajax({
-                        type: 'PUT',
-                        url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/likeFlagShown/false'
-                    });
-                else if (model.has('nextFeedbackShow') && !model.get('pluginRated')
-                    && moment(model.get('nextFeedbackShow')).isBefore(moment()))
-                    new LikeFlag();
             },
             error: function(model, response) {
                 var msg = 'Error while trying to load user preferences. ';
                 if (response.responseText)
                     msg += response.responseText;
                 alert(msg);
-                mainView.loadFullCalendar('month', false, 'local', [1, 2, 3, 4, 5]);
 
                 Backbone.history.start();
-            }
-        });
-        mainView.startLoadingCalendarsCallback();
-        mainView.collection.fetch({
-            silent: true,
-            success: function(collection) {
-                var hasEnabledCalendar = false;
-                mainView.buildCalendarList();
-                mainView.buildQuickFilterList();
-                collection.each(function(calendar) {
-                    if (calendar.get('visible') && !calendar.get('hasError')) {
-                        mainView.calendarView.addEventSource(calendar.id, true);
-                        hasEnabledCalendar = true;
-                    }
-                });
-                mainView.fillCalendarsInUrl();
-                hasEnabledCalendar || mainView.finishLoadingCalendarsCallback();
-                mainView.calendarsLoaded = true;
-                mainView.setUrlCalendars();
-            },
-            error: function(request) {
-                alert(request.responseText);
             }
         });
     });
@@ -394,22 +305,22 @@ require(['jquery',
  */
 function collectTopMailCounterScript() {
     var _tmr = window._tmr || (window._tmr = []);
-    _tmr.push({id: "2706504", type: "pageView", start: (new Date()).getTime()});
+    _tmr.push({ id: '2706504', type: 'pageView', start: (new Date()).getTime() });
     (function(d, w, id) {
         if (d.getElementById(id)) return;
-        var ts = d.createElement("script");
-        ts.type = "text/javascript";
+        var ts = d.createElement('script');
+        ts.type = 'text/javascript';
         ts.async = true;
         ts.id = id;
-        ts.src = (d.location.protocol == "https:" ? "https:" : "http:") + "//top-fwz1.mail.ru/js/code.js";
+        ts.src = (d.location.protocol == 'https:' ? 'https:' : 'http:') + '//top-fwz1.mail.ru/js/code.js';
         var f = function() {
-            var s = d.getElementsByTagName("script")[0];
+            var s = d.getElementsByTagName('script')[0];
             s.parentNode.insertBefore(ts, s);
         };
-        if (w.opera == "[object Opera]") {
-            d.addEventListener("DOMContentLoaded", f, false);
+        if (w.opera == '[object Opera]') {
+            d.addEventListener('DOMContentLoaded', f, false);
         } else {
             f();
         }
-    })(document, window, "topmailru-code");
+    })(document, window, 'topmailru-code');
 }
