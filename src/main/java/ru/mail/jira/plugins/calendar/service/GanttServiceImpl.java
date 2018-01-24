@@ -35,7 +35,7 @@ public class GanttServiceImpl implements GanttService {
             @ComponentImport ActiveObjects ao,
             @ComponentImport CustomFieldManager customFieldManager,
             @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-            @ComponentImport JiraDeprecatedService jiraDeprecatedService,
+            JiraDeprecatedService jiraDeprecatedService,
             CalendarEventService calendarEventService) {
         this.ao = ao;
         this.customFieldManager = customFieldManager;
