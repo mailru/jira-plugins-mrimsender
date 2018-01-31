@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>mailrucal</artifactId>
-    <version>3.5.17</version>
+    <version>3.5.18</version>
     <organization>
         <name>Mail.Ru Group</name>
         <url>http://mail.ru</url>
@@ -212,7 +212,7 @@
         <!-- Check compilation for version 6.3.4 - 7.1.6 - 7.3.2-->
         <!--<jira.version>6.3.13</jira.version>-->
         <!--<jira.version>6.4.1</jira.version>-->
-        <jira.version>7.5.0</jira.version>
+        <jira.version>7.6.3</jira.version>
         <amps.version>6.2.11</amps.version>
         <ao.version>1.2.0</ao.version>
         <atlassian.spring.scanner.version>1.2.13</atlassian.spring.scanner.version>
