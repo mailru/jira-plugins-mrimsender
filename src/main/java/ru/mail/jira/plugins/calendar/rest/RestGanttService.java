@@ -11,6 +11,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -27,11 +28,13 @@ public class RestGanttService {
 
     @GET
     @Path("{id}")
-    public Response loadGantt(@PathParam("id") final int calendarId) {
+    public Response loadGantt(@PathParam("id") final int calendarId,
+                              @QueryParam("start") final String startDate,
+                              @QueryParam("end") final String endDate) {
         return new RestExecutor<GanttDto>() {
             @Override
             protected GanttDto doAction() throws Exception {
-                return ganttService.getGantt(calendarId);
+                return ganttService.getGantt(calendarId, startDate, endDate);
             }
         }.getResponse();
     }
@@ -46,6 +49,22 @@ public class RestGanttService {
             @Override
             protected Integer doAction() throws Exception {
                 return ganttService.createLink(calendarId, sourceKey, targetKey, type).getID();
+            }
+        }.getResponse();
+    }
+
+
+    @POST
+    @Path("{id}/task/{issueKey}")
+    public Response updateIssueDates(@PathParam("id") final int calendarId,
+                                     @PathParam("issueKey") final String issueKey,
+                                     @FormParam("start_date") final String startDate,
+                                     @FormParam("end_date") final String endDate) {
+        return new RestExecutor<Void>() {
+            @Override
+            protected Void doAction() throws Exception {
+                ganttService.updateDates(calendarId, issueKey, startDate, endDate);
+                return null;
             }
         }.getResponse();
     }

@@ -22,8 +22,6 @@ public class GanttEventDto {
     @XmlElement(name = "end_date")
     private String endDate;
     @XmlElement
-    private String duration;
-    @XmlElement
     private float progress;
     @XmlElement
     private String parent;

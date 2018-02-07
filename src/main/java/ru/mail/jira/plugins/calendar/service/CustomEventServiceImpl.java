@@ -980,13 +980,16 @@ public class CustomEventServiceImpl implements CustomEventService {
         result.setType(EventDto.Type.CUSTOM);
         result.setParticipants(parseParticipants(event.getParticipants()));
         result.setStart(dateFormatter.format(event.getStartDate()));
+        result.setStartDate(event.getStartDate());
 
         Date end = event.getEndDate();
         if (end != null) {
             if (event.isAllDay()) {
                 result.setEnd(dateFormatter.format(new Date(event.getEndDate().getTime() + TimeUnit.HOURS.toMillis(24))));
+                result.setEndDate(new Date(event.getEndDate().getTime() + TimeUnit.HOURS.toMillis(24)));
             } else {
                 result.setEnd(dateFormatter.format(event.getEndDate()));
+                result.setEndDate(event.getEndDate());
             }
         }
 
@@ -1011,11 +1014,14 @@ public class CustomEventServiceImpl implements CustomEventService {
 
             result.setAllDay(childEvent.isAllDay());
             result.setStart(dateTimeFormatter.format(childEvent.getStartDate()));
+            result.setStartDate(childEvent.getStartDate());
             if (childEvent.getEndDate() != null) {
                 if (childEvent.isAllDay()) {
                     result.setEnd(dateTimeFormatter.format(new Date(childEvent.getEndDate().getTime() + TimeUnit.DAYS.toMillis(1))));
+                    result.setEndDate(new Date(childEvent.getEndDate().getTime() + TimeUnit.DAYS.toMillis(1)));
                 } else {
                     result.setEnd(dateTimeFormatter.format(childEvent.getEndDate()));
+                    result.setEndDate(childEvent.getEndDate());
                 }
             }
 
@@ -1028,11 +1034,14 @@ public class CustomEventServiceImpl implements CustomEventService {
 
             result.setAllDay(event.isAllDay());
             result.setStart(dateTimeFormatter.format(Date.from(startDate.toInstant())));
+            result.setStartDate(Date.from(startDate.toInstant()));
             if (endDate != null) {
                 if (event.isAllDay()) {
                     result.setEnd(dateTimeFormatter.format(Date.from(endDate.plusDays(1).toInstant())));
+                    result.setEndDate(Date.from(endDate.plusDays(1).toInstant()));
                 } else {
                     result.setEnd(dateTimeFormatter.format(Date.from(endDate.toInstant())));
+                    result.setEndDate(Date.from(endDate.toInstant()));
                 }
             }
 

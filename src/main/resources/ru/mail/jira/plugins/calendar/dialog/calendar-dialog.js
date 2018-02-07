@@ -466,10 +466,6 @@ define('calendar/calendar-dialog', [
                 this.$('#calendar-dialog-show-issue-status').attr('checked', !!this.model.get('showIssueStatus'));
 
                 this.$('#calendar-dialog-project-gantt-enabled').attr('checked', !!this.model.get('ganttEnabled'));
-                this._onProjectGanttEnabledChange();
-                this.$('#calendar-dialog-event-duration').auiSelect2('val', this.model.get('eventDurationField'));
-                this.$('#calendar-dialog-event-progress').auiSelect2('val', this.model.get('eventProgressField'));
-                this.$('#calendar-dialog-event-parent').auiSelect2('val', this.model.get('eventParentField'));
 
                 if (this.model.has('permissions')) {
                     var sortOrder = { 'USER': 1, 'GROUP': 2, 'PROJECT_ROLE': 3 };
@@ -537,9 +533,6 @@ define('calendar/calendar-dialog', [
             var displayedFields = this.$('#calendar-dialog-displayed-fields').val();
             var showIssueStatus = !!this.$('#calendar-dialog-show-issue-status:checked').length;
             var ganttEnabled = !!this.$('#calendar-dialog-project-gantt-enabled:checked').length;
-            var eventDurationField = this.$('#calendar-dialog-event-duration').val();
-            var eventProgressField = this.$('#calendar-dialog-event-progress').val();
-            var eventParentField = this.$('#calendar-dialog-event-parent').val();
             var permissions = _.filter(_.values(this.permissionIds), function(obj) {
                 return !!obj;
             });
@@ -555,9 +548,6 @@ define('calendar/calendar-dialog', [
                 selectedDisplayedFields: displayedFields ? displayedFields.split(',') : [],
                 showIssueStatus: showIssueStatus,
                 ganttEnabled: ganttEnabled,
-                eventDurationField: eventDurationField,
-                eventProgressField: eventProgressField,
-                eventParentField: eventParentField,
                 timelineGroup: timelineGroup,
                 permissions: permissions && permissions.length ? permissions : []
             };
@@ -842,12 +832,6 @@ define('calendar/calendar-dialog', [
             var sourceType = this.$('input[type=radio][name=calendar-dialog-source]:checked').val();
             this._showSourceField(sourceType);
             this.$('#calendar-dialog-source-error').addClass('hidden');
-        },
-        _onProjectGanttEnabledChange: function() {
-            this._toggleVisibilityGanttFields(!!this.$('#calendar-dialog-project-gantt-enabled:checked').length);
-        },
-        _toggleVisibilityGanttFields: function(projectGanttEnabled) {
-            this.$('.calendar-dialog-project-gantt-field').toggleClass('hidden', !projectGanttEnabled);
         },
         _onPermissionTableActionFocus: function(e) {
             $(e.target).closest('tr').addClass('calendar-dialog-permission-table-row-hover');

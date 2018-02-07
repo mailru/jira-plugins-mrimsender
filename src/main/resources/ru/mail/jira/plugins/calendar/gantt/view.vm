@@ -31,11 +31,18 @@
     <div class="aui-page-panel gantt-view-page-panel">
         <div class="aui-page-panel-inner">
             <section class="aui-page-panel-content">
-                <div class="aui-buttons gantt-diagram-zoom-buttons">
-                    <button id="gantt-diagram-zoom-in" class="aui-button">Zoom In</button>
-                    <button id="gantt-diagram-zoom-fit" class="aui-button">Zoom Fit</button>
-                    <button id="gantt-diagram-zoom-out" class="aui-button">Zoom Out</button>
-                </div>
+                <form class="aui gantt-diagram-actions">
+                    <div class="gantt-diagram-actions-period">
+                        <input class="text date-field" id="gantt-diagram-period-startDate" type="text" dateFormat="yyyy-mm-dd" placeholder="yyyy-mm-dd"/>
+                        <span> — </span>
+                        <input class="text date-field" id="gantt-diagram-period-endDate" type="text" dateFormat="yyyy-mm-dd" placeholder="yyyy-mm-dd" />
+                    </div>
+                    <div class="aui-buttons gantt-diagram-zoom">
+                        <button id="gantt-diagram-zoom-in" class="aui-button">Zoom In</button>
+                        <button id="gantt-diagram-zoom-fit" class="aui-button">Zoom Fit</button>
+                        <button id="gantt-diagram-zoom-out" class="aui-button">Zoom Out</button>
+                    </div>
+                </form>
                 <div id="gantt-diagram-calendar" />
             </section>
         </div>

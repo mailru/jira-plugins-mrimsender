@@ -1,12 +1,17 @@
 package ru.mail.jira.plugins.calendar.service;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
+import com.atlassian.jira.datetime.DateTimeFormatter;
+import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import net.java.ao.Query;
+import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.model.GanttLink;
@@ -17,9 +22,7 @@ import ru.mail.jira.plugins.calendar.rest.dto.GanttEventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.GanttLinkDto;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 @Component
@@ -45,17 +48,28 @@ public class GanttServiceImpl implements GanttService {
     }
 
     @Override
-    public GanttDto getGantt(int calendarId) throws ParseException, SearchException, GetException {
+    public GanttDto getGantt(int calendarId, String startDate, String endDate) throws ParseException, SearchException, GetException {
+        DateTimeFormatter userDateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(jiraAuthenticationContext.getLoggedInUser()).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+        if (StringUtils.isEmpty(startDate))
+            startDate = LocalDate.now().withDayOfYear(1).toString("yyyy-MM-dd");
+        if (StringUtils.isEmpty(endDate))
+            endDate = LocalDate.now().plusMonths(3).toString("yyyy-MM-dd");
+
         GanttDto ganttDto = new GanttDto();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        List<EventDto> eventDtoList = calendarEventService.findEvents(calendarId, null, "2015-01-01", dateFormat.format(new Date()), jiraAuthenticationContext.getLoggedInUser());//todo dates params
+        List<EventDto> eventDtoList = calendarEventService.findEvents(calendarId, null, startDate, endDate, jiraAuthenticationContext.getLoggedInUser());
         ganttDto.setData(eventDtoList.stream()
                                      .map(eventDto -> {
                                          GanttEventDto ganttEventDto = new GanttEventDto();
                                          ganttEventDto.setId(eventDto.getId());
-                                         ganttEventDto.setText(eventDto.getTitle());
+                                         ganttEventDto.setText(String.format("%s %s", eventDto.getId(), eventDto.getTitle()));
                                          ganttEventDto.setStartDate(eventDto.getStart());
-                                         ganttEventDto.setEndDate(eventDto.getEnd());
+                                         if (StringUtils.isNotEmpty(eventDto.getEnd())) {
+                                             ganttEventDto.setEndDate(eventDto.getEnd());
+                                         } else if (eventDto.getOriginalEstimateSeconds() != null) {
+                                             ganttEventDto.setEndDate(userDateTimeFormat.format(DateUtils.addMilliseconds(eventDto.getStartDate(), eventDto.getOriginalEstimateSeconds().intValue())));
+                                         }
+                                         if (eventDto.getOriginalEstimateSeconds() != null && eventDto.getTimeSpentSeconds() != null)
+                                             ganttEventDto.setProgress(eventDto.getTimeSpentSeconds() / eventDto.getOriginalEstimateSeconds());
                                          return ganttEventDto;
                                      })
                                      .toArray(GanttEventDto[]::new));
@@ -83,5 +97,10 @@ public class GanttServiceImpl implements GanttService {
         ganttLink.setType(type);
         ganttLink.save();
         return ganttLink;
+    }
+
+    @Override
+    public void updateDates(int calendarId, String issueKey, String startDate, String endDate) {
+
     }
 }

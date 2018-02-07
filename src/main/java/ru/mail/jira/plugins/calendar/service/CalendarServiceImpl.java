@@ -165,9 +165,6 @@ public class CalendarServiceImpl implements CalendarService {
             result.setSelectedDisplayedFields(Arrays.asList(calendar.getDisplayedFields().split(",")));
         result.setShowIssueStatus(calendar.isShowIssueStatus());
         result.setGanttEnabled(calendar.isGanttEnabled());
-        result.setEventDurationField(calendar.getEventDurationField());
-        result.setEventProgressField(calendar.getEventProgressField());
-        result.setEventParentField(calendar.getEventParentField());
 
         fillSelectedSourceFields(user, result, calendar);
 
@@ -326,9 +323,6 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setDisplayedFields(StringUtils.join(calendarSettingDto.getSelectedDisplayedFields(), ","));
         calendar.setShowIssueStatus(calendarSettingDto.isShowIssueStatus());
         calendar.setGanttEnabled(calendarSettingDto.isGanttEnabled());
-        calendar.setEventDurationField(StringUtils.trimToNull(calendarSettingDto.getEventDurationField()));
-        calendar.setEventProgressField(StringUtils.trimToNull(calendarSettingDto.getEventProgressField()));
-        calendar.setEventParentField(StringUtils.trimToNull(calendarSettingDto.getEventParentField()));
         calendar.save();
     }
 

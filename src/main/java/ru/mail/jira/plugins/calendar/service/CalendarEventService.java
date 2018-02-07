@@ -540,7 +540,9 @@ public class CalendarEventService {
             event.setStatusColor(issue.getStatus().getStatusCategory().getColorName());
         }
         event.setType(EventDto.Type.ISSUE);
+        event.setOriginalEstimateSeconds(originalEstimate);
         event.setOriginalEstimate(originalEstimate != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(originalEstimate) : null);
+        event.setTimeSpentSeconds(timeSpent);
         event.setTimeSpent(timeSpent != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(timeSpent) : null);
 
         if (groups != null) {
@@ -572,13 +574,18 @@ public class CalendarEventService {
         DateTimeFormatter endFormatter = endField != null && endField.equals(DUE_DATE_KEY) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType ? userDateFormat.withSystemZone() : userDateTimeFormat;
         if (startDate != null) {
             event.setStart(startFormatter.format(startDate));
+            event.setStartDate(startDate);
             if (endDate != null)
-                if (DUE_DATE_KEY.equals(endField) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType)
+                if (DUE_DATE_KEY.equals(endField) || endCF != null && endCF.getCustomFieldType() instanceof DateCFType) {
                     event.setEnd(endFormatter.format(new Date(endDate.getTime() + MILLIS_IN_DAY)));
-                else
+                    event.setEndDate(new Date(endDate.getTime() + MILLIS_IN_DAY));
+                } else {
                     event.setEnd(endFormatter.format(endDate));
+                    event.setEndDate(endDate);
+                }
         } else {
             event.setStart(endFormatter.format(endDate));
+            event.setStartDate(endDate);
             event.setDatesError(true);
             dateFieldsIsDraggable = false;
         }

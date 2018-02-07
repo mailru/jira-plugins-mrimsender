@@ -2,20 +2,23 @@ require(['jquery',
     'underscore',
     'backbone'
 ], function($, _, Backbone) {
-    gantt.config.xml_date = '%Y-%m-%dT%H:%i:%s';
+    gantt.config.fit_tasks = true;
+    gantt.config.details_on_dblclick = false;
+    gantt.config.columns = [
+        { name: 'id', label: ' ', tree: true, width: '200px' },
+        // { name: 'duration', label: 'Продолжительность', align: 'right', width: '*' }
+    ];
+
     gantt.templates.xml_date = function(date) {
         return moment(date).toDate();
     };
-    // gantt.config.autosize = 'y';
     gantt.templates.scale_cell_class = function(date) {
         if (date.getDay() === 0 || date.getDay() === 6)
             return 'weekend';
     };
-    gantt.config.columns = [
-        { name: 'text', label: ' ', tree: true, width: '*' },
-        // { name: 'start_date', label: 'Начало', align: 'center' },
-        { name: 'duration', label: 'Продолжительность', align: 'center', width: '*' }
-    ];
+    gantt.templates.task_class = function(start, end, task) {
+        return 'gantt-event-object';
+    };
 
     //Setting available scales
     var scaleConfigs = [
@@ -123,16 +126,70 @@ require(['jquery',
                 'click #gantt-diagram-zoom-in': 'zoomIn',
                 'click #gantt-diagram-zoom-out': 'zoomOut',
                 'click #gantt-diagram-zoom-fit': 'zoomToFit',
+                'change #gantt-diagram-period-startDate': 'loadGantt',
+                'change #gantt-diagram-period-endDate': 'loadGantt',
+                'submit form': 'preventFormSubmit'
             },
             initialize: function() {
+                AJS.$('#gantt-diagram-period-startDate').datePicker({ 'overrideBrowserDefault': true });
+                AJS.$('#gantt-diagram-period-endDate').datePicker({ 'overrideBrowserDefault': true });
+
+                gantt.init('gantt-diagram-calendar');
+
+                var self = this;
+                this.eventDialog = AJS.InlineDialog('.gantt-event-object', 'eventDialog', function(content, trigger, showPopup) {
+                    var eventId = $(trigger).attr('task_id');
+
+                    // Atlassian bug workaround
+                    content.click(function(e) {
+                        e.stopPropagation();
+                    });
+
+                    if (!event) {
+                        content.html('');
+                        showPopup();
+                        self.eventDialog.hide();
+                        return;
+                    }
+
+                    content.html('<span class="aui-icon aui-icon-wait">Loading...</span>');
+                    showPopup();
+
+                    $.ajax({
+                        type: 'GET',
+                        url: AJS.format('{0}/rest/mailrucalendar/1.0/calendar/events/{1}/event/{2}/info', contextPath, self.calendar.id, eventId),
+                        success: function(issue) {
+                            content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
+                                issue: issue,
+                                contextPath: AJS.contextPath()
+                            })).addClass('calendar-event-info-popup');
+                            self.eventDialog.refresh();
+                        },
+                        error: function(xhr) {
+                            var msg = 'Error while trying to view info about issue => ' + eventId;
+                            if (xhr.responseText)
+                                msg += xhr.responseText;
+                            alert(msg);
+                        }
+                    });
+                }, {
+                    isRelativeToMouse: true,
+                    cacheContent: false,
+                    width: this.popupWidth,
+                    hideDelay: null,
+                    onTop: true,
+                    closeOnTriggerClick: true,
+                    useLiveEvents: true
+                });
+            },
+            preventFormSubmit: function() {
+                return false;
             },
             loadGantt: function() {
-                gantt.init('gantt-diagram-calendar');
-                gantt.load(AJS.contextPath() + '/rest/mailrucalendar/1.0/gantt/' + this.calendar.id);
-
-                var dp = new gantt.dataProcessor(AJS.contextPath() + '/rest/mailrucalendar/1.0/gantt/' + this.calendar.id);
-                dp.init(gantt);
-                dp.setTransactionMode("REST");
+                var startDate = AJS.$('#gantt-diagram-period-startDate').val();
+                var endDate = AJS.$('#gantt-diagram-period-endDate').val();
+                gantt.clearAll();
+                gantt.load(AJS.format('{0}/rest/mailrucalendar/1.0/gantt/{1}?start={2}&end={3}', AJS.contextPath(), this.calendar.id, startDate, endDate));
 
                 this.isActive = true;
                 this.current = 1;
@@ -168,6 +225,10 @@ require(['jquery',
                         alert(msg);
                     }
                 });
+
+                var dp = new gantt.dataProcessor(AJS.contextPath() + '/rest/mailrucalendar/1.0/gantt/' + calendarId);
+                dp.init(gantt);
+                dp.setTransactionMode('REST');
             },
             zoomToFit: function() {
                 var project = gantt.getSubtaskDates(),

@@ -8,6 +8,7 @@ import lombok.ToString;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
@@ -38,6 +39,9 @@ public class EventDto {
     private String end;
     @XmlElement
     private String start;
+    //for accessing between modules in back-end
+    private Date endDate;
+    private Date startDate;
     @XmlElement
     private String title;
     @XmlElement
@@ -74,6 +78,10 @@ public class EventDto {
     private String originalEstimate;
     @XmlElement
     private String timeSpent;
+    @XmlElement
+    private Long originalEstimateSeconds;
+    @XmlElement
+    private Long timeSpentSeconds;
 
     public enum Type {
         ISSUE,

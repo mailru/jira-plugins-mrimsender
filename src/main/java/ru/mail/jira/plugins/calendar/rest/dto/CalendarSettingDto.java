@@ -47,12 +47,6 @@ public class CalendarSettingDto {
 
     @XmlElement
     private boolean ganttEnabled;
-    @XmlElement
-    private String eventDurationField;
-    @XmlElement
-    private String eventProgressField;
-    @XmlElement
-    private String eventParentField;
 
     @XmlElement
     private boolean canAdmin;

@@ -144,9 +144,29 @@
     min-height: 400px;
 }
 
-
-.gantt-diagram-zoom-buttons {
+.gantt-diagram-actions {
+    display: table;
     padding-bottom: 10px;
+    width: 100%;
+}
+
+.gantt-diagram-zoom {
+    display: table-cell;
+    text-align: right;
+}
+
+.gantt-diagram-actions-period {
+    text-align: right;
+}
+
+.gantt-diagram-actions-period input.date-field {
+    border: none;
+    outline: none;
+    cursor: pointer;
+}
+
+#gantt-diagram-period-startDate {
+    text-align: right;
 }
 
 
