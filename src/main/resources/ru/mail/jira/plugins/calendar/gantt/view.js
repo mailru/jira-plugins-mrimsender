@@ -2,6 +2,9 @@ require(['jquery',
     'underscore',
     'backbone'
 ], function($, _, Backbone) {
+    gantt.config.min_duration = 24 * 60 * 60 * 1000; // minimum task duration = 1 day
+    gantt.config.work_time = true;
+    gantt.config.skip_off_time = true;
     gantt.config.fit_tasks = true;
     gantt.config.details_on_dblclick = false;
     gantt.config.columns = [
@@ -12,13 +15,31 @@ require(['jquery',
     gantt.templates.xml_date = function(date) {
         return moment(date).toDate();
     };
-    gantt.templates.scale_cell_class = function(date) {
-        if (date.getDay() === 0 || date.getDay() === 6)
-            return 'weekend';
+    gantt.templates.task_cell_class = function(item, date) {
+        if (!gantt.isWorkTime(date)) {
+            return 'gantt-diagram-weekend-day';
+        }
     };
     gantt.templates.task_class = function(start, end, task) {
         return 'gantt-event-object';
     };
+
+    // todo обработка попадания на выходные конца или начала таска
+    // gantt.attachEvent('onTaskDrag', function(id, mode, task, original) {
+    //     var modes = gantt.config.drag_mode;
+    //     if (mode === modes.move || mode === modes.resize) {
+    //         var diff = original.duration * gantt.config.min_duration;
+    //
+    //         if (!gantt.isWorkTime(task.end_date)) {
+    //             task.end_date = new Date(task.end_date + diff);
+    //             return;
+    //         }
+    //         if (!gantt.isWorkTime(task.start_date)) {
+    //             task.start_date = new Date(task.start_date - diff);
+    //             return;
+    //         }
+    //     }
+    // });
 
     //Setting available scales
     var scaleConfigs = [
@@ -344,6 +365,11 @@ require(['jquery',
         mainView.model.fetch({
             success: function(model) {
                 moment.tz.setDefault(model.get('timezone'));
+                var workingDays = model.get('workingDays');
+                var workingHours = [10, 18];// todo make a config for it
+                for (var i = 0; i <= 6; i++) {
+                    gantt.setWorkTime({ day: i, hours: _.contains(workingDays, i) ? workingHours : false });
+                }
 
                 Backbone.history.start();
             },

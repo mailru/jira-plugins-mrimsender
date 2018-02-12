@@ -169,6 +169,11 @@
     text-align: right;
 }
 
+.gantt-diagram-weekend-day {
+    background: #d7d7d7;
+    opacity: .5;
+}
+
 
 
 
