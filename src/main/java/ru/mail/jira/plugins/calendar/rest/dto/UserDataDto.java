@@ -1,9 +1,12 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
+import lombok.Getter;
+import lombok.Setter;
 import ru.mail.jira.plugins.calendar.model.UserData;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Date;
 import java.util.List;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
@@ -35,6 +38,8 @@ public class UserDataDto {
     private String timezone;
     @XmlElement
     private int[] workingDays;
+    @XmlElement @Setter @Getter
+    private List<Date> nonWorkingDays;
 
     public UserDataDto() {
     }

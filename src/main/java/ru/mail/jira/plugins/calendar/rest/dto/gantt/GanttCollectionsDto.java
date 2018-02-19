@@ -1,4 +1,4 @@
-package ru.mail.jira.plugins.calendar.rest.dto;
+package ru.mail.jira.plugins.calendar.rest.dto.gantt;
 
 import lombok.Getter;
 import lombok.Setter;

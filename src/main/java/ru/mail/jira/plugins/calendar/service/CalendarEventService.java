@@ -145,6 +145,43 @@ public class CalendarEventService {
         this.timeZoneManager = timeZoneManager;
     }
 
+    public EventDto getEvent(int calendarId, final ApplicationUser user, String issueKey) throws GetException {
+        Calendar calendar = calendarService.getCalendar(calendarId);
+
+        String startField = calendar.getEventStart();
+        CustomField startCF = null;
+        if (startField.startsWith("customfield_")) {
+            startCF = customFieldManager.getCustomFieldObject(startField);
+            if (log.isDebugEnabled())
+                log.debug("find customfield for startField. startCF={}", startCF);
+            if (startCF == null)
+                throw new IllegalArgumentException("Bad custom field id => " + startField);
+        }
+
+        String endField = calendar.getEventEnd();
+        CustomField endCF = null;
+        if (StringUtils.isNotEmpty(endField) && endField.startsWith("customfield_")) {
+            endCF = customFieldManager.getCustomFieldObject(endField);
+            if (log.isDebugEnabled())
+                log.debug("find customfield for endField. endCF={}", endCF);
+            if (endCF == null)
+                throw new IllegalArgumentException("Bad custom field id => " + endField);
+        }
+
+        return buildEvent(
+            calendar,
+            null,
+            user,
+            issueService.getIssue(user, issueKey).getIssue(),
+            true,
+            startField,
+            startCF,
+            endField,
+            endCF,
+            null
+        );
+    }
+
     public List<EventDto> findEvents(final int calendarId, String groupBy,
                                      final String start,
                                      final String end,
@@ -541,9 +578,10 @@ public class CalendarEventService {
         }
         event.setType(EventDto.Type.ISSUE);
         event.setOriginalEstimateSeconds(originalEstimate);
-        event.setOriginalEstimate(originalEstimate != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(originalEstimate) : null);
+        event.setOriginalEstimate(originalEstimate != null ? ComponentAccessor.getJiraDurationUtils().getShortFormattedDuration(originalEstimate) : null);
         event.setTimeSpentSeconds(timeSpent);
-        event.setTimeSpent(timeSpent != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(timeSpent) : null);
+        event.setTimeSpent(timeSpent != null ? ComponentAccessor.getJiraDurationUtils().getShortFormattedDuration(timeSpent) : null);
+        event.setResolved(issue.getResolutionId() != null);
 
         if (groups != null) {
             event.setGroupField(groupBy);

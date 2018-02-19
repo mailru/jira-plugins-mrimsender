@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.service.PluginData;
 
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
 
@@ -42,5 +43,12 @@ public class WorkingDaysService {
 
     public void deleteNonWorkingDay(int id) {
         ao.delete(ao.get(NonWorkingDay.class, id));
+    }
+
+    public WorkingTimeDto getWorkingTime() {
+        WorkingTimeDto workingTimeDto = new WorkingTimeDto();
+        workingTimeDto.setStartTime(LocalTime.of(10, 0));
+        workingTimeDto.setEndTime(LocalTime.of(18, 0));
+        return workingTimeDto;
     }
 }

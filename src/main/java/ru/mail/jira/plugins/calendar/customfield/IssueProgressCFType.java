@@ -21,6 +21,7 @@ import com.atlassian.jira.issue.fields.rest.json.JsonType;
 import com.atlassian.jira.issue.fields.rest.json.JsonTypeBuilder;
 import com.atlassian.jira.util.velocity.NumberTool;
 import com.atlassian.jira.web.bean.BulkEditBean;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 
 import javax.annotation.Nonnull;
@@ -28,6 +29,7 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
+@Scanned
 public class IssueProgressCFType extends AbstractSingleFieldType<Double> implements SortableCustomField<Double>, RestAwareCustomFieldType {
     private final ApplicationProperties applicationProperties;
     private final DoubleConverter doubleConverter;

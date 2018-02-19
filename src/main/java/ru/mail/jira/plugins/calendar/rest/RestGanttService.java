@@ -1,17 +1,11 @@
 package ru.mail.jira.plugins.calendar.rest;
 
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
-import ru.mail.jira.plugins.calendar.rest.dto.GanttDto;
+import ru.mail.jira.plugins.calendar.rest.dto.gantt.*;
 import ru.mail.jira.plugins.calendar.service.GanttService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -19,7 +13,6 @@ import javax.ws.rs.core.Response;
 @Path("/gantt")
 @Produces(MediaType.APPLICATION_JSON)
 public class RestGanttService {
-
     private final GanttService ganttService;
 
     public RestGanttService(GanttService ganttService) {
@@ -41,30 +34,44 @@ public class RestGanttService {
 
     @POST
     @Path("{id}/link")
-    public Response createLink(@PathParam("id") final int calendarId,
-                               @FormParam("source") final String sourceKey,
-                               @FormParam("target") final String targetKey,
-                               @FormParam("type") final String type) {
-        return new RestExecutor<Integer>() {
+    public Response createLink(
+        @PathParam("id") final int calendarId,
+        GanttLinkForm form
+    ) {
+        return new RestExecutor<GanttLinkDto>() {
             @Override
-            protected Integer doAction() throws Exception {
-                return ganttService.createLink(calendarId, sourceKey, targetKey, type).getID();
+            protected GanttLinkDto doAction() {
+                return ganttService.createLink(calendarId, form);
             }
         }.getResponse();
     }
 
-
-    @POST
-    @Path("{id}/task/{issueKey}")
-    public Response updateIssueDates(@PathParam("id") final int calendarId,
-                                     @PathParam("issueKey") final String issueKey,
-                                     @FormParam("start_date") final String startDate,
-                                     @FormParam("end_date") final String endDate) {
-        return new RestExecutor<Void>() {
+    @DELETE
+    @Path("{id}/link/{linkId}")
+    public Response deleteLink(
+        @PathParam("id") final int calendarId,
+        @PathParam("linkId") final int linkId
+    ) {
+        return new RestExecutor<GanttActionResponse>() {
             @Override
-            protected Void doAction() throws Exception {
-                ganttService.updateDates(calendarId, issueKey, startDate, endDate);
-                return null;
+            protected GanttActionResponse doAction() {
+                ganttService.deleteLink(calendarId, linkId);
+                return new GanttActionResponse<>(GanttActionResponse.Action.deleted, null);
+            }
+        }.getResponse();
+    }
+
+    @PUT
+    @Path("{id}/task/{issueKey}")
+    public Response updateTask(
+        @PathParam("id") final int calendarId,
+        @PathParam("issueKey") final String issueKey,
+        GanttTaskForm updateDto
+    ) {
+        return new RestExecutor<GanttTaskDto>() {
+            @Override
+            protected GanttTaskDto doAction() throws Exception {
+                return ganttService.updateDates(calendarId, issueKey, updateDto.getStartDate(), updateDto.getEndDate());
             }
         }.getResponse();
     }

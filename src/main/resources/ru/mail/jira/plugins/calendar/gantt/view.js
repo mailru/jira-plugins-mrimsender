@@ -2,15 +2,48 @@ require(['jquery',
     'underscore',
     'backbone'
 ], function($, _, Backbone) {
+    function getContextPath() {
+        if (AJS.gadget) {
+            return AJS.gadget.getBaseUrl();
+        } else {
+            return AJS.contextPath();
+        }
+    }
+
     gantt.config.min_duration = 24 * 60 * 60 * 1000; // minimum task duration = 1 day
     gantt.config.work_time = true;
     gantt.config.skip_off_time = true;
     gantt.config.fit_tasks = true;
     gantt.config.details_on_dblclick = false;
     gantt.config.columns = [
-        { name: 'id', label: ' ', tree: true, width: '200px' },
+        {
+            name: 'id',
+            label: 'Key',
+            width: '100px'
+        },
+        {
+            align: 'left',
+            name: 'summary',
+            label: 'Task',
+            tree: true,
+            width: '*'
+        },
+        {
+            align: 'left',
+            name: 'assignee',
+            label: 'Assignee',
+            width: '*',
+            /*template: function(item) {
+                if (item.assignee) {
+
+                }
+            }*/
+        }
         // { name: 'duration', label: 'Продолжительность', align: 'right', width: '*' }
     ];
+    gantt.templates.grid_file = function(item) {
+        return '<img class="calendar-event-issue-type" alt="" height="16" width="16" style="margin-right: 5px;" src="' + getContextPath() + item.icon_src + '" />';
+    };
 
     gantt.templates.xml_date = function(date) {
         return moment(date).toDate();

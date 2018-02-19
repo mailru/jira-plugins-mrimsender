@@ -1,13 +1,10 @@
-package ru.mail.jira.plugins.calendar.rest.dto;
+package ru.mail.jira.plugins.calendar.rest.dto.gantt;
 
 import lombok.Getter;
 import lombok.Setter;
-import ru.mail.jira.plugins.calendar.model.Calendar;
-import ru.mail.jira.plugins.calendar.model.UserCalendar;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.List;
 
 @Setter
 @Getter
@@ -15,7 +12,7 @@ import java.util.List;
 @XmlRootElement
 public class GanttDto {
     @XmlElement
-    private GanttEventDto[] data;
+    private GanttTaskDto[] data;
     @XmlElement
     private GanttCollectionsDto collections;
 
