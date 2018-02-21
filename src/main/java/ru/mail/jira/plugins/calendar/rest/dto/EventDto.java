@@ -83,11 +83,9 @@ public class EventDto {
     @XmlElement
     private Long timeSpentSeconds;
     @XmlElement
-<<<<<<< HEAD
     private UserDto assignee;
-=======
+    @XmlElement
     private boolean resolved;
->>>>>>> fabc6c8a21c6996743b64890d8eb858cfba44d9b
 
     public enum Type {
         ISSUE,
