@@ -82,6 +82,8 @@ public class EventDto {
     private Long originalEstimateSeconds;
     @XmlElement
     private Long timeSpentSeconds;
+    @XmlElement
+    private UserDto assignee;
 
     public enum Type {
         ISSUE,

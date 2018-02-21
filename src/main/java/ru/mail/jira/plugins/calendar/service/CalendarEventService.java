@@ -62,6 +62,7 @@ import ru.mail.jira.plugins.calendar.model.UserCalendar;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventGroup;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
+import ru.mail.jira.plugins.calendar.rest.dto.UserDto;
 import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
 import ru.mail.jira.plugins.commons.CommonUtils;
 
@@ -544,6 +545,7 @@ public class CalendarEventService {
         event.setOriginalEstimate(originalEstimate != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(originalEstimate) : null);
         event.setTimeSpentSeconds(timeSpent);
         event.setTimeSpent(timeSpent != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(timeSpent) : null);
+        event.setAssignee(issue.getAssignee() != null ? buildUser(issue.getAssignee()) : null);
 
         if (groups != null) {
             event.setGroupField(groupBy);
@@ -597,6 +599,15 @@ public class CalendarEventService {
             event.setIssueInfo(getEventInfo(calendar, issue, user));
 
         return event;
+    }
+
+    private UserDto buildUser(ApplicationUser user) {
+        UserDto result = new UserDto();
+        result.setKey(user.getKey());
+        result.setName(user.getName());
+        result.setDisplayName(user.getDisplayName());
+        result.setAvatarUrl(avatarService.getAvatarURL(user, user, Avatar.Size.SMALL).toString());
+        return result;
     }
 
     private String getBaseUrl() {

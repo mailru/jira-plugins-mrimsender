@@ -112,6 +112,17 @@
             <version>${atlassian.spring.scanner.version}</version>
             <scope>runtime</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.ojalgo</groupId>
+            <artifactId>ojalgo</artifactId>
+            <version>44.0.0</version>
+        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.jgrapht</groupId>-->
+            <!--<artifactId>jgrapht-core</artifactId>-->
+            <!--<version>1.1.0</version>-->
+        <!--</dependency>-->
     </dependencies>
 
     <build>
