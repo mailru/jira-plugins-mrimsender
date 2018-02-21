@@ -97,6 +97,29 @@ function initGantt() {
                 eventDialog.refresh();
             });
     }, {
+        calculatePositions: (popup, targetPosition, mousePosition, opts) => {
+            if (targetPosition) {
+                const {target} = targetPosition;
+
+                if (target && target.length) {
+                    const firstTarget = target[0];
+
+                    if (!document.body.contains(firstTarget)) {
+                        const taskId = firstTarget.getAttribute('task_id');
+
+                        if (taskId) {
+                            const targetOverride = document.querySelector(`.gantt_event_object[task_id=${taskId}]`);
+
+                            if (targetOverride) {
+                                targetPosition = {target: targetOverride};
+                            }
+                        }
+                    }
+                }
+            }
+
+            return AJS.InlineDialog.opts.calculatePositions(popup, targetPosition, mousePosition, opts);
+        },
         isRelativeToMouse: true,
         cacheContent: false,
         hideDelay: null,
