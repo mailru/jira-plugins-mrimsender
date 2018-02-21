@@ -14,6 +14,7 @@ import MediaServicesZoomOutIcon from '@atlaskit/icon/glyph/media-services/zoom-o
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import CalendarIcon from '@atlaskit/icon/glyph/calendar';
 import SearchIcon from '@atlaskit/icon/glyph/search';
+import ListIcon from '@atlaskit/icon/glyph/list';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import i18n from 'gantt-i18n';
@@ -93,16 +94,19 @@ class GanttActionsInternal extends React.Component {
 
     _setDate = (field) => (value) => this.props.updateOptions({ [field]: value });
 
+    _toggleGrid = () => this.props.updateOptions({ showGrid: !this.props.options.showGrid });
+
     render() {
         const {showDateDialog} = this.state;
         const {options, calendar} = this.props;
+        const {showGrid} = options;
 
         let datePickers = null;
 
         if (showDateDialog) {
             datePickers = (
                 <div>
-                    <Label label="Дата начала" isFirstChild={false}/>
+                    <Label label="Дата начала" isFirstChild={true}/>
                     <DatePicker value={options.startDate} onChange={this._setDate('startDate')}/>
                     <Label label="Дата конца"/>
                     <DatePicker value={options.endDate} onChange={this._setDate('endDate')}/>
@@ -116,6 +120,16 @@ class GanttActionsInternal extends React.Component {
                     {calendar && i18n.calendarTitle(calendar.selectedName)}
                 </PageHeader>
                 <div className="flex-row">
+                    <div>
+                        <Button
+                            iconBefore={<ListIcon label=""/>}
+                            isSelected={showGrid}
+
+                            onClick={this._toggleGrid}
+                        >
+                            Список задач
+                        </Button>
+                    </div>
                     <div className="flex-horizontal-middle flex-grow">
                         <ButtonGroup>
                             {keyedConfigs.map(config =>

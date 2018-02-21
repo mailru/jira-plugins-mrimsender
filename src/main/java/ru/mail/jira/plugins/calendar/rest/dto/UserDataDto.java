@@ -2,6 +2,7 @@ package ru.mail.jira.plugins.calendar.rest.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import ru.mail.jira.plugins.calendar.configuration.WorkingTimeDto;
 import ru.mail.jira.plugins.calendar.model.UserData;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -40,6 +41,8 @@ public class UserDataDto {
     private int[] workingDays;
     @XmlElement @Setter @Getter
     private List<Date> nonWorkingDays;
+    @XmlElement @Setter @Getter
+    private WorkingTimeDto workingTime;
 
     public UserDataDto() {
     }

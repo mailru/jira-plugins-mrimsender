@@ -328,11 +328,42 @@
         <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>
         <resource type="download" name="moment-timezone-with-data.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment-timezone-with-data.js"/>
 
-        <!--resource type="download" name="common.css" location="ru/mail/jira/plugins/calendar/css/common.css"/>
-        <resource type="download" name="gantt.css" location="ru/mail/jira/plugins/calendar/css/gantt.css"/-->
+        <resource type="download" name="common.css" location="ru/mail/jira/plugins/calendar/css/common.css"/>
+        <resource type="download" name="gantt.css" location="ru/mail/jira/plugins/calendar/css/gantt.css"/>
         <resource type="download" name="i18n.js" location="ru/mail/jira/plugins/calendar/gantt/i18n.js"/>
         <resource type="download" name="common.js" location="ru/mail/jira/plugins/calendar/js/common.js"/>
         <resource type="download" name="gantt.js" location="ru/mail/jira/plugins/calendar/js/gantt.js"/>
+    </web-resource>
+
+    <web-resource key="gantt-old-resources">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <dependency>com.atlassian.auiplugin:aui-sidebar</dependency>
+        <dependency>com.atlassian.auiplugin:aui-dropdown2</dependency>
+        <dependency>com.atlassian.auiplugin:dialog2</dependency>
+        <dependency>com.atlassian.auiplugin:aui-inline-dialog2</dependency>
+        <dependency>com.atlassian.auiplugin:aui-flag</dependency>
+        <dependency>com.atlassian.auiplugin:aui-select2</dependency>
+        <dependency>com.atlassian.auiplugin:aui-date-picker</dependency>
+        <dependency>com.atlassian.auiplugin:aui-banner</dependency>
+        <dependency>jira.webresources:jquery-livestamp</dependency>
+        <dependency>com.atlassian.auiplugin:aui-experimental-tooltips</dependency>
+        <dependency>jira.webresources:jqlautocomplete</dependency>
+        <dependency>ru.mail.jira.plugins.mailrucal:mailru-calendar-soy-templates</dependency>
+
+        <resource type="download" name="calendar-img/" location="ru/mail/jira/plugins/calendar/img"/>
+
+        <resource type="download" name="dhtmlxgantt.css" location="ru/mail/jira/plugins/calendar/gantt/dhtmlxgantt.css"/>
+        <resource type="download" name="dhtmlxgantt-min.js" location="ru/mail/jira/plugins/calendar/gantt/dhtmlxgantt-min.js"/>
+        <resource type="download" name="dhtmlxgantt-min.js.map" location="ru/mail/jira/plugins/calendar/gantt/dhtmlxgantt-min.js.map"/>
+
+        <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>
+        <resource type="download" name="moment-timezone-with-data.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment-timezone-with-data.js"/>
+
+        <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/gantt/view.css"/>
+        <resource type="download" name="view.js" location="ru/mail/jira/plugins/calendar/gantt/view.js"/>
     </web-resource>
 
     <!-- todo: managed-access-level? -->

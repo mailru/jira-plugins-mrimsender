@@ -191,6 +191,12 @@
   border-right-color: #ebebeb;
 }
 
+.scrolling {
+  .gantt_task_link, .gantt_event_object, .gantt_row {
+    opacity: 0.05;
+  }
+}
+
 //task
 .gantt_event_object {
   border: none;
@@ -260,7 +266,7 @@
   background-color: @ak-color-N40;
   border-radius: @progress-height / 2;
   height: @progress-height;
-  width: 88px;
+  width: 68px;
   overflow: hidden;
 
   > .progressIndicator {
@@ -271,4 +277,8 @@
       background-color: @overdue-background-color;
     }
   }
+}
+
+#footer {
+  display: none;
 }

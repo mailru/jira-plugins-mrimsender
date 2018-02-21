@@ -11,16 +11,21 @@ export const default_min_column_width = 70;
 export const config = {
     min_duration: 24 * 60 * 60 * 1000, // minimum task duration : 1 day
 
+    showGrid: true,
     work_time: true,
     skip_off_time: true,
     fit_tasks: true,
     details_on_dblclick: false,
     show_progress: false,
+    smart_rendering: true,
+    smart_scales: true,
+    //show_task_cells: false,
 
     columns: [
         {
             name: 'id',
             //resize: true,
+            width: '110px',
             label: 'Код',
             align: 'left',
             template: (item) => {
@@ -42,14 +47,14 @@ export const config = {
         {
             name: 'progress',
             label: 'Прогресс',
-            width: '100px',
+            width: '80px',
             template: (item) => {
                 const {progress} = item;
                 const overdue = progress > 1;
 
                 return (
                     `<div class="progressBar">
-                        <div class="progressIndicator ${overdue ? 'overdue' : ''}" style="width: ${(overdue ? 1 : item.progress) * 88}px"></div>
+                        <div class="progressIndicator ${overdue ? 'overdue' : ''}" style="width: ${(overdue ? 1 : item.progress) * (80-12)}px"></div>
                     </div>`
                 );
             },
@@ -57,21 +62,22 @@ export const config = {
         {
             name: 'estimate',
             label: 'Оценка',
+            width: '53px',
             align: 'left',
-            template: (item) => `${escapeHtml(item.estimate) || ''}`
+            template: (item) => item.estimate || ''
         },
         {
             name: 'assignee',
             //resize: true,
+            width: '200px',
             label: 'Исполнитель',
-            width: '*',
             align: 'left',
             template: (item) => item.assignee || ''
         },
     ],
     task_height: 20,
     row_height: 34,
-    grid_width: 500,
+    grid_width: 600,
 };
 
 export const default_task_cell = (_item, date) => {
@@ -95,7 +101,6 @@ export const templates = {
     task_class: (start, end, task) => {
         const classes = ['gantt_event_object'];
 
-        console.log(task.overdueDate);
         if (task.overdueDate) {
             classes.push('overdue');
         }

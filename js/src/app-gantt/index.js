@@ -18,12 +18,14 @@ import JIRA from 'JIRA';
 
 import 'dhtmlx-gantt';
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_marker';
+import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_smart_rendering';
 
 import {GanttActions} from './GanttActions';
 import {config, templates} from './ganttConfig';
 import {eventListeners} from './ganttEvents';
 import {ScaleUpdater} from './scale.updater';
 import {GanttUpdater} from './gantt.updater';
+import {LayoutUpdater} from './layout.updater';
 
 import {collectTopMailCounterScript} from '../common/top-mail-ru';
 
@@ -110,6 +112,7 @@ AJS.toInit(function() {
 
         const scaleUpdater = new ScaleUpdater(gantt, store);
         new GanttUpdater(gantt, store);
+        new LayoutUpdater(gantt, store);
 
         gantt.attachEvent('onParse', () => {
             scaleUpdater.updateScales();
@@ -142,8 +145,11 @@ AJS.toInit(function() {
             .getUserPreference()
             .then(preference => {
                 moment.tz.setDefault(preference.timezone);
-                const workingDays = preference.workingDays;
-                const workingHours = [10, 18];// todo make a config for it
+                const {workingDays, workingTime} = preference;
+                const workingHours = [
+                    moment(workingTime.startTime, 'HH:mm').hours(),
+                    moment(workingTime.endTime, 'HH:mm').hours()
+                ];
                 for (let i = 0; i <= 6; i++) {
                     gantt.setWorkTime({day: i, hours: _.contains(workingDays, i) ? workingHours : false});
                 }

@@ -21,6 +21,7 @@ export class ScaleUpdater {
                 this.scale = newScale;
 
                 this.updateScales();
+                this.gantt.render();
             }
         }
     };
@@ -61,7 +62,7 @@ export class ScaleUpdater {
             this.gantt.config.start_date = this.gantt.config.end_date = null;
         }
 
-        this.gantt.render();
+        console.log('calling render');
     };
 
     _getScale = () => {

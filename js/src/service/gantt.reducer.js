@@ -41,9 +41,10 @@ export const CalendarActionCreators = {
 function optionsReducer(state, action) {
     if (state === undefined) {
         return {
-            scale: keyedConfigs[0].i,
+            scale: keyedConfigs[1].i,
             startDate: '',
-            endDate: ''
+            endDate: '',
+            showGrid: true
         };
     }
 

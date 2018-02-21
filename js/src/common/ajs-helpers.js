@@ -14,7 +14,7 @@ export function escapeHtml(html) {
     if (!html) {
         return null;
     }
-    return AJS.escapeHTML(html);
+    return AJS.escapeHtml(html);
 }
 
 export function getPluginBaseUrl() {

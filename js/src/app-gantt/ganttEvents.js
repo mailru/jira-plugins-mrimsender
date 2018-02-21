@@ -1,12 +1,43 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import AJS from 'AJS';
+import debounce from 'lodash.debounce';
 
 import {ganttService, storeService} from '../service/services';
 
 
 const gantt = window.gantt;
 
+const scrollTimeout = 100;
+
+//detach default smart render scroll event handler
+//gantt.detachEvent('ev_onganttscroll:0');
+
+const updateRender = debounce(
+    (oldLeft, oldTop, left, top) => {
+        console.log('executing debounced update render');
+        if (gantt.config.smart_rendering) {
+            if((oldTop !== top) || (oldLeft !== left)){
+                gantt._smart_render.updateRender();
+            }
+        }
+    },
+    50,
+    {
+        maxWait: 200
+    }
+);
+
+let timeoutId = null;
+
 export const eventListeners = {
+    onLoadStart: () => {
+        AJS.dim();
+    },
+    onLoadEnd: () => {
+        AJS.undim();
+    },
     onAfterTaskAdd: (id, task) => {
         console.log('task add', id, task);
     },
@@ -49,5 +80,19 @@ export const eventListeners = {
     },
     onAfterLinkDelete: (id) => {
         ganttService.deleteLink(storeService.getCalendar().id, id);
-    }
+    },
+    /*onGanttScroll: (oldLeft, oldTop, left, top) => {
+        //updateRender(oldLeft, oldTop, left, top);
+        if (oldTop !== top) {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            const el = document.getElementById('gantt-diagram-calendar');
+            el.classList.add('scrolling');
+            timeoutId = setTimeout(() => {
+                el.classList.remove('scrolling');
+                gantt._smart_render.updateRender();
+            }, scrollTimeout);
+        }
+    },*/
 };

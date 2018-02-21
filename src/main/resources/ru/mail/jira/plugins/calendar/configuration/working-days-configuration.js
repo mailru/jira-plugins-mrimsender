@@ -18,7 +18,8 @@ require(['jquery', 'underscore', 'backbone', 'calendar/non-working-day-configura
             events: {
                 'change .calendar-working-day' : 'changeWorkingDays',
                 'click #calendar-add-date': 'showNonWorkingDayConfigurationDialog',
-                'click .non-working-day-delete': 'deleteNonWorkingDay'
+                'click .non-working-day-delete': 'deleteNonWorkingDay',
+                'submit #worktime-form': 'updateWorkTime'
             },
             initialize: function() {
                 this.collection.on('request', this.startLoadingScriptsCallback);
@@ -35,8 +36,8 @@ require(['jquery', 'underscore', 'backbone', 'calendar/non-working-day-configura
                 AJS.undim();
             },
             changeWorkingDays: function(e) {
-               var selectedDays = [];
-               this.$('input.calendar-working-day:checked').map(function(index, item) { selectedDays.push($(item).attr('id')); });
+                var selectedDays = [];
+                this.$('input.calendar-working-day:checked').map(function(index, item) { selectedDays.push($(item).attr('id')); });
                 $.ajax({
                     type: 'POST',
                     url: AJS.contextPath() + '/rest/mailrucalendar/1.0/configuration/workingDays',
@@ -66,6 +67,32 @@ require(['jquery', 'underscore', 'backbone', 'calendar/non-working-day-configura
             _removeNonWorkingDay: function(day) {
                 $('#calendar-non-working-days tr[id="' + day.id + '"]').remove();
                 this.finishLoadingScriptsCallback();
+            },
+            updateWorkTime: function() {
+                $.ajax({
+                    type: 'POST',
+                    url: AJS.contextPath() + '/rest/mailrucalendar/1.0/configuration/workingDays/time',
+                    data: {
+                        startTime: $("#worktime-start-time").val(),
+                        endTime: $("#worktime-end-time").val()
+                    },
+                    success: function() {
+                        AJS.flag({
+                            type: 'success',
+                            body: 'Updated',
+                            close: 'auto'
+                        });
+                    },
+                    error: function(xhr) {
+                        AJS.flag({
+                            type: 'error',
+                            body: xhr.responseText,
+                            close: 'auto'
+                        });
+                    }
+                });
+
+                return false; //prevent default submit
             }
         });
 

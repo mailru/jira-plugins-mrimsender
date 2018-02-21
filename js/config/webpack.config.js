@@ -1,12 +1,11 @@
 'use strict';
 
-//const autoprefixer = require('autoprefixer');
+const os = require('os');
 const path = require('path');
 const webpack = require('webpack');
-//const ExtractTextPlugin = require('extract-text-webpack-plugin');
-//const ManifestPlugin = require('webpack-manifest-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const CleanWebpackPlugin = require('clean-webpack-plugin');
 const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const paths = require('./paths');
@@ -25,42 +24,57 @@ const publicUrl = publicPath.slice(0, -1);
 // Get environment variables to inject into our app.
 const env = getClientEnvironment(publicUrl);
 
+const cssDir = '../../src/main/resources/ru/mail/jira/plugins/calendar/css/';
+
 const extractLess = new ExtractTextPlugin({
-    filename: '../../src/main/resources/ru/mail/jira/plugins/calendar/css/[name].css',
+    filename: cssDir + '[name].css',
     disable: process.env.NODE_ENV === "development"
 });
 
 let watch = true;
-let uglify = [];
 let extraPlugins = [];
+let devtool = 'cheap-module-source-map';
+let minimizeCss = false;
+
+let styleLoader = [
+    {
+        loader: 'style-loader'
+    }
+];
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 
 if (process.env.NODE_ENV === 'production') {
-    uglify = [
+    extraPlugins.push(
         new webpack.optimize.UglifyJsPlugin({
-            compress: {
-                warnings: false,
-                // Disabled because of an issue with Uglify breaking seemingly valid code:
-                // https://github.com/facebookincubator/create-react-app/issues/2376
-                // Pending further investigation:
-                // https://github.com/mishoo/UglifyJS2/issues/2011
-                comparisons: false,
+            uglifyOptions: {
+                compress: {
+                    warnings: false,
+                    // Disabled because of an issue with Uglify breaking seemingly valid code:
+                    // https://github.com/facebookincubator/create-react-app/issues/2376
+                    // Pending further investigation:
+                    // https://github.com/mishoo/UglifyJS2/issues/2011
+                    comparisons: false,
+                },
+                output: {
+                    comments: false,
+                    // Turned on because emoji and regex is not minified properly using default
+                    // https://github.com/facebookincubator/create-react-app/issues/2488
+                    ascii_only: true,
+                }
             },
-            output: {
-                comments: false,
-                // Turned on because emoji and regex is not minified properly using default
-                // https://github.com/facebookincubator/create-react-app/issues/2488
-                ascii_only: true,
-            },
-            sourceMap: shouldUseSourceMap, //todo
+            parallel: os.cpus().length,
+            sourceMap: shouldUseSourceMap,
         })
-    ];
+    );
+
+    styleLoader = [];
+    watch = false;
+    minimizeCss = true;
+    devtool = 'source-map';
 
     extraPlugins.push(new webpack.optimize.ModuleConcatenationPlugin());
-
-    watch = false;
 }
 
 console.log(`sourcemap: ${shouldUseSourceMap}`);
@@ -79,7 +93,7 @@ module.exports = {
     bail: true,
     // We generate sourcemaps in production. This is slow but gives good results.
     // You can exclude the *.map files from the build during deployment.
-    devtool: shouldUseSourceMap ? 'source-map' : false,
+    devtool: shouldUseSourceMap ? devtool : false,
     // In production, we only want to load the polyfills and the app code.
     entry: {
         gantt: [require.resolve('./polyfills'), paths.resolveApp('src/app-gantt/index.js')],
@@ -171,19 +185,22 @@ module.exports = {
                     },
                     {
                         test: /\.less$/,
-                        use: extractLess.extract(
-                            [
+                        use: extractLess.extract({
+                            fallback: 'style-loader',
+                            use: [
+                                ...styleLoader,
                                 {
-                                    loader: 'style-loader'
-                                },
-                                {
-                                    loader: 'css-loader'
+                                    loader: 'css-loader',
+                                    options: {
+                                        minimize: minimizeCss,
+                                        sourceMap: shouldUseSourceMap
+                                    }
                                 },
                                 {
                                     loader: 'less-loader'
                                 }
                             ]
-                        )
+                        })
                     },
                     // "file" loader makes sure assets end up in the `build` folder.
                     // When you `import` an asset, you get its filename.
@@ -213,13 +230,19 @@ module.exports = {
         // Otherwise React will be compiled in the very slow development mode.
         new webpack.DefinePlugin(env.stringified),
         // Minify the code.
-        ...uglify,
         new webpack.optimize.CommonsChunkPlugin({
             name: 'common',
             minChunks: 2
         }),
         // Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
         extractLess,
+        new CleanWebpackPlugin(
+            cssDir + "*.*",
+            {
+                dry: false,
+                allowExternal: true
+            }
+        ),
         // Moment.js is an extremely popular library that bundles large locale files
         // by default due to how Webpack interprets its code. This is a practical
         // solution that requires the user to opt into importing specific locales.

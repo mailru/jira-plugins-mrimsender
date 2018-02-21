@@ -80,6 +80,7 @@ public class UserDataService {
                 .map(NonWorkingDay::getDate)
                 .collect(Collectors.toList())
         );
+        userDataDto.setWorkingTime(workingDaysService.getWorkingTime());
         return userDataDto;
     }
 
