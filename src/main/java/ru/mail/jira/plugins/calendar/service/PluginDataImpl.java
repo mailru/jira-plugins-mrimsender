@@ -8,8 +8,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.xmlgraphics.util.uri.CommonURIResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.calendar.configuration.WorkingTimeDto;
 import ru.mail.jira.plugins.commons.CommonUtils;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +45,7 @@ public class PluginDataImpl implements PluginData {
     public synchronized List<Integer> getWorkingDays() {
         String workingDays = (String) this.pluginSettings.get("workingDays");
         if (workingDays == null)
-            return new ArrayList<Integer>(Arrays.asList(1, 2, 3, 4, 5));
+            return new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5));
         if (StringUtils.isBlank(workingDays))
             return new ArrayList<>();
         List<Integer> result = new ArrayList<>();
@@ -54,5 +57,29 @@ public class PluginDataImpl implements PluginData {
     @Override
     public synchronized void setWorkingDays(String workingDays) {
         this.pluginSettings.put("workingDays", workingDays);
+    }
+
+    private LocalTime getTimeValue(String key, LocalTime defaultValue) {
+        String time = (String) this.pluginSettings.get(key);
+        if (time == null) {
+            return defaultValue;
+        } else {
+            return LocalTime.parse(time);
+        }
+    }
+
+    @Override
+    public synchronized WorkingTimeDto getWorkingTime() {
+        return new WorkingTimeDto(
+            getTimeValue("workingTimeStart", LocalTime.of(10, 0)),
+            getTimeValue("workingTimeEnd", LocalTime.of(18, 0))
+        );
+    }
+
+    @Override
+    public synchronized void setWorkingTime(WorkingTimeDto workingTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_TIME;
+        this.pluginSettings.put("workingTimeStart", formatter.format(workingTime.getStartTime()));
+        this.pluginSettings.put("workingTimeEnd", formatter.format(workingTime.getEndTime()));
     }
 }

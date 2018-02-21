@@ -325,6 +325,36 @@
 
         <resource type="download" name="calendar-img/" location="ru/mail/jira/plugins/calendar/img"/>
 
+        <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>
+        <resource type="download" name="moment-timezone-with-data.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment-timezone-with-data.js"/>
+
+        <resource type="download" name="common.css" location="ru/mail/jira/plugins/calendar/css/common.css"/>
+        <resource type="download" name="gantt.css" location="ru/mail/jira/plugins/calendar/css/gantt.css"/>
+        <resource type="download" name="i18n.js" location="ru/mail/jira/plugins/calendar/gantt/i18n.js"/>
+        <resource type="download" name="common.js" location="ru/mail/jira/plugins/calendar/js/common.js"/>
+        <resource type="download" name="gantt.js" location="ru/mail/jira/plugins/calendar/js/gantt.js"/>
+    </web-resource>
+
+    <web-resource key="gantt-old-resources">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <dependency>com.atlassian.auiplugin:aui-sidebar</dependency>
+        <dependency>com.atlassian.auiplugin:aui-dropdown2</dependency>
+        <dependency>com.atlassian.auiplugin:dialog2</dependency>
+        <dependency>com.atlassian.auiplugin:aui-inline-dialog2</dependency>
+        <dependency>com.atlassian.auiplugin:aui-flag</dependency>
+        <dependency>com.atlassian.auiplugin:aui-select2</dependency>
+        <dependency>com.atlassian.auiplugin:aui-date-picker</dependency>
+        <dependency>com.atlassian.auiplugin:aui-banner</dependency>
+        <dependency>jira.webresources:jquery-livestamp</dependency>
+        <dependency>com.atlassian.auiplugin:aui-experimental-tooltips</dependency>
+        <dependency>jira.webresources:jqlautocomplete</dependency>
+        <dependency>ru.mail.jira.plugins.mailrucal:mailru-calendar-soy-templates</dependency>
+
+        <resource type="download" name="calendar-img/" location="ru/mail/jira/plugins/calendar/img"/>
+
         <resource type="download" name="dhtmlxgantt.css" location="ru/mail/jira/plugins/calendar/gantt/dhtmlxgantt.css"/>
         <resource type="download" name="dhtmlxgantt-min.js" location="ru/mail/jira/plugins/calendar/gantt/dhtmlxgantt-min.js"/>
         <resource type="download" name="dhtmlxgantt-min.js.map" location="ru/mail/jira/plugins/calendar/gantt/dhtmlxgantt-min.js.map"/>
@@ -336,20 +366,36 @@
         <resource type="download" name="view.js" location="ru/mail/jira/plugins/calendar/gantt/view.js"/>
     </web-resource>
 
+    <!-- todo: managed-access-level? -->
     <!--Custom Fields-->
-    <customfield-type key="calendar-issue-progress-cf" name="Calendar Issue Progress for Gantt" i18n-name-key="ru.mail.jira.plugins.calendar.cf.progress.title" class="ru.mail.jira.plugins.calendar.customfield.IssueProgressCFType">
+    <customfield-type
+            key="calendar-issue-progress-cf"
+            name="Calendar Issue Progress for Gantt"
+            i18n-name-key="ru.mail.jira.plugins.calendar.cf.progress.title"
+            class="ru.mail.jira.plugins.calendar.customfield.IssueProgressCFType"
+    >
         <description>Calendar Issue Progress for Gantt Diagram.</description>
         <resource type="velocity" name="view" location="ru/mail/jira/plugins/calendar/cf/progress-cf-view.vm" />
         <resource type="velocity" name="edit" location="ru/mail/jira/plugins/calendar/cf/progress-cf-edit.vm" />
     </customfield-type>
 
-    <customfield-type key="calendar-issue-duration-cf" name="Calendar Issue Duration for Gantt" i18n-name-key="ru.mail.jira.plugins.calendar.cf.duration.title" class="ru.mail.jira.plugins.calendar.customfield.IssueDurationCFType">
+    <customfield-type
+            key="calendar-issue-duration-cf"
+            name="Calendar Issue Duration for Gantt"
+            i18n-name-key="ru.mail.jira.plugins.calendar.cf.duration.title"
+            class="ru.mail.jira.plugins.calendar.customfield.IssueDurationCFType"
+    >
         <description>Calendar Issue Duration for Gantt Diagram.</description>
         <resource type="velocity" name="view" location="ru/mail/jira/plugins/calendar/cf/duration-cf-view.vm" />
         <resource type="velocity" name="edit" location="ru/mail/jira/plugins/calendar/cf/duration-cf-edit.vm" />
     </customfield-type>
 
-    <customfield-type key="calendar-issue-parent-cf" name="Calendar Issue Parent for Gantt" i18n-name-key="ru.mail.jira.plugins.calendar.cf.issueParent.title" class="ru.mail.jira.plugins.calendar.customfield.IssueParentCFType">
+    <customfield-type
+            key="calendar-issue-parent-cf"
+            name="Calendar Issue Parent for Gantt"
+            i18n-name-key="ru.mail.jira.plugins.calendar.cf.issueParent.title"
+            class="ru.mail.jira.plugins.calendar.customfield.IssueParentCFType"
+    >
         <description>Calendar Issue Parent for Gantt Diagram.</description>
         <resource type="velocity" name="view" location="ru/mail/jira/plugins/calendar/cf/parent-cf-view.vm" />
         <resource type="velocity" name="edit" location="ru/mail/jira/plugins/calendar/cf/parent-cf-edit.vm" />

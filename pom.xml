@@ -4,16 +4,14 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>mailrucal</artifactId>
-    <version>3.6.19</version>
+    <version>3.6.21</version>
     <organization>
         <name>Mail.Ru Group</name>
         <url>http://mail.ru</url>
     </organization>
-
     <name>Mail.Ru Calendar</name>
     <description>Calendar from Mail.Ru Company</description>
     <packaging>atlassian-plugin</packaging>
-
     <dependencies>
         <dependency>
             <groupId>com.atlassian.jira</groupId>
@@ -86,7 +84,6 @@
             <version>1.16.16</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>com.atlassian.upm</groupId>
             <artifactId>licensing-api</artifactId>
@@ -99,7 +96,6 @@
             <version>2.21</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>com.atlassian.plugin</groupId>
             <artifactId>atlassian-spring-scanner-annotation</artifactId>
@@ -124,7 +120,6 @@
             <!--<version>1.1.0</version>-->
         <!--</dependency>-->
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -140,11 +135,10 @@
                         <atlassian.mail.senddisabled>false</atlassian.mail.senddisabled>
                         <fastdev.mvn.command>${fastdev.mvn.command}</fastdev.mvn.command>
                     </systemPropertyVariables>
-                    <extractDependencies>true</extractDependencies>
                     <instructions>
                         <Atlassian-Plugin-Key>${atlassian.plugin.key}</Atlassian-Plugin-Key>
                         <Spring-Context>*</Spring-Context>
-                        <Export-Package></Export-Package>
+                        <Export-Package/>
                         <!-- explicitly exclude groovy imports, which may cause issues if groovyrunner is also installed -->
                         <Import-Package>
                             org.springframework.osgi.*;resolution:="optional",
@@ -161,14 +155,30 @@
                             com.atlassian.greenhopper.api.issuetype
                         </DynamicImport-Package>
                     </instructions>
-                    <compressJs>false</compressJs>
-                    <compressCss>false</compressCss>
                     <applications>
                         <application>
                             <applicationKey>jira-software</applicationKey>
                             <version>${jira.version}</version>
                         </application>
                     </applications>
+
+                    <compressJs>false</compressJs>
+                    <compressCss>false</compressCss>
+                    <enableFastdev>false</enableFastdev>
+                    <enableDevToolbox>false</enableDevToolbox>
+                    <enablePde>false</enablePde>
+                    <skipRestDocGeneration>true</skipRestDocGeneration>
+                    <allowGoogleTracking>false</allowGoogleTracking>
+                    <skipManifestValidation>true</skipManifestValidation>
+                    <extractDependencies>false</extractDependencies>
+
+                    <pluginArtifacts>
+                        <pluginArtifact>
+                            <groupId>com.atlassian.labs.plugins</groupId>
+                            <artifactId>quickreload</artifactId>
+                            <version>${quick.reload.version}</version>
+                        </pluginArtifact>
+                    </pluginArtifacts>
                 </configuration>
             </plugin>
             <plugin>
@@ -195,6 +205,8 @@
                     <!-- Don't really care about warning messages. They're fairly useless -->
                     <jswarn>false</jswarn>
                     <excludes>
+                        <exclude>**/js/*</exclude>
+                        <exclude>**/gantt/i18n.js</exclude>
                         <exclude>**/*.xml</exclude>
                         <exclude>**/*-min*</exclude>
                         <exclude>**/vis-timeline.js</exclude>
@@ -220,12 +232,10 @@
         </plugins>
     </build>
     <properties>
-        <!-- Check compilation for version 6.3.4 - 7.1.6 - 7.3.2-->
-        <!--<jira.version>6.3.13</jira.version>-->
-        <!--<jira.version>6.4.1</jira.version>-->
         <jira.version>7.6.3</jira.version>
-        <amps.version>6.2.11</amps.version>
+        <amps.version>6.3.14</amps.version>
         <ao.version>1.2.0</ao.version>
+        <quick.reload.version>2.0.0</quick.reload.version>
         <atlassian.spring.scanner.version>1.2.13</atlassian.spring.scanner.version>
         <!--<fastdev.mvn.command>/usr/share/atlassian-plugin-sdk-5.0.13/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>-->
         <fastdev.mvn.command>/Applications/Atlassian/atlassian-plugin-sdk-6.2.14/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>

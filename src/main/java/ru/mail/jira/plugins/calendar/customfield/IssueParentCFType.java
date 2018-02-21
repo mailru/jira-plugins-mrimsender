@@ -19,6 +19,7 @@ import com.atlassian.jira.issue.fields.rest.json.JsonData;
 import com.atlassian.jira.issue.fields.rest.json.JsonType;
 import com.atlassian.jira.issue.fields.rest.json.JsonTypeBuilder;
 import com.atlassian.jira.web.bean.BulkEditBean;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import org.apache.commons.lang3.StringUtils;
 
@@ -27,6 +28,7 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
+@Scanned
 public class IssueParentCFType extends AbstractSingleFieldType<String> implements SortableCustomField<String>, RestAwareCustomFieldType {
     private final ApplicationProperties applicationProperties;
 

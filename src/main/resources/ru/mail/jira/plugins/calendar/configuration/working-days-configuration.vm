@@ -55,6 +55,32 @@
         </div>
         <div class="module">
             <div class="mod-content">
+                <h2>Standard Working Time</h2>
+                <form class="aui" id="worktime-form">
+                    <div class="field-group">
+                        <label for="worktime-start-time">
+                            $i18n.getText("ru.mail.jira.plugins.calendar.configuration.workingTime.startTime")
+                            <span class="aui-icon icon-required">required</span>
+                        </label>
+                        <input class="text" type="text" id="worktime-start-time" name="worktime-start-time" title="Text input" value="$workingTime.startTime">
+                    </div>
+                    <div class="field-group">
+                        <label for="worktime-end-time">
+                            $i18n.getText("ru.mail.jira.plugins.calendar.configuration.workingTime.endTime")
+                            <span class="aui-icon icon-required">required</span>
+                        </label>
+                        <input class="text" type="text" id="worktime-end-time" name="worktime-end-time" title="Text input" value="$workingTime.endTime">
+                    </div>
+                    <div class="buttons-container">
+                        <div class="buttons">
+                            <input class="button submit" type="submit" value="$i18n.getText("ru.mail.jira.plugins.calendar.common.update")">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="module">
+            <div class="mod-content">
                 <header class="aui-page-header">
                     <div class="aui-page-header-inner">
                         <div class="aui-page-header-main">

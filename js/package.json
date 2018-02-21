@@ -1,0 +1,63 @@
+{
+  "private": true,
+  "devDependencies": {
+    "autoprefixer": "^8.0.0",
+    "babel-core": "^6.26.0",
+    "babel-eslint": "^8.2.1",
+    "babel-loader": "^7.1.2",
+    "babel-preset-react-app": "^3.1.1",
+    "clean-webpack-plugin": "^0.1.18",
+    "css-loader": "^0.28.9",
+    "eslint": "^4.17.0",
+    "eslint-config-react-app": "^2.1.0",
+    "eslint-loader": "^1.9.0",
+    "eslint-plugin-flowtype": "^2.43.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "5.1.1",
+    "eslint-plugin-react": "^7.6.1",
+    "extract-text-webpack-plugin": "^3.0.2",
+    "file-loader": "^1.1.6",
+    "less": "^2.7.3",
+    "less-loader": "^4.0.5",
+    "react-dev-utils": "^5.0.0",
+    "style-loader": "^0.20.1",
+    "url-loader": "^0.6.2",
+    "webpack": "^3.11.0",
+    "webpack-bundle-analyzer": "^2.10.0"
+  },
+  "scripts": {
+    "build": "NODE_ENV=development webpack --progress --config config/webpack.config.js",
+    "build-prod": "NODE_ENV=production webpack --progress --config config/webpack.config.js"
+  },
+  "babel": {
+    "presets": [
+      "react-app"
+    ]
+  },
+  "resolutions": {
+    "react": "16.2.0"
+  },
+  "dependencies": {
+    "@atlaskit/button": "^6.4.1",
+    "@atlaskit/datetime-picker": "^0.6.1",
+    "@atlaskit/dropdown-menu": "^3.11.8",
+    "@atlaskit/field-base": "^8.1.11",
+    "@atlaskit/icon": "^10.9.1",
+    "@atlaskit/inline-dialog": "^5.2.1",
+    "@atlaskit/layer-manager": "^2.7.3",
+    "@atlaskit/page-header": "^2.2.1",
+    "@atlaskit/reduced-ui-pack": "^8.7.1",
+    "@atlaskit/theme": "^2.3.3",
+    "@atlaskit/util-shared-styles": "^2.10.6",
+    "dhtmlx-gantt": "^5.0.5",
+    "lodash.debounce": "^4.0.8",
+    "object-assign": "^4.1.1",
+    "promise": "^8.0.1",
+    "prop-types": "^15.6.0",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "react-redux": "^5.0.6",
+    "redux": "^3.7.2",
+    "whatwg-fetch": "^2.0.3"
+  }
+}

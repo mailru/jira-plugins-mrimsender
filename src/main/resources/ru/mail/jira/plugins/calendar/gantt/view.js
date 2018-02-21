@@ -8,7 +8,29 @@ require(['jquery',
     gantt.config.fit_tasks = true;
     gantt.config.details_on_dblclick = false;
     gantt.config.columns = [
-        { name: 'id', label: ' ', tree: true, width: '200px' },
+        {
+            name: 'id',
+            label: 'Key',
+            width: '100px'
+        },
+        {
+            align: 'left',
+            name: 'summary',
+            label: 'Task',
+            tree: true,
+            width: '*'
+        },
+        {
+            align: 'left',
+            name: 'assignee',
+            label: 'Assignee',
+            width: '*',
+            /*template: function(item) {
+                if (item.assignee) {
+
+                }
+            }*/
+        }
         // { name: 'duration', label: 'Продолжительность', align: 'right', width: '*' }
     ];
 

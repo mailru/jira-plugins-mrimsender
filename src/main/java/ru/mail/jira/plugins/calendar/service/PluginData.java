@@ -1,5 +1,7 @@
 package ru.mail.jira.plugins.calendar.service;
 
+import ru.mail.jira.plugins.calendar.configuration.WorkingTimeDto;
+
 import java.util.List;
 
 public interface PluginData {
@@ -9,4 +11,7 @@ public interface PluginData {
 
     List<Integer> getWorkingDays();
     void setWorkingDays(String workingDays);
+
+    WorkingTimeDto getWorkingTime();
+    void setWorkingTime(WorkingTimeDto workingTime);
 }

@@ -43,4 +43,12 @@ public class WorkingDaysService {
     public void deleteNonWorkingDay(int id) {
         ao.delete(ao.get(NonWorkingDay.class, id));
     }
+
+    public WorkingTimeDto getWorkingTime() {
+        return pluginData.getWorkingTime();
+    }
+
+    public void setWorkingTime(WorkingTimeDto workingTime) {
+        pluginData.setWorkingTime(workingTime);
+    }
 }

@@ -17,12 +17,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.calendar.configuration.NonWorkingDay;
 import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDataDto;
 
+import java.util.Arrays;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class UserDataService {
@@ -71,6 +74,13 @@ public class UserDataService {
             userDataDto.setFeedbackShowCount(userData.getFeedbackShowCount());
         }
         userDataDto.setWorkingDays(workingDaysService.getWorkingDays().stream().mapToInt(i -> i).toArray());
+        userDataDto.setNonWorkingDays(
+            Arrays
+                .stream(workingDaysService.getNonWorkingDays())
+                .map(NonWorkingDay::getDate)
+                .collect(Collectors.toList())
+        );
+        userDataDto.setWorkingTime(workingDaysService.getWorkingTime());
         return userDataDto;
     }
 
