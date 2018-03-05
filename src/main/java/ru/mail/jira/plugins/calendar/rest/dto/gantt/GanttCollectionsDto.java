@@ -5,12 +5,11 @@ import lombok.Setter;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
-@Setter
-@Getter
-@SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
+@Setter @Getter
 @XmlRootElement
 public class GanttCollectionsDto {
     @XmlElement
-    private GanttLinkDto[] links;
+    private List<GanttLinkDto> links;
 }

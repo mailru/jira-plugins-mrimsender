@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.calendar.rest.dto.gantt;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -38,4 +39,5 @@ public class GanttTaskDto extends GanttTaskForm {
     private Long overdueSeconds;
     @XmlElement
     private Long earlySeconds;
+    private EventDto originalEvent;
 }

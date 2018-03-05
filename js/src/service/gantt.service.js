@@ -6,6 +6,10 @@ export class GanttService {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/${calendarId}`);
     }
 
+    getOptimized(calendarId) {
+        return ajaxGet(`${getPluginBaseUrl()}/gantt/${calendarId}/optimized`);
+    }
+
     updateTask(calendarId, id, task) {
         return ajaxPut(`${getPluginBaseUrl()}/gantt/${calendarId}/task/${id}`, task);
     }

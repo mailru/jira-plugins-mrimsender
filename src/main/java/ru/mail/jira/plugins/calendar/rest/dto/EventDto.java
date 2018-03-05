@@ -10,6 +10,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
@@ -84,12 +85,24 @@ public class EventDto {
     private Long timeSpentSeconds;
     @XmlElement
     private UserDto assignee;
-    @XmlElement
     private boolean resolved;
 
     public enum Type {
         ISSUE,
         CUSTOM,
         HOLIDAY
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EventDto eventDto = (EventDto) o;
+        return Objects.equals(id, eventDto.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

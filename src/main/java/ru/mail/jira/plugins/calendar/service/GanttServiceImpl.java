@@ -93,14 +93,14 @@ public class GanttServiceImpl implements GanttService {
             eventDtoList
                 .stream()
                 .map(eventDto -> buildEvent(eventDto, dateFormat, dateTimeFormat, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, userZoneId))
-                .toArray(GanttTaskDto[]::new)
+                .collect(Collectors.toList())
         );
         GanttCollectionsDto collectionsDto = new GanttCollectionsDto();
         collectionsDto.setLinks(
             Arrays
                 .stream(ao.find(GanttLink.class, Query.select().where("CALENDAR_ID = ?", calendarId)))
                 .map(GanttServiceImpl::buildLinkDto)
-                .toArray(GanttLinkDto[]::new)
+                .collect(Collectors.toList())
         );
         ganttDto.setCollections(collectionsDto);
         return ganttDto;
@@ -167,6 +167,7 @@ public class GanttServiceImpl implements GanttService {
         Set<Integer> workingDays, Set<java.time.LocalDate> nonWorkingDays, WorkingTimeDto workingTime, ZoneId zoneId
     ) {
         GanttTaskDto ganttTaskDto = new GanttTaskDto();
+        ganttTaskDto.setOriginalEvent(event);
         ganttTaskDto.setId(event.getId());
         ganttTaskDto.setSummary(event.getTitle());
         ganttTaskDto.setText(String.format("%s %s", event.getId(), event.getTitle()));

@@ -15,6 +15,7 @@ import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import CalendarIcon from '@atlaskit/icon/glyph/calendar';
 import SearchIcon from '@atlaskit/icon/glyph/search';
 import ListIcon from '@atlaskit/icon/glyph/list';
+import JiraLabsIcon from '@atlaskit/icon/glyph/jira/labs';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import i18n from 'gantt-i18n';
@@ -22,6 +23,7 @@ import i18n from 'gantt-i18n';
 import {keyedConfigs, scaleConfigs} from './scaleConfigs';
 
 import {OptionsActionCreators} from '../service/gantt.reducer';
+import {ganttService} from '../service/services';
 
 
 class GanttActionsInternal extends React.Component {
@@ -32,7 +34,8 @@ class GanttActionsInternal extends React.Component {
     };
 
     state ={
-        showDateDialog: false
+        showDateDialog: false,
+        waitingForMagic: false
     };
 
     _zoomIn = () => {
@@ -96,8 +99,30 @@ class GanttActionsInternal extends React.Component {
 
     _toggleGrid = () => this.props.updateOptions({ showGrid: !this.props.options.showGrid });
 
+    _runMagic = () => {
+        this.setState({ waitingForMagic: true });
+        ganttService
+            .getOptimized(this.props.calendar.id)
+            .then(
+                data => {
+                    const {gantt} = this.props;
+                    gantt.clearAll();
+                    gantt.addMarker({
+                        start_date: new Date(),
+                        css: 'today'
+                    });
+                    gantt.parse(data);
+                    this.setState({ waitingForMagic: false });
+                },
+                error => {
+                    this.setState({ waitingForMagic: false });
+                    throw error;
+                }
+            );
+    };
+
     render() {
-        const {showDateDialog} = this.state;
+        const {showDateDialog, waitingForMagic} = this.state;
         const {options, calendar} = this.props;
         const {showGrid} = options;
 
@@ -121,14 +146,24 @@ class GanttActionsInternal extends React.Component {
                 </PageHeader>
                 <div className="flex-row">
                     <div>
-                        <Button
-                            iconBefore={<ListIcon label=""/>}
-                            isSelected={showGrid}
+                        <ButtonGroup>
+                            <Button
+                                iconBefore={<ListIcon label=""/>}
+                                isSelected={showGrid}
 
-                            onClick={this._toggleGrid}
-                        >
-                            Список задач
-                        </Button>
+                                onClick={this._toggleGrid}
+                            >
+                                Список задач
+                            </Button>
+                            <Button
+                                iconBefore={<JiraLabsIcon label=""/>}
+                                isDisabled={waitingForMagic}
+
+                                onClick={this._runMagic}
+                            >
+                                Запустить магию
+                            </Button>
+                        </ButtonGroup>
                     </div>
                     <div className="flex-horizontal-middle flex-grow">
                         <ButtonGroup>

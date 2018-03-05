@@ -6,17 +6,23 @@ import org.ojalgo.optimisation.Expression;
 import org.ojalgo.optimisation.ExpressionsBasedModel;
 import org.ojalgo.optimisation.Optimisation;
 import org.ojalgo.optimisation.Variable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDto;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class PlanningEngine {
+    private final Logger logger = LoggerFactory.getLogger(PlanningEngine.class);
     private static final BigDecimal PROGRESS_START_MARGIN = new BigDecimal(0 + 0.001);
     private static final BigDecimal PROGRESS_END_MARGIN = new BigDecimal(1 - 0.001);
 
@@ -60,7 +66,7 @@ public class PlanningEngine {
                 for (int j = 0; j < numDays; j++) {
 
                     progressVars[i * numDays + j] = Variable.make(String.format("x_%d_%d", i, j))
-                                                            .weight(j + 1 == numDays ? 1 : 0)
+                                                            .weight(1)
                                                             .lower(0)
                                                             .upper(1);
                     if (j == 0)
@@ -79,7 +85,7 @@ public class PlanningEngine {
                                                                 .upper(1);
                     } else {
                         progressVars[i * numDays + j] = Variable.make(String.format("x_%d_%d", i, j))
-                                                                .weight(j + 1 == numDays ? 1 : 0)
+                                                                .weight(j + 1 == numDays ? 1 : 1)
                                                                 .lower(0)
                                                                 .upper(1);
                     }
@@ -113,17 +119,17 @@ public class PlanningEngine {
                  .set(progressVars[taskIdx * numDays], 1)
                  .level(0);
 
-            for (EventDto issueDep : issueDepList) {
-                if (!issueIndex.containsKey(issueDep))
+            for (EventDto dependantIssue : issueDepList) {
+                if (!issueIndex.containsKey(dependantIssue))
                     continue;
-                int taskDepIdx = issueIndex.get(issueDep);
+                int dependantIssueIdx = issueIndex.get(dependantIssue);
 
                 for (int j = 1; j < numDays; j++) {
                     //  dependence_constraints.append(progress[task_dep, j - 1] - progress[task, j] >= 0)
-                    model.addExpression(String.format("dependence_continuous_%s_%s_%d", issue.getId(), issueDep.getId(), j))
-                         .set(progressVars[taskDepIdx * numDays + j - 1], 1)
+                    model.addExpression(String.format("dependence_continuous_%s_%s_%d", issue.getId(), dependantIssue.getId(), j))
+                         .set(progressVars[dependantIssueIdx * numDays + j - 1], 1)
                          .set(progressVars[taskIdx * numDays + j], -1)
-                         .upper(0);
+                         .lower(0);
                 }
             }
         }
@@ -153,28 +159,66 @@ public class PlanningEngine {
                     expression.set(progressVars[taskIdx * numDays + day], duration)
                               .set(progressVars[taskIdx * numDays + day - 1], -duration)
                               .upper(maxDayCapacity);
+
+
+                    /*
+                    Expression expression2 = model.addExpression(String.format("work_capacity_%d_%s_%s_min", day, user, issue.getId()));
+
+                    expression2
+                        .set(progressVars[taskIdx * numDays + day], duration)
+                        .set(progressVars[taskIdx * numDays + day - 1], -duration)
+                        .lower(1)
+                        .upper(2);*/
                 }
             }
         }
 
         Map<EventDto, Pair<Date, Date>> plan = new HashMap<>();
+        logger.debug("maximizing");
         Optimisation.Result result = model.maximise();
+        logger.debug("maximized");
+
+        DecimalFormat decimalFormat = new DecimalFormat();
+        decimalFormat.setMaximumFractionDigits(2);
+        decimalFormat.setMinimumFractionDigits(0);
 
         LocalDate today = LocalDate.now();
         for (int i = 0; i < numTasks; i++) {
+            EventDto issue = indexIssue.get(i);
+            Integer duration = issueDuration.get(issue);
+
+            StringBuilder sb = new StringBuilder();
+            sb.append(issue.getId());
+            sb.append('\t');
+            sb.append(issue.getAssignee() != null ? issue.getAssignee().getKey() : "");
+            sb.append('\t');
+
             Date planStart = null;
             Date planEnd = null;
             for (int j = 0; j < numDays; j++) {
                 BigDecimal progress = result.get(i * numDays + j);
+
+                BigDecimal progressDiff = progress;
+                if (j > 0) {
+                    progressDiff = progress.subtract(result.get(i * numDays + j - 1));
+                }
+
+                sb.append("| ");
+                sb.append(decimalFormat.format(progressDiff.multiply(new BigDecimal(duration))));
+                sb.append(" \t");
+
                 if (planStart == null && progress.compareTo(PROGRESS_START_MARGIN) > 0) { // start date
                     planStart = today.plusDays(j).toDate();
-                } else if (progress.compareTo(PROGRESS_END_MARGIN) >= 0) { // end date
-                    planEnd = today.plusDays(j).toDate();
+                }
+                if (progress.compareTo(PROGRESS_END_MARGIN) >= 0) { // end date
+                    planEnd = today.plusDays(j+1).toDate();
                     break;
                 }
             }
 
-            plan.put(indexIssue.get(i * numDays), Pair.nicePairOf(planStart, planEnd));
+            logger.debug(sb.toString());
+
+            plan.put(issue, Pair.nicePairOf(planStart, planEnd));
         }
 
         return plan;
