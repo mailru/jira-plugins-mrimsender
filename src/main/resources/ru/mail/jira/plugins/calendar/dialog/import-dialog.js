@@ -72,6 +72,8 @@ define('calendar/import-dialog', ['jquery', 'underscore', 'backbone'], function(
         },
         save: function() {
             this.model.save({calendars: this.selectedIds}, {
+                patch: true,
+                type : 'PUT',
                 success: $.proxy(function() {
                     this.dialog.hide();
                     this.collection.fetch();

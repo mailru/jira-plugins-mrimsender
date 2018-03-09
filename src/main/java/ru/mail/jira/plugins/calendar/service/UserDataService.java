@@ -110,19 +110,16 @@ public class UserDataService {
     }
 
     public UserDataDto updateUserData(final ApplicationUser user, final UserDataDto userDataDto) {
-        return ao.executeInTransaction(new TransactionCallback<UserDataDto>() {
-            @Override
-            public UserDataDto doInTransaction() {
-                if (userDataDto.getCalendars() != null && !userDataDto.getCalendars().isEmpty())
-                    for (Integer calendarId : userDataDto.getCalendars())
-                        try {
-                            Calendar calendar = calendarService.getCalendar(calendarId);
-                            userCalendarService.addCalendarToUser(user.getKey(), calendar, true);
-                        } catch (GetException e) {
-                            log.warn("User attempt to add not existing calendar. User={}, calendar={}", user.getKey(), calendarId);
-                        }
-                return getUserDataDto(user, getUserData(user));
-            }
+        return ao.executeInTransaction(() -> {
+            if (userDataDto.getCalendars() != null && !userDataDto.getCalendars().isEmpty())
+                for (Integer calendarId : userDataDto.getCalendars())
+                    try {
+                        Calendar calendar = calendarService.getCalendar(calendarId);
+                        userCalendarService.addCalendarToUser(user.getKey(), calendar, true);
+                    } catch (GetException e) {
+                        log.warn("User attempt to add not existing calendar. User={}, calendar={}", user.getKey(), calendarId);
+                    }
+            return getUserDataDto(user, getUserData(user));
         });
     }
 
