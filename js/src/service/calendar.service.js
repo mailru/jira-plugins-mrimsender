@@ -1,4 +1,4 @@
-import {ajaxGet, getPluginBaseUrl} from '../common/ajs-helpers';
+import {ajaxGet, getBaseUrl, getPluginBaseUrl} from '../common/ajs-helpers';
 
 
 export class CalendarService {
@@ -12,5 +12,9 @@ export class CalendarService {
 
     getUserPreference() {
         return ajaxGet(`${getPluginBaseUrl()}/calendar/userPreference`);
+    }
+
+    getFields() {
+        return ajaxGet(`${getBaseUrl()}/rest/api/latest/field`);
     }
 }

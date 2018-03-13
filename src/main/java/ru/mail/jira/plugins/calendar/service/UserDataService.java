@@ -21,6 +21,7 @@ import ru.mail.jira.plugins.calendar.configuration.NonWorkingDay;
 import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.UserData;
+import ru.mail.jira.plugins.calendar.rest.dto.CalendarsDto;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDataDto;
 
 import java.util.Arrays;
@@ -109,10 +110,10 @@ public class UserDataService {
         });
     }
 
-    public UserDataDto updateUserData(final ApplicationUser user, final UserDataDto userDataDto) {
+    public UserDataDto updateUserCalendars(final ApplicationUser user, final CalendarsDto calendarsDto) {
         return ao.executeInTransaction(() -> {
-            if (userDataDto.getCalendars() != null && !userDataDto.getCalendars().isEmpty())
-                for (Integer calendarId : userDataDto.getCalendars())
+            if (calendarsDto.getCalendars() != null && !calendarsDto.getCalendars().isEmpty())
+                for (Integer calendarId : calendarsDto.getCalendars())
                     try {
                         Calendar calendar = calendarService.getCalendar(calendarId);
                         userCalendarService.addCalendarToUser(user.getKey(), calendar, true);

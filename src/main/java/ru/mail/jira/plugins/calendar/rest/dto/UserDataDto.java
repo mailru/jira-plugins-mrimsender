@@ -12,7 +12,7 @@ import java.util.List;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
-public class UserDataDto {
+public class UserDataDto extends CalendarsDto {
     @XmlElement
     private String id;
     @XmlElement
@@ -27,8 +27,6 @@ public class UserDataDto {
     private boolean hideWeekends;
     @XmlElement
     private String icalUid;
-    @XmlElement
-    private List<Integer> calendars;
     @XmlElement
     private Long nextFeedbackShow;
     @XmlElement
@@ -78,14 +76,6 @@ public class UserDataDto {
 
     public void setIcalUid(String icalUid) {
         this.icalUid = icalUid;
-    }
-
-    public List<Integer> getCalendars() {
-        return calendars;
-    }
-
-    public void setCalendars(List<Integer> calendars) {
-        this.calendars = calendars;
     }
 
     public Long getNextFeedbackShow() {

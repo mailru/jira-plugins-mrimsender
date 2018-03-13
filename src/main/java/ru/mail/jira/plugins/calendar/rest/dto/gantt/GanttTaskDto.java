@@ -38,6 +38,10 @@ public class GanttTaskDto extends GanttTaskForm {
     @XmlElement
     private Long overdueSeconds;
     @XmlElement
+    private String type;
+    @XmlElement
+    private String resource;
+    @XmlElement
     private Long earlySeconds;
     private EventDto originalEvent;
 }

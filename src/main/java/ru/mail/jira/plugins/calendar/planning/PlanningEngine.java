@@ -85,7 +85,7 @@ public class PlanningEngine {
                                                                 .upper(1);
                     } else {
                         progressVars[i * numDays + j] = Variable.make(String.format("x_%d_%d", i, j))
-                                                                .weight(j + 1 == numDays ? 1 : 1)
+                                                                .weight(1)
                                                                 .lower(0)
                                                                 .upper(1);
                     }
@@ -130,6 +130,10 @@ public class PlanningEngine {
                          .set(progressVars[dependantIssueIdx * numDays + j - 1], 1)
                          .set(progressVars[taskIdx * numDays + j], -1)
                          .lower(0);
+                    model.addExpression(String.format("dependence_day_%s_%s_%d", issue.getId(), dependantIssue.getId(), j))
+                        .set(progressVars[dependantIssueIdx * numDays + j], 1)
+                        .set(progressVars[taskIdx * numDays + j], -1)
+                        .lower(0);
                 }
             }
         }

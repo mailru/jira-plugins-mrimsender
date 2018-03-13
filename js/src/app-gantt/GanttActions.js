@@ -12,10 +12,12 @@ import {Label} from '@atlaskit/field-base';
 import MediaServicesZoomInIcon from '@atlaskit/icon/glyph/media-services/zoom-in';
 import MediaServicesZoomOutIcon from '@atlaskit/icon/glyph/media-services/zoom-out';
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
-import CalendarIcon from '@atlaskit/icon/glyph/calendar';
+import PreferencesIcon from '@atlaskit/icon/glyph/preferences';
 import SearchIcon from '@atlaskit/icon/glyph/search';
 import ListIcon from '@atlaskit/icon/glyph/list';
 import JiraLabsIcon from '@atlaskit/icon/glyph/jira/labs';
+import ArrowDownIcon from '@atlaskit/icon/glyph/arrow-down';
+import ArrowUpIcon from '@atlaskit/icon/glyph/arrow-up';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import i18n from 'gantt-i18n';
@@ -23,8 +25,16 @@ import i18n from 'gantt-i18n';
 import {keyedConfigs, scaleConfigs} from './scaleConfigs';
 
 import {OptionsActionCreators} from '../service/gantt.reducer';
-import {ganttService} from '../service/services';
+import {calendarService, ganttService} from '../service/services';
+import {SingleSelect} from '../common/ak/SingleSelect';
 
+
+const groupOptions = [
+    {
+        value: 'assignee',
+        label: 'По исполнителю'
+    }
+];
 
 class GanttActionsInternal extends React.Component {
     static propTypes = {
@@ -35,8 +45,26 @@ class GanttActionsInternal extends React.Component {
 
     state ={
         showDateDialog: false,
-        waitingForMagic: false
+        waitingForMagic: false,
+        fields: []
     };
+
+    componentDidMount() {
+        calendarService
+            .getFields()
+            .then(fields =>
+                this.setState({
+                    fields: fields
+                        .filter(field => field.navigable && field.clauseNames && field.clauseNames.length)
+                        .map(field => {
+                            return {
+                                label: field.name,
+                                value: field.id
+                            };
+                        })
+                })
+            );
+    }
 
     _zoomIn = () => {
         const currentScale = this.props.options.scale;
@@ -97,7 +125,13 @@ class GanttActionsInternal extends React.Component {
 
     _setDate = (field) => (value) => this.props.updateOptions({ [field]: value });
 
+    _setGroup = (value) => this.props.updateOptions({ 'groupBy': value ? value.value : null });
+
+    _setOrder = (value) => this.props.updateOptions({ 'orderBy': value ? value.value : null });
+
     _toggleGrid = () => this.props.updateOptions({ showGrid: !this.props.options.showGrid });
+
+    _toggleOrder = () => this.props.updateOptions({ order: !this.props.options.order });
 
     _runMagic = () => {
         this.setState({ waitingForMagic: true });
@@ -122,7 +156,7 @@ class GanttActionsInternal extends React.Component {
     };
 
     render() {
-        const {showDateDialog, waitingForMagic} = this.state;
+        const {showDateDialog, waitingForMagic, fields} = this.state;
         const {options, calendar} = this.props;
         const {showGrid} = options;
 
@@ -130,11 +164,37 @@ class GanttActionsInternal extends React.Component {
 
         if (showDateDialog) {
             datePickers = (
-                <div>
+                <div style={{ width: '250px' }} className="flex-column">
                     <Label label="Дата начала" isFirstChild={true}/>
                     <DatePicker value={options.startDate} onChange={this._setDate('startDate')}/>
                     <Label label="Дата конца"/>
                     <DatePicker value={options.endDate} onChange={this._setDate('endDate')}/>
+                    <SingleSelect
+                        label="Группировка"
+                        isClearable={true}
+                        options={groupOptions}
+
+                        value={options.groupBy ? groupOptions.find(val => val.value === options.groupBy) : null}
+                        onChange={this._setGroup}
+                    />
+                    <div className="flex-row">
+                        <div className="flex-grow">
+                            <SingleSelect
+                                label="Сортировать по"
+                                isClearable={true}
+                                options={fields}
+
+                                value={options.orderBy ? fields.find(val => val.value === options.orderBy) : null}
+                                onChange={this._setOrder}
+                            />
+                        </div>
+                        <div className="flex-none" style={{paddingTop: '45px', marginLeft: '5px'}}>
+                            <Button
+                                iconBefore={options.order ? <ArrowDownIcon label=""/> : <ArrowUpIcon label=""/>}
+                                onClick={this._toggleOrder}
+                            />
+                        </div>
+                    </div>
                 </div>
             );
         }
@@ -155,14 +215,14 @@ class GanttActionsInternal extends React.Component {
                             >
                                 Список задач
                             </Button>
-                            <Button
+                            {/*TODO: <Button
                                 iconBefore={<JiraLabsIcon label=""/>}
                                 isDisabled={waitingForMagic}
 
                                 onClick={this._runMagic}
                             >
                                 Запустить магию
-                            </Button>
+                            </Button>*/}
                         </ButtonGroup>
                     </div>
                     <div className="flex-horizontal-middle flex-grow">
@@ -183,12 +243,12 @@ class GanttActionsInternal extends React.Component {
                                 onClose={this._toggleDateDialog}
                             >
                                 <Button
-                                    iconBefore={<CalendarIcon/>}
+                                    iconBefore={<PreferencesIcon/>}
                                     iconAfter={<ChevronDownIcon/>}
                                     onClick={this._toggleDateDialog}
                                     isSelected={showDateDialog}
                                 >
-                                    Период
+                                    Параметры
                                 </Button>
                             </InlineDialog>
                         </ButtonGroup>

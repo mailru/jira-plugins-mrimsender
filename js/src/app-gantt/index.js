@@ -30,9 +30,9 @@ import {LayoutUpdater} from './layout.updater';
 import {collectTopMailCounterScript} from '../common/top-mail-ru';
 
 import {calendarService, store, storeService} from '../service/services';
+import {CalendarActionCreators, ganttReady} from '../service/gantt.reducer';
 
 import './gantt.less';
-import {CalendarActionCreators, ganttReady} from '../service/gantt.reducer';
 
 
 const gantt = window.gantt;
@@ -71,7 +71,7 @@ for (const key of Object.keys(eventListeners)) {
 function initGantt() {
     gantt.init('gantt-diagram-calendar');
 
-    const eventDialog = AJS.InlineDialog('.gantt_event_object', 'eventDialog', (content, trigger, showPopup) => {
+    const eventDialog = AJS.InlineDialog('.gantt_event_object.issue_event', 'eventDialog', (content, trigger, showPopup) => {
         const eventId = $(trigger).attr('task_id');
 
         // Atlassian bug workaround

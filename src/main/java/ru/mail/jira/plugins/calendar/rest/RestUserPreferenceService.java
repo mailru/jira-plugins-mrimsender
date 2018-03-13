@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.calendar.rest;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import ru.mail.jira.plugins.calendar.rest.dto.CalendarsDto;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDataDto;
 import ru.mail.jira.plugins.calendar.service.UserDataService;
@@ -47,12 +48,12 @@ public class RestUserPreferenceService {
     }
 
     @PUT
-    public Response update(final UserDataDto userDataDto) {
+    public Response updateCalendars(final CalendarsDto calendarsDto) {
         return new RestExecutor<UserDataDto>() {
             @Override
             protected UserDataDto doAction() throws Exception {
                 licenseService.checkLicense();
-                return userDataService.updateUserData(jiraAuthenticationContext.getUser(), userDataDto);
+                return userDataService.updateUserCalendars(jiraAuthenticationContext.getLoggedInUser(), calendarsDto);
             }
         }.getResponse();
     }

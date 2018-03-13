@@ -44,6 +44,9 @@ function optionsReducer(state, action) {
             scale: keyedConfigs[1].i,
             startDate: '',
             endDate: '',
+            groupBy: null,
+            orderBy: null,
+            order: true,
             showGrid: true
         };
     }

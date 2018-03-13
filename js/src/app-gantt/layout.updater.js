@@ -11,7 +11,9 @@ export class LayoutUpdater {
     }
 
     _update = () => {
-        const showGrid = storeService.getOptions().showGrid;
+        const {showGrid} = storeService.getOptions();
+
+        let render = false;
 
         if (this.showGrid !== showGrid) {
             this.showGrid = showGrid;
@@ -19,11 +21,12 @@ export class LayoutUpdater {
             //avoid unnecessary re-renders
             if (this.gantt.config.show_grid !== showGrid) {
                 this.gantt.config.show_grid = showGrid;
-
-                if (storeService.isGanttReady()) {
-                    this.gantt.render();
-                }
+                render = true;
             }
+        }
+
+        if (render && storeService.isGanttReady()) {
+            this.gantt.render();
         }
     };
 }

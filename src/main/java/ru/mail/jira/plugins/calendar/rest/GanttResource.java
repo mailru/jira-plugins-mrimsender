@@ -2,10 +2,12 @@ package ru.mail.jira.plugins.calendar.rest;
 
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
+import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.util.lang.Pair;
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.query.order.SortOrder;
 import com.google.common.collect.ImmutableMap;
 import ru.mail.jira.plugins.calendar.planning.PlanningEngine;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
@@ -45,13 +47,18 @@ public class GanttResource {
 
     @GET
     @Path("{id}")
-    public Response loadGantt(@PathParam("id") final int calendarId,
-                              @QueryParam("start") final String startDate,
-                              @QueryParam("end") final String endDate) {
+    public Response loadGantt(
+        @PathParam("id") int calendarId,
+        @QueryParam("start") String startDate,
+        @QueryParam("end") String endDate,
+        @QueryParam("groupBy") String groupBy,
+        @QueryParam("orderBy") String orderBy,
+        @QueryParam("order") SortOrder order
+    ) {
         return new RestExecutor<GanttDto>() {
             @Override
             protected GanttDto doAction() throws Exception {
-                return ganttService.getGantt(calendarId, startDate, endDate);
+                return ganttService.getGantt(authenticationContext.getLoggedInUser(), calendarId, startDate, endDate, groupBy, orderBy, order);
             }
         }.getResponse();
     }
@@ -61,14 +68,17 @@ public class GanttResource {
     public Response loadOptimized(
         @PathParam("id") final int calendarId,
         @QueryParam("start") final String startDate,
-        @QueryParam("end") final String endDate
+        @QueryParam("end") final String endDate,
+        @QueryParam("groupBy") String groupBy,
+        @QueryParam("orderBy") String orderBy,
+        @QueryParam("order") SortOrder order
     ) {
         return new RestExecutor<GanttDto>() {
             @Override
             protected GanttDto doAction() throws Exception {
                 DateTimeFormatter dateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(authenticationContext.getLoggedInUser()).withStyle(DateTimeStyle.ISO_8601_DATE);
 
-                GanttDto ganttData = ganttService.getGantt(calendarId, startDate, endDate);
+                GanttDto ganttData = ganttService.getGantt(authenticationContext.getLoggedInUser(), calendarId, startDate, endDate, groupBy, orderBy, order);
 
                 List<GanttTaskDto> ganttEvents = ganttData.getData();
                 List<EventDto> events = ganttEvents
@@ -129,8 +139,8 @@ public class GanttResource {
     ) {
         return new RestExecutor<GanttLinkDto>() {
             @Override
-            protected GanttLinkDto doAction() {
-                return ganttService.createLink(calendarId, form);
+            protected GanttLinkDto doAction() throws GetException {
+                return ganttService.createLink(authenticationContext.getLoggedInUser(), calendarId, form);
             }
         }.getResponse();
     }
@@ -143,8 +153,8 @@ public class GanttResource {
     ) {
         return new RestExecutor<GanttActionResponse>() {
             @Override
-            protected GanttActionResponse doAction() {
-                ganttService.deleteLink(calendarId, linkId);
+            protected GanttActionResponse doAction() throws GetException {
+                ganttService.deleteLink(authenticationContext.getLoggedInUser(), calendarId, linkId);
                 return new GanttActionResponse<>(GanttActionResponse.Action.deleted, null);
             }
         }.getResponse();
@@ -157,10 +167,11 @@ public class GanttResource {
         @PathParam("issueKey") final String issueKey,
         GanttTaskForm updateDto
     ) {
-        return new RestExecutor<GanttTaskDto>() {
+        //todo: return object with list field
+        return new RestExecutor<List<GanttTaskDto>>() {
             @Override
-            protected GanttTaskDto doAction() throws Exception {
-                return ganttService.updateDates(calendarId, issueKey, updateDto.getStartDate(), updateDto.getEndDate());
+            protected List<GanttTaskDto> doAction() throws Exception {
+                return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, updateDto.getStartDate(), updateDto.getEndDate());
             }
         }.getResponse();
     }

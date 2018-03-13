@@ -1,12 +1,18 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
 
-import {getContextPath, escapeHtml, getBaseUrl} from '../common/ajs-helpers';
+import {ganttColumns} from './ganttColumns';
 
 
 const gantt = window.gantt;
 
 export const default_min_column_width = 70;
+
+export const defaultColumns = Object.keys(ganttColumns);
+
+export function buildColumns(names) {
+    return names.map(key => ganttColumns[key]);
+}
 
 export const config = {
     min_duration: 24 * 60 * 60 * 1000, // minimum task duration : 1 day
@@ -19,62 +25,10 @@ export const config = {
     show_progress: false,
     smart_rendering: true,
     smart_scales: true,
+    open_tree_initially: true,
     //show_task_cells: false,
 
-    columns: [
-        {
-            name: 'id',
-            //resize: true,
-            width: '110px',
-            label: 'Код',
-            align: 'left',
-            template: (item) => {
-                const id = escapeHtml(item.id);
-                return `<a href="${getBaseUrl()}/browse/${id}" ${item.resolved ? 'style="text-decoration: line-through;"' : ''}>${id}</a>`;
-            }
-        },
-        {
-            name: 'summary',
-            //resize: true,
-            label: 'Задача',
-            width: '*',
-            align: 'left',
-            template: (item) => `<img
-                class="calendar-event-issue-type"
-                alt="" height="16" width="16" style="margin-right: 5px;"
-                src="${getContextPath()}${item.icon_src}"/> ${escapeHtml(item.summary)}`
-        },
-        {
-            name: 'progress',
-            label: 'Прогресс',
-            width: '80px',
-            template: (item) => {
-                const {progress} = item;
-                const overdue = progress > 1;
-
-                return (
-                    `<div class="progressBar">
-                        <div class="progressIndicator ${overdue ? 'overdue' : ''}" style="width: ${(overdue ? 1 : item.progress) * (80-12)}px"></div>
-                    </div>`
-                );
-            },
-        },
-        {
-            name: 'estimate',
-            label: 'Оценка',
-            width: '53px',
-            align: 'left',
-            template: (item) => item.estimate || ''
-        },
-        {
-            name: 'assignee',
-            //resize: true,
-            width: '200px',
-            label: 'Исполнитель',
-            align: 'left',
-            template: (item) => item.assignee || ''
-        },
-    ],
+    columns: buildColumns(defaultColumns),
     task_height: 20,
     row_height: 34,
     grid_width: 600,
@@ -100,6 +54,14 @@ export const templates = {
     task_cell_class: default_task_cell,
     task_class: (start, end, task) => {
         const classes = ['gantt_event_object'];
+
+        if (task.type === 'issue') {
+            classes.push('issue_event');
+        }
+
+        if (task.type === 'group') {
+            classes.push('no_link');
+        }
 
         if (task.overdueDate) {
             classes.push('overdue');
