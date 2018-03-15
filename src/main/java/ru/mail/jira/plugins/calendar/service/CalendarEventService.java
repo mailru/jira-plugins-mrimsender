@@ -460,7 +460,16 @@ public class CalendarEventService {
             );
         } else if ("epicLink".equals(groupBy)) {
             if (jiraSoftwareHelper.isAvailable()) {
-                Issue epicLink = (Issue) issue.getCustomFieldValue(jiraSoftwareHelper.getEpicLinkField());
+                Issue epicLink = null;
+
+                CustomField epicLinkField = jiraSoftwareHelper.getEpicLinkField();
+                if (issue.isSubTask()) {
+                    if (issue.getParentObject() != null) {
+                        epicLink = (Issue) issue.getParentObject().getCustomFieldValue(epicLinkField);
+                    }
+                } else {
+                    epicLink = (Issue) issue.getCustomFieldValue(epicLinkField);
+                }
 
                 if (epicLink != null) {
                     groups = ImmutableList.of(

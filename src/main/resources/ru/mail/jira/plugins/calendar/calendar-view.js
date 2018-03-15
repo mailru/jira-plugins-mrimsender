@@ -33,7 +33,7 @@ define('calendar/calendar-view', [
             var CustomEvent = Backbone.Model.extend({urlRoot: contextPath + '/rest/mailrucalendar/1.0/customEvent/'});
             var self = this;
 
-            this.eventDialog = AJS.InlineDialog('.calendar-event-object,.vis-item', 'eventDialog', function(content, trigger, showPopup) {
+            this.eventDialog = AJS.InlineDialog('.calendar-event-object:not(.holiday-item-content),.vis-item', 'eventDialog', function(content, trigger, showPopup) {
                 var event;
                 if (self.getViewType() === 'timeline') {
                     var timeline = self.getView().timeline;
@@ -411,7 +411,8 @@ define('calendar/calendar-view', [
                 },
                 weekNumberTitle: '',
                 weekNumbers: true,
-                weekNumberCalculation: 'ISO',
+                weekNumberCalculation: 'local',
+                locale: AJS.Meta.get('user-locale'),
                 timezone: self.timezone,
                 timeFormat: this.timeFormat,
                 slotLabelFormat: this.timeFormat,
