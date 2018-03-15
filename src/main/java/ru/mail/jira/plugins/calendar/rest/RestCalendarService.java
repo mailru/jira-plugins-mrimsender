@@ -12,17 +12,14 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.plugins.rest.common.security.AnonymousAllowed;
 import com.atlassian.sal.api.message.I18nResolver;
 import net.fortuna.ical4j.data.CalendarOutputter;
+import net.fortuna.ical4j.extensions.property.RefreshInterval;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.ValidationException;
+import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.property.CalScale;
-import net.fortuna.ical4j.model.property.Description;
-import net.fortuna.ical4j.model.property.ProdId;
-import net.fortuna.ical4j.model.property.Uid;
-import net.fortuna.ical4j.model.property.Url;
-import net.fortuna.ical4j.model.property.Version;
+import net.fortuna.ical4j.model.property.*;
 import net.fortuna.ical4j.util.Uris;
+import net.fortuna.ical4j.validate.ValidationException;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDate;
 import org.slf4j.Logger;
@@ -233,12 +230,16 @@ public class RestCalendarService {
                     if (user == null || !user.isActive())
                         return null;
 
+                    //todo: check windows outlook & google calendar
                     DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
                     DateTimeFormatter userDateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
                     final net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
                     calendar.getProperties().add(new ProdId("-//MailRu Calendar/" + icalUid + "/iCal4j 1.0//EN"));
                     calendar.getProperties().add(Version.VERSION_2_0);
                     calendar.getProperties().add(CalScale.GREGORIAN);
+                    calendar.getProperties().add(Method.PUBLISH);
+                    calendar.getProperties().add(new RefreshInterval(new ParameterList(), "DURATION: PT30M"));
+                    calendar.getProperties().add(new XProperty("X-PUBLISHED-TTL", "PT30M"));
 
                     LocalDate startSearch = LocalDate.now().minusMonths(3);
                     LocalDate endSearch = LocalDate.now().plusMonths(1);
@@ -278,14 +279,11 @@ public class RestCalendarService {
                         }
                     }
 
-                    return new StreamingOutput() {
-                        @Override
-                        public void write(OutputStream output) throws IOException, WebApplicationException {
-                            try {
-                                new CalendarOutputter(false).output(calendar, output);
-                            } catch (ValidationException e) {
-                                throw new IOException(e);
-                            }
+                    return output -> {
+                        try {
+                            new CalendarOutputter(false).output(calendar, output);
+                        } catch (ValidationException e) {
+                            throw new IOException(e);
                         }
                     };
                 } catch (Throwable t) {

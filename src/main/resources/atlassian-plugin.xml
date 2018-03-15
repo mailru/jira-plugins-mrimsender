@@ -87,6 +87,7 @@
 
         <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
         <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
+        <resource type="download" name="fullcalendar-lang-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar-lang-all.js"/>
 
         <resource type="download" name="preferences.js" location="ru/mail/jira/plugins/calendar/preferences.js"/>
         <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
@@ -129,6 +130,7 @@
 
         <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
         <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
+        <resource type="download" name="fullcalendar-lang-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar-lang-all.js"/>
 
         <resource type="download" name="preferences.js" location="ru/mail/jira/plugins/calendar/preferences.js"/>
         <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
