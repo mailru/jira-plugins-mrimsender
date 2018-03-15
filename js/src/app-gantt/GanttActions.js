@@ -12,6 +12,7 @@ import MediaServicesZoomOutIcon from '@atlaskit/icon/glyph/media-services/zoom-o
 import PreferencesIcon from '@atlaskit/icon/glyph/preferences';
 import SearchIcon from '@atlaskit/icon/glyph/search';
 import ListIcon from '@atlaskit/icon/glyph/list';
+import JiraLabsIcon from '@atlaskit/icon/glyph/jira/labs';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import i18n from 'gantt-i18n';

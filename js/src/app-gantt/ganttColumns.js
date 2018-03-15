@@ -50,7 +50,7 @@ export const ganttColumns = {
         template: (item) => `<img
                 class="calendar-event-issue-type"
                 alt="" height="16" width="16" style="margin-right: 5px;"
-                src="${getIconSrc(item.icon_src)}"/> ${escapeHtml(item.summary)}`
+                src="${item.type === 'group' ? item.icon_src : getIconSrc(item.icon_src)}"/> ${escapeHtml(item.summary)}`
     },
     progress: {
         name: 'progress',

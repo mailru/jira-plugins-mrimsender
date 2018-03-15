@@ -107,6 +107,7 @@ public class GanttServiceImpl implements GanttService {
 
         eventDtoList
             .stream()
+            .filter(e -> e.getType() == EventDto.Type.ISSUE)
             .map(eventDto -> buildEvent(eventDto, dateFormat, dateTimeFormat, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, userZoneId))
             .forEach(events::add);
 
