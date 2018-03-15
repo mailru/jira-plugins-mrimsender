@@ -1,7 +1,8 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import $ from 'jquery';
 
-import {buildColumns, defaultColumns} from './ganttConfig';
+import {buildColumns} from './ganttConfig';
+import {defaultColumns} from './ganttColumns';
 
 import {storeService} from '../service/services';
 import {getPluginBaseUrl} from '../common/ajs-helpers';
@@ -18,7 +19,7 @@ export class GanttUpdater {
     }
 
     _update = () => {
-        const {startDate, endDate, groupBy, order, orderBy} = storeService.getOptions();
+        const {startDate, endDate, groupBy, order, orderBy, columns} = storeService.getOptions();
         const calendar = storeService.getCalendar();
         if (storeService.isGanttReady() && calendar) {
             if (
@@ -27,6 +28,7 @@ export class GanttUpdater {
                 this.groupBy !== groupBy ||
                 this.orderBy !== orderBy ||
                 this.order !== order ||
+                this.columns !== columns ||
                 calendar.id !== (this.calendar || {}).id
             ) {
                 this.startDate = startDate;
@@ -35,6 +37,7 @@ export class GanttUpdater {
                 this.orderBy = orderBy;
                 this.order = order;
                 this.calendar = calendar;
+                this.columns = columns;
 
                 console.log('loading gantt');
 
@@ -45,24 +48,16 @@ export class GanttUpdater {
                     //text: 'Today'
                 });
 
-                const isAssignee = groupBy === 'assignee';
-                const hasAssigneeColumn = !!this.gantt.config.columns.find(col => col.name === 'assignee');
-
-                if (isAssignee && hasAssigneeColumn) {
-                    this.gantt.config.columns = buildColumns(defaultColumns.filter(col => col !== 'assignee'));
-                    this.gantt.config.grid_width = 400;
-                }
-
-                if (!isAssignee && !hasAssigneeColumn) {
-                    this.gantt.config.columns = buildColumns(defaultColumns);
-                    this.gantt.config.grid_width = 600;
-                }
+                this.gantt.config.columns = buildColumns([...defaultColumns, ...(columns || [])]);
                 //no need to re-render here, gantt chart will be updated after data is parsed
+
+                console.log(this.gantt.config.columns);
 
                 const param = $.param({
                     start: startDate,
                     end: endDate,
                     order: order ? 'ASC' : 'DESC',
+                    fields: this.gantt.config.columns.filter(col => col.isJiraField).map(col => col.name),
                     groupBy, orderBy
                 });
 

@@ -2,6 +2,7 @@ package ru.mail.jira.plugins.calendar.rest.dto;
 
 import com.atlassian.core.util.HTMLUtils;
 import com.atlassian.sal.api.message.I18nResolver;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -56,7 +57,7 @@ public class IssueInfo {
     private String created;
     @XmlElement
     private String updated;
-    @XmlElement
+    @XmlElement @Getter
     private Map<String, String> customFields = new LinkedHashMap<String, String>();
 
     public IssueInfo(String key, String summary) {

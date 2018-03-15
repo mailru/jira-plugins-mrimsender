@@ -9,6 +9,22 @@ function getIconSrc(src) {
     }
 }
 
+export function buildJiraFieldColumn({key, name, colParams}) {
+    return {
+        ...colParams,
+        name: key,
+        label: name,
+        align: 'left',
+        isJiraField: true,
+        template: (item) => {
+            if (item.fields) {
+                return item.fields[key] || '';
+            }
+            return '';
+        }
+    };
+}
+
 export const ganttColumns = {
     id: {
         name: 'id',
@@ -26,7 +42,7 @@ export const ganttColumns = {
         }
     },
     name: {
-        name: 'name',
+        name: 'summary',
         //resize: true,
         label: 'Название',
         width: '*',
@@ -50,20 +66,13 @@ export const ganttColumns = {
                     </div>`
             );
         },
-    },
-    estimate: {
-        name: 'estimate',
-        label: 'Оценка',
-        width: '53px',
-        align: 'left',
-        template: (item) => item.estimate || ''
-    },
-    assignee: {
-        name: 'assignee',
-        //resize: true,
-        width: '200px',
-        label: 'Исполнитель',
-        align: 'left',
-        template: (item) => item.assignee || ''
     }
 };
+
+export const defaultColumns = Object
+    .keys(ganttColumns)
+    .map(key => {
+        return {
+            key
+        };
+    });

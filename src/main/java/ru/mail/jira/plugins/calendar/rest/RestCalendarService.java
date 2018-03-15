@@ -248,7 +248,7 @@ public class RestCalendarService {
                                                                              startSearch.toString("yyyy-MM-dd"),
                                                                              endSearch.toString("yyyy-MM-dd"),
                                                                              userManager.getUserByKey(userData.getUserKey()),
-                                                                             true, null);
+                                                                             true, null, null);
 
                         for (EventDto event : events) {
                             Date start = new DateTime(true);

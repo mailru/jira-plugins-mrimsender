@@ -7,6 +7,7 @@ import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Map;
 
 
 @XmlRootElement
@@ -41,6 +42,8 @@ public class GanttTaskDto extends GanttTaskForm {
     private String type;
     @XmlElement
     private String resource;
+    @XmlElement
+    private Map<String, String> fields;
     @XmlElement
     private Long earlySeconds;
     private EventDto originalEvent;

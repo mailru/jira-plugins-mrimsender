@@ -1,17 +1,28 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
 
-import {ganttColumns} from './ganttColumns';
+import {buildJiraFieldColumn, ganttColumns, defaultColumns} from './ganttColumns';
 
 
 const gantt = window.gantt;
 
 export const default_min_column_width = 70;
 
-export const defaultColumns = Object.keys(ganttColumns);
-
 export function buildColumns(names) {
-    return names.map(key => ganttColumns[key]);
+    return names.map(column => {
+        const builtInColumn = ganttColumns[column.key];
+
+        if (builtInColumn) {
+            return {...builtInColumn};
+        }
+
+        if (column.isJiraField) {
+            return buildJiraFieldColumn(column);
+        }
+
+        console.warn('unknown column', column);
+        return null;
+    });
 }
 
 export const config = {

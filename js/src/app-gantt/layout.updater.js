@@ -1,3 +1,5 @@
+import {views} from './views';
+
 import {storeService} from '../service/services';
 
 
@@ -11,14 +13,17 @@ export class LayoutUpdater {
     }
 
     _update = () => {
-        const {showGrid} = storeService.getOptions();
+        const {view} = storeService.getOptions();
 
         let render = false;
 
-        if (this.showGrid !== showGrid) {
-            this.showGrid = showGrid;
+        if (this.view !== view) {
+            this.view = view;
+
+            const viewObject = views[view];
 
             //avoid unnecessary re-renders
+            const showGrid = viewObject.panels.grid;
             if (this.gantt.config.show_grid !== showGrid) {
                 this.gantt.config.show_grid = showGrid;
                 render = true;

@@ -1,6 +1,7 @@
 import {combineReducers} from 'redux';
 
 import {keyedConfigs} from '../app-gantt/scaleConfigs';
+import {views} from '../app-gantt/views';
 
 
 export const ganttReducer = combineReducers({
@@ -47,7 +48,25 @@ function optionsReducer(state, action) {
             groupBy: null,
             orderBy: null,
             order: true,
-            showGrid: true
+            view: views.basic.key,
+            columns: [
+                {
+                    key: 'timeoriginalestimate',
+                    name: 'Оценка',
+                    isJiraField: true,
+                    colParams: {
+                        width: '53px'
+                    }
+                },
+                {
+                    key: 'assignee',
+                    name: 'Исполнитель',
+                    isJiraField: true,
+                    colParams: {
+                        width: '200px'
+                    }
+                }
+            ]
         };
     }
 

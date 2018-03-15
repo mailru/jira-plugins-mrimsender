@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 
 import {Provider} from 'react-redux';
 
+import LayerManager from '@atlaskit/layer-manager';
+
 // eslint-disable-next-line import/no-extraneous-dependencies
 import AJS from 'AJS';
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -159,7 +161,9 @@ AJS.toInit(function() {
 
         ReactDOM.render(
             <Provider store={store}>
-                <GanttActions gantt={gantt}/>
+                <LayerManager>
+                    <GanttActions gantt={gantt}/>
+                </LayerManager>
             </Provider>,
             document.getElementById('gantt-actions')
         );

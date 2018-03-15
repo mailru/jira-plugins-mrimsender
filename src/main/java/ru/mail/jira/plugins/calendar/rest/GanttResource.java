@@ -53,12 +53,13 @@ public class GanttResource {
         @QueryParam("end") String endDate,
         @QueryParam("groupBy") String groupBy,
         @QueryParam("orderBy") String orderBy,
-        @QueryParam("order") SortOrder order
+        @QueryParam("order") SortOrder order,
+        @QueryParam("fields") List<String> fields
     ) {
         return new RestExecutor<GanttDto>() {
             @Override
             protected GanttDto doAction() throws Exception {
-                return ganttService.getGantt(authenticationContext.getLoggedInUser(), calendarId, startDate, endDate, groupBy, orderBy, order);
+                return ganttService.getGantt(authenticationContext.getLoggedInUser(), calendarId, startDate, endDate, groupBy, orderBy, order, fields);
             }
         }.getResponse();
     }
@@ -71,14 +72,15 @@ public class GanttResource {
         @QueryParam("end") final String endDate,
         @QueryParam("groupBy") String groupBy,
         @QueryParam("orderBy") String orderBy,
-        @QueryParam("order") SortOrder order
+        @QueryParam("order") SortOrder order,
+        @QueryParam("fields") List<String> fields
     ) {
         return new RestExecutor<GanttDto>() {
             @Override
             protected GanttDto doAction() throws Exception {
                 DateTimeFormatter dateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(authenticationContext.getLoggedInUser()).withStyle(DateTimeStyle.ISO_8601_DATE);
 
-                GanttDto ganttData = ganttService.getGantt(authenticationContext.getLoggedInUser(), calendarId, startDate, endDate, groupBy, orderBy, order);
+                GanttDto ganttData = ganttService.getGantt(authenticationContext.getLoggedInUser(), calendarId, startDate, endDate, groupBy, orderBy, order, fields);
 
                 List<GanttTaskDto> ganttEvents = ganttData.getData();
                 List<EventDto> events = ganttEvents

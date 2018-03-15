@@ -46,6 +46,7 @@ import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.UrlMode;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,6 +182,7 @@ public class CalendarEventService {
             startCF,
             endField,
             endCF,
+            null,
             null
         );
     }
@@ -191,7 +193,7 @@ public class CalendarEventService {
         final String end,
         final ApplicationUser user
     ) throws ParseException, SearchException, GetException {
-        return findEvents(calendarId, groupBy, start, end, user, false, null);
+        return findEvents(calendarId, groupBy, start, end, user, false, null, null);
     }
 
     public List<EventDto> findEvents(
@@ -200,7 +202,8 @@ public class CalendarEventService {
         final String end,
         final ApplicationUser user,
         final boolean includeIssueInfo,
-        Order order
+        Order order,
+        List<String> fields
     ) throws ParseException, SearchException, GetException {
         if (log.isDebugEnabled())
             log.debug(
@@ -221,13 +224,13 @@ public class CalendarEventService {
 
         if (source.startsWith("project_"))
             result = getProjectEvents(calendarModel, groupBy, Long.parseLong(source.substring("project_".length())),
-                                      calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo, order);
+                                      calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo, order, fields);
         else if (source.startsWith("filter_"))
             result = getFilterEvents(calendarModel, groupBy, Long.parseLong(source.substring("filter_".length())),
-                                     calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo, order);
+                                     calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo, order, fields);
         else if (source.startsWith("jql_"))
             result = getJqlEvents(calendarModel, groupBy, StringUtils.substringAfter(source, "jql_"),
-                                  calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo, order);
+                                  calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, includeIssueInfo, order, fields);
         else {
             result = new ArrayList<>();
         }
@@ -247,10 +250,10 @@ public class CalendarEventService {
     private List<EventDto> getProjectEvents(Calendar calendar, String groupBy, long projectId,
                                             String startField, String endField,
                                             Date startTime, Date endTime,
-                                            ApplicationUser user, boolean includeIssueInfo, Order order) throws SearchException {
+                                            ApplicationUser user, boolean includeIssueInfo, Order order, List<String> fields) throws SearchException {
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder();
         jqlBuilder.project(projectId);
-        return getEvents(calendar, groupBy, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo, order);
+        return getEvents(calendar, groupBy, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo, order, fields);
     }
 
     private Clause getSelectedQuickFilterClause(Calendar calendar, ApplicationUser user) {
@@ -280,7 +283,7 @@ public class CalendarEventService {
                                            String endField,
                                            Date startTime,
                                            Date endTime,
-                                           ApplicationUser user, boolean includeIssueInfo, Order order) throws SearchException {
+                                           ApplicationUser user, boolean includeIssueInfo, Order order, List<String> fields) throws SearchException {
         if (log.isDebugEnabled())
             log.debug(
                     "getFilterEvents with params. calendar={}, filterId={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
@@ -297,7 +300,7 @@ public class CalendarEventService {
         }
 
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder(filter.getQuery());
-        return getEvents(calendar, groupBy, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo, order);
+        return getEvents(calendar, groupBy, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo, order, fields);
     }
 
     private List<EventDto> getJqlEvents(Calendar calendar, String groupBy,
@@ -306,7 +309,7 @@ public class CalendarEventService {
                                         String endField,
                                         Date startTime,
                                         Date endTime,
-                                        ApplicationUser user, boolean includeIssueInfo, Order order) throws SearchException {
+                                        ApplicationUser user, boolean includeIssueInfo, Order order, List<String> fields) throws SearchException {
         if (log.isDebugEnabled())
             log.debug(
                     "getJqlEvents with params. calendar={}, jql={}, startField={}, endField={}, startTime={}, endTime={}, user={}, includeIssueInfo={}",
@@ -322,7 +325,7 @@ public class CalendarEventService {
 
         if (parseResult.isValid()) {
             JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder(parseResult.getQuery());
-            return getEvents(calendar, groupBy, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo, order);
+            return getEvents(calendar, groupBy, jqlBuilder, startField, endField, startTime, endTime, user, includeIssueInfo, order, fields);
         } else {
             log.error("JQL is invalid => {}", jql);
             return new ArrayList<>(0);
@@ -335,7 +338,7 @@ public class CalendarEventService {
                                      String endField,
                                      Date startTime,
                                      Date endTime,
-                                     ApplicationUser user, boolean includeIssueInfo, Order order) throws SearchException {
+                                     ApplicationUser user, boolean includeIssueInfo, Order order, List<String> fields) throws SearchException {
         List<EventDto> result = new ArrayList<>();
 
         CustomField startCF = null;
@@ -399,7 +402,7 @@ public class CalendarEventService {
             log.debug("searchProvider.search(). query={}, user={}, issues.size()={}", query.toString(), user, issues.size());
         for (Issue issue : issues) {
             try {
-                buildEventWithGroups(calendar, groupBy, user, issue, includeIssueInfo, startField, startCF, endField, endCF).ifPresent(result::add);
+                buildEventWithGroups(calendar, groupBy, user, issue, includeIssueInfo, startField, startCF, endField, endCF, fields).ifPresent(result::add);
             } catch (Exception e) {
                 log.error(String.format("Error while trying to translate issue => %s to event", issue.getKey()), e);
             }
@@ -409,7 +412,7 @@ public class CalendarEventService {
 
     private Optional<EventDto> buildEventWithGroups(
             Calendar calendar, String groupBy, ApplicationUser user, Issue issue, boolean includeIssueInfo,
-            String startField, CustomField startCF, String endField, CustomField endCF
+            String startField, CustomField startCF, String endField, CustomField endCF, List<String> fields
     ) {
         if (calendar == null || issue == null) {
             return Optional.empty();
@@ -568,11 +571,15 @@ public class CalendarEventService {
                 );
             }
         }
-        return Optional.of(buildEvent(calendar, groupBy, user, issue, includeIssueInfo, startField, startCF, endField, endCF, groups));
+        Optional<EventDto> event = Optional.of(buildEvent(calendar, groupBy, user, issue, includeIssueInfo, startField, startCF, endField, endCF, groups, fields));
+
+        event.ifPresent(eventDto -> fillExtraFields(eventDto.getIssueInfo(), fields, issue));
+
+        return event;
     }
 
     private EventDto buildEvent(Calendar calendar, String groupBy, ApplicationUser user, Issue issue, boolean includeIssueInfo,
-                                String startField, CustomField startCF, String endField, CustomField endCF, List<EventGroup> groups) {
+                                String startField, CustomField startCF, String endField, CustomField endCF, List<EventGroup> groups, List<String> fields) {
         if (calendar == null || issue == null)
             return null;
         DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
@@ -862,7 +869,7 @@ public class CalendarEventService {
         if (!updateResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
 
-        return buildEvent(calendar, null, user, jiraDeprecatedService.issueService.getIssue(user, eventId).getIssue(), false, calendar.getEventStart(), eventStartCF, calendar.getEventEnd(), eventEndCF, ImmutableList.of());
+        return buildEvent(calendar, null, user, jiraDeprecatedService.issueService.getIssue(user, eventId).getIssue(), false, calendar.getEventStart(), eventStartCF, calendar.getEventEnd(), eventEndCF, ImmutableList.of(), null);
     }
 
     public List<EventDto> getHolidays(ApplicationUser user) throws GetException {
@@ -925,6 +932,19 @@ public class CalendarEventService {
 
     private boolean isDateFieldsDraggable(String startField, CustomField startCf, String endField, CustomField endCf) {
         return isDateFieldResizable(startField, startCf) && (isDateFieldResizable(endField, endCf) || StringUtils.isEmpty(endField));
+    }
+
+    private void fillExtraFields(IssueInfo issueInfo, List<String> fields, Issue issue) {
+        for (String fieldId : fields) {
+            Field field = fieldManager.getField(fieldId);
+            //todo: if orderablefield, maybe render viewHtml
+            if (field != null && field instanceof NavigableField) {
+                FieldLayoutItem fieldLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem(fieldId);
+                String columnViewHtml = ((NavigableField) field).getColumnViewHtml(fieldLayoutItem, ImmutableMap.of(), issue);
+                if (StringUtils.isNotEmpty(columnViewHtml))
+                    issueInfo.addCustomField(field.getId(), columnViewHtml);
+            }
+        }
     }
 
     private void fillDisplayedFields(IssueInfo issueInfo, String[] extraFields, Issue issue) {

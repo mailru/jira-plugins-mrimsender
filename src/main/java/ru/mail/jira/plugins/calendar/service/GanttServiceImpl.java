@@ -22,6 +22,7 @@ import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.GanttLink;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventGroup;
+import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.*;
 
 import java.math.BigDecimal;
@@ -64,7 +65,7 @@ public class GanttServiceImpl implements GanttService {
     }
 
     @Override
-    public GanttDto getGantt(ApplicationUser user, int calendarId, String startDate, String endDate, String groupBy, String orderBy, SortOrder sortOrder) throws ParseException, SearchException, GetException {
+    public GanttDto getGantt(ApplicationUser user, int calendarId, String startDate, String endDate, String groupBy, String orderBy, SortOrder sortOrder, List<String> fields) throws ParseException, SearchException, GetException {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
         if (!permissionService.hasUsePermission(user, calendar)) {
@@ -87,7 +88,7 @@ public class GanttServiceImpl implements GanttService {
         if (orderBy != null && sortOrder != null) {
             order = new Order(orderBy, sortOrder);
         }
-        List<EventDto> eventDtoList = calendarEventService.findEvents(calendarId, groupBy, startDate, endDate, user, true, order);
+        List<EventDto> eventDtoList = calendarEventService.findEvents(calendarId, groupBy, startDate, endDate, user, true, order, fields);
 
         WorkingTimeDto workingTime = workingDaysService.getWorkingTime();
         Set<Integer> workingDays = Sets.newHashSet(workingDaysService.getWorkingDays());
@@ -280,11 +281,16 @@ public class GanttServiceImpl implements GanttService {
             ganttTaskDto.setParent(groups.get(0).getId());
         }
 
-        if (event.getIssueInfo() != null) {
+        IssueInfo issueInfo = event.getIssueInfo();
+        if (issueInfo != null) {
             if (event.getAssignee() != null) {
                 ganttTaskDto.setResource(event.getAssignee().getKey());
             }
-            ganttTaskDto.setAssignee(event.getIssueInfo().getAssignee());
+            ganttTaskDto.setAssignee(issueInfo.getAssignee());
+
+            if (issueInfo.getCustomFields() != null) {
+                ganttTaskDto.setFields(issueInfo.getCustomFields());
+            }
         }
 
         DateTimeFormatter suitableFormatter = event.isAllDay() ? dateFormatter : dateTimeFormatter;
