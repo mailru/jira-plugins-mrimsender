@@ -18,6 +18,12 @@
                     <div class="field-group">
                         <label for="calendar-feed-dialog-calendars">1. {getText( 'ru.mail.jira.plugins.calendar.feed.dialog.text.choose' )}</label>
                         <input type="hidden" id="calendar-feed-dialog-calendars" class="long-field calendar-feed-dialog-select" autofocus>
+                        <div class="checkbox">
+                            <input class="checkbox" type="checkbox" name="calendar-feed-dialog-withIssueKeys" id="calendar-feed-dialog-withIssueKeys">
+                            <label for="calendar-feed-dialog-withIssueKeys">
+                                {getText('ru.mail.jira.plugins.calendar.feed.dialog.text.withIssueKeys')}
+                            </label>
+                        </div>
                     </div>
                     <div class="field-group">
                         <label>2. {getText( 'ru.mail.jira.plugins.calendar.feed.dialog.text.useurl' )}</label>

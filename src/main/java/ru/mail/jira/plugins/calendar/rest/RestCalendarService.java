@@ -217,8 +217,11 @@ public class RestCalendarService {
     @Produces("text/calendar")
     @Path("{icalUid}/{calendars}.ics")
     @AnonymousAllowed
-    public Response getIcsCalendar(@PathParam("icalUid") final String icalUid,
-                                   @PathParam("calendars") final String calendars) {
+    public Response getIcsCalendar(
+        @PathParam("icalUid") final String icalUid,
+        @PathParam("calendars") final String calendars,
+        @QueryParam("issueKeys") boolean withIssueKeys
+    ) {
         return new RestExecutor<StreamingOutput>() {
             @Override
             protected StreamingOutput doAction() throws Exception {
@@ -274,7 +277,13 @@ public class RestCalendarService {
                                 }
                             }
 
-                            VEvent vEvent = end != null ? new VEvent(start, end, event.getTitle()) : new VEvent(start, event.getTitle());
+                            String title = event.getTitle();
+
+                            if (withIssueKeys && event.getId() != null && event.getType() == EventDto.Type.ISSUE) {
+                                title = event.getId() + " " + title;
+                            }
+
+                            VEvent vEvent = end != null ? new VEvent(start, end, title) : new VEvent(start, title);
                             vEvent.getProperties().add(new Uid(calendarId + "_" + event.getId()));
                             if (event.getType() == EventDto.Type.ISSUE) {
                                 vEvent.getProperties().add(new Url(Uris.create(ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/" + event.getId())));
