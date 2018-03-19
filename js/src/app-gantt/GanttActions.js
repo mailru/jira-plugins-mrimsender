@@ -25,7 +25,7 @@ import {OptionsActionCreators} from '../service/gantt.reducer';
 import {ganttService} from '../service/services';
 
 
-const enableMagic = false;
+const enableMagic = true;
 
 class GanttActionsInternal extends React.Component {
     static propTypes = {

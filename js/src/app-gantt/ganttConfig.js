@@ -39,6 +39,60 @@ export const config = {
     open_tree_initially: true,
     //show_task_cells: false,
 
+    layout: {
+        css: 'gantt_container',
+        rows: [
+            /*{
+                cols: [
+                    {
+                        html: '<div>ka</div>',
+                        group: 'grids',
+                    },
+                    {
+                        resizer: true,
+                        width: 1
+                    },
+                    {
+                        html: '<div>ka</div>',
+                    }
+                ]
+            },*/
+            {
+                cols: [
+                    {
+                        view: 'grid',
+                        id: 'grid',
+                        group: 'grids',
+                        scrollX: 'scrollHor',
+                        scrollY: 'scrollVer'
+                    },
+                    {
+                        resizer: true,
+                        width: 1
+                    },
+                    {
+                        view: 'timeline',
+                        id: 'timeline',
+                        scrollX: 'scrollHor',
+                        scrollY: 'scrollVer'
+                    },
+                    {
+                        view: 'scrollbar',
+                        scroll: 'y',
+                        id: 'scrollVer',
+                        group: 'vertical'
+                    }
+                ]
+            },
+            {
+                view: 'scrollbar',
+                scroll: 'x',
+                id: 'scrollHor',
+                height: 20
+            }
+        ]
+    },
+
     columns: buildColumns(defaultColumns),
     task_height: 20,
     row_height: 34,

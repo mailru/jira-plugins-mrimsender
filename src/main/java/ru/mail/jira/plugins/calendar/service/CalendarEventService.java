@@ -944,14 +944,16 @@ public class CalendarEventService {
     }
 
     private void fillExtraFields(IssueInfo issueInfo, List<String> fields, Issue issue) {
-        for (String fieldId : fields) {
-            Field field = fieldManager.getField(fieldId);
-            //todo: if orderablefield, maybe render viewHtml
-            if (field != null && field instanceof NavigableField) {
-                FieldLayoutItem fieldLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem(fieldId);
-                String columnViewHtml = ((NavigableField) field).getColumnViewHtml(fieldLayoutItem, ImmutableMap.of(), issue);
-                if (StringUtils.isNotEmpty(columnViewHtml))
-                    issueInfo.addCustomField(field.getId(), columnViewHtml);
+        if (fields != null) {
+            for (String fieldId : fields) {
+                Field field = fieldManager.getField(fieldId);
+                //todo: if orderablefield, maybe render viewHtml
+                if (field != null && field instanceof NavigableField) {
+                    FieldLayoutItem fieldLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem(fieldId);
+                    String columnViewHtml = ((NavigableField) field).getColumnViewHtml(fieldLayoutItem, ImmutableMap.of(), issue);
+                    if (StringUtils.isNotEmpty(columnViewHtml))
+                        issueInfo.addCustomField(field.getId(), columnViewHtml);
+                }
             }
         }
     }
