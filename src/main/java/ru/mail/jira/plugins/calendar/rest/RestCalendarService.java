@@ -13,10 +13,12 @@ import com.atlassian.plugins.rest.common.security.AnonymousAllowed;
 import com.atlassian.sal.api.message.I18nResolver;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.extensions.property.RefreshInterval;
+import net.fortuna.ical4j.extensions.property.WrCalName;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.*;
 import net.fortuna.ical4j.util.Uris;
 import net.fortuna.ical4j.validate.ValidationException;
@@ -215,8 +217,11 @@ public class RestCalendarService {
     @Produces("text/calendar")
     @Path("{icalUid}/{calendars}.ics")
     @AnonymousAllowed
-    public Response getIcsCalendar(@PathParam("icalUid") final String icalUid,
-                                   @PathParam("calendars") final String calendars) {
+    public Response getIcsCalendar(
+        @PathParam("icalUid") final String icalUid,
+        @PathParam("calendars") final String calendars,
+        @QueryParam("issueKeys") boolean withIssueKeys
+    ) {
         return new RestExecutor<StreamingOutput>() {
             @Override
             protected StreamingOutput doAction() throws Exception {
@@ -238,8 +243,12 @@ public class RestCalendarService {
                     calendar.getProperties().add(Version.VERSION_2_0);
                     calendar.getProperties().add(CalScale.GREGORIAN);
                     calendar.getProperties().add(Method.PUBLISH);
-                    calendar.getProperties().add(new RefreshInterval(new ParameterList(), "DURATION: PT30M"));
+                    ParameterList refreshParams = new ParameterList();
+                    refreshParams.add(Value.DURATION);
+                    calendar.getProperties().add(new RefreshInterval(refreshParams, "PT30M"));
                     calendar.getProperties().add(new XProperty("X-PUBLISHED-TTL", "PT30M"));
+                    calendar.getProperties().add(new WrCalName(null, "Jira Calendar"));
+                    calendar.getProperties().add(new Name(null, "Jira Calendar"));
 
                     LocalDate startSearch = LocalDate.now().minusMonths(3);
                     LocalDate endSearch = LocalDate.now().plusMonths(1);
@@ -268,7 +277,13 @@ public class RestCalendarService {
                                 }
                             }
 
-                            VEvent vEvent = end != null ? new VEvent(start, end, event.getTitle()) : new VEvent(start, event.getTitle());
+                            String title = event.getTitle();
+
+                            if (withIssueKeys && event.getId() != null && event.getType() == EventDto.Type.ISSUE) {
+                                title = event.getId() + " " + title;
+                            }
+
+                            VEvent vEvent = end != null ? new VEvent(start, end, title) : new VEvent(start, title);
                             vEvent.getProperties().add(new Uid(calendarId + "_" + event.getId()));
                             if (event.getType() == EventDto.Type.ISSUE) {
                                 vEvent.getProperties().add(new Url(Uris.create(ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/" + event.getId())));

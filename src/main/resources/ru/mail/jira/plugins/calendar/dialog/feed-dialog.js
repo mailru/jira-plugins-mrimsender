@@ -3,7 +3,8 @@ define('calendar/feed-dialog', ['jquery', 'underscore', 'backbone', 'calendar/co
         events: {
             'click #calendar-feed-dialog-ok': 'hide',
             'click #calendar-feed-dialog-delete': '_resetLink',
-            'change #calendar-feed-dialog-calendars': '_updateCalendarFeedUrl'
+            'change #calendar-feed-dialog-calendars': '_updateCalendarFeedUrl',
+            'change #calendar-feed-dialog-withIssueKeys': '_updateCalendarFeedUrl'
         },
         render: function() {
             this.$el.html(JIRA.Templates.Plugins.MailRuCalendar.FeedDialog.dialog());
@@ -17,6 +18,7 @@ define('calendar/feed-dialog', ['jquery', 'underscore', 'backbone', 'calendar/co
             new Clipboard('#url-field-copy');
             this.dialog = AJS.dialog2('#calendar-feed-dialog');
             this.$calendarSelect = this.$('#calendar-feed-dialog-calendars');
+            this.$issueKeysCheckbox = this.$('#calendar-feed-dialog-withIssueKeys');
             this.$urlField = this.$('.url-field');
 
             this.listenTo(this.model, 'change:icalUid', this._updateCalendarFeedUrl);
@@ -89,9 +91,13 @@ define('calendar/feed-dialog', ['jquery', 'underscore', 'backbone', 'calendar/co
                 return;
             }
             var calendars = this.$calendarSelect.val();
+            var withIssueKeys = this.$issueKeysCheckbox.is(':checked');
             if (calendars) {
                 var calUrl = calendars.split(',').join('-');
-                this.$urlField.val(window.location.origin + AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + this.model.get('icalUid') + '/' + calUrl + '.ics');
+                this.$urlField.val(
+                    window.location.origin + AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + this.model.get('icalUid') + '/' + calUrl + '.ics' +
+                    (withIssueKeys ? '?issueKeys=true' : '')
+                );
             }
         }
     });
