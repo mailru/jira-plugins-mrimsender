@@ -68,7 +68,7 @@ public class GanttServiceImpl implements GanttService {
     public GanttDto getGantt(ApplicationUser user, int calendarId, String startDate, String endDate, String groupBy, String orderBy, SortOrder sortOrder, List<String> fields) throws ParseException, SearchException, GetException {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
-        if (!permissionService.hasUsePermission(user, calendar)) {
+        if (!permissionService.hasUsePermission(user, calendar) && !permissionService.hasAdminPermission(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
