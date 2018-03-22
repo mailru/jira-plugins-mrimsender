@@ -17,6 +17,11 @@ public class JiraSoftwareHelperStub implements JiraSoftwareHelper {
     }
 
     @Override
+    public CustomField getRankField() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public IssueType getEpicIssueType() {
         throw new UnsupportedOperationException();
     }

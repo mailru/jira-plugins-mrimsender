@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.calendar.rest.dto;
 import com.atlassian.core.util.HTMLUtils;
 import com.atlassian.sal.api.message.I18nResolver;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -45,6 +46,8 @@ public class IssueInfo {
     private String environment;
     @XmlElement
     private String priority;
+    @Getter @Setter
+    private Long prioritySequence;
     @XmlElement
     private String priorityIconUrl;
     @XmlElement

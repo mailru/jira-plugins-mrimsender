@@ -8,5 +8,7 @@ public interface JiraSoftwareHelper {
 
     CustomField getEpicLinkField();
 
+    CustomField getRankField();
+
     IssueType getEpicIssueType();
 }

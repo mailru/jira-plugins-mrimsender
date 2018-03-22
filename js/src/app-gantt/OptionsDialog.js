@@ -10,41 +10,13 @@ import {Label} from '@atlaskit/field-base';
 import ArrowDownIcon from '@atlaskit/icon/glyph/arrow-down';
 import ArrowUpIcon from '@atlaskit/icon/glyph/arrow-up';
 
+import {groupOptions} from './staticOptions';
+
 import {OptionsActionCreators} from '../service/gantt.reducer';
 import {SingleSelect} from '../common/ak/SingleSelect';
 import {calendarService} from '../service/services';
 
 
-const groupOptions = [
-    {
-        value: 'assignee',
-        label: 'По исполнителю'
-    },
-    {
-        value: 'reporter',
-        label: 'По постановщику'
-    },
-    {
-        value: 'project',
-        label: 'По проекту'
-    },
-    {
-        value: 'issueType',
-        label: 'По типу задачи'
-    },
-    {
-        value: 'priority',
-        label: 'По приоритету'
-    },
-    {
-        value: 'resolution',
-        label: 'По резолюции'
-    },
-    {
-        value: 'epicLink',
-        label: 'По эпику'
-    },
-];
 
 const columnSizes = {
     timeoriginalestimate: '53px',

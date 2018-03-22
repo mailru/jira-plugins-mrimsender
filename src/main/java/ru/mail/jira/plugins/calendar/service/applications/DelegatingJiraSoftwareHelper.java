@@ -88,6 +88,11 @@ public class DelegatingJiraSoftwareHelper implements LifecycleAware, JiraSoftwar
     }
 
     @Override
+    public CustomField getRankField() {
+        return delegate.getRankField();
+    }
+
+    @Override
     public IssueType getEpicIssueType() {
         return delegate.getEpicIssueType();
     }

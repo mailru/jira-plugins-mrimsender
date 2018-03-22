@@ -49,17 +49,19 @@ export const eventListeners = {
                     start_date: gantt.templates.xml_format(task.start_date),
                     end_date: gantt.templates.xml_format(task.end_date)
                 })
-            .then(newTask => {
-                const {start_date, end_date, id, ...etc} = newTask;
-                Object.assign(
-                    gantt.getTask(id),
-                    {
-                        ...etc,
-                        start_date: moment(start_date).toDate(),
-                        end_date: moment(end_date).toDate()
-                    }
-                );
-                gantt.refreshTask(id);
+            .then(updatedTasks => {
+                for (const newTask of updatedTasks) {
+                    const {start_date, end_date, id, ...etc} = newTask;
+                    Object.assign(
+                        gantt.getTask(id),
+                        {
+                            ...etc,
+                            start_date: moment(start_date).toDate(),
+                            end_date: moment(end_date).toDate()
+                        }
+                    );
+                    gantt.refreshTask(id);
+                }
             });
     },
     onAfterTaskDelete: (id) => {

@@ -100,6 +100,18 @@
     babel-runtime "^6.26.0"
     styled-components "1.4.6 - 3"
 
+"@atlaskit/field-text-area@^1.2.2":
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/@atlaskit/field-text-area/-/field-text-area-1.2.2.tgz#7ad0d8ea96033d8ddacd7eda9e29ce83f430dbe6"
+  dependencies:
+    "@atlaskit/button" "^6.6.2"
+    "@atlaskit/field-base" "^8.2.1"
+    "@atlaskit/icon" "^10.12.1"
+    "@atlaskit/theme" "^2.4.1"
+    babel-runtime "^6.26.0"
+    prop-types "^15.5.10"
+    styled-components "1.4.6 - 3"
+
 "@atlaskit/icon@^10.12.1", "@atlaskit/icon@^10.12.2":
   version "10.12.2"
   resolved "https://registry.yarnpkg.com/@atlaskit/icon/-/icon-10.12.2.tgz#9d27df9e40582f317a1a9b91a32e9318c19eb18d"

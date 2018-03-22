@@ -20,6 +20,7 @@ import i18n from 'gantt-i18n';
 import {keyedConfigs, scaleConfigs} from './scaleConfigs';
 import {OptionsDialog} from './OptionsDialog';
 import {viewItems} from './views';
+import {MagicDialog} from './MagicDialog';
 
 import {OptionsActionCreators} from '../service/gantt.reducer';
 import {ganttService} from '../service/services';
@@ -37,6 +38,7 @@ class GanttActionsInternal extends React.Component {
     state ={
         showDateDialog: false,
         waitingForMagic: false,
+        showMagicDialog: false
     };
 
     _zoomIn = () => {
@@ -94,14 +96,32 @@ class GanttActionsInternal extends React.Component {
         };
     });
 
+    _toggleMagicDialog = () => this.setState(state => {
+        return {
+            showMagicDialog: !state.showMagicDialog
+        };
+    });
+
     _setScale = (scale) => () => this.props.updateOptions({ scale });
 
     _setView = (view) => () => this.props.updateOptions({ view });
 
+    //todo: restore dialog with priority field and grouping field
     _runMagic = () => {
         this.setState({ waitingForMagic: true });
+
+        const {order, groupBy, orderBy} = this.props.options;
+
+        //todo: add params
         ganttService
-            .getOptimized(this.props.calendar.id)
+            .getOptimized(
+                this.props.calendar.id,
+                {
+                    order: order ? 'ASC' : 'DESC',
+                    fields: this.props.gantt.config.columns.filter(col => col.isJiraField).map(col => col.name),
+                    groupBy, orderBy
+                }
+            )
             .then(
                 data => {
                     const {gantt} = this.props;
@@ -121,7 +141,7 @@ class GanttActionsInternal extends React.Component {
     };
 
     render() {
-        const {showDateDialog, waitingForMagic} = this.state;
+        const {showDateDialog, showMagicDialog, waitingForMagic} = this.state;
         const {options, calendar, gantt} = this.props;
 
         return (
@@ -136,10 +156,11 @@ class GanttActionsInternal extends React.Component {
                                 iconBefore={<JiraLabsIcon label=""/>}
                                 isDisabled={waitingForMagic}
 
-                                onClick={this._runMagic}
+                                onClick={this._toggleMagicDialog}
                             >
-                                Запустить магию
+                                Автоматическое планирование
                             </Button>}
+                            {showMagicDialog && <MagicDialog onClose={this._toggleMagicDialog} gantt={gantt}/>}
                         </ButtonGroup>
                     </div>
                     <div className="flex-horizontal-middle flex-grow">

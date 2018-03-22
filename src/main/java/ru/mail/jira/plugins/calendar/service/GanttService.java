@@ -16,6 +16,7 @@ import java.util.List;
 @Transactional
 public interface GanttService {
     GanttDto getGantt(ApplicationUser user, int calendarId, String startDate, String endDate, String groupBy, String orderBy, SortOrder order, List<String> fields) throws ParseException, SearchException, GetException;
+    GanttDto getGantt(ApplicationUser user, int calendarId, String groupBy, String orderBy, SortOrder sortOrder, List<String> fields) throws Exception;
 
     GanttLinkDto createLink(ApplicationUser user, int calendarId, GanttLinkForm form) throws GetException;
     void deleteLink(ApplicationUser user, int calendarId, int linkId) throws GetException;

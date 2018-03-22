@@ -72,23 +72,43 @@ public class GanttServiceImpl implements GanttService {
             throw new SecurityException("No permission");
         }
 
-        DateTimeFormatter dateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
-        DateTimeFormatter dateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-
         if (StringUtils.isEmpty(startDate))
             startDate = LocalDate.now().withDayOfYear(1).format(java.time.format.DateTimeFormatter.ISO_DATE);
         if (StringUtils.isEmpty(endDate))
             endDate = LocalDate.now().plusMonths(3).format(java.time.format.DateTimeFormatter.ISO_DATE);
-        ZoneId userZoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
-        ZoneId defaultZoneId = timeZoneManager.getDefaultTimezone().toZoneId();
-
-        GanttDto ganttDto = new GanttDto();
 
         Order order = null;
         if (orderBy != null && sortOrder != null) {
             order = new Order(orderBy, sortOrder);
         }
         List<EventDto> eventDtoList = calendarEventService.findEvents(calendarId, groupBy, startDate, endDate, user, true, order, fields);
+
+        return getGantt(eventDtoList, user, calendarId);
+    }
+
+    @Override
+    public GanttDto getGantt(ApplicationUser user, int calendarId, String groupBy, String orderBy, SortOrder sortOrder, List<String> fields) throws Exception {
+        Calendar calendar = calendarService.getCalendar(calendarId);
+
+        if (!permissionService.hasUsePermission(user, calendar) && !permissionService.hasAdminPermission(user, calendar)) {
+            throw new SecurityException("No permission");
+        }
+
+        Order order = null;
+        if (orderBy != null && sortOrder != null) {
+            order = new Order(orderBy, sortOrder);
+        }
+        return getGantt(calendarEventService.getUnboundedEvents(calendar, groupBy, user, true, order, fields), user, calendarId);
+    }
+
+    private GanttDto getGantt(List<EventDto> eventDtoList, ApplicationUser user, int calendarId) {
+        DateTimeFormatter dateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
+        DateTimeFormatter dateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+
+        ZoneId userZoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
+        ZoneId defaultZoneId = timeZoneManager.getDefaultTimezone().toZoneId();
+
+        GanttDto ganttDto = new GanttDto();
 
         WorkingTimeDto workingTime = workingDaysService.getWorkingTime();
         Set<Integer> workingDays = Sets.newHashSet(workingDaysService.getWorkingDays());
@@ -303,36 +323,38 @@ public class GanttServiceImpl implements GanttService {
         Long timeSpent = event.getTimeSpentSeconds();
         if (StringUtils.isNotEmpty(event.getEnd())) {
             ganttTaskDto.setEndDate(event.getEnd());
-        } else if (originalEstimate != null) {
-            Date plannedEnd = addWorkTimeSeconds(
-                event.isAllDay(), eventStart, originalEstimate, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId
-            );
-            ganttTaskDto.setEndDate(suitableFormatter.format(plannedEnd));
+        } else if (eventStart != null) {
+            if (originalEstimate != null) {
+                Date plannedEnd = addWorkTimeSeconds(
+                    event.isAllDay(), eventStart, originalEstimate, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId
+                );
+                ganttTaskDto.setEndDate(suitableFormatter.format(plannedEnd));
 
-            if (timeSpent != null) {
-                if (timeSpent > originalEstimate) {
-                    Date overdueDate = addWorkTimeSeconds(
-                        event.isAllDay(), eventStart, timeSpent, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId
-                    );
-                    ganttTaskDto.setEndDate(suitableFormatter.format(overdueDate));
+                if (timeSpent != null) {
+                    if (timeSpent > originalEstimate) {
+                        Date overdueDate = addWorkTimeSeconds(
+                            event.isAllDay(), eventStart, timeSpent, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId
+                        );
+                        ganttTaskDto.setEndDate(suitableFormatter.format(overdueDate));
 
-                    ganttTaskDto.setOverdueSeconds(
-                        TimeUnit.MILLISECONDS.toSeconds(overdueDate.getTime() - plannedEnd.getTime())
-                    );
+                        ganttTaskDto.setOverdueSeconds(
+                            TimeUnit.MILLISECONDS.toSeconds(overdueDate.getTime() - plannedEnd.getTime())
+                        );
+                    }
+
+                    if (event.isResolved() && timeSpent < originalEstimate) {
+                        Date earlyDate = addWorkTimeSeconds(
+                            event.isAllDay(), eventStart, timeSpent, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId
+                        );
+
+                        ganttTaskDto.setEarlySeconds(
+                            TimeUnit.MILLISECONDS.toSeconds(plannedEnd.getTime() - earlyDate.getTime())
+                        );
+                    }
                 }
-
-                if (event.isResolved() && timeSpent < originalEstimate) {
-                    Date earlyDate = addWorkTimeSeconds(
-                        event.isAllDay(), eventStart, timeSpent, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId
-                    );
-
-                    ganttTaskDto.setEarlySeconds(
-                        TimeUnit.MILLISECONDS.toSeconds(plannedEnd.getTime() - earlyDate.getTime())
-                    );
-                }
+            } else {
+                ganttTaskDto.setEndDate(suitableFormatter.format(new Date(eventStart.getTime() + TimeUnit.DAYS.toMillis(1))));
             }
-        } else {
-            ganttTaskDto.setEndDate(suitableFormatter.format(new Date(eventStart.getTime() + TimeUnit.DAYS.toMillis(1))));
         }
 
         if (originalEstimate != null && timeSpent != null)

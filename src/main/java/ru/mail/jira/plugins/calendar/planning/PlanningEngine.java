@@ -80,7 +80,7 @@ public class PlanningEngine {
                 for (int j = 0; j < numDays; j++) {
                     if (priority != null) {
                         progressVars[i * numDays + j] = Variable.make(String.format("x_%d_%d", i, j))
-                                                                .weight(j + 1 == numDays ? 1 + priority : priority)
+                                                                .weight(priority)
                                                                 .lower(0)
                                                                 .upper(1);
                     } else {
@@ -181,6 +181,8 @@ public class PlanningEngine {
         logger.debug("maximizing");
         Optimisation.Result result = model.maximise();
         logger.debug("maximized");
+
+        logger.debug("result state {}", result.getState());
 
         DecimalFormat decimalFormat = new DecimalFormat();
         decimalFormat.setMaximumFractionDigits(2);

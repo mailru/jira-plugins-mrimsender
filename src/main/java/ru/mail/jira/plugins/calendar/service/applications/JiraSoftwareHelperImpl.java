@@ -30,6 +30,11 @@ public class JiraSoftwareHelperImpl implements JiraSoftwareHelper {
     }
 
     @Override
+    public CustomField getRankField() {
+        return managedCustomFieldsService.getRankCustomField().get();
+    }
+
+    @Override
     public IssueType getEpicIssueType() {
         return managedIssueTypesService.getEpicIssueType().get();
     }

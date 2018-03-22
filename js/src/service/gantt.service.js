@@ -1,3 +1,6 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
+import $ from 'jquery';
+
 import {ajaxDelete, ajaxGet, ajaxPost, ajaxPut, getPluginBaseUrl} from '../common/ajs-helpers';
 
 
@@ -6,8 +9,8 @@ export class GanttService {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/${calendarId}`);
     }
 
-    getOptimized(calendarId) {
-        return ajaxGet(`${getPluginBaseUrl()}/gantt/${calendarId}/optimized`);
+    getOptimized(calendarId, params) {
+        return ajaxGet(`${getPluginBaseUrl()}/gantt/${calendarId}/optimized?${$.param(params)}`);
     }
 
     updateTask(calendarId, id, task) {
