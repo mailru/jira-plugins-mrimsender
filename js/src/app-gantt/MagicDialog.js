@@ -8,6 +8,9 @@ import Spinner from '@atlaskit/spinner';
 import {Label} from '@atlaskit/field-base';
 import {DatePicker} from '@atlaskit/datetime-picker';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+import moment from 'moment';
+
 import {groupOptions} from './staticOptions';
 
 import {SingleSelect} from '../common/ak/SingleSelect';
@@ -37,7 +40,7 @@ class MagicDialogInternal extends React.Component {
     state = {
         groupBy: null,
         orderBy: null,
-        deadline: '',
+        deadline: moment().add(3, 'months').format('YYYY-MM-DD'),
         waitingForMagic: false
     };
 

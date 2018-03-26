@@ -4,22 +4,39 @@ import $ from 'jquery';
 import {buildColumns} from './ganttConfig';
 import {defaultColumns} from './ganttColumns';
 
-import {storeService} from '../service/services';
+import {preferenceService, storeService} from '../service/services';
 import {getPluginBaseUrl} from '../common/ajs-helpers';
 
+
+function matchesFilter(gantt, id, filter) {
+    if (gantt.getTask(id).summary.toLocaleLowerCase().includes(filter)) {
+        return true;
+    }
+
+    return gantt.getChildren(id).some(childId => matchesFilter(gantt, childId, filter));
+}
 
 export class GanttUpdater {
     constructor(gantt, store, loadGantt) {
         this.gantt = gantt;
         this.loadGantt = loadGantt;
 
+        this._attachEventListeners();
+
         this._update();
 
         store.subscribe(this._update);
     }
 
+    _attachEventListeners() {
+        this.gantt.attachEvent(
+            'onBeforeTaskDisplay',
+            id => (this.filter && this.filter.length) ? matchesFilter(this.gantt, id, this.filter) : true
+        );
+    }
+
     _update = () => {
-        const {startDate, endDate, groupBy, order, orderBy, columns} = storeService.getOptions();
+        const {startDate, endDate, groupBy, order, orderBy, columns, filter} = storeService.getOptions();
         const calendar = storeService.getCalendar();
         if (storeService.isGanttReady() && calendar) {
             if (
@@ -62,6 +79,14 @@ export class GanttUpdater {
                 });
 
                 this.gantt.load(`${getPluginBaseUrl()}/gantt/${this.calendar.id}?${param}`);
+
+                preferenceService.saveOptions(storeService.getOptions());
+            }
+
+            if (filter !== this.filter) {
+                this.filter = filter;
+
+                this.gantt.refreshData();
             }
         } else {
             console.log('no calendar');

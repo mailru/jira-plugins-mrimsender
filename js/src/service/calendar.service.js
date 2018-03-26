@@ -14,6 +14,10 @@ export class CalendarService {
         return ajaxGet(`${getPluginBaseUrl()}/calendar/userPreference`);
     }
 
+    getUserCalendars() {
+        return ajaxGet(`${getPluginBaseUrl()}/calendar/forUser`);
+    }
+
     getFields() {
         return ajaxGet(`${getBaseUrl()}/rest/api/latest/field`);
     }

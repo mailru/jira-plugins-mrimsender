@@ -1,7 +1,11 @@
 import {combineReducers} from 'redux';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+import moment from 'moment';
+
 import {keyedConfigs} from '../app-gantt/scaleConfigs';
 import {views} from '../app-gantt/views';
+import {defaultOptions} from '../app-gantt/staticOptions';
 
 
 export const ganttReducer = combineReducers({
@@ -14,6 +18,7 @@ export const ganttReducer = combineReducers({
 const UPDATE_OPTIONS = 'UPDATE_OPTIONS';
 const SET_CALENDAR = 'SET_CALENDAR';
 const GANTT_READY = 'GANTT_READY';
+const UPDATE_ALL = 'UPDATE_ALL';
 
 export function ganttReady() {
     return {
@@ -36,41 +41,21 @@ export const CalendarActionCreators = {
             type: SET_CALENDAR,
             calendar
         };
+    },
+    updateAll: (calendar, options) => {
+        return {
+            type: UPDATE_ALL,
+            calendar, options
+        };
     }
 };
 
 function optionsReducer(state, action) {
     if (state === undefined) {
-        return {
-            scale: keyedConfigs[1].i,
-            startDate: '',
-            endDate: '',
-            groupBy: null,
-            orderBy: null,
-            order: true,
-            view: views.basic.key,
-            columns: [
-                {
-                    key: 'timeoriginalestimate',
-                    name: 'Оценка',
-                    isJiraField: true,
-                    colParams: {
-                        width: '53px'
-                    }
-                },
-                {
-                    key: 'assignee',
-                    name: 'Исполнитель',
-                    isJiraField: true,
-                    colParams: {
-                        width: '200px'
-                    }
-                }
-            ]
-        };
+        return defaultOptions;
     }
 
-    if (action.type === UPDATE_OPTIONS) {
+    if (action.type === UPDATE_OPTIONS || action.type === UPDATE_ALL) {
         return {
             ...state,
             ...action.options
@@ -85,7 +70,7 @@ function calendarReducer(state, action) {
         return null;
     }
 
-    if (action.type === SET_CALENDAR) {
+    if (action.type === SET_CALENDAR || action.type === UPDATE_ALL) {
         return action.calendar;
     }
 

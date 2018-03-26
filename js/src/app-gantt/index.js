@@ -193,4 +193,3 @@ AJS.toInit(function() {
         console.error(e);
     }
 });
-

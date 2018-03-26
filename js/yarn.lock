@@ -112,6 +112,14 @@
     prop-types "^15.5.10"
     styled-components "1.4.6 - 3"
 
+"@atlaskit/field-text@^4.3.0":
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/field-text/-/field-text-4.3.0.tgz#4ef2a8ff7d0e16cfcee4df402bd82d087a7c6065"
+  dependencies:
+    "@atlaskit/field-base" "^8.2.1"
+    "@atlaskit/theme" "^2.4.1"
+    styled-components "1.4.6 - 3"
+
 "@atlaskit/icon@^10.12.1", "@atlaskit/icon@^10.12.2":
   version "10.12.2"
   resolved "https://registry.yarnpkg.com/@atlaskit/icon/-/icon-10.12.2.tgz#9d27df9e40582f317a1a9b91a32e9318c19eb18d"

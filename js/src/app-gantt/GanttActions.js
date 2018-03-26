@@ -3,19 +3,21 @@ import PropTypes from 'prop-types';
 
 import {connect} from 'react-redux';
 
+import memoize from 'lodash.memoize';
+
+import {FieldTextStateless} from '@atlaskit/field-text';
 import Button, {ButtonGroup} from '@atlaskit/button';
-import PageHeader from '@atlaskit/page-header';
+import InlineDialog from '@atlaskit/inline-dialog';
 import DropdownMenu, { DropdownItemGroupRadio, DropdownItemRadio } from '@atlaskit/dropdown-menu';
 
+import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import MediaServicesZoomInIcon from '@atlaskit/icon/glyph/media-services/zoom-in';
 import MediaServicesZoomOutIcon from '@atlaskit/icon/glyph/media-services/zoom-out';
 import PreferencesIcon from '@atlaskit/icon/glyph/preferences';
 import SearchIcon from '@atlaskit/icon/glyph/search';
 import ListIcon from '@atlaskit/icon/glyph/list';
 import JiraLabsIcon from '@atlaskit/icon/glyph/jira/labs';
-
-// eslint-disable-next-line import/no-extraneous-dependencies
-import i18n from 'gantt-i18n';
+import FilterIcon from '@atlaskit/icon/glyph/filter';
 
 import {keyedConfigs, scaleConfigs} from './scaleConfigs';
 import {OptionsDialog} from './OptionsDialog';
@@ -23,7 +25,7 @@ import {viewItems} from './views';
 import {MagicDialog} from './MagicDialog';
 
 import {OptionsActionCreators} from '../service/gantt.reducer';
-import {ganttService} from '../service/services';
+import {calendarService} from '../service/services';
 
 
 const enableMagic = true;
@@ -36,9 +38,10 @@ class GanttActionsInternal extends React.Component {
     };
 
     state ={
-        showDateDialog: false,
+        activeDialog: null,
         waitingForMagic: false,
-        showMagicDialog: false
+        calendars: null,
+        filter: ''
     };
 
     _zoomIn = () => {
@@ -90,65 +93,49 @@ class GanttActionsInternal extends React.Component {
         return units;
     };
 
-    _toggleDateDialog = () => this.setState(state => {
-        return {
-            showDateDialog: !state.showDateDialog
-        };
-    });
+    _toggleDialog = memoize(
+        (dialog) => () => this.setState(state => {
+            if (state.activeDialog === dialog) {
+                return {
+                    activeDialog: null
+                };
+            }
+            return {
+                activeDialog: dialog
+            };
+        })
+    );
 
-    _toggleMagicDialog = () => this.setState(state => {
-        return {
-            showMagicDialog: !state.showMagicDialog
-        };
-    });
+    _setFilter = (e) => this.setState({ filter: e.target.value });
 
     _setScale = (scale) => () => this.props.updateOptions({ scale });
 
     _setView = (view) => () => this.props.updateOptions({ view });
 
-    //todo: restore dialog with priority field and grouping field
-    _runMagic = () => {
-        this.setState({ waitingForMagic: true });
+    _applyFilter = () => this.props.updateOptions({ filter: this.state.filter });
 
-        const {order, groupBy, orderBy} = this.props.options;
+    _fetchCalendars = () => calendarService
+        .getUserCalendars()
+        .then(calendars => this.setState({
+            calendars: calendars
+                .filter(cal => cal.ganttEnabled)
+        }));
 
-        //todo: add params
-        ganttService
-            .getOptimized(
-                this.props.calendar.id,
-                {
-                    order: order ? 'ASC' : 'DESC',
-                    fields: this.props.gantt.config.columns.filter(col => col.isJiraField).map(col => col.name),
-                    groupBy, orderBy
-                }
-            )
-            .then(
-                data => {
-                    const {gantt} = this.props;
-                    gantt.clearAll();
-                    gantt.addMarker({
-                        start_date: new Date(),
-                        css: 'today'
-                    });
-                    gantt.parse(data);
-                    this.setState({ waitingForMagic: false });
-                },
-                error => {
-                    this.setState({ waitingForMagic: false });
-                    throw error;
-                }
-            );
+    _onCalendarListOpen = () => {
+        if (!this.state.calendars) {
+            this._fetchCalendars();
+        }
     };
 
     render() {
-        const {showDateDialog, showMagicDialog, waitingForMagic} = this.state;
+        const {activeDialog, waitingForMagic, calendars, filter} = this.state;
         const {options, calendar, gantt} = this.props;
 
         return (
-            <div>
-                <PageHeader>
+            <div className="gantt-actions">
+                {/*<PageHeader>
                     {calendar && i18n.calendarTitle(calendar.selectedName)}
-                </PageHeader>
+                </PageHeader>*/}
                 <div className="flex-row">
                     <div>
                         <ButtonGroup>
@@ -156,11 +143,11 @@ class GanttActionsInternal extends React.Component {
                                 iconBefore={<JiraLabsIcon label=""/>}
                                 isDisabled={waitingForMagic}
 
-                                onClick={this._toggleMagicDialog}
+                                onClick={this._toggleDialog('magic')}
                             >
-                                Автоматическое планирование
+                                Запустить магию
                             </Button>}
-                            {showMagicDialog && <MagicDialog onClose={this._toggleMagicDialog} gantt={gantt}/>}
+                            {activeDialog === 'magic' && <MagicDialog onClose={this._toggleDialog('magic')} gantt={gantt}/>}
                         </ButtonGroup>
                     </div>
                     <div className="flex-horizontal-middle flex-grow">
@@ -194,14 +181,13 @@ class GanttActionsInternal extends React.Component {
                                 iconBefore={<SearchIcon label="Reset zoom"/>}
                             />
                         </ButtonGroup>
-                        {showDateDialog && <OptionsDialog gantt={gantt} onClose={this._toggleDateDialog}/>}
+                        {activeDialog === 'params' && <OptionsDialog gantt={gantt} onClose={this._toggleDialog('params')}/>}
                     </div>
                     <div>
                         <ButtonGroup>
                             <Button
                                 iconBefore={<PreferencesIcon/>}
-                                onClick={this._toggleDateDialog}
-                                isSelected={showDateDialog}
+                                onClick={this._toggleDialog('params')}
                             >
                                 Параметры
                             </Button>
@@ -228,6 +214,64 @@ class GanttActionsInternal extends React.Component {
                             </DropdownMenu>
                         </ButtonGroup>
                     </div>
+                </div>
+
+                <div className="gantt-header">
+                    <div>
+                        <DropdownMenu
+                            trigger={<span className="calendar-title">{calendar && calendar.selectedName}</span>}
+                            triggerType="button"
+                            triggerButtonProps={{
+                                appearance: 'subtle',
+                                iconAfter: <ChevronDownIcon label=""/>
+                            }}
+
+                            onOpenChange={this._onCalendarListOpen}
+
+                            isLoading={!calendars}
+                        >
+                            {calendars &&
+                                <DropdownItemGroupRadio id="gantt-calendar">
+                                    {calendars.map(cal =>
+                                        <DropdownItemRadio
+                                            href={`#calendar=${cal.id}`}
+                                            key={cal.id}
+                                            id={cal.id}
+
+                                            isSelected={calendar && parseInt(calendar.id, 10) === cal.id}
+                                        >
+                                            {cal.name}
+                                        </DropdownItemRadio>
+                                    )}
+                                </DropdownItemGroupRadio>
+                            }
+                        </DropdownMenu>
+                    </div>
+                    <div className="flex-grow"/>
+                    <ButtonGroup>
+                        <Button appearance="subtle" iconBefore={<FilterIcon label=""/>}/>
+                        <InlineDialog
+                            content={
+                                <div className="flex-column">
+                                    <FieldTextStateless isLabelHidden={true} label="" value={filter} onChange={this._setFilter}/>
+                                    <div style={{marginTop: '20px'}}>
+                                        <Button onClick={this._applyFilter} shouldFitContainer={true}>
+                                            Применить
+                                        </Button>
+                                    </div>
+                                </div>
+                            }
+                            position="bottom right"
+                            isOpen={activeDialog === 'filter'}
+                            onClose={this._toggleDialog('filter')}
+                        >
+                            <Button
+                                appearance="subtle"
+                                iconBefore={<SearchIcon label=""/>}
+                                onClick={this._toggleDialog('filter')}
+                            />
+                        </InlineDialog>
+                    </ButtonGroup>
                 </div>
             </div>
         );
