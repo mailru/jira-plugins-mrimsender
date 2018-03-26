@@ -22,6 +22,7 @@ import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttTaskDto;
 import ru.mail.jira.plugins.calendar.service.GanttService;
 import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -67,6 +68,8 @@ public class PlanningService {
 
         SortOrder order = null;
         String orderField = null;
+
+        //todo: calculate estimate if no estimate and start&end is present
 
         if ("priority".equals(orderBy)) {
             orderField = orderBy;
@@ -118,6 +121,7 @@ public class PlanningService {
             }
         }
 
+        int workingHours = getWorkingHours();
         Map<EventDto, Pair<Date, Date>> plan = planningEngine.generatePlan(
             events,
             events
@@ -128,14 +132,21 @@ public class PlanningService {
                         if (event.getOriginalEstimateSeconds() != null) {
                             return (int) TimeUnit.SECONDS.toHours(event.getOriginalEstimateSeconds());
                         }
-                        return 8;
+                        if (event.getOriginalStart() != null && event.getOriginalEnd() != null) {
+                            return workingHours * countWorkDays(
+                                user, event.isAllDay(),
+                                event.getOriginalStart().toInstant(),
+                                event.getOriginalEnd().toInstant()
+                            );
+                        }
+                        return workingHours;
                     }
                 )),
             ImmutableMap.of(), //todo
             dependencies,
             priorities,
             countWorkDays(LocalDate.now(), LocalDate.parse(deadline)),
-            getWorkingHours()
+            workingHours
         );
 
         plan.forEach((event, dates) -> {
@@ -153,6 +164,21 @@ public class PlanningService {
     private int getWorkingHours() {
         WorkingTimeDto workingTime = workingDaysService.getWorkingTime();
         return (int) workingTime.getStartTime().until(workingTime.getEndTime(), ChronoUnit.HOURS);
+    }
+
+    private int countWorkDays(ApplicationUser user, boolean allDay, Instant startI, Instant endI) {
+        LocalDate start = null;
+        LocalDate end = null;
+
+        if (allDay) {
+            start = startI.atZone(timeZoneManager.getDefaultTimezone().toZoneId()).toLocalDate();
+            end = endI.atZone(timeZoneManager.getDefaultTimezone().toZoneId()).toLocalDate();
+        } else {
+            start = startI.atZone(timeZoneManager.getTimeZoneforUser(user).toZoneId()).toLocalDate();
+            end = endI.atZone(timeZoneManager.getTimeZoneforUser(user).toZoneId()).toLocalDate();
+        }
+
+        return countWorkDays(start, end);
     }
 
     private int countWorkDays(LocalDate start, LocalDate deadline) {

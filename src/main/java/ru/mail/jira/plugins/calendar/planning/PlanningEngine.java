@@ -60,6 +60,7 @@ public class PlanningEngine {
 
         final Variable[] progressVars = new Variable[numTasks * numDays];// matrix[i][j] = array[i * m + j], 0 <= i < n, 0 <= j <m
 
+        int lastDay = numDays - 1;
         // main function
         if (issuePriority.size() == 0) {
             for (int i = 0; i < numTasks; i++) {
@@ -69,8 +70,11 @@ public class PlanningEngine {
                                                             .weight(1)
                                                             .lower(0)
                                                             .upper(1);
-                    if (j == 0)
+                    if (j == 0) {
                         progressVars[i * numDays + j].level(0);
+                    } else if (j == lastDay) {
+                        progressVars[i * numDays + j].lower(1);
+                    }
                 }
             }
         } else {
@@ -89,8 +93,11 @@ public class PlanningEngine {
                                                                 .lower(0)
                                                                 .upper(1);
                     }
-                    if (j == 0)
+                    if (j == 0) {
                         progressVars[i * numDays + j].level(0);
+                    } else if (j == lastDay) {
+                        progressVars[i * numDays + j].lower(1);
+                    }
                 }
             }
         }
