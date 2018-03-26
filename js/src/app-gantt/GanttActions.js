@@ -13,15 +13,17 @@ import DropdownMenu, { DropdownItemGroupRadio, DropdownItemRadio } from '@atlask
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import MediaServicesZoomInIcon from '@atlaskit/icon/glyph/media-services/zoom-in';
 import MediaServicesZoomOutIcon from '@atlaskit/icon/glyph/media-services/zoom-out';
-import PreferencesIcon from '@atlaskit/icon/glyph/preferences';
+import CalendarIcon from '@atlaskit/icon/glyph/calendar-filled';
 import SearchIcon from '@atlaskit/icon/glyph/search';
 import ListIcon from '@atlaskit/icon/glyph/list';
 import JiraLabsIcon from '@atlaskit/icon/glyph/jira/labs';
 import FilterIcon from '@atlaskit/icon/glyph/filter';
 
 import {keyedConfigs, scaleConfigs} from './scaleConfigs';
-import {OptionsDialog} from './OptionsDialog';
 import {viewItems} from './views';
+
+import {OptionsDialog} from './OptionsDialog';
+import {DatesDialog} from './DatesDialog';
 import {MagicDialog} from './MagicDialog';
 
 import {OptionsActionCreators} from '../service/gantt.reducer';
@@ -181,16 +183,21 @@ class GanttActionsInternal extends React.Component {
                                 iconBefore={<SearchIcon label="Reset zoom"/>}
                             />
                         </ButtonGroup>
-                        {activeDialog === 'params' && <OptionsDialog gantt={gantt} onClose={this._toggleDialog('params')}/>}
                     </div>
                     <div>
                         <ButtonGroup>
-                            <Button
-                                iconBefore={<PreferencesIcon/>}
-                                onClick={this._toggleDialog('params')}
+                            <InlineDialog
+                                position="bottom right"
+                                isOpen={activeDialog === 'dates'}
+                                content={(activeDialog === 'dates') && <DatesDialog gantt={gantt} onClose={this._toggleDialog('dates')}/>}
                             >
-                                Параметры
-                            </Button>
+                                <Button
+                                    iconBefore={<CalendarIcon/>}
+                                    onClick={this._toggleDialog('dates')}
+                                >
+                                    Период
+                                </Button>
+                            </InlineDialog>
                             <DropdownMenu
                                 trigger="Вид"
                                 triggerType="button"
@@ -249,7 +256,17 @@ class GanttActionsInternal extends React.Component {
                     </div>
                     <div className="flex-grow"/>
                     <ButtonGroup>
-                        <Button appearance="subtle" iconBefore={<FilterIcon label=""/>}/>
+                        <InlineDialog
+                            position="bottom right"
+                            isOpen={activeDialog === 'params'}
+                            content={(activeDialog === 'params') && <OptionsDialog gantt={gantt} onClose={this._toggleDialog('params')}/>}
+                        >
+                            <Button
+                                appearance="subtle"
+                                iconBefore={<FilterIcon label=""/>}
+                                onClick={this._toggleDialog('params')}
+                            />
+                        </InlineDialog>
                         <InlineDialog
                             content={
                                 <div className="flex-column">

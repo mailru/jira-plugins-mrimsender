@@ -201,13 +201,13 @@
   dependencies:
     "@atlaskit/util-shared-styles" "^2.10.3"
 
-"@atlaskit/select@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@atlaskit/select/-/select-0.2.1.tgz#2089c74b8008495cb48f06928a2f9c8aa3d034dd"
+"@atlaskit/select@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/select/-/select-0.3.0.tgz#1447317e955eb3e7e401dc2783329fa10076c008"
   dependencies:
     "@atlaskit/icon" "^10.12.1"
     "@atlaskit/theme" "^2.4.1"
-    react-select "2.0.0-alpha.6"
+    react-select "2.0.0-alpha.8"
     react-transition-group "^2.2.1"
     styled-components "1.4.6 - 3"
 
@@ -4195,6 +4195,10 @@ performance-now@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-0.2.0.tgz#33ef30c5c77d4ea21c5a53869d91b56d8f2555e5"
 
+performance-now@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
+
 pify@^2.0.0, pify@^2.3.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/pify/-/pify-2.3.0.tgz#ed141a6ac043a849ea588498e7dca8b15330e90c"
@@ -4599,6 +4603,12 @@ raf-schd@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/raf-schd/-/raf-schd-2.1.0.tgz#64d645723380ec25cc1714e909b953ef1cf254bf"
 
+raf@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/raf/-/raf-3.4.0.tgz#a28876881b4bc2ca9117d4138163ddb80f781575"
+  dependencies:
+    performance-now "^2.1.0"
+
 railroad-diagrams@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/railroad-diagrams/-/railroad-diagrams-1.0.0.tgz#eb7e6267548ddedfb899c1b90e57374559cddb7e"
@@ -4730,13 +4740,14 @@ react-scroll-captor@^1.0.1:
   dependencies:
     react-node-resolver "^1.0.1"
 
-react-select@2.0.0-alpha.6:
-  version "2.0.0-alpha.6"
-  resolved "https://registry.yarnpkg.com/react-select/-/react-select-2.0.0-alpha.6.tgz#422de89840538a8c09a25e9609f5e79777a79154"
+react-select@2.0.0-alpha.8:
+  version "2.0.0-alpha.8"
+  resolved "https://registry.yarnpkg.com/react-select/-/react-select-2.0.0-alpha.8.tgz#c6e4e18abc7871f78cd6d10d5a8ab1931660d4a6"
   dependencies:
     classnames "^2.2.5"
     glam "^5.0.1"
     prop-types "^15.6.0"
+    raf "^3.4.0"
     react-input-autosize "^2.2.1"
     react-scroll-captor "^1.0.1"
     react-transition-group "^2.2.1"

@@ -34,6 +34,7 @@ class MagicDialogInternal extends React.Component {
     static propTypes = {
         onClose: PropTypes.func.isRequired,
         gantt: PropTypes.any.isRequired,
+        groupBy: PropTypes.string,
         calendar: PropTypes.object
     };
 
@@ -43,6 +44,12 @@ class MagicDialogInternal extends React.Component {
         deadline: moment().add(3, 'months').format('YYYY-MM-DD'),
         waitingForMagic: false
     };
+
+    componentDidMount() {
+        this.setState({
+            groupBy: this.props.groupBy
+        });
+    }
 
     _runMagic = () => {
         const {orderBy, groupBy, deadline} = this.state;
@@ -141,7 +148,8 @@ export const MagicDialog =
     connect(
         state => {
             return {
-                calendar: state.calendar
+                calendar: state.calendar,
+                groupBy: state.options.groupBy
             };
         },
         OptionsActionCreators

@@ -51,7 +51,7 @@
     "@atlaskit/modal-dialog": "^3.5.1",
     "@atlaskit/page-header": "^2.4.1",
     "@atlaskit/reduced-ui-pack": "^8.7.2",
-    "@atlaskit/select": "^0.2.1",
+    "@atlaskit/select": "^0.3.0",
     "@atlaskit/spinner": "^4.2.1",
     "@atlaskit/theme": "^2.4.1",
     "@atlaskit/util-shared-styles": "^2.10.7",
