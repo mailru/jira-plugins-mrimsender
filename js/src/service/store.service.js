@@ -14,4 +14,8 @@ export class StoreService {
     isGanttReady() {
         return this.store.getState().ganttReady;
     }
+
+    dispatch(event) {
+        return this.store.dispatch(event);
+    }
 }

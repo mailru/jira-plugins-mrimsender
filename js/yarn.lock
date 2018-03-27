@@ -2180,9 +2180,9 @@ detect-port-alt@1.1.5:
     address "^1.0.1"
     debug "^2.6.0"
 
-dhtmlx-gantt@^5.0.5:
-  version "5.0.5"
-  resolved "https://registry.yarnpkg.com/dhtmlx-gantt/-/dhtmlx-gantt-5.0.5.tgz#bdf500f0c4537ad7370c809fecf3036601394de6"
+dhtmlx-gantt@^5.1.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/dhtmlx-gantt/-/dhtmlx-gantt-5.1.0.tgz#98380563b2e7e42cb5bf68d30099db85b0a3a05e"
 
 diffie-hellman@^5.0.0:
   version "5.0.2"

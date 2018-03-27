@@ -1,10 +1,5 @@
 import {combineReducers} from 'redux';
 
-// eslint-disable-next-line import/no-extraneous-dependencies
-import moment from 'moment';
-
-import {keyedConfigs} from '../app-gantt/scaleConfigs';
-import {views} from '../app-gantt/views';
 import {defaultOptions} from '../app-gantt/staticOptions';
 
 

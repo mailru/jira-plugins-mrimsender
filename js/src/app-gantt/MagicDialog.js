@@ -73,6 +73,7 @@ class MagicDialogInternal extends React.Component {
                     });
                     gantt.parse(data);
                     this.setState({ waitingForMagic: false });
+                    this.props.updateOptions({ liveData: false });
                     this.props.onClose();
                 },
                 error => {

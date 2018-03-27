@@ -13,6 +13,10 @@ export class GanttService {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/${calendarId}/optimized?${$.param(params)}`);
     }
 
+    applyPlan(calendarId, data) {
+        return ajaxPost(`${getPluginBaseUrl()}/gantt/${calendarId}/applyPlan`, data);
+    }
+
     updateTask(calendarId, id, task) {
         return ajaxPut(`${getPluginBaseUrl()}/gantt/${calendarId}/task/${id}`, task);
     }

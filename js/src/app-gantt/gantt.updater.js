@@ -6,6 +6,7 @@ import {defaultColumns} from './ganttColumns';
 
 import {preferenceService, storeService} from '../service/services';
 import {getPluginBaseUrl} from '../common/ajs-helpers';
+import {OptionsActionCreators} from '../service/gantt.reducer';
 
 
 function matchesFilter(gantt, id, filter) {
@@ -80,6 +81,7 @@ export class GanttUpdater {
 
                 this.gantt.load(`${getPluginBaseUrl()}/gantt/${this.calendar.id}?${param}`);
 
+                storeService.dispatch(OptionsActionCreators.updateOptions({ liveData: true }));
                 preferenceService.saveOptions(storeService.getOptions());
             }
 

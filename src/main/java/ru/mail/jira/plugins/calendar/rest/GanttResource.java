@@ -6,7 +6,9 @@ import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.order.SortOrder;
 import ru.mail.jira.plugins.calendar.planning.PlanningService;
+import ru.mail.jira.plugins.calendar.rest.dto.SingleValueDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.*;
+import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanForm;
 import ru.mail.jira.plugins.calendar.service.GanttService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
@@ -110,6 +112,25 @@ public class GanttResource {
             @Override
             protected List<GanttTaskDto> doAction() throws Exception {
                 return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, updateDto.getStartDate(), updateDto.getEndDate());
+            }
+        }.getResponse();
+    }
+
+    @POST
+    @Path("/{id}/applyPlan")
+    public Response applyPlan(
+        @PathParam("id") int calendarId,
+        GanttPlanForm form
+    ) {
+        return new RestExecutor<Void>() {
+            @Override
+            protected Void doAction() throws Exception {
+                ganttService.applyPlan(
+                    authenticationContext.getLoggedInUser(),
+                    calendarId,
+                    form
+                );
+                return null;
             }
         }.getResponse();
     }

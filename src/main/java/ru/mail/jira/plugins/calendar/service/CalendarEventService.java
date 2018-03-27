@@ -963,9 +963,9 @@ public class CalendarEventService {
     }
 
     public EventDto moveEvent(ApplicationUser user, int calendarId, String eventId, String start, String end) throws Exception {
-        IssueService.IssueResult issueResult = jiraDeprecatedService.issueService.getIssue(user, eventId);
+        IssueService.IssueResult issueResult = issueService.getIssue(user, eventId);
         MutableIssue issue = issueResult.getIssue();
-        if (!jiraDeprecatedService.issueService.isEditable(issue, user))
+        if (!issueService.isEditable(issue, user))
             throw new IllegalArgumentException("Can not edit issue with key => " + eventId);
         Calendar calendar = calendarService.getCalendar(calendarId);
         CustomField eventStartCF = null;
@@ -1010,16 +1010,16 @@ public class CalendarEventService {
                 issueInputParams.setDueDate(datePickerFormat.format(new Date(endDate.getTime() - MILLIS_IN_DAY)));
         }
 
-        IssueService.UpdateValidationResult updateValidationResult = jiraDeprecatedService.issueService.validateUpdate(user, issue.getId(), issueInputParams);
+        IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(user, issue.getId(), issueInputParams);
         if (!updateValidationResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateValidationResult.getErrorCollection()));
 
-        IssueService.IssueResult updateResult = jiraDeprecatedService.issueService.update(user, updateValidationResult);
+        IssueService.IssueResult updateResult = issueService.update(user, updateValidationResult);
         if (!updateResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
 
         return buildEvent(
-            calendar, null, user, jiraDeprecatedService.issueService.getIssue(user, eventId).getIssue(), false,
+            calendar, null, user, issueService.getIssue(user, eventId).getIssue(), false,
             calendar.getEventStart(), eventStartCF, calendar.getEventEnd(), eventEndCF, ImmutableList.of(), null, true);
     }
 

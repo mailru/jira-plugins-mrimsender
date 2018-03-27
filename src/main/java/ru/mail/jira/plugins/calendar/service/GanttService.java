@@ -9,6 +9,7 @@ import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttLinkForm;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttTaskDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttLinkDto;
+import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanForm;
 
 import java.text.ParseException;
 import java.util.List;
@@ -22,4 +23,6 @@ public interface GanttService {
     void deleteLink(ApplicationUser user, int calendarId, int linkId) throws GetException;
 
     List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, String endDate) throws Exception;
+
+    void applyPlan(ApplicationUser loggedInUser, int calendarId, GanttPlanForm form) throws Exception;
 }

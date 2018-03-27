@@ -5,6 +5,8 @@ import com.atlassian.jira.bc.issue.worklog.TimeTrackingConfiguration;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.exception.GetException;
+import com.atlassian.jira.issue.customfields.impl.CalculatedCFType;
+import com.atlassian.jira.issue.fields.*;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
@@ -24,6 +26,8 @@ import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventGroup;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.*;
+import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanForm;
+import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanItem;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -37,6 +41,7 @@ public class GanttServiceImpl implements GanttService {
     private final ActiveObjects ao;
     private final TimeTrackingConfiguration timeTrackingConfiguration;
     private final TimeZoneManager timeZoneManager;
+    private final FieldManager fieldManager;
     private final JiraDeprecatedService jiraDeprecatedService;
     private final PermissionService permissionService;
     private final CalendarEventService calendarEventService;
@@ -48,6 +53,7 @@ public class GanttServiceImpl implements GanttService {
         @ComponentImport ActiveObjects ao,
         @ComponentImport TimeTrackingConfiguration timeTrackingConfiguration,
         @ComponentImport TimeZoneManager timeZoneManager,
+        @ComponentImport FieldManager fieldManager,
         JiraDeprecatedService jiraDeprecatedService,
         PermissionService permissionService,
         CalendarEventService calendarEventService,
@@ -57,6 +63,7 @@ public class GanttServiceImpl implements GanttService {
         this.ao = ao;
         this.timeTrackingConfiguration = timeTrackingConfiguration;
         this.timeZoneManager = timeZoneManager;
+        this.fieldManager = fieldManager;
         this.jiraDeprecatedService = jiraDeprecatedService;
         this.permissionService = permissionService;
         this.calendarEventService = calendarEventService;
@@ -136,6 +143,7 @@ public class GanttServiceImpl implements GanttService {
             .map(EventDto::getGroups)
             .filter(Objects::nonNull)
             .flatMap(List::stream)
+            .distinct()
             .map(this::buildGroup)
             .forEach(events::add);
 
@@ -186,6 +194,48 @@ public class GanttServiceImpl implements GanttService {
     @Override
     public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, String endDate) throws Exception {
         return updateDates(user, calendarId, issueKey, startDate, endDate, false);
+    }
+
+    @Override
+    public void applyPlan(ApplicationUser user, int calendarId, GanttPlanForm form) throws Exception {
+        Calendar calendar = calendarService.getCalendar(calendarId);
+
+        if (!permissionService.hasUsePermission(user, calendar)) {
+            throw new SecurityException("No permission");
+        }
+
+        if (!(isMutableField(calendar.getEventStart()) && isMutableField(calendar.getEventEnd()))) {
+            throw new IllegalArgumentException("Calendar start and end fields must be present and mutable");
+        }
+
+        for (GanttPlanItem item : form.getItems()) {
+            calendarEventService.moveEvent(
+                user,
+                calendarId,
+                item.getTaskId(),
+                item.getStartDate(),
+                item.getEndDate()
+            );
+        }
+    }
+
+    private boolean isMutableField(String fieldId) {
+        if (fieldId == null) {
+            return false;
+        }
+
+        if (CalendarEventService.DUE_DATE_KEY.equals(fieldId)) {
+            fieldId = "duedate";
+        } else if (CalendarEventService.RESOLVED_DATE_KEY.equals(fieldId)) {
+            fieldId = "resolutiondate";
+        }
+
+        Field field = fieldManager.getField(fieldId);
+
+        return field != null && !(
+            field instanceof CalculatedCFType || field instanceof CreatedSystemField ||
+            field instanceof UpdatedSystemField || field instanceof ResolutionDateSystemField
+        );
     }
 
     public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, String endDate, boolean withDependencies) throws Exception {
@@ -374,6 +424,7 @@ public class GanttServiceImpl implements GanttService {
         result.setSummary(group.getName());
         result.setIconSrc(group.getAvatar());
         result.setType("group");
+        result.setOpen(true);
 
         return result;
     }

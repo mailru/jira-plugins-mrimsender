@@ -9,6 +9,7 @@ import {FieldTextStateless} from '@atlaskit/field-text';
 import Button, {ButtonGroup} from '@atlaskit/button';
 import InlineDialog from '@atlaskit/inline-dialog';
 import DropdownMenu, { DropdownItemGroupRadio, DropdownItemRadio } from '@atlaskit/dropdown-menu';
+import Spinner from '@atlaskit/spinner';
 
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import MediaServicesZoomInIcon from '@atlaskit/icon/glyph/media-services/zoom-in';
@@ -18,6 +19,7 @@ import SearchIcon from '@atlaskit/icon/glyph/search';
 import ListIcon from '@atlaskit/icon/glyph/list';
 import JiraLabsIcon from '@atlaskit/icon/glyph/jira/labs';
 import FilterIcon from '@atlaskit/icon/glyph/filter';
+import CheckIcon from '@atlaskit/icon/glyph/check';
 
 import {keyedConfigs, scaleConfigs} from './scaleConfigs';
 import {viewItems} from './views';
@@ -27,7 +29,7 @@ import {DatesDialog} from './DatesDialog';
 import {MagicDialog} from './MagicDialog';
 
 import {OptionsActionCreators} from '../service/gantt.reducer';
-import {calendarService} from '../service/services';
+import {calendarService, ganttService} from '../service/services';
 
 
 const enableMagic = true;
@@ -39,11 +41,51 @@ class GanttActionsInternal extends React.Component {
         calendar: PropTypes.object
     };
 
-    state ={
+    state = {
         activeDialog: null,
         waitingForMagic: false,
+        waitingForPlan: false,
         calendars: null,
         filter: ''
+    };
+
+    _applyPlan = () => {
+        const {gantt, calendar, options} = this.props;
+
+        if (options.liveData) {
+            return;
+        }
+
+        const tasks = gantt.getTaskBy(task => task.type !== 'group');
+
+        this.setState({
+            waitingForPlan: true
+        });
+
+        ganttService
+            .applyPlan(
+                calendar.id,
+                {
+                    items: tasks.map(({id, start_date, end_date}) => {
+                        return {
+                            taskId: id,
+                            start_date: gantt.templates.xml_format(start_date),
+                            end_date: gantt.templates.xml_format(end_date)
+                        };
+                    })
+                }
+            )
+            .then(
+                () => {
+                    this.setState({waitingForPlan: false});
+                    this.props.updateOptions({ liveData: true });
+                },
+                error => {
+                    this.setState({waitingForPlan: false});
+                    console.error(error);
+                    alert(error);
+                }
+            );
     };
 
     _zoomIn = () => {
@@ -130,7 +172,7 @@ class GanttActionsInternal extends React.Component {
     };
 
     render() {
-        const {activeDialog, waitingForMagic, calendars, filter} = this.state;
+        const {activeDialog, waitingForMagic, waitingForPlan, calendars, filter} = this.state;
         const {options, calendar, gantt} = this.props;
 
         return (
@@ -149,6 +191,16 @@ class GanttActionsInternal extends React.Component {
                             >
                                 Запустить магию
                             </Button>}
+                            {!options.liveData &&
+                                <Button
+                                    onClick={this._applyPlan}
+
+                                    isDisabled={waitingForPlan}
+                                    iconBefore={waitingForPlan ? <Spinner/> : <CheckIcon label=""/>}
+                                >
+                                    Применить изменения
+                                </Button>
+                            }
                             {activeDialog === 'magic' && <MagicDialog onClose={this._toggleDialog('magic')} gantt={gantt}/>}
                         </ButtonGroup>
                     </div>

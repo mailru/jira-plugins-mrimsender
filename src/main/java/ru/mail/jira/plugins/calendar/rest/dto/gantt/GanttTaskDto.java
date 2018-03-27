@@ -8,6 +8,7 @@ import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Map;
+import java.util.Objects;
 
 
 @XmlRootElement
@@ -46,5 +47,21 @@ public class GanttTaskDto extends GanttTaskForm {
     private Map<String, String> fields;
     @XmlElement
     private Long earlySeconds;
+    @XmlElement
+    private Boolean open;
     private EventDto originalEvent;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GanttTaskDto that = (GanttTaskDto) o;
+        return Objects.equals(id, that.id) &&
+            Objects.equals(type, that.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, type);
+    }
 }
