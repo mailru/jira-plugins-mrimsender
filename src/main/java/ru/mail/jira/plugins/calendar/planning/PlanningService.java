@@ -133,6 +133,7 @@ public class PlanningService {
                             return (int) TimeUnit.SECONDS.toHours(event.getOriginalEstimateSeconds());
                         }
                         if (event.getStartDate() != null && event.getEndDate() != null) {
+                            //todo: do more precise calculation if not all day event
                             return workingHours * countWorkDays(
                                 user, event.isAllDay(),
                                 event.getStartDate().toInstant(),
