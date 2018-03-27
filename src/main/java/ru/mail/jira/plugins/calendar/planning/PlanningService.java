@@ -132,11 +132,11 @@ public class PlanningService {
                         if (event.getOriginalEstimateSeconds() != null) {
                             return (int) TimeUnit.SECONDS.toHours(event.getOriginalEstimateSeconds());
                         }
-                        if (event.getOriginalStart() != null && event.getOriginalEnd() != null) {
+                        if (event.getStartDate() != null && event.getEndDate() != null) {
                             return workingHours * countWorkDays(
                                 user, event.isAllDay(),
-                                event.getOriginalStart().toInstant(),
-                                event.getOriginalEnd().toInstant()
+                                event.getStartDate().toInstant(),
+                                event.getEndDate().toInstant()
                             );
                         }
                         return workingHours;

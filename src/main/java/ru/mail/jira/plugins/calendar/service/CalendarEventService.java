@@ -102,7 +102,7 @@ public class CalendarEventService {
     private final WorkingDaysService workingDaysService;
     private final RendererManager rendererManager;
     private final SearchRequestService searchRequestService;
-    private final SearchProvider searchProvider;
+    private final SearchService searchService;
     private final UserCalendarService userCalendarService;
     private final I18nResolver i18nResolver;
     private final AvatarService avatarService;
@@ -119,7 +119,7 @@ public class CalendarEventService {
         @ComponentImport FieldLayoutManager fieldLayoutManager,
         @ComponentImport RendererManager rendererManager,
         @ComponentImport SearchRequestService searchRequestService,
-        @ComponentImport SearchProvider searchProvider,
+        @ComponentImport SearchService searchService,
         @ComponentImport I18nResolver i18nResolver,
         @ComponentImport AvatarService avatarService,
         CalendarService calendarService,
@@ -141,7 +141,7 @@ public class CalendarEventService {
         this.workingDaysService = workingDaysService;
         this.rendererManager = rendererManager;
         this.searchRequestService = searchRequestService;
-        this.searchProvider = searchProvider;
+        this.searchService = searchService;
         this.userCalendarService = userCalendarService;
         this.i18nResolver = i18nResolver;
         this.avatarService = avatarService;
@@ -391,11 +391,16 @@ public class CalendarEventService {
         String startField = calendar.getEventStart();
         String endField = calendar.getEventEnd();
 
-        if (startField != null && endField != null) {
+        String startFieldClause = getClauseName(startField);
+        String endFieldClause = getClauseName(endField);
+
+        if (startFieldClause != null && endFieldClause != null) {
             queryBuilder
                 .or()
-                .field(startField).isNotEmpty()
-                .and().field(endField).isNotEmpty();
+                .sub()
+                .addCondition(startFieldClause).isNotEmpty()
+                .and().addCondition(endFieldClause).isNotEmpty()
+                .endsub();
         }
 
         queryBuilder
@@ -406,9 +411,12 @@ public class CalendarEventService {
         CustomField startCF = getCf(startField);
         CustomField endCF = getCf(endField);
 
-        return searchProvider
-            .search(withOrder(queryBuilder.buildQuery(), order), user, PagerFilter.newPageAlignedFilter(0, 1000))
-            .getIssues()
+        Query query = withOrder(queryBuilder.buildQuery(), order);
+
+        List<Issue> issues = searchService
+            .search(user, query, PagerFilter.newPageAlignedFilter(0, 1000))
+            .getIssues();
+        return issues
             .stream()
             .map(issue -> buildEventWithGroups(
                 calendar,
@@ -489,7 +497,7 @@ public class CalendarEventService {
 
         Query query = withOrder(jqlBuilder.buildQuery(), order);
 
-        List<Issue> issues = searchProvider.search(query, user, PagerFilter.getUnlimitedFilter()).getIssues();
+        List<Issue> issues = searchService.search(user, query, PagerFilter.getUnlimitedFilter()).getIssues();
         if (log.isDebugEnabled())
             log.debug("searchProvider.search(). query={}, user={}, issues.size()={}", query.toString(), user, issues.size());
         for (Issue issue : issues) {
@@ -504,24 +512,36 @@ public class CalendarEventService {
 
     private Query withOrder(Query query, Order order) {
         if (order != null) {
-            Field field = fieldManager.getField(order.getField());
-            if (field != null && field instanceof NavigableField) {
-                String name = null;
-                if (field instanceof CustomField) {
-                    ClauseNames clauseNames = ((CustomField) field).getClauseNames();
-                    if (clauseNames != null && clauseNames.getPrimaryName() != null) {
-                        name = clauseNames.getPrimaryName();
-                    }
-                } else {
-                    name = field.getId();
-                }
+            String fieldClauseName = getClauseName(order.getField());
 
-                if (name != null) {
-                    return JqlQueryBuilder.newBuilder(query).orderBy().clear().add(name, order.getOrder(), true).buildQuery();
-                }
+            if (fieldClauseName != null) {
+                return JqlQueryBuilder.newBuilder(query).orderBy().clear().add(fieldClauseName, order.getOrder(), true).buildQuery();
             }
         }
         return query;
+    }
+
+    private String getClauseName(String fieldId) {
+        if (fieldId != null) {
+            if (DUE_DATE_KEY.equals(fieldId)) {
+                fieldId = "duedate";
+            } else if (RESOLVED_DATE_KEY.equals(fieldId)) {
+                fieldId = "resolutiondate";
+            }
+
+            Field field = fieldManager.getField(fieldId);
+            if (field != null && field instanceof NavigableField) {
+                if (field instanceof CustomField) {
+                    ClauseNames clauseNames = ((CustomField) field).getClauseNames();
+                    if (clauseNames != null && clauseNames.getPrimaryName() != null) {
+                        return clauseNames.getPrimaryName();
+                    }
+                } else {
+                    return field.getId();
+                }
+            }
+        }
+        return null;
     }
 
     private Optional<EventDto> buildEventWithGroups(
