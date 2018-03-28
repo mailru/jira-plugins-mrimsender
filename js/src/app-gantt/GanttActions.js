@@ -43,7 +43,6 @@ class GanttActionsInternal extends React.Component {
 
     state = {
         activeDialog: null,
-        waitingForMagic: false,
         waitingForPlan: false,
         calendars: null,
         filter: ''
@@ -172,7 +171,7 @@ class GanttActionsInternal extends React.Component {
     };
 
     render() {
-        const {activeDialog, waitingForMagic, waitingForPlan, calendars, filter} = this.state;
+        const {activeDialog, waitingForPlan, calendars, filter} = this.state;
         const {options, calendar, gantt} = this.props;
 
         return (
@@ -185,7 +184,6 @@ class GanttActionsInternal extends React.Component {
                         <ButtonGroup>
                             {enableMagic && <Button
                                 iconBefore={<JiraLabsIcon label=""/>}
-                                isDisabled={waitingForMagic}
 
                                 onClick={this._toggleDialog('magic')}
                             >

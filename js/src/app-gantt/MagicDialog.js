@@ -137,7 +137,11 @@ class MagicDialogInternal extends React.Component {
                     />
                     <div>
                         <Label label="Дедлайн" isRequired={true}/>
-                        <DatePicker value={deadline} onChange={this._setDeadline}/>
+                        <DatePicker
+                            value={deadline}
+                            isDisabled={waitingForMagic}
+                            onChange={this._setDeadline}
+                        />
                     </div>
                 </div>
             </Modal>
