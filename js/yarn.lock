@@ -42,9 +42,9 @@
   dependencies:
     "@atlaskit/util-shared-styles" "^2.10.3"
 
-"@atlaskit/datetime-picker@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@atlaskit/datetime-picker/-/datetime-picker-1.0.0.tgz#b1e96cc5525dad1f8b49157a9d9527a05296ad4a"
+"@atlaskit/datetime-picker@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@atlaskit/datetime-picker/-/datetime-picker-1.0.1.tgz#d796119253798f2a0574d5e004fac8b4fd9bf57d"
   dependencies:
     "@atlaskit/calendar" "^4.0.0"
     "@atlaskit/droplist" "^4.12.2"
