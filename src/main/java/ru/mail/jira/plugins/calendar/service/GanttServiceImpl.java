@@ -12,7 +12,7 @@ import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.order.SortOrder;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,9 +35,17 @@ import java.time.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 public class GanttServiceImpl implements GanttService {
+    private static final Set<String> MULTI_GROUP_TYPES = ImmutableSet.of(
+        "component",
+        "fixVersion",
+        "affectsVersion",
+        "labels"
+    );
+
     private final ActiveObjects ao;
     private final TimeTrackingConfiguration timeTrackingConfiguration;
     private final TimeZoneManager timeZoneManager;
@@ -90,7 +98,7 @@ public class GanttServiceImpl implements GanttService {
         }
         List<EventDto> eventDtoList = calendarEventService.findEvents(calendarId, groupBy, startDate, endDate, user, true, order, fields);
 
-        return getGantt(eventDtoList, user, calendarId);
+        return getGantt(eventDtoList, user, calendarId, groupBy);
     }
 
     @Override
@@ -105,10 +113,10 @@ public class GanttServiceImpl implements GanttService {
         if (orderBy != null && sortOrder != null) {
             order = new Order(orderBy, sortOrder);
         }
-        return getGantt(calendarEventService.getUnboundedEvents(calendar, groupBy, user, true, order, fields), user, calendarId);
+        return getGantt(calendarEventService.getUnboundedEvents(calendar, groupBy, user, true, order, fields), user, calendarId, groupBy);
     }
 
-    private GanttDto getGantt(List<EventDto> eventDtoList, ApplicationUser user, int calendarId) {
+    private GanttDto getGantt(List<EventDto> eventDtoList, ApplicationUser user, int calendarId, String groupBy) {
         DateTimeFormatter dateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
         DateTimeFormatter dateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
 
@@ -132,10 +140,14 @@ public class GanttServiceImpl implements GanttService {
 
         List<GanttTaskDto> events = new ArrayList<>();
 
+        boolean shouldAppendGroupToId = MULTI_GROUP_TYPES.contains(groupBy);
+
         eventDtoList
             .stream()
             .filter(e -> e.getType() == EventDto.Type.ISSUE)
-            .map(eventDto -> buildEvent(eventDto, dateFormat, dateTimeFormat, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, userZoneId))
+            .flatMap(eventDto -> buildEvenWithGroups(
+                eventDto, dateFormat, dateTimeFormat, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, userZoneId, shouldAppendGroupToId
+            ))
             .forEach(events::add);
 
         eventDtoList
@@ -149,14 +161,89 @@ public class GanttServiceImpl implements GanttService {
 
         ganttDto.setData(events);
         GanttCollectionsDto collectionsDto = new GanttCollectionsDto();
-        collectionsDto.setLinks(
-            Arrays
-                .stream(ao.find(GanttLink.class, Query.select().where("CALENDAR_ID = ?", calendarId)))
-                .map(GanttServiceImpl::buildLinkDto)
-                .collect(Collectors.toList())
-        );
+        List<GanttLinkDto> links = Arrays
+            .stream(ao.find(GanttLink.class, Query.select().where("CALENDAR_ID = ?", calendarId)))
+            .map(GanttServiceImpl::buildLinkDto)
+            .collect(Collectors.toList());
+
+        if (shouldAppendGroupToId) {
+            Multimap<String, String> groupedTasks = HashMultimap.create();
+
+            for (GanttTaskDto task : events) {
+                if (task.getParent() != null && !task.getId().equals(task.getEntityId())) {
+                    groupedTasks.put(task.getEntityId(), task.getId());
+                }
+            }
+
+            if (groupedTasks.size() > 0) {
+                Set<Integer> processedLinks = new HashSet<>();
+                Multimap<String, GanttLinkDto> linksBySource = HashMultimap.create();
+                Multimap<String, GanttLinkDto> linksByTarget = HashMultimap.create();
+
+                for (GanttLinkDto link : links) {
+                    linksBySource.put(link.getSource(), link);
+                    linksByTarget.put(link.getTarget(), link);
+                }
+
+                List<GanttLinkDto> newLinks = new ArrayList<>();
+
+                int generatedId = -1;
+                for (String key : groupedTasks.keys()) {
+                    for (GanttLinkDto link : linksBySource.get(key)) {
+                        if (!processedLinks.contains(link.getId())) {
+                            processedLinks.add(link.getId());
+
+                            Collection<String> sources = groupedTasks.get(key);
+                            Collection<String> targets;
+                            if (groupedTasks.containsKey(link.getTarget())) {
+                                targets = groupedTasks.get(link.getTarget());
+                            } else {
+                                targets = ImmutableList.of(link.getTarget());
+                            }
+
+                            generatedId = collectLinks(sources, targets, link, generatedId, newLinks);
+                        }
+                    }
+                    for (GanttLinkDto link : linksByTarget.get(key)) {
+                        if (!processedLinks.contains(link.getId())) {
+                            processedLinks.add(link.getId());
+
+                            Collection<String> targets = groupedTasks.get(key);
+                            Collection<String> sources;
+                            if (groupedTasks.containsKey(link.getSource())) {
+                                sources = groupedTasks.get(link.getSource());
+                            } else {
+                                sources = ImmutableList.of(link.getSource());
+                            }
+
+                            generatedId = collectLinks(sources, targets, link, generatedId, newLinks);
+                        }
+                    }
+                }
+
+                links.addAll(newLinks);
+            }
+        }
+
+        collectionsDto.setLinks(links);
         ganttDto.setCollections(collectionsDto);
         return ganttDto;
+    }
+
+    private int collectLinks(Collection<String> sources, Collection<String> targets, GanttLinkDto link, int id, List<GanttLinkDto> collection) {
+        for (String source : sources) {
+            for (String target : targets) {
+                GanttLinkDto dto = new GanttLinkDto();
+                dto.setId(id--);
+                dto.setEntityId(link.getId());
+                dto.setSource(source);
+                dto.setTarget(target);
+                dto.setType(link.getType());
+                dto.setColor(link.getColor());
+                collection.add(dto);
+            }
+        }
+        return id;
     }
 
     @Override
@@ -238,6 +325,7 @@ public class GanttServiceImpl implements GanttService {
         );
     }
 
+    //todo: group by parameter
     public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, String endDate, boolean withDependencies) throws Exception {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
@@ -280,7 +368,7 @@ public class GanttServiceImpl implements GanttService {
         result.add(
             buildEvent(
                 event,
-                dateFormat, dateTimeFormat, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, userZoneId
+                dateFormat, dateTimeFormat, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, userZoneId, null
             )
         );
 
@@ -333,24 +421,54 @@ public class GanttServiceImpl implements GanttService {
             .collect(Collectors.toList());
     }
 
+    private Stream<GanttTaskDto> buildEvenWithGroups(
+        EventDto event, DateTimeFormatter dateFormatter, DateTimeFormatter dateTimeFormatter, long secondsPerWeek, long secondsPerDay,
+        Set<Integer> workingDays, Set<java.time.LocalDate> nonWorkingDays, WorkingTimeDto workingTime, ZoneId zoneId, boolean addGroupId
+    ) {
+        if (addGroupId) {
+            if (event.getGroups() != null && event.getGroups().size() > 0) {
+                return event
+                    .getGroups()
+                    .stream()
+                    .map(group -> buildEvent(
+                        event, dateFormatter, dateTimeFormatter, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId, group.getId()
+                    ));
+            }
+        }
+        return Stream.of(buildEvent(
+                event, dateFormatter, dateTimeFormatter, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId, null
+            ));
+    }
+
     private GanttTaskDto buildEvent(
         EventDto event, DateTimeFormatter dateFormatter, DateTimeFormatter dateTimeFormatter, long secondsPerWeek, long secondsPerDay,
-        Set<Integer> workingDays, Set<java.time.LocalDate> nonWorkingDays, WorkingTimeDto workingTime, ZoneId zoneId
+        Set<Integer> workingDays, Set<java.time.LocalDate> nonWorkingDays, WorkingTimeDto workingTime, ZoneId zoneId, String groupId
     ) {
         GanttTaskDto ganttTaskDto = new GanttTaskDto();
         ganttTaskDto.setType("issue");
         ganttTaskDto.setOriginalEvent(event);
-        ganttTaskDto.setId(event.getId());
+
+        List<EventGroup> groups = event.getGroups();
+        if (groupId != null) {
+            ganttTaskDto.setId(groupId + '/' + event.getId());
+            ganttTaskDto.setParent(groupId);
+            ganttTaskDto.setMovable(false);
+            ganttTaskDto.setResizable(false);
+            ganttTaskDto.setLinkable(false);
+        } else {
+            ganttTaskDto.setId(event.getId());
+            if (groups != null && groups.size() == 1) {
+                ganttTaskDto.setParent(groups.get(0).getId());
+            }
+            ganttTaskDto.setLinkable(true);
+            ganttTaskDto.setMovable(event.isStartEditable());
+            ganttTaskDto.setResizable(event.isDurationEditable());
+        }
+        ganttTaskDto.setEntityId(event.getId());
         ganttTaskDto.setSummary(event.getTitle());
         ganttTaskDto.setText(String.format("%s %s", event.getId(), event.getTitle()));
         ganttTaskDto.setIconSrc(event.getIssueTypeImgUrl());
-        ganttTaskDto.setMovable(event.isStartEditable());
-        ganttTaskDto.setResizable(event.isDurationEditable());
         ganttTaskDto.setResolved(event.isResolved());
-        List<EventGroup> groups = event.getGroups();
-        if (groups != null && groups.size() > 0) {
-            ganttTaskDto.setParent(groups.get(0).getId());
-        }
 
         IssueInfo issueInfo = event.getIssueInfo();
         if (issueInfo != null) {

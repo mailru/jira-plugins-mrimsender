@@ -83,6 +83,12 @@ export const eventListeners = {
     onAfterLinkDelete: (id) => {
         ganttService.deleteLink(storeService.getCalendar().id, id);
     },
+    onBeforeTaskDrag: (id) => {
+        return gantt.getTask(id).movable;
+    },
+    onBeforeLinkDelete: (id) => {
+        return id >= 0;
+    }
     /*onGanttScroll: (oldLeft, oldTop, left, top) => {
         //updateRender(oldLeft, oldTop, left, top);
         if (oldTop !== top) {

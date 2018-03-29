@@ -90,7 +90,7 @@ function initGantt() {
         showPopup();
 
         calendarService
-            .getEventInfo(storeService.getCalendar().id, eventId)
+            .getEventInfo(storeService.getCalendar().id, gantt.getTask(eventId).entityId)
             .then(issue => {
                 content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
                     issue: issue,
@@ -110,7 +110,7 @@ function initGantt() {
                         const taskId = firstTarget.getAttribute('task_id');
 
                         if (taskId) {
-                            const targetOverride = document.querySelector(`.gantt_event_object[task_id=${taskId}]`);
+                            const targetOverride = document.querySelector(`.gantt_event_object[task_id="${taskId}"]`);
 
                             if (targetOverride) {
                                 targetPosition = {target: targetOverride};

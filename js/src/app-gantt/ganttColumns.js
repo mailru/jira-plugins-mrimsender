@@ -37,7 +37,7 @@ export const ganttColumns = {
             if (item.type === 'group') {
                 return '';
             }
-            const id = escapeHtml(item.id);
+            const id = escapeHtml(item.entityId);
             return `<a href="${getBaseUrl()}/browse/${id}" ${item.resolved ? 'style="text-decoration: line-through;"' : ''}>${id}</a>`;
         }
     },

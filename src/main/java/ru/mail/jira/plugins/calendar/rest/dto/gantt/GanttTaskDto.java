@@ -18,6 +18,8 @@ public class GanttTaskDto extends GanttTaskForm {
     @XmlElement
     private String id;
     @XmlElement
+    private String entityId;
+    @XmlElement
     private String summary;
     @XmlElement
     private String text;
@@ -35,6 +37,8 @@ public class GanttTaskDto extends GanttTaskForm {
     private boolean movable;
     @XmlElement
     private boolean resizable;
+    @XmlElement
+    private boolean linkable;
     @XmlElement
     private boolean resolved;
     @XmlElement

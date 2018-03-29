@@ -124,7 +124,7 @@ export const templates = {
             classes.push('issue_event');
         }
 
-        if (task.type === 'group') {
+        if (task.type === 'group' || !task.linkable) {
             classes.push('no_link');
         }
 

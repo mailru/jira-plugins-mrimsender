@@ -31,6 +31,22 @@ export const groupOptions = [
         label: 'По резолюции'
     },
     {
+        value: 'component',
+        label: 'По компонентам'
+    },
+    {
+        value: 'fixVersion',
+        label: 'По версиям исправления'
+    },
+    {
+        value: 'affectsVersion',
+        label: 'По затронутым версиям'
+    },
+    {
+        value: 'labels',
+        label: 'По меткам'
+    },
+    {
         value: 'epicLink',
         label: 'По эпику'
     },

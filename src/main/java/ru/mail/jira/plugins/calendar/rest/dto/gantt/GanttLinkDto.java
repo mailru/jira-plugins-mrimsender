@@ -12,5 +12,7 @@ public class GanttLinkDto extends GanttLinkForm {
     @XmlElement
     private int id;
     @XmlElement
+    private int entityId;
+    @XmlElement
     private String color;
 }
