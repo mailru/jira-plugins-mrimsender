@@ -122,7 +122,7 @@ public class PlanningService {
         }
 
         int workingHours = getWorkingHours();
-        Map<EventDto, Pair<Date, Date>> plan = planningEngine.generatePlan(
+        Map<EventDto, Pair<Date, Date>> plan = planningEngine.generatePlan2(
             events,
             events
                 .stream()
