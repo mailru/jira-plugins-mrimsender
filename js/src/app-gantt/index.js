@@ -18,8 +18,11 @@ import moment from 'moment';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import JIRA from 'JIRA';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 import 'dhtmlx-gantt';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_marker';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_smart_rendering';
 
 import {GanttActions} from './GanttActions';

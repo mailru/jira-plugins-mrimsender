@@ -55,7 +55,6 @@
     "@atlaskit/spinner": "^4.2.1",
     "@atlaskit/theme": "^2.4.1",
     "@atlaskit/util-shared-styles": "^2.10.7",
-    "dhtmlx-gantt": "^5.1.0",
     "lodash.debounce": "^4.0.8",
     "lodash.memoize": "^4.1.2",
     "object-assign": "^4.1.1",

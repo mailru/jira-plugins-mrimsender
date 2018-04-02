@@ -16,6 +16,7 @@ export function buildJiraFieldColumn({key, name, colParams}) {
         label: name,
         align: 'left',
         isJiraField: true,
+        resize: true,
         template: (item) => {
             if (item.fields) {
                 return item.fields[key] || '';
@@ -28,7 +29,7 @@ export function buildJiraFieldColumn({key, name, colParams}) {
 export const ganttColumns = {
     id: {
         name: 'id',
-        //resize: true,
+        resize: true,
         tree: true,
         width: '110px',
         label: 'Код',
@@ -43,7 +44,7 @@ export const ganttColumns = {
     },
     name: {
         name: 'summary',
-        //resize: true,
+        resize: true,
         label: 'Название',
         width: '*',
         align: 'left',

@@ -1988,10 +1988,6 @@ detect-port-alt@1.1.5:
     address "^1.0.1"
     debug "^2.6.0"
 
-dhtmlx-gantt@^5.1.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/dhtmlx-gantt/-/dhtmlx-gantt-5.1.0.tgz#98380563b2e7e42cb5bf68d30099db85b0a3a05e"
-
 diffie-hellman@^5.0.0:
   version "5.0.2"
   resolved "https://registry.yarnpkg.com/diffie-hellman/-/diffie-hellman-5.0.2.tgz#b5835739270cfe26acf632099fded2a07f209e5e"

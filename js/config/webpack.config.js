@@ -118,7 +118,7 @@ module.exports = {
         // We placed these paths second because we want `node_modules` to "win"
         // if there are any conflicts. This matches Node resolution mechanism.
         // https://github.com/facebookincubator/create-react-app/issues/253
-        modules: ['node_modules', paths.appNodeModules, paths.resolveApp('../src/main/resources/')].concat(
+        modules: ['node_vendor_modules', 'node_modules', paths.appNodeModules, paths.resolveApp('../src/main/resources/')].concat(
             // It is guaranteed to exist because we tweak it in `env.js`
             process.env.NODE_PATH.split(path.delimiter).filter(Boolean)
         ),
@@ -177,7 +177,7 @@ module.exports = {
                     // Process JS with Babel.
                     {
                         test: /\.(js|jsx)$/,
-                        include: [paths.appSrc, 'node_modules/'],
+                        include: [paths.appSrc, 'node_vendor_modules', 'node_modules/'],
                         loader: require.resolve('babel-loader'),
                         options: {
                             compact: true
