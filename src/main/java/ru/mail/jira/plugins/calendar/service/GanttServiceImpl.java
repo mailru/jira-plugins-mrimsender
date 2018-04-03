@@ -28,6 +28,7 @@ import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.*;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanForm;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanItem;
+import ru.mail.jira.plugins.calendar.util.DateUtil;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -393,7 +394,7 @@ public class GanttServiceImpl implements GanttService {
                 }
 
                 eventEnd = inputFormat.format(
-                    addWorkTimeSeconds(
+                    DateUtil.addWorkTimeSeconds(
                         event.isAllDay(), event.getStartDate(), time, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, userZoneId
                     )
                 );
@@ -493,14 +494,14 @@ public class GanttServiceImpl implements GanttService {
             ganttTaskDto.setEndDate(event.getEnd());
         } else if (eventStart != null) {
             if (originalEstimate != null) {
-                Date plannedEnd = addWorkTimeSeconds(
+                Date plannedEnd = DateUtil.addWorkTimeSeconds(
                     event.isAllDay(), eventStart, originalEstimate, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId
                 );
                 ganttTaskDto.setEndDate(suitableFormatter.format(plannedEnd));
 
                 if (timeSpent != null) {
                     if (timeSpent > originalEstimate) {
-                        Date overdueDate = addWorkTimeSeconds(
+                        Date overdueDate = DateUtil.addWorkTimeSeconds(
                             event.isAllDay(), eventStart, timeSpent, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId
                         );
                         ganttTaskDto.setEndDate(suitableFormatter.format(overdueDate));
@@ -511,7 +512,7 @@ public class GanttServiceImpl implements GanttService {
                     }
 
                     if (event.isResolved() && timeSpent < originalEstimate) {
-                        Date earlyDate = addWorkTimeSeconds(
+                        Date earlyDate = DateUtil.addWorkTimeSeconds(
                             event.isAllDay(), eventStart, timeSpent, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId
                         );
 
@@ -545,112 +546,6 @@ public class GanttServiceImpl implements GanttService {
         result.setOpen(true);
 
         return result;
-    }
-
-    private Date addWorkTimeSeconds(
-        boolean allDay, Date sourceDate, long seconds, long secondsPerWeek, long secondsPerDay,
-        Set<Integer> workingDays, Set<java.time.LocalDate> nonWorkingDays, WorkingTimeDto workingTime, ZoneId zoneId
-    ) {
-        boolean reduceIfWorkDay = false;
-
-        long weeks = seconds / secondsPerWeek;
-        seconds = seconds % secondsPerWeek;
-
-        long days = seconds / secondsPerDay;
-        seconds = seconds % secondsPerDay;
-
-        ZonedDateTime date = sourceDate
-            .toInstant()
-            .atZone(zoneId)
-            .plusWeeks(weeks);
-
-        LocalTime startTime = workingTime.getStartTime();
-        LocalTime endTime = workingTime.getEndTime();
-
-        java.time.LocalDate localDate = date.toLocalDate();
-        if (allDay) {
-            if (seconds > 0) {
-                days++;
-            }
-        } else {
-            LocalTime time = date.toLocalTime();
-
-            if (seconds <= 0) {
-                if (days > 0) {
-                    reduceIfWorkDay = true;
-                    seconds = secondsPerDay;
-                }
-            }
-            if (seconds > 0) {
-                if (time.isBefore(startTime)) {
-                    date = ZonedDateTime.of(
-                        localDate,
-                        startTime,
-                        zoneId
-                    );
-                    time = startTime;
-                }
-
-                if (time.isBefore(endTime)) {
-                    long secondOfDay = time.toSecondOfDay() + seconds;
-                    int endSecond = endTime.toSecondOfDay();
-                    seconds = secondOfDay - endSecond;
-                    //if (time + seconds) > end_time: seconds=(time+seconds)-end_time, time=end_time
-                    if (seconds > 0) {
-                        time = endTime;
-                    } else {
-                        time = LocalTime.ofSecondOfDay(secondOfDay);
-                    }
-                    date = ZonedDateTime.of(localDate, time, zoneId);
-                }
-
-                //if after end of day: date=date+1d, time=start_time+seconds
-                if (seconds > 0) {
-                    days++;
-                    date = ZonedDateTime.of(
-                        localDate,
-                        startTime.plusSeconds(seconds),
-                        zoneId
-                    );
-                }
-            }
-        }
-
-        while (days > 0) {
-            if (!allDay) {
-                if (reduceIfWorkDay) {
-                    boolean isWeekDay = workingDays.contains(date.getDayOfWeek().getValue());
-                    boolean isNonWorkingDay = nonWorkingDays.contains(date.toLocalDate());
-                    boolean isWorkDay = isWeekDay && !isNonWorkingDay;
-
-                    if (isWorkDay) {
-                        days--;
-                    }
-                    reduceIfWorkDay = false;
-
-                    if (days == 0) {
-                        //date = date.plusDays(1);
-                        continue;
-                    }
-                }
-
-                date = date.plusDays(1);
-            }
-
-            boolean isWeekDay = workingDays.contains(date.getDayOfWeek().getValue());
-            boolean isNonWorkingDay = nonWorkingDays.contains(date.toLocalDate());
-            boolean isWorkDay = isWeekDay && !isNonWorkingDay;
-
-            if (isWorkDay) {
-                days--;
-            }
-
-            if (allDay) {
-                date = date.plusDays(1);
-            }
-        }
-
-        return Date.from(date.toInstant());
     }
 
     private static GanttLinkDto buildLinkDto(GanttLink link) {
