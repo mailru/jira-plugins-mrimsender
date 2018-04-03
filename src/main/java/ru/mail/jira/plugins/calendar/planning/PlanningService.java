@@ -61,7 +61,7 @@ public class PlanningService {
     }
 
     public GanttDto doPlan(ApplicationUser user, int calendarId, String deadline, String groupBy, String orderBy, List<String> fields) throws Exception {
-        DateTimeFormatter dateFormat = dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
+        DateTimeFormatter dateFormat = dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
 
         boolean useRank = false;
         boolean usePriority = false;
