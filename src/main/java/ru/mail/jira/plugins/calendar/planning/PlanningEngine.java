@@ -2,10 +2,8 @@ package ru.mail.jira.plugins.calendar.planning;
 
 import com.atlassian.jira.util.lang.Pair;
 import org.jacop.constraints.Max;
-import org.jacop.constraints.XlteqC;
 import org.jacop.constraints.XlteqY;
 import org.jacop.constraints.XplusCeqZ;
-import org.jacop.constraints.XplusClteqZ;
 import org.jacop.constraints.diffn.Nooverlap;
 import org.jacop.core.IntVar;
 import org.jacop.core.Store;
@@ -373,6 +371,9 @@ public class PlanningEngine {
         Store store = new Store();
 
         int numTasks = issues.size();
+        numDays = issueDuration.values()
+                               .stream()
+                               .reduce(0, Integer::sum) / maxDayCapacity + 1;
         int maxTime = maxDayCapacity * numDays;
         Map<EventDto, Integer> issueIndex = new HashMap<>();
         Map<Integer, EventDto> indexIssue = new HashMap<>();
@@ -391,17 +392,20 @@ public class PlanningEngine {
 
         final IntVar[] startTime = new IntVar[numTasks];
         final IntVar[] endTime = new IntVar[numTasks];
+        final IntVar height = new IntVar(store, "height", 0, 0);
+        final IntVar heightLength = new IntVar(store, "heightLength", 1, 1);
 
         final int[] duration = new int[numTasks];
         for (int i = 0; i < numTasks; i++) {
-            duration[i] = issueDuration.get(indexIssue.get(i));
-            startTime[i] = new IntVar(store, "startTime[" + i + "]", 0, maxTime - duration[i]);
-            endTime[i] = new IntVar(store, "endTime[" + i + "]", 0, maxTime);
+            EventDto eventDto = indexIssue.get(i);
+            duration[i] = issueDuration.get(eventDto);
+            int deadline = issueDeadline.getOrDefault(eventDto, maxTime);
+            startTime[i] = new IntVar(store, "startTime[" + i + "]", 0, deadline * maxDayCapacity - duration[i]);
+            endTime[i] = new IntVar(store, "endTime[" + i + "]", 0, deadline * maxDayCapacity);
 
             store.impose(new XplusCeqZ(startTime[i], duration[i], endTime[i]));
 
             vars.add(startTime[i]);
-            //vars.add(endTime[i]);
         }
 
         IntVar earliestEndTime = new IntVar(store, "earliestEndTime", 0, maxTime);
@@ -418,14 +422,8 @@ public class PlanningEngine {
                     continue;
                 int dependantIssueIdx = issueIndex.get(dependantIssue);
 
-                store.impose(new XplusClteqZ(startTime[dependantIssueIdx], duration[dependantIssueIdx], startTime[taskIdx]));
+                store.impose(new XlteqY(endTime[dependantIssueIdx], startTime[taskIdx]));
             }
-        }
-
-        // deadlines
-        for (Map.Entry<EventDto, Integer> task : issueDeadline.entrySet()) {
-            int issueIdx = issueIndex.get(task.getKey());
-            store.impose(new XlteqC(endTime[issueIdx], task.getValue() * maxDayCapacity));
         }
 
         // no overlap
@@ -439,15 +437,15 @@ public class PlanningEngine {
                 start[i] = startTime[taskIdx];
                 length[i] = new IntVar(store, duration[taskIdx], duration[taskIdx]);
             }
-            IntVar[] height = new IntVar[start.length];
-            Arrays.fill(height, new IntVar(store, "height", 0, 0));
-            IntVar[] heightLength = new IntVar[start.length];
-            Arrays.fill(heightLength, new IntVar(store, "heightLength", 1, 1));
+            IntVar[] nooverlapHeight = new IntVar[start.length];
+            Arrays.fill(nooverlapHeight, height);
+            IntVar[] nooverlapHeightLength = new IntVar[start.length];
+            Arrays.fill(nooverlapHeightLength, heightLength);
 
-            store.impose(new Nooverlap(start, height, length, heightLength));
+            store.impose(new Nooverlap(start, nooverlapHeight, length, nooverlapHeightLength));
         }
 
-        //priority
+        // priority
         List<EventDto> hasPriorityAndNoDependance = new ArrayList<>(issues);
         hasPriorityAndNoDependance.removeAll(dependenceList.keySet());
         hasPriorityAndNoDependance.retainAll(issuePriority.keySet());
@@ -462,21 +460,20 @@ public class PlanningEngine {
         Map<EventDto, Pair<Date, Date>> plan = new HashMap<>();
         logger.debug("maximizing");
         Search<IntVar> search = new DepthFirstSearch<>();
-
+        search.setTimeOut(60);
         SelectChoicePoint<IntVar> select = new SplitSelect<>(vars.toArray(new IntVar[1]), new SmallestMin<>(), new IndomainMin<>());
         boolean result = search.labeling(store, select, earliestEndTime);
         logger.debug("maximized");
         logger.debug("result state {}", result);
 
-        DateTime today = DateTime.now();
+        DateTime today = DateTime.now().withTimeAtStartOfDay();
         for (int i = 0; i < numTasks; i++) {
             EventDto issue = indexIssue.get(i);
-            Integer durationHours = issueDuration.get(issue);
             Date planStart = today.plusDays(startTime[i].value() / maxDayCapacity)
                                   .plusHours(startTime[i].value() % maxDayCapacity)
                                   .toDate();
-            Date planEnd = today.plusDays((startTime[i].value() + durationHours) / maxDayCapacity)
-                                .plusHours((startTime[i].value() + durationHours) % maxDayCapacity)
+            Date planEnd = today.plusDays(endTime[i].value() / maxDayCapacity)
+                                .plusHours(endTime[i].value() % maxDayCapacity)
                                 .toDate();
 
             plan.put(issue, Pair.nicePairOf(planStart, planEnd));
