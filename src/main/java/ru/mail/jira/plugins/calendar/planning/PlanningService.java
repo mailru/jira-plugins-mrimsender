@@ -21,6 +21,7 @@ import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttLinkDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttTaskDto;
 import ru.mail.jira.plugins.calendar.service.GanttService;
 import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
+import ru.mail.jira.plugins.calendar.util.GanttLinkType;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -94,6 +95,10 @@ public class PlanningService {
         Map<EventDto, List<EventDto>> dependencies = new HashMap<>();
 
         for (GanttLinkDto link : links) {
+            if (!GanttLinkType.FINISH_TO_START.equals(link.getType())) {
+                continue;
+            }
+
             EventDto source = events.stream().filter(event -> event.getId().equals(link.getSource())).findAny().orElse(null);
             EventDto target = events.stream().filter(event -> event.getId().equals(link.getTarget())).findAny().orElse(null);
 
