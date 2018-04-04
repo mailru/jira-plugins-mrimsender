@@ -5,6 +5,7 @@ import com.atlassian.jira.bc.issue.worklog.TimeTrackingConfiguration;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.exception.GetException;
+import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.customfields.impl.CalculatedCFType;
 import com.atlassian.jira.issue.fields.*;
 import com.atlassian.jira.issue.search.SearchException;
@@ -280,6 +281,19 @@ public class GanttServiceImpl implements GanttService {
     }
 
     @Override
+    public boolean hasLinks(String issueKey) {
+        return ao.count(GanttLink.class, Query.select().where("SOURCE = ? OR TARGET = ?", issueKey, issueKey)) > 0;
+    }
+
+    @Override
+    public List<GanttLinkDto> getLinks(String issueKey) {
+        return Arrays
+            .stream(ao.find(GanttLink.class, Query.select().where("SOURCE = ? OR TARGET = ?", issueKey, issueKey)))
+            .map(GanttServiceImpl::buildLinkDto)
+            .collect(Collectors.toList());
+    }
+
+    @Override
     public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, String endDate) throws Exception {
         return updateDates(user, calendarId, issueKey, startDate, endDate, false);
     }
@@ -551,6 +565,7 @@ public class GanttServiceImpl implements GanttService {
     private static GanttLinkDto buildLinkDto(GanttLink link) {
         GanttLinkDto dto = new GanttLinkDto();
         dto.setId(link.getID());
+        dto.setCalendarId(link.getCalendarId());
         dto.setSource(link.getSource());
         dto.setTarget(link.getTarget());
         dto.setType(link.getType());

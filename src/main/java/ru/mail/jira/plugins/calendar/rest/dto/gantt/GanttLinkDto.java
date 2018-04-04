@@ -15,4 +15,5 @@ public class GanttLinkDto extends GanttLinkForm {
     private int entityId;
     @XmlElement
     private String color;
+    private int calendarId;
 }

@@ -370,6 +370,21 @@
         <resource type="download" name="view.js" location="ru/mail/jira/plugins/calendar/gantt/view.js"/>
     </web-resource>
 
+    <web-panel key="gantt-issue-panel" location="atl.jira.view.issue.left.context" weight="401">
+        <context-provider class="ru.mail.jira.plugins.calendar.web.gantt.GanttLinksContextProvider"/>
+
+        <conditions type="AND">
+            <condition class="com.atlassian.jira.plugin.webfragment.conditions.HasIssuePermissionCondition">
+                <param name="permission">browse</param>
+            </condition>
+            <condition class="ru.mail.jira.plugins.calendar.web.gantt.HasGanttLinksCondition"/>
+        </conditions>
+
+        <label key="ru.mail.jira.plugins.calendar.gantt.issuePanel.title"/>
+
+        <resource name="view" type="velocity" location="ru/mail/jira/plugins/calendar/gantt/issuepanel.vm"/>
+    </web-panel>
+
     <!-- todo: managed-access-level? -->
     <!--Custom Fields-->
     <customfield-type

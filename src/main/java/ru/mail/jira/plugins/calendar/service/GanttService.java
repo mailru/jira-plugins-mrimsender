@@ -2,6 +2,7 @@ package ru.mail.jira.plugins.calendar.service;
 
 import com.atlassian.activeobjects.tx.Transactional;
 import com.atlassian.jira.exception.GetException;
+import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.query.order.SortOrder;
@@ -21,6 +22,9 @@ public interface GanttService {
 
     GanttLinkDto createLink(ApplicationUser user, int calendarId, GanttLinkForm form) throws GetException;
     void deleteLink(ApplicationUser user, int calendarId, int linkId) throws GetException;
+
+    boolean hasLinks(String issueKey);
+    List<GanttLinkDto> getLinks(String issueKey);
 
     List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, String endDate) throws Exception;
 

@@ -1,0 +1,29 @@
+#* @vtlvariable name="linkGroups" type="java.util.List<ru.mail.jira.plugins.calendar.web.gantt.LinkGroupDto>" *#
+#foreach($group in $linkGroups)
+    <p>
+        <span class="aui-icon aui-icon-small aui-iconfont-calendar">Insert meaningful text here for accessibility</span>
+        <a href="$baseUrl/secure/MailRuGanttDiagram.jspa#calendar=$group.calendarId"><strong>$group.calendarName</strong></a>
+    </p>
+    <dl class="links-list">
+        #foreach($link in $group.links)
+            <dt title="$link.typeName">
+                $link.typeName
+            </dt>
+            <dd>
+                <div class="link-content">
+                    <p>
+                        #if ($link.issueTypeIconUrl)
+                            <img width="16" height="16" src="$link.issueTypeIconUrl"
+                        #end
+                        <span title="$link.issueKey: $link.issueSummary">
+                            <a href="$baseUrl/browse/$link.issueKey" data-issue-key="$link.issueKey" class="issue-link link-title">$link.issueKey</a>
+                            <span class="link-summary">
+                                $link.issueSummary
+                            </span>
+                        </span>
+                    </p>
+                </div>
+            </dd>
+        #end
+    </dl>
+#end

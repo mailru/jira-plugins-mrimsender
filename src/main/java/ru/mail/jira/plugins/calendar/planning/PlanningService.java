@@ -95,7 +95,7 @@ public class PlanningService {
         Map<EventDto, List<EventDto>> dependencies = new HashMap<>();
 
         for (GanttLinkDto link : links) {
-            if (!GanttLinkType.FINISH_TO_START.equals(link.getType())) {
+            if (GanttLinkType.FINISH_TO_START != GanttLinkType.fromString(link.getType())) {
                 continue;
             }
 
