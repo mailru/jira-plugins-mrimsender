@@ -9,14 +9,14 @@ function getIconSrc(src) {
     }
 }
 
-export function buildJiraFieldColumn({key, name, colParams}) {
+export function buildJiraFieldColumn({key, name, colParams}, resizable=true) {
     return {
         ...colParams,
         name: key,
         label: name,
         align: 'left',
         isJiraField: true,
-        resize: true,
+        resize: resizable,
         template: (item) => {
             if (item.fields) {
                 return item.fields[key] || '';
@@ -68,6 +68,14 @@ export const ganttColumns = {
             );
         },
     }
+};
+
+export const emptyColumn = {
+    name: '___empty',
+    resize: false,
+    label: '',
+    width: '12px',
+    template: () => ''
 };
 
 export const defaultColumns = Object

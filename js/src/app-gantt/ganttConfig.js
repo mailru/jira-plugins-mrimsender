@@ -9,7 +9,9 @@ const gantt = window.gantt;
 export const default_min_column_width = 70;
 
 export function buildColumns(names) {
-    return names.map(column => {
+    const lastId = names.length - 1;
+
+    return names.map((column, i) => {
         const builtInColumn = ganttColumns[column.key];
 
         if (builtInColumn) {
@@ -17,7 +19,7 @@ export function buildColumns(names) {
         }
 
         if (column.isJiraField) {
-            return buildJiraFieldColumn(column);
+            return buildJiraFieldColumn(column, i !== lastId);
         }
 
         console.warn('unknown column', column);
