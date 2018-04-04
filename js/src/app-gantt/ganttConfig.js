@@ -30,33 +30,19 @@ export const config = {
 
     showGrid: true,
     work_time: true,
-    skip_off_time: true,
+    //skip_off_time: true,
     fit_tasks: true,
     details_on_dblclick: false,
     show_progress: false,
     smart_rendering: true,
     smart_scales: true,
     open_tree_initially: true,
+    static_background: false,
     //show_task_cells: false,
 
     layout: {
         css: 'gantt_container',
         rows: [
-            /*{
-                cols: [
-                    {
-                        html: '<div>ka</div>',
-                        group: 'grids',
-                    },
-                    {
-                        resizer: true,
-                        width: 1
-                    },
-                    {
-                        html: '<div>ka</div>',
-                    }
-                ]
-            },*/
             {
                 cols: [
                     {
@@ -99,6 +85,46 @@ export const config = {
     grid_width: 600,
 };
 
+function createBox(sizes, class_name) {
+    const box = document.createElement('div');
+    box.style.cssText = [
+        'height:' + sizes.height + 'px',
+        'line-height:' + sizes.height + 'px',
+        'width:' + sizes.width + 'px',
+        'top:' + sizes.top + 'px',
+        'left:' + sizes.left + 'px',
+        'position:absolute'
+    ].join(';');
+    box.className = class_name;
+    return box;
+}
+
+gantt.addTaskLayer((task) => {
+    if (!task.$open && gantt.hasChild(task.id)) {
+        const el = document.createElement('div'),
+            sizes = gantt.getTaskPosition(task);
+
+        const subTasks = gantt.getChildren(task.id);
+
+        console.log(subTasks);
+
+        for (let i = 0; i < subTasks.length; i++) {
+            const child = gantt.getTask(subTasks[i]);
+            const child_sizes = gantt.getTaskPosition(child);
+
+            const child_el = createBox({
+                height: 20,
+                top: sizes.top,
+                left: child_sizes.left+2,
+                width: child_sizes.width-4,
+            }, 'child_preview gantt_task_line gantt_event_object');
+            el.appendChild(child_el);
+        }
+        return el;
+    }
+    return false;
+});
+
 export const default_task_cell = (_item, date) => {
     //todo: hide non work time
     if (!gantt.isWorkTime(date)) {
@@ -117,7 +143,7 @@ export const templates = {
     xml_date: (date) => moment(date).toDate(),
     xml_format: (date) => moment(date).format(),
     task_cell_class: default_task_cell,
-    task_class: (start, end, task) => {
+    task_class: (_start, _end, task) => {
         const classes = ['gantt_event_object'];
 
         if (task.type === 'issue') {
@@ -142,6 +168,14 @@ export const templates = {
 
         if (task.resolved) {
             classes.push('resolved');
+        }
+
+        if (gantt.hasChild(task.id)) {
+            classes.push('parent');
+        }
+
+        if (!task.$open && gantt.hasChild(task.id)) {
+            classes.push('collapsed');
         }
 
         return classes.join(' ');

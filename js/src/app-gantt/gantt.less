@@ -16,7 +16,7 @@
 #gantt-diagram-calendar {
   position: relative;
   min-height: 400px;
-  height: ~"calc(100vh - 200px)";
+  height: ~"calc(100vh - 210px)";
   z-index: 1;
 }
 
@@ -254,6 +254,27 @@
 
   &.resolved {
     background-color: @ak-color-G50;
+  }
+
+  &.parent {
+    background-color: @ak-color-N100A;
+  }
+
+  &.collapsed {
+    //height: 4px;
+    .gantt_task_content {
+      display: none;
+    }
+  }
+
+  &.child_preview {
+    box-sizing: border-box;
+    margin-top: 7px;
+    position: absolute;
+    z-index: 1;
+    color: white;
+    text-align: center;
+    font-size: 12px;
   }
 
   .gantt_side_content.gantt_left {
