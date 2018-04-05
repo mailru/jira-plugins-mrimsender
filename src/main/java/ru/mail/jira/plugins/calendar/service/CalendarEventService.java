@@ -377,7 +377,40 @@ public class CalendarEventService {
         Long sprintId,
         List<String> fields
     ) throws SearchException {
-        //todo: get calendar filter + resolution is empty and (estimate is not empty or start is not empty and end is not empty)
+        String startField = calendar.getEventStart();
+        String endField = calendar.getEventEnd();
+
+        CustomField startCF = getCf(startField);
+        CustomField endCF = getCf(endField);
+
+        List<Issue> issues = searchService
+            .search(
+                user,
+                getUnboundedEventsQuery(user, calendar, sprintId, order),
+                PagerFilter.newPageAlignedFilter(0, 1000)
+            )
+            .getIssues();
+        return issues
+            .stream()
+            .map(issue -> buildEventWithGroups(
+                calendar,
+                groupBy,
+                user,
+                issue,
+                includeIssueInfo,
+                startField,
+                startCF,
+                endField,
+                endCF,
+                fields,
+                true
+            ))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toList());
+    }
+
+    public Query getUnboundedEventsQuery(ApplicationUser user, Calendar calendar, Long sprintId, Order order) {
         JqlClauseBuilder queryBuilder = getCalendarQueryBuilder(user, calendar);
         if (queryBuilder == null) {
             throw new RuntimeException("Unable to get calendar query");
@@ -421,34 +454,7 @@ public class CalendarEventService {
             .and().resolution().isEmpty()
             .endsub();
 
-        CustomField startCF = getCf(startField);
-        CustomField endCF = getCf(endField);
-
-        Query query = withOrder(queryBuilder.buildQuery(), order);
-
-        log.error(searchService.getJqlString(query));
-
-        List<Issue> issues = searchService
-            .search(user, query, PagerFilter.newPageAlignedFilter(0, 1000))
-            .getIssues();
-        return issues
-            .stream()
-            .map(issue -> buildEventWithGroups(
-                calendar,
-                groupBy,
-                user,
-                issue,
-                includeIssueInfo,
-                startField,
-                startCF,
-                endField,
-                endCF,
-                fields,
-                true
-            ))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(Collectors.toList());
+        return withOrder(queryBuilder.buildQuery(), order);
     }
 
     private CustomField getCf(String fieldId) {

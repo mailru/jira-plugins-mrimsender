@@ -115,4 +115,9 @@ public class DelegatingJiraSoftwareHelper implements LifecycleAware, JiraSoftwar
     public List<SprintDto> findSprints(ApplicationUser user, String query) {
         return delegate.findSprints(user, query);
     }
+
+    @Override
+    public SprintDto getSprint(ApplicationUser user, long id) {
+        return delegate.getSprint(user, id);
+    }
 }

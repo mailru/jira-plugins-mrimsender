@@ -7,7 +7,7 @@ import Modal from '@atlaskit/modal-dialog';
 import Spinner from '@atlaskit/spinner';
 import {Label} from '@atlaskit/field-base';
 import {DatePicker} from '@atlaskit/datetime-picker';
-import {AsyncSelect} from '@atlaskit/select';
+import Select from '@atlaskit/select';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
@@ -15,6 +15,8 @@ import moment from 'moment';
 import {groupOptions} from './staticOptions';
 
 import {SingleSelect} from '../common/ak/SingleSelect';
+import {SprintState} from '../common/sprints';
+
 import {noop} from '../common/util';
 import {ganttService} from '../service/services';
 import {OptionsActionCreators} from '../service/gantt.reducer';
@@ -31,26 +33,27 @@ const orderOptions = [
     }
 ];
 
-function loadSprints(inputValue, callback) {
-    ganttService
-        .findSprints(inputValue || '')
-        .then(sprints => callback(
-            sprints.map(({id, name, boardName}) => {
-                return {
-                    value: id,
-                    label: name,
-                    boardName
-                };
-            })
-        ));
+function mapSprint(sprint) {
+    if (!sprint) {
+        return null;
+    }
+
+    const {id, name, ...etc} = sprint;
+    return {
+        ...etc,
+        value: id,
+        label: name
+    };
 }
 
-function formatSprintLabel({boardName, label}) {
+function formatSprintLabel({boardName, state, label}) {
     if (!boardName) {
         return label;
     } else {
         return (
             <span>
+                <SprintState state={state}/>
+                {' '}
                 <strong>
                     {boardName}
                 </strong>
@@ -65,7 +68,9 @@ class MagicDialogInternal extends React.Component {
     static propTypes = {
         onClose: PropTypes.func.isRequired,
         gantt: PropTypes.any.isRequired,
+        sprints: PropTypes.arrayOf(PropTypes.object.isRequired),
         groupBy: PropTypes.string,
+        sprint: PropTypes.number,
         calendar: PropTypes.object
     };
 
@@ -77,8 +82,11 @@ class MagicDialogInternal extends React.Component {
     };
 
     componentDidMount() {
+        const {sprint, sprints, groupBy} = this.props;
+
         this.setState({
-            groupBy: this.props.groupBy
+            groupBy: groupBy,
+            sprint: sprint ? mapSprint(sprints.find(item => item.id === sprint)) : null
         });
     }
 
@@ -125,7 +133,7 @@ class MagicDialogInternal extends React.Component {
     _setSprint = (sprint) => this.setState({ sprint });
 
     render() {
-        const {onClose} = this.props;
+        const {onClose, sprints} = this.props;
         const {orderBy, groupBy, sprint, deadline, waitingForMagic} = this.state;
 
         const actions = [
@@ -171,10 +179,10 @@ class MagicDialogInternal extends React.Component {
                     />
                     <div>
                         <Label label="Спринт"/>
-                        <AsyncSelect
+                        <Select
                             defaultOptions
                             formatOptionLabel={formatSprintLabel}
-                            loadOptions={loadSprints}
+                            options={sprints.map(mapSprint)}
 
                             value={sprint}
                             onChange={this._setSprint}
@@ -196,10 +204,11 @@ class MagicDialogInternal extends React.Component {
 
 export const MagicDialog =
     connect(
-        state => {
+        ({calendar, sprints, options}) => {
             return {
-                calendar: state.calendar,
-                groupBy: state.options.groupBy
+                calendar, sprints,
+                groupBy: options.groupBy,
+                sprint: options.sprint
             };
         },
         OptionsActionCreators

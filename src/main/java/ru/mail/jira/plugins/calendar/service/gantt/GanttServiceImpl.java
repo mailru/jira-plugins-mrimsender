@@ -11,7 +11,6 @@ import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import com.atlassian.query.order.SortOrder;
 import com.google.common.collect.*;
 import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;

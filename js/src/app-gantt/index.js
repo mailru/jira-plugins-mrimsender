@@ -34,7 +34,7 @@ import {LayoutUpdater} from './layout.updater';
 
 import {collectTopMailCounterScript} from '../common/top-mail-ru';
 
-import {calendarService, store, storeService} from '../service/services';
+import {calendarService, ganttService, store, storeService} from '../service/services';
 import {CalendarActionCreators, ganttReady} from '../service/gantt.reducer';
 
 import './gantt.less';
@@ -152,11 +152,11 @@ AJS.toInit(function() {
                 'calendar=:calendar': 'setCalendar'
             },
             setCalendar: function (id) {
-                calendarService
-                    .getCalendar(id)
-                    .then(calendar => {
-                        store.dispatch(CalendarActionCreators.setCalendar({...calendar, id}));
-                    });
+                Promise
+                    .all([calendarService.getCalendar(id), ganttService.getCalendarSprints(id)])
+                    .then(
+                        ([calendar, sprints]) => store.dispatch(CalendarActionCreators.setCalendar({...calendar, id}, sprints))
+                    );
             }
         });
 

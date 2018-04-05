@@ -57,8 +57,9 @@ export const defaultOptions = {
     scale: keyedConfigs[1].i,
     startDate: moment().subtract(1, 'months').format('YYYY-MM-DD'),
     endDate: moment().add(3, 'months').format('YYYY-MM-DD'),
-    groupBy: null,
-    orderBy: null,
+    groupBy: undefined,
+    orderBy: undefined,
+    sprint: undefined,
     order: true,
     view: views.basic.key,
     columns: [

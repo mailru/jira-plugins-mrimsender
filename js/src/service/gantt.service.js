@@ -32,4 +32,8 @@ export class GanttService {
     findSprints(query) {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/sprints?query=${encodeURIComponent(query)}`);
     }
+
+    getCalendarSprints(calendarId) {
+        return ajaxGet(`${getPluginBaseUrl()}/gantt/calendarSprints/${calendarId}`);
+    }
 }

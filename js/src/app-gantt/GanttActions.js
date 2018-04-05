@@ -28,6 +28,8 @@ import {OptionsDialog} from './OptionsDialog';
 import {DatesDialog} from './DatesDialog';
 import {MagicDialog} from './MagicDialog';
 
+import {SprintState} from '../common/sprints';
+
 import {OptionsActionCreators} from '../service/gantt.reducer';
 import {calendarService, ganttService} from '../service/services';
 
@@ -38,7 +40,8 @@ class GanttActionsInternal extends React.Component {
     static propTypes = {
         gantt: PropTypes.object.isRequired,
         options: PropTypes.object.isRequired,
-        calendar: PropTypes.object
+        calendar: PropTypes.object,
+        sprints: PropTypes.arrayOf(PropTypes.object.isRequired)
     };
 
     state = {
@@ -170,9 +173,14 @@ class GanttActionsInternal extends React.Component {
         }
     };
 
+    _selectSprint = (sprint) => () => this.props.updateOptions({ sprint });
+
     render() {
         const {activeDialog, waitingForPlan, calendars, filter} = this.state;
-        const {options, calendar, gantt} = this.props;
+        const {options, calendar, sprints, gantt} = this.props;
+
+        const currentSprint = options.sprint ?
+            (sprints.find(sprint => sprint.id === options.sprint) || { id: options.sprint, name: 'Неизвестный спринт' }) : null;
 
         return (
             <div className="gantt-actions">
@@ -274,7 +282,7 @@ class GanttActionsInternal extends React.Component {
                 </div>
 
                 <div className="gantt-header">
-                    <div>
+                    <ButtonGroup>
                         <DropdownMenu
                             trigger={<span className="calendar-title">{calendar && calendar.selectedName}</span>}
                             triggerType="button"
@@ -303,7 +311,48 @@ class GanttActionsInternal extends React.Component {
                                 </DropdownItemGroupRadio>
                             }
                         </DropdownMenu>
-                    </div>
+                        {!!sprints.length &&
+                            <DropdownMenu
+                                trigger={<span className="calendar-title">{(currentSprint && currentSprint.name) || 'Спринт'}</span>}
+                                triggerType="button"
+                                triggerButtonProps={{
+                                    appearance: 'subtle',
+                                    iconAfter: <ChevronDownIcon label=""/>
+                                }}
+                            >
+                                <DropdownItemGroupRadio id="gantt-sprint">
+                                    <DropdownItemRadio
+                                        key="null"
+                                        id="null"
+
+                                        onClick={this._selectSprint(null)}
+
+                                        isSelected={!currentSprint}
+                                    >
+                                        Не выбран
+                                    </DropdownItemRadio>
+                                    {sprints.map(sprintItem =>
+                                        <DropdownItemRadio
+                                            key={sprintItem.id}
+                                            id={sprintItem.id}
+
+                                            onClick={this._selectSprint(sprintItem.id)}
+
+                                            isSelected={currentSprint && (currentSprint.id === sprintItem.id)}
+                                        >
+                                            <SprintState state={sprintItem.state}/>
+                                            {' '}
+                                            <strong>
+                                                {sprintItem.boardName}
+                                            </strong>
+                                            {' - '}
+                                            {sprintItem.name}
+                                        </DropdownItemRadio>
+                                    )}
+                                </DropdownItemGroupRadio>
+                            </DropdownMenu>
+                        }
+                    </ButtonGroup>
                     <div className="flex-grow"/>
                     <ButtonGroup>
                         <InlineDialog
@@ -350,7 +399,8 @@ export const GanttActions =
         state => {
             return {
                 options: state.options,
-                calendar: state.calendar
+                calendar: state.calendar,
+                sprints: state.sprints
             };
         },
         OptionsActionCreators

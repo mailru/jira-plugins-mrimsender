@@ -15,4 +15,12 @@ public class SprintDto {
     private String boardName;
     @XmlElement
     private String name;
+    @XmlElement
+    private State state;
+
+    public enum State {
+        FUTURE,
+        ACTIVE,
+        CLOSED
+    }
 }

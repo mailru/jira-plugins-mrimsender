@@ -18,4 +18,6 @@ public interface JiraSoftwareHelper {
     IssueType getEpicIssueType();
 
     List<SprintDto> findSprints(ApplicationUser user, String query);
+
+    SprintDto getSprint(ApplicationUser user, long id);
 }

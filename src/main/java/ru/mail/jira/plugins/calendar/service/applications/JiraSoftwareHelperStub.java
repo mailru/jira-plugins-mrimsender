@@ -38,4 +38,9 @@ public class JiraSoftwareHelperStub implements JiraSoftwareHelper {
     public List<SprintDto> findSprints(ApplicationUser user, String query) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public SprintDto getSprint(ApplicationUser user, long id) {
+        throw new UnsupportedOperationException();
+    }
 }

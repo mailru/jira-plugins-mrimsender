@@ -69,19 +69,39 @@ public class JiraSoftwareHelperImpl implements JiraSoftwareHelper {
             return outcome
                 .get()
                 .stream()
-                .map(sprint -> {
-                    SprintDto dto = new SprintDto();
-                    dto.setId(sprint.getId());
-                    dto.setName(sprint.getName());
-                    ServiceOutcome<RapidView> rapidViewOutcome = rapidViewService.getRapidView(user, sprint.getRapidViewId());
-                    if (rapidViewOutcome.isValid()) {
-                        dto.setBoardName(rapidViewOutcome.get().getName());
-                    }
-                    return dto;
-                })
+                .map(sprint -> buildSprint(user, sprint))
                 .collect(Collectors.toList());
         } else {
             return ImmutableList.of();
         }
+    }
+
+    @Override
+    public SprintDto getSprint(ApplicationUser user, long id) {
+        ServiceOutcome<Sprint> outcome = sprintService.getSprint(user, id);
+
+        if (outcome.isValid()) {
+            return buildSprint(user, outcome.get());
+        }
+
+        return null;
+    }
+
+    private SprintDto buildSprint(ApplicationUser user, Sprint sprint) {
+        if (sprint == null) {
+            return null;
+        }
+
+        SprintDto result = new SprintDto();
+        result.setId(sprint.getId());
+        result.setName(sprint.getName());
+        result.setState(SprintDto.State.valueOf(sprint.getState().name()));
+
+        ServiceOutcome<RapidView> rapidViewOutcome = rapidViewService.getRapidView(user, sprint.getRapidViewId());
+        if (rapidViewOutcome.isValid()) {
+            result.setBoardName(rapidViewOutcome.get().getName());
+        }
+
+        return result;
     }
 }
