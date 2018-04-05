@@ -19,7 +19,9 @@ import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttLinkDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttTaskDto;
-import ru.mail.jira.plugins.calendar.service.GanttService;
+import ru.mail.jira.plugins.calendar.service.Order;
+import ru.mail.jira.plugins.calendar.service.gantt.GanttParams;
+import ru.mail.jira.plugins.calendar.service.gantt.GanttService;
 import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
 import ru.mail.jira.plugins.calendar.util.GanttLinkType;
 
@@ -61,28 +63,33 @@ public class PlanningService {
         this.ganttService = ganttService;
     }
 
-    public GanttDto doPlan(ApplicationUser user, int calendarId, String deadline, String groupBy, String orderBy, List<String> fields) throws Exception {
+    //todo: create class with all params
+    public GanttDto doPlan(ApplicationUser user, int calendarId, String deadline, GanttParams params) throws Exception {
         DateTimeFormatter dateFormat = dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
 
         boolean useRank = false;
         boolean usePriority = false;
 
-        SortOrder order = null;
-        String orderField = null;
+        Order order = null;
 
         //todo: calculate estimate if no estimate and start&end is present
 
-        if ("priority".equals(orderBy)) {
-            orderField = orderBy;
-            order = SortOrder.DESC;
-            usePriority = true;
-        } else if ("rank".equals(orderBy) && jiraSoftwareHelper.isAvailable()) {
-            orderField = jiraSoftwareHelper.getRankField().getId();
-            order = SortOrder.ASC;
-            useRank = true;
+        if (params.getOrder() != null) {
+            String orderBy = params.getOrder().getField();
+
+            if ("priority".equals(orderBy)) {
+                order = new Order(orderBy, SortOrder.DESC);
+                usePriority = true;
+            } else if ("rank".equals(orderBy) && jiraSoftwareHelper.isAvailable()) {
+                order = new Order(jiraSoftwareHelper.getRankField().getId(), SortOrder.ASC);
+                useRank = true;
+            }
         }
 
-        GanttDto ganttData = ganttService.getGantt(user, calendarId, groupBy, orderField, order, fields);
+        GanttDto ganttData = ganttService.getGantt(
+            user, calendarId,
+            new GanttParams(order, params.getGroupBy(), params.getSprintId(), params.getFields())
+        );
 
         List<GanttTaskDto> ganttEvents = ganttData.getData();
         List<EventDto> events = ganttEvents

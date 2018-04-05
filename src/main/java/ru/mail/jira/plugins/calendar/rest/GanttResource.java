@@ -6,10 +6,13 @@ import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.order.SortOrder;
 import ru.mail.jira.plugins.calendar.planning.PlanningService;
-import ru.mail.jira.plugins.calendar.rest.dto.SingleValueDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.*;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanForm;
-import ru.mail.jira.plugins.calendar.service.GanttService;
+import ru.mail.jira.plugins.calendar.service.Order;
+import ru.mail.jira.plugins.calendar.service.gantt.GanttParams;
+import ru.mail.jira.plugins.calendar.service.gantt.GanttService;
+import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
+import ru.mail.jira.plugins.calendar.service.applications.SprintDto;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.*;
@@ -24,15 +27,18 @@ public class GanttResource {
     private final JiraAuthenticationContext authenticationContext;
     private final GanttService ganttService;
     private final PlanningService planningService;
+    private final JiraSoftwareHelper jiraSoftwareHelper;
 
     public GanttResource(
         @ComponentImport JiraAuthenticationContext authenticationContext,
         GanttService ganttService,
-        PlanningService planningService
+        PlanningService planningService,
+        JiraSoftwareHelper jiraSoftwareHelper
     ) {
         this.authenticationContext = authenticationContext;
         this.ganttService = ganttService;
         this.planningService = planningService;
+        this.jiraSoftwareHelper = jiraSoftwareHelper;
     }
 
     @GET
@@ -43,13 +49,16 @@ public class GanttResource {
         @QueryParam("end") String endDate,
         @QueryParam("groupBy") String groupBy,
         @QueryParam("orderBy") String orderBy,
-        @QueryParam("order") SortOrder order,
+        @QueryParam("order") SortOrder sortOrder,
         @QueryParam("fields") List<String> fields
     ) {
         return new RestExecutor<GanttDto>() {
             @Override
             protected GanttDto doAction() throws Exception {
-                return ganttService.getGantt(authenticationContext.getLoggedInUser(), calendarId, startDate, endDate, groupBy, orderBy, order, fields);
+                return ganttService.getGantt(
+                    authenticationContext.getLoggedInUser(), calendarId, startDate, endDate,
+                    new GanttParams(getOrder(orderBy, sortOrder), groupBy, null, fields)
+                );
             }
         }.getResponse();
     }
@@ -61,12 +70,16 @@ public class GanttResource {
         @QueryParam("deadline") String deadline,
         @QueryParam("groupBy") String groupBy,
         @QueryParam("orderBy") String orderBy,
+        @QueryParam("sprint") Long sprintId,
         @QueryParam("fields") List<String> fields
     ) {
         return new RestExecutor<GanttDto>() {
             @Override
             protected GanttDto doAction() throws Exception {
-                return planningService.doPlan(authenticationContext.getLoggedInUser(), calendarId, deadline, groupBy, orderBy, fields);
+                return planningService.doPlan(
+                    authenticationContext.getLoggedInUser(), calendarId, deadline,
+                    new GanttParams(new Order(orderBy, null), groupBy, sprintId, fields)
+                );
             }
         }.getResponse();
     }
@@ -133,5 +146,23 @@ public class GanttResource {
                 return null;
             }
         }.getResponse();
+    }
+
+    @GET
+    @Path("/sprints")
+    public Response findSprints(@QueryParam("query") String query) {
+        return new RestExecutor<List<SprintDto>>() {
+            @Override
+            protected List<SprintDto> doAction() {
+                return jiraSoftwareHelper.findSprints(authenticationContext.getLoggedInUser(), query);
+            }
+        }.getResponse();
+    }
+
+    private Order getOrder(String orderBy, SortOrder sortOrder) {
+        if (orderBy != null && sortOrder != null) {
+            return new Order(orderBy, sortOrder);
+        }
+        return null;
     }
 }

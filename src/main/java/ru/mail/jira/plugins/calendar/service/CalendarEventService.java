@@ -374,6 +374,7 @@ public class CalendarEventService {
         ApplicationUser user,
         boolean includeIssueInfo,
         Order order,
+        Long sprintId,
         List<String> fields
     ) throws SearchException {
         //todo: get calendar filter + resolution is empty and (estimate is not empty or start is not empty and end is not empty)
@@ -403,8 +404,20 @@ public class CalendarEventService {
                 .endsub();
         }
 
+        queryBuilder.endsub();
+
+        if (sprintId != null) {
+            if (!jiraSoftwareHelper.isAvailable()) {
+                throw new RuntimeException("jira software is not available");
+            }
+
+            queryBuilder
+                .and()
+                .customField(jiraSoftwareHelper.getSprintField().getIdAsLong())
+                .eq(sprintId);
+        }
+
         queryBuilder
-            .endsub()
             .and().resolution().isEmpty()
             .endsub();
 
@@ -412,6 +425,8 @@ public class CalendarEventService {
         CustomField endCF = getCf(endField);
 
         Query query = withOrder(queryBuilder.buildQuery(), order);
+
+        log.error(searchService.getJqlString(query));
 
         List<Issue> issues = searchService
             .search(user, query, PagerFilter.newPageAlignedFilter(0, 1000))

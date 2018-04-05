@@ -1,11 +1,10 @@
-package ru.mail.jira.plugins.calendar.service;
+package ru.mail.jira.plugins.calendar.service.gantt;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.jira.bc.issue.worklog.TimeTrackingConfiguration;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.exception.GetException;
-import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.customfields.impl.CalculatedCFType;
 import com.atlassian.jira.issue.fields.*;
 import com.atlassian.jira.issue.search.SearchException;
@@ -29,6 +28,7 @@ import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.*;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanForm;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanItem;
+import ru.mail.jira.plugins.calendar.service.*;
 import ru.mail.jira.plugins.calendar.util.DateUtil;
 
 import java.math.BigDecimal;
@@ -82,7 +82,7 @@ public class GanttServiceImpl implements GanttService {
     }
 
     @Override
-    public GanttDto getGantt(ApplicationUser user, int calendarId, String startDate, String endDate, String groupBy, String orderBy, SortOrder sortOrder, List<String> fields) throws ParseException, SearchException, GetException {
+    public GanttDto getGantt(ApplicationUser user, int calendarId, String startDate, String endDate, GanttParams params) throws ParseException, SearchException, GetException {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
         if (!permissionService.hasUsePermission(user, calendar) && !permissionService.hasAdminPermission(user, calendar)) {
@@ -94,28 +94,20 @@ public class GanttServiceImpl implements GanttService {
         if (StringUtils.isEmpty(endDate))
             endDate = LocalDate.now().plusMonths(3).format(java.time.format.DateTimeFormatter.ISO_DATE);
 
-        Order order = null;
-        if (orderBy != null && sortOrder != null) {
-            order = new Order(orderBy, sortOrder);
-        }
-        List<EventDto> eventDtoList = calendarEventService.findEvents(calendarId, groupBy, startDate, endDate, user, true, order, fields);
+        List<EventDto> eventDtoList = calendarEventService.findEvents(calendarId, params.getGroupBy(), startDate, endDate, user, true, params.getOrder(), params.getFields());
 
-        return getGantt(eventDtoList, user, calendarId, groupBy);
+        return getGantt(eventDtoList, user, calendarId, params.getGroupBy());
     }
 
     @Override
-    public GanttDto getGantt(ApplicationUser user, int calendarId, String groupBy, String orderBy, SortOrder sortOrder, List<String> fields) throws Exception {
+    public GanttDto getGantt(ApplicationUser user, int calendarId, GanttParams params) throws Exception {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
         if (!permissionService.hasUsePermission(user, calendar) && !permissionService.hasAdminPermission(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
-        Order order = null;
-        if (orderBy != null && sortOrder != null) {
-            order = new Order(orderBy, sortOrder);
-        }
-        return getGantt(calendarEventService.getUnboundedEvents(calendar, groupBy, user, true, order, fields), user, calendarId, groupBy);
+        return getGantt(calendarEventService.getUnboundedEvents(calendar, params.getGroupBy(), user, true, params.getOrder(), params.getSprintId(), params.getFields()), user, calendarId, params.getGroupBy());
     }
 
     private GanttDto getGantt(List<EventDto> eventDtoList, ApplicationUser user, int calendarId, String groupBy) {

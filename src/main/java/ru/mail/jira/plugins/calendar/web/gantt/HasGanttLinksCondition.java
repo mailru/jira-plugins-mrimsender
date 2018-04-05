@@ -5,7 +5,7 @@ import com.atlassian.jira.plugin.webfragment.conditions.AbstractIssueWebConditio
 import com.atlassian.jira.plugin.webfragment.model.JiraHelper;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
-import ru.mail.jira.plugins.calendar.service.GanttService;
+import ru.mail.jira.plugins.calendar.service.gantt.GanttService;
 
 @Scanned
 public class HasGanttLinksCondition extends AbstractIssueWebCondition {

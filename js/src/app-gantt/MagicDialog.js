@@ -7,6 +7,7 @@ import Modal from '@atlaskit/modal-dialog';
 import Spinner from '@atlaskit/spinner';
 import {Label} from '@atlaskit/field-base';
 import {DatePicker} from '@atlaskit/datetime-picker';
+import {AsyncSelect} from '@atlaskit/select';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
@@ -30,6 +31,36 @@ const orderOptions = [
     }
 ];
 
+function loadSprints(inputValue, callback) {
+    ganttService
+        .findSprints(inputValue || '')
+        .then(sprints => callback(
+            sprints.map(({id, name, boardName}) => {
+                return {
+                    value: id,
+                    label: name,
+                    boardName
+                };
+            })
+        ));
+}
+
+function formatSprintLabel({boardName, label}) {
+    if (!boardName) {
+        return label;
+    } else {
+        return (
+            <span>
+                <strong>
+                    {boardName}
+                </strong>
+                {' - '}
+                {label}
+            </span>
+        );
+    }
+}
+
 class MagicDialogInternal extends React.Component {
     static propTypes = {
         onClose: PropTypes.func.isRequired,
@@ -52,7 +83,7 @@ class MagicDialogInternal extends React.Component {
     }
 
     _runMagic = () => {
-        const {orderBy, groupBy, deadline} = this.state;
+        const {orderBy, groupBy, deadline, sprint} = this.state;
 
         this.setState({ waitingForMagic: true });
         ganttService
@@ -60,6 +91,7 @@ class MagicDialogInternal extends React.Component {
                 this.props.calendar.id,
                 {
                     fields: this.props.gantt.config.columns.filter(col => col.isJiraField).map(col => col.name),
+                    sprint: sprint ? sprint.value : '',
                     groupBy, orderBy, deadline
                 }
             )
@@ -90,9 +122,11 @@ class MagicDialogInternal extends React.Component {
 
     _setDeadline = (deadline) => this.setState({ deadline });
 
+    _setSprint = (sprint) => this.setState({ sprint });
+
     render() {
         const {onClose} = this.props;
-        const {orderBy, groupBy, deadline, waitingForMagic} = this.state;
+        const {orderBy, groupBy, sprint, deadline, waitingForMagic} = this.state;
 
         const actions = [
             {
@@ -135,6 +169,17 @@ class MagicDialogInternal extends React.Component {
                         value={orderBy ? orderOptions.find(val => val.value === orderBy) : null}
                         onChange={this._setOrder}
                     />
+                    <div>
+                        <Label label="Спринт"/>
+                        <AsyncSelect
+                            defaultOptions
+                            formatOptionLabel={formatSprintLabel}
+                            loadOptions={loadSprints}
+
+                            value={sprint}
+                            onChange={this._setSprint}
+                        />
+                    </div>
                     <div>
                         <Label label="Дедлайн" isRequired={true}/>
                         <DatePicker

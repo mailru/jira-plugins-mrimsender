@@ -17,11 +17,9 @@ import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttLinkDto;
 import ru.mail.jira.plugins.calendar.service.CalendarService;
-import ru.mail.jira.plugins.calendar.service.GanttService;
+import ru.mail.jira.plugins.calendar.service.gantt.GanttService;
 import ru.mail.jira.plugins.calendar.util.GanttLinkType;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

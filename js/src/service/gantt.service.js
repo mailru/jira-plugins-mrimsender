@@ -28,4 +28,8 @@ export class GanttService {
     deleteLink(calendarId, id) {
         return ajaxDelete(`${getPluginBaseUrl()}/gantt/${calendarId}/link/${id}`);
     }
+
+    findSprints(query) {
+        return ajaxGet(`${getPluginBaseUrl()}/gantt/sprints?query=${encodeURIComponent(query)}`);
+    }
 }
