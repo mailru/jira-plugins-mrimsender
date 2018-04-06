@@ -97,6 +97,7 @@ module.exports = {
     // In production, we only want to load the polyfills and the app code.
     entry: {
         gantt: [require.resolve('./polyfills'), paths.resolveApp('src/app-gantt/index.js')],
+        teams: [require.resolve('./polyfills'), paths.resolveApp('src/app-gantt-teams/index.js')],
     },
     output: {
         // The build folder.

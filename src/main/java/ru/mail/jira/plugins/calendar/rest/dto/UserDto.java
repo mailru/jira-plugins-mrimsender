@@ -19,6 +19,9 @@ public class UserDto {
     @XmlElement
     private String avatarUrl;
 
+    public UserDto() {
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

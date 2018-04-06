@@ -27,6 +27,9 @@
         <entity>ru.mail.jira.plugins.calendar.model.GanttLink</entity>
         <entity>ru.mail.jira.plugins.calendar.schedule.model.Schedule</entity>
         <entity>ru.mail.jira.plugins.calendar.configuration.NonWorkingDay</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.gantt.GanttTeam</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.gantt.GanttUser</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.gantt.GanttUserToGanttTeam</entity>
 
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v3.Version3UpgradeTask</upgradeTask>
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v4.Version4UpgradeTask</upgradeTask>
@@ -366,6 +369,25 @@
 
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/gantt/view.css"/>
         <resource type="download" name="view.js" location="ru/mail/jira/plugins/calendar/gantt/view.js"/>
+    </web-resource>
+
+    <!--Gantt Resource-->
+
+    <webwork1 key="calendar-gantt-teams-action" class="java.lang.Object" roles-required="use">
+        <actions>
+            <action name="ru.mail.jira.plugins.calendar.MailRuGanttTeamsAction" alias="MailRuGanttTeams">
+                <view name="success">/ru/mail/jira/plugins/calendar/gantt/teams/view.vm</view>
+            </action>
+        </actions>
+    </webwork1>
+
+    <web-resource key="gantt-teams-resources">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <resource type="download" name="common.js" location="ru/mail/jira/plugins/calendar/js/common.js"/>
+        <resource type="download" name="teams.js" location="ru/mail/jira/plugins/calendar/js/teams.js"/>
     </web-resource>
 
     <!-- todo: managed-access-level? -->
