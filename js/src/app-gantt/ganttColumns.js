@@ -9,13 +9,14 @@ function getIconSrc(src) {
     }
 }
 
-export function buildJiraFieldColumn({key, name, colParams}) {
+export function buildJiraFieldColumn({key, name, colParams}, resizable=true) {
     return {
         ...colParams,
         name: key,
         label: name,
         align: 'left',
         isJiraField: true,
+        resize: resizable,
         template: (item) => {
             if (item.fields) {
                 return item.fields[key] || '';
@@ -28,7 +29,7 @@ export function buildJiraFieldColumn({key, name, colParams}) {
 export const ganttColumns = {
     id: {
         name: 'id',
-        //resize: true,
+        resize: true,
         tree: true,
         width: '110px',
         label: 'Код',
@@ -37,13 +38,13 @@ export const ganttColumns = {
             if (item.type === 'group') {
                 return '';
             }
-            const id = escapeHtml(item.id);
+            const id = escapeHtml(item.entityId);
             return `<a href="${getBaseUrl()}/browse/${id}" ${item.resolved ? 'style="text-decoration: line-through;"' : ''}>${id}</a>`;
         }
     },
     name: {
         name: 'summary',
-        //resize: true,
+        resize: true,
         label: 'Название',
         width: '*',
         align: 'left',
@@ -67,6 +68,14 @@ export const ganttColumns = {
             );
         },
     }
+};
+
+export const emptyColumn = {
+    name: '___empty',
+    resize: false,
+    label: '',
+    width: '12px',
+    template: () => ''
 };
 
 export const defaultColumns = Object

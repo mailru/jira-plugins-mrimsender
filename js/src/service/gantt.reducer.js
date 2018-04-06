@@ -7,6 +7,7 @@ import {defaultOptions} from '../app-gantt/staticOptions';
 export const ganttReducer = combineReducers({
     options: optionsReducer,
     calendar: calendarReducer,
+    sprints: sprintsReducer,
     ganttReady: ganttReadyReducer,
     teams: ganttTeamReducer
 });
@@ -34,10 +35,11 @@ export const OptionsActionCreators = {
 };
 
 export const CalendarActionCreators = {
-    setCalendar: (calendar) => {
+    setCalendar: (calendar, sprints) => {
         return {
             type: SET_CALENDAR,
-            calendar
+            calendar,
+            sprints
         };
     },
     updateAll: (calendar, options) => {
@@ -60,6 +62,13 @@ function optionsReducer(state, action) {
         };
     }
 
+    if (action.type === SET_CALENDAR) {
+        return {
+            ...state,
+            sprint: undefined
+        };
+    }
+
     return state;
 }
 
@@ -70,6 +79,18 @@ function calendarReducer(state, action) {
 
     if (action.type === SET_CALENDAR || action.type === UPDATE_ALL) {
         return action.calendar;
+    }
+
+    return state;
+}
+
+function sprintsReducer(state, action) {
+    if (state === undefined) {
+        return [];
+    }
+
+    if (action.type === SET_CALENDAR) {
+        return action.sprints;
     }
 
     return state;

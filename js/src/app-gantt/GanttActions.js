@@ -11,6 +11,7 @@ import {FieldTextStateless} from '@atlaskit/field-text';
 import Button, {ButtonGroup} from '@atlaskit/button';
 import InlineDialog from '@atlaskit/inline-dialog';
 import DropdownMenu, { DropdownItemGroupRadio, DropdownItemRadio } from '@atlaskit/dropdown-menu';
+import Spinner from '@atlaskit/spinner';
 
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import MediaServicesZoomInIcon from '@atlaskit/icon/glyph/media-services/zoom-in';
@@ -21,6 +22,7 @@ import ListIcon from '@atlaskit/icon/glyph/list';
 import JiraLabsIcon from '@atlaskit/icon/glyph/jira/labs';
 import FilterIcon from '@atlaskit/icon/glyph/filter';
 import PeopleGroupIcon from '@atlaskit/icon/glyph/people-group';
+import CheckIcon from '@atlaskit/icon/glyph/check';
 
 import {keyedConfigs, scaleConfigs} from './scaleConfigs';
 import {viewItems} from './views';
@@ -29,8 +31,10 @@ import {OptionsDialog} from './OptionsDialog';
 import {DatesDialog} from './DatesDialog';
 import {MagicDialog} from './MagicDialog';
 
+import {SprintState} from '../common/sprints';
+
 import {OptionsActionCreators} from '../service/gantt.reducer';
-import {calendarService} from '../service/services';
+import {calendarService, ganttService} from '../service/services';
 
 
 const enableMagic = true;
@@ -39,14 +43,54 @@ class GanttActionsInternal extends React.Component {
     static propTypes = {
         gantt: PropTypes.object.isRequired,
         options: PropTypes.object.isRequired,
-        calendar: PropTypes.object
+        calendar: PropTypes.object,
+        sprints: PropTypes.arrayOf(PropTypes.object.isRequired)
     };
 
-    state ={
+    state = {
         activeDialog: null,
-        waitingForMagic: false,
+        waitingForPlan: false,
         calendars: null,
         filter: ''
+    };
+
+    _applyPlan = () => {
+        const {gantt, calendar, options} = this.props;
+
+        if (options.liveData) {
+            return;
+        }
+
+        const tasks = gantt.getTaskBy(task => task.type !== 'group');
+
+        this.setState({
+            waitingForPlan: true
+        });
+
+        ganttService
+            .applyPlan(
+                calendar.id,
+                {
+                    items: tasks.map(({id, start_date, end_date}) => {
+                        return {
+                            taskId: id,
+                            start_date: gantt.templates.xml_format(start_date),
+                            end_date: gantt.templates.xml_format(end_date)
+                        };
+                    })
+                }
+            )
+            .then(
+                () => {
+                    this.setState({waitingForPlan: false});
+                    this.props.updateOptions({ liveData: true });
+                },
+                error => {
+                    this.setState({waitingForPlan: false});
+                    console.error(error);
+                    alert(error);
+                }
+            );
     };
 
     _zoomIn = () => {
@@ -136,9 +180,14 @@ class GanttActionsInternal extends React.Component {
         window.location = AJS.contextPath() + '/secure/MailRuGanttTeams.jspa#calendar=' + this.props.calendar.id;
     };
 
+    _selectSprint = (sprint) => () => this.props.updateOptions({ sprint });
+
     render() {
-        const {activeDialog, waitingForMagic, calendars, filter} = this.state;
-        const {options, calendar, gantt} = this.props;
+        const {activeDialog, waitingForPlan, calendars, filter} = this.state;
+        const {options, calendar, sprints, gantt} = this.props;
+
+        const currentSprint = options.sprint ?
+            (sprints.find(sprint => sprint.id === options.sprint) || { id: options.sprint, name: 'Неизвестный спринт' }) : null;
 
         return (
             <div className="gantt-actions">
@@ -150,12 +199,21 @@ class GanttActionsInternal extends React.Component {
                         <ButtonGroup>
                             {enableMagic && <Button
                                 iconBefore={<JiraLabsIcon label=""/>}
-                                isDisabled={waitingForMagic}
 
                                 onClick={this._toggleDialog('magic')}
                             >
                                 Запустить магию
                             </Button>}
+                            {!options.liveData &&
+                                <Button
+                                    onClick={this._applyPlan}
+
+                                    isDisabled={waitingForPlan}
+                                    iconBefore={waitingForPlan ? <Spinner/> : <CheckIcon label=""/>}
+                                >
+                                    Применить изменения
+                                </Button>
+                            }
                             {activeDialog === 'magic' && <MagicDialog onClose={this._toggleDialog('magic')} gantt={gantt}/>}
                         </ButtonGroup>
                     </div>
@@ -237,7 +295,7 @@ class GanttActionsInternal extends React.Component {
                 </div>
 
                 <div className="gantt-header">
-                    <div>
+                    <ButtonGroup>
                         <DropdownMenu
                             trigger={<span className="calendar-title">{calendar && calendar.selectedName}</span>}
                             triggerType="button"
@@ -266,7 +324,48 @@ class GanttActionsInternal extends React.Component {
                                 </DropdownItemGroupRadio>
                             }
                         </DropdownMenu>
-                    </div>
+                        {!!sprints.length &&
+                            <DropdownMenu
+                                trigger={<span className="calendar-title">{(currentSprint && currentSprint.name) || 'Спринт'}</span>}
+                                triggerType="button"
+                                triggerButtonProps={{
+                                    appearance: 'subtle',
+                                    iconAfter: <ChevronDownIcon label=""/>
+                                }}
+                            >
+                                <DropdownItemGroupRadio id="gantt-sprint">
+                                    <DropdownItemRadio
+                                        key="null"
+                                        id="null"
+
+                                        onClick={this._selectSprint(null)}
+
+                                        isSelected={!currentSprint}
+                                    >
+                                        Не выбран
+                                    </DropdownItemRadio>
+                                    {sprints.map(sprintItem =>
+                                        <DropdownItemRadio
+                                            key={sprintItem.id}
+                                            id={sprintItem.id}
+
+                                            onClick={this._selectSprint(sprintItem.id)}
+
+                                            isSelected={currentSprint && (currentSprint.id === sprintItem.id)}
+                                        >
+                                            <SprintState state={sprintItem.state}/>
+                                            {' '}
+                                            <strong>
+                                                {sprintItem.boardName}
+                                            </strong>
+                                            {' - '}
+                                            {sprintItem.name}
+                                        </DropdownItemRadio>
+                                    )}
+                                </DropdownItemGroupRadio>
+                            </DropdownMenu>
+                        }
+                    </ButtonGroup>
                     <div className="flex-grow"/>
                     <ButtonGroup>
                         <InlineDialog
@@ -313,7 +412,8 @@ export const GanttActions =
         state => {
             return {
                 options: state.options,
-                calendar: state.calendar
+                calendar: state.calendar,
+                sprints: state.sprints
             };
         },
         OptionsActionCreators

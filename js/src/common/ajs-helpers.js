@@ -2,6 +2,15 @@
 import AJS from 'AJS';
 
 
+function parseJson(json) {
+    try {
+        return JSON.parse(json);
+    } catch (e) {
+        console.warn(e);
+        return json;
+    }
+}
+
 export function getContextPath() {
     if (AJS.gadget) {
         return AJS.gadget.getBaseUrl();
@@ -60,7 +69,7 @@ export function ajaxPromise(url, method, params, data) {
                         response: {
                             ...error,
                             data: error.responseText ?
-                                JSON.parse(error.responseText) :
+                                parseJson(error.responseText) :
                                 {
                                     error: `${error.status}: ${error.statusText}`
                                 }

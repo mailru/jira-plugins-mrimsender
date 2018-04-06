@@ -48,5 +48,10 @@
             </section>
         </div>
     </div>
+
+    <script>
+        #set ($ajaxTimeout = 'AJS.$.ajaxSetup({timeout: 30000000})')
+        $ajaxTimeout
+    </script>
 </body>
 </html>

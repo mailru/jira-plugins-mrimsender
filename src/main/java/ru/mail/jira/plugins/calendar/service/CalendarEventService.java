@@ -374,9 +374,43 @@ public class CalendarEventService {
         ApplicationUser user,
         boolean includeIssueInfo,
         Order order,
+        Long sprintId,
         List<String> fields
     ) throws SearchException {
-        //todo: get calendar filter + resolution is empty and (estimate is not empty or start is not empty and end is not empty)
+        String startField = calendar.getEventStart();
+        String endField = calendar.getEventEnd();
+
+        CustomField startCF = getCf(startField);
+        CustomField endCF = getCf(endField);
+
+        List<Issue> issues = searchService
+            .search(
+                user,
+                getUnboundedEventsQuery(user, calendar, sprintId, order),
+                PagerFilter.newPageAlignedFilter(0, 1000)
+            )
+            .getIssues();
+        return issues
+            .stream()
+            .map(issue -> buildEventWithGroups(
+                calendar,
+                groupBy,
+                user,
+                issue,
+                includeIssueInfo,
+                startField,
+                startCF,
+                endField,
+                endCF,
+                fields,
+                true
+            ))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toList());
+    }
+
+    public Query getUnboundedEventsQuery(ApplicationUser user, Calendar calendar, Long sprintId, Order order) {
         JqlClauseBuilder queryBuilder = getCalendarQueryBuilder(user, calendar);
         if (queryBuilder == null) {
             throw new RuntimeException("Unable to get calendar query");
@@ -403,37 +437,24 @@ public class CalendarEventService {
                 .endsub();
         }
 
+        queryBuilder.endsub();
+
+        if (sprintId != null) {
+            if (!jiraSoftwareHelper.isAvailable()) {
+                throw new RuntimeException("jira software is not available");
+            }
+
+            queryBuilder
+                .and()
+                .customField(jiraSoftwareHelper.getSprintField().getIdAsLong())
+                .eq(sprintId);
+        }
+
         queryBuilder
-            .endsub()
             .and().resolution().isEmpty()
             .endsub();
 
-        CustomField startCF = getCf(startField);
-        CustomField endCF = getCf(endField);
-
-        Query query = withOrder(queryBuilder.buildQuery(), order);
-
-        List<Issue> issues = searchService
-            .search(user, query, PagerFilter.newPageAlignedFilter(0, 1000))
-            .getIssues();
-        return issues
-            .stream()
-            .map(issue -> buildEventWithGroups(
-                calendar,
-                groupBy,
-                user,
-                issue,
-                includeIssueInfo,
-                startField,
-                startCF,
-                endField,
-                endCF,
-                fields,
-                true
-            ))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(Collectors.toList());
+        return withOrder(queryBuilder.buildQuery(), order);
     }
 
     private CustomField getCf(String fieldId) {
@@ -963,9 +984,9 @@ public class CalendarEventService {
     }
 
     public EventDto moveEvent(ApplicationUser user, int calendarId, String eventId, String start, String end) throws Exception {
-        IssueService.IssueResult issueResult = jiraDeprecatedService.issueService.getIssue(user, eventId);
+        IssueService.IssueResult issueResult = issueService.getIssue(user, eventId);
         MutableIssue issue = issueResult.getIssue();
-        if (!jiraDeprecatedService.issueService.isEditable(issue, user))
+        if (!issueService.isEditable(issue, user))
             throw new IllegalArgumentException("Can not edit issue with key => " + eventId);
         Calendar calendar = calendarService.getCalendar(calendarId);
         CustomField eventStartCF = null;
@@ -1010,16 +1031,16 @@ public class CalendarEventService {
                 issueInputParams.setDueDate(datePickerFormat.format(new Date(endDate.getTime() - MILLIS_IN_DAY)));
         }
 
-        IssueService.UpdateValidationResult updateValidationResult = jiraDeprecatedService.issueService.validateUpdate(user, issue.getId(), issueInputParams);
+        IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(user, issue.getId(), issueInputParams);
         if (!updateValidationResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateValidationResult.getErrorCollection()));
 
-        IssueService.IssueResult updateResult = jiraDeprecatedService.issueService.update(user, updateValidationResult);
+        IssueService.IssueResult updateResult = issueService.update(user, updateValidationResult);
         if (!updateResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
 
         return buildEvent(
-            calendar, null, user, jiraDeprecatedService.issueService.getIssue(user, eventId).getIssue(), false,
+            calendar, null, user, issueService.getIssue(user, eventId).getIssue(), false,
             calendar.getEventStart(), eventStartCF, calendar.getEventEnd(), eventEndCF, ImmutableList.of(), null, true);
     }
 

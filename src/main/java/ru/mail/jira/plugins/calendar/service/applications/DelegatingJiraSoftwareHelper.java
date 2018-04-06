@@ -4,8 +4,11 @@ import com.atlassian.event.api.EventListener;
 import com.atlassian.event.api.EventPublisher;
 import com.atlassian.greenhopper.api.customfield.ManagedCustomFieldsService;
 import com.atlassian.greenhopper.api.issuetype.ManagedIssueTypesService;
+import com.atlassian.greenhopper.service.rapid.view.RapidViewService;
+import com.atlassian.greenhopper.service.sprint.SprintService;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.issuetype.IssueType;
+import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.ModuleDescriptor;
 import com.atlassian.plugin.Plugin;
 import com.atlassian.plugin.PluginAccessor;
@@ -17,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @ExportAsService(LifecycleAware.class)
@@ -62,11 +67,15 @@ public class DelegatingJiraSoftwareHelper implements LifecycleAware, JiraSoftwar
             logger.info("Creating JSW helper");
             ModuleDescriptor<?> managedIssueTypeSerivceDescriptor = plugin.getModuleDescriptor("greenhopper-managedissuetypes-service");
             ModuleDescriptor<?> managedCustomFieldsServiceDescriptor = plugin.getModuleDescriptor("greenhopper-managedcustomfields-service");
+            ModuleDescriptor<?> sprintServiceDescriptor = plugin.getModuleDescriptor("greenhopper-sprint-service");
+            ModuleDescriptor<?> rapidViewServiceDescriptor = plugin.getModuleDescriptor("greenhopper-rapidview-service");
 
             if (managedCustomFieldsServiceDescriptor != null && managedIssueTypeSerivceDescriptor != null) {
                 this.delegate = new JiraSoftwareHelperImpl(
                     (ManagedIssueTypesService) managedIssueTypeSerivceDescriptor.getModule(),
-                    (ManagedCustomFieldsService) managedCustomFieldsServiceDescriptor.getModule()
+                    (ManagedCustomFieldsService) managedCustomFieldsServiceDescriptor.getModule(),
+                    (SprintService) sprintServiceDescriptor.getModule(),
+                    (RapidViewService) rapidViewServiceDescriptor.getModule()
                 );
             } else {
                 logger.warn("JSW modules not available");
@@ -93,7 +102,22 @@ public class DelegatingJiraSoftwareHelper implements LifecycleAware, JiraSoftwar
     }
 
     @Override
+    public CustomField getSprintField() {
+        return delegate.getSprintField();
+    }
+
+    @Override
     public IssueType getEpicIssueType() {
         return delegate.getEpicIssueType();
+    }
+
+    @Override
+    public List<SprintDto> findSprints(ApplicationUser user, String query) {
+        return delegate.findSprints(user, query);
+    }
+
+    @Override
+    public SprintDto getSprint(ApplicationUser user, long id) {
+        return delegate.getSprint(user, id);
     }
 }

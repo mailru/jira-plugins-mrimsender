@@ -13,6 +13,10 @@ export class GanttService {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/${calendarId}/optimized?${$.param(params)}`);
     }
 
+    applyPlan(calendarId, data) {
+        return ajaxPost(`${getPluginBaseUrl()}/gantt/${calendarId}/applyPlan`, data);
+    }
+
     updateTask(calendarId, id, task) {
         return ajaxPut(`${getPluginBaseUrl()}/gantt/${calendarId}/task/${id}`, task);
     }
@@ -23,5 +27,13 @@ export class GanttService {
 
     deleteLink(calendarId, id) {
         return ajaxDelete(`${getPluginBaseUrl()}/gantt/${calendarId}/link/${id}`);
+    }
+
+    findSprints(query) {
+        return ajaxGet(`${getPluginBaseUrl()}/gantt/sprints?query=${encodeURIComponent(query)}`);
+    }
+
+    getCalendarSprints(calendarId) {
+        return ajaxGet(`${getPluginBaseUrl()}/gantt/calendarSprints/${calendarId}`);
     }
 }

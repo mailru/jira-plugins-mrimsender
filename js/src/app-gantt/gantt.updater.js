@@ -1,11 +1,11 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
-import $ from 'jquery';
+import queryString from 'query-string';
 
 import {buildColumns} from './ganttConfig';
 import {defaultColumns} from './ganttColumns';
 
 import {preferenceService, storeService} from '../service/services';
 import {getPluginBaseUrl} from '../common/ajs-helpers';
+import {OptionsActionCreators} from '../service/gantt.reducer';
 
 
 function matchesFilter(gantt, id, filter) {
@@ -36,7 +36,7 @@ export class GanttUpdater {
     }
 
     _update = () => {
-        const {startDate, endDate, groupBy, order, orderBy, columns, filter} = storeService.getOptions();
+        const {startDate, endDate, groupBy, order, orderBy, columns, filter, sprint} = storeService.getOptions();
         const calendar = storeService.getCalendar();
         if (storeService.isGanttReady() && calendar) {
             if (
@@ -46,6 +46,7 @@ export class GanttUpdater {
                 this.orderBy !== orderBy ||
                 this.order !== order ||
                 this.columns !== columns ||
+                this.sprint !== sprint ||
                 calendar.id !== (this.calendar || {}).id
             ) {
                 this.startDate = startDate;
@@ -55,6 +56,7 @@ export class GanttUpdater {
                 this.order = order;
                 this.calendar = calendar;
                 this.columns = columns;
+                this.sprint = sprint;
 
                 console.log('loading gantt');
 
@@ -70,16 +72,17 @@ export class GanttUpdater {
 
                 console.log(this.gantt.config.columns);
 
-                const param = $.param({
+                const param = queryString.stringify({
                     start: startDate,
                     end: endDate,
                     order: order ? 'ASC' : 'DESC',
                     fields: this.gantt.config.columns.filter(col => col.isJiraField).map(col => col.name),
-                    groupBy, orderBy
+                    groupBy, orderBy, sprint
                 });
 
                 this.gantt.load(`${getPluginBaseUrl()}/gantt/${this.calendar.id}?${param}`);
 
+                storeService.dispatch(OptionsActionCreators.updateOptions({ liveData: true }));
                 preferenceService.saveOptions(storeService.getOptions());
             }
 

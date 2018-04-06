@@ -16,7 +16,7 @@ export class PreferenceService {
     }
 
     put(key, value) {
-        if (value) {
+        if (value !== null && value !== undefined) {
             localStorage.setItem(key, JSON.stringify(value));
         } else {
             this.remove(key);
@@ -33,7 +33,7 @@ export class PreferenceService {
         for (const key of Object.keys(properties)) {
             const value = this.get(properties[key]);
 
-            if (value) {
+            if (value !== null && value !== undefined) {
                 result[key] = value;
             }
         }

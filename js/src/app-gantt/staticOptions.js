@@ -31,17 +31,35 @@ export const groupOptions = [
         label: 'По резолюции'
     },
     {
+        value: 'component',
+        label: 'По компонентам'
+    },
+    {
+        value: 'fixVersion',
+        label: 'По версиям исправления'
+    },
+    {
+        value: 'affectsVersion',
+        label: 'По затронутым версиям'
+    },
+    {
+        value: 'labels',
+        label: 'По меткам'
+    },
+    {
         value: 'epicLink',
         label: 'По эпику'
     },
 ];
 
 export const defaultOptions = {
+    liveData: true,
     scale: keyedConfigs[1].i,
     startDate: moment().subtract(1, 'months').format('YYYY-MM-DD'),
     endDate: moment().add(3, 'months').format('YYYY-MM-DD'),
-    groupBy: null,
-    orderBy: null,
+    groupBy: undefined,
+    orderBy: undefined,
+    sprint: undefined,
     order: true,
     view: views.basic.key,
     columns: [

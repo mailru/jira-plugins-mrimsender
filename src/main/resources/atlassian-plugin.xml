@@ -337,7 +337,9 @@
         <resource type="download" name="gantt.css" location="ru/mail/jira/plugins/calendar/css/gantt.css"/>
         <resource type="download" name="i18n.js" location="ru/mail/jira/plugins/calendar/gantt/i18n.js"/>
         <resource type="download" name="common.js" location="ru/mail/jira/plugins/calendar/js/common.js"/>
+        <resource type="download" name="common.js.map" location="ru/mail/jira/plugins/calendar/js/common.js.map"/>
         <resource type="download" name="gantt.js" location="ru/mail/jira/plugins/calendar/js/gantt.js"/>
+        <resource type="download" name="gantt.js.map" location="ru/mail/jira/plugins/calendar/js/gantt.js.map"/>
     </web-resource>
 
     <web-resource key="gantt-old-resources">
@@ -370,6 +372,21 @@
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/gantt/view.css"/>
         <resource type="download" name="view.js" location="ru/mail/jira/plugins/calendar/gantt/view.js"/>
     </web-resource>
+
+    <web-panel key="gantt-issue-panel" location="atl.jira.view.issue.left.context" weight="401">
+        <context-provider class="ru.mail.jira.plugins.calendar.web.gantt.GanttLinksContextProvider"/>
+
+        <conditions type="AND">
+            <condition class="com.atlassian.jira.plugin.webfragment.conditions.HasIssuePermissionCondition">
+                <param name="permission">browse</param>
+            </condition>
+            <condition class="ru.mail.jira.plugins.calendar.web.gantt.HasGanttLinksCondition"/>
+        </conditions>
+
+        <label key="ru.mail.jira.plugins.calendar.gantt.issuePanel.title"/>
+
+        <resource name="view" type="velocity" location="ru/mail/jira/plugins/calendar/gantt/issuepanel.vm"/>
+    </web-panel>
 
     <!--Gantt Resource-->
 

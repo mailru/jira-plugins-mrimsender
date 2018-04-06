@@ -18,8 +18,11 @@ import moment from 'moment';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import JIRA from 'JIRA';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 import 'dhtmlx-gantt';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_marker';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_smart_rendering';
 
 import {GanttActions} from './GanttActions';
@@ -31,7 +34,7 @@ import {LayoutUpdater} from './layout.updater';
 
 import {collectTopMailCounterScript} from '../common/top-mail-ru';
 
-import {calendarService, store, storeService} from '../service/services';
+import {calendarService, ganttService, store, storeService} from '../service/services';
 import {CalendarActionCreators, ganttReady} from '../service/gantt.reducer';
 
 import './gantt.less';
@@ -90,7 +93,7 @@ function initGantt() {
         showPopup();
 
         calendarService
-            .getEventInfo(storeService.getCalendar().id, eventId)
+            .getEventInfo(storeService.getCalendar().id, gantt.getTask(eventId).entityId)
             .then(issue => {
                 content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
                     issue: issue,
@@ -110,7 +113,7 @@ function initGantt() {
                         const taskId = firstTarget.getAttribute('task_id');
 
                         if (taskId) {
-                            const targetOverride = document.querySelector(`.gantt_event_object[task_id=${taskId}]`);
+                            const targetOverride = document.querySelector(`.gantt_event_object[task_id="${taskId}"]`);
 
                             if (targetOverride) {
                                 targetPosition = {target: targetOverride};
@@ -149,11 +152,11 @@ AJS.toInit(function() {
                 'calendar=:calendar': 'setCalendar'
             },
             setCalendar: function (id) {
-                calendarService
-                    .getCalendar(id)
-                    .then(calendar => {
-                        store.dispatch(CalendarActionCreators.setCalendar({...calendar, id}));
-                    });
+                Promise
+                    .all([calendarService.getCalendar(id), ganttService.getCalendarSprints(id)])
+                    .then(
+                        ([calendar, sprints]) => store.dispatch(CalendarActionCreators.setCalendar({...calendar, id}, sprints))
+                    );
             }
         });
 
