@@ -14,6 +14,7 @@ import org.jacop.search.SelectChoicePoint;
 import org.jacop.search.SmallestMin;
 import org.jacop.search.SplitSelect;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeConstants;
 import org.joda.time.LocalDate;
 import org.ojalgo.optimisation.Expression;
 import org.ojalgo.optimisation.ExpressionsBasedModel;
@@ -32,8 +33,11 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class PlanningEngine {
@@ -364,7 +368,7 @@ public class PlanningEngine {
     public Map<EventDto, Pair<Date, Date>> generatePlan2(List<EventDto> issues,
                                                          Map<EventDto, Integer> issueDuration,
                                                          Map<EventDto, Integer> issueDeadline,
-                                                         Map<EventDto, List<EventDto>> dependenceList,
+                                                         Map<EventDto, Set<EventDto>> dependenceList,
                                                          Map<EventDto, Double> issuePriority,
                                                          int numDays,
                                                          int maxDayCapacity) {
@@ -413,11 +417,11 @@ public class PlanningEngine {
         store.impose(new Max(endTime, earliestEndTime));
 
         // dependence constraints
-        for (Map.Entry<EventDto, List<EventDto>> dep : dependenceList.entrySet()) {
-            List<EventDto> issueDepList = dep.getValue();
+        for (Map.Entry<EventDto, Set<EventDto>> dep : dependenceList.entrySet()) {
+            Set<EventDto> issueDepSet = dep.getValue();
             int taskIdx = issueIndex.get(dep.getKey());
 
-            for (EventDto dependantIssue : issueDepList) {
+            for (EventDto dependantIssue : issueDepSet) {
                 if (!issueIndex.containsKey(dependantIssue))
                     continue;
                 int dependantIssueIdx = issueIndex.get(dependantIssue);
@@ -457,7 +461,7 @@ public class PlanningEngine {
             store.impose(new XlteqY(startTime[idx1], startTime[idx2]));
         }
 
-        Map<EventDto, Pair<Date, Date>> plan = new HashMap<>();
+
         logger.debug("maximizing");
         Search<IntVar> search = new DepthFirstSearch<>();
         search.setTimeOut(60);
@@ -466,19 +470,95 @@ public class PlanningEngine {
         logger.debug("maximized");
         logger.debug("result state {}", result);
 
+        int[] planStart = new int[numTasks];
+        int[] planEnd = new int[numTasks];
+        for (int i = 0; i < numTasks; i++) {
+            planStart[i] = startTime[i].value();
+            planEnd[i] = endTime[i].value();
+        }
+        Map<EventDto, Set<EventDto>> planDependence = new HashMap<>();
+        for (Map.Entry<EventDto, Set<EventDto>> entry : dependenceList.entrySet()) {
+            for (EventDto eventDto : entry.getValue()) {
+                planDependence.computeIfAbsent(eventDto, e -> new HashSet<>()).add(entry.getKey());
+            }
+        }
+        for (Map.Entry<UserDto, List<EventDto>> entry : userIssueGroup.entrySet()) {
+            List<EventDto> deps = entry.getValue().stream()
+                                       .sorted(Comparator.comparing(eventDto -> {
+                                           int taskIdx = issueIndex.get(eventDto);
+                                           return planStart[taskIdx];
+                                       }))
+                                       .collect(Collectors.toList());
+            for (int i = 0; i < deps.size() - 1; i++) {
+                planDependence.computeIfAbsent(deps.get(i), eventDto -> new HashSet<>()).add(deps.get(i + 1));
+            }
+        }
+
+        for (EventDto eventDto : planDependence.keySet()) {
+            adjustPlanDatesWithWeekends(eventDto, DateTime.now().withTimeAtStartOfDay(), maxDayCapacity, planStart, planEnd, duration, issueIndex, planDependence);
+        }
+
+        Map<EventDto, Pair<Date, Date>> plan = new HashMap<>();
         DateTime today = DateTime.now().withTimeAtStartOfDay();
         for (int i = 0; i < numTasks; i++) {
             EventDto issue = indexIssue.get(i);
-            Date planStart = today.plusDays(startTime[i].value() / maxDayCapacity)
-                                  .plusHours(startTime[i].value() % maxDayCapacity)
-                                  .toDate();
-            Date planEnd = today.plusDays(endTime[i].value() / maxDayCapacity)
-                                .plusHours(endTime[i].value() % maxDayCapacity)
-                                .toDate();
+            Date start = today.plusDays(planStart[i] / maxDayCapacity)
+                              .plusHours(planStart[i] % maxDayCapacity)
+                              .toDate();
+            Date end = today.plusDays(planEnd[i] / maxDayCapacity)
+                            .plusHours(planEnd[i] % maxDayCapacity)
+                            .toDate();
 
-            plan.put(issue, Pair.nicePairOf(planStart, planEnd));
+            plan.put(issue, Pair.nicePairOf(start, end));
         }
 
         return plan;
+    }
+
+    private void adjustPlanDatesWithWeekends(EventDto eventDto, DateTime now, int maxDayCapacity, int[] planStarts, int[] planEnds, int[] durations, Map<EventDto, Integer> issueIndex, Map<EventDto, Set<EventDto>> planDependence) {
+        int taskIdx = issueIndex.get(eventDto);
+        int planStartDays = planStarts[taskIdx] / maxDayCapacity;
+        int planStartHours = planStarts[taskIdx] % maxDayCapacity;
+        int durationDays = durations[taskIdx] / maxDayCapacity;
+        int durationHours = durations[taskIdx] % maxDayCapacity;
+
+
+        DateTime planStart = now.plusDays(planStartDays)
+                                .plusHours(planStartHours);
+        int addDaysToStart = 0;
+        if (planStart.getDayOfWeek() == DateTimeConstants.SATURDAY)
+            addDaysToStart = 2;
+        else if (planStart.getDayOfWeek() == DateTimeConstants.SUNDAY)
+            addDaysToStart = 1;
+
+        if (addDaysToStart > 0) {
+            planStart = planStart.plusDays(addDaysToStart)
+                                 .withTimeAtStartOfDay();
+            planStartHours = 0;
+            planStarts[taskIdx] = planStartDays * maxDayCapacity + addDaysToStart * maxDayCapacity;
+        }
+
+        if (planStartHours + durationHours > maxDayCapacity) {
+            durationDays = durationDays + (planStartHours + durationHours) / maxDayCapacity;
+            durationHours = (planStartHours + durationHours) % maxDayCapacity;
+        }
+        durationDays = getActualNumberOfDaysToAdd(durationDays, planStart.getDayOfWeek());
+
+        planEnds[taskIdx] = planStarts[taskIdx] + durationDays * maxDayCapacity + durationHours;
+        if (planDependence.containsKey(eventDto))
+            for (EventDto dependent : planDependence.get(eventDto)) {
+                int dependantTaskIdx = issueIndex.get(dependent);
+                planStarts[dependantTaskIdx] = planEnds[taskIdx];
+
+                adjustPlanDatesWithWeekends(dependent, now, maxDayCapacity, planStarts, planEnds, durations, issueIndex, planDependence);
+            }
+    }
+
+    public int getActualNumberOfDaysToAdd(int workdays, int dayOfWeek) {
+        if (dayOfWeek < 6) { // date is a workday
+            return workdays + (workdays + dayOfWeek - 1) / 5 * 2;
+        } else { // date is a weekend
+            return workdays + (workdays - 1) / 5 * 2 + (7 - dayOfWeek);
+        }
     }
 }

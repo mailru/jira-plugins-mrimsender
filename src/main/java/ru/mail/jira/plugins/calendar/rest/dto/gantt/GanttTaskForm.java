@@ -13,4 +13,6 @@ public class GanttTaskForm {
     private String startDate;
     @XmlElement(name = "end_date")
     private String endDate;
+    @XmlElement
+    private int duration;
 }
