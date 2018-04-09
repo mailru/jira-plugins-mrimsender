@@ -10,6 +10,7 @@ import Button, {ButtonGroup} from '@atlaskit/button';
 import InlineDialog from '@atlaskit/inline-dialog';
 import DropdownMenu, { DropdownItemGroupRadio, DropdownItemRadio } from '@atlaskit/dropdown-menu';
 import Spinner from '@atlaskit/spinner';
+import Tooltip from '@atlaskit/tooltip';
 
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import MediaServicesZoomInIcon from '@atlaskit/icon/glyph/media-services/zoom-in';
@@ -20,9 +21,11 @@ import ListIcon from '@atlaskit/icon/glyph/list';
 import JiraLabsIcon from '@atlaskit/icon/glyph/jira/labs';
 import FilterIcon from '@atlaskit/icon/glyph/filter';
 import CheckIcon from '@atlaskit/icon/glyph/check';
+import VidFullScreenOnIcon from '@atlaskit/icon/glyph/vid-full-screen-on';
+import VidFullScreenOffIcon from '@atlaskit/icon/glyph/vid-full-screen-off';
 
 import {keyedConfigs, scaleConfigs} from './scaleConfigs';
-import {viewItems} from './views';
+import {viewItems, views} from './views';
 
 import {OptionsDialog} from './OptionsDialog';
 import {DatesDialog} from './DatesDialog';
@@ -174,6 +177,20 @@ class GanttActionsInternal extends React.Component {
     };
 
     _selectSprint = (sprint) => () => this.props.updateOptions({ sprint });
+
+    _updateStructure = (isOpen) => {
+        const {gantt} = this.props;
+
+        gantt.eachTask(function(task){
+            task.$open = isOpen;
+        });
+
+        gantt.render();
+    };
+
+    _collapseStructure = () => this._updateStructure(false);
+
+    _expandStructure = () => this._updateStructure(true);
 
     render() {
         const {activeDialog, waitingForPlan, calendars, filter} = this.state;
@@ -354,7 +371,19 @@ class GanttActionsInternal extends React.Component {
                         }
                     </ButtonGroup>
                     <div className="flex-grow"/>
-                    <ButtonGroup>
+                    <ButtonGroup appearance="subtle">
+                        <Tooltip content="Развернуть структуру">
+                            <Button
+                                iconBefore={<VidFullScreenOnIcon label="Expand"/>}
+                                onClick={this._expandStructure}
+                            />
+                        </Tooltip>
+                        <Tooltip content="Свернуть структуру">
+                            <Button
+                                iconBefore={<VidFullScreenOffIcon label="Collapse"/>}
+                                onClick={this._collapseStructure}
+                            />
+                        </Tooltip>
                         <InlineDialog
                             position="bottom right"
                             isOpen={activeDialog === 'params'}
