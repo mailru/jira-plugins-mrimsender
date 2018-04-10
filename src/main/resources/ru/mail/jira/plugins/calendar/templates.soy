@@ -370,8 +370,10 @@
         {if $calendar.sourceType != 'basic'}
             {if $calendar.sourceType == 'project' }
                 <a href="{$contextPath}/issues/?jql=project%3D{$calendar.sourceId}" class="mailru-calendar-gadget-legend-entry">
-            {else}
+            {elseif $calendar.sourceType == 'filter'}
                 <a href="{$contextPath}/issues/?filter={$calendar.sourceId}" class="mailru-calendar-gadget-legend-entry">
+            {else}
+                <a href="{$contextPath}/issues/?jql={$calendar.sourceId}" class="mailru-calendar-gadget-legend-entry">
             {/if}
             {if $calendar.hasError}
                 <span class="aui-icon aui-icon-small aui-iconfont-error calendar-view-color-box" title="{$calendar.error}"/>
