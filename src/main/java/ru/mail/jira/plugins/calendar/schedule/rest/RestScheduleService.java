@@ -7,6 +7,7 @@ import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
+import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.web.component.cron.CronEditorBean;
 import com.atlassian.jira.web.component.cron.generator.CronExpressionDescriptor;
 import com.atlassian.jira.web.component.cron.parser.CronExpressionParser;
@@ -41,29 +42,32 @@ import java.util.List;
 public class RestScheduleService {
     private static final Logger log = LoggerFactory.getLogger(RestScheduleService.class);
 
-    private final CalendarUtils calendarUtils;
     private final IssueManager issueManager;
     private final GlobalPermissionManager globalPermissionManager;
     private final JiraAuthenticationContext jiraAuthenticationContext;
+    private final UserManager userManager;
+    private final I18nHelper i18nHelper;
+    private final CalendarUtils calendarUtils;
     private final ScheduleManager scheduleManager;
     private final ScheduleService scheduleService;
     private final SchedulerService schedulerService;
-    private final UserManager userManager;
 
     public RestScheduleService(
-            @ComponentImport IssueManager issueManager,
-            @ComponentImport GlobalPermissionManager globalPermissionManager,
-            @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-            @ComponentImport SchedulerService schedulerService,
-            @ComponentImport UserManager userManager,
-            CalendarUtils calendarUtils,
-            ScheduleManager scheduleManager,
-            ScheduleService scheduleService
+        @ComponentImport IssueManager issueManager,
+        @ComponentImport GlobalPermissionManager globalPermissionManager,
+        @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+        @ComponentImport SchedulerService schedulerService,
+        @ComponentImport UserManager userManager,
+        @ComponentImport I18nHelper i18nHelper,
+        CalendarUtils calendarUtils,
+        ScheduleManager scheduleManager,
+        ScheduleService scheduleService
     ) {
         this.calendarUtils = calendarUtils;
         this.issueManager = issueManager;
         this.globalPermissionManager = globalPermissionManager;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
+        this.i18nHelper = i18nHelper;
         this.scheduleManager = scheduleManager;
         this.scheduleService = scheduleService;
         this.schedulerService = schedulerService;
@@ -99,10 +103,17 @@ public class RestScheduleService {
                     Issue sourceIssue = issueManager.getIssueObject(schedule.getSourceIssueId());
                     Issue lastCreatedIssue = issueManager.getIssueObject(schedule.getLastCreatedIssueId());
                     ApplicationUser creator = userManager.getUserByKey(schedule.getCreatorKey());
-                    result.add(new ScheduleDto(schedule.getID(), new IssueDto(sourceIssue.getId(), sourceIssue.getKey(), sourceIssue.getSummary()), schedule.getName(),
-                                               getScheduleDescription(schedule.getCronExpression(), schedule.getMode()), new UserDto(creator.getKey(), creator.getName(), creator.getDisplayName()),
-                                               schedule.getMode(), schedule.getCronExpression(), schedule.getRunCount(), calendarUtils.getFormattedDateTime(currentUser, schedule.getLastRun()),
-                                               lastCreatedIssue != null ? new IssueDto(lastCreatedIssue.getId(), lastCreatedIssue.getKey(), lastCreatedIssue.getSummary()) : null, schedule.isDeleted()));
+                    result.add(new ScheduleDto(
+                        schedule.getID(),
+                        sourceIssue != null ?
+                            new IssueDto(sourceIssue.getId(), sourceIssue.getKey(), sourceIssue.getSummary()) :
+                            new IssueDto(schedule.getSourceIssueId(), i18nHelper.getText("ru.mail.jira.plugins.calendar.schedule.deletedIssueShort"), i18nHelper.getText("ru.mail.jira.plugins.calendar.schedule.deletedIssue")),
+                        schedule.getName(), getScheduleDescription(schedule.getCronExpression(), schedule.getMode()),
+                        new UserDto(creator.getKey(), creator.getName(), creator.getDisplayName()),
+                        schedule.getMode(), schedule.getCronExpression(), schedule.getRunCount(),
+                        calendarUtils.getFormattedDateTime(currentUser, schedule.getLastRun()),
+                        lastCreatedIssue != null ? new IssueDto(lastCreatedIssue.getId(), lastCreatedIssue.getKey(), lastCreatedIssue.getSummary()) : null,
+                        schedule.isDeleted()));
                 }
                 return result;
             }

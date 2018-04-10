@@ -232,7 +232,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                 _.each(gadgetCalendars, function(calendar) {
                     gadget.calendarView.addEventSource(calendar.id, false);
                     calendar.sourceType = calendar.source.split('_')[0];
-                    calendar.sourceId = calendar.source.split('_')[1];
+                    calendar.sourceId = encodeURIComponent(calendar.source.split('_')[1]);
                 });
                 AJS.$('#mailru-calendar-gadget-legend').html(JIRA.Templates.Plugins.MailRuCalendar.calendarLegend({
                     calendars: gadgetCalendars,
