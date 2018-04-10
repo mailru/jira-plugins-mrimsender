@@ -6,7 +6,8 @@ export const properties = {
     groupBy: `${prefix}groupBy`,
     orderBy: `${prefix}orderBy`,
     order: `${prefix}order`,
-    columns: `${prefix}columns`
+    columns: `${prefix}columns`,
+    withUnscheduled: `${prefix}withUnscheduled`
 };
 
 export class PreferenceService {

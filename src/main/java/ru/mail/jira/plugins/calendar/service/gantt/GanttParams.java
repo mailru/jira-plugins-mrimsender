@@ -15,4 +15,6 @@ public class GanttParams {
     private String groupBy;
     private Long sprintId;
     private List<String> fields;
+    private boolean includeUnscheduled;
+    private boolean forPlan;
 }

@@ -61,12 +61,13 @@ public class GanttResource {
         @QueryParam("orderBy") String orderBy,
         @QueryParam("order") SortOrder sortOrder,
         @QueryParam("sprint") Long sprintId,
-        @QueryParam("fields") List<String> fields
+        @QueryParam("fields") List<String> fields,
+        @QueryParam("withUnscheduled") boolean withUnscheduled
     ) {
         return new RestExecutor<GanttDto>() {
             @Override
             protected GanttDto doAction() throws Exception {
-                GanttParams params = new GanttParams(getOrder(orderBy, sortOrder), groupBy, sprintId, fields);
+                GanttParams params = new GanttParams(getOrder(orderBy, sortOrder), groupBy, sprintId, fields, withUnscheduled, false);
 
                 //if sprint is specified, get all issues without date restrictions
                 if (sprintId != null) {
@@ -93,7 +94,7 @@ public class GanttResource {
             protected GanttDto doAction() throws Exception {
                 return planningService.doPlan(
                     authenticationContext.getLoggedInUser(), calendarId, deadline,
-                    new GanttParams(new Order(orderBy, null), groupBy, sprintId, fields)
+                    new GanttParams(new Order(orderBy, null), groupBy, sprintId, fields, true, true)
                 );
             }
         }.getResponse();
