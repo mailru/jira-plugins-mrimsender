@@ -88,7 +88,7 @@ public class PlanningService {
 
         GanttDto ganttData = ganttService.getGantt(
             user, calendarId,
-            new GanttParams(order, params.getGroupBy(), params.getSprintId(), params.getFields())
+            new GanttParams(order, params.getGroupBy(), params.getSprintId(), params.getFields(), true, true)
         );
 
         List<GanttTaskDto> ganttEvents = ganttData.getData();

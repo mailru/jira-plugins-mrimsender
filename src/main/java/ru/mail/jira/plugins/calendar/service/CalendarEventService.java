@@ -375,7 +375,8 @@ public class CalendarEventService {
         boolean includeIssueInfo,
         Order order,
         Long sprintId,
-        List<String> fields
+        List<String> fields,
+        boolean forPlan
     ) throws SearchException {
         String startField = calendar.getEventStart();
         String endField = calendar.getEventEnd();
@@ -386,7 +387,7 @@ public class CalendarEventService {
         List<Issue> issues = searchService
             .search(
                 user,
-                getUnboundedEventsQuery(user, calendar, sprintId, order),
+                getUnboundedEventsQuery(user, calendar, sprintId, order, forPlan),
                 PagerFilter.newPageAlignedFilter(0, 1000)
             )
             .getIssues();
@@ -410,34 +411,36 @@ public class CalendarEventService {
             .collect(Collectors.toList());
     }
 
-    public Query getUnboundedEventsQuery(ApplicationUser user, Calendar calendar, Long sprintId, Order order) {
+    public Query getUnboundedEventsQuery(ApplicationUser user, Calendar calendar, Long sprintId, Order order, boolean forPlan) {
         JqlClauseBuilder queryBuilder = getCalendarQueryBuilder(user, calendar);
         if (queryBuilder == null) {
             throw new RuntimeException("Unable to get calendar query");
         }
 
-        queryBuilder
-            .and()
-            .sub()
-            .sub()
-            .currentEstimate().isNotEmpty();
-
-        String startField = calendar.getEventStart();
-        String endField = calendar.getEventEnd();
-
-        String startFieldClause = getClauseName(startField);
-        String endFieldClause = getClauseName(endField);
-
-        if (startFieldClause != null && endFieldClause != null) {
+        if (forPlan) {
             queryBuilder
-                .or()
+                .and()
                 .sub()
-                .addCondition(startFieldClause).isNotEmpty()
-                .and().addCondition(endFieldClause).isNotEmpty()
-                .endsub();
-        }
+                .sub()
+                .currentEstimate().isNotEmpty();
 
-        queryBuilder.endsub();
+            String startField = calendar.getEventStart();
+            String endField = calendar.getEventEnd();
+
+            String startFieldClause = getClauseName(startField);
+            String endFieldClause = getClauseName(endField);
+
+            if (startFieldClause != null && endFieldClause != null) {
+                queryBuilder
+                    .or()
+                    .sub()
+                    .addCondition(startFieldClause).isNotEmpty()
+                    .and().addCondition(endFieldClause).isNotEmpty()
+                    .endsub();
+            }
+
+            queryBuilder.endsub();
+        }
 
         if (sprintId != null) {
             if (!jiraSoftwareHelper.isAvailable()) {
@@ -450,9 +453,11 @@ public class CalendarEventService {
                 .eq(sprintId);
         }
 
-        queryBuilder
-            .and().resolution().isEmpty()
-            .endsub();
+        if (forPlan) {
+            queryBuilder
+                .and().resolution().isEmpty()
+                .endsub();
+        }
 
         return withOrder(queryBuilder.buildQuery(), order);
     }

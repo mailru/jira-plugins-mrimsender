@@ -61,6 +61,7 @@ export const defaultOptions = {
     orderBy: undefined,
     sprint: undefined,
     order: true,
+    withUnscheduled: false,
     view: views.basic.key,
     columns: [
         {

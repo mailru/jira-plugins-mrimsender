@@ -36,7 +36,7 @@ export class GanttUpdater {
     }
 
     _update = () => {
-        const {startDate, endDate, groupBy, order, orderBy, columns, filter, sprint} = storeService.getOptions();
+        const {startDate, endDate, groupBy, order, orderBy, columns, filter, sprint, withUnscheduled} = storeService.getOptions();
         const calendar = storeService.getCalendar();
         if (storeService.isGanttReady() && calendar) {
             if (
@@ -47,6 +47,7 @@ export class GanttUpdater {
                 this.order !== order ||
                 this.columns !== columns ||
                 this.sprint !== sprint ||
+                this.withUnscheduled !== withUnscheduled ||
                 calendar.id !== (this.calendar || {}).id
             ) {
                 this.startDate = startDate;
@@ -57,6 +58,7 @@ export class GanttUpdater {
                 this.calendar = calendar;
                 this.columns = columns;
                 this.sprint = sprint;
+                this.withUnscheduled = withUnscheduled;
 
                 console.log('loading gantt');
 
@@ -77,7 +79,7 @@ export class GanttUpdater {
                     end: endDate,
                     order: order ? 'ASC' : 'DESC',
                     fields: this.gantt.config.columns.filter(col => col.isJiraField).map(col => col.name),
-                    groupBy, orderBy, sprint
+                    groupBy, orderBy, sprint, withUnscheduled
                 });
 
                 this.gantt.load(`${getPluginBaseUrl()}/gantt/${this.calendar.id}?${param}`);

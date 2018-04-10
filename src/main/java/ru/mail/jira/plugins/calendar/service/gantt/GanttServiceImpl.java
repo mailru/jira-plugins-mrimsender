@@ -93,7 +93,12 @@ public class GanttServiceImpl implements GanttService {
         if (StringUtils.isEmpty(endDate))
             endDate = LocalDate.now().plusMonths(3).format(java.time.format.DateTimeFormatter.ISO_DATE);
 
-        List<EventDto> eventDtoList = calendarEventService.findEvents(calendarId, params.getGroupBy(), startDate, endDate, user, true, params.getOrder(), params.getFields());
+        List<EventDto> eventDtoList;
+        if (params.isIncludeUnscheduled()) {
+            eventDtoList = calendarEventService.getUnboundedEvents(calendar, params.getGroupBy(), user, true, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan());
+        } else {
+            eventDtoList = calendarEventService.findEvents(calendarId, params.getGroupBy(), startDate, endDate, user, true, params.getOrder(), params.getFields());
+        }
 
         return getGantt(eventDtoList, user, calendarId, params.getGroupBy());
     }
@@ -106,7 +111,7 @@ public class GanttServiceImpl implements GanttService {
             throw new SecurityException("No permission");
         }
 
-        return getGantt(calendarEventService.getUnboundedEvents(calendar, params.getGroupBy(), user, true, params.getOrder(), params.getSprintId(), params.getFields()), user, calendarId, params.getGroupBy());
+        return getGantt(calendarEventService.getUnboundedEvents(calendar, params.getGroupBy(), user, true, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan()), user, calendarId, params.getGroupBy());
     }
 
     private GanttDto getGantt(List<EventDto> eventDtoList, ApplicationUser user, int calendarId, String groupBy) {
@@ -495,6 +500,10 @@ public class GanttServiceImpl implements GanttService {
         Date eventStart = event.getStartDate();
         Long originalEstimate = event.getOriginalEstimateSeconds();
         Long timeSpent = event.getTimeSpentSeconds();
+        if (eventStart == null) {
+            ganttTaskDto.setUnscheduled(true);
+        }
+
         if (StringUtils.isNotEmpty(event.getEnd())) {
             ganttTaskDto.setEndDate(event.getEnd());
         } else if (eventStart != null) {
