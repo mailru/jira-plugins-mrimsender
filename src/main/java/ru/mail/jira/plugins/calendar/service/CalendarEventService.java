@@ -989,6 +989,10 @@ public class CalendarEventService {
     }
 
     public EventDto moveEvent(ApplicationUser user, int calendarId, String eventId, String start, String end) throws Exception {
+        return moveEvent(user, calendarId, eventId, start, end, null);
+    }
+
+    public EventDto moveEvent(ApplicationUser user, int calendarId, String eventId, String start, String end, String estimate) throws Exception {
         IssueService.IssueResult issueResult = issueService.getIssue(user, eventId);
         MutableIssue issue = issueResult.getIssue();
         if (!issueService.isEditable(issue, user))
@@ -1035,6 +1039,9 @@ public class CalendarEventService {
             } else
                 issueInputParams.setDueDate(datePickerFormat.format(new Date(endDate.getTime() - MILLIS_IN_DAY)));
         }
+        if (estimate != null) {
+            issueInputParams.setOriginalEstimate(estimate);
+        }
 
         IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(user, issue.getId(), issueInputParams);
         if (!updateValidationResult.isValid())
@@ -1043,6 +1050,8 @@ public class CalendarEventService {
         IssueService.IssueResult updateResult = issueService.update(user, updateValidationResult);
         if (!updateResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
+
+
 
         return buildEvent(
             calendar, null, user, issueService.getIssue(user, eventId).getIssue(), false,

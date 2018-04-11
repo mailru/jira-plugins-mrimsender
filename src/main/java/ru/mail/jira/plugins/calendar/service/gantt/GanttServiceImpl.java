@@ -317,6 +317,35 @@ public class GanttServiceImpl implements GanttService {
         }
     }
 
+    @Override
+    public GanttTaskDto setEstimate(ApplicationUser user, int calendarId, String issueKey, GanttEstimateForm form) throws Exception {
+        EventDto event = calendarEventService.moveEvent(user, calendarId, issueKey, form.getStart(), null, form.getEstimate());
+
+        DateTimeFormatter dateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
+        DateTimeFormatter dateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+
+        ZoneId defaultZoneId = timeZoneManager.getDefaultTimezone().toZoneId();
+        ZoneId userZoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
+
+        BigDecimal secondsPerHour = BigDecimal.valueOf(com.atlassian.core.util.DateUtils.Duration.HOUR.getSeconds());
+        long secondsPerDay = timeTrackingConfiguration.getHoursPerDay().multiply(secondsPerHour).longValueExact();
+        long secondsPerWeek = timeTrackingConfiguration.getDaysPerWeek().multiply(timeTrackingConfiguration.getHoursPerDay()).multiply(secondsPerHour).longValueExact();
+
+        Set<Integer> workingDays = Sets.newHashSet(workingDaysService.getWorkingDays());
+        WorkingTimeDto workingTime = workingDaysService.getWorkingTime();
+
+        Set<java.time.LocalDate> nonWorkingDays = Arrays
+            .stream(workingDaysService.getNonWorkingDays())
+            .map(NonWorkingDay::getDate)
+            .map(date -> date.toInstant().atZone(defaultZoneId))
+            .map(ZonedDateTime::toLocalDate)
+            .collect(Collectors.toSet());
+
+        return buildEvent(
+            event, dateFormat, dateTimeFormat, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, userZoneId, null
+        );
+    }
+
     private boolean isMutableField(String fieldId) {
         if (fieldId == null) {
             return false;
@@ -502,6 +531,8 @@ public class GanttServiceImpl implements GanttService {
         Long timeSpent = event.getTimeSpentSeconds();
         if (eventStart == null) {
             ganttTaskDto.setUnscheduled(true);
+        } else {
+            ganttTaskDto.setUnscheduled(false);
         }
 
         if (StringUtils.isNotEmpty(event.getEnd())) {
@@ -540,8 +571,10 @@ public class GanttServiceImpl implements GanttService {
             }
         }
 
-        if (originalEstimate != null && timeSpent != null)
+        if (originalEstimate != null && originalEstimate > 0 && timeSpent != null) {
+            ganttTaskDto.setEstimateSeconds(originalEstimate);
             ganttTaskDto.setProgress(timeSpent * 1.0 / originalEstimate);
+        }
         if (event.getOriginalEstimate() != null) {
             ganttTaskDto.setEstimate(event.getOriginalEstimate());
         }

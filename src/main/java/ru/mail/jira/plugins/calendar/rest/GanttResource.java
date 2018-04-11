@@ -146,6 +146,21 @@ public class GanttResource {
     }
 
     @POST
+    @Path("{id}/task/{issueKey}/estimate")
+    public Response updateTask(
+        @PathParam("id") final int calendarId,
+        @PathParam("issueKey") final String issueKey,
+        GanttEstimateForm form
+    ) {
+        return new RestExecutor<GanttTaskDto>() {
+            @Override
+            protected GanttTaskDto doAction() throws Exception {
+                return ganttService.setEstimate(authenticationContext.getLoggedInUser(), calendarId, issueKey, form);
+            }
+        }.getResponse();
+    }
+
+    @POST
     @Path("/{id}/applyPlan")
     public Response applyPlan(
         @PathParam("id") int calendarId,

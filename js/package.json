@@ -46,6 +46,7 @@
     "@atlaskit/field-base": "^8.2.1",
     "@atlaskit/field-text": "^4.3.0",
     "@atlaskit/field-text-area": "^1.2.2",
+    "@atlaskit/flag": "^7.0.0",
     "@atlaskit/icon": "^10.12.2",
     "@atlaskit/inline-dialog": "^5.3.2",
     "@atlaskit/layer-manager": "^2.8.2",

@@ -173,6 +173,19 @@
     "@atlaskit/theme" "^2.4.1"
     styled-components "1.4.6 - 3"
 
+"@atlaskit/flag@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/flag/-/flag-7.0.0.tgz#2ac3d8eb4935d530b04933c840aa25f6b0975540"
+  dependencies:
+    "@atlaskit/button" "^7.0.0"
+    "@atlaskit/icon" "^11.0.0"
+    "@atlaskit/layer-manager" "^3.0.0"
+    "@atlaskit/theme" "^3.0.0"
+    babel-runtime "^6.26.0"
+    react-transition-group "^2.2.1"
+    styled-components "1.4.6 - 3"
+    uuid "^3.1.0"
+
 "@atlaskit/icon@^10.12.1", "@atlaskit/icon@^10.12.2":
   version "10.12.2"
   resolved "https://registry.yarnpkg.com/@atlaskit/icon/-/icon-10.12.2.tgz#9d27df9e40582f317a1a9b91a32e9318c19eb18d"

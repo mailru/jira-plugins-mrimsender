@@ -62,7 +62,7 @@ class GanttActionsInternal extends React.Component {
         gantt.attachEvent(
             'onTaskDblClick',
             (id) => {
-                this._openScheduleDialog(id);
+                this._openScheduleDialog(gantt.getTask(id));
                 return true;
             }
         );
@@ -206,7 +206,7 @@ class GanttActionsInternal extends React.Component {
 
     _expandStructure = () => this._updateStructure(true);
 
-    _openScheduleDialog = (taskId) => this.setState({ schedulingTask: taskId }, this._toggleDialog('scheduleTask'));
+    _openScheduleDialog = (task) => this.setState({ schedulingTask: task }, this._toggleDialog('scheduleTask'));
 
     render() {
         const {activeDialog, waitingForPlan, calendars, filter, schedulingTask} = this.state;
@@ -221,7 +221,7 @@ class GanttActionsInternal extends React.Component {
                     <ScheduleDialog
                         gantt={gantt}
                         onClose={this._toggleDialog('scheduleTask')}
-                        taskId={schedulingTask}
+                        task={schedulingTask}
                     />
                 }
                 {/*<PageHeader>
