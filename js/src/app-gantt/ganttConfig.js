@@ -41,6 +41,9 @@ export const config = {
     open_tree_initially: true,
     static_background: false,
     show_unscheduled: true,
+    auto_scheduling: true,
+    auto_scheduling_strict: true,
+    auto_scheduling_initial: false,
     //show_task_cells: false,
 
     layout: {
