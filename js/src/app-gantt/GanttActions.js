@@ -24,8 +24,9 @@ import CheckIcon from '@atlaskit/icon/glyph/check';
 import VidFullScreenOnIcon from '@atlaskit/icon/glyph/vid-full-screen-on';
 import VidFullScreenOffIcon from '@atlaskit/icon/glyph/vid-full-screen-off';
 
+import {ScheduleDialog} from './ScheduleDialog';
 import {keyedConfigs, scaleConfigs} from './scaleConfigs';
-import {viewItems, views} from './views';
+import {viewItems} from './views';
 
 import {OptionsDialog} from './OptionsDialog';
 import {DatesDialog} from './DatesDialog';
@@ -51,8 +52,21 @@ class GanttActionsInternal extends React.Component {
         activeDialog: null,
         waitingForPlan: false,
         calendars: null,
-        filter: ''
+        filter: '',
+        schedulingTask: null
     };
+
+    componentDidMount() {
+        const {gantt} = this.props;
+
+        gantt.attachEvent(
+            'onTaskDblClick',
+            (id) => {
+                this._openScheduleDialog(gantt.getTask(id));
+                return true;
+            }
+        );
+    }
 
     _applyPlan = () => {
         const {gantt, calendar, options} = this.props;
@@ -192,8 +206,10 @@ class GanttActionsInternal extends React.Component {
 
     _expandStructure = () => this._updateStructure(true);
 
+    _openScheduleDialog = (task) => this.setState({ schedulingTask: task }, this._toggleDialog('scheduleTask'));
+
     render() {
-        const {activeDialog, waitingForPlan, calendars, filter} = this.state;
+        const {activeDialog, waitingForPlan, calendars, filter, schedulingTask} = this.state;
         const {options, calendar, sprints, gantt} = this.props;
 
         const currentSprint = options.sprint ?
@@ -201,6 +217,13 @@ class GanttActionsInternal extends React.Component {
 
         return (
             <div className="gantt-actions">
+                {activeDialog === 'scheduleTask' &&
+                    <ScheduleDialog
+                        gantt={gantt}
+                        onClose={this._toggleDialog('scheduleTask')}
+                        task={schedulingTask}
+                    />
+                }
                 {/*<PageHeader>
                     {calendar && i18n.calendarTitle(calendar.selectedName)}
                 </PageHeader>*/}

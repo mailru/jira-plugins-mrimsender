@@ -40,6 +40,7 @@ export const config = {
     smart_scales: true,
     open_tree_initially: true,
     static_background: false,
+    show_unscheduled: true,
     //show_task_cells: false,
 
     layout: {
@@ -182,6 +183,15 @@ export const templates = {
 
         return classes.join(' ');
     },
+    grid_row_class: (_start, _end, task) => {
+        const classes = [];
+
+        if (task.unscheduled) {
+            classes.push('unscheduled');
+        }
+
+        return classes.join(' ');
+    },
     task_text: () => '',
     leftside_text: (_start, end, task) => {
         const overdueSeconds = task.overdueSeconds;
@@ -201,5 +211,5 @@ export const templates = {
             return `Overdue: ${task.overdueDays} days`;
         }
         return '';
-    }
+    },
 };

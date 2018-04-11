@@ -32,6 +32,8 @@ public class GanttTaskDto extends GanttTaskForm {
     @XmlElement
     private String estimate;
     @XmlElement
+    private Long estimateSeconds;
+    @XmlElement
     private String parent;
     @XmlElement
     private boolean movable;
@@ -53,6 +55,8 @@ public class GanttTaskDto extends GanttTaskForm {
     private Long earlySeconds;
     @XmlElement
     private Boolean open;
+    @XmlElement
+    private Boolean unscheduled;
     private EventDto originalEvent;
 
     @Override

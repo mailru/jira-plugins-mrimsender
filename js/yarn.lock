@@ -51,6 +51,17 @@
     styled-components "1.4.6 - 3"
     uuid "^3.1.0"
 
+"@atlaskit/checkbox@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/checkbox/-/checkbox-2.0.0.tgz#698e2f4ca6dec7a4c8142abdcd8052c400cacc1f"
+  dependencies:
+    "@atlaskit/button" "^7.0.0"
+    "@atlaskit/icon" "^11.0.0"
+    "@atlaskit/theme" "^3.0.0"
+    babel-runtime "^6.26.0"
+    prop-types "^15.5.10"
+    styled-components "1.4.6 - 3"
+
 "@atlaskit/css-reset@^1.2.3":
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/@atlaskit/css-reset/-/css-reset-1.2.3.tgz#001690620e4c1602b0cd12951ae016add121678c"
@@ -161,6 +172,19 @@
     "@atlaskit/field-base" "^8.2.1"
     "@atlaskit/theme" "^2.4.1"
     styled-components "1.4.6 - 3"
+
+"@atlaskit/flag@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/flag/-/flag-7.0.0.tgz#2ac3d8eb4935d530b04933c840aa25f6b0975540"
+  dependencies:
+    "@atlaskit/button" "^7.0.0"
+    "@atlaskit/icon" "^11.0.0"
+    "@atlaskit/layer-manager" "^3.0.0"
+    "@atlaskit/theme" "^3.0.0"
+    babel-runtime "^6.26.0"
+    react-transition-group "^2.2.1"
+    styled-components "1.4.6 - 3"
+    uuid "^3.1.0"
 
 "@atlaskit/icon@^10.12.1", "@atlaskit/icon@^10.12.2":
   version "10.12.2"
@@ -336,6 +360,15 @@
   dependencies:
     prop-types "^15.5.10"
     styled-components "1.4.6 - 3"
+
+"@atlaskit/toggle@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/toggle/-/toggle-3.0.0.tgz#bed9d2710a2367e996dcd6834992b2a9ba1d9a76"
+  dependencies:
+    "@atlaskit/icon" "^11.0.0"
+    "@atlaskit/theme" "^3.0.0"
+    styled-components "1.4.6 - 3"
+    uuid "^3.1.0"
 
 "@atlaskit/tooltip@^8.4.1":
   version "8.4.1"

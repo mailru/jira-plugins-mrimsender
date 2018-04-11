@@ -61,12 +61,13 @@ public class GanttResource {
         @QueryParam("orderBy") String orderBy,
         @QueryParam("order") SortOrder sortOrder,
         @QueryParam("sprint") Long sprintId,
-        @QueryParam("fields") List<String> fields
+        @QueryParam("fields") List<String> fields,
+        @QueryParam("withUnscheduled") boolean withUnscheduled
     ) {
         return new RestExecutor<GanttDto>() {
             @Override
             protected GanttDto doAction() throws Exception {
-                GanttParams params = new GanttParams(getOrder(orderBy, sortOrder), groupBy, sprintId, fields);
+                GanttParams params = new GanttParams(getOrder(orderBy, sortOrder), groupBy, sprintId, fields, withUnscheduled, false);
 
                 //if sprint is specified, get all issues without date restrictions
                 if (sprintId != null) {
@@ -93,7 +94,7 @@ public class GanttResource {
             protected GanttDto doAction() throws Exception {
                 return planningService.doPlan(
                     authenticationContext.getLoggedInUser(), calendarId, deadline,
-                    new GanttParams(new Order(orderBy, null), groupBy, sprintId, fields)
+                    new GanttParams(new Order(orderBy, null), groupBy, sprintId, fields, true, true)
                 );
             }
         }.getResponse();
@@ -140,6 +141,21 @@ public class GanttResource {
             @Override
             protected List<GanttTaskDto> doAction() throws Exception {
                 return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, updateDto.getStartDate(), updateDto.getEndDate());
+            }
+        }.getResponse();
+    }
+
+    @POST
+    @Path("{id}/task/{issueKey}/estimate")
+    public Response updateTask(
+        @PathParam("id") final int calendarId,
+        @PathParam("issueKey") final String issueKey,
+        GanttEstimateForm form
+    ) {
+        return new RestExecutor<GanttTaskDto>() {
+            @Override
+            protected GanttTaskDto doAction() throws Exception {
+                return ganttService.setEstimate(authenticationContext.getLoggedInUser(), calendarId, issueKey, form);
             }
         }.getResponse();
     }
