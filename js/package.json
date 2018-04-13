@@ -44,7 +44,7 @@
     "@atlaskit/datetime-picker": "^2.0.3",
     "@atlaskit/dropdown-menu": "^3.12.1",
     "@atlaskit/field-base": "^8.2.1",
-    "@atlaskit/field-text": "^4.3.0",
+    "@atlaskit/field-text": "^5.0.0",
     "@atlaskit/field-text-area": "^1.2.2",
     "@atlaskit/flag": "^7.0.0",
     "@atlaskit/icon": "^10.12.2",
