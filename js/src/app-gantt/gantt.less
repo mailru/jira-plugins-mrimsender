@@ -207,17 +207,8 @@
 
 @selected-row-bg-color: @ak-color-N20;
 
-//selected row
-.gantt_grid_data .gantt_row.gantt_selected,
-.gantt_grid_data .gantt_row.odd.gantt_selected,
-.gantt_task_row.gantt_selected,
-.gantt_grid_data .gantt_row:hover,
-.gantt_grid_data .gantt_row.odd:hover {
+.gantt_task_row.gantt_selected {
   background-color: @selected-row-bg-color;
-
-  .gantt_cell:after {
-    .cell-overflow-background(@selected-row-bg-color);
-  }
 }
 
 .gantt_task_row.gantt_selected .gantt_task_cell {
@@ -232,7 +223,20 @@
 
 //row
 
-.gantt_row {
+.gantt_grid_data .gantt_row {
+  border-top: 1px solid transparent;
+
+  &.gantt_selected,
+  &.odd.gantt_selected,
+  &:hover,
+  &.odd:hover {
+    background-color: @selected-row-bg-color;
+
+    .gantt_cell:after {
+      .cell-overflow-background(@selected-row-bg-color);
+    }
+  }
+
   &.unscheduled {
     font-weight: bold;
     color: @ak-color-R500;
@@ -240,6 +244,12 @@
     .gantt_cell {
       color: @ak-color-R500;
     }
+  }
+
+  &:focus {
+    box-shadow: none;
+    border-color: @ak-color-B100;
+    outline: none;
   }
 }
 

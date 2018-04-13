@@ -44,6 +44,7 @@ export const config = {
     auto_scheduling: true,
     auto_scheduling_strict: true,
     auto_scheduling_initial: false,
+    keyboard_navigation: true,
     //show_task_cells: false,
 
     layout: {

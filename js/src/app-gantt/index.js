@@ -26,6 +26,8 @@ import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_marker';
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_smart_rendering';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_auto_scheduling';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_keyboard_navigation';
 
 
 import {GanttActions} from './GanttActions';
@@ -58,6 +60,39 @@ gantt.templates = {
 for (const key of Object.keys(eventListeners)) {
     gantt.attachEvent(key, eventListeners[key]);
 }
+
+gantt.removeShortcut('enter', 'taskRow');
+gantt.removeShortcut('ctrl+enter', 'taskRow');
+gantt.removeShortcut('ctrl+z', 'taskRow');
+gantt.removeShortcut('ctrl+r', 'taskRow');
+gantt.removeShortcut('space', 'taskRow');
+gantt.removeShortcut('delete', 'taskRow');
+
+gantt.addShortcut(
+    'space',
+    e => {
+        const taskId = gantt.locate(e);
+
+        if (taskId) {
+            const task = gantt.getTask(taskId);
+
+            if (task.type === 'group') {
+                if (task.$open) {
+                    gantt.close(taskId);
+                } else {
+                    gantt.open(taskId);
+                }
+            } else {
+                if (gantt.getSelectedId() !== taskId) {
+                    gantt.selectTask(taskId);
+                } else {
+                    gantt.unselectTask(taskId);
+                }
+            }
+        }
+    },
+    'taskRow'
+);
 
 // todo обработка попадания на выходные конца или начала таска
 // gantt.attachEvent('onTaskDrag', function(id, mode, task, original) {

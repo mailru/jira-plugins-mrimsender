@@ -66,6 +66,17 @@ class GanttActionsInternal extends React.Component {
                 return true;
             }
         );
+
+        gantt.addShortcut(
+            'enter',
+            e => {
+                const taskId = gantt.locate(e);
+                if (taskId) {
+                    this._openScheduleDialog(gantt.getTask(taskId));
+                }
+            },
+            'taskRow'
+        );
     }
 
     _applyPlan = () => {
@@ -206,7 +217,11 @@ class GanttActionsInternal extends React.Component {
 
     _expandStructure = () => this._updateStructure(true);
 
-    _openScheduleDialog = (task) => this.setState({ schedulingTask: task }, this._toggleDialog('scheduleTask'));
+    _openScheduleDialog = (task) => {
+        if (task.type !== 'group') {
+            this.setState({schedulingTask: task}, this._toggleDialog('scheduleTask'));
+        }
+    };
 
     render() {
         const {activeDialog, waitingForPlan, calendars, filter, schedulingTask} = this.state;
