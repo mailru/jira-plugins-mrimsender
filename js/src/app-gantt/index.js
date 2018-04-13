@@ -142,8 +142,24 @@ AJS.toInit(function() {
         new GanttUpdater(gantt, store);
         new LayoutUpdater(gantt, store);
 
+        const resourcesStore = gantt.createDatastore({
+            name: gantt.config.resource_store,
+            type: 'treeDatastore',
+            initItem: function (item) {
+                item.parent = item.parent || gantt.config.root_id;
+                item[gantt.config.resource_property] = item.parent;
+                item.open = true;
+                return item;
+            }
+        });
+
+        gantt.attachEvent('onBeforeParse', () => {
+            gantt.serverList('resources');
+        });
+
         gantt.attachEvent('onParse', () => {
             scaleUpdater.updateScales();
+            resourcesStore.parse(gantt.serverList('resources'));
         });
 
         /* Router */

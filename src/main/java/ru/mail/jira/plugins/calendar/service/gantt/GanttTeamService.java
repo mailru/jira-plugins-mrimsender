@@ -1,4 +1,4 @@
-package ru.mail.jira.plugins.calendar.service;
+package ru.mail.jira.plugins.calendar.service.gantt;
 
 import com.atlassian.activeobjects.tx.Transactional;
 import com.atlassian.jira.exception.GetException;
@@ -23,7 +23,7 @@ public interface GanttTeamService {
 
     List<GanttTeamDto> deleteTeam(ApplicationUser currentUser, int id) throws GetException;
 
-    List<UserDto> findUsers(int teamId, String filter) throws GetException;
+    List<UserDto> findUsers(int calendarId, String filter) throws GetException;
 
     List<GanttTeamDto> addUsers(ApplicationUser currentUser, int teamId, List<UserDto> selectedUsers) throws GetException;
 

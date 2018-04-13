@@ -5,12 +5,10 @@ import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.mail.jira.plugins.calendar.model.gantt.GanttTeam;
-import ru.mail.jira.plugins.calendar.model.gantt.GanttUser;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttTeamDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttUserDto;
-import ru.mail.jira.plugins.calendar.service.GanttTeamService;
+import ru.mail.jira.plugins.calendar.service.gantt.GanttTeamService;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
@@ -99,15 +97,15 @@ public class RestGanttTeamService {
     }
 
     @GET
-    @Path("/{id}/findUsers")
-    public Response findUsers(@PathParam("id") final int teamId,
+    @Path("/findUsers")
+    public Response findUsers(@QueryParam("calendarId") final int calendarId,
                               @QueryParam("filter") final String filter) {
         return new RestExecutor<List<UserDto>>() {
             @Override
             protected List<UserDto> doAction() throws Exception {
                 licenseService.checkLicense();
 
-                return ganttTeamService.findUsers(teamId, filter);
+                return ganttTeamService.findUsers(calendarId, filter);
             }
         }.getResponse();
     }

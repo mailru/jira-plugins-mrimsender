@@ -23,11 +23,14 @@ export class LayoutUpdater {
             const viewObject = views[view];
 
             //avoid unnecessary re-renders
-            const showGrid = viewObject.panels.grid;
-            if (this.gantt.config.show_grid !== showGrid) {
-                this.gantt.config.show_grid = showGrid;
-                render = true;
-            }
+            // const showGrid = viewObject.panels.grid;
+            // if (this.gantt.config.show_grid !== showGrid) {
+            //     this.gantt.config.show_grid = showGrid;
+            //     render = true;
+            // }
+
+            this.gantt.config.layout.rows = viewObject.rows;
+            render = true;
         }
 
         if (render && storeService.isGanttReady()) {

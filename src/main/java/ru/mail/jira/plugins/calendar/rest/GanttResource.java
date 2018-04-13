@@ -10,7 +10,6 @@ import com.atlassian.query.order.SortOrder;
 import ru.mail.jira.plugins.calendar.planning.PlanningService;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.*;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanForm;
-import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.Order;
 import ru.mail.jira.plugins.calendar.service.gantt.GanttParams;
 import ru.mail.jira.plugins.calendar.service.gantt.GanttService;
@@ -29,22 +28,19 @@ import java.util.*;
 @Produces(MediaType.APPLICATION_JSON)
 public class GanttResource {
     private final JiraAuthenticationContext authenticationContext;
-    private final CalendarEventService calendarEventService;
     private final SprintSearcher sprintSearcher;
     private final GanttService ganttService;
     private final PlanningService planningService;
     private final JiraSoftwareHelper jiraSoftwareHelper;
 
     public GanttResource(
-        @ComponentImport JiraAuthenticationContext authenticationContext,
-        CalendarEventService calendarEventService,
-        SprintSearcher sprintSearcher,
-        GanttService ganttService,
-        PlanningService planningService,
-        JiraSoftwareHelper jiraSoftwareHelper
+            @ComponentImport JiraAuthenticationContext authenticationContext,
+            SprintSearcher sprintSearcher,
+            GanttService ganttService,
+            PlanningService planningService,
+            JiraSoftwareHelper jiraSoftwareHelper
     ) {
         this.authenticationContext = authenticationContext;
-        this.calendarEventService = calendarEventService;
         this.sprintSearcher = sprintSearcher;
         this.ganttService = ganttService;
         this.planningService = planningService;

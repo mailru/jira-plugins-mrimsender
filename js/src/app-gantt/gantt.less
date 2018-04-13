@@ -337,6 +337,38 @@
   }
 }
 
+.resource_marker,
+.resource_marker_min {
+  text-align: center;
+}
+.resource_marker div{
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  display: inline-block;
+  border-radius: 14px;
+  color: #FFF;
+}
+
+.resource_marker_min div {
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  display: inline-block;
+  border-radius: 10px;
+  color: #FFF;
+}
+
+.resource_marker.workday_ok div,
+.resource_marker_min.workday_ok div {
+  background: #51c185;
+}
+
+.resource_marker.workday_over div,
+.resource_marker_min.workday_over div {
+  background: #ff8686;
+}
+
 #footer {
   display: none;
 }

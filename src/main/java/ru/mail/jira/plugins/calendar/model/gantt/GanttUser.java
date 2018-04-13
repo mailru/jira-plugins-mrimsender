@@ -9,6 +9,9 @@ public interface GanttUser extends Entity {
     String getKey();
     void setKey(String key);
 
-    @ManyToMany(value = GanttUserToGanttTeam.class)
-    GanttTeam[] getTeams();
+    Integer getWeeklyHours();
+    void setWeeklyHours(Integer weeklyHours);
+
+    GanttTeam getTeam();
+    void setTeam(GanttTeam team);
 }

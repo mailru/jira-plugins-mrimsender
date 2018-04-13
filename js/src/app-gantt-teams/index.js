@@ -10,10 +10,6 @@ import AJS from 'AJS';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import Backbone from 'backbone';
 
-import 'dhtmlx-gantt';
-import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_marker';
-import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_smart_rendering';
-
 import {GanttTeams} from './GanttTeams';
 
 import {collectTopMailCounterScript} from '../common/top-mail-ru';
@@ -37,7 +33,7 @@ AJS.toInit(function() {
                 calendarService
                     .getCalendar(id)
                     .then(calendar => {
-                        store.dispatch(CalendarActionCreators.setCalendar({...calendar, id}));
+                        store.dispatch(CalendarActionCreators.setCalendar({...calendar, id}, []));
                     });
                 ganttTeamService
                     .getTeams(id)

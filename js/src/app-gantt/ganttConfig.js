@@ -27,6 +27,36 @@ export function buildColumns(names) {
     });
 }
 
+export const resourceConfig = {
+    columns: [
+        {
+            name: 'name', label: 'Name', tree:true, template: function (resource) {
+                return resource.text;
+            }
+        },
+        {
+            name: 'workload', label: 'Workload', template: function (resource) {
+                let tasks;
+                let store = gantt.getDatastore(gantt.config.resource_store),
+                    field = gantt.config.resource_property;
+
+                if(store.hasChild(resource.id)){
+                    tasks = gantt.getTaskBy(field, store.getChildren(resource.id));
+                }else{
+                    tasks = gantt.getTaskBy(field, resource.id);
+                }
+
+                let totalDuration = 0;
+                for (let i = 0; i < tasks.length; i++) {
+                    totalDuration += tasks[i].duration;
+                }
+
+                return (totalDuration || 0) * 8 + 'h';
+            }
+        }
+    ]
+};
+
 export const config = {
     min_duration: 24 * 60 * 60 * 1000, // minimum task duration : 1 day
 
@@ -41,6 +71,8 @@ export const config = {
     open_tree_initially: true,
     static_background: false,
     //show_task_cells: false,
+    resource_store: 'resources',
+    resource_property: 'resource',
 
     layout: {
         css: 'gantt_container',
@@ -101,7 +133,7 @@ function createBox(sizes, class_name) {
     return box;
 }
 
-gantt.addTaskLayer((task) => {
+gantt && gantt.addTaskLayer((task) => {
     if (!task.$open && gantt.hasChild(task.id)) {
         const el = document.createElement('div'),
             sizes = gantt.getTaskPosition(task);
@@ -201,5 +233,22 @@ export const templates = {
             return `Overdue: ${task.overdueDays} days`;
         }
         return '';
+    },
+    resource_cell_class: (_start, _end, resource, tasks) => {
+        let css = [];
+        if (gantt.getScale().col_width > 20) {
+            css.push('resource_marker');
+        } else {
+            css.push('resource_marker_min');
+        }
+        if (tasks.length <= 1) {
+            css.push('workday_ok');
+        } else {
+            css.push('workday_over');
+        }
+        return css.join(' ');
+    },
+    resource_cell_value: (_start, _end, resource, tasks) => {
+        return '<div>' + tasks.length * 8 + '</div>';
     }
 };

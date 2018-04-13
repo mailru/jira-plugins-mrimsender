@@ -20,7 +20,7 @@ export class GanttTeamService {
     }
 
     findUsers(team, filter) {
-        return ajaxGet(`${getPluginBaseUrl()}/gantt/team/${team.id}/findUsers?filter=${filter}`);
+        return ajaxGet(`${getPluginBaseUrl()}/gantt/team/findUsers?filter=${filter}&&calendarId=${team.calendarId}`);
     }
 
     addUsers(team, users) {

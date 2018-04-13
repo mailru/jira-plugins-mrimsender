@@ -1,4 +1,4 @@
-package ru.mail.jira.plugins.calendar.service;
+package ru.mail.jira.plugins.calendar.service.gantt;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.jira.avatar.AvatarService;
@@ -19,13 +19,13 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.gantt.GanttUser;
 import ru.mail.jira.plugins.calendar.model.gantt.GanttTeam;
-import ru.mail.jira.plugins.calendar.model.gantt.GanttUserToGanttTeam;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttUserDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttTeamDto;
+import ru.mail.jira.plugins.calendar.service.CalendarService;
+import ru.mail.jira.plugins.calendar.service.PermissionService;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -115,15 +115,6 @@ public class GanttTeamServiceImpl implements GanttTeamService {
         return userDto;
     };
 
-    private GanttUserToGanttTeam getUserToTeam(int teamId, int userId) {
-        GanttUserToGanttTeam[] userToTeams = ao.find(GanttUserToGanttTeam.class, Query.select().where("USER_ID = ? AND TEAM_ID = ?", userId, teamId));
-        if (userToTeams.length == 0)
-            return null;
-        if (userToTeams.length > 1)
-            throw new IllegalArgumentException("More than one gantt user for one team");
-        return userToTeams[0];
-    }
-
     @Override
     public GanttTeam getTeam(final int id) throws GetException {
         GanttTeam team = ao.get(GanttTeam.class, id);
@@ -146,9 +137,7 @@ public class GanttTeamServiceImpl implements GanttTeamService {
                     userDto.setKey(jiraUser.getKey());
                     userDto.setDisplayName(jiraUser.getDisplayName());
                     userDto.setAvatarUrl(avatarService.getAvatarURL(jiraUser, jiraUser).toString());
-                    GanttUserToGanttTeam userToTeam = getUserToTeam(team.getID(), user.getID());
-                    if (userToTeam != null && userToTeam.getWeeklyHours() != null)
-                        userDto.setWeeklyHours(userToTeam.getWeeklyHours().toString());
+                    userDto.setWeeklyHours(user.getWeeklyHours() == null ? "40" : user.getWeeklyHours().toString());
                     userDtos.add(userDto);
                 }
             }
@@ -197,11 +186,13 @@ public class GanttTeamServiceImpl implements GanttTeamService {
     }
 
     @Override
-    public List<UserDto> findUsers(int teamId, String filter) throws GetException {
-        GanttTeam team = getTeam(teamId);
-        List<String> teamUsersKeys = Arrays.stream(team.getUsers())
-                                   .map(GanttUser::getKey)
-                                   .collect(Collectors.toList());
+    public List<UserDto> findUsers(int calendarId, String filter) {
+        List<String> teamUsersKeys = new ArrayList<>();
+        for (GanttTeamDto team : getTeams(calendarId)) {
+            teamUsersKeys.addAll(team.getUsers().stream()
+                                                .map(GanttUserDto::getKey)
+                                                .collect(Collectors.toList()));
+        }
         return userSearchService.findUsers(filter, new UserSearchParams(true, true, false, true, null, null))
                                 .stream()
                                 .filter(user -> !teamUsersKeys.contains(user.getKey()))
@@ -221,12 +212,9 @@ public class GanttTeamServiceImpl implements GanttTeamService {
             if (user == null) {
                 user = ao.create(GanttUser.class);
                 user.setKey(selectedUser.getKey());
+                user.setTeam(team);
                 user.save();
             }
-            GanttUserToGanttTeam userToTeam = ao.create(GanttUserToGanttTeam.class);
-            userToTeam.setUser(user);
-            userToTeam.setTeam(team);
-            userToTeam.save();
         }
         return getTeams(team.getCalendarId());
     }
@@ -237,12 +225,7 @@ public class GanttTeamServiceImpl implements GanttTeamService {
         Calendar calendar = calendarService.getCalendar(team.getCalendarId());
         if (!permissionService.hasAdminPermission(currentUser, calendar))
             throw new SecurityException("No permission to edit team");
-        GanttUser user = getUser(userId);
-        GanttUserToGanttTeam userToTeam = getUserToTeam(teamId, userId);
-        if (userToTeam != null)
-            ao.delete(userToTeam);
-        if (user.getTeams().length == 0)
-            ao.delete(user);
+        ao.delete(getUser(userId));
         return getTeams(team.getCalendarId());
     }
 
@@ -253,12 +236,9 @@ public class GanttTeamServiceImpl implements GanttTeamService {
         if (!permissionService.hasAdminPermission(currentUser, calendar))
             throw new SecurityException("No permission to edit user");
         validateUser(currentUser, userDto);
-        GanttUserToGanttTeam userToTeam = getUserToTeam(teamId, userId);
-        if (userToTeam != null) {
-
-            userToTeam.setWeeklyHours(Integer.parseInt(userDto.getWeeklyHours()));
-            userToTeam.save();
-        }
+        GanttUser user = getUser(userId);
+        user.setWeeklyHours(Integer.parseInt(userDto.getWeeklyHours()));
+        user.save();
         return getTeams(team.getCalendarId());
     }
 
