@@ -12,6 +12,7 @@ import Button, {ButtonGroup} from '@atlaskit/button';
 import InlineDialog from '@atlaskit/inline-dialog';
 import DropdownMenu, { DropdownItemGroupRadio, DropdownItemRadio } from '@atlaskit/dropdown-menu';
 import Spinner from '@atlaskit/spinner';
+import Tooltip from '@atlaskit/tooltip';
 
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import MediaServicesZoomInIcon from '@atlaskit/icon/glyph/media-services/zoom-in';
@@ -23,7 +24,10 @@ import JiraLabsIcon from '@atlaskit/icon/glyph/jira/labs';
 import FilterIcon from '@atlaskit/icon/glyph/filter';
 import PeopleGroupIcon from '@atlaskit/icon/glyph/people-group';
 import CheckIcon from '@atlaskit/icon/glyph/check';
+import VidFullScreenOnIcon from '@atlaskit/icon/glyph/vid-full-screen-on';
+import VidFullScreenOffIcon from '@atlaskit/icon/glyph/vid-full-screen-off';
 
+import {ScheduleDialog} from './ScheduleDialog';
 import {keyedConfigs, scaleConfigs} from './scaleConfigs';
 import {viewItems} from './views';
 
@@ -51,8 +55,21 @@ class GanttActionsInternal extends React.Component {
         activeDialog: null,
         waitingForPlan: false,
         calendars: null,
-        filter: ''
+        filter: '',
+        schedulingTask: null
     };
+
+    componentDidMount() {
+        const {gantt} = this.props;
+
+        gantt.attachEvent(
+            'onTaskDblClick',
+            (id) => {
+                this._openScheduleDialog(gantt.getTask(id));
+                return true;
+            }
+        );
+    }
 
     _applyPlan = () => {
         const {gantt, calendar, options} = this.props;
@@ -182,8 +199,24 @@ class GanttActionsInternal extends React.Component {
 
     _selectSprint = (sprint) => () => this.props.updateOptions({ sprint });
 
+    _updateStructure = (isOpen) => {
+        const {gantt} = this.props;
+
+        gantt.eachTask(function(task){
+            task.$open = isOpen;
+        });
+
+        gantt.render();
+    };
+
+    _collapseStructure = () => this._updateStructure(false);
+
+    _expandStructure = () => this._updateStructure(true);
+
+    _openScheduleDialog = (task) => this.setState({ schedulingTask: task }, this._toggleDialog('scheduleTask'));
+
     render() {
-        const {activeDialog, waitingForPlan, calendars, filter} = this.state;
+        const {activeDialog, waitingForPlan, calendars, filter, schedulingTask} = this.state;
         const {options, calendar, sprints, gantt} = this.props;
 
         const currentSprint = options.sprint ?
@@ -191,6 +224,13 @@ class GanttActionsInternal extends React.Component {
 
         return (
             <div className="gantt-actions">
+                {activeDialog === 'scheduleTask' &&
+                    <ScheduleDialog
+                        gantt={gantt}
+                        onClose={this._toggleDialog('scheduleTask')}
+                        task={schedulingTask}
+                    />
+                }
                 {/*<PageHeader>
                     {calendar && i18n.calendarTitle(calendar.selectedName)}
                 </PageHeader>*/}
@@ -367,7 +407,19 @@ class GanttActionsInternal extends React.Component {
                         }
                     </ButtonGroup>
                     <div className="flex-grow"/>
-                    <ButtonGroup>
+                    <ButtonGroup appearance="subtle">
+                        <Tooltip content="Развернуть структуру">
+                            <Button
+                                iconBefore={<VidFullScreenOnIcon label="Expand"/>}
+                                onClick={this._expandStructure}
+                            />
+                        </Tooltip>
+                        <Tooltip content="Свернуть структуру">
+                            <Button
+                                iconBefore={<VidFullScreenOffIcon label="Collapse"/>}
+                                onClick={this._collapseStructure}
+                            />
+                        </Tooltip>
                         <InlineDialog
                             position="bottom right"
                             isOpen={activeDialog === 'params'}

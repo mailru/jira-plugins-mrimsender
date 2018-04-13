@@ -49,11 +49,11 @@ public class SprintSearcher {
     public List<SprintDto> findSprintsForCalendar(ApplicationUser user, int calendarId) throws SearchException, GetException {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
-        if (!permissionService.hasUsePermission(user, calendar)) {
+        if (!permissionService.hasUsePermission(user, calendar) && !permissionService.hasAdminPermission(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
-        Query query = calendarEventService.getUnboundedEventsQuery(user, calendar, null, null);
+        Query query = calendarEventService.getUnboundedEventsQuery(user, calendar, null, null, false);
 
         IndexSearcher searcher = searchProviderFactory.getSearcher(SearchProviderFactory.ISSUE_INDEX);
 

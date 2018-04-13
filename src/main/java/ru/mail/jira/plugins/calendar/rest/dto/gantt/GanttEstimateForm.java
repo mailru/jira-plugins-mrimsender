@@ -8,11 +8,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @Getter @Setter
 @XmlRootElement
-public class GanttTaskForm {
-    @XmlElement(name = "start_date")
-    private String startDate;
-    @XmlElement(name = "end_date")
-    private String endDate;
+public class GanttEstimateForm {
     @XmlElement
-    private int duration;
+    private String start;
+    @XmlElement
+    private String estimate;
 }

@@ -24,6 +24,9 @@ import 'dhtmlx-gantt';
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_marker';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_smart_rendering';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_auto_scheduling';
+
 
 import {GanttActions} from './GanttActions';
 import {config, templates} from './ganttConfig';

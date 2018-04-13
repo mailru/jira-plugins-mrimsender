@@ -336,9 +336,7 @@
         <resource type="download" name="gantt.css" location="ru/mail/jira/plugins/calendar/css/gantt.css"/>
         <resource type="download" name="i18n.js" location="ru/mail/jira/plugins/calendar/gantt/i18n.js"/>
         <resource type="download" name="common.js" location="ru/mail/jira/plugins/calendar/js/common.js"/>
-        <resource type="download" name="common.js.map" location="ru/mail/jira/plugins/calendar/js/common.js.map"/>
         <resource type="download" name="gantt.js" location="ru/mail/jira/plugins/calendar/js/gantt.js"/>
-        <resource type="download" name="gantt.js.map" location="ru/mail/jira/plugins/calendar/js/gantt.js.map"/>
     </web-resource>
 
     <web-resource key="gantt-old-resources">

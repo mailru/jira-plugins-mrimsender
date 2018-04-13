@@ -70,6 +70,10 @@ export const config = {
     smart_scales: true,
     open_tree_initially: true,
     static_background: false,
+    show_unscheduled: true,
+    auto_scheduling: true,
+    auto_scheduling_strict: true,
+    auto_scheduling_initial: false,
     //show_task_cells: false,
     resource_store: 'resources',
     resource_property: 'resource',
@@ -214,6 +218,15 @@ export const templates = {
 
         return classes.join(' ');
     },
+    grid_row_class: (_start, _end, task) => {
+        const classes = [];
+
+        if (task.unscheduled) {
+            classes.push('unscheduled');
+        }
+
+        return classes.join(' ');
+    },
     task_text: () => '',
     leftside_text: (_start, end, task) => {
         const overdueSeconds = task.overdueSeconds;
@@ -250,5 +263,5 @@ export const templates = {
     },
     resource_cell_value: (_start, _end, resource, tasks) => {
         return '<div>' + tasks.length * 8 + '</div>';
-    }
+    },
 };

@@ -20,16 +20,22 @@ import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttLinkDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttTaskDto;
 import ru.mail.jira.plugins.calendar.service.Order;
+import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
 import ru.mail.jira.plugins.calendar.service.gantt.GanttParams;
 import ru.mail.jira.plugins.calendar.service.gantt.GanttService;
-import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
 import ru.mail.jira.plugins.calendar.util.GanttLinkType;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -46,13 +52,13 @@ public class PlanningService {
 
     @Autowired
     public PlanningService(
-        @ComponentImport DateTimeFormatter dateTimeFormatter,
-        @ComponentImport TimeZoneManager timeZoneManager,
-        @ComponentImport PriorityManager priorityManager,
-        JiraSoftwareHelper jiraSoftwareHelper,
-        WorkingDaysService workingDaysService,
-        PlanningEngine planningEngine,
-        GanttService ganttService
+            @ComponentImport DateTimeFormatter dateTimeFormatter,
+            @ComponentImport TimeZoneManager timeZoneManager,
+            @ComponentImport PriorityManager priorityManager,
+            JiraSoftwareHelper jiraSoftwareHelper,
+            WorkingDaysService workingDaysService,
+            PlanningEngine planningEngine,
+            GanttService ganttService
     ) {
         this.dateTimeFormatter = dateTimeFormatter;
         this.timeZoneManager = timeZoneManager;
@@ -88,18 +94,18 @@ public class PlanningService {
 
         GanttDto ganttData = ganttService.getGantt(
             user, calendarId,
-            new GanttParams(order, params.getGroupBy(), params.getSprintId(), params.getFields())
+            new GanttParams(order, params.getGroupBy(), params.getSprintId(), params.getFields(), true, true)
         );
 
         List<GanttTaskDto> ganttEvents = ganttData.getData();
         List<EventDto> events = ganttEvents
-            .stream()
-            .filter(task -> !"group".equals(task.getType()))
-            .map(GanttTaskDto::getOriginalEvent)
-            .collect(Collectors.toList());
+                .stream()
+                .filter(task -> !"group".equals(task.getType()))
+                .map(GanttTaskDto::getOriginalEvent)
+                .collect(Collectors.toList());
         List<GanttLinkDto> links = ganttData.getCollections().getLinks();
 
-        Map<EventDto, List<EventDto>> dependencies = new HashMap<>();
+        Map<EventDto, Set<EventDto>> dependencies = new HashMap<>();
 
         for (GanttLinkDto link : links) {
             if (GanttLinkType.FINISH_TO_START != GanttLinkType.fromString(link.getType())) {
@@ -110,8 +116,8 @@ public class PlanningService {
             EventDto target = events.stream().filter(event -> event.getId().equals(link.getTarget())).findAny().orElse(null);
 
             if (source != null && target != null) {
-                List<EventDto> list = dependencies.computeIfAbsent(target, (key) -> new ArrayList<>());
-                list.add(source);
+                Set<EventDto> set = dependencies.computeIfAbsent(target, (key) -> new HashSet<>());
+                set.add(source);
             }
         }
 
@@ -122,50 +128,51 @@ public class PlanningService {
             double total = events.size();
 
             for (EventDto event : events) {
-                priorities.put(event, (total-i) / total);
+                priorities.put(event, (total - i) / total);
                 ++i;
             }
         } else if (usePriority) {
-            double maxSequence = priorityManager.getPriorities().stream().mapToLong(Priority::getSequence).max().orElse(1)+1;
+            double maxSequence = priorityManager.getPriorities().stream().mapToLong(Priority::getSequence).max().orElse(1) + 1;
 
             for (EventDto event : events) {
-                priorities.put(event, (maxSequence-event.getIssueInfo().getPrioritySequence()) / maxSequence);
+                priorities.put(event, (maxSequence - event.getIssueInfo().getPrioritySequence()) / maxSequence);
             }
         }
 
         int workingHours = getWorkingHours();
+        Map<EventDto, Integer> issueDuration = events.stream()
+                                                     .collect(Collectors.toMap(
+                                                             Function.identity(),
+                                                             event -> {
+                                                                 if (event.getOriginalEstimateSeconds() != null) {
+                                                                     return (int) TimeUnit.SECONDS.toHours(event.getOriginalEstimateSeconds());
+                                                                 }
+                                                                 if (event.getStartDate() != null && event.getEndDate() != null) {
+                                                                     //todo: do more precise calculation if not all day event
+                                                                     return workingHours * countWorkDays(
+                                                                             user, event.isAllDay(),
+                                                                             event.getStartDate().toInstant(),
+                                                                             event.getEndDate().toInstant()
+                                                                     );
+                                                                 }
+                                                                 return workingHours;
+                                                             }
+                                                     ));
         Map<EventDto, Pair<Date, Date>> plan = planningEngine.generatePlan2(
-            events,
-            events
-                .stream()
-                .collect(Collectors.toMap(
-                    Function.identity(),
-                    event -> {
-                        if (event.getOriginalEstimateSeconds() != null) {
-                            return (int) TimeUnit.SECONDS.toHours(event.getOriginalEstimateSeconds());
-                        }
-                        if (event.getStartDate() != null && event.getEndDate() != null) {
-                            //todo: do more precise calculation if not all day event
-                            return workingHours * countWorkDays(
-                                user, event.isAllDay(),
-                                event.getStartDate().toInstant(),
-                                event.getEndDate().toInstant()
-                            );
-                        }
-                        return workingHours;
-                    }
-                )),
-            ImmutableMap.of(), //todo
-            dependencies,
-            priorities,
-            countWorkDays(LocalDate.now(), LocalDate.parse(deadline)),
-            workingHours
+                events,
+                issueDuration,
+                ImmutableMap.of(), //todo
+                dependencies,
+                priorities,
+                countWorkDays(LocalDate.now(), LocalDate.parse(deadline)),
+                workingHours
         );
 
         plan.forEach((event, dates) -> {
             GanttTaskDto ganttTask = ganttEvents.stream().filter(e -> e.getId().equals(event.getId())).findAny().orElse(null);
 
             ganttTask.setStartDate(dateFormat.format(dates.first()));
+//            ganttTask.setDuration(issueDuration.get(event) / workingHours);
             ganttTask.setEndDate(dateFormat.format(dates.second()));
             ganttTask.setOverdueSeconds(null);
             ganttTask.setEarlySeconds(null);
@@ -200,11 +207,11 @@ public class PlanningService {
         }
 
         Set<LocalDate> nonWorkingDays = Arrays
-            .stream(workingDaysService.getNonWorkingDays())
-            .map(NonWorkingDay::getDate)
-            .map(date -> date.toInstant().atZone(timeZoneManager.getDefaultTimezone().toZoneId()))
-            .map(ZonedDateTime::toLocalDate)
-            .collect(Collectors.toSet());
+                .stream(workingDaysService.getNonWorkingDays())
+                .map(NonWorkingDay::getDate)
+                .map(date -> date.toInstant().atZone(timeZoneManager.getDefaultTimezone().toZoneId()))
+                .map(ZonedDateTime::toLocalDate)
+                .collect(Collectors.toSet());
         List<Integer> workingDays = workingDaysService.getWorkingDays();
 
         int i = 0;

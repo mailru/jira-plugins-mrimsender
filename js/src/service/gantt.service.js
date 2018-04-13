@@ -21,6 +21,10 @@ export class GanttService {
         return ajaxPut(`${getPluginBaseUrl()}/gantt/${calendarId}/task/${id}`, task);
     }
 
+    estimateTask(calendarId, id, data) {
+        return ajaxPost(`${getPluginBaseUrl()}/gantt/${calendarId}/task/${id}/estimate`, data);
+    }
+
     createLink(calendarId, link) {
         return ajaxPost(`${getPluginBaseUrl()}/gantt/${calendarId}/link`, link);
     }

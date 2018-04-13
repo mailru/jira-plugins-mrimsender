@@ -88,7 +88,7 @@ export const eventListeners = {
     },
     onBeforeLinkDelete: (id) => {
         return id >= 0;
-    }
+    },
     /*onGanttScroll: (oldLeft, oldTop, left, top) => {
         //updateRender(oldLeft, oldTop, left, top);
         if (oldTop !== top) {
