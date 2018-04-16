@@ -154,7 +154,13 @@ public class GanttServiceImpl implements GanttService {
             .filter(Objects::nonNull)
             .flatMap(List::stream)
             .distinct()
-            .map(this::buildGroup)
+            .map(group -> buildGroup(
+                group,
+                events
+                    .stream()
+                    .filter(event -> Objects.equals(event.getParent(), group.getId()))
+                    .allMatch(GanttTaskDto::getUnscheduled)
+            ))
             .forEach(events::add);
 
         ganttDto.setData(events);
@@ -582,7 +588,7 @@ public class GanttServiceImpl implements GanttService {
         return ganttTaskDto;
     }
 
-    private GanttTaskDto buildGroup(EventGroup group) {
+    private GanttTaskDto buildGroup(EventGroup group, boolean unscheduled) {
         GanttTaskDto result = new GanttTaskDto();
 
         result.setId(group.getId());
@@ -591,6 +597,7 @@ public class GanttServiceImpl implements GanttService {
         result.setIconSrc(group.getAvatar());
         result.setType("group");
         result.setOpen(true);
+        result.setUnscheduled(unscheduled);
 
         return result;
     }

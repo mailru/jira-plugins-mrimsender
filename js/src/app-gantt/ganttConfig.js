@@ -107,7 +107,7 @@ function createBox(sizes, class_name) {
 }
 
 gantt.addTaskLayer((task) => {
-    if (!task.$open && gantt.hasChild(task.id)) {
+    if (!task.$open && gantt.hasChild(task.id) && !task.unscheduled) {
         const el = document.createElement('div'),
             sizes = gantt.getTaskPosition(task);
 
@@ -118,6 +118,10 @@ gantt.addTaskLayer((task) => {
         for (let i = 0; i < subTasks.length; i++) {
             const child = gantt.getTask(subTasks[i]);
             const child_sizes = gantt.getTaskPosition(child);
+
+            if (child.unscheduled) {
+                continue;
+            }
 
             const child_el = createBox({
                 height: 20,
