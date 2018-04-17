@@ -174,6 +174,7 @@ public class PlanningService {
             ganttTask.setStartDate(dateFormat.format(dates.first()));
 //            ganttTask.setDuration(issueDuration.get(event) / workingHours);
             ganttTask.setEndDate(dateFormat.format(dates.second()));
+            ganttTask.setUnscheduled(false);
             ganttTask.setOverdueSeconds(null);
             ganttTask.setEarlySeconds(null);
         });
