@@ -1,6 +1,8 @@
 package ru.mail.jira.plugins.calendar.planning;
 
+import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.util.lang.Pair;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import org.jacop.constraints.Max;
 import org.jacop.constraints.XlteqY;
 import org.jacop.constraints.XplusCeqZ;
@@ -15,6 +17,7 @@ import org.jacop.search.SmallestMin;
 import org.jacop.search.SplitSelect;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.ojalgo.optimisation.Expression;
 import org.ojalgo.optimisation.ExpressionsBasedModel;
@@ -22,7 +25,10 @@ import org.ojalgo.optimisation.Optimisation;
 import org.ojalgo.optimisation.Variable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.calendar.configuration.NonWorkingDay;
+import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDto;
 
@@ -44,6 +50,15 @@ public class PlanningEngine {
     private final Logger logger = LoggerFactory.getLogger(PlanningEngine.class);
     private static final BigDecimal PROGRESS_START_MARGIN = new BigDecimal(0 + 0.001);
     private static final BigDecimal PROGRESS_END_MARGIN = new BigDecimal(1 - 0.001);
+
+    private final TimeZoneManager timeZoneManager;
+    private final WorkingDaysService workingDaysService;
+
+    @Autowired
+    public PlanningEngine(@ComponentImport TimeZoneManager timeZoneManager, WorkingDaysService workingDaysService) {
+        this.timeZoneManager = timeZoneManager;
+        this.workingDaysService = workingDaysService;
+    }
 
     /**
      * @param issues
@@ -521,19 +536,23 @@ public class PlanningEngine {
         int planStartHours = planStarts[taskIdx] % maxDayCapacity;
         int durationDays = durations[taskIdx] / maxDayCapacity;
         int durationHours = durations[taskIdx] % maxDayCapacity;
-
+        Set<LocalDate> nonWorkingDays = Arrays
+                .stream(workingDaysService.getNonWorkingDays())
+                .map(NonWorkingDay::getDate)
+                .map(date -> new DateTime(date).withZone(DateTimeZone.forTimeZone(timeZoneManager.getDefaultTimezone())))
+                .map(DateTime::toLocalDate)
+                .collect(Collectors.toSet());
+        Set<Integer> workingDays = new HashSet<>(workingDaysService.getWorkingDays());
 
         DateTime planStart = now.plusDays(planStartDays)
                                 .plusHours(planStartHours);
         int addDaysToStart = 0;
-        if (planStart.getDayOfWeek() == DateTimeConstants.SATURDAY)
-            addDaysToStart = 2;
-        else if (planStart.getDayOfWeek() == DateTimeConstants.SUNDAY)
-            addDaysToStart = 1;
-
-        if (addDaysToStart > 0) {
-            planStart = planStart.plusDays(addDaysToStart)
+        while (!workingDays.contains(planStart.getDayOfWeek()) || nonWorkingDays.contains(planStart.toLocalDate())) {
+            planStart = planStart.plusDays(1)
                                  .withTimeAtStartOfDay();
+            addDaysToStart++;
+        }
+        if (addDaysToStart > 0) {
             planStartHours = 0;
             planStarts[taskIdx] = planStartDays * maxDayCapacity + addDaysToStart * maxDayCapacity;
         }
@@ -542,9 +561,19 @@ public class PlanningEngine {
             durationDays = durationDays + (planStartHours + durationHours) / maxDayCapacity;
             durationHours = (planStartHours + durationHours) % maxDayCapacity;
         }
-        durationDays = getActualNumberOfDaysToAdd(durationDays, planStart.getDayOfWeek());
 
-        planEnds[taskIdx] = planStarts[taskIdx] + durationDays * maxDayCapacity + durationHours;
+        DateTime planEnd = planStart.plusHours(durationHours);
+        int addDaysToEnd = 0;
+        while (durationDays > 0) {
+            if (workingDays.contains(planEnd.getDayOfWeek()) && !nonWorkingDays.contains(planEnd.toLocalDate())) {
+                durationDays--;
+            }
+            planEnd = planEnd.plusDays(1);
+            addDaysToEnd++;
+        }
+
+        planEnds[taskIdx] = planStarts[taskIdx] + addDaysToEnd * maxDayCapacity + durationHours;
+
         if (planDependence.containsKey(eventDto))
             for (EventDto dependent : planDependence.get(eventDto)) {
                 int dependantTaskIdx = issueIndex.get(dependent);
@@ -552,13 +581,5 @@ public class PlanningEngine {
 
                 adjustPlanDatesWithWeekends(dependent, now, maxDayCapacity, planStarts, planEnds, durations, issueIndex, planDependence);
             }
-    }
-
-    public int getActualNumberOfDaysToAdd(int workdays, int dayOfWeek) {
-        if (dayOfWeek < 6) { // date is a workday
-            return workdays + (workdays + dayOfWeek - 1) / 5 * 2;
-        } else { // date is a weekend
-            return workdays + (workdays - 1) / 5 * 2 + (7 - dayOfWeek);
-        }
     }
 }
