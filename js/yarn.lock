@@ -8,6 +8,12 @@
   dependencies:
     prop-types "^15.5.10"
 
+"@atlaskit/analytics-next@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/analytics-next/-/analytics-next-2.0.0.tgz#974e5551fefc78683cf36be4bea1450132e55883"
+  dependencies:
+    prop-types "^15.5.10"
+
 "@atlaskit/avatar@^9.2.3":
   version "9.2.3"
   resolved "https://registry.yarnpkg.com/@atlaskit/avatar/-/avatar-9.2.3.tgz#fdfdbcdee6f07941e6885547460b1f7c8614e5be"
@@ -17,12 +23,6 @@
     "@atlaskit/theme" "^2.4.1"
     "@atlaskit/tooltip" "^8.4.2"
     styled-components "1.4.6 - 3"
-
-"@atlaskit/analytics-next@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@atlaskit/analytics-next/-/analytics-next-2.0.0.tgz#974e5551fefc78683cf36be4bea1450132e55883"
-  dependencies:
-    prop-types "^15.5.10"
 
 "@atlaskit/blanket@^4.1.1":
   version "4.1.1"
@@ -160,20 +160,6 @@
     prop-types "^15.5.10"
     styled-components "1.4.6 - 3"
 
-"@atlaskit/dynamic-table@^7.2.2":
-  version "7.2.2"
-  resolved "https://registry.yarnpkg.com/@atlaskit/dynamic-table/-/dynamic-table-7.2.2.tgz#3df38fb404a2ec8f366cfa4bb202601be48db4c6"
-  dependencies:
-    "@atlaskit/button" "^6.6.2"
-    "@atlaskit/pagination" "^4.0.0"
-    "@atlaskit/spinner" "^4.2.1"
-    "@atlaskit/theme" "^2.4.1"
-    "@atlaskit/util-common" "^1.5.2"
-    "@atlaskit/util-shared-styles" "^2.10.3"
-    prop-types "^15.5.10"
-    react-beautiful-dnd "^4.0.1"
-    styled-components "1.4.6 - 3"
-
 "@atlaskit/droplist@^5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@atlaskit/droplist/-/droplist-5.0.0.tgz#f0c83b236bb2db8b0245978c8167a18b6b83371f"
@@ -188,6 +174,20 @@
     classnames "^2.2.5"
     keycode "^2.1.7"
     prop-types "^15.5.10"
+    styled-components "1.4.6 - 3"
+
+"@atlaskit/dynamic-table@^7.2.2":
+  version "7.2.2"
+  resolved "https://registry.yarnpkg.com/@atlaskit/dynamic-table/-/dynamic-table-7.2.2.tgz#3df38fb404a2ec8f366cfa4bb202601be48db4c6"
+  dependencies:
+    "@atlaskit/button" "^6.6.2"
+    "@atlaskit/pagination" "^4.0.0"
+    "@atlaskit/spinner" "^4.2.1"
+    "@atlaskit/theme" "^2.4.1"
+    "@atlaskit/util-common" "^1.5.2"
+    "@atlaskit/util-shared-styles" "^2.10.3"
+    prop-types "^15.5.10"
+    react-beautiful-dnd "^4.0.1"
     styled-components "1.4.6 - 3"
 
 "@atlaskit/field-base@^8.2.1":
@@ -271,6 +271,14 @@
     "@atlaskit/theme" "^2.4.1"
     styled-components "1.4.6 - 3"
 
+"@atlaskit/inline-dialog@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/inline-dialog/-/inline-dialog-6.0.0.tgz#5f1ad0fe20a23154efe8307df4379fba82643508"
+  dependencies:
+    "@atlaskit/layer" "^3.0.0"
+    "@atlaskit/theme" "^3.0.0"
+    styled-components "1.4.6 - 3"
+
 "@atlaskit/inline-edit@^4.6.5":
   version "4.6.5"
   resolved "https://registry.yarnpkg.com/@atlaskit/inline-edit/-/inline-edit-4.6.5.tgz#a9a34e9b33b35fe193ee531313eb13ae4c974b3d"
@@ -282,12 +290,13 @@
     classnames "^2.2.5"
     styled-components "1.4.6 - 3"
 
-"@atlaskit/inline-dialog@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@atlaskit/inline-dialog/-/inline-dialog-6.0.0.tgz#5f1ad0fe20a23154efe8307df4379fba82643508"
+"@atlaskit/input@^1.7.1":
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/@atlaskit/input/-/input-1.7.1.tgz#de4908bdff5f420f1c6da98aa181b4d728afa18a"
   dependencies:
-    "@atlaskit/layer" "^3.0.0"
-    "@atlaskit/theme" "^3.0.0"
+    "@atlaskit/theme" "^2.4.1"
+    babel-runtime "^6.26.0"
+    keycode "^2.1.7"
     styled-components "1.4.6 - 3"
 
 "@atlaskit/input@^2.0.0":
@@ -459,22 +468,22 @@
     react-transition-group "^2.2.1"
     styled-components "1.4.6 - 3"
 
-"@atlaskit/tooltip@^9.0.0":
-  version "9.0.0"
-  resolved "https://registry.yarnpkg.com/@atlaskit/tooltip/-/tooltip-9.0.0.tgz#c14e6f86499c5cb80405f632fdc490324c001a8d"
-  dependencies:
-    "@atlaskit/layer-manager" "^3.0.0"
-    "@atlaskit/theme" "^3.0.0"
-    react-deprecate "^0.1.0"
-    react-transition-group "^2.2.1"
-    styled-components "1.4.6 - 3"
-
 "@atlaskit/tooltip@^8.4.2":
   version "8.4.2"
   resolved "https://registry.yarnpkg.com/@atlaskit/tooltip/-/tooltip-8.4.2.tgz#2af48ef96bfcf599c2ffe99a993fc5619f9fbea5"
   dependencies:
     "@atlaskit/layer-manager" "^2.8.1"
     "@atlaskit/theme" "^2.4.1"
+    react-deprecate "^0.1.0"
+    react-transition-group "^2.2.1"
+    styled-components "1.4.6 - 3"
+
+"@atlaskit/tooltip@^9.0.0":
+  version "9.0.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/tooltip/-/tooltip-9.0.0.tgz#c14e6f86499c5cb80405f632fdc490324c001a8d"
+  dependencies:
+    "@atlaskit/layer-manager" "^3.0.0"
+    "@atlaskit/theme" "^3.0.0"
     react-deprecate "^0.1.0"
     react-transition-group "^2.2.1"
     styled-components "1.4.6 - 3"
