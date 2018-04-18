@@ -43,13 +43,12 @@ class ScheduleDialogInternal extends React.Component {
             )
             .then(
                 newTask => {
-                    const {start_date, end_date, id, ...etc} = newTask;
+                    const {start_date, id, ...etc} = newTask;
                     Object.assign(
                         task,
                         {
                             ...etc,
-                            start_date: moment(start_date).toDate(),
-                            end_date: moment(end_date).toDate()
+                            start_date: moment(start_date).toDate()
                         }
                     );
                     gantt.refreshTask(task.id);
