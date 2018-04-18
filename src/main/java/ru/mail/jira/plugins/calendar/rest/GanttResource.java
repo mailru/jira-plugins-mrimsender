@@ -134,13 +134,13 @@ public class GanttResource {
     public Response updateTask(
         @PathParam("id") final int calendarId,
         @PathParam("issueKey") final String issueKey,
-        GanttTaskForm updateDto
+        GanttTaskForm form
     ) {
         //todo: return object with list field
         return new RestExecutor<List<GanttTaskDto>>() {
             @Override
             protected List<GanttTaskDto> doAction() throws Exception {
-                return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, updateDto.getStartDate(), updateDto.getEndDate());
+                return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, form);
             }
         }.getResponse();
     }

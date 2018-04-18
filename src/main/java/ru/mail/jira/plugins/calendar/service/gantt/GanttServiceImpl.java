@@ -1,9 +1,6 @@
 package ru.mail.jira.plugins.calendar.service.gantt;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
-import com.atlassian.jira.bc.issue.worklog.TimeTrackingConfiguration;
-import com.atlassian.jira.datetime.DateTimeFormatter;
-import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.issue.customfields.impl.CalculatedCFType;
 import com.atlassian.jira.issue.fields.*;
@@ -30,9 +27,10 @@ import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanItem;
 import ru.mail.jira.plugins.calendar.service.*;
 import ru.mail.jira.plugins.calendar.util.DateUtil;
 
-import java.math.BigDecimal;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -48,10 +46,8 @@ public class GanttServiceImpl implements GanttService {
     );
 
     private final ActiveObjects ao;
-    private final TimeTrackingConfiguration timeTrackingConfiguration;
     private final TimeZoneManager timeZoneManager;
     private final FieldManager fieldManager;
-    private final JiraDeprecatedService jiraDeprecatedService;
     private final PermissionService permissionService;
     private final CalendarEventService calendarEventService;
     private final CalendarService calendarService;
@@ -60,20 +56,16 @@ public class GanttServiceImpl implements GanttService {
     @Autowired
     public GanttServiceImpl(
         @ComponentImport ActiveObjects ao,
-        @ComponentImport TimeTrackingConfiguration timeTrackingConfiguration,
         @ComponentImport TimeZoneManager timeZoneManager,
         @ComponentImport FieldManager fieldManager,
-        JiraDeprecatedService jiraDeprecatedService,
         PermissionService permissionService,
         CalendarEventService calendarEventService,
         CalendarService calendarService,
         WorkingDaysService workingDaysService
     ) {
         this.ao = ao;
-        this.timeTrackingConfiguration = timeTrackingConfiguration;
         this.timeZoneManager = timeZoneManager;
         this.fieldManager = fieldManager;
-        this.jiraDeprecatedService = jiraDeprecatedService;
         this.permissionService = permissionService;
         this.calendarEventService = calendarEventService;
         this.calendarService = calendarService;
@@ -93,11 +85,17 @@ public class GanttServiceImpl implements GanttService {
         if (StringUtils.isEmpty(endDate))
             endDate = LocalDate.now().plusMonths(3).format(java.time.format.DateTimeFormatter.ISO_DATE);
 
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setTimeZone(timeZoneManager.getTimeZoneforUser(user));
+
         List<EventDto> eventDtoList;
         if (params.isIncludeUnscheduled()) {
             eventDtoList = calendarEventService.getUnboundedEvents(calendar, params.getGroupBy(), user, true, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan());
         } else {
-            eventDtoList = calendarEventService.findEvents(calendarId, params.getGroupBy(), startDate, endDate, user, true, params.getOrder(), params.getFields());
+            eventDtoList = calendarEventService.getEventsWithDuration(
+                calendar, params.getGroupBy(), user, true, params.getOrder(), params.getFields(),
+                dateFormat.parse(startDate), dateFormat.parse(endDate)
+            );
         }
 
         return getGantt(eventDtoList, user, calendarId, params.getGroupBy());
@@ -111,30 +109,14 @@ public class GanttServiceImpl implements GanttService {
             throw new SecurityException("No permission");
         }
 
-        return getGantt(calendarEventService.getUnboundedEvents(calendar, params.getGroupBy(), user, true, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan()), user, calendarId, params.getGroupBy());
+        List<EventDto> events = calendarEventService.getUnboundedEvents(
+            calendar, params.getGroupBy(), user, true, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan()
+        );
+        return getGantt(events, user, calendarId, params.getGroupBy());
     }
 
     private GanttDto getGantt(List<EventDto> eventDtoList, ApplicationUser user, int calendarId, String groupBy) {
-        DateTimeFormatter dateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
-        DateTimeFormatter dateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-
-        ZoneId userZoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
-        ZoneId defaultZoneId = timeZoneManager.getDefaultTimezone().toZoneId();
-
         GanttDto ganttDto = new GanttDto();
-
-        WorkingTimeDto workingTime = workingDaysService.getWorkingTime();
-        Set<Integer> workingDays = Sets.newHashSet(workingDaysService.getWorkingDays());
-
-        long secondsPerDay = workingTime.getEndTime().toSecondOfDay() - workingTime.getStartTime().toSecondOfDay();
-        long secondsPerWeek = workingDays.size() * secondsPerDay;
-
-        Set<java.time.LocalDate> nonWorkingDays = Arrays
-            .stream(workingDaysService.getNonWorkingDays())
-            .map(NonWorkingDay::getDate)
-            .map(date -> date.toInstant().atZone(defaultZoneId))
-            .map(ZonedDateTime::toLocalDate)
-            .collect(Collectors.toSet());
 
         List<GanttTaskDto> events = new ArrayList<>();
 
@@ -143,9 +125,7 @@ public class GanttServiceImpl implements GanttService {
         eventDtoList
             .stream()
             .filter(e -> e.getType() == EventDto.Type.ISSUE)
-            .flatMap(eventDto -> buildEvenWithGroups(
-                eventDto, dateFormat, dateTimeFormat, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, userZoneId, shouldAppendGroupToId
-            ))
+            .flatMap(eventDto -> buildEvenWithGroups(eventDto, user, shouldAppendGroupToId))
             .forEach(events::add);
 
         eventDtoList
@@ -296,8 +276,8 @@ public class GanttServiceImpl implements GanttService {
     }
 
     @Override
-    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, String endDate) throws Exception {
-        return updateDates(user, calendarId, issueKey, startDate, endDate, false);
+    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, GanttTaskForm form) throws Exception {
+        return updateDates(user, calendarId, issueKey, form.getStartDate(), form.getDuration());
     }
 
     @Override
@@ -318,38 +298,15 @@ public class GanttServiceImpl implements GanttService {
                 calendarId,
                 item.getTaskId(),
                 item.getStartDate(),
-                item.getEndDate()
+                null,
+                item.getDuration() != null ? item.getDuration() + "m" : null
             );
         }
     }
 
     @Override
     public GanttTaskDto setEstimate(ApplicationUser user, int calendarId, String issueKey, GanttEstimateForm form) throws Exception {
-        EventDto event = calendarEventService.moveEvent(user, calendarId, issueKey, form.getStart(), null, form.getEstimate());
-
-        DateTimeFormatter dateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
-        DateTimeFormatter dateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-
-        ZoneId defaultZoneId = timeZoneManager.getDefaultTimezone().toZoneId();
-        ZoneId userZoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
-
-        BigDecimal secondsPerHour = BigDecimal.valueOf(com.atlassian.core.util.DateUtils.Duration.HOUR.getSeconds());
-        long secondsPerDay = timeTrackingConfiguration.getHoursPerDay().multiply(secondsPerHour).longValueExact();
-        long secondsPerWeek = timeTrackingConfiguration.getDaysPerWeek().multiply(timeTrackingConfiguration.getHoursPerDay()).multiply(secondsPerHour).longValueExact();
-
-        Set<Integer> workingDays = Sets.newHashSet(workingDaysService.getWorkingDays());
-        WorkingTimeDto workingTime = workingDaysService.getWorkingTime();
-
-        Set<java.time.LocalDate> nonWorkingDays = Arrays
-            .stream(workingDaysService.getNonWorkingDays())
-            .map(NonWorkingDay::getDate)
-            .map(date -> date.toInstant().atZone(defaultZoneId))
-            .map(ZonedDateTime::toLocalDate)
-            .collect(Collectors.toSet());
-
-        return buildEvent(
-            event, dateFormat, dateTimeFormat, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, userZoneId, null
-        );
+        return buildEvent(calendarEventService.moveEvent(user, calendarId, issueKey, form.getStart(), null, form.getEstimate()), user, null);
     }
 
     private boolean isMutableField(String fieldId) {
@@ -371,8 +328,7 @@ public class GanttServiceImpl implements GanttService {
         );
     }
 
-    //todo: group by parameter
-    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, String endDate, boolean withDependencies) throws Exception {
+    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, Long duration) throws Exception {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
         if (!permissionService.hasUsePermission(user, calendar)) {
@@ -386,110 +342,28 @@ public class GanttServiceImpl implements GanttService {
             calendarId,
             issueKey,
             startDate,
-            endDate
+            null,
+            duration != null ? duration + "m" : null
         );
 
-        //todo: dependencies
-
-        DateTimeFormatter dateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
-        DateTimeFormatter dateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-
-        ZoneId defaultZoneId = timeZoneManager.getDefaultTimezone().toZoneId();
-        ZoneId userZoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
-
-        BigDecimal secondsPerHour = BigDecimal.valueOf(com.atlassian.core.util.DateUtils.Duration.HOUR.getSeconds());
-        long secondsPerDay = timeTrackingConfiguration.getHoursPerDay().multiply(secondsPerHour).longValueExact();
-        long secondsPerWeek = timeTrackingConfiguration.getDaysPerWeek().multiply(timeTrackingConfiguration.getHoursPerDay()).multiply(secondsPerHour).longValueExact();
-
-        Set<Integer> workingDays = Sets.newHashSet(workingDaysService.getWorkingDays());
-        WorkingTimeDto workingTime = workingDaysService.getWorkingTime();
-
-        Set<java.time.LocalDate> nonWorkingDays = Arrays
-            .stream(workingDaysService.getNonWorkingDays())
-            .map(NonWorkingDay::getDate)
-            .map(date -> date.toInstant().atZone(defaultZoneId))
-            .map(ZonedDateTime::toLocalDate)
-            .collect(Collectors.toSet());
-
-        result.add(
-            buildEvent(
-                event,
-                dateFormat, dateTimeFormat, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, userZoneId, null
-            )
-        );
-
-
-        if (withDependencies) {
-            DateTimeFormatter inputFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-
-            String eventEnd;
-            if (calendar.getEventEnd() == null) {
-                //when end date is based on estimate
-
-                Long estimate = event.getOriginalEstimateSeconds();
-                Long spent = event.getTimeSpentSeconds();
-
-                long time = 0;
-                if (estimate != null) {
-                    time = estimate;
-
-                    if (spent != null && spent > estimate) {
-                        time = spent;
-                    }
-                }
-
-                eventEnd = inputFormat.format(
-                    DateUtil.addWorkTimeSeconds(
-                        event.isAllDay(), event.getStartDate(), time, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, userZoneId
-                    )
-                );
-            } else {
-                eventEnd = event.getEnd();
-            }
-
-
-            //todo: probably check for events that depend on this event
-            if (eventEnd != null) {
-                for (String key : findDependencies(issueKey)) {
-                    //todo: if depEvent.start<eventEnd
-                    result.addAll(updateDates(user, calendarId, key, eventEnd, eventEnd));
-                }
-            }
-        }
+        result.add(buildEvent(event, user, null));
 
         return result;
     }
 
-    private List<String> findDependencies(String source) {
-        return Arrays
-            .stream(ao.find(GanttLink.class, Query.select().where("SOURCE = ?", source)))
-            .map(GanttLink::getTarget)
-            .collect(Collectors.toList());
-    }
-
-    private Stream<GanttTaskDto> buildEvenWithGroups(
-        EventDto event, DateTimeFormatter dateFormatter, DateTimeFormatter dateTimeFormatter, long secondsPerWeek, long secondsPerDay,
-        Set<Integer> workingDays, Set<java.time.LocalDate> nonWorkingDays, WorkingTimeDto workingTime, ZoneId zoneId, boolean addGroupId
-    ) {
+    private Stream<GanttTaskDto> buildEvenWithGroups(EventDto event, ApplicationUser user, boolean addGroupId) {
         if (addGroupId) {
             if (event.getGroups() != null && event.getGroups().size() > 0) {
                 return event
                     .getGroups()
                     .stream()
-                    .map(group -> buildEvent(
-                        event, dateFormatter, dateTimeFormatter, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId, group.getId()
-                    ));
+                    .map(group -> buildEvent(event, user, group.getId()));
             }
         }
-        return Stream.of(buildEvent(
-                event, dateFormatter, dateTimeFormatter, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId, null
-            ));
+        return Stream.of(buildEvent(event, user, null));
     }
 
-    private GanttTaskDto buildEvent(
-        EventDto event, DateTimeFormatter dateFormatter, DateTimeFormatter dateTimeFormatter, long secondsPerWeek, long secondsPerDay,
-        Set<Integer> workingDays, Set<java.time.LocalDate> nonWorkingDays, WorkingTimeDto workingTime, ZoneId zoneId, String groupId
-    ) {
+    private GanttTaskDto buildEvent(EventDto event, ApplicationUser user, String groupId) {
         GanttTaskDto ganttTaskDto = new GanttTaskDto();
         ganttTaskDto.setType("issue");
         ganttTaskDto.setOriginalEvent(event);
@@ -528,53 +402,51 @@ public class GanttServiceImpl implements GanttService {
             }
         }
 
-        DateTimeFormatter suitableFormatter = event.isAllDay() ? dateFormatter : dateTimeFormatter;
-
         ganttTaskDto.setStartDate(event.getStart());
 
         Date eventStart = event.getStartDate();
         Long originalEstimate = event.getOriginalEstimateSeconds();
         Long timeSpent = event.getTimeSpentSeconds();
-        if (eventStart == null) {
-            ganttTaskDto.setUnscheduled(true);
-        } else {
-            ganttTaskDto.setUnscheduled(false);
-        }
 
-        if (StringUtils.isNotEmpty(event.getEnd())) {
-            ganttTaskDto.setEndDate(event.getEnd());
-        } else if (eventStart != null) {
+        if (eventStart != null) {
             if (originalEstimate != null) {
-                Date plannedEnd = DateUtil.addWorkTimeSeconds(
-                    event.isAllDay(), eventStart, originalEstimate, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId
-                );
-                ganttTaskDto.setEndDate(suitableFormatter.format(plannedEnd));
+                ganttTaskDto.setDuration(TimeUnit.SECONDS.toMinutes(originalEstimate));
 
                 if (timeSpent != null) {
                     if (timeSpent > originalEstimate) {
-                        Date overdueDate = DateUtil.addWorkTimeSeconds(
-                            event.isAllDay(), eventStart, timeSpent, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId
-                        );
-                        ganttTaskDto.setEndDate(suitableFormatter.format(overdueDate));
-
-                        ganttTaskDto.setOverdueSeconds(
-                            TimeUnit.MILLISECONDS.toSeconds(overdueDate.getTime() - plannedEnd.getTime())
-                        );
-                    }
-
-                    if (event.isResolved() && timeSpent < originalEstimate) {
-                        Date earlyDate = DateUtil.addWorkTimeSeconds(
-                            event.isAllDay(), eventStart, timeSpent, secondsPerWeek, secondsPerDay, workingDays, nonWorkingDays, workingTime, zoneId
-                        );
-
-                        ganttTaskDto.setEarlySeconds(
-                            TimeUnit.MILLISECONDS.toSeconds(plannedEnd.getTime() - earlyDate.getTime())
-                        );
+                        ganttTaskDto.setPlannedDuration(ganttTaskDto.getDuration());
+                        ganttTaskDto.setDuration(TimeUnit.SECONDS.toMinutes(timeSpent));
+                        ganttTaskDto.setOverdueSeconds(timeSpent - originalEstimate);
+                    } else if (event.isResolved() && timeSpent < originalEstimate) {
+                        ganttTaskDto.setEarlyDuration(TimeUnit.SECONDS.toMinutes(originalEstimate - timeSpent));
                     }
                 }
-            } else {
-                ganttTaskDto.setEndDate(suitableFormatter.format(new Date(eventStart.getTime() + TimeUnit.DAYS.toMillis(1))));
+            } else if (event.getEndDate() != null) {
+                ZoneId zoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
+
+                Set<LocalDate> nonWorkingDays = Arrays
+                    .stream(workingDaysService.getNonWorkingDays())
+                    .map(NonWorkingDay::getDate)
+                    .map(date -> date.toInstant().atZone(timeZoneManager.getDefaultTimezone().toZoneId()))
+                    .map(ZonedDateTime::toLocalDate)
+                    .collect(Collectors.toSet());
+                List<Integer> workingDays = workingDaysService.getWorkingDays();
+
+                int durationDays = DateUtil.countWorkDays(
+                    event.getStartDate().toInstant().atZone(zoneId).toLocalDate(),
+                    event.getEndDate().toInstant().atZone(zoneId).toLocalDate(),
+                    workingDays, nonWorkingDays
+                );
+
+                WorkingTimeDto workingTime = workingDaysService.getWorkingTime();
+                ganttTaskDto.setDuration(durationDays * workingTime.getStartTime().until(workingTime.getEndTime(), ChronoUnit.MINUTES));
             }
+        }
+
+        if (ganttTaskDto.getStartDate() == null || ganttTaskDto.getDuration() == null) {
+            ganttTaskDto.setUnscheduled(true);
+        } else {
+            ganttTaskDto.setUnscheduled(false);
         }
 
         if (originalEstimate != null && originalEstimate > 0 && timeSpent != null) {

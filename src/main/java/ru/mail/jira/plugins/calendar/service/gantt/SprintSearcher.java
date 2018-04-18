@@ -53,7 +53,7 @@ public class SprintSearcher {
             throw new SecurityException("No permission");
         }
 
-        Query query = calendarEventService.getUnboundedEventsQuery(user, calendar, null, null, false);
+        Query query = calendarEventService.getUnboundedEventsQuery(user, calendar, null, null, false, false);
 
         IndexSearcher searcher = searchProviderFactory.getSearcher(SearchProviderFactory.ISSUE_INDEX);
 

@@ -47,7 +47,7 @@ export const eventListeners = {
                 storeService.getCalendar().id, id,
                 {
                     start_date: gantt.templates.xml_format(task.start_date),
-                    end_date: gantt.templates.xml_format(task.end_date)
+                    duration: task.duration
                 })
             .then(updatedTasks => {
                 for (const newTask of updatedTasks) {
