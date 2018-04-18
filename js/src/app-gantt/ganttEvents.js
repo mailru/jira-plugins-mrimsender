@@ -47,17 +47,16 @@ export const eventListeners = {
                 storeService.getCalendar().id, id,
                 {
                     start_date: gantt.templates.xml_format(task.start_date),
-                    end_date: gantt.templates.xml_format(task.end_date)
+                    duration: task.duration
                 })
             .then(updatedTasks => {
                 for (const newTask of updatedTasks) {
-                    const {start_date, end_date, id, ...etc} = newTask;
+                    const {start_date, id, ...etc} = newTask;
                     Object.assign(
                         gantt.getTask(id),
                         {
                             ...etc,
-                            start_date: moment(start_date).toDate(),
-                            end_date: moment(end_date).toDate()
+                            start_date: moment(start_date).toDate()
                         }
                     );
                     gantt.refreshTask(id);
@@ -83,8 +82,13 @@ export const eventListeners = {
     onAfterLinkDelete: (id) => {
         ganttService.deleteLink(storeService.getCalendar().id, id);
     },
-    onBeforeTaskDrag: (id) => {
-        return gantt.getTask(id).movable;
+    onBeforeTaskDrag: (id, mode) => {
+        switch (mode) {
+            case 'resize':
+                return gantt.getTask(id).resizable;
+            default:
+                return gantt.getTask(id).movable;
+        }
     },
     onBeforeLinkDelete: (id) => {
         return id >= 0;

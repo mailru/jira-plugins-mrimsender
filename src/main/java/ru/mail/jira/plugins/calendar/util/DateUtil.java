@@ -1,14 +1,19 @@
 package ru.mail.jira.plugins.calendar.util;
 
+import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.configuration.WorkingTimeDto;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
-public class DateUtil {
+public final class DateUtil {
+    private DateUtil() {};
+
     public static Date addWorkTimeSeconds(
         boolean allDay, Date sourceDate, long seconds, long secondsPerWeek, long secondsPerDay,
         Set<Integer> workingDays, Set<java.time.LocalDate> nonWorkingDays, WorkingTimeDto workingTime, ZoneId zoneId
@@ -113,5 +118,22 @@ public class DateUtil {
         }
 
         return Date.from(date.toInstant());
+    }
+
+    //todo: more precise calculation with time
+    public static int countWorkDays(LocalDate start, LocalDate end, List<Integer> workingDays, Set<java.time.LocalDate> nonWorkingDays) {
+        if (start.isAfter(end) || start.isEqual(end)) {
+            throw new RuntimeException("end is after today");
+        }
+
+        int i = 0;
+        while (start.compareTo(end) < 0) {
+            if (workingDays.contains(start.getDayOfWeek().getValue()) && !nonWorkingDays.contains(start)) {
+                i++;
+            }
+            start = start.plusDays(1);
+        }
+
+        return i;
     }
 }

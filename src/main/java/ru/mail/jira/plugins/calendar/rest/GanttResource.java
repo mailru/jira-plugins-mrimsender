@@ -10,7 +10,6 @@ import com.atlassian.query.order.SortOrder;
 import ru.mail.jira.plugins.calendar.planning.PlanningService;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.*;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanForm;
-import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.Order;
 import ru.mail.jira.plugins.calendar.service.gantt.GanttParams;
 import ru.mail.jira.plugins.calendar.service.gantt.GanttService;
@@ -29,7 +28,6 @@ import java.util.*;
 @Produces(MediaType.APPLICATION_JSON)
 public class GanttResource {
     private final JiraAuthenticationContext authenticationContext;
-    private final CalendarEventService calendarEventService;
     private final SprintSearcher sprintSearcher;
     private final GanttService ganttService;
     private final PlanningService planningService;
@@ -37,14 +35,12 @@ public class GanttResource {
 
     public GanttResource(
         @ComponentImport JiraAuthenticationContext authenticationContext,
-        CalendarEventService calendarEventService,
         SprintSearcher sprintSearcher,
         GanttService ganttService,
         PlanningService planningService,
         JiraSoftwareHelper jiraSoftwareHelper
     ) {
         this.authenticationContext = authenticationContext;
-        this.calendarEventService = calendarEventService;
         this.sprintSearcher = sprintSearcher;
         this.ganttService = ganttService;
         this.planningService = planningService;
@@ -134,13 +130,13 @@ public class GanttResource {
     public Response updateTask(
         @PathParam("id") final int calendarId,
         @PathParam("issueKey") final String issueKey,
-        GanttTaskForm updateDto
+        GanttTaskForm form
     ) {
         //todo: return object with list field
         return new RestExecutor<List<GanttTaskDto>>() {
             @Override
             protected List<GanttTaskDto> doAction() throws Exception {
-                return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, updateDto.getStartDate(), updateDto.getEndDate());
+                return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, form);
             }
         }.getResponse();
     }

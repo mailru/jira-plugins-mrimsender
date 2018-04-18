@@ -28,8 +28,6 @@ export function buildColumns(names) {
 }
 
 export const config = {
-    min_duration: 24 * 60 * 60 * 1000, // minimum task duration : 1 day
-
     showGrid: true,
     work_time: true,
     //skip_off_time: true,
@@ -46,6 +44,10 @@ export const config = {
     auto_scheduling_initial: false,
     keyboard_navigation: true,
     //show_task_cells: false,
+
+    duration_unit: 'minute',
+    duration_step: 1,
+    min_duration: 30 * 60 * 1000, // minimum task duration : 30 min
 
     layout: {
         css: 'gantt_container',
@@ -136,15 +138,14 @@ gantt.addTaskLayer((task) => {
     return false;
 });
 
-export const default_task_cell = (_item, date) => {
-    //todo: hide non work time
-    if (!gantt.isWorkTime(date)) {
+export const default_task_cell = (_task, date) => {
+    if (!gantt.isWorkTime(date, 'day')) {
         return 'gantt-diagram-weekend-day';
     }
 };
 
 export const hours_task_cell = (_item, date) => {
-    if (!gantt.isWorkTime(date) || !gantt.isWorkTime(date, 'hour')) {
+    if (!gantt.isWorkTime(date, 'hour')) {
         return 'gantt-diagram-weekend-day';
     }
 };
@@ -201,15 +202,14 @@ export const templates = {
         return classes.join(' ');
     },
     task_text: () => '',
-    leftside_text: (_start, end, task) => {
-        const overdueSeconds = task.overdueSeconds;
+    leftside_text: (start, end, task) => {
+        const {overdueSeconds, plannedDuration, earlyDuration} = task;
         if (overdueSeconds) {
-            const {width, height} = gantt.getTaskPosition(task, moment(end).subtract(overdueSeconds, 'seconds').toDate(), end);
+            const {width, height} = gantt.getTaskPosition(task, gantt.calculateEndDate({ start_date: start, duration: plannedDuration }), end);
             return `<div class="gantt_overdue_extension gantt_task_line" style="width: ${width}px; height: ${height}px"/>`;
         }
-        const earlySeconds = task.earlySeconds;
-        if (earlySeconds) {
-            const {width, height} = gantt.getTaskPosition(task, moment(end).subtract(earlySeconds, 'seconds').toDate(), end);
+        if (earlyDuration) {
+            const {width, height} = gantt.getTaskPosition(task, gantt.calculateEndDate({ start_date: start, duration: earlyDuration }), end);
             return `<div class="gantt_early_extension gantt_task_line" style="width: ${width}px; height: ${height}px"/>`;
         }
         return '';

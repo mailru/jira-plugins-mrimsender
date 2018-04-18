@@ -62,7 +62,9 @@ class GanttActionsInternal extends React.Component {
         gantt.attachEvent(
             'onTaskDblClick',
             (id) => {
-                this._openScheduleDialog(gantt.getTask(id));
+                if (id) {
+                    this._openScheduleDialog(gantt.getTask(id));
+                }
                 return true;
             }
         );
@@ -96,11 +98,11 @@ class GanttActionsInternal extends React.Component {
             .applyPlan(
                 calendar.id,
                 {
-                    items: tasks.map(({id, start_date, end_date}) => {
+                    items: tasks.map(({id, start_date, duration}) => {
                         return {
                             taskId: id,
                             start_date: gantt.templates.xml_format(start_date),
-                            end_date: gantt.templates.xml_format(end_date)
+                            duration: duration
                         };
                     })
                 }
