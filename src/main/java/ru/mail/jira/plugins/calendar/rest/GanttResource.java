@@ -34,11 +34,11 @@ public class GanttResource {
     private final JiraSoftwareHelper jiraSoftwareHelper;
 
     public GanttResource(
-            @ComponentImport JiraAuthenticationContext authenticationContext,
-            SprintSearcher sprintSearcher,
-            GanttService ganttService,
-            PlanningService planningService,
-            JiraSoftwareHelper jiraSoftwareHelper
+        @ComponentImport JiraAuthenticationContext authenticationContext,
+        SprintSearcher sprintSearcher,
+        GanttService ganttService,
+        PlanningService planningService,
+        JiraSoftwareHelper jiraSoftwareHelper
     ) {
         this.authenticationContext = authenticationContext;
         this.sprintSearcher = sprintSearcher;
@@ -130,13 +130,13 @@ public class GanttResource {
     public Response updateTask(
         @PathParam("id") final int calendarId,
         @PathParam("issueKey") final String issueKey,
-        GanttTaskForm updateDto
+        GanttTaskForm form
     ) {
         //todo: return object with list field
         return new RestExecutor<List<GanttTaskDto>>() {
             @Override
             protected List<GanttTaskDto> doAction() throws Exception {
-                return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, updateDto.getStartDate(), updateDto.getEndDate());
+                return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, form);
             }
         }.getResponse();
     }

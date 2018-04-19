@@ -387,7 +387,7 @@ public class CalendarEventService {
         List<Issue> issues = searchService
             .search(
                 user,
-                getUnboundedEventsQuery(user, calendar, sprintId, order, forPlan),
+                getUnboundedEventsQuery(user, calendar, sprintId, order, forPlan, true),
                 PagerFilter.newPageAlignedFilter(0, 1000)
             )
             .getIssues();
@@ -411,16 +411,34 @@ public class CalendarEventService {
             .collect(Collectors.toList());
     }
 
-    public Query getUnboundedEventsQuery(ApplicationUser user, Calendar calendar, Long sprintId, Order order, boolean forPlan) {
+    public List<EventDto> getEventsWithDuration(
+        Calendar calendar,
+        String groupBy,
+        ApplicationUser user,
+        boolean includeIssueInfo,
+        Order order,
+        List<String> fields,
+        Date startTime,
+        Date endTime
+    ) throws SearchException {
+        return getEvents(
+            calendar, groupBy,
+            JqlQueryBuilder.newClauseBuilder(getUnboundedEventsQuery(user, calendar, null, order, true, false)),
+            calendar.getEventStart(), calendar.getEventEnd(), startTime, endTime, user, includeIssueInfo, null, fields
+        );
+    }
+
+    public Query getUnboundedEventsQuery(
+        ApplicationUser user, Calendar calendar, Long sprintId, Order order, boolean onlyEstimated, boolean onlyResolved
+    ) {
         JqlClauseBuilder queryBuilder = getCalendarQueryBuilder(user, calendar);
         if (queryBuilder == null) {
             throw new RuntimeException("Unable to get calendar query");
         }
 
-        if (forPlan) {
+        if (onlyEstimated) {
             queryBuilder
                 .and()
-                .sub()
                 .sub()
                 .currentEstimate().isNotEmpty();
 
@@ -453,10 +471,8 @@ public class CalendarEventService {
                 .eq(sprintId);
         }
 
-        if (forPlan) {
-            queryBuilder
-                .and().resolution().isEmpty()
-                .endsub();
+        if (onlyResolved) {
+            queryBuilder.and().resolution().isEmpty();
         }
 
         return withOrder(queryBuilder.buildQuery(), order);

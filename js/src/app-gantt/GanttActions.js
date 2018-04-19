@@ -65,9 +65,22 @@ class GanttActionsInternal extends React.Component {
         gantt.attachEvent(
             'onTaskDblClick',
             (id) => {
-                this._openScheduleDialog(gantt.getTask(id));
+                if (id) {
+                    this._openScheduleDialog(gantt.getTask(id));
+                }
                 return true;
             }
+        );
+
+        gantt.addShortcut(
+            'enter',
+            e => {
+                const taskId = gantt.locate(e);
+                if (taskId) {
+                    this._openScheduleDialog(gantt.getTask(taskId));
+                }
+            },
+            'taskRow'
         );
     }
 
@@ -88,11 +101,11 @@ class GanttActionsInternal extends React.Component {
             .applyPlan(
                 calendar.id,
                 {
-                    items: tasks.map(({id, start_date, end_date}) => {
+                    items: tasks.map(({id, start_date, duration}) => {
                         return {
                             taskId: id,
                             start_date: gantt.templates.xml_format(start_date),
-                            end_date: gantt.templates.xml_format(end_date)
+                            duration: duration
                         };
                     })
                 }
@@ -213,7 +226,11 @@ class GanttActionsInternal extends React.Component {
 
     _expandStructure = () => this._updateStructure(true);
 
-    _openScheduleDialog = (task) => this.setState({ schedulingTask: task }, this._toggleDialog('scheduleTask'));
+    _openScheduleDialog = (task) => {
+        if (task.type !== 'group') {
+            this.setState({schedulingTask: task}, this._toggleDialog('scheduleTask'));
+        }
+    };
 
     render() {
         const {activeDialog, waitingForPlan, calendars, filter, schedulingTask} = this.state;

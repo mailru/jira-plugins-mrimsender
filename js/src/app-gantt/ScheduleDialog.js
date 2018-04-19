@@ -43,13 +43,12 @@ class ScheduleDialogInternal extends React.Component {
             )
             .then(
                 newTask => {
-                    const {start_date, end_date, id, ...etc} = newTask;
+                    const {start_date, id, ...etc} = newTask;
                     Object.assign(
                         task,
                         {
                             ...etc,
-                            start_date: moment(start_date).toDate(),
-                            end_date: moment(end_date).toDate()
+                            start_date: moment(start_date).toDate()
                         }
                     );
                     gantt.refreshTask(task.id);
@@ -134,6 +133,7 @@ class ScheduleDialogInternal extends React.Component {
                     </div>
                     <div className="flex-none time-field">
                         <FieldTextStateless
+                            placeholder="00:00"
                             isLabelHidden={true}
                             value={startTime}
                             onChange={this._setText('startTime')}
@@ -142,6 +142,7 @@ class ScheduleDialogInternal extends React.Component {
                 </div>
                 <FieldTextStateless
                     label="Оценка"
+                    placeholder="Например 3w 4d 12h"
                     isRequired={true}
                     shouldFitContainer={true}
 

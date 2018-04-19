@@ -6,6 +6,7 @@
     "babel-eslint": "^8.2.1",
     "babel-loader": "^7.1.2",
     "babel-preset-react-app": "^3.1.1",
+    "babel-preset-env": "^1.6.1",
     "clean-webpack-plugin": "^0.1.18",
     "css-loader": "^0.28.9",
     "eslint": "^4.17.0",
@@ -31,7 +32,8 @@
   },
   "babel": {
     "presets": [
-      "react-app"
+      "react-app",
+      "env"
     ]
   },
   "resolutions": {
@@ -46,7 +48,7 @@
     "@atlaskit/dropdown-menu": "^3.12.1",
     "@atlaskit/dynamic-table": "^7.2.2",
     "@atlaskit/field-base": "^8.2.1",
-    "@atlaskit/field-text": "^4.3.0",
+    "@atlaskit/field-text": "^5.0.0",
     "@atlaskit/field-text-area": "^1.2.2",
     "@atlaskit/flag": "^7.0.0",
     "@atlaskit/icon": "^10.12.2",

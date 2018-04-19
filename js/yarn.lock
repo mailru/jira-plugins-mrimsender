@@ -224,12 +224,12 @@
     prop-types "^15.5.10"
     styled-components "1.4.6 - 3"
 
-"@atlaskit/field-text@^4.3.0":
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/@atlaskit/field-text/-/field-text-4.3.0.tgz#4ef2a8ff7d0e16cfcee4df402bd82d087a7c6065"
+"@atlaskit/field-text@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/field-text/-/field-text-5.0.0.tgz#cd21687b8e2dfe34e7e1acc6ffd1503bf080e689"
   dependencies:
-    "@atlaskit/field-base" "^8.2.1"
-    "@atlaskit/theme" "^2.4.1"
+    "@atlaskit/field-base" "^9.0.0"
+    "@atlaskit/theme" "^3.0.0"
     styled-components "1.4.6 - 3"
 
 "@atlaskit/flag@^7.0.0":
@@ -1337,7 +1337,7 @@ babel-polyfill@6.23.0:
     core-js "^2.4.0"
     regenerator-runtime "^0.10.0"
 
-babel-preset-env@1.6.1:
+babel-preset-env@1.6.1, babel-preset-env@^1.6.1:
   version "1.6.1"
   resolved "https://registry.yarnpkg.com/babel-preset-env/-/babel-preset-env-1.6.1.tgz#a18b564cc9b9afdf4aae57ae3c1b0d99188e6f48"
   dependencies:

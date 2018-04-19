@@ -178,11 +178,14 @@ module.exports = {
                     // Process JS with Babel.
                     {
                         test: /\.(js|jsx)$/,
-                        include: [paths.appSrc, 'node_vendor_modules', 'node_modules/'],
-                        loader: require.resolve('babel-loader'),
-                        options: {
-                            compact: true
-                        },
+                        include: [paths.resolveApp('node_modules/query-string'), paths.resolveApp('node_modules/strict-uri-encode'), paths.appSrc, 'node_vendor_modules'],
+                        use: {
+                            loader: 'babel-loader',
+                            options: {
+                                compact: true,
+                                presets: ['react-app']
+                            }
+                        }
                     },
                     {
                         test: /\.less$/,

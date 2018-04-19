@@ -23,6 +23,7 @@ import ru.mail.jira.plugins.calendar.service.Order;
 import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
 import ru.mail.jira.plugins.calendar.service.gantt.GanttParams;
 import ru.mail.jira.plugins.calendar.service.gantt.GanttService;
+import ru.mail.jira.plugins.calendar.util.DateUtil;
 import ru.mail.jira.plugins.calendar.util.GanttLinkType;
 
 import java.time.Instant;
@@ -140,31 +141,36 @@ public class PlanningService {
         }
 
         int workingHours = getWorkingHours();
-        Map<EventDto, Integer> issueDuration = events.stream()
-                                                     .collect(Collectors.toMap(
-                                                             Function.identity(),
-                                                             event -> {
-                                                                 if (event.getOriginalEstimateSeconds() != null) {
-                                                                     return (int) TimeUnit.SECONDS.toHours(event.getOriginalEstimateSeconds());
-                                                                 }
-                                                                 if (event.getStartDate() != null && event.getEndDate() != null) {
-                                                                     //todo: do more precise calculation if not all day event
-                                                                     return workingHours * countWorkDays(
-                                                                             user, event.isAllDay(),
-                                                                             event.getStartDate().toInstant(),
-                                                                             event.getEndDate().toInstant()
-                                                                     );
-                                                                 }
-                                                                 return workingHours;
-                                                             }
-                                                     ));
+        Map<EventDto, Integer> issueDuration =
+            ganttEvents
+                .stream()
+                .filter(task -> !"group".equals(task.getType()))
+                .collect(Collectors.toMap(
+                    GanttTaskDto::getOriginalEvent,
+                    event -> {
+                        if (event.getDuration() != null) {
+                            //todo: round or ceil value
+                            return (int) TimeUnit.MINUTES.toHours(event.getDuration());
+                        }
+                        return workingHours;
+                    }
+                ));
+
+        Set<LocalDate> nonWorkingDays = Arrays
+            .stream(workingDaysService.getNonWorkingDays())
+            .map(NonWorkingDay::getDate)
+            .map(date -> date.toInstant().atZone(timeZoneManager.getDefaultTimezone().toZoneId()))
+            .map(ZonedDateTime::toLocalDate)
+            .collect(Collectors.toSet());
+        List<Integer> workingDays = workingDaysService.getWorkingDays();
+
         Map<EventDto, Pair<Date, Date>> plan = planningEngine.generatePlan2(
                 events,
                 issueDuration,
                 ImmutableMap.of(), //todo
                 dependencies,
                 priorities,
-                countWorkDays(LocalDate.now(), LocalDate.parse(deadline)),
+                DateUtil.countWorkDays(LocalDate.now(), LocalDate.parse(deadline), workingDays, nonWorkingDays),
                 workingHours
         );
 
@@ -172,10 +178,11 @@ public class PlanningService {
             GanttTaskDto ganttTask = ganttEvents.stream().filter(e -> e.getId().equals(event.getId())).findAny().orElse(null);
 
             ganttTask.setStartDate(dateFormat.format(dates.first()));
-//            ganttTask.setDuration(issueDuration.get(event) / workingHours);
-            ganttTask.setEndDate(dateFormat.format(dates.second()));
+            ganttTask.setDuration(TimeUnit.HOURS.toMinutes(issueDuration.get(event)));
+            //ganttTask.setEndDate(dateFormat.format(dates.second()));
+            ganttTask.setUnscheduled(false);
             ganttTask.setOverdueSeconds(null);
-            ganttTask.setEarlySeconds(null);
+            ganttTask.setEarlyDuration(null);
         });
 
         return ganttData;
@@ -186,42 +193,5 @@ public class PlanningService {
         return (int) workingTime.getStartTime().until(workingTime.getEndTime(), ChronoUnit.HOURS);
     }
 
-    private int countWorkDays(ApplicationUser user, boolean allDay, Instant startI, Instant endI) {
-        LocalDate start = null;
-        LocalDate end = null;
 
-        if (allDay) {
-            start = startI.atZone(timeZoneManager.getDefaultTimezone().toZoneId()).toLocalDate();
-            end = endI.atZone(timeZoneManager.getDefaultTimezone().toZoneId()).toLocalDate();
-        } else {
-            start = startI.atZone(timeZoneManager.getTimeZoneforUser(user).toZoneId()).toLocalDate();
-            end = endI.atZone(timeZoneManager.getTimeZoneforUser(user).toZoneId()).toLocalDate();
-        }
-
-        return countWorkDays(start, end);
-    }
-
-    private int countWorkDays(LocalDate start, LocalDate deadline) {
-        if (start.isAfter(deadline) || start.isEqual(deadline)) {
-            throw new RuntimeException("deadline is after today");
-        }
-
-        Set<LocalDate> nonWorkingDays = Arrays
-                .stream(workingDaysService.getNonWorkingDays())
-                .map(NonWorkingDay::getDate)
-                .map(date -> date.toInstant().atZone(timeZoneManager.getDefaultTimezone().toZoneId()))
-                .map(ZonedDateTime::toLocalDate)
-                .collect(Collectors.toSet());
-        List<Integer> workingDays = workingDaysService.getWorkingDays();
-
-        int i = 0;
-        while (start.compareTo(deadline) <= 0) {
-            if (workingDays.contains(start.getDayOfWeek().getValue()) && !nonWorkingDays.contains(start)) {
-                i++;
-            }
-            start = start.plusDays(1);
-        }
-
-        return i;
-    }
 }
