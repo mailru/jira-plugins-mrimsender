@@ -6,6 +6,7 @@
     "babel-eslint": "^8.2.1",
     "babel-loader": "^7.1.2",
     "babel-preset-react-app": "^3.1.1",
+    "babel-preset-env": "^1.6.1",
     "clean-webpack-plugin": "^0.1.18",
     "css-loader": "^0.28.9",
     "eslint": "^4.17.0",
@@ -31,7 +32,8 @@
   },
   "babel": {
     "presets": [
-      "react-app"
+      "react-app",
+      "env"
     ]
   },
   "resolutions": {
