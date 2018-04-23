@@ -40,4 +40,8 @@ export class GanttService {
     getCalendarSprints(calendarId) {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/calendarSprints/${calendarId}`);
     }
+
+    getErrors(calendarId) {
+        return ajaxGet(`${getPluginBaseUrl()}/gantt/errors/${calendarId}`);
+    }
 }

@@ -5,12 +5,16 @@ import {connect} from 'react-redux';
 
 import memoize from 'lodash.memoize';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+import AJS from 'AJS';
+
 import {FieldTextStateless} from '@atlaskit/field-text';
 import Button, {ButtonGroup} from '@atlaskit/button';
 import InlineDialog from '@atlaskit/inline-dialog';
 import DropdownMenu, { DropdownItemGroupRadio, DropdownItemRadio } from '@atlaskit/dropdown-menu';
 import Spinner from '@atlaskit/spinner';
 import Tooltip from '@atlaskit/tooltip';
+import Banner from '@atlaskit/banner';
 
 import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
 import MediaServicesZoomInIcon from '@atlaskit/icon/glyph/media-services/zoom-in';
@@ -23,6 +27,7 @@ import FilterIcon from '@atlaskit/icon/glyph/filter';
 import CheckIcon from '@atlaskit/icon/glyph/check';
 import VidFullScreenOnIcon from '@atlaskit/icon/glyph/vid-full-screen-on';
 import VidFullScreenOffIcon from '@atlaskit/icon/glyph/vid-full-screen-off';
+import WarningIcon from '@atlaskit/icon/glyph/warning';
 
 import {ScheduleDialog} from './ScheduleDialog';
 import {keyedConfigs, scaleConfigs} from './scaleConfigs';
@@ -114,8 +119,12 @@ class GanttActionsInternal extends React.Component {
                 },
                 error => {
                     this.setState({waitingForPlan: false});
-                    console.error(error);
-                    alert(error);
+                    AJS.flag({
+                        title: 'Не удалось применить изменения',
+                        body: error.response.responseText,
+                        type: 'error',
+                        close: 'manual'
+                    });
                 }
             );
     };
@@ -233,7 +242,16 @@ class GanttActionsInternal extends React.Component {
             (sprints.find(sprint => sprint.id === options.sprint) || { id: options.sprint, name: 'Неизвестный спринт' }) : null;
 
         return (
-            <div className="gantt-actions">
+            <div>
+                {calendar && calendar.errors && !!calendar.errors.length &&
+                    <div style={{margin: '0 -20px'}}>
+                        <Banner isOpen={true} icon={<WarningIcon label="warning" secondaryColor="inherit"/>}>
+                            <div className="flex-column">
+                                {calendar.errors.map((e, i) => <div key={i}>{e}</div>)}
+                            </div>
+                        </Banner>
+                    </div>
+                }
                 {activeDialog === 'scheduleTask' &&
                     <ScheduleDialog
                         gantt={gantt}
@@ -244,219 +262,221 @@ class GanttActionsInternal extends React.Component {
                 {/*<PageHeader>
                     {calendar && i18n.calendarTitle(calendar.selectedName)}
                 </PageHeader>*/}
-                <div className="flex-row">
-                    <div>
-                        <ButtonGroup>
-                            {enableMagic && <Button
-                                iconBefore={<JiraLabsIcon label=""/>}
+                <div className="gantt-actions">
+                    <div className="flex-row">
+                        <div>
+                            <ButtonGroup>
+                                {enableMagic && <Button
+                                    iconBefore={<JiraLabsIcon label=""/>}
 
-                                onClick={this._toggleDialog('magic')}
-                            >
-                                Запустить магию
-                            </Button>}
-                            {!options.liveData &&
-                                <Button
-                                    onClick={this._applyPlan}
-
-                                    isDisabled={waitingForPlan}
-                                    iconBefore={waitingForPlan ? <Spinner/> : <CheckIcon label=""/>}
+                                    onClick={this._toggleDialog('magic')}
                                 >
-                                    Применить изменения
-                                </Button>
-                            }
-                            {activeDialog === 'magic' && <MagicDialog onClose={this._toggleDialog('magic')} gantt={gantt}/>}
-                        </ButtonGroup>
+                                    Запустить магию
+                                </Button>}
+                                {!options.liveData &&
+                                    <Button
+                                        onClick={this._applyPlan}
+
+                                        isDisabled={waitingForPlan}
+                                        iconBefore={waitingForPlan ? <Spinner/> : <CheckIcon label=""/>}
+                                    >
+                                        Применить изменения
+                                    </Button>
+                                }
+                                {activeDialog === 'magic' && <MagicDialog onClose={this._toggleDialog('magic')} gantt={gantt}/>}
+                            </ButtonGroup>
+                        </div>
+                        <div className="flex-horizontal-middle flex-grow">
+                            <ButtonGroup>
+                                {keyedConfigs.map(config =>
+                                    <Button
+                                        key={config.key}
+                                        isSelected={options.scale === config.i}
+
+                                        onClick={this._setScale(config.i)}
+                                    >
+                                        {scaleConfigs[config.i].title}
+                                    </Button>
+                                )}
+                                <Button
+                                    iconBefore={<MediaServicesZoomInIcon label="Zoom in"/>}
+
+                                    isDisabled={options.scale === 0}
+
+                                    onClick={this._zoomIn}
+                                />
+                                <Button
+                                    iconBefore={<MediaServicesZoomOutIcon label="Zoom out"/>}
+
+                                    isDisabled={options.scale+1 === scaleConfigs.length}
+
+                                    onClick={this._zoomOut}
+                                />
+                                <Button
+                                    onClick={this._zoomToFit}
+                                    iconBefore={<SearchIcon label="Reset zoom"/>}
+                                />
+                            </ButtonGroup>
+                        </div>
+                        <div>
+                            <ButtonGroup>
+                                <InlineDialog
+                                    position="bottom right"
+                                    isOpen={activeDialog === 'dates'}
+                                    content={(activeDialog === 'dates') && <DatesDialog gantt={gantt} onClose={this._toggleDialog('dates')}/>}
+                                >
+                                    <Button
+                                        iconBefore={<CalendarIcon/>}
+                                        onClick={this._toggleDialog('dates')}
+                                    >
+                                        Период
+                                    </Button>
+                                </InlineDialog>
+                                <DropdownMenu
+                                    trigger="Вид"
+                                    triggerType="button"
+                                    triggerButtonProps={{iconBefore: <ListIcon label=""/>}}
+                                    shouldFlip={false}
+                                    position="bottom right"
+                                    boundariesElement="window"
+                                >
+                                    <DropdownItemGroupRadio id="gantt-view">
+                                        {viewItems.map(item =>
+                                            <DropdownItemRadio
+                                                key={item.key}
+                                                id={item.key}
+                                                isSelected={options.view === item.key}
+                                                onClick={this._setView(item.key)}
+                                            >
+                                                {item.name}
+                                            </DropdownItemRadio>
+                                        )}
+                                    </DropdownItemGroupRadio>
+                                </DropdownMenu>
+                            </ButtonGroup>
+                        </div>
                     </div>
-                    <div className="flex-horizontal-middle flex-grow">
+
+                    <div className="gantt-header">
                         <ButtonGroup>
-                            {keyedConfigs.map(config =>
-                                <Button
-                                    key={config.key}
-                                    isSelected={options.scale === config.i}
-
-                                    onClick={this._setScale(config.i)}
-                                >
-                                    {scaleConfigs[config.i].title}
-                                </Button>
-                            )}
-                            <Button
-                                iconBefore={<MediaServicesZoomInIcon label="Zoom in"/>}
-
-                                isDisabled={options.scale === 0}
-
-                                onClick={this._zoomIn}
-                            />
-                            <Button
-                                iconBefore={<MediaServicesZoomOutIcon label="Zoom out"/>}
-
-                                isDisabled={options.scale+1 === scaleConfigs.length}
-
-                                onClick={this._zoomOut}
-                            />
-                            <Button
-                                onClick={this._zoomToFit}
-                                iconBefore={<SearchIcon label="Reset zoom"/>}
-                            />
-                        </ButtonGroup>
-                    </div>
-                    <div>
-                        <ButtonGroup>
-                            <InlineDialog
-                                position="bottom right"
-                                isOpen={activeDialog === 'dates'}
-                                content={(activeDialog === 'dates') && <DatesDialog gantt={gantt} onClose={this._toggleDialog('dates')}/>}
-                            >
-                                <Button
-                                    iconBefore={<CalendarIcon/>}
-                                    onClick={this._toggleDialog('dates')}
-                                >
-                                    Период
-                                </Button>
-                            </InlineDialog>
                             <DropdownMenu
-                                trigger="Вид"
-                                triggerType="button"
-                                triggerButtonProps={{iconBefore: <ListIcon label=""/>}}
-                                shouldFlip={false}
-                                position="bottom right"
-                                boundariesElement="window"
-                            >
-                                <DropdownItemGroupRadio id="gantt-view">
-                                    {viewItems.map(item =>
-                                        <DropdownItemRadio
-                                            key={item.key}
-                                            id={item.key}
-                                            isSelected={options.view === item.key}
-                                            onClick={this._setView(item.key)}
-                                        >
-                                            {item.name}
-                                        </DropdownItemRadio>
-                                    )}
-                                </DropdownItemGroupRadio>
-                            </DropdownMenu>
-                        </ButtonGroup>
-                    </div>
-                </div>
-
-                <div className="gantt-header">
-                    <ButtonGroup>
-                        <DropdownMenu
-                            trigger={<span className="calendar-title">{calendar && calendar.selectedName}</span>}
-                            triggerType="button"
-                            triggerButtonProps={{
-                                appearance: 'subtle',
-                                iconAfter: <ChevronDownIcon label=""/>
-                            }}
-
-                            onOpenChange={this._onCalendarListOpen}
-
-                            isLoading={!calendars}
-                        >
-                            {calendars &&
-                                <DropdownItemGroupRadio id="gantt-calendar">
-                                    {calendars.map(cal =>
-                                        <DropdownItemRadio
-                                            href={`#calendar=${cal.id}`}
-                                            key={cal.id}
-                                            id={cal.id}
-
-                                            isSelected={calendar && parseInt(calendar.id, 10) === cal.id}
-                                        >
-                                            {cal.name}
-                                        </DropdownItemRadio>
-                                    )}
-                                </DropdownItemGroupRadio>
-                            }
-                        </DropdownMenu>
-                        {!!sprints.length &&
-                            <DropdownMenu
-                                trigger={<span className="calendar-title">{(currentSprint && currentSprint.name) || 'Спринт'}</span>}
+                                trigger={<span className="calendar-title">{calendar && calendar.selectedName}</span>}
                                 triggerType="button"
                                 triggerButtonProps={{
                                     appearance: 'subtle',
                                     iconAfter: <ChevronDownIcon label=""/>
                                 }}
+
+                                onOpenChange={this._onCalendarListOpen}
+
+                                isLoading={!calendars}
                             >
-                                <DropdownItemGroupRadio id="gantt-sprint">
-                                    <DropdownItemRadio
-                                        key="null"
-                                        id="null"
+                                {calendars &&
+                                    <DropdownItemGroupRadio id="gantt-calendar">
+                                        {calendars.map(cal =>
+                                            <DropdownItemRadio
+                                                href={`#calendar=${cal.id}`}
+                                                key={cal.id}
+                                                id={cal.id}
 
-                                        onClick={this._selectSprint(null)}
-
-                                        isSelected={!currentSprint}
-                                    >
-                                        Не выбран
-                                    </DropdownItemRadio>
-                                    {sprints.map(sprintItem =>
-                                        <DropdownItemRadio
-                                            key={sprintItem.id}
-                                            id={sprintItem.id}
-
-                                            onClick={this._selectSprint(sprintItem.id)}
-
-                                            isSelected={currentSprint && (currentSprint.id === sprintItem.id)}
-                                        >
-                                            <SprintState state={sprintItem.state}/>
-                                            {' '}
-                                            <strong>
-                                                {sprintItem.boardName}
-                                            </strong>
-                                            {' - '}
-                                            {sprintItem.name}
-                                        </DropdownItemRadio>
-                                    )}
-                                </DropdownItemGroupRadio>
+                                                isSelected={calendar && parseInt(calendar.id, 10) === cal.id}
+                                            >
+                                                {cal.name}
+                                            </DropdownItemRadio>
+                                        )}
+                                    </DropdownItemGroupRadio>
+                                }
                             </DropdownMenu>
-                        }
-                    </ButtonGroup>
-                    <div className="flex-grow"/>
-                    <ButtonGroup appearance="subtle">
-                        <Tooltip content="Развернуть структуру">
-                            <Button
-                                iconBefore={<VidFullScreenOnIcon label="Expand"/>}
-                                onClick={this._expandStructure}
-                            />
-                        </Tooltip>
-                        <Tooltip content="Свернуть структуру">
-                            <Button
-                                iconBefore={<VidFullScreenOffIcon label="Collapse"/>}
-                                onClick={this._collapseStructure}
-                            />
-                        </Tooltip>
-                        <InlineDialog
-                            position="bottom right"
-                            isOpen={activeDialog === 'params'}
-                            content={(activeDialog === 'params') && <OptionsDialog gantt={gantt} onClose={this._toggleDialog('params')}/>}
-                        >
-                            <Button
-                                appearance="subtle"
-                                iconBefore={<FilterIcon label=""/>}
-                                onClick={this._toggleDialog('params')}
-                            />
-                        </InlineDialog>
-                        <InlineDialog
-                            content={
-                                <div className="flex-column">
-                                    <FieldTextStateless isLabelHidden={true} label="" value={filter} onChange={this._setFilter}/>
-                                    <div style={{marginTop: '20px'}}>
-                                        <Button onClick={this._applyFilter} shouldFitContainer={true}>
-                                            Применить
-                                        </Button>
-                                    </div>
-                                </div>
+                            {!!sprints.length &&
+                                <DropdownMenu
+                                    trigger={<span className="calendar-title">{(currentSprint && currentSprint.name) || 'Спринт'}</span>}
+                                    triggerType="button"
+                                    triggerButtonProps={{
+                                        appearance: 'subtle',
+                                        iconAfter: <ChevronDownIcon label=""/>
+                                    }}
+                                >
+                                    <DropdownItemGroupRadio id="gantt-sprint">
+                                        <DropdownItemRadio
+                                            key="null"
+                                            id="null"
+
+                                            onClick={this._selectSprint(null)}
+
+                                            isSelected={!currentSprint}
+                                        >
+                                            Не выбран
+                                        </DropdownItemRadio>
+                                        {sprints.map(sprintItem =>
+                                            <DropdownItemRadio
+                                                key={sprintItem.id}
+                                                id={sprintItem.id}
+
+                                                onClick={this._selectSprint(sprintItem.id)}
+
+                                                isSelected={currentSprint && (currentSprint.id === sprintItem.id)}
+                                            >
+                                                <SprintState state={sprintItem.state}/>
+                                                {' '}
+                                                <strong>
+                                                    {sprintItem.boardName}
+                                                </strong>
+                                                {' - '}
+                                                {sprintItem.name}
+                                            </DropdownItemRadio>
+                                        )}
+                                    </DropdownItemGroupRadio>
+                                </DropdownMenu>
                             }
-                            position="bottom right"
-                            isOpen={activeDialog === 'filter'}
-                            onClose={this._toggleDialog('filter')}
-                        >
-                            <Button
-                                appearance="subtle"
-                                iconBefore={<SearchIcon label=""/>}
-                                onClick={this._toggleDialog('filter')}
-                            />
-                        </InlineDialog>
-                    </ButtonGroup>
+                        </ButtonGroup>
+                        <div className="flex-grow"/>
+                        <ButtonGroup appearance="subtle">
+                            <Tooltip content="Развернуть структуру">
+                                <Button
+                                    iconBefore={<VidFullScreenOnIcon label="Expand"/>}
+                                    onClick={this._expandStructure}
+                                />
+                            </Tooltip>
+                            <Tooltip content="Свернуть структуру">
+                                <Button
+                                    iconBefore={<VidFullScreenOffIcon label="Collapse"/>}
+                                    onClick={this._collapseStructure}
+                                />
+                            </Tooltip>
+                            <InlineDialog
+                                position="bottom right"
+                                isOpen={activeDialog === 'params'}
+                                content={(activeDialog === 'params') && <OptionsDialog gantt={gantt} onClose={this._toggleDialog('params')}/>}
+                            >
+                                <Button
+                                    appearance="subtle"
+                                    iconBefore={<FilterIcon label=""/>}
+                                    onClick={this._toggleDialog('params')}
+                                />
+                            </InlineDialog>
+                            <InlineDialog
+                                content={
+                                    <div className="flex-column">
+                                        <FieldTextStateless isLabelHidden={true} label="" value={filter} onChange={this._setFilter}/>
+                                        <div style={{marginTop: '20px'}}>
+                                            <Button onClick={this._applyFilter} shouldFitContainer={true}>
+                                                Применить
+                                            </Button>
+                                        </div>
+                                    </div>
+                                }
+                                position="bottom right"
+                                isOpen={activeDialog === 'filter'}
+                                onClose={this._toggleDialog('filter')}
+                            >
+                                <Button
+                                    appearance="subtle"
+                                    iconBefore={<SearchIcon label=""/>}
+                                    onClick={this._toggleDialog('filter')}
+                                />
+                            </InlineDialog>
+                        </ButtonGroup>
+                    </div>
                 </div>
             </div>
         );

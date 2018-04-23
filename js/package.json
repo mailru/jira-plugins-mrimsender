@@ -5,8 +5,8 @@
     "babel-core": "^6.26.0",
     "babel-eslint": "^8.2.1",
     "babel-loader": "^7.1.2",
-    "babel-preset-react-app": "^3.1.1",
     "babel-preset-env": "^1.6.1",
+    "babel-preset-react-app": "^3.1.1",
     "clean-webpack-plugin": "^0.1.18",
     "css-loader": "^0.28.9",
     "eslint": "^4.17.0",
@@ -40,6 +40,7 @@
     "react": "16.2.0"
   },
   "dependencies": {
+    "@atlaskit/banner": "^5.0.0",
     "@atlaskit/button": "^6.6.3",
     "@atlaskit/checkbox": "^2.0.0",
     "@atlaskit/css-reset": "^1.2.3",

@@ -7,6 +7,7 @@ import com.atlassian.jira.issue.fields.*;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.google.common.collect.*;
 import net.java.ao.Query;
@@ -48,6 +49,7 @@ public class GanttServiceImpl implements GanttService {
     private final ActiveObjects ao;
     private final TimeZoneManager timeZoneManager;
     private final FieldManager fieldManager;
+    private final I18nHelper i18nHelper;
     private final PermissionService permissionService;
     private final CalendarEventService calendarEventService;
     private final CalendarService calendarService;
@@ -58,6 +60,7 @@ public class GanttServiceImpl implements GanttService {
         @ComponentImport ActiveObjects ao,
         @ComponentImport TimeZoneManager timeZoneManager,
         @ComponentImport FieldManager fieldManager,
+        @ComponentImport I18nHelper i18nHelper,
         PermissionService permissionService,
         CalendarEventService calendarEventService,
         CalendarService calendarService,
@@ -66,6 +69,7 @@ public class GanttServiceImpl implements GanttService {
         this.ao = ao;
         this.timeZoneManager = timeZoneManager;
         this.fieldManager = fieldManager;
+        this.i18nHelper = i18nHelper;
         this.permissionService = permissionService;
         this.calendarEventService = calendarEventService;
         this.calendarService = calendarService;
@@ -307,6 +311,23 @@ public class GanttServiceImpl implements GanttService {
     @Override
     public GanttTaskDto setEstimate(ApplicationUser user, int calendarId, String issueKey, GanttEstimateForm form) throws Exception {
         return buildEvent(calendarEventService.moveEvent(user, calendarId, issueKey, form.getStart(), null, form.getEstimate()), user, null);
+    }
+
+    @Override
+    public List<String> getErrors(ApplicationUser user, int calendarId) throws GetException {
+        Calendar calendar = calendarService.getCalendar(calendarId);
+
+        if (!permissionService.hasUsePermission(user, calendar)) {
+            throw new SecurityException("No permission");
+        }
+
+        List<String> errors = new ArrayList<>();
+
+        if (!isMutableField(calendar.getEventStart())) {
+            errors.add(i18nHelper.getText("ru.mail.jira.plugins.calendar.gantt.error.startImmutable"));
+        }
+
+        return errors;
     }
 
     private boolean isMutableField(String fieldId) {

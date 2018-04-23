@@ -194,6 +194,18 @@ public class GanttResource {
         }.getResponse();
     }
 
+    @GET
+    @Path("/errors/{id}")
+    public Response getErrors(@PathParam("id") int calendarId) {
+        return new RestExecutor<List<String>>() {
+            @Override
+            protected List<String> doAction() throws GetException, SearchException {
+                ApplicationUser user = authenticationContext.getLoggedInUser();
+                return ganttService.getErrors(user, calendarId);
+            }
+        }.getResponse();
+    }
+
     private Order getOrder(String orderBy, SortOrder sortOrder) {
         if (orderBy != null && sortOrder != null) {
             return new Order(orderBy, sortOrder);

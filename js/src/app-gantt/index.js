@@ -191,9 +191,9 @@ AJS.toInit(function() {
             },
             setCalendar: function (id) {
                 Promise
-                    .all([calendarService.getCalendar(id), ganttService.getCalendarSprints(id)])
+                    .all([calendarService.getCalendar(id), ganttService.getCalendarSprints(id), ganttService.getErrors(id)])
                     .then(
-                        ([calendar, sprints]) => store.dispatch(CalendarActionCreators.setCalendar({...calendar, id}, sprints))
+                        ([calendar, sprints, errors]) => store.dispatch(CalendarActionCreators.setCalendar({...calendar, errors, id}, sprints))
                     );
             }
         });

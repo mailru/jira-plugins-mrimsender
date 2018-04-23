@@ -24,4 +24,6 @@ public interface GanttService {
     void applyPlan(ApplicationUser loggedInUser, int calendarId, GanttPlanForm form) throws Exception;
 
     GanttTaskDto setEstimate(ApplicationUser loggedInUser, int calendarId, String issueKey, GanttEstimateForm form) throws Exception;
+
+    List<String> getErrors(ApplicationUser user, int calendarId) throws GetException;
 }
