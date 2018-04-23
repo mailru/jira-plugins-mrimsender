@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import {combineReducers} from 'redux';
 
 import {defaultOptions} from '../app-gantt/staticOptions';

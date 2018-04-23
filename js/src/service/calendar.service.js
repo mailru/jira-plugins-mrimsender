@@ -1,24 +1,25 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import {ajaxGet, getBaseUrl, getPluginBaseUrl} from '../common/ajs-helpers';
 
 
 export class CalendarService {
-    getCalendar(id) {
+    static getCalendar(id) {
         return ajaxGet(`${getPluginBaseUrl()}/calendar/${id}`);
     }
 
-    getEventInfo(calendarId, eventId) {
+    static getEventInfo(calendarId, eventId) {
         return ajaxGet(`${getPluginBaseUrl()}/calendar/events/${calendarId}/event/${eventId}/info`);
     }
 
-    getUserPreference() {
+    static getUserPreference() {
         return ajaxGet(`${getPluginBaseUrl()}/calendar/userPreference`);
     }
 
-    getUserCalendars() {
+    static getUserCalendars() {
         return ajaxGet(`${getPluginBaseUrl()}/calendar/forUser`);
     }
 
-    getFields() {
+    static getFields() {
         return ajaxGet(`${getBaseUrl()}/rest/api/latest/field`);
     }
 }

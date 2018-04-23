@@ -1,12 +1,12 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import {escapeHtml, getBaseUrl, getContextPath} from '../common/ajs-helpers';
 
 
 function getIconSrc(src) {
     if (src.startsWith('http')) {
         return src;
-    } else {
-        return getContextPath() + src;
     }
+    return getContextPath() + src;
 }
 
 export function buildJiraFieldColumn({key, name, colParams}, resizable=true) {

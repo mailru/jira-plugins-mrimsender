@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import queryString from 'query-string';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -7,43 +8,43 @@ import {ajaxDelete, ajaxGet, ajaxPost, ajaxPut, getPluginBaseUrl} from '../commo
 
 
 export class GanttService {
-    getGantt(calendarId) {
+    static getGantt(calendarId) {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/${calendarId}`);
     }
 
-    getOptimized(calendarId, params) {
+    static getOptimized(calendarId, params) {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/${calendarId}/optimized?${$.param(params)}`);
     }
 
-    applyPlan(calendarId, data) {
+    static applyPlan(calendarId, data) {
         return ajaxPost(`${getPluginBaseUrl()}/gantt/${calendarId}/applyPlan`, data);
     }
 
-    updateTask(calendarId, id, task, queryParams={}) {
+    static updateTask(calendarId, id, task, queryParams={}) {
         return ajaxPut(`${getPluginBaseUrl()}/gantt/${calendarId}/task/${id}?${queryString.stringify(queryParams)}`, task);
     }
 
-    estimateTask(calendarId, id, data, queryParams={}) {
+    static estimateTask(calendarId, id, data, queryParams={}) {
         return ajaxPost(`${getPluginBaseUrl()}/gantt/${calendarId}/task/${id}/estimate?${queryString.stringify(queryParams)}`, data);
     }
 
-    createLink(calendarId, link) {
+    static createLink(calendarId, link) {
         return ajaxPost(`${getPluginBaseUrl()}/gantt/${calendarId}/link`, link);
     }
 
-    deleteLink(calendarId, id) {
+    static deleteLink(calendarId, id) {
         return ajaxDelete(`${getPluginBaseUrl()}/gantt/${calendarId}/link/${id}`);
     }
 
-    findSprints(query) {
+    static findSprints(query) {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/sprints?query=${encodeURIComponent(query)}`);
     }
 
-    getCalendarSprints(calendarId) {
+    static getCalendarSprints(calendarId) {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/calendarSprints/${calendarId}`);
     }
 
-    getErrors(calendarId) {
+    static getErrors(calendarId) {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/errors/${calendarId}`);
     }
 }

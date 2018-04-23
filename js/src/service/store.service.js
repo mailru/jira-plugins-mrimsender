@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 export class StoreService {
     constructor(store) {
         this.store = store;

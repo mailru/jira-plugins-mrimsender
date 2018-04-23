@@ -1,4 +1,5 @@
-import {default_min_column_width, default_task_cell} from './ganttConfig';
+/* eslint-disable flowtype/require-valid-file-annotation */
+import {DEFAULT_MIN_COLUMN_WIDTH, defaultTaskCell} from './ganttConfig';
 import {scaleConfigs} from './scaleConfigs';
 
 import {storeService} from '../service/services';
@@ -34,13 +35,13 @@ export class ScaleUpdater {
         if (config.min_width_override) {
             this.gantt.config.min_column_width = config.min_width_override;
         } else {
-            this.gantt.config.min_column_width = default_min_column_width;
+            this.gantt.config.min_column_width = DEFAULT_MIN_COLUMN_WIDTH;
         }
 
         if (config.task_cell) {
             this.gantt.templates.task_cell_class = config.task_cell;
         } else {
-            this.gantt.templates.task_cell_class = default_task_cell;
+            this.gantt.templates.task_cell_class = defaultTaskCell;
         }
 
         this.gantt.config.scale_unit = config.scale_unit;
@@ -57,9 +58,10 @@ export class ScaleUpdater {
 
         if (dates && dates.start_date && dates.end_date) {
             this.gantt.config.start_date = this.gantt.date.add(dates.start_date, -1, config.unit);
-            this.gantt.config.end_date = this.gantt.date.add(this.gantt.date[config.unit + '_start'](dates.end_date), 2, config.unit);
+            this.gantt.config.end_date = this.gantt.date.add(this.gantt.date[`${config.unit  }_start`](dates.end_date), 2, config.unit);
         } else {
-            this.gantt.config.start_date = this.gantt.config.end_date = null;
+            this.gantt.config.start_date = null;
+            this.gantt.config.end_date = null;
         }
 
         console.log('calling render');

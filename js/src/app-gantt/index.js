@@ -1,10 +1,10 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import {Provider} from 'react-redux';
+import { Provider } from 'react-redux';
 
 import LayerManager from '@atlaskit/layer-manager';
-
 // eslint-disable-next-line import/no-extraneous-dependencies
 import AJS from 'AJS';
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -17,7 +17,6 @@ import Backbone from 'backbone';
 import moment from 'moment';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import JIRA from 'JIRA';
-
 // eslint-disable-next-line import/no-extraneous-dependencies
 import 'dhtmlx-gantt';
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -30,22 +29,22 @@ import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_auto_scheduling';
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_keyboard_navigation';
 
 
-import {GanttActions} from './GanttActions';
-import {config, templates} from './ganttConfig';
-import {eventListeners} from './ganttEvents';
-import {ScaleUpdater} from './scale.updater';
-import {GanttUpdater} from './gantt.updater';
-import {LayoutUpdater} from './layout.updater';
+import { GanttActions } from './GanttActions';
+import { config, templates } from './ganttConfig';
+import { eventListeners } from './ganttEvents';
+import { ScaleUpdater } from './scale.updater';
+import { GanttUpdater } from './gantt.updater';
+import { LayoutUpdater } from './layout.updater';
 
-import {collectTopMailCounterScript} from '../common/top-mail-ru';
+import { collectTopMailCounterScript } from '../common/top-mail-ru';
 
-import {calendarService, ganttService, store, storeService} from '../service/services';
-import {CalendarActionCreators, ganttReady} from '../service/gantt.reducer';
+import { calendarService, ganttService, store, storeService } from '../service/services';
+import { CalendarActionCreators, ganttReady } from '../service/gantt.reducer';
 
 import './gantt.less';
 
 
-const gantt = window.gantt;
+const {gantt} = window;
 
 gantt.config = {
     ...gantt.config,
@@ -82,12 +81,10 @@ gantt.addShortcut(
                 } else {
                     gantt.open(taskId);
                 }
+            } else if (gantt.getSelectedId() !== taskId) {
+                gantt.selectTask(taskId);
             } else {
-                if (gantt.getSelectedId() !== taskId) {
-                    gantt.selectTask(taskId);
-                } else {
-                    gantt.unselectTask(taskId);
-                }
+                gantt.unselectTask(taskId);
             }
         }
     },
@@ -134,7 +131,7 @@ function initGantt() {
             .getEventInfo(storeService.getCalendar().id, gantt.getTask(eventId).entityId)
             .then(issue => {
                 content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
-                    issue: issue,
+                    issue,
                     contextPath: AJS.contextPath()
                 })).addClass('calendar-event-info-popup');
                 eventDialog.refresh();
@@ -154,7 +151,7 @@ function initGantt() {
                             const targetOverride = document.querySelector(`.gantt_event_object[task_id="${taskId}"]`);
 
                             if (targetOverride) {
-                                targetPosition = {target: targetOverride};
+                                return AJS.InlineDialog.opts.calculatePositions(popup, {target: targetOverride}, mousePosition, opts);
                             }
                         }
                     }
@@ -172,13 +169,15 @@ function initGantt() {
     });
 }
 
-AJS.toInit(function() {
+AJS.toInit(() => {
     try {
         collectTopMailCounterScript();
 
         const scaleUpdater = new ScaleUpdater(gantt, store);
-        new GanttUpdater(gantt, store);
-        new LayoutUpdater(gantt, store);
+        // eslint-disable-next-line no-unused-vars
+        const ganttUpdater = new GanttUpdater(gantt, store);
+        // eslint-disable-next-line no-unused-vars
+        const layoutUpdaater = new LayoutUpdater(gantt, store);
 
         gantt.attachEvent('onParse', () => {
             scaleUpdater.updateScales();
@@ -189,7 +188,7 @@ AJS.toInit(function() {
             routes: {
                 'calendar=:calendar': 'setCalendar'
             },
-            setCalendar: function (id) {
+            setCalendar (id) {
                 Promise
                     .all([calendarService.getCalendar(id), ganttService.getCalendarSprints(id), ganttService.getErrors(id)])
                     .then(
@@ -198,7 +197,8 @@ AJS.toInit(function() {
             }
         });
 
-        new ViewRouter();
+        // eslint-disable-next-line no-unused-vars
+        const viewRouter = new ViewRouter();
 
         ReactDOM.render(
             <Provider store={store}>

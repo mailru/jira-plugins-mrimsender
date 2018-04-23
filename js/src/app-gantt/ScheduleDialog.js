@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -24,8 +25,11 @@ import {ganttService} from '../service/services';
 
 class ScheduleDialogInternal extends React.Component {
     static propTypes = {
+        // eslint-disable-next-line react/forbid-prop-types
         task: PropTypes.object.isRequired,
+        // eslint-disable-next-line react/forbid-prop-types
         gantt: PropTypes.any.isRequired,
+        // eslint-disable-next-line react/forbid-prop-types
         calendar: PropTypes.object.isRequired,
         onClose: PropTypes.func.isRequired,
     };
@@ -59,8 +63,10 @@ class ScheduleDialogInternal extends React.Component {
         super(props);
 
         const {task} = props;
+        // eslint-disable-next-line camelcase
         const {unscheduled, start_date, estimate} = task;
 
+        // eslint-disable-next-line camelcase
         const startMoment = moment(start_date);
 
         if (unscheduled) {
@@ -117,7 +123,7 @@ class ScheduleDialogInternal extends React.Component {
                 }
                 <Label
                     label="Дата начала"
-                    isRequired={true}
+                    isRequired
                 />
                 <div
                     className="flex-row"
@@ -131,7 +137,7 @@ class ScheduleDialogInternal extends React.Component {
                     <div className="flex-none time-field">
                         <FieldTextStateless
                             placeholder="00:00"
-                            isLabelHidden={true}
+                            isLabelHidden
                             value={startTime}
                             onChange={this._setText('startTime')}
                         />
@@ -140,8 +146,8 @@ class ScheduleDialogInternal extends React.Component {
                 <FieldTextStateless
                     label="Оценка"
                     placeholder="Например 3w 4d 12h"
-                    isRequired={true}
-                    shouldFitContainer={true}
+                    isRequired
+                    shouldFitContainer
 
                     value={estimate}
                     onChange={this._setText('estimate')}

@@ -172,10 +172,10 @@ module.exports = {
                         include: [paths.resolveApp('node_modules/query-string'), paths.resolveApp('node_modules/strict-uri-encode'), paths.appSrc, 'node_vendor_modules'],
                         use: {
                             loader: 'babel-loader',
-                            options: {
-                                compact: true,
-                                presets: ['react-app']
-                            }
+                            // options: {
+                            //     compact: true,
+                            //     presets: ['react', 'flow']
+                            // }
                         }
                     },
                     {

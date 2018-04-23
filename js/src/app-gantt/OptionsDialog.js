@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
@@ -22,7 +23,9 @@ const columnSizes = {
 
 class OptionsDialogInternal extends React.Component {
     static propTypes = {
-        gantt: PropTypes.object.isRequired,
+        // eslint-disable-next-line react/forbid-prop-types
+        // gantt: PropTypes.object.isRequired,
+        // eslint-disable-next-line react/forbid-prop-types
         options: PropTypes.object.isRequired,
         onClose: PropTypes.func.isRequired,
         updateOptions: PropTypes.func.isRequired
@@ -98,7 +101,7 @@ class OptionsDialogInternal extends React.Component {
             <div className="flex-column">
                 <SingleSelect
                     label="Группировка"
-                    isClearable={true}
+                    isClearable
                     options={groupOptions}
 
                     value={options.groupBy ? groupOptions.find(val => val.value === options.groupBy) : null}
@@ -108,7 +111,7 @@ class OptionsDialogInternal extends React.Component {
                     <div className="flex-grow">
                         <SingleSelect
                             label="Сортировать по"
-                            isClearable={true}
+                            isClearable
                             options={fields}
 
                             value={options.orderBy ? fields.find(val => val.value === options.orderBy) : null}
@@ -126,7 +129,7 @@ class OptionsDialogInternal extends React.Component {
                     label="Дополнительные поля"
                     options={fields}
 
-                    isMulti={true}
+                    isMulti
 
                     value={options.columns ? options.columns.map(col => {
                         return {

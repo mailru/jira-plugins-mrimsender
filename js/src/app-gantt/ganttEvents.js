@@ -1,37 +1,39 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import AJS from 'AJS';
-import debounce from 'lodash.debounce';
+// import debounce from 'lodash.debounce';
 
 import {ganttService, storeService} from '../service/services';
 
 
-const gantt = window.gantt;
+const { gantt } = window;
 
-const scrollTimeout = 100;
+// const scrollTimeout = 100;
 
 //detach default smart render scroll event handler
 //gantt.detachEvent('ev_onganttscroll:0');
 
-const updateRender = debounce(
-    (oldLeft, oldTop, left, top) => {
-        console.log('executing debounced update render');
-        if (gantt.config.smart_rendering) {
-            if((oldTop !== top) || (oldLeft !== left)){
-                gantt._smart_render.updateRender();
-            }
-        }
-    },
-    50,
-    {
-        maxWait: 200
-    }
-);
+// const updateRender = debounce(
+//     (oldLeft, oldTop, left, top) => {
+//         console.log('executing debounced update render');
+//         if (gantt.config.smart_rendering) {
+//             if((oldTop !== top) || (oldLeft !== left)){
+//                 gantt._smart_render.updateRender();
+//             }
+//         }
+//     },
+//     50,
+//     {
+//         maxWait: 200
+//     }
+// );
 
-let timeoutId = null;
+// let timeoutId = null;
 
 export function updateTask(task, data) {
+    // eslint-disable-next-line camelcase
     const {start_date, id, duration, overdueSeconds, ...etc} = data;
     const start = moment(start_date).toDate();
 

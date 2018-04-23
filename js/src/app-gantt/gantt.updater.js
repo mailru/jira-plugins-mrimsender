@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import queryString from 'query-string';
 
 import {buildColumns} from './ganttConfig';

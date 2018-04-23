@@ -1,14 +1,15 @@
-import {hours_task_cell} from './ganttConfig';
+/* eslint-disable flowtype/require-valid-file-annotation */
+import {hoursTaskCell} from './ganttConfig';
 
 
-const gantt = window.gantt;
+const { gantt } = window;
 
 //Setting available scales
 export const scaleConfigs = [
     // hours
     {
         min_width_override: 20,
-        task_cell: hours_task_cell,
+        task_cell: hoursTaskCell,
         unit: 'hour', step: 1, scale_unit: 'day', date_scale: '%j %M',
         subscales: [
             { unit: 'hour', step: 1, date: '%H' }
@@ -69,10 +70,10 @@ export const scaleConfigs = [
         subscales: [
             {
                 unit: 'month', step: 3,
-                template: function(date) {
+                template(date) {
                     const dateToStr = gantt.date.date_to_str('%M');
                     const endDate = gantt.date.add(gantt.date.add(date, 3, 'month'), -1, 'day');
-                    return dateToStr(date) + ' - ' + dateToStr(endDate);
+                    return `${dateToStr(date)  } - ${  dateToStr(endDate)}`;
                 }
             }
         ]
@@ -83,10 +84,10 @@ export const scaleConfigs = [
         subscales: [
             {
                 unit: 'year', step: 5,
-                template: function(date) {
+                template(date) {
                     const dateToStr = gantt.date.date_to_str('%Y');
                     const endDate = gantt.date.add(gantt.date.add(date, 5, 'year'), -1, 'day');
-                    return dateToStr(date) + ' - ' + dateToStr(endDate);
+                    return `${dateToStr(date)  } - ${  dateToStr(endDate)}`;
                 }
             }
         ]
@@ -94,18 +95,18 @@ export const scaleConfigs = [
     // decades
     {
         unit: 'year', step: 10, scale_unit: 'year',
-        template: function(date) {
+        template(date) {
             const dateToStr = gantt.date.date_to_str('%Y');
             const endDate = gantt.date.add(gantt.date.add(date, 10, 'year'), -1, 'day');
-            return dateToStr(date) + ' - ' + dateToStr(endDate);
+            return `${dateToStr(date)  } - ${  dateToStr(endDate)}`;
         },
         subscales: [
             {
                 unit: 'year', step: 100,
-                template: function(date) {
+                template(date) {
                     const dateToStr = gantt.date.date_to_str('%Y');
                     const endDate = gantt.date.add(gantt.date.add(date, 100, 'year'), -1, 'day');
-                    return dateToStr(date) + ' - ' + dateToStr(endDate);
+                    return `${dateToStr(date)  } - ${  dateToStr(endDate)}`;
                 }
             }
         ]

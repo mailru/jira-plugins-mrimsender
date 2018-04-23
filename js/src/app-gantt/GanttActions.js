@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -47,10 +48,14 @@ const enableMagic = true;
 
 class GanttActionsInternal extends React.Component {
     static propTypes = {
+        // eslint-disable-next-line react/forbid-prop-types
         gantt: PropTypes.object.isRequired,
+        // eslint-disable-next-line react/forbid-prop-types
         options: PropTypes.object.isRequired,
+        // eslint-disable-next-line react/forbid-prop-types
         calendar: PropTypes.object,
-        sprints: PropTypes.arrayOf(PropTypes.object.isRequired)
+        sprints: PropTypes.arrayOf(PropTypes.object.isRequired),
+        updateOptions: PropTypes.func
     };
 
     state = {
@@ -103,11 +108,12 @@ class GanttActionsInternal extends React.Component {
             .applyPlan(
                 calendar.id,
                 {
+                    // eslint-disable-next-line camelcase
                     items: tasks.map(({id, start_date, duration}) => {
                         return {
                             taskId: id,
                             start_date: gantt.templates.xml_format(start_date),
-                            duration: duration
+                            duration
                         };
                     })
                 }
@@ -146,8 +152,8 @@ class GanttActionsInternal extends React.Component {
     _zoomToFit = () => {
         const {gantt} = this.props;
 
-        const project = gantt.getSubtaskDates(),
-            areaWidth = gantt.$task.offsetWidth;
+        const project = gantt.getSubtaskDates();
+        const areaWidth = gantt.$task.offsetWidth;
 
         let i;
         for (i = 0; i < scaleConfigs.length; i++) {
@@ -168,8 +174,8 @@ class GanttActionsInternal extends React.Component {
     _getUnitsBetween =  (from, to, unit, step) => {
         const {gantt} = this.props;
 
-        let start = new Date(from),
-            end = new Date(to);
+        let start = new Date(from);
+        const end = new Date(to);
         let units = 0;
         while (start.valueOf() < end.valueOf()) {
             units++;
@@ -217,7 +223,8 @@ class GanttActionsInternal extends React.Component {
     _updateStructure = (isOpen) => {
         const {gantt} = this.props;
 
-        gantt.eachTask(function(task){
+        gantt.eachTask((task) => {
+            // eslint-disable-next-line no-param-reassign
             task.$open = isOpen;
         });
 
@@ -245,9 +252,9 @@ class GanttActionsInternal extends React.Component {
             <div>
                 {calendar && calendar.errors && !!calendar.errors.length &&
                     <div style={{margin: '0 -20px'}}>
-                        <Banner isOpen={true} icon={<WarningIcon label="warning" secondaryColor="inherit"/>}>
+                        <Banner isOpen icon={<WarningIcon label="warning" secondaryColor="inherit"/>}>
                             <div className="flex-column">
-                                {calendar.errors.map((e, i) => <div key={i}>{e}</div>)}
+                                {calendar.errors.map((e) => <div key={ e }>{e}</div>)}
                             </div>
                         </Banner>
                     </div>
@@ -266,7 +273,8 @@ class GanttActionsInternal extends React.Component {
                     <div className="flex-row">
                         <div>
                             <ButtonGroup>
-                                {enableMagic && <Button
+                                {enableMagic &&
+                                <Button
                                     iconBefore={<JiraLabsIcon label=""/>}
 
                                     onClick={this._toggleDialog('magic')}
@@ -457,9 +465,9 @@ class GanttActionsInternal extends React.Component {
                             <InlineDialog
                                 content={
                                     <div className="flex-column">
-                                        <FieldTextStateless isLabelHidden={true} label="" value={filter} onChange={this._setFilter}/>
+                                        <FieldTextStateless isLabelHidden label="" value={filter} onChange={this._setFilter}/>
                                         <div style={{marginTop: '20px'}}>
-                                            <Button onClick={this._applyFilter} shouldFitContainer={true}>
+                                            <Button onClick={this._applyFilter} shouldFitContainer>
                                                 Применить
                                             </Button>
                                         </div>

@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import {views} from './views';
 
 import {storeService} from '../service/services';
