@@ -288,8 +288,8 @@ public class GanttServiceImpl implements GanttService {
             throw new SecurityException("No permission");
         }
 
-        if (!(isMutableField(calendar.getEventStart()) && isMutableField(calendar.getEventEnd()))) {
-            throw new IllegalArgumentException("Calendar start and end fields must be present and mutable");
+        if (!(isMutableField(calendar.getEventStart()) && isMutableField("timeoriginalestimate"))) {
+            throw new IllegalArgumentException("Calendar start and original estimate must be present and mutable");
         }
 
         for (GanttPlanItem item : form.getItems()) {
