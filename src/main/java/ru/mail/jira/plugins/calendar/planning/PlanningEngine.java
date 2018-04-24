@@ -467,7 +467,7 @@ public class PlanningEngine {
         List<EventDto> hasPriorityAndNoDependance = new ArrayList<>(issues);
         hasPriorityAndNoDependance.removeAll(dependenceList.keySet());
         hasPriorityAndNoDependance.retainAll(issuePriority.keySet());
-        hasPriorityAndNoDependance.sort(Comparator.comparingDouble(issuePriority::get).reversed());
+        hasPriorityAndNoDependance.sort(Comparator.comparingDouble(issuePriority::get));
 
         final Map<UserDto, List<EventDto>> userPriorityIssueGroup = new HashMap<>();
         hasPriorityAndNoDependance.forEach(issue -> userPriorityIssueGroup.computeIfAbsent(issue.getAssignee(), k -> new ArrayList<>())
