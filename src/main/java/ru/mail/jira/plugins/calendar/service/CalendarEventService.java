@@ -1009,6 +1009,10 @@ public class CalendarEventService {
     }
 
     public EventDto moveEvent(ApplicationUser user, int calendarId, String eventId, String start, String end, String estimate) throws Exception {
+        return moveEvent(user, calendarId, eventId, start, end, estimate, ImmutableList.of());
+    }
+
+    public EventDto moveEvent(ApplicationUser user, int calendarId, String eventId, String start, String end, String estimate, List<String> fields) throws Exception {
         IssueService.IssueResult issueResult = issueService.getIssue(user, eventId);
         MutableIssue issue = issueResult.getIssue();
         if (!issueService.isEditable(issue, user))
@@ -1067,11 +1071,13 @@ public class CalendarEventService {
         if (!updateResult.isValid())
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
 
-
-
-        return buildEvent(
-            calendar, null, user, issueService.getIssue(user, eventId).getIssue(), false,
+        EventDto event = buildEvent(
+            calendar, null, user, issueService.getIssue(user, eventId).getIssue(), true,
             calendar.getEventStart(), eventStartCF, calendar.getEventEnd(), eventEndCF, ImmutableList.of(), null, true);
+
+        fillExtraFields(event.getIssueInfo(), fields, updateResult.getIssue());
+
+        return event;
     }
 
     public List<EventDto> getHolidays(ApplicationUser user) throws GetException {

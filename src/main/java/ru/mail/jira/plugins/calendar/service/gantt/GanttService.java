@@ -19,11 +19,11 @@ public interface GanttService {
     boolean hasLinks(String issueKey);
     List<GanttLinkDto> getLinks(String issueKey);
 
-    List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, GanttTaskForm form) throws Exception;
+    List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, GanttTaskForm form, List<String> fields) throws Exception;
 
     void applyPlan(ApplicationUser loggedInUser, int calendarId, GanttPlanForm form) throws Exception;
 
-    GanttTaskDto setEstimate(ApplicationUser loggedInUser, int calendarId, String issueKey, GanttEstimateForm form) throws Exception;
+    GanttTaskDto setEstimate(ApplicationUser loggedInUser, int calendarId, String issueKey, GanttEstimateForm form, List<String> fields) throws Exception;
 
     List<String> getErrors(ApplicationUser user, int calendarId) throws GetException;
 }

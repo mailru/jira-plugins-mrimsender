@@ -17,6 +17,8 @@ import Flag from '@atlaskit/flag';
 
 import ErrorIcon from '@atlaskit/icon/glyph/error';
 
+import {updateTask} from './ganttEvents';
+
 import {ganttService} from '../service/services';
 
 
@@ -39,19 +41,14 @@ class ScheduleDialogInternal extends React.Component {
                 {
                     start: gantt.templates.xml_format(moment(`${startDate} ${startTime}`)),
                     estimate
+                },
+                {
+                    fields: gantt.config.columns.filter(col => col.isJiraField).map(col => col.name)
                 }
             )
             .then(
                 newTask => {
-                    const {start_date, id, ...etc} = newTask;
-                    Object.assign(
-                        task,
-                        {
-                            ...etc,
-                            start_date: moment(start_date).toDate()
-                        }
-                    );
-                    gantt.refreshTask(task.id);
+                    updateTask(task, newTask);
                     onClose();
                 },
                 error => this.setState({ error: error.response.data })
@@ -62,7 +59,7 @@ class ScheduleDialogInternal extends React.Component {
         super(props);
 
         const {task} = props;
-        const {unscheduled, start_date, estimateSeconds} = task;
+        const {unscheduled, start_date, estimate} = task;
 
         const startMoment = moment(start_date);
 
@@ -76,7 +73,7 @@ class ScheduleDialogInternal extends React.Component {
             this.state = {
                 startDate: startMoment.format('YYYY-MM-DD'),
                 startTime: startMoment.format('HH:mm'),
-                estimate: (estimateSeconds || 0).toString()
+                estimate: estimate || ''
             };
         }
     }
@@ -157,7 +154,8 @@ class ScheduleDialogInternal extends React.Component {
 export const ScheduleDialog = connect(
     state => {
         return {
-            calendar: state.calendar
+            calendar: state.calendar,
+            options: state.options
         };
     }
 )(ScheduleDialogInternal);

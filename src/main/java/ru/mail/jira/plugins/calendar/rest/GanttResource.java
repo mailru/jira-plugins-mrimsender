@@ -130,13 +130,14 @@ public class GanttResource {
     public Response updateTask(
         @PathParam("id") final int calendarId,
         @PathParam("issueKey") final String issueKey,
+        @QueryParam("fields") List<String> fields,
         GanttTaskForm form
     ) {
         //todo: return object with list field
         return new RestExecutor<List<GanttTaskDto>>() {
             @Override
             protected List<GanttTaskDto> doAction() throws Exception {
-                return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, form);
+                return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, form, fields);
             }
         }.getResponse();
     }
@@ -146,12 +147,13 @@ public class GanttResource {
     public Response updateTask(
         @PathParam("id") final int calendarId,
         @PathParam("issueKey") final String issueKey,
+        @QueryParam("fields") List<String> fields,
         GanttEstimateForm form
     ) {
         return new RestExecutor<GanttTaskDto>() {
             @Override
             protected GanttTaskDto doAction() throws Exception {
-                return ganttService.setEstimate(authenticationContext.getLoggedInUser(), calendarId, issueKey, form);
+                return ganttService.setEstimate(authenticationContext.getLoggedInUser(), calendarId, issueKey, form, fields);
             }
         }.getResponse();
     }

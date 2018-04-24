@@ -1,3 +1,5 @@
+import queryString from 'query-string';
+
 // eslint-disable-next-line import/no-extraneous-dependencies
 import $ from 'jquery';
 
@@ -17,12 +19,12 @@ export class GanttService {
         return ajaxPost(`${getPluginBaseUrl()}/gantt/${calendarId}/applyPlan`, data);
     }
 
-    updateTask(calendarId, id, task) {
-        return ajaxPut(`${getPluginBaseUrl()}/gantt/${calendarId}/task/${id}`, task);
+    updateTask(calendarId, id, task, queryParams={}) {
+        return ajaxPut(`${getPluginBaseUrl()}/gantt/${calendarId}/task/${id}?${queryString.stringify(queryParams)}`, task);
     }
 
-    estimateTask(calendarId, id, data) {
-        return ajaxPost(`${getPluginBaseUrl()}/gantt/${calendarId}/task/${id}/estimate`, data);
+    estimateTask(calendarId, id, data, queryParams={}) {
+        return ajaxPost(`${getPluginBaseUrl()}/gantt/${calendarId}/task/${id}/estimate?${queryString.stringify(queryParams)}`, data);
     }
 
     createLink(calendarId, link) {

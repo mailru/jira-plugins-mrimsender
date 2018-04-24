@@ -280,8 +280,8 @@ public class GanttServiceImpl implements GanttService {
     }
 
     @Override
-    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, GanttTaskForm form) throws Exception {
-        return updateDates(user, calendarId, issueKey, form.getStartDate(), form.getDuration());
+    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, GanttTaskForm form, List<String> fields) throws Exception {
+        return updateDates(user, calendarId, issueKey, form.getStartDate(), form.getDuration(), fields);
     }
 
     @Override
@@ -309,8 +309,8 @@ public class GanttServiceImpl implements GanttService {
     }
 
     @Override
-    public GanttTaskDto setEstimate(ApplicationUser user, int calendarId, String issueKey, GanttEstimateForm form) throws Exception {
-        return buildEvent(calendarEventService.moveEvent(user, calendarId, issueKey, form.getStart(), null, form.getEstimate()), user, null);
+    public GanttTaskDto setEstimate(ApplicationUser user, int calendarId, String issueKey, GanttEstimateForm form, List<String> fields) throws Exception {
+        return buildEvent(calendarEventService.moveEvent(user, calendarId, issueKey, form.getStart(), null, form.getEstimate(), fields), user, null);
     }
 
     @Override
@@ -349,7 +349,7 @@ public class GanttServiceImpl implements GanttService {
         );
     }
 
-    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, Long duration) throws Exception {
+    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, Long duration, List<String> fields) throws Exception {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
         if (!permissionService.hasUsePermission(user, calendar)) {
@@ -364,7 +364,8 @@ public class GanttServiceImpl implements GanttService {
             issueKey,
             startDate,
             null,
-            duration != null ? duration + "m" : null
+            duration != null ? duration + "m" : null,
+            fields
         );
 
         result.add(buildEvent(event, user, null));
@@ -403,7 +404,7 @@ public class GanttServiceImpl implements GanttService {
             }
             ganttTaskDto.setLinkable(true);
             ganttTaskDto.setMovable(event.isStartEditable());
-            ganttTaskDto.setResizable(event.isDurationEditable());
+            ganttTaskDto.setResizable(true); //todo: check if user can edit estimate for issue
         }
         ganttTaskDto.setEntityId(event.getId());
         ganttTaskDto.setSummary(event.getTitle());
