@@ -80,7 +80,7 @@ public class GanttServiceImpl implements GanttService {
     public GanttDto getGantt(ApplicationUser user, int calendarId, String startDate, String endDate, GanttParams params) throws ParseException, SearchException, GetException {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
-        if (!permissionService.hasUsePermission(user, calendar) && !permissionService.hasAdminPermission(user, calendar)) {
+        if (!canUse(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
@@ -109,7 +109,7 @@ public class GanttServiceImpl implements GanttService {
     public GanttDto getGantt(ApplicationUser user, int calendarId, GanttParams params) throws Exception {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
-        if (!permissionService.hasUsePermission(user, calendar) && !permissionService.hasAdminPermission(user, calendar)) {
+        if (!canUse(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
@@ -239,7 +239,7 @@ public class GanttServiceImpl implements GanttService {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
         //todo different permission
-        if (!permissionService.hasUsePermission(user, calendar)) {
+        if (!canUse(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
@@ -259,7 +259,7 @@ public class GanttServiceImpl implements GanttService {
         Calendar calendar = calendarService.getCalendar(ganttLink.getCalendarId());
 
         //todo different permission
-        if (!permissionService.hasUsePermission(user, calendar)) {
+        if (!canUse(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
@@ -288,7 +288,7 @@ public class GanttServiceImpl implements GanttService {
     public void applyPlan(ApplicationUser user, int calendarId, GanttPlanForm form) throws Exception {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
-        if (!permissionService.hasUsePermission(user, calendar)) {
+        if (!permissionService.hasAdminPermission(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
@@ -317,7 +317,7 @@ public class GanttServiceImpl implements GanttService {
     public List<String> getErrors(ApplicationUser user, int calendarId) throws GetException {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
-        if (!permissionService.hasUsePermission(user, calendar)) {
+        if (!canUse(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
@@ -352,7 +352,7 @@ public class GanttServiceImpl implements GanttService {
     public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, Long duration, List<String> fields) throws Exception {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
-        if (!permissionService.hasUsePermission(user, calendar)) {
+        if (!canUse(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
@@ -505,5 +505,9 @@ public class GanttServiceImpl implements GanttService {
         dto.setType(link.getType());
         dto.setColor("#505F79"); //@ak-color-N400
         return dto;
+    }
+
+    private boolean canUse(ApplicationUser user, Calendar calendar) {
+        return permissionService.hasUsePermission(user, calendar) || permissionService.hasAdminPermission(user, calendar);
     }
 }
