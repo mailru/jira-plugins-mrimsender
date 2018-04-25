@@ -1,11 +1,9 @@
 package ru.mail.jira.plugins.calendar.service;
 
-import bsh.StringUtil;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.xmlgraphics.util.uri.CommonURIResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.CommonUtils;
