@@ -423,7 +423,7 @@ public class CalendarEventService {
     ) throws SearchException {
         return getEvents(
             calendar, groupBy,
-            JqlQueryBuilder.newClauseBuilder(getUnboundedEventsQuery(user, calendar, null, order, true, false)),
+            JqlQueryBuilder.newBuilder(getUnboundedEventsQuery(user, calendar, null, order, true, false)).where(),
             calendar.getEventStart(), calendar.getEventEnd(), startTime, endTime, user, includeIssueInfo, null, fields
         );
     }
