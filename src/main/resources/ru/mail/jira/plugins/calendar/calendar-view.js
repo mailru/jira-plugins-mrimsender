@@ -1,3 +1,5 @@
+var calendarMoment = window.moment;
+
 define('calendar/calendar-view', [
     'jquery',
     'underscore',
@@ -7,6 +9,8 @@ define('calendar/calendar-view', [
     'calendar/recurrence',
     'calendar/preferences'
 ], function($, _, Backbone, Reminder, EditTypeDialog, Recurring, Preferences) {
+    window.moment = calendarMoment;
+
     function getContextPath() {
         if (AJS.gadget) {
             return AJS.gadget.getBaseUrl();
