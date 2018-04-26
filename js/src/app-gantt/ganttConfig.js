@@ -122,12 +122,12 @@ export const config = {
 function createBox(sizes, className) {
     const box = document.createElement('div');
     box.style.cssText = [
-        `height:${  sizes.height  }px`,
-        `line-height:${  sizes.height  }px`,
-        `width:${  sizes.width  }px`,
-        `top:${  sizes.top  }px`,
-        `left:${  sizes.left  }px`,
-        'position:absolute'
+        `height: ${sizes.height}px`,
+        `line-height: ${sizes.height}px`,
+        `width: ${sizes.width}px`,
+        `top: ${sizes.top}px`,
+        `left: ${sizes.left}px`,
+        'position: absolute'
     ].join(';');
     box.className = className;
     return box;
