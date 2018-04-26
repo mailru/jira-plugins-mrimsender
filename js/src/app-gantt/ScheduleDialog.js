@@ -1,4 +1,4 @@
-/* eslint-disable flowtype/require-valid-file-annotation */
+//@flow
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -22,8 +22,24 @@ import {updateTask} from './ganttEvents';
 
 import {ganttService} from '../service/services';
 
+import type {GanttType, TaskType, CalendarType, VoidCallback} from './types';
 
-class ScheduleDialogInternal extends React.Component {
+
+type Props = {
+    task: TaskType,
+    gantt: GanttType,
+    calendar: CalendarType,
+    onClose: VoidCallback
+}
+
+type State = {
+    startDate: string,
+    startTime: string,
+    estimate: string,
+    error: ?string
+}
+
+class ScheduleDialogInternal extends React.Component<Props, State> {
     static propTypes = {
         // eslint-disable-next-line react/forbid-prop-types
         task: PropTypes.object.isRequired,
@@ -43,7 +59,7 @@ class ScheduleDialogInternal extends React.Component {
                 calendar.id,
                 task.entityId,
                 {
-                    start: gantt.templates.xml_format(moment(`${startDate} ${startTime}`)),
+                    start: startDate ? gantt.templates.xml_format(moment(`${startDate} ${startTime}`)) : null,
                     estimate
                 },
                 {
@@ -73,13 +89,15 @@ class ScheduleDialogInternal extends React.Component {
             this.state = {
                 startDate: '',
                 startTime: '',
-                estimate: ''
+                estimate: estimate || '',
+                error: null
             };
         } else {
             this.state = {
                 startDate: startMoment.format('YYYY-MM-DD'),
                 startTime: startMoment.format('HH:mm'),
-                estimate: estimate || ''
+                estimate: estimate || '',
+                error: null
             };
         }
     }
@@ -116,6 +134,7 @@ class ScheduleDialogInternal extends React.Component {
                 onClose={onClose}
             >
                 {error &&
+                    //$FlowFixMe
                     <Flag
                         icon={<ErrorIcon primaryColor={colors.R300} label="Info" />}
                         title={error}
@@ -123,7 +142,6 @@ class ScheduleDialogInternal extends React.Component {
                 }
                 <Label
                     label="Дата начала"
-                    isRequired
                 />
                 <div
                     className="flex-row"

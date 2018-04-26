@@ -7,6 +7,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.order.SortOrder;
+import com.google.common.collect.ImmutableList;
 import ru.mail.jira.plugins.calendar.planning.PlanningService;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.*;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanForm;
@@ -179,7 +180,10 @@ public class GanttResource {
         return new RestExecutor<List<SprintDto>>() {
             @Override
             protected List<SprintDto> doAction() {
-                return jiraSoftwareHelper.findSprints(authenticationContext.getLoggedInUser(), query);
+                if (jiraSoftwareHelper.isAvailable()) {
+                    return jiraSoftwareHelper.findSprints(authenticationContext.getLoggedInUser(), query);
+                }
+                return ImmutableList.of();
             }
         }.getResponse();
     }
