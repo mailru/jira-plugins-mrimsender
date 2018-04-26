@@ -98,7 +98,7 @@ class GanttActionsInternal extends React.Component {
             return;
         }
 
-        const tasks = gantt.getTaskBy(task => task.type !== 'group');
+        const tasks = gantt.getTaskBy(task => task.type === 'issue');
 
         this.setState({
             waitingForPlan: true
@@ -236,7 +236,7 @@ class GanttActionsInternal extends React.Component {
     _expandStructure = () => this._updateStructure(true);
 
     _openScheduleDialog = (task) => {
-        if (task.type !== 'group') {
+        if (task.type === 'issue') {
             this.setState({schedulingTask: task}, this._toggleDialog('scheduleTask'));
         }
     };

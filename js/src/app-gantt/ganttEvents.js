@@ -108,6 +108,39 @@ export const eventListeners = {
     onBeforeLinkDelete: (id) => {
         return id >= 0;
     },
+    onParse: () => {
+        const {sprint} = storeService.getOptions();
+
+        if (sprint) {
+            const sprintObject = storeService
+                .getSprints()
+                .find(it => it.id === sprint);
+
+            if (sprintObject) {
+                const {startDate, endDate} = sprintObject;
+
+                const taskId = gantt.addTask({
+                    id: 'sprint',
+                    summary: sprintObject.name,
+                    name: sprintObject.name,
+                    type: 'sprint',
+                    $open: true,
+                    unscheduled: !(startDate && endDate),
+                    start_date: startDate ? moment(startDate).toDate() : null,
+                    end_date: endDate ? moment(endDate).toDate() : null
+                }, null, 0);
+
+                for (const task of gantt.getTaskBy(it => !it.parent)) {
+                    if (task.id !== taskId) {
+                        //console.log(task.id, taskId);
+                        //gantt.setParent(task.id, taskId);
+                        task.parent = taskId;
+                        gantt.refreshTask(task.id);
+                    }
+                }
+            }
+        }
+    }
     /*onGanttScroll: (oldLeft, oldTop, left, top) => {
         //updateRender(oldLeft, oldTop, left, top);
         if (oldTop !== top) {

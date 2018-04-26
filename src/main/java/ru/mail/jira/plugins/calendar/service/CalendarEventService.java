@@ -9,6 +9,7 @@ import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.bc.project.component.ProjectComponent;
 import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.exception.GetException;
@@ -30,7 +31,6 @@ import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.jira.issue.resolution.Resolution;
 import com.atlassian.jira.issue.search.ClauseNames;
 import com.atlassian.jira.issue.search.SearchException;
-import com.atlassian.jira.issue.search.SearchProvider;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.jql.builder.JqlClauseBuilder;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
@@ -97,6 +97,7 @@ public class CalendarEventService {
     private final FieldManager fieldManager;
     private final DateTimeFormatter dateTimeFormatter;
     private final IssueService issueService;
+    private final LocaleManager localeManager;
     private final FieldLayoutManager fieldLayoutManager;
     private final JiraDeprecatedService jiraDeprecatedService;
     private final WorkingDaysService workingDaysService;
@@ -116,6 +117,7 @@ public class CalendarEventService {
         @ComponentImport FieldManager fieldManager,
         @ComponentImport DateTimeFormatter dateTimeFormatter,
         @ComponentImport IssueService issueService,
+        @ComponentImport LocaleManager localeManager,
         @ComponentImport FieldLayoutManager fieldLayoutManager,
         @ComponentImport RendererManager rendererManager,
         @ComponentImport SearchRequestService searchRequestService,
@@ -128,9 +130,11 @@ public class CalendarEventService {
         UserCalendarService userCalendarService,
         JiraSoftwareHelper jiraSoftwareHelper,
         WorkingDaysService workingDaysService,
-        @ComponentImport TimeZoneManager timeZoneManager) {
+        @ComponentImport TimeZoneManager timeZoneManager
+    ) {
         this.applicationProperties = applicationProperties;
         this.fieldManager = fieldManager;
+        this.localeManager = localeManager;
         this.calendarService = calendarService;
         this.customEventService = customEventService;
         this.customFieldManager = customFieldManager;
@@ -429,7 +433,7 @@ public class CalendarEventService {
     }
 
     public Query getUnboundedEventsQuery(
-        ApplicationUser user, Calendar calendar, Long sprintId, Order order, boolean onlyEstimated, boolean onlyResolved
+        ApplicationUser user, Calendar calendar, Long sprintId, Order order, boolean onlyEstimated, boolean onlyUnresolved
     ) {
         JqlClauseBuilder queryBuilder = getCalendarQueryBuilder(user, calendar);
         if (queryBuilder == null) {
@@ -440,7 +444,7 @@ public class CalendarEventService {
             queryBuilder
                 .and()
                 .sub()
-                .currentEstimate().isNotEmpty();
+                .originalEstimate().isNotEmpty();
 
             String startField = calendar.getEventStart();
             String endField = calendar.getEventEnd();
@@ -471,7 +475,7 @@ public class CalendarEventService {
                 .eq(sprintId);
         }
 
-        if (onlyResolved) {
+        if (onlyUnresolved) {
             queryBuilder.and().resolution().isEmpty();
         }
 
@@ -1060,7 +1064,13 @@ public class CalendarEventService {
                 issueInputParams.setDueDate(datePickerFormat.format(new Date(endDate.getTime() - MILLIS_IN_DAY)));
         }
         if (estimate != null) {
-            issueInputParams.setOriginalEstimate(estimate);
+            Long estimateSeconds = ComponentAccessor.getJiraDurationUtils().parseDuration(estimate, localeManager.getLocaleFor(user));
+            issueInputParams.setOriginalEstimate(estimateSeconds);
+            if (issue.getTimeSpent() != null) {
+                issueInputParams.setRemainingEstimate(estimateSeconds - issue.getTimeSpent());
+            } else {
+                issueInputParams.setRemainingEstimate(estimateSeconds);
+            }
         }
 
         IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(user, issue.getId(), issueInputParams);

@@ -12,6 +12,10 @@ export class StoreService {
         return this.store.getState().calendar;
     }
 
+    getSprints() {
+        return this.store.getState().sprints;
+    }
+
     isGanttReady() {
         return this.store.getState().ganttReady;
     }

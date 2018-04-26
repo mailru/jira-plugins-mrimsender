@@ -89,6 +89,30 @@ export const config = {
         ]
     },
 
+    types: {
+        ...gantt.config.types,
+        sprint: 'sprint'
+    },
+    type_renderers: {
+        ...gantt.config.type_renderers,
+        sprint: (task) => {
+            const el = document.createElement("div");
+            el.setAttribute(gantt.config.task_attribute, task.id);
+            const size = gantt.getTaskPosition(task);
+            el.innerHTML = [
+                "<div class='project-left'></div>",
+                "<div class='project-right'></div>"
+            ].join('');
+            el.className = "custom-project";
+
+            el.style.left = `${size.left}px`;
+            el.style.top = `${size.top + 7}px`;
+            el.style.width = `${size.width}px`;
+
+            return el;
+        }
+    },
+
     columns: buildColumns(defaultColumns),
     task_height: 20,
     row_height: 34,
@@ -110,13 +134,11 @@ function createBox(sizes, className) {
 }
 
 gantt.addTaskLayer((task) => {
-    if (!task.$open && gantt.hasChild(task.id) && !task.unscheduled) {
+    if (task.type === 'group' && !task.$open && gantt.hasChild(task.id) && !task.unscheduled) {
         const el = document.createElement('div');
         const sizes = gantt.getTaskPosition(task);
 
         const subTasks = gantt.getChildren(task.id);
-
-        console.log(subTasks);
 
         for (let i = 0; i < subTasks.length; i++) {
             const child = gantt.getTask(subTasks[i]);
@@ -163,7 +185,7 @@ export const templates = {
             classes.push('issue_event');
         }
 
-        if (task.type === 'group' || !task.linkable) {
+        if (task.type === 'group' || task.type === 'sprint' || !task.linkable) {
             classes.push('no_link');
         }
 
@@ -183,11 +205,11 @@ export const templates = {
             classes.push('resolved');
         }
 
-        if (gantt.hasChild(task.id)) {
+        if (task.type === 'group' && gantt.hasChild(task.id)) {
             classes.push('parent');
         }
 
-        if (!task.$open && gantt.hasChild(task.id)) {
+        if (task.type === 'group' && !task.$open && gantt.hasChild(task.id)) {
             classes.push('collapsed');
         }
 

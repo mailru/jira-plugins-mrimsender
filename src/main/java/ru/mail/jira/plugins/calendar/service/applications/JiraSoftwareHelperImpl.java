@@ -96,6 +96,10 @@ public class JiraSoftwareHelperImpl implements JiraSoftwareHelper {
         result.setId(sprint.getId());
         result.setName(sprint.getName());
         result.setState(SprintDto.State.valueOf(sprint.getState().name()));
+        if (sprint.getStartDate() != null && sprint.getEndDate() != null) {
+            result.setStartDate(sprint.getStartDate().toString());
+            result.setEndDate(sprint.getEndDate().toString());
+        }
 
         ServiceOutcome<RapidView> rapidViewOutcome = rapidViewService.getRapidView(user, sprint.getRapidViewId());
         if (rapidViewOutcome.isValid()) {

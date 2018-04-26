@@ -17,6 +17,10 @@ public class SprintDto {
     private String name;
     @XmlElement
     private State state;
+    @XmlElement
+    private String startDate;
+    @XmlElement
+    private String endDate;
 
     public enum State {
         FUTURE,
