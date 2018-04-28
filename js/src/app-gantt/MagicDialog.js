@@ -1,28 +1,28 @@
+// @flow
 import React from 'react';
-import PropTypes from 'prop-types';
 
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 
 import Modal from '@atlaskit/modal-dialog';
 import Spinner from '@atlaskit/spinner';
-import {Label} from '@atlaskit/field-base';
-import {DatePicker} from '@atlaskit/datetime-picker';
+import { Label } from '@atlaskit/field-base';
+import { DatePicker } from '@atlaskit/datetime-picker';
 import Select from '@atlaskit/select';
-
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
 
-import {groupOptions} from './staticOptions';
+import { groupOptions } from './staticOptions';
 
-import {SingleSelect} from '../common/ak/SingleSelect';
-import {SprintState} from '../common/sprints';
+import { SingleSelect } from '../common/ak/SingleSelect';
+import { SprintState } from '../common/sprints';
 
-import {noop} from '../common/util';
-import {ganttService} from '../service/services';
-import {OptionsActionCreators} from '../service/gantt.reducer';
+import { noop } from '../common/util';
+import { ganttService } from '../service/services';
+import { OptionsActionCreators } from '../service/gantt.reducer';
+import type { SelectOption } from '../common/types';
 
 
-const orderOptions = [
+const orderOptions: Array<SelectOption> = [
     {
         value: 'priority',
         label: 'По приоритету'
@@ -38,7 +38,7 @@ function mapSprint(sprint) {
         return null;
     }
 
-    const {id, name, ...etc} = sprint;
+    const { id, name, ...etc } = sprint;
     return {
         ...etc,
         value: id,
@@ -46,52 +46,64 @@ function mapSprint(sprint) {
     };
 }
 
-function formatSprintLabel({boardName, state, label}) {
+function formatSprintLabel({ boardName, state, label }: { boardName: string, state: string, label: string }) {
     if (!boardName) {
         return label;
-    } else {
-        return (
-            <span>
-                <SprintState state={state}/>
-                {' '}
-                <strong>
-                    {boardName}
-                </strong>
-                {' - '}
-                {label}
-            </span>
-        );
     }
+    return (
+        <span>
+            <SprintState state={state} />
+            {' '}
+            <strong>
+                {boardName}
+            </strong>
+            {' - '}
+            {label}
+        </span>
+    );
 }
 
-class MagicDialogInternal extends React.Component {
-    static propTypes = {
-        onClose: PropTypes.func.isRequired,
-        gantt: PropTypes.any.isRequired,
-        sprints: PropTypes.arrayOf(PropTypes.object.isRequired),
-        groupBy: PropTypes.string,
-        sprint: PropTypes.number,
-        calendar: PropTypes.object
-    };
+type Props = {
+    onClose: () => void,
+    updateOptions: ({ liveData: bool }) => void,
+    gantt: any,// todo
+    sprints: Array<{ id: string, name: string }>,
+    groupBy: { value: string } | null,
+    sprint?: number,
+    calendar: { id: string }
+}
+
+type State = {
+    groupBy: { value: string } | null,
+    orderBy: { value: string } | null,
+    sprint: { value: string, label: string } | null,
+    deadline: string,
+    waitingForMagic: bool
+}
+
+class MagicDialogInternal extends React.Component<Props, State> {
 
     state = {
         groupBy: null,
         orderBy: null,
+        sprint: null,
         deadline: moment().add(3, 'months').format('YYYY-MM-DD'),
         waitingForMagic: false
     };
 
     componentDidMount() {
-        const {sprint, sprints, groupBy} = this.props;
+        const { sprint, sprints, groupBy } = this.props;
 
+        // todo remove setState
+        // eslint-disable-next-line react/no-did-mount-set-state
         this.setState({
-            groupBy: groupBy,
+            groupBy,
             sprint: sprint ? mapSprint(sprints.find(item => item.id === sprint)) : null
         });
     }
 
     _runMagic = () => {
-        const {orderBy, groupBy, deadline, sprint} = this.state;
+        const { orderBy, groupBy, deadline, sprint } = this.state;
 
         this.setState({ waitingForMagic: true });
         ganttService
@@ -105,7 +117,7 @@ class MagicDialogInternal extends React.Component {
             )
             .then(
                 data => {
-                    const {gantt} = this.props;
+                    const { gantt } = this.props;
                     gantt.clearAll();
                     gantt.addMarker({
                         start_date: new Date(),
@@ -133,14 +145,14 @@ class MagicDialogInternal extends React.Component {
     _setSprint = (sprint) => this.setState({ sprint });
 
     render() {
-        const {onClose, sprints} = this.props;
-        const {orderBy, groupBy, sprint, deadline, waitingForMagic} = this.state;
+        const { onClose, sprints } = this.props;
+        const { orderBy, groupBy, sprint, deadline, waitingForMagic } = this.state;
 
         const actions = [
             {
                 text: !waitingForMagic && 'Запустить',
                 onClick: this._runMagic,
-                iconBefore: waitingForMagic && <Spinner/>,
+                iconBefore: waitingForMagic && <Spinner />,
                 isDisabled: waitingForMagic
             },
             {
@@ -161,7 +173,7 @@ class MagicDialogInternal extends React.Component {
                 <div className="flex-column full-width">
                     <SingleSelect
                         label="Группировка"
-                        isClearable={true}
+                        isClearable
                         isDisabled={waitingForMagic}
                         options={groupOptions}
 
@@ -170,7 +182,7 @@ class MagicDialogInternal extends React.Component {
                     />
                     <SingleSelect
                         label="Ранжирование"
-                        isClearable={true}
+                        isClearable
                         isDisabled={waitingForMagic}
                         options={orderOptions}
 
@@ -178,7 +190,7 @@ class MagicDialogInternal extends React.Component {
                         onChange={this._setOrder}
                     />
                     <div>
-                        <Label label="Спринт"/>
+                        <Label label="Спринт" />
                         <Select
                             defaultOptions
                             formatOptionLabel={formatSprintLabel}
@@ -189,7 +201,7 @@ class MagicDialogInternal extends React.Component {
                         />
                     </div>
                     <div>
-                        <Label label="Дедлайн" isRequired={true}/>
+                        <Label label="Дедлайн" isRequired />
                         <DatePicker
                             value={deadline}
                             isDisabled={waitingForMagic}
@@ -204,7 +216,7 @@ class MagicDialogInternal extends React.Component {
 
 export const MagicDialog =
     connect(
-        ({calendar, sprints, options}) => {
+        ({ calendar, sprints, options }) => {
             return {
                 calendar, sprints,
                 groupBy: options.groupBy,

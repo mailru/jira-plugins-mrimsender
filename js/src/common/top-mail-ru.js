@@ -1,3 +1,4 @@
+/* eslint-disable  */
 /**
  * Run statistic counter - like Google Analytics.
  * Surely, it doesn't collect any personal data or private information.

@@ -1,12 +1,12 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import {escapeHtml, getBaseUrl, getContextPath} from '../common/ajs-helpers';
 
 
 function getIconSrc(src) {
     if (src.startsWith('http')) {
         return src;
-    } else {
-        return getContextPath() + src;
     }
+    return getContextPath() + src;
 }
 
 export function buildJiraFieldColumn({key, name, colParams}, resizable=true) {
@@ -35,7 +35,7 @@ export const ganttColumns = {
         label: 'Код',
         align: 'left',
         template: (item) => {
-            if (item.type === 'group') {
+            if (item.type === 'group' || item.type === 'sprint') {
                 return '';
             }
             const id = escapeHtml(item.entityId);
@@ -48,16 +48,26 @@ export const ganttColumns = {
         label: 'Название',
         width: '*',
         align: 'left',
-        template: (item) => `<img
+        template: (item) => {
+            if (!item.icon_src) {
+                return escapeHtml(item.summary);
+            }
+
+            return `<img
                 class="calendar-event-issue-type"
                 alt="" height="16" width="16" style="margin-right: 5px;"
                 src="${item.type === 'group' ? item.icon_src : getIconSrc(item.icon_src)}"/> ${escapeHtml(item.summary)}`
+        }
     },
     progress: {
         name: 'progress',
         label: 'Прогресс',
         width: '80px',
         template: (item) => {
+            if (item.type !== 'issue') {
+                return '';
+            }
+
             const {progress} = item;
             const overdue = progress > 1;
 

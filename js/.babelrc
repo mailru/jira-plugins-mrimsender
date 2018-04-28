@@ -1,0 +1,39 @@
+{
+  "presets": [["env", { "modules": false }], "react", "flow"],
+  "plugins": [
+    "transform-class-properties",
+    "transform-object-rest-spread",
+    "syntax-dynamic-import",
+//    [
+//      "babel-plugin-styled-components",
+//      {
+//        "minify": false,
+//        "uglifyPure": false
+//      }
+//    ]
+  ],
+  "env": {
+    "production:cjs": {
+      "presets": [["env", {"modules": "commonjs"}], "react", "flow"],
+      "plugins": [
+        "transform-class-properties",
+        "transform-object-rest-spread",
+        "transform-runtime"
+      ],
+      "ignore": ["__mocks__", "__tests__", "__fixtures__", "node_modules"]
+    },
+    "production:esm": {
+      "presets": [["env", { "modules": false }], "react", "flow"],
+      "plugins": [
+        "transform-class-properties",
+        "transform-object-rest-spread",
+        "transform-runtime"
+      ],
+      "ignore": ["__mocks__", "__tests__", "__fixtures__", "node_modules"]
+    },
+    "test": {
+      "presets": ["env", "react", "flow"],
+      "plugins": ["transform-class-properties", "transform-object-rest-spread"]
+    }
+  }
+}

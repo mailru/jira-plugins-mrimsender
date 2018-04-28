@@ -1,12 +1,13 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
 
 import {buildJiraFieldColumn, ganttColumns, defaultColumns} from './ganttColumns';
 
 
-const gantt = window.gantt;
+const { gantt } = window;
 
-export const default_min_column_width = 70;
+export const DEFAULT_MIN_COLUMN_WIDTH = 70;
 
 export function buildColumns(names) {
     const lastId = names.length - 1;
@@ -163,73 +164,95 @@ export const config = {
         ]
     },
 
+    types: {
+        ...gantt.config.types,
+        sprint: 'sprint'
+    },
+    type_renderers: {
+        ...gantt.config.type_renderers,
+        sprint: (task) => {
+            const el = document.createElement("div");
+            el.setAttribute(gantt.config.task_attribute, task.id);
+            const size = gantt.getTaskPosition(task);
+            el.innerHTML = [
+                "<div class='project-left'></div>",
+                "<div class='project-right'></div>"
+            ].join('');
+            el.className = "custom-project";
+
+            el.style.left = `${size.left}px`;
+            el.style.top = `${size.top + 7}px`;
+            el.style.width = `${size.width}px`;
+
+            return el;
+        }
+    },
+
     columns: buildColumns(defaultColumns),
     task_height: 20,
     row_height: 34,
     grid_width: 600,
 };
 
-function createBox(sizes, class_name) {
+function createBox(sizes, className) {
     const box = document.createElement('div');
     box.style.cssText = [
-        'height:' + sizes.height + 'px',
-        'line-height:' + sizes.height + 'px',
-        'width:' + sizes.width + 'px',
-        'top:' + sizes.top + 'px',
-        'left:' + sizes.left + 'px',
-        'position:absolute'
+        `height: ${sizes.height}px`,
+        `line-height: ${sizes.height}px`,
+        `width: ${sizes.width}px`,
+        `top: ${sizes.top}px`,
+        `left: ${sizes.left}px`,
+        'position: absolute'
     ].join(';');
-    box.className = class_name;
+    box.className = className;
     return box;
 }
 
 gantt && gantt.addTaskLayer((task) => {
-    if (!task.$open && gantt.hasChild(task.id) && !task.unscheduled) {
-        const el = document.createElement('div'),
-            sizes = gantt.getTaskPosition(task);
+    if (task.type === 'group' && !task.$open && gantt.hasChild(task.id) && !task.unscheduled) {
+        const el = document.createElement('div');
+        const sizes = gantt.getTaskPosition(task);
 
         const subTasks = gantt.getChildren(task.id);
 
-        console.log(subTasks);
-
         for (let i = 0; i < subTasks.length; i++) {
             const child = gantt.getTask(subTasks[i]);
-            const child_sizes = gantt.getTaskPosition(child);
+            const childSizes = gantt.getTaskPosition(child);
 
-            if (child.unscheduled) {
-                continue;
+            if (!child.unscheduled) {
+                const childEl = createBox({
+                    height: 20,
+                    top: sizes.top,
+                    left: childSizes.left + 2,
+                    width: childSizes.width - 4,
+                }, 'child_preview gantt_task_line gantt_event_object');
+                el.appendChild(childEl);
             }
-
-            const child_el = createBox({
-                height: 20,
-                top: sizes.top,
-                left: child_sizes.left+2,
-                width: child_sizes.width-4,
-            }, 'child_preview gantt_task_line gantt_event_object');
-            el.appendChild(child_el);
         }
         return el;
     }
     return false;
 });
 
-export const default_task_cell = (_task, date) => {
+export const defaultTaskCell = (_task, date) => {
     if (!gantt.isWorkTime(date, 'day')) {
         return 'gantt-diagram-weekend-day';
     }
+    return '';
 };
 
-export const hours_task_cell = (_item, date) => {
+export const hoursTaskCell = (_item, date) => {
     if (!gantt.isWorkTime(date, 'hour')) {
         return 'gantt-diagram-weekend-day';
     }
+    return '';
 };
 
 export const templates = {
     grid_file: () => '',
     xml_date: (date) => moment(date).toDate(),
     xml_format: (date) => moment(date).format(),
-    task_cell_class: default_task_cell,
+    task_cell_class: defaultTaskCell,
     task_class: (_start, _end, task) => {
         const classes = ['gantt_event_object'];
 
@@ -237,7 +260,7 @@ export const templates = {
             classes.push('issue_event');
         }
 
-        if (task.type === 'group' || !task.linkable) {
+        if (task.type === 'group' || task.type === 'sprint' || !task.linkable) {
             classes.push('no_link');
         }
 
@@ -257,11 +280,11 @@ export const templates = {
             classes.push('resolved');
         }
 
-        if (gantt.hasChild(task.id)) {
+        if (task.type === 'group' && gantt.hasChild(task.id)) {
             classes.push('parent');
         }
 
-        if (!task.$open && gantt.hasChild(task.id)) {
+        if (task.type === 'group' && !task.$open && gantt.hasChild(task.id)) {
             classes.push('collapsed');
         }
 

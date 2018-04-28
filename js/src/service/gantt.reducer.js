@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import {combineReducers} from 'redux';
 
 // eslint-disable-next-line import/no-extraneous-dependencies

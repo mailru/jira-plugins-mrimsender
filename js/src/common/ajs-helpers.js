@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 // eslint-disable-next-line import/no-extraneous-dependencies
 import AJS from 'AJS';
 
@@ -14,9 +15,8 @@ function parseJson(json) {
 export function getContextPath() {
     if (AJS.gadget) {
         return AJS.gadget.getBaseUrl();
-    } else {
-        return AJS.contextPath();
     }
+    return AJS.contextPath();
 }
 
 export function escapeHtml(html) {
@@ -27,7 +27,7 @@ export function escapeHtml(html) {
 }
 
 export function getPluginBaseUrl() {
-    return getBaseUrl() + '/rest/mailrucalendar/latest';
+    return `${getBaseUrl()}/rest/mailrucalendar/latest`;
 }
 
 export function getBaseUrl() {
@@ -54,17 +54,18 @@ export function ajaxPromise(url, method, params, data) {
     return new Promise((resolve, reject) => {
         return AJS.$
             .ajax({
-                url: url,
+                url,
                 type: method,
                 contentType: method !== 'GET' ? 'application/json' : undefined,
                 dataType: 'json',
                 data: method !== 'GET' && method !== 'DELETE' ? JSON.stringify(data) : undefined
             })
             .then(
-                data => {
-                    resolve(data);
+                result => {
+                    resolve(result);
                 },
                 error => {
+                    // eslint-disable-next-line prefer-promise-reject-errors
                     reject({
                         response: {
                             ...error,

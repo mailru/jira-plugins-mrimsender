@@ -8,6 +8,7 @@ import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
+import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.google.common.collect.*;
 import net.java.ao.Query;
@@ -49,6 +50,7 @@ public class GanttServiceImpl implements GanttService {
     private final ActiveObjects ao;
     private final TimeZoneManager timeZoneManager;
     private final FieldManager fieldManager;
+    private final I18nHelper i18nHelper;
     private final PermissionService permissionService;
     private final CalendarEventService calendarEventService;
     private final CalendarService calendarService;
@@ -62,6 +64,7 @@ public class GanttServiceImpl implements GanttService {
         @ComponentImport TimeZoneManager timeZoneManager,
         @ComponentImport FieldManager fieldManager,
         @ComponentImport UserManager userManager,
+        @ComponentImport I18nHelper i18nHelper,
         PermissionService permissionService,
         CalendarEventService calendarEventService,
         CalendarService calendarService,
@@ -71,6 +74,7 @@ public class GanttServiceImpl implements GanttService {
         this.ao = ao;
         this.timeZoneManager = timeZoneManager;
         this.fieldManager = fieldManager;
+        this.i18nHelper = i18nHelper;
         this.permissionService = permissionService;
         this.calendarEventService = calendarEventService;
         this.calendarService = calendarService;
@@ -83,7 +87,7 @@ public class GanttServiceImpl implements GanttService {
     public GanttDto getGantt(ApplicationUser user, int calendarId, String startDate, String endDate, GanttParams params) throws ParseException, SearchException, GetException {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
-        if (!permissionService.hasUsePermission(user, calendar) && !permissionService.hasAdminPermission(user, calendar)) {
+        if (!canUse(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
@@ -112,7 +116,7 @@ public class GanttServiceImpl implements GanttService {
     public GanttDto getGantt(ApplicationUser user, int calendarId, GanttParams params) throws Exception {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
-        if (!permissionService.hasUsePermission(user, calendar) && !permissionService.hasAdminPermission(user, calendar)) {
+        if (!canUse(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
@@ -263,7 +267,7 @@ public class GanttServiceImpl implements GanttService {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
         //todo different permission
-        if (!permissionService.hasUsePermission(user, calendar)) {
+        if (!canUse(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
@@ -283,7 +287,7 @@ public class GanttServiceImpl implements GanttService {
         Calendar calendar = calendarService.getCalendar(ganttLink.getCalendarId());
 
         //todo different permission
-        if (!permissionService.hasUsePermission(user, calendar)) {
+        if (!canUse(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
@@ -304,20 +308,20 @@ public class GanttServiceImpl implements GanttService {
     }
 
     @Override
-    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, GanttTaskForm form) throws Exception {
-        return updateDates(user, calendarId, issueKey, form.getStartDate(), form.getDuration());
+    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, GanttTaskForm form, List<String> fields) throws Exception {
+        return updateDates(user, calendarId, issueKey, form.getStartDate(), form.getDuration(), fields);
     }
 
     @Override
     public void applyPlan(ApplicationUser user, int calendarId, GanttPlanForm form) throws Exception {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
-        if (!permissionService.hasUsePermission(user, calendar)) {
+        if (!permissionService.hasAdminPermission(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
-        if (!(isMutableField(calendar.getEventStart()) && isMutableField(calendar.getEventEnd()))) {
-            throw new IllegalArgumentException("Calendar start and end fields must be present and mutable");
+        if (!(isMutableField(calendar.getEventStart()) && isMutableField("timeoriginalestimate"))) {
+            throw new IllegalArgumentException("Calendar start and original estimate must be present and mutable");
         }
 
         for (GanttPlanItem item : form.getItems()) {
@@ -333,8 +337,25 @@ public class GanttServiceImpl implements GanttService {
     }
 
     @Override
-    public GanttTaskDto setEstimate(ApplicationUser user, int calendarId, String issueKey, GanttEstimateForm form) throws Exception {
-        return buildEvent(calendarEventService.moveEvent(user, calendarId, issueKey, form.getStart(), null, form.getEstimate()), user, null);
+    public GanttTaskDto setEstimate(ApplicationUser user, int calendarId, String issueKey, GanttEstimateForm form, List<String> fields) throws Exception {
+        return buildEvent(calendarEventService.moveEvent(user, calendarId, issueKey, form.getStart(), null, form.getEstimate(), fields), user, null);
+    }
+
+    @Override
+    public List<String> getErrors(ApplicationUser user, int calendarId) throws GetException {
+        Calendar calendar = calendarService.getCalendar(calendarId);
+
+        if (!canUse(user, calendar)) {
+            throw new SecurityException("No permission");
+        }
+
+        List<String> errors = new ArrayList<>();
+
+        if (!isMutableField(calendar.getEventStart())) {
+            errors.add(i18nHelper.getText("ru.mail.jira.plugins.calendar.gantt.error.startImmutable"));
+        }
+
+        return errors;
     }
 
     private boolean isMutableField(String fieldId) {
@@ -356,10 +377,10 @@ public class GanttServiceImpl implements GanttService {
         );
     }
 
-    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, Long duration) throws Exception {
+    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, Long duration, List<String> fields) throws Exception {
         Calendar calendar = calendarService.getCalendar(calendarId);
 
-        if (!permissionService.hasUsePermission(user, calendar)) {
+        if (!canUse(user, calendar)) {
             throw new SecurityException("No permission");
         }
 
@@ -371,7 +392,8 @@ public class GanttServiceImpl implements GanttService {
             issueKey,
             startDate,
             null,
-            duration != null ? duration + "m" : null
+            duration != null ? duration + "m" : null,
+            fields
         );
 
         result.add(buildEvent(event, user, null));
@@ -410,7 +432,7 @@ public class GanttServiceImpl implements GanttService {
             }
             ganttTaskDto.setLinkable(true);
             ganttTaskDto.setMovable(event.isStartEditable());
-            ganttTaskDto.setResizable(event.isDurationEditable());
+            ganttTaskDto.setResizable(true); //todo: check if user can edit estimate for issue
         }
         ganttTaskDto.setEntityId(event.getId());
         ganttTaskDto.setSummary(event.getTitle());
@@ -509,5 +531,9 @@ public class GanttServiceImpl implements GanttService {
         dto.setType(link.getType());
         dto.setColor("#505F79"); //@ak-color-N400
         return dto;
+    }
+
+    private boolean canUse(ApplicationUser user, Calendar calendar) {
+        return permissionService.hasUsePermission(user, calendar) || permissionService.hasAdminPermission(user, calendar);
     }
 }

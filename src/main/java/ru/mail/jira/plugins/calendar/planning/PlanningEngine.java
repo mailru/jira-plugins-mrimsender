@@ -16,7 +16,6 @@ import org.jacop.search.SelectChoicePoint;
 import org.jacop.search.SmallestMin;
 import org.jacop.search.SplitSelect;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.ojalgo.optimisation.Expression;
@@ -468,12 +467,18 @@ public class PlanningEngine {
         List<EventDto> hasPriorityAndNoDependance = new ArrayList<>(issues);
         hasPriorityAndNoDependance.removeAll(dependenceList.keySet());
         hasPriorityAndNoDependance.retainAll(issuePriority.keySet());
-        hasPriorityAndNoDependance.sort(Comparator.comparingDouble(issuePriority::get).reversed());
+        hasPriorityAndNoDependance.sort(Comparator.comparingDouble(issuePriority::get));
 
-        for (int i = 0; i < hasPriorityAndNoDependance.size() - 1; i++) {
-            int idx1 = issueIndex.get(hasPriorityAndNoDependance.get(i));
-            int idx2 = issueIndex.get(hasPriorityAndNoDependance.get(i + 1));
-            store.impose(new XlteqY(startTime[idx1], startTime[idx2]));
+        final Map<UserDto, List<EventDto>> userPriorityIssueGroup = new HashMap<>();
+        hasPriorityAndNoDependance.forEach(issue -> userPriorityIssueGroup.computeIfAbsent(issue.getAssignee(), k -> new ArrayList<>())
+                                                                          .add(issue));
+
+        for (Map.Entry<UserDto, List<EventDto>> e : userPriorityIssueGroup.entrySet()) {
+            for (int i = 0; i < e.getValue().size() - 1; i++) {
+                int idx1 = issueIndex.get(e.getValue().get(i));
+                int idx2 = issueIndex.get(e.getValue().get(i + 1));
+                store.impose(new XlteqY(startTime[idx1], startTime[idx2]));
+            }
         }
 
 

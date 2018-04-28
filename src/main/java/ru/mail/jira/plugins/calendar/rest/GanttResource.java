@@ -7,6 +7,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.order.SortOrder;
+import com.google.common.collect.ImmutableList;
 import ru.mail.jira.plugins.calendar.planning.PlanningService;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.*;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanForm;
@@ -130,13 +131,14 @@ public class GanttResource {
     public Response updateTask(
         @PathParam("id") final int calendarId,
         @PathParam("issueKey") final String issueKey,
+        @QueryParam("fields") List<String> fields,
         GanttTaskForm form
     ) {
         //todo: return object with list field
         return new RestExecutor<List<GanttTaskDto>>() {
             @Override
             protected List<GanttTaskDto> doAction() throws Exception {
-                return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, form);
+                return ganttService.updateDates(authenticationContext.getLoggedInUser(), calendarId, issueKey, form, fields);
             }
         }.getResponse();
     }
@@ -146,12 +148,13 @@ public class GanttResource {
     public Response updateTask(
         @PathParam("id") final int calendarId,
         @PathParam("issueKey") final String issueKey,
+        @QueryParam("fields") List<String> fields,
         GanttEstimateForm form
     ) {
         return new RestExecutor<GanttTaskDto>() {
             @Override
             protected GanttTaskDto doAction() throws Exception {
-                return ganttService.setEstimate(authenticationContext.getLoggedInUser(), calendarId, issueKey, form);
+                return ganttService.setEstimate(authenticationContext.getLoggedInUser(), calendarId, issueKey, form, fields);
             }
         }.getResponse();
     }
@@ -177,7 +180,10 @@ public class GanttResource {
         return new RestExecutor<List<SprintDto>>() {
             @Override
             protected List<SprintDto> doAction() {
-                return jiraSoftwareHelper.findSprints(authenticationContext.getLoggedInUser(), query);
+                if (jiraSoftwareHelper.isAvailable()) {
+                    return jiraSoftwareHelper.findSprints(authenticationContext.getLoggedInUser(), query);
+                }
+                return ImmutableList.of();
             }
         }.getResponse();
     }
@@ -190,6 +196,18 @@ public class GanttResource {
             protected List<SprintDto> doAction() throws GetException, SearchException {
                 ApplicationUser user = authenticationContext.getLoggedInUser();
                 return sprintSearcher.findSprintsForCalendar(user, calendarId);
+            }
+        }.getResponse();
+    }
+
+    @GET
+    @Path("/errors/{id}")
+    public Response getErrors(@PathParam("id") int calendarId) {
+        return new RestExecutor<List<String>>() {
+            @Override
+            protected List<String> doAction() throws GetException, SearchException {
+                ApplicationUser user = authenticationContext.getLoggedInUser();
+                return ganttService.getErrors(user, calendarId);
             }
         }.getResponse();
     }

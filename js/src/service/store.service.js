@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 export class StoreService {
     constructor(store) {
         this.store = store;
@@ -9,6 +10,10 @@ export class StoreService {
 
     getCalendar() {
         return this.store.getState().calendar;
+    }
+
+    getSprints() {
+        return this.store.getState().sprints;
     }
 
     isGanttReady() {

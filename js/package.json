@@ -2,22 +2,33 @@
   "private": true,
   "devDependencies": {
     "autoprefixer": "^8.0.0",
+    "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",
     "babel-eslint": "^8.2.1",
     "babel-loader": "^7.1.2",
-    "babel-preset-react-app": "^3.1.1",
     "babel-preset-env": "^1.6.1",
+    "babel-preset-flow": "^6.23.0",
+    "babel-preset-react-app": "^3.1.1",
     "clean-webpack-plugin": "^0.1.18",
     "css-loader": "^0.28.9",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.1.1",
     "eslint": "^4.17.0",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-config-prettier": "^2.9.0",
     "eslint-config-react-app": "^2.1.0",
     "eslint-loader": "^1.9.0",
     "eslint-plugin-flowtype": "^2.43.0",
     "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jest": "^21.15.1",
     "eslint-plugin-jsx-a11y": "5.1.1",
+    "eslint-plugin-prettier": "^2.6.0",
     "eslint-plugin-react": "^7.6.1",
     "extract-text-webpack-plugin": "^3.0.2",
     "file-loader": "^1.1.6",
+    "flow-bin": "^0.67.0",
+    "jest": "^22.4.3",
+    "jest-enzyme": "^6.0.0",
     "less": "^2.7.3",
     "less-loader": "^4.0.5",
     "react-dev-utils": "^5.0.0",
@@ -28,19 +39,18 @@
   },
   "scripts": {
     "build": "NODE_ENV=development webpack --progress --config config/webpack.config.js",
-    "build-prod": "NODE_ENV=production webpack --progress --config config/webpack.config.js"
+    "build-prod": "flow status && jest && NODE_ENV=production webpack --progress --config config/webpack.config.js",
+    "test": "flow status && jest"
   },
-  "babel": {
-    "presets": [
-      "react-app",
-      "env"
-    ]
+  "jest": {
+    "setupTestFrameworkScriptFile": "./config/setupTests.js"
   },
   "resolutions": {
     "react": "16.2.0"
   },
   "dependencies": {
     "@atlaskit/avatar": "^9.2.3",
+    "@atlaskit/banner": "^5.0.0",
     "@atlaskit/button": "^6.6.3",
     "@atlaskit/checkbox": "^2.0.0",
     "@atlaskit/css-reset": "^1.2.3",

@@ -1,13 +1,17 @@
+// @flow
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import Lozenge from '@atlaskit/lozenge';
+import type { Appearances } from '@atlaskit/lozenge/dist/cjs/Lozenge/index';
+import { APPEARANCE_ENUM } from '@atlaskit/lozenge/dist/cjs/Lozenge/index';
 
+type Props = {
+    state?: string,
+};
 
-export function SprintState({state}) {
-    let appearance = null;
+export const SprintState = ({ state }: Props) => {
+    let appearance: Appearances = APPEARANCE_ENUM.defaultValue;
 
-    // eslint-disable-next-line default-case
     switch (state) {
         case 'FUTURE':
             appearance = 'new';
@@ -18,10 +22,8 @@ export function SprintState({state}) {
         case 'CLOSED':
             appearance = 'default';
             break;
+        default:
+            appearance = APPEARANCE_ENUM.defaultValue;
     }
     return <Lozenge appearance={appearance}>{state}</Lozenge>;
-}
-
-SprintState.propTypes = {
-    state: PropTypes.string.isRequired
 };

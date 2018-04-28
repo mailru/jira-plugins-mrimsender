@@ -1,4 +1,5 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable flowtype/require-valid-file-annotation */
 import moment from 'moment';
 
 import {keyedConfigs} from './scaleConfigs';

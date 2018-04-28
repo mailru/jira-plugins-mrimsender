@@ -1,1 +1,3 @@
-export function noop() {}
+// @flow
+export function noop(): void {
+}

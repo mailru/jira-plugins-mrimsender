@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
@@ -11,7 +12,9 @@ import {OptionsActionCreators} from '../service/gantt.reducer';
 
 class DatesDialogInternal extends React.Component {
     static propTypes = {
-        gantt: PropTypes.object.isRequired,
+        // eslint-disable-next-line react/forbid-prop-types
+        // gantt: PropTypes.object.isRequired,
+        // eslint-disable-next-line react/forbid-prop-types
         options: PropTypes.object.isRequired,
         onClose: PropTypes.func.isRequired,
         updateOptions: PropTypes.func.isRequired
@@ -49,7 +52,7 @@ class DatesDialogInternal extends React.Component {
 
         return (
             <div className="flex-column">
-                <Label label="Дата начала" isFirstChild={true}/>
+                <Label label="Дата начала" isFirstChild/>
                 <DatePicker value={options.startDate} onChange={this._setDate('startDate')}/>
                 <Label label="Дата конца"/>
                 <DatePicker value={options.endDate} onChange={this._setDate('endDate')}/>

@@ -4,7 +4,7 @@ const os = require('os');
 const path = require('path');
 const webpack = require('webpack');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
@@ -27,20 +27,13 @@ const env = getClientEnvironment(publicUrl);
 const cssDir = '../../src/main/resources/ru/mail/jira/plugins/calendar/css/';
 
 const extractLess = new ExtractTextPlugin({
-    filename: cssDir + '[name].css',
-    disable: process.env.NODE_ENV === "development"
+    filename: cssDir + '[name].css'
 });
 
 let watch = true;
 let extraPlugins = [];
 let devtool = 'cheap-module-source-map';
 let minimizeCss = false;
-
-let styleLoader = [
-    {
-        loader: 'style-loader'
-    }
-];
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
@@ -69,7 +62,6 @@ if (process.env.NODE_ENV === 'production') {
         })
     );
 
-    styleLoader = [];
     watch = false;
     minimizeCss = true;
     devtool = 'source-map';
@@ -181,10 +173,10 @@ module.exports = {
                         include: [paths.resolveApp('node_modules/query-string'), paths.resolveApp('node_modules/strict-uri-encode'), paths.appSrc, 'node_vendor_modules'],
                         use: {
                             loader: 'babel-loader',
-                            options: {
-                                compact: true,
-                                presets: ['react-app']
-                            }
+                            // options: {
+                            //     compact: true,
+                            //     presets: ['react', 'flow']
+                            // }
                         }
                     },
                     {
@@ -192,12 +184,11 @@ module.exports = {
                         use: extractLess.extract({
                             fallback: 'style-loader',
                             use: [
-                                ...styleLoader,
                                 {
                                     loader: 'css-loader',
                                     options: {
                                         minimize: minimizeCss,
-                                        sourceMap: shouldUseSourceMap
+                                        sourceMap: false
                                     }
                                 },
                                 {
@@ -241,7 +232,7 @@ module.exports = {
         // Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
         extractLess,
         new CleanWebpackPlugin(
-            cssDir + "*.*",
+            cssDir + '*.*',
             {
                 dry: false,
                 allowExternal: true

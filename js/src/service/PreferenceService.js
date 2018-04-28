@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 const prefix = 'ru.mail.jira.gantt.';
 
 export const properties = {
@@ -11,28 +12,28 @@ export const properties = {
 };
 
 export class PreferenceService {
-    get(key) {
+    static get(key) {
         const item = localStorage.getItem(key);
         return item ? JSON.parse(item) : null;
     }
 
-    put(key, value) {
+    static put(key, value) {
         if (value !== null && value !== undefined) {
             localStorage.setItem(key, JSON.stringify(value));
         } else {
-            this.remove(key);
+            PreferenceService.remove(key);
         }
     }
 
-    remove(key) {
+    static remove(key) {
         localStorage.removeItem(key);
     }
 
-    getOptions() {
+    static getOptions() {
         const result = {};
 
         for (const key of Object.keys(properties)) {
-            const value = this.get(properties[key]);
+            const value = PreferenceService.get(properties[key]);
 
             if (value !== null && value !== undefined) {
                 result[key] = value;
@@ -42,11 +43,11 @@ export class PreferenceService {
         return result;
     }
 
-    saveOptions(options) {
+    static saveOptions(options) {
         for (const key of Object.keys(properties)) {
             const storeKey = properties[key];
             if (storeKey) {
-                this.put(storeKey, options[key]);
+                PreferenceService.put(storeKey, options[key]);
             } else {
                 console.warn('unknwon store key', storeKey);
             }

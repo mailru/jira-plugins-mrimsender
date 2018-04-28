@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import {createStore} from 'redux';
 
 import {GanttService} from './gantt.service';
@@ -11,12 +12,13 @@ import {PreferenceService} from './PreferenceService';
 import {defaultOptions} from '../app-gantt/staticOptions';
 
 
-export const ganttService = new GanttService();
+export const ganttService = GanttService;
 export const ganttTeamService = new GanttTeamService();
-export const calendarService = new CalendarService();
-export const jiraService = new JiraService();
+export const calendarService = CalendarService;
+export const jiraService = JiraService;
 
-export const preferenceService = new PreferenceService();
+export const preferenceService = PreferenceService;
+
 export const store = createStore(
     ganttReducer,
     {
