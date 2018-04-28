@@ -1,7 +1,7 @@
 /*!
  * @license
  * 
- * dhtmlxGantt v.5.1.2 Professional
+ * dhtmlxGantt v.5.1.5 Professional
  * This software is covered by DHTMLX Enterprise License. Usage without proper license is prohibited.
  * 
  * (c) Dinamenta, UAB.
@@ -180,6 +180,11 @@ gantt.date.str_to_date = function(format,utc){
 	};
 };
 
+// custom DOM attributes may be stripped in some environemnts, make sure data attributes used instead
+gantt.config.task_attribute = "data-task-id";
+gantt.config.link_attribute = "data-link-id";
+gantt.config.grid_resizer_column_attribute = "data-column-index";
+gantt.config.grid_resizer_attribute = "data-grid-resizer";
 
 /***/ })
 

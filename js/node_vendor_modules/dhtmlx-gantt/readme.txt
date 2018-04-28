@@ -1,6 +1,6 @@
 @license
 
-dhtmlxGantt v.5.1.2 Professional
+dhtmlxGantt v.5.1.5 Professional
 This software is covered by DHTMLX Enterprise License. Usage without proper license is prohibited.
 
 (c) Dinamenta, UAB.

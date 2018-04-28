@@ -1,7 +1,7 @@
 /*!
  * @license
  * 
- * dhtmlxGantt v.5.1.2 Professional
+ * dhtmlxGantt v.5.1.5 Professional
  * This software is covered by DHTMLX Enterprise License. Usage without proper license is prohibited.
  * 
  * (c) Dinamenta, UAB.
@@ -539,22 +539,11 @@ module.exports = function (d, b) {
 /***/ (function(module, exports) {
 
 function isDate(obj) {
-	var fields = [
-		"getFullYear",
-		"getMonth",
-		"getDate"
-	];
-	
 	if (obj && typeof obj == "object") {
-		for (var i=0; i<fields.length; i++) {
-			if (!obj[fields[i]])
-				return false;
-		}
+		return !!(obj.getFullYear && obj.getMonth && obj.getDate);
 	} else {
 		return false;
 	}
-
-	return true;
 }
 
 module.exports = {
@@ -932,21 +921,30 @@ function getSecondsInUnit(unit){
 }
 
 function forEach(arr, callback){
-	var workArray = arr.slice();
-	for(var i = 0; i < workArray.length; i++){
-		callback(workArray[i], i);
+	if(arr.forEach){
+		arr.forEach(callback);
+	}else{
+		var workArray = arr.slice();
+		for(var i = 0; i < workArray.length; i++){
+			callback(workArray[i], i);
+		}
 	}
 }
 
 function arrayMap(arr, callback){
-	var workArray = arr.slice();
-	var resArray = [];
+	if(arr.map){
+		return arr.map(callback);
+	}else{
+		var workArray = arr.slice();
+		var resArray = [];
 
-	for(var i = 0; i < workArray.length; i++){
-		resArray.push(callback(workArray[i], i));
+		for(var i = 0; i < workArray.length; i++){
+			resArray.push(callback(workArray[i], i));
+		}
+
+		return resArray;
 	}
 
-	return resArray;
 }
 
 module.exports = {
@@ -1459,7 +1457,7 @@ Grid.prototype = {
 
 			var ariaAttrs = gantt._waiAria.gridScaleCellAttrString(col, label);
 
-			var cell = "<div class='" + cssClass + "' style='" + style + "' " + ariaAttrs + " column_id='" + col.name + "'>" + label + sort + "</div>";
+			var cell = "<div class='" + cssClass + "' style='" + style + "' " + ariaAttrs + " data-column-id='" + col.name + "' column_id='" + col.name + "'>" + label + sort + "</div>";
 			cells.push(cell);
 		}
 		this.$grid_scale.style.height = (config.scale_height) + "px";
@@ -2863,7 +2861,7 @@ Timeline.prototype = {
 		var day_ind = _findBinary(days, pos);
 		var day = +days[day_ind];
 		while (ignores[day]) {
-			day = days[++day_ind];
+			day = +days[++day_ind];
 		}
 
 		var transition = this._tasks.trace_index_transition;
@@ -3231,7 +3229,7 @@ DataStore.prototype = {
 					this.$insertAt(item.id,index);
 			});
 		}
-
+		this.filter();
 		//order.$insertAt(item.id,index);
 	},
 
@@ -3270,11 +3268,12 @@ DataStore.prototype = {
 		if(this.pull[oldId])
 			this.pull[newId] = this.pull[oldId];
 
+		var visibleOrder = this._searchVisibleOrder[oldId];
 		this.pull[newId].id = newId;
 		this._updateOrder(function(){
 			this[this.$find(oldId)] = newId;
 		});
-		this._searchVisibleOrder[newId] = this._searchVisibleOrder[oldId];
+		this._searchVisibleOrder[newId] = visibleOrder;
 		delete this._searchVisibleOrder[oldId];
 
 		//this.visibleOrder[this.visibleOrder.$find(oldId)]=newId;
@@ -3618,6 +3617,8 @@ TreeDataStore.prototype = utils.mixin({
 		},
 		_changeIdInner: function(oldId, newId){
 			var children = this.getChildren(oldId);
+			var visibleOrder = this._searchVisibleOrder[oldId];
+
 			DataStore.prototype._changeIdInner.call(this, oldId, newId);
 
 			var parent = this.getParent(newId);
@@ -3626,6 +3627,8 @@ TreeDataStore.prototype = utils.mixin({
 			for(var i = 0; i < children.length; i++){
 				this.setParent(this.getItem(children[i]), newId);
 			}
+
+			this._searchVisibleOrder[newId] = visibleOrder;
 			delete this._branches[oldId];
 		},
 
@@ -3744,8 +3747,16 @@ TreeDataStore.prototype = utils.mixin({
 			if (parentId === this.$getRootId())
 				return true;
 
+			if (!this.hasChild(parentId))
+				return false;
+
 			var item = this.getItem(childId);
 			var pid = this.getParent(childId);
+
+			var parent = this.getItem(parentId);
+			if(parent.$level >= item.$level){
+				return false;
+			}
 
 			while (item && this.exists(pid)) {
 				item = this.getItem(pid);
@@ -3789,9 +3800,11 @@ TreeDataStore.prototype = utils.mixin({
 				item = this.getItem(id);
 			}
 
-			var parent = this.$getRootId();
+			var parent;
 			if(item){
 				parent = item[this.$parentProperty];
+			}else{
+				parent = this.$getRootId();
 			}
 			return parent;
 
@@ -3839,10 +3852,11 @@ TreeDataStore.prototype = utils.mixin({
 		},
 		eachParent: function(code, startItem){
 			var item = startItem;
-			while (this.getParent(item)) {
-				if (!this.exists(this.getParent(item))) break;
-				item = this.getItem(this.getParent(item));
+			var parent = this.getParent(item);
+			while (this.exists(parent)) {
+				item = this.getItem(parent);
 				code.call(this, item);
+				parent = this.getParent(item);
 			}
 		},
 		_add_branch: function(item, index, parent){
@@ -4128,6 +4142,47 @@ module.exports = {
 var utils = __webpack_require__(0);
 var dateHelper = __webpack_require__(4);
 
+
+function IsWorkTimeArgument(date, unit, task, id, calendar){
+	this.date = date;
+	this.unit = unit;
+	this.task = task;
+	this.id = id;
+	this.calendar = calendar;
+	return this;
+}
+
+function ClosestWorkTimeArgument(date, dir, unit, task, id, calendar){
+	this.date = date;
+	this.dir = dir;
+	this.unit = unit;
+	this.task = task;
+	this.id = id;
+	this.calendar = calendar;
+	return this;
+}
+
+function CalculateEndDateArgument(start_date, duration, unit, step, task, id, calendar){
+	this.start_date = start_date;
+	this.duration = duration;
+	this.unit = unit;
+	this.step = step;
+	this.task = task;
+	this.id = id;
+	this.calendar = calendar;
+	return this;
+}
+
+function GetDurationArgument(start, end, task, calendar) {
+	this.start_date = start;
+	this.end_date = end;
+	this.task = task;
+	this.calendar = calendar;
+	this.unit = null;
+	this.step = null;
+	return this;
+}
+
 var calendarArgumentsHelper = function(gantt){
 	return {
 		getWorkHoursArguments: function () {
@@ -4149,49 +4204,53 @@ var calendarArgumentsHelper = function(gantt){
 		},
 		isWorkTimeArguments: function () {
 			var config = arguments[0];
+			if(config instanceof IsWorkTimeArgument){
+				return config;
+			}
+
+			var processedConfig;
 			if (!config.date) {
-				config = {};
-				config.date = arguments[0];
-				config.unit = arguments[1];
-				config.task = arguments[2];
-				config.calendar = arguments[3];
+				//IsWorkTimeArgument(date, unit, task, id, calendar)
+				processedConfig = new IsWorkTimeArgument(arguments[0], arguments[1], arguments[2], null, arguments[3]);
 			} else {
-				config = utils.mixin({}, config);
-				config.unit = config.unit || gantt.config.duration_unit;
-				config.task = config.task || null;
-				config.calendar = config.calendar || null;
+				processedConfig = new IsWorkTimeArgument(config.date, config.unit, config.task, null, config.calendar);
 			}
 
-			config.unit = config.unit || gantt.config.duration_unit;
+			processedConfig.unit = processedConfig.unit || gantt.config.duration_unit;
 
-			return config;
+			return processedConfig;
 		},
-		getClosestWorkTimeArguments: function (config) {
-			config = arguments[0];
+		getClosestWorkTimeArguments: function (arg) {
+			var config = arguments[0];
+			if (config instanceof ClosestWorkTimeArgument)
+				return config;
+
+			var processedConfig;
 			if (dateHelper.isDate(config)) {
-				config = {
-					date: config
-				};
+				processedConfig = new ClosestWorkTimeArgument(config);
+
 			} else {
-				config = utils.mixin({}, config);
+				processedConfig = new ClosestWorkTimeArgument(
+					config.date,
+					config.dir,
+					config.unit,
+					config.task,
+					null,//config.id,
+					config.calendar
+				);
 			}
-			config.dir = config.dir || 'any';
-			config.unit = config.unit || gantt.config.duration_unit;
 
-			return config;
+			if(config.id){
+				processedConfig.task = config;
+			}
+			processedConfig.dir = config.dir || 'any';
+			processedConfig.unit = config.unit || gantt.config.duration_unit;
+
+			return processedConfig;
 		},
 
-		getDurationConfig: function (start, end, task, calendar) {
-			this.start_date = start;
-			this.end_date = end;
-			this.task = task;
-			this.calendar = calendar;
-			this.unit = null;
-			this.step = null;
-			return this;
-		},
 		_getStartEndConfig: function (param) {
-			var argumentType = this.getDurationConfig;
+			var argumentType = GetDurationArgument;
 			var config;
 			if (param instanceof argumentType)
 				return param;
@@ -4222,22 +4281,41 @@ var calendarArgumentsHelper = function(gantt){
 
 		calculateEndDateArguments: function (start, duration, unit, step) {
 			var config = arguments[0];
+			if (config instanceof CalculateEndDateArgument)
+				return config;
+
+			var processedConfig;
+			//CalculateEndDateArgument(start_date, duration, unit, step, task, id, calendar)
 			if (dateHelper.isDate(config)) {
-				config = {
-					start_date: arguments[0],
-					duration: arguments[1],
-					unit: arguments[2],
-					task: arguments[3],
-					calendar: arguments[4]
-				};
+				processedConfig = new CalculateEndDateArgument(
+					arguments[0],
+					arguments[1],
+					arguments[2],
+					undefined,
+					arguments[3],
+					undefined,
+					arguments[4]
+				);
+
 			} else {
-				config = utils.mixin({}, config);
+				processedConfig = new CalculateEndDateArgument(
+					config.start_date,
+					config.duration,
+					config.unit,
+					config.step,
+					config.task,
+					null,//config.id,
+					config.calendar
+				);
+			}
+			if(config.id){
+				processedConfig.task = config;
 			}
 
-			config.unit = config.unit || gantt.config.duration_unit;
-			config.step = config.step || gantt.config.duration_step;
+			processedConfig.unit = processedConfig.unit || gantt.config.duration_unit;
+			processedConfig.step = processedConfig.step || gantt.config.duration_step;
 
-			return config;
+			return processedConfig;
 		}
 	};
 };
@@ -4292,7 +4370,7 @@ module.exports = Gantt;
 /***/ (function(module, exports, __webpack_require__) {
 
 function DHXGantt(){
-	this.version = "5.1.2";
+	this.version = "5.1.5";
 	this.templates = {};
 	this.keys = {
 		edit_save: 13,
@@ -5027,15 +5105,17 @@ module.exports = function(gantt) {
 						return "\"+to_fixed(date.getSeconds())+\"";
 					case "%W":
 						return "\"+to_fixed(getISOWeek(date))+\"";
+					case "%w":
+						return "\"+to_fixed(getWeek(date))+\"";
 					default:
 						return a;
 				}
 			});
 			if (utc) format = format.replace(/date\.get/g, "date.getUTC");
-			var dateToStr = new Function("date", "to_fixed", "locale", "getISOWeek", "return \"" + format + "\";");
+			var dateToStr = new Function("date", "to_fixed", "locale", "getISOWeek", "getWeek", "return \"" + format + "\";");
 
 			return function (date) {
-				return dateToStr(date, dateHelper.to_fixed, gantt.locale, dateHelper.getISOWeek);
+				return dateToStr(date, dateHelper.to_fixed, gantt.locale, dateHelper.getISOWeek, dateHelper.getWeek);
 			};
 		},
 		str_to_date: function (format, utc) {
@@ -5092,10 +5172,15 @@ module.exports = function(gantt) {
 			};
 		},
 		getISOWeek: function (ndate) {
+			return gantt.date._getWeekNumber(ndate, true);
+		},
+		_getWeekNumber: function(ndate, isoWeek){
 			if (!ndate) return false;
 			var nday = ndate.getDay();
-			if (nday === 0) {
-				nday = 7;
+			if(isoWeek){
+				if (nday === 0) {
+					nday = 7;
+				}
 			}
 			var first_thursday = new Date(ndate.valueOf());
 			first_thursday.setDate(ndate.getDate() + (4 - nday));
@@ -5104,8 +5189,12 @@ module.exports = function(gantt) {
 			var week_number = 1 + Math.floor(ordinal_date / 7);
 			return week_number;
 		},
+
+		getWeek: function(ndate){
+			return gantt.date._getWeekNumber(ndate, gantt.config.start_on_monday);
+		},
 		getUTCISOWeek: function (ndate) {
-			return this.getISOWeek(ndate);
+			return gantt.date.getISOWeek(ndate);
 		},
 		convert_to_utc: function (date) {
 			return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
@@ -5633,6 +5722,8 @@ var domHelpers = __webpack_require__(1);
 
 module.exports = function(gantt) {
 
+	var boxAttribute = "data-dhxbox";
+
 	var _dhx_msg_cfg = null;
 
 	function callback(config, result) {
@@ -5682,7 +5773,7 @@ module.exports = function(gantt) {
 
 	function modality(mode) {
 		if (!modality.cover) {
-			modality.cover = document.createElement("DIV");
+			modality.cover = document.createElement("div");
 			//necessary for IE only
 			modality.cover.onkeydown = modal_key;
 			modality.cover.className = "dhx_modal_cover";
@@ -5696,19 +5787,19 @@ module.exports = function(gantt) {
 		var buttonAriaAttrs = gantt._waiAria.messageButtonAttrString(text);
 		var name = className.toLowerCase().replace(/ /g, "_");
 		var button_css = "gantt_" + name + "_button" + " dhtmlx_" + name + "_button"; // dhtmlx_ok_button, dhtmlx_click_me_button
-		return "<div " + buttonAriaAttrs + " class='gantt_popup_button dhtmlx_popup_button " + button_css + "' result='" + result + "' ><div>" + text + "</div></div>";
+		return "<div " + buttonAriaAttrs + " class='gantt_popup_button dhtmlx_popup_button " + button_css + "' data-result='" + result + "' result='" + result + "' ><div>" + text + "</div></div>";
 	}
 
 	function info(text) {
 		if (!messageBox.area) {
-			messageBox.area = document.createElement("DIV");
+			messageBox.area = document.createElement("div");
 			messageBox.area.className = "gantt_message_area dhtmlx_message_area";
 			messageBox.area.style[messageBox.position] = "5px";
 			document.body.appendChild(messageBox.area);
 		}
 
 		messageBox.hide(text.id);
-		var message = document.createElement("DIV");
+		var message = document.createElement("div");
 		message.innerHTML = "<div>" + text.text + "</div>";
 		message.className = "gantt-info dhtmlx-info gantt-" + text.type + " dhtmlx-" + text.type;
 		message.onclick = function () {
@@ -5746,7 +5837,7 @@ module.exports = function(gantt) {
 	}
 
 	function _boxStructure(config, ok, cancel) {
-		var box = document.createElement("DIV");
+		var box = document.createElement("div");
 
 		var locale = gantt.locale;
 
@@ -5755,7 +5846,7 @@ module.exports = function(gantt) {
 
 
 		box.className = " gantt_modal_box dhtmlx_modal_box gantt-" + config.type + " dhtmlx-" + config.type;
-		box.setAttribute("dhxbox", 1);
+		box.setAttribute(boxAttribute, 1);
 
 		var inner = '';
 
@@ -5803,7 +5894,7 @@ module.exports = function(gantt) {
 			var source = e.target || e.srcElement;
 			if (!source.className) source = source.parentNode;
 			if (source.className.split(" ")[0] == "gantt_popup_button") {
-				var result = source.getAttribute("result");
+				var result = source.getAttribute("data-result");
 				result = (result == "true") || (result == "false" ? false : result);
 				callback(config, result);
 			}
@@ -5887,7 +5978,7 @@ module.exports = function(gantt) {
 		return boxPopup(text);
 	};
 	modalBox.hide = function (node) {
-		while (node && node.getAttribute && !node.getAttribute("dhxbox"))
+		while (node && node.getAttribute && !node.getAttribute(boxAttribute))
 			node = node.parentNode;
 		if (node) {
 			node.parentNode.removeChild(node);
@@ -10022,7 +10113,7 @@ var initializer = (function(){
 				}, gantt), grid.$grid);
 
 				this._mouseDelegates.delegate("click", "gantt_grid_head_cell", gantt.bind(function (e, id, trg) {
-					var column = trg.getAttribute("column_id");
+					var column = trg.getAttribute("data-column-id");
 
 					if (!gantt.callEvent("onGridHeaderClick", [column, e]))
 						return;
@@ -12243,7 +12334,7 @@ var createDatastoreFacade = function(){
 		}
 
 		var store = new $StoreType(config);
-		this.mixin(store, createDatastoreSelect());
+		this.mixin(store, createDatastoreSelect(store));
 
 		if(config.name){
 
@@ -12301,7 +12392,7 @@ var createDatastoreFacade = function(){
 
 	},
 	refreshLink: function (linkId) {
-		this.$data.linksStore.refresh(linkId);
+		this.$data.linksStore.refresh(linkId, !!this.getState().drag_id);// do quick refresh during drag and drop
 	},
 
 	silent: function(code){
@@ -12491,7 +12582,11 @@ var createTasksDatastoreFacade = function(){
 		}
 	},
 	getChildren: function (id) {
-		return this.$data.tasksStore.getChildren(id).slice();
+		if(!this.hasChild(id)){
+			return [];
+		}else{
+			return this.$data.tasksStore.getChildren(id).slice();
+		}
 	},
 	hasChild: function (id) {
 		return this.$data.tasksStore.hasChild(id);
@@ -12572,8 +12667,27 @@ module.exports = createLinksStoreFacade;
 /***/ (function(module, exports) {
 
 
-function createDataStoreSelectMixin(){
+function createDataStoreSelectMixin(store){
 	var selectedId = null;
+
+	var deleteItem = store._removeItemInner;
+	store._removeItemInner = function(id){
+		if(selectedId == id){
+			selectedId = null;
+		}
+		return deleteItem.apply(this, arguments);
+	};
+
+
+	store.attachEvent("onIdChange", function(oldId, newId) {
+		if (store.getSelectedId() == oldId) {
+			store.silent(function () {
+				store.unselect(oldId);
+				store.select(newId);
+			});
+		}
+	});
+
 	return {
 		select: function(id){
 			if (id){
@@ -12665,7 +12779,6 @@ var storeRenderCreator = function(name, gantt){
 		var renderer = gantt.$services.getService("layers").getDataRender(name);
 
 		if(renderer){
-			store.filter();
 			if(!id || action == "move" || action == "delete"){
 				store.callEvent("onBeforeRefreshAll", []);
 				itemRepainter.renderItems(renderer);
@@ -12693,14 +12806,8 @@ var storeRenderCreator = function(name, gantt){
 			renders[i].change_id(oldId, newId);
 		}
 	}
-	store.attachEvent("onIdChange", function(oldId, newId){
 
-		if (store.getSelectedId() == oldId) {
-			store.silent(function(){
-				store.unselect(oldId);
-				store.select(newId);
-			});
-		}
+	store.attachEvent("onIdChange", function(oldId, newId){
 
 		// in case of linked datastores (tasks <-> links), id change should recalculate something in linked datastore before any repaint
 		// use onBeforeIdChange for this hook.
@@ -14496,11 +14603,11 @@ function createResourceMethods(gantt){
 		return res;
 	}
 
-	function getResourceLoad(resourceId, resourceProperty, scale){
+	function getResourceLoad(resourceId, resourceProperty, scale, timeline){
 		var cacheKey = [resourceId, resourceProperty, scale.unit, scale.step].join("_");
 		var res;
 		if(!resourceTaskCache[cacheKey]){
-			res = resourceTaskCache[cacheKey] = calculateResourceLoad(resourceId, resourceProperty, scale);
+			res = resourceTaskCache[cacheKey] = calculateResourceLoad(resourceId, resourceProperty, scale, timeline);
 
 		}else{
 			res = resourceTaskCache[cacheKey];
@@ -14508,7 +14615,7 @@ function createResourceMethods(gantt){
 		return res;
 	}
 
-	function calculateResourceLoad(resourceProperty, resourceId, scale) {
+	function calculateResourceLoad(resourceProperty, resourceId, scale, timeline) {
 
 		var tasks = getTaskBy(resourceProperty, resourceId);
 		var step = scale.unit;
@@ -14524,31 +14631,35 @@ function createResourceMethods(gantt){
 				var date = currDate;
 				currDate = gantt.date.add(currDate, 1, step);
 
-				if (!gantt.isWorkTime({date: date, task: task})) {
+				if (!gantt.isWorkTime({date: date, task: task, unit: step})) {
 					continue;
 				}
 
 				var timestamp = date.valueOf();
 				if (!timegrid[timestamp]){
-					timegrid[timestamp] = {
-						tasks: []
-					};
+					timegrid[timestamp] = [];
 				}
 
-				timegrid[timestamp].tasks.push(task);
+				timegrid[timestamp].push(task);
 			}
 		}
 
 		var timetable = [];
-		var start, end;
-		for (var i in timegrid) {
-			start = new Date(i * 1);
+		var start, end, tasks;
+		var config = timeline.$getConfig();
+
+		for(var i = 0; i < scale.trace_x.length; i++){
+			start = new Date(scale.trace_x[i]);
 			end = gantt.date.add(start, 1, step);
-			timetable.push({
-				start_date: start,
-				end_date: end,
-				tasks: timegrid[i].tasks
-			});
+			tasks = timegrid[start.valueOf()] || [];
+			if(tasks.length || config.resource_render_empty_cells){
+				timetable.push({
+					start_date: start,
+					end_date: end,
+					tasks: tasks
+				});
+			}
+
 		}
 
 		return timetable;
@@ -14557,7 +14668,7 @@ function createResourceMethods(gantt){
 	function renderResourceLine(resource, timeline) {
 		var config = timeline.$getConfig(),
 			templates = timeline.$getTemplates();
-		var timetable = getResourceLoad(config.resource_property, resource.id, timeline.getScale());
+		var timetable = getResourceLoad(config.resource_property, resource.id, timeline.getScale(), timeline);
 
 		var cells = [];
 		for (var i = 0; i < timetable.length; i++) {
@@ -14611,6 +14722,7 @@ module.exports = function(gantt){
 	gantt.$ui.layers.resourceRow = methods.renderLine;
 	gantt.config.resource_property = "owner_id";
 	gantt.config.resource_store = "resource";
+	gantt.config.resource_render_empty_cells = false;
 
 	gantt.templates.resource_cell_class = function(start, end, resource, tasks){
 		var css = "";
@@ -16371,7 +16483,7 @@ module.exports = function(gantt) {
 		var task = this.getTask(id),
 			type = this.getTaskType(task.type);
 
-		if (!((+task.start_date <= +this._max_date && +task.end_date >= +this._min_date) || gantt._isAllowedUnscheduledTask(task))){
+		if (!(gantt._isAllowedUnscheduledTask(task) || (task.start_date.valueOf() <= this._max_date.valueOf() && task.end_date.valueOf() >= this._min_date.valueOf()))){
 			return false;
 		}
 
@@ -16844,7 +16956,7 @@ module.exports = function(gantt) {
 				var button = this.config._migrate_buttons[buttons[i]] ? this.config._migrate_buttons[buttons[i]] : buttons[i];
 
 				ariaAttr = this._waiAria.lightboxButtonAttrString(button);
-				html += "<div " + ariaAttr + " class='gantt_btn_set gantt_left_btn_set " + button + "_set'><div dhx_button='1' class='" + button + "'></div><div>" + this.locale.labels[button] + "</div></div>";
+				html += "<div " + ariaAttr + " class='gantt_btn_set gantt_left_btn_set " + button + "_set'><div dhx_button='1' data-dhx-button='1' class='" + button + "'></div><div>" + this.locale.labels[button] + "</div></div>";
 
 			}
 			buttons = this.config.buttons_right;
@@ -16852,7 +16964,7 @@ module.exports = function(gantt) {
 				var button = this.config._migrate_buttons[buttons[i]] ? this.config._migrate_buttons[buttons[i]] : buttons[i];
 				ariaAttr = this._waiAria.lightboxButtonAttrString(button);
 
-				html += "<div " + ariaAttr + " class='gantt_btn_set gantt_right_btn_set " + button + "_set' style='float:right;'><div dhx_button='1' class='" + button + "'></div><div>" + this.locale.labels[button] + "</div></div>";
+				html += "<div " + ariaAttr + " class='gantt_btn_set gantt_right_btn_set " + button + "_set' style='float:right;'><div dhx_button='1' data-dhx-button='1' class='" + button + "'></div><div>" + this.locale.labels[button] + "</div></div>";
 
 			}
 			html += "</div>";
@@ -16927,7 +17039,7 @@ module.exports = function(gantt) {
 			var display = sns[i].hidden ? " style='display:none'" : "";
 			var button = "";
 			if (sns[i].button) {
-				button = "<div class='gantt_custom_button' index='" + i + "'><div class='gantt_custom_button_" + sns[i].button + "'></div><div class='gantt_custom_button_label'>" + this.locale.labels["button_" + sns[i].button] + "</div></div>";
+				button = "<div class='gantt_custom_button' data-index='" + i + "'><div class='gantt_custom_button_" + sns[i].button + "'></div><div class='gantt_custom_button_label'>" + this.locale.labels["button_" + sns[i].button] + "</div></div>";
 			}
 			if (this.config.wide_form) {
 				html += "<div class='gantt_wrap_section' " + display + ">";
@@ -17013,7 +17125,7 @@ module.exports = function(gantt) {
 
 
 		gantt.lightbox_events["default"] = function (e, src) {
-			if (src.getAttribute("dhx_button")) {
+			if (src.getAttribute("data-dhx-button")) {
 				gantt.callEvent("onLightboxButton", [src.className, src, e]);
 			} else {
 				var index, block, sec;
@@ -17021,13 +17133,13 @@ module.exports = function(gantt) {
 				var className = domHelpers.getClassName(src);
 				if (className.indexOf("gantt_custom_button") != -1) {
 					if (className.indexOf("gantt_custom_button_") != -1) {
-						index = src.parentNode.getAttribute("index");
+						index = src.parentNode.getAttribute("data-index");
 						sec = src;
 						while (sec && domHelpers.getClassName(sec).indexOf("gantt_cal_lsection") == -1) {
 							sec = sec.parentNode;
 						}
 					} else {
-						index = src.getAttribute("index");
+						index = src.getAttribute("data-index");
 						sec = src.parentNode;
 						src = src.firstChild;
 					}
@@ -18713,7 +18825,7 @@ module.exports = function(gantt) {
 			if (task && gantt.isTaskVisible(taskId)) {
 				for (var i = 0; i < renders.length; i++) {
 					task = renders[i].rendered[taskId];
-					if (task && task.getAttribute("task_id") && task.getAttribute("task_id") == taskId) {
+					if (task && task.getAttribute(gantt.config.task_attribute) && task.getAttribute(gantt.config.task_attribute) == taskId) {
 						var copy = task.cloneNode(true);
 						current_target = task;
 						renders[i].rendered[taskId] = copy;

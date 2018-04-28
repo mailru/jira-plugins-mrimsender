@@ -126,7 +126,7 @@ export const views = {
                     {
                         view: 'resourceGrid',
                         group: 'grids',
-                        scrollY: 'scrollVer'
+                        scrollY: 'resourceScrollVer'
                     },
                     {
                         resizer: true,
@@ -135,7 +135,7 @@ export const views = {
                     {
                         view: 'resourceTimeline',
                         scrollX: 'scrollHor',
-                        scrollY: 'scrollVer'
+                        scrollY: 'resourceScrollVer'
                     },
                     {
                         view: 'scrollbar',

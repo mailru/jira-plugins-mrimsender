@@ -1,7 +1,7 @@
 /*!
  * @license
  * 
- * dhtmlxGantt v.5.1.2 Professional
+ * dhtmlxGantt v.5.1.5 Professional
  * This software is covered by DHTMLX Enterprise License. Usage without proper license is prohibited.
  * 
  * (c) Dinamenta, UAB.
@@ -88,8 +88,7 @@ module.exports = function(gantt) {
 		if (gantt.isTaskExists(taskId)) {
 			task = gantt.getTask(taskId);
 		}
-		var role = getTarget ? "target" : "source";
-		gantt.assert(task, "Link " + role + " not found. Task id=" + taskId + ", link id=" + link.id);
+
 		return task;
 	};
 	gantt._get_link_target = function (link) {
@@ -100,8 +99,38 @@ module.exports = function(gantt) {
 		return gantt._get_linked_task(link, false);
 	};
 
+	var caching = false;
+	var formattedLinksStash = {};
+	var inheritedSuccessorsStash = {};
+	var inheritedPredecessorsStash = {};
+	var getPredecessorsCache = {};
+
+
+	gantt._isLinksCacheEnabled = function(){
+		return caching;
+	};
+	gantt._startLinksCache = function(){
+		formattedLinksStash = {};
+		inheritedSuccessorsStash = {};
+		inheritedPredecessorsStash = {};
+		getPredecessorsCache = {};
+		caching = true;
+	};
+	gantt._endLinksCache = function(){
+		formattedLinksStash = {};
+		inheritedSuccessorsStash = {};
+		inheritedPredecessorsStash = {};
+		getPredecessorsCache = {};
+		caching = false;
+	};
 
 	gantt._formatLink = function (link) {
+
+
+		if(caching && formattedLinksStash[link.id]){
+			return formattedLinksStash[link.id];
+		}
+
 		var relations = [];
 		var target = this._get_link_target(link);
 		var source = this._get_link_source(link);
@@ -110,9 +139,8 @@ module.exports = function(gantt) {
 			return relations;
 		}
 
-		if ((gantt.isChildOf(source.id, target.id) && gantt.isSummaryTask(target)) || (gantt.isChildOf(target.id, source.id) && gantt.isSummaryTask(source))) {
+		if ((gantt.isSummaryTask(target) && gantt.isChildOf(source.id, target.id)) || (gantt.isSummaryTask(source) && gantt.isChildOf(target.id, source.id))) {
 			return relations;
-
 		}
 
 
@@ -124,7 +152,7 @@ module.exports = function(gantt) {
 
 		var from = this._getImplicitLinks(link, source, function (c) {
 			return 0;
-		});
+		}, true);
 
 		var respectTargetOffset = gantt.config.auto_scheduling_move_projects;
 		var targetDates = this.isSummaryTask(target) ? this.getSubtaskDates(target.id) : {
@@ -148,9 +176,9 @@ module.exports = function(gantt) {
 			}
 		});
 
-		for (var i = 0; i < from.length; i++) {
+		for (var i = 0, fromLength = from.length; i < fromLength; i++) {
 			var fromTask = from[i];
-			for (var j = 0; j < to.length; j++) {
+			for (var j = 0, toLength = to.length; j < toLength; j++) {
 				var toTask = to[j];
 
 				var lag = fromTask.lag * 1 + toTask.lag * 1;
@@ -163,9 +191,12 @@ module.exports = function(gantt) {
 					lag: (link.lag * 1 || 0) + lag
 				};
 
-				relations.push(gantt._convertToFinishToStartLink(toTask.task, subtaskLink, source, target));
+				relations.push(gantt._convertToFinishToStartLink(toTask.task, subtaskLink, source, target, fromTask.taskParent, toTask.taskParent));
 			}
 		}
+
+		if(caching)
+			formattedLinksStash[link.id] = relations;
 
 		return relations;
 	};
@@ -174,19 +205,49 @@ gantt._isAutoSchedulable = function(task){
 	return task.auto_scheduling !== false;
 };
 
-gantt._getImplicitLinks = function(link, parent, selectOffset){
+gantt._getImplicitLinks = function(link, parent, selectOffset, selectSourceLinks){
 	var relations = [];
+
 	if(this.isSummaryTask(parent)){
+
+		// if the summary task contains multiple chains of linked tasks - no need to consider every task of the chain,
+		// it will be enough to check the first/last tasks of the chain
+		// special conditions if there are unscheduled tasks in the chain, or negative lag values
+		var children = {};
 		this.eachTask(function(c){
-			if(!this.isSummaryTask(c))
-				relations.push({task: c.id, lag: selectOffset(c)});
+			if(!this.isSummaryTask(c)){
+				children[c.id] = c;
+			}
 		}, parent.id);
+
+		var skipChild;
+
+		for(var c in children){
+			var task = children[c];
+			var linksCollection = selectSourceLinks ? task.$source : task.$target;
+
+			skipChild = false;
+
+			for(var l = 0; l < linksCollection.length; l++){
+				var siblingLink = gantt.getLink(linksCollection[l]);
+				var siblingId = selectSourceLinks ? siblingLink.target : siblingLink.source;
+
+				if(children[siblingId] && task.auto_scheduling !== false && children[siblingId].auto_scheduling !== false && siblingLink.lag >= 0){
+					skipChild = true;
+					break;
+				}
+			}
+			if(!skipChild){
+				relations.push({task: task.id, taskParent: task.parent, lag: selectOffset(task)});
+			}
+		}
+
 	}else{
-		relations.push({task:parent.id, lag: 0});
+		relations.push({task:parent.id, taskParent: parent.parent, lag: 0});
 	}
 
 		return relations;
-	};
+};
 
 	gantt._getDirectDependencies = function (task, selectSuccessors) {
 
@@ -213,34 +274,49 @@ gantt._getImplicitLinks = function(link, parent, selectOffset){
 	};
 
 	gantt._getInheritedDependencies = function (task, selectSuccessors) {
-		var successors = [];
+
+		//var successors = [];
 	var stop = false;
 	var inheritedRelations = [];
+	var cacheCollection;
 	if(this.isTaskExists(task.id)){
+
+		var parent = this.getParent(task.id);
+
+
 		this.eachParent(function(parent){
 			if(stop)
 				return;
 
+			if(caching){
+				cacheCollection = selectSuccessors ? inheritedSuccessorsStash : inheritedPredecessorsStash;
+				if(cacheCollection[parent.id]){
+					inheritedRelations.push.apply(inheritedRelations, cacheCollection[parent.id]);
+					return;
+				}
+			}
+
+			var parentDependencies;
 			if(this.isSummaryTask(parent)){
 				if(!this._isAutoSchedulable(parent)){
 					stop = true;
 				}else{
-					inheritedRelations.push.apply(inheritedRelations, this._getDirectDependencies(parent, selectSuccessors));
+					parentDependencies = this._getDirectDependencies(parent, selectSuccessors);
+					if(caching){
+						cacheCollection[parent.id] = parentDependencies;
+					}
+					inheritedRelations.push.apply(inheritedRelations, parentDependencies);
 				}
 			}
+
 		}, task.id, this);
 
-			for (var i = 0; i < inheritedRelations.length; i++) {
-
-				var relProperty = selectSuccessors ? inheritedRelations[i].source : inheritedRelations[i].target;
-
-				if (relProperty == task.id) {
-					successors.push(inheritedRelations[i]);
-				}
-			}
+		//	for (var i = 0; i < inheritedRelations.length; i++) {
+		//		successors.push(inheritedRelations[i]);
+		//	}
 		}
 
-		return successors;
+		return inheritedRelations;
 	};
 
 
@@ -260,17 +336,37 @@ gantt._getImplicitLinks = function(link, parent, selectOffset){
 		return this._getInheritedDependencies(task, false);
 	};
 
-
-	gantt._getSuccessors = function (task) {
-		return this._getDirectSuccessors(task).concat(this._getInheritedSuccessors(task));
+	gantt._getSuccessors = function (task, skipInherited) {
+		var successors = this._getDirectSuccessors(task);
+		if(skipInherited){
+			return successors;
+		}else{
+			return successors.concat(this._getInheritedSuccessors(task));
+		}
 	};
 
-	gantt._getPredecessors = function (task) {
-		return this._getDirectPredecessors(task).concat(this._getInheritedPredecessors(task));
+	gantt._getPredecessors = function (task, skipInherited) {
+		var key = task.id + skipInherited;
+		var result;
+
+		if(caching && getPredecessorsCache[key]){
+			return getPredecessorsCache[key];
+		}
+
+		var predecessors = this._getDirectPredecessors(task);
+		if(skipInherited){
+			result = predecessors;
+		}else{
+			result = predecessors.concat(this._getInheritedPredecessors(task));
+		}
+		if(caching){
+			getPredecessorsCache[key] = result;
+		}
+		return result;
 	};
 
 
-	gantt._convertToFinishToStartLink = function (id, link, sourceTask, targetTask) {
+	gantt._convertToFinishToStartLink = function (id, link, sourceTask, targetTask, sourceParent, targetParent) {
 		// convert finish-to-finish, start-to-finish and start-to-start to finish-to-start link and provide some additional properties
 		var res = {
 			target: id,
@@ -278,7 +374,9 @@ gantt._getImplicitLinks = function(link, parent, selectOffset){
 			id: link.id,
 			lag: link.lag || 0,
 			source: link.source,
-			preferredStart: null
+			preferredStart: null,
+			sourceParent: sourceParent,
+			targetParent: targetParent
 		};
 
 		var additionalLag = 0;
@@ -337,6 +435,13 @@ gantt._isCriticalTask = function(task, chain){
 	if(this._isProjectEnd(task)){
 		return true;
 	}else{
+
+		var clearCache = false;
+		if(!gantt._isLinksCacheEnabled()) {
+			gantt._startLinksCache();
+			clearCache = true;
+		}
+
 		path[task.id] = true;
 		var successors = this._getDependencies(task);
 		for(var i=0; i < successors.length; i++){
@@ -344,6 +449,9 @@ gantt._isCriticalTask = function(task, chain){
 			if(this._getSlack(task, next, successors[i]) <= 0 && (!path[next.id] && this._isCriticalTask(next, path)))
 				return true;
 		}
+
+		if(clearCache)
+			gantt._endLinksCache();
 	}
 
 	return false;
@@ -372,7 +480,7 @@ gantt.getSlack = function(task1, task2){
 	var slacks = [];
 	for(var i=0; i < relations.length; i++){
 		var link = this.getLink(relations[i]);
-		slacks.push(this._getSlack(task1, task2, this._convertToFinishToStartLink(link.id, link, task1, task2)));
+		slacks.push(this._getSlack(task1, task2, this._convertToFinishToStartLink(link.id, link, task1, task2, task1.parent, task2.parent)));
 	}
 
 	return Math.min.apply(Math, slacks);

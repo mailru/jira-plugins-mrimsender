@@ -1,7 +1,7 @@
 /*!
  * @license
  * 
- * dhtmlxGantt v.5.1.2 Professional
+ * dhtmlxGantt v.5.1.5 Professional
  * This software is covered by DHTMLX Enterprise License. Usage without proper license is prohibited.
  * 
  * (c) Dinamenta, UAB.
@@ -88,8 +88,7 @@ module.exports = function(gantt) {
 		if (gantt.isTaskExists(taskId)) {
 			task = gantt.getTask(taskId);
 		}
-		var role = getTarget ? "target" : "source";
-		gantt.assert(task, "Link " + role + " not found. Task id=" + taskId + ", link id=" + link.id);
+
 		return task;
 	};
 	gantt._get_link_target = function (link) {
@@ -100,8 +99,38 @@ module.exports = function(gantt) {
 		return gantt._get_linked_task(link, false);
 	};
 
+	var caching = false;
+	var formattedLinksStash = {};
+	var inheritedSuccessorsStash = {};
+	var inheritedPredecessorsStash = {};
+	var getPredecessorsCache = {};
+
+
+	gantt._isLinksCacheEnabled = function(){
+		return caching;
+	};
+	gantt._startLinksCache = function(){
+		formattedLinksStash = {};
+		inheritedSuccessorsStash = {};
+		inheritedPredecessorsStash = {};
+		getPredecessorsCache = {};
+		caching = true;
+	};
+	gantt._endLinksCache = function(){
+		formattedLinksStash = {};
+		inheritedSuccessorsStash = {};
+		inheritedPredecessorsStash = {};
+		getPredecessorsCache = {};
+		caching = false;
+	};
 
 	gantt._formatLink = function (link) {
+
+
+		if(caching && formattedLinksStash[link.id]){
+			return formattedLinksStash[link.id];
+		}
+
 		var relations = [];
 		var target = this._get_link_target(link);
 		var source = this._get_link_source(link);
@@ -110,9 +139,8 @@ module.exports = function(gantt) {
 			return relations;
 		}
 
-		if ((gantt.isChildOf(source.id, target.id) && gantt.isSummaryTask(target)) || (gantt.isChildOf(target.id, source.id) && gantt.isSummaryTask(source))) {
+		if ((gantt.isSummaryTask(target) && gantt.isChildOf(source.id, target.id)) || (gantt.isSummaryTask(source) && gantt.isChildOf(target.id, source.id))) {
 			return relations;
-
 		}
 
 
@@ -124,7 +152,7 @@ module.exports = function(gantt) {
 
 		var from = this._getImplicitLinks(link, source, function (c) {
 			return 0;
-		});
+		}, true);
 
 		var respectTargetOffset = gantt.config.auto_scheduling_move_projects;
 		var targetDates = this.isSummaryTask(target) ? this.getSubtaskDates(target.id) : {
@@ -148,9 +176,9 @@ module.exports = function(gantt) {
 			}
 		});
 
-		for (var i = 0; i < from.length; i++) {
+		for (var i = 0, fromLength = from.length; i < fromLength; i++) {
 			var fromTask = from[i];
-			for (var j = 0; j < to.length; j++) {
+			for (var j = 0, toLength = to.length; j < toLength; j++) {
 				var toTask = to[j];
 
 				var lag = fromTask.lag * 1 + toTask.lag * 1;
@@ -163,9 +191,12 @@ module.exports = function(gantt) {
 					lag: (link.lag * 1 || 0) + lag
 				};
 
-				relations.push(gantt._convertToFinishToStartLink(toTask.task, subtaskLink, source, target));
+				relations.push(gantt._convertToFinishToStartLink(toTask.task, subtaskLink, source, target, fromTask.taskParent, toTask.taskParent));
 			}
 		}
+
+		if(caching)
+			formattedLinksStash[link.id] = relations;
 
 		return relations;
 	};
@@ -174,19 +205,49 @@ gantt._isAutoSchedulable = function(task){
 	return task.auto_scheduling !== false;
 };
 
-gantt._getImplicitLinks = function(link, parent, selectOffset){
+gantt._getImplicitLinks = function(link, parent, selectOffset, selectSourceLinks){
 	var relations = [];
+
 	if(this.isSummaryTask(parent)){
+
+		// if the summary task contains multiple chains of linked tasks - no need to consider every task of the chain,
+		// it will be enough to check the first/last tasks of the chain
+		// special conditions if there are unscheduled tasks in the chain, or negative lag values
+		var children = {};
 		this.eachTask(function(c){
-			if(!this.isSummaryTask(c))
-				relations.push({task: c.id, lag: selectOffset(c)});
+			if(!this.isSummaryTask(c)){
+				children[c.id] = c;
+			}
 		}, parent.id);
+
+		var skipChild;
+
+		for(var c in children){
+			var task = children[c];
+			var linksCollection = selectSourceLinks ? task.$source : task.$target;
+
+			skipChild = false;
+
+			for(var l = 0; l < linksCollection.length; l++){
+				var siblingLink = gantt.getLink(linksCollection[l]);
+				var siblingId = selectSourceLinks ? siblingLink.target : siblingLink.source;
+
+				if(children[siblingId] && task.auto_scheduling !== false && children[siblingId].auto_scheduling !== false && siblingLink.lag >= 0){
+					skipChild = true;
+					break;
+				}
+			}
+			if(!skipChild){
+				relations.push({task: task.id, taskParent: task.parent, lag: selectOffset(task)});
+			}
+		}
+
 	}else{
-		relations.push({task:parent.id, lag: 0});
+		relations.push({task:parent.id, taskParent: parent.parent, lag: 0});
 	}
 
 		return relations;
-	};
+};
 
 	gantt._getDirectDependencies = function (task, selectSuccessors) {
 
@@ -213,34 +274,49 @@ gantt._getImplicitLinks = function(link, parent, selectOffset){
 	};
 
 	gantt._getInheritedDependencies = function (task, selectSuccessors) {
-		var successors = [];
+
+		//var successors = [];
 	var stop = false;
 	var inheritedRelations = [];
+	var cacheCollection;
 	if(this.isTaskExists(task.id)){
+
+		var parent = this.getParent(task.id);
+
+
 		this.eachParent(function(parent){
 			if(stop)
 				return;
 
+			if(caching){
+				cacheCollection = selectSuccessors ? inheritedSuccessorsStash : inheritedPredecessorsStash;
+				if(cacheCollection[parent.id]){
+					inheritedRelations.push.apply(inheritedRelations, cacheCollection[parent.id]);
+					return;
+				}
+			}
+
+			var parentDependencies;
 			if(this.isSummaryTask(parent)){
 				if(!this._isAutoSchedulable(parent)){
 					stop = true;
 				}else{
-					inheritedRelations.push.apply(inheritedRelations, this._getDirectDependencies(parent, selectSuccessors));
+					parentDependencies = this._getDirectDependencies(parent, selectSuccessors);
+					if(caching){
+						cacheCollection[parent.id] = parentDependencies;
+					}
+					inheritedRelations.push.apply(inheritedRelations, parentDependencies);
 				}
 			}
+
 		}, task.id, this);
 
-			for (var i = 0; i < inheritedRelations.length; i++) {
-
-				var relProperty = selectSuccessors ? inheritedRelations[i].source : inheritedRelations[i].target;
-
-				if (relProperty == task.id) {
-					successors.push(inheritedRelations[i]);
-				}
-			}
+		//	for (var i = 0; i < inheritedRelations.length; i++) {
+		//		successors.push(inheritedRelations[i]);
+		//	}
 		}
 
-		return successors;
+		return inheritedRelations;
 	};
 
 
@@ -260,17 +336,37 @@ gantt._getImplicitLinks = function(link, parent, selectOffset){
 		return this._getInheritedDependencies(task, false);
 	};
 
-
-	gantt._getSuccessors = function (task) {
-		return this._getDirectSuccessors(task).concat(this._getInheritedSuccessors(task));
+	gantt._getSuccessors = function (task, skipInherited) {
+		var successors = this._getDirectSuccessors(task);
+		if(skipInherited){
+			return successors;
+		}else{
+			return successors.concat(this._getInheritedSuccessors(task));
+		}
 	};
 
-	gantt._getPredecessors = function (task) {
-		return this._getDirectPredecessors(task).concat(this._getInheritedPredecessors(task));
+	gantt._getPredecessors = function (task, skipInherited) {
+		var key = task.id + skipInherited;
+		var result;
+
+		if(caching && getPredecessorsCache[key]){
+			return getPredecessorsCache[key];
+		}
+
+		var predecessors = this._getDirectPredecessors(task);
+		if(skipInherited){
+			result = predecessors;
+		}else{
+			result = predecessors.concat(this._getInheritedPredecessors(task));
+		}
+		if(caching){
+			getPredecessorsCache[key] = result;
+		}
+		return result;
 	};
 
 
-	gantt._convertToFinishToStartLink = function (id, link, sourceTask, targetTask) {
+	gantt._convertToFinishToStartLink = function (id, link, sourceTask, targetTask, sourceParent, targetParent) {
 		// convert finish-to-finish, start-to-finish and start-to-start to finish-to-start link and provide some additional properties
 		var res = {
 			target: id,
@@ -278,7 +374,9 @@ gantt._getImplicitLinks = function(link, parent, selectOffset){
 			id: link.id,
 			lag: link.lag || 0,
 			source: link.source,
-			preferredStart: null
+			preferredStart: null,
+			sourceParent: sourceParent,
+			targetParent: targetParent
 		};
 
 		var additionalLag = 0;
@@ -328,28 +426,31 @@ var helpers = __webpack_require__(4);
 gantt._autoSchedulingGraph = {
 	getVertices: function(relations){
 		var ids = {};
-
-		helpers.forEach(relations, function(rel){
+		var rel;
+		for(var i = 0, len = relations.length; i < len; i++){
+			rel = relations[i];
 			ids[rel.target] = rel.target;
 			ids[rel.source] = rel.source;
-		});
-
-		var vertices = [];
-		for(var i in ids){
-			vertices.push(ids[i]);
 		}
 
-		return vertices.sort(function(a, b){ return gantt.getGlobalTaskIndex(a) - gantt.getGlobalTaskIndex(b);});
+		var vertices = [];
+		var id;
+		for(var i in ids){
+			id = ids[i];
+			vertices.push(id);
+		}
+
+		return vertices;
 	},
 	topologicalSort: function(edges){
 		var vertices = this.getVertices(edges);
 		var hash = {};
 
-		for(var i = 0; i < vertices.length; i ++){
+		for(var i = 0, len = vertices.length; i < len; i ++){
 			hash[vertices[i]] = {id: vertices[i], $source:[], $target:[], $incoming: 0};
 		}
 
-		for(var i = 0; i < edges.length; i++){
+		for(var i = 0, len = edges.length; i < len; i++){
 			var successor = hash[edges[i].target];
 			successor.$target.push(i);
 			successor.$incoming = successor.$target.length;
@@ -382,6 +483,18 @@ gantt._autoSchedulingGraph = {
 		return L;
 
 	},
+	_groupEdgesBySource: function(edges){
+		var res = {};
+		var edge;
+		for(var i = 0, len = edges.length; i < len; i++){
+			edge = edges[i];
+			if(!res[edge.source]){
+				res[edge.source] = [];
+			}
+			res[edge.source].push(edge);
+		}
+		return res;
+	},
 	tarjanStronglyConnectedComponents: function(vertices, edges){
 		//https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
 		var verticesHash = {};
@@ -391,12 +504,16 @@ gantt._autoSchedulingGraph = {
 		var connectedEdges = [];
 		var connectedComponents = [];
 
-		helpers.forEach(vertices, function(vertexId){
+		var edgesFromTasks = this._groupEdgesBySource(edges);
+
+		var vertexId;
+		for(var v = 0, len = vertices.length; v < len; v++){
+			vertexId = vertices[v];
 			var vertex = getVertex(vertexId);
 			if(vertex.index === undefined){
 				strongConnect(vertexId);
 			}
-		});
+		}
 
 		function strongConnect(vertexId, previousLink){
 			var v = getVertex(vertexId);
@@ -412,8 +529,12 @@ gantt._autoSchedulingGraph = {
 			v.onStack = true;
 
 			// Consider successors of v
-			helpers.forEach(edges, function(edge){
-				if(edge.source != vertexId) return;
+
+			var edge;
+			var successors = edgesFromTasks[vertexId];
+			for(var e = 0; successors  && e < successors.length; e++){
+				edge = successors[e];
+				if(edge.source != vertexId) continue;
 
 				var v = getVertex(edge.source);
 				var w = getVertex(edge.target);
@@ -427,7 +548,7 @@ gantt._autoSchedulingGraph = {
 					connectedEdges.push(edge);
 				}
 
-			});
+			}
 
 			// If v is a root node, pop the stack and generate an SCC
 			if(v.lowLink == v.index){
@@ -451,7 +572,7 @@ gantt._autoSchedulingGraph = {
 
 		function getVertex(id){
 			if(!verticesHash[id]){
-				verticesHash[id] = {id: id};
+				verticesHash[id] = {id: id, onStack:false, index: undefined, lowLink: undefined};
 			}
 
 			return verticesHash[id];
@@ -463,7 +584,7 @@ gantt._autoSchedulingGraph = {
 
 gantt._autoSchedulingPath = {
 	getKey: function(rel){
-		return [rel.lag, rel.link, rel.source, rel.target].join("_");
+		return rel.lag +"_"+ rel.link +"_"+ rel.source +"_"+ rel.target;
 	},
 	getVirtualRoot: function(){
 		return gantt.mixin(
@@ -495,43 +616,70 @@ gantt._autoSchedulingPath = {
 	getLinkedTasks: function(id, includePredecessors){
 		var startIds = [id];
 
+		//TODO: format links cache
+		var clearCache = false;
+		if(!gantt._isLinksCacheEnabled()) {
+			gantt._startLinksCache();
+			clearCache = true;
+		}
 		var relations = [];
 		var visited = {};
 		for(var i = 0; i < startIds.length; i++){
-			relations = relations.concat(this._getLinkedTasks(startIds[i], visited, includePredecessors));
+			this._getLinkedTasks(startIds[i], visited, includePredecessors);
 		}
 
-		relations = this.filterDuplicates(relations);
+		for(var i in visited){
+			relations.push(visited[i]);
+		}
+		if(clearCache)
+			gantt._endLinksCache();
 		return relations;
 	},
 
-	_getLinkedTasks: function(rootTask, visitedTasks, includePredecessors){
+	_getLinkedTasks: function(rootTask, visitedTasks, includePredecessors, isChild) {
 		var from = rootTask === undefined ? gantt.config.root_id : rootTask;
 		var visited = visitedTasks || {};
 
 		var rootObj = gantt.isTaskExists(from) ? gantt.getTask(from) : this.getVirtualRoot();
-		var relations = gantt._getSuccessors(rootObj);
 
-		if(includePredecessors){
-			relations.push.apply(relations, gantt._getPredecessors(rootObj));
+		var successors = gantt._getSuccessors(rootObj, isChild);
+
+		var predecessors = [];
+		if (includePredecessors) {
+			predecessors = gantt._getPredecessors(rootObj, isChild);
 		}
+		var relations = [];
+		var linkKey;
 
-		var chainRelations = [];
-		for(var i=0; i < relations.length; i++){
-
-			if(visited[this.getKey(relations[i])])
+		for(var i = 0; i < successors.length; i++){
+			linkKey = this.getKey(successors[i]);
+			if(visited[linkKey]) {
 				continue;
-			visited[this.getKey(relations[i])] = true;
-			chainRelations = chainRelations.concat(this._getLinkedTasks(relations[i].target, visited, true));
+			}else{
+				visited[linkKey] = successors[i];
+				relations.push(successors[i]);
+			}
+		}
+		for(var i = 0; i < predecessors.length; i++){
+			linkKey = this.getKey(predecessors[i]);
+			if(visited[linkKey]) {
+				continue;
+			}else{
+				visited[linkKey] = predecessors[i];
+				relations.push(predecessors[i]);
+			}
 		}
 
-		var children = gantt.getChildren(rootObj.id);
-		for(var i=0; i < children.length; i++){
-			relations = relations.concat(this._getLinkedTasks(children[i], visited, true));
+		for(var i=0; i < relations.length; i++){
+			var isSameParent = relations[i].sourceParent == relations[i].targetParent;
+			this._getLinkedTasks(relations[i].target, visited, true, isSameParent);
 		}
 
-		if(chainRelations.length){
-			relations = relations.concat(chainRelations);
+		if(gantt.hasChild(rootObj.id)){
+			var children = gantt.getChildren(rootObj.id);
+			for(var i=0; i < children.length; i++){
+				this._getLinkedTasks(children[i], visited, true, true);
+			}
 		}
 
 		return relations;
@@ -578,16 +726,17 @@ gantt._autoSchedulingDateResolver = {
 		var linkId = null;
 
 		var defaultStart = null;
-
+		var task;
 		for(var i = 0; i < relations.length; i++){
 			var relation = relations[i];
 			taskId = relation.target;
 
 			defaultStart = relation.preferredStart;
+			task = gantt.getTask(taskId);
+			var constraintDate = this.getConstraintDate(relation, getEndDate, task);
 
-			var constraintDate = this.getConstraintDate(relation, getEndDate);
 
-			if(this.isSmallerOrDefault(defaultStart, constraintDate, gantt.getTask(taskId)) && this.isSmallerOrDefault(minStart, constraintDate, gantt.getTask(taskId))){
+			if(this.isSmallerOrDefault(defaultStart, constraintDate, task) && this.isSmallerOrDefault(minStart, constraintDate, task)){
 				minStart = constraintDate;
 				linkId = relation.id;
 			}
@@ -604,9 +753,9 @@ gantt._autoSchedulingDateResolver = {
 			start_date: minStart
 		};
 	},
-	getConstraintDate: function(relation, getEndDate){
+	getConstraintDate: function(relation, getEndDate, task){
 		var predecessorEnd = getEndDate(relation.source);
-		var successor = gantt.getTask(relation.target);
+		var successor = task;
 
 		var successorStart = gantt.getClosestWorkTime({date:predecessorEnd, dir:"future", task:successor});
 
@@ -626,15 +775,16 @@ gantt._autoSchedulingPlanner = {
 		var predecessorRelations = {},
 			plansHash = {};
 
-		helpers.arrayMap(orderedIds, function(v) {
-			var task = gantt.getTask(v);
+		var id;
+		for(var i = 0, len = orderedIds.length; i < len; i++){
+			id = orderedIds[i];
+			var task = gantt.getTask(id);
 			if(task.auto_scheduling === false){
-				return;
+				continue;
 			}
-
-			predecessorRelations[v] = [];
-			plansHash[v] = null;
-		});
+			predecessorRelations[id] = [];
+			plansHash[id] = null;
+		}
 
 		function getPredecessorEndDate(id){
 			var plan = plansHash[id];
@@ -652,9 +802,11 @@ gantt._autoSchedulingPlanner = {
 			return res;
 		}
 
-		for(var i = 0; i < relations.length; i++){
-			if(predecessorRelations[relations[i].target]) {
-				predecessorRelations[relations[i].target].push(relations[i]);
+		var rel;
+		for(var i = 0, len = relations.length; i < len; i++){
+			rel = relations[i];
+			if(predecessorRelations[rel.target]) {
+				predecessorRelations[rel.target].push(rel);
 			}
 		}
 
@@ -772,8 +924,13 @@ gantt.autoSchedule = function(id, inclusive){
 	}else{
 		inclusive = !!inclusive;
 	}
+
 	var relations =  gantt._autoSchedulingPath.getLinkedTasks(id, inclusive);
+
+	var totalRelations = relations.length;
+	var startAutoSchedule = Date.now();
 	gantt._autoSchedule(id, relations, gantt._finalizeAutoSchedulingChanges);
+	var durationAutoSchedule = Date.now() - startAutoSchedule;
 };
 
 gantt._finalizeAutoSchedulingChanges = function(updatedTasks){
@@ -923,7 +1080,7 @@ gantt._attachAutoSchedulingHandlers = function(){
 	var relations;
 	var movedTask;
 	gantt.attachEvent("onBeforeTaskDrag", function(id, mode, task){
-		if(gantt.config.auto_scheduling_move_projects){
+		if(gantt.config.auto_scheduling && gantt.config.auto_scheduling_move_projects){
 			// collect relations before drag and drop  in order to have original positions of subtasks within project since they are used as lag when moving dependent project
 			relations = gantt._autoSchedulingPath.getLinkedTasks(id, true);
 			movedTask = id;
@@ -1041,21 +1198,30 @@ function getSecondsInUnit(unit){
 }
 
 function forEach(arr, callback){
-	var workArray = arr.slice();
-	for(var i = 0; i < workArray.length; i++){
-		callback(workArray[i], i);
+	if(arr.forEach){
+		arr.forEach(callback);
+	}else{
+		var workArray = arr.slice();
+		for(var i = 0; i < workArray.length; i++){
+			callback(workArray[i], i);
+		}
 	}
 }
 
 function arrayMap(arr, callback){
-	var workArray = arr.slice();
-	var resArray = [];
+	if(arr.map){
+		return arr.map(callback);
+	}else{
+		var workArray = arr.slice();
+		var resArray = [];
 
-	for(var i = 0; i < workArray.length; i++){
-		resArray.push(callback(workArray[i], i));
+		for(var i = 0; i < workArray.length; i++){
+			resArray.push(callback(workArray[i], i));
+		}
+
+		return resArray;
 	}
 
-	return resArray;
 }
 
 module.exports = {
