@@ -220,7 +220,7 @@ class GanttActionsInternal extends React.Component {
     };
 
     _handleTeams = () => {
-        window.location = AJS.contextPath() + '/secure/MailRuGanttTeams.jspa#calendar=' + this.props.calendar.id;
+        window.location = `${AJS.contextPath()}/secure/MailRuGanttTeams.jspa#calendar=${this.props.calendar.id}`;
     };
 
     _selectSprint = (sprint) => () => this.props.updateOptions({ sprint });

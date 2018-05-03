@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -14,22 +15,14 @@ import {ganttTeamService, store} from '../service/services';
 
 class AddUsersDialogInternal extends React.Component {
     static propTypes = {
-        team: PropTypes.object.isRequired,
+        team: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
         onClose: PropTypes.func.isRequired,
     };
 
     state = {
-        inputValue: '',
         selectedUsers: [],
         waitingForAdd: false
     };
-
-    componentDidMount() {
-        ganttTeamService.findUsers(this.props.team, '')
-            .then(users => {
-                this.setState({users: users});
-            });
-    }
 
     _addUsers = () => {
         this.setState({ waitingForAdd: true });
@@ -49,24 +42,12 @@ class AddUsersDialogInternal extends React.Component {
             );
     };
 
-    _setOrder = (value) => this.setState({ orderBy: value ? value.value : null });
-
-    _setGroup = (value) => this.setState({ groupBy: value ? value.value : null });
-
-    _setDeadline = (deadline) => this.setState({ deadline });
-
     _loadOptions = inputValue => {
         return ganttTeamService
             .findUsers(this.props.team, inputValue)
             .then(users => {
                 return users;
             });
-    };
-
-    _handleInputChange = (newValue) => {
-        const inputValue = newValue.replace(/\W/g, '');
-        this.setState({ inputValue });
-        return inputValue;
     };
 
     _getOptionLabel = option => {
@@ -113,12 +94,11 @@ class AddUsersDialogInternal extends React.Component {
                         cacheOptions
                         loadOptions={this._loadOptions}
                         defaultOptions
-                        onInputChange={this._handleInputChange}
                         onChange={this._onChange}
                         placeholder="Выберите пользователей"
                         getOptionLabel={this._getOptionLabel}
                         getOptionValue={this._getOptionValue}
-                        isMulti={true}
+                        isMulti
                     />
                 </div>
             </Modal>

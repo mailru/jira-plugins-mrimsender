@@ -224,12 +224,6 @@ module.exports = {
         // It is absolutely essential that NODE_ENV was set to production here.
         // Otherwise React will be compiled in the very slow development mode.
         new webpack.DefinePlugin(env.stringified),
-        // Minify the code.
-        new webpack.optimize.CommonsChunkPlugin({
-            name: 'common',
-            minChunks: 2
-        }),
-        // Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
         extractLess,
         new CleanWebpackPlugin(
             cssDir + '*.*',

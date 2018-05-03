@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -15,8 +16,7 @@ import {ganttTeamService, store} from '../service/services';
 class CreateDialogInternal extends React.Component {
     static propTypes = {
         onClose: PropTypes.func.isRequired,
-        calendar: PropTypes.object.isRequired,
-        teams: PropTypes.array
+        calendar: PropTypes.object.isRequired // eslint-disable-line react/forbid-prop-types
     };
 
     state = {
@@ -39,7 +39,7 @@ class CreateDialogInternal extends React.Component {
             },
             error => {
                 this.setState({ waitingForCreate: false });
-                if (error.response.data.hasOwnProperty('errors')) {
+                if (Object.prototype.hasOwnProperty.call(error.response.data, 'errors')) {
                     this.setState({ hasError: true, errorMessage: error.response.data.errors.field });
                 }
             }
@@ -77,7 +77,7 @@ class CreateDialogInternal extends React.Component {
             >
                 <div className="flex-column full-width">
                     <FieldTextStateless
-                        required={true}
+                        required
                         label="Название команды"
                         onChange={this._setName}
                         isInvalid={hasError}

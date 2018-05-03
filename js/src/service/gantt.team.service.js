@@ -1,37 +1,38 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {ajaxGet, ajaxPost, ajaxPut, ajaxDelete, getPluginBaseUrl} from '../common/ajs-helpers';
 
 
 export class GanttTeamService {
-    getTeams(calendarId) {
+    static getTeams(calendarId) {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/team/all?calendarId=${calendarId}`);
     }
 
-    createTeam(team) {
+    static createTeam(team) {
         return ajaxPost(`${getPluginBaseUrl()}/gantt/team`, team);
     }
 
-    editTeam(team) {
+    static editTeam(team) {
         return ajaxPut(`${getPluginBaseUrl()}/gantt/team/${team.id}`, team);
     }
 
-    deleteTeam(team) {
+    static deleteTeam(team) {
         return ajaxDelete(`${getPluginBaseUrl()}/gantt/team/${team.id}`);
     }
 
-    findUsers(team, filter) {
+    static findUsers(team, filter) {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/team/findUsers?filter=${filter}&&calendarId=${team.calendarId}`);
     }
 
-    addUsers(team, users) {
+    static addUsers(team, users) {
         return ajaxPost(`${getPluginBaseUrl()}/gantt/team/${team.id}/users`, users);
     }
 
-    deleteUser(team, user) {
+    static deleteUser(team, user) {
         return ajaxDelete(`${getPluginBaseUrl()}/gantt/team/${team.id}/user/${user.id}`);
     }
 
-    editUser(team, user) {
+    static editUser(team, user) {
         return ajaxPut(`${getPluginBaseUrl()}/gantt/team/${team.id}/user/${user.id}`, user);
     }
 }

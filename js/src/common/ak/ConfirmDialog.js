@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -14,6 +15,10 @@ class ConfirmDialogInternal extends React.Component {
         header: PropTypes.string.isRequired,
         onConfirm: PropTypes.func.isRequired,
         onClose: PropTypes.func.isRequired,
+        children: PropTypes.oneOfType([
+            PropTypes.arrayOf(PropTypes.node),
+            PropTypes.node
+        ])
     };
 
     state = {

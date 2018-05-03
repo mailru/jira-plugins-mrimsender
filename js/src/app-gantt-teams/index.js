@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -12,24 +13,20 @@ import Backbone from 'backbone';
 
 import {GanttTeams} from './GanttTeams';
 
-import {collectTopMailCounterScript} from '../common/top-mail-ru';
-
 import {calendarService, store, ganttTeamService} from '../service/services';
 import {CalendarActionCreators, GanttTeamActionCreators} from '../service/gantt.reducer';
 
 import './gantt-teams.less';
 
 
-AJS.toInit(function() {
+AJS.toInit(() => {
     try {
-        collectTopMailCounterScript();
-
         /* Router */
         const ViewRouter = Backbone.Router.extend({
             routes: {
                 'calendar=:calendar': 'setCalendar'
             },
-            setCalendar: function (id) {
+            setCalendar (id) {
                 calendarService
                     .getCalendar(id)
                     .then(calendar => {
@@ -43,7 +40,8 @@ AJS.toInit(function() {
             }
         });
 
-        new ViewRouter();
+        // eslint-disable-next-line no-unused-vars
+        const viewRouter = new ViewRouter();
 
         ReactDOM.render(
             <Provider store={store}>

@@ -13,7 +13,7 @@ import {defaultOptions} from '../app-gantt/staticOptions';
 
 
 export const ganttService = GanttService;
-export const ganttTeamService = new GanttTeamService();
+export const ganttTeamService = GanttTeamService;
 export const calendarService = CalendarService;
 export const jiraService = JiraService;
 

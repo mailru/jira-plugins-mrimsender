@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -24,7 +25,7 @@ import {ganttTeamService, store} from '../service/services';
 
 class GanttTeamInternal extends React.Component {
     static propTypes = {
-        team: PropTypes.object.isRequired
+        team: PropTypes.object.isRequired // eslint-disable-line react/forbid-prop-types
     };
 
     state = {
@@ -55,7 +56,7 @@ class GanttTeamInternal extends React.Component {
             ganttTeamService
                 .editTeam({
                     ...this.props.team,
-                    name: name
+                    name
                 })
                 .then(
                     teams => {
@@ -108,89 +109,87 @@ class GanttTeamInternal extends React.Component {
             cells: [
                 {
                     key: 'name',
-                    content: 'Name',
+                    content: 'Название',
                     isSortable: true,
                 },
                 {
                     key: 'weeklyHours',
-                    content: 'Weekly Hours',
+                    content: 'Продолжительность рабочей недели',
                     isSortable: false,
                 },
                 {
                     key: 'options',
-                    content: 'Options',
+                    content: 'Опции',
                     isSortable: false,
                 },
             ],
         };
     };
 
-    _getUsersRows = (team) => {
-        if (team.users.length === 0) {
-            return;
-        }
-
-        return team.users.map((user, index) => ({
-            key: `gantt-team-${team.id}-user-row-${index}-${user.key}`,
-            cells: [
-                {
-                    key: user.key,
-                    content: (
-                        <AvatarItem
-                            avatar={<Avatar src={user.avatarUrl} name={user.displayName} isDisabled={true}/>}
-                            primaryText={user.displayName}
-                            secondaryText={user.email}
-                            backgroundColor={'transparent'}
-                            isActive={false}
-                            isHover={false}
-                            isFocus={false}
-                            isSelected={false}
-                            isDisabled={true}
-                        />
-                    ),
-                },
-                {
-                    content: (
-                        <InlineEditSingleLineTextInput
-                            isLabelHidden={true}
-                            isFitContainerWidthReadView={false}
-                            id={user.key}
-                            value={user.weeklyHours ? user.weeklyHours : 40}
-                            onConfirm={this._onConfirmEditWeeklyHours(user)}
-                        />
-                    )
-                },
-                {
-                    content: (
-                        <div>
-                            <Dropdown trigger={
-                                <Button
-                                    appearance="subtle"
-                                    iconBefore={<MoreIcon label=""/>}
-                                />
-                            }>
-                                <DropdownItemGroup>
-                                    <DropdownItem
-                                        onClick={this._toggleDialog(`confirmDeleteUser${user.id}`)}
+    _getUsersRows = (team) => { // eslint-disable-line consistent-return
+        if (team.users.length !== 0) {
+            return team.users.map((user, index) => ({
+                key: `gantt-team-${team.id}-user-row-${index}-${user.key}`,
+                cells: [
+                    {
+                        key: user.key,
+                        content: (
+                            <AvatarItem
+                                avatar={<Avatar src={user.avatarUrl} name={user.displayName} isDisabled/>}
+                                primaryText={user.displayName}
+                                secondaryText={user.email}
+                                backgroundColor="transparent"
+                                isActive={false}
+                                isHover={false}
+                                isFocus={false}
+                                isSelected={false}
+                            />
+                        ),
+                    },
+                    {
+                        content: (
+                            <InlineEditSingleLineTextInput
+                                isLabelHidden
+                                isFitContainerWidthReadView={false}
+                                id={user.key}
+                                value={user.weeklyHours ? user.weeklyHours : 40}
+                                onConfirm={this._onConfirmEditWeeklyHours(user)}
+                            />
+                        )
+                    },
+                    {
+                        content: (
+                            <div>
+                                <Dropdown trigger={
+                                    <Button
+                                        appearance="subtle"
+                                        iconBefore={<MoreIcon label=""/>}
+                                    />
+                                }>
+                                    <DropdownItemGroup>
+                                        <DropdownItem
+                                            onClick={this._toggleDialog(`confirmDeleteUser${user.id}`)}
+                                        >
+                                            Удалить
+                                        </DropdownItem>
+                                    </DropdownItemGroup>
+                                </Dropdown>
+                                {this.state.activeDialog === `confirmDeleteUser${user.id}` ?
+                                    <ConfirmDialog
+                                        header="Удалить пользователя из команды"
+                                        onConfirm={() => this._onConfirmDeleteUser(user)}
+                                        onClose={this._toggleDialog(`confirmDeleteUser${user.id}`)}
                                     >
-                                        Delete
-                                    </DropdownItem>
-                                </DropdownItemGroup>
-                            </Dropdown>
-                            {this.state.activeDialog === `confirmDeleteUser${user.id}`
-                                && <ConfirmDialog
-                                    header="Удалить пользователя из команды"
-                                    onConfirm={() => this._onConfirmDeleteUser(user)}
-                                    onClose={this._toggleDialog(`confirmDeleteUser${user.id}`)}
-                                >
-                                    <div>{`Вы уверены, что хотите удалить пользователя ${user.displayName} из команды "${team.name}"`}</div>
-                                </ConfirmDialog>
-                            }
-                        </div>
-                    ),
-                },
-            ],
-        }));
+                                        <div>{`Вы уверены, что хотите удалить пользователя ${user.displayName} из команды ${team.name}`}</div>
+                                    </ConfirmDialog> :
+                                    null
+                                }
+                            </div>
+                        ),
+                    },
+                ],
+            }));
+        }
     };
 
     render() {
@@ -207,11 +206,11 @@ class GanttTeamInternal extends React.Component {
                     />
                     <div className="gantt-title">
                         <InlineEditSingleLineTextInput
-                            isLabelHidden={true}
+                            isLabelHidden
                             isFitContainerWidthReadView={false}
                             id={team.id}
                             value={team.name}
-                            viewClassNames={'gantt-team-name'}
+                            viewClassNames="gantt-team-name"
                             onConfirm={this._onConfirmEditTeamName}
                         />
                     </div>
@@ -242,31 +241,33 @@ class GanttTeamInternal extends React.Component {
                             <DropdownItem
                                 onClick={this._toggleDialog('addUsers')}
                             >
-                                Add Users
+                                Добавить пользователей
                             </DropdownItem>
                             <DropdownItem
                                 onClick={this._toggleDialog('confirmDeleteTeam')}
                             >
-                                Delete
+                                Удалить
                             </DropdownItem>
                         </DropdownItemGroup>
                     </Dropdown>
-                    {activeDialog === 'addUsers'
-                    && <AddUsersDialog
-                        team={team}
-                        onClose={this._toggleDialog('addUsers')}
-                    >
-                        <div>{`Вы уверены, что хотите удалить команду "${team.name}"`}</div>
-                    </AddUsersDialog>
+                    {activeDialog === 'addUsers' ?
+                        <AddUsersDialog
+                            team={team}
+                            onClose={this._toggleDialog('addUsers')}
+                        >
+                            <div>{`Вы уверены, что хотите удалить команду "${team.name}"`}</div>
+                        </AddUsersDialog> :
+                        null
                     }
-                    {activeDialog === 'confirmDeleteTeam'
-                        && <ConfirmDialog
+                    {activeDialog === 'confirmDeleteTeam' ?
+                        <ConfirmDialog
                             header="Удалить команду"
                             onConfirm={this._onConfirmDeleteTeam}
                             onClose={this._toggleDialog('confirmDeleteTeam')}
                         >
-                            <div>{`Вы уверены, что хотите удалить команду "${team.name}"`}</div>
-                        </ConfirmDialog>
+                            <div>{`Вы уверены, что хотите удалить команду ${team.name}`}</div>
+                        </ConfirmDialog> :
+                        null
                     }
                 </div>
                 { showingUsers &&
@@ -279,7 +280,7 @@ class GanttTeamInternal extends React.Component {
                             emptyView={<div>There are no users added yet.</div>}
                             loadingSpinnerSize="large"
                             isLoading={false}
-                            isFixedSize={true}
+                            isFixedSize
                             defaultSortKey="name"
                             defaultSortOrder="ASC"
                         />

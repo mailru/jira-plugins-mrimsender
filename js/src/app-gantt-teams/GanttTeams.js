@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -16,75 +17,11 @@ import {GanttTeamActionCreators} from '../service/gantt.reducer';
 
 class GanttTeamsInternal extends React.Component {
     static propTypes = {
-        calendar: PropTypes.object,
-        teams: PropTypes.array
+        teams: PropTypes.array // eslint-disable-line react/forbid-prop-types
     };
 
-    state ={
-        activeDialog: null,
-        teams: [
-            {
-                id: 1,
-                name: 'svdfgsgfsdg sgdfgs sfgdf sdfg sdfgsdfsg dfg sdfgsd gf',
-                users: [
-                    {
-                        key: 'admin',
-                        displayName: 'Admin Admin',
-                        email: 'dfdfas@sdfas.rt',
-                        avatarUrl: 'http://www.gravatar.com/avatar/64e1b8d34f425d19e1ee2ea7236d3028?d=mm&s=48',
-                        weeklyHours: 40
-                    },
-                    {
-                        key: 'daria',
-                        displayName: 'Daria Sabitova',
-                        email: 'dfdfas@sdfas.rt',
-                        avatarUrl: 'http://www.gravatar.com/avatar/64e1b8d34f425d19e1ee2ea7236d3028?d=mm&s=48',
-                        weeklyHours: 16
-                    },
-                    {
-                        key: 'daria',
-                        displayName: 'Daria Sabitova',
-                        email: 'dfdfas@sdfas.rt',
-                        avatarUrl: 'http://www.gravatar.com/avatar/64e1b8d34f425d19e1ee2ea7236d3028?d=mm&s=48',
-                        weeklyHours: 16
-                    },
-                    {
-                        key: 'daria',
-                        displayName: 'Daria Sabitova',
-                        email: 'dfdfas@sdfas.rt',
-                        avatarUrl: 'http://www.gravatar.com/avatar/64e1b8d34f425d19e1ee2ea7236d3028?d=mm&s=48',
-                        weeklyHours: 16
-                    },
-                    {
-                        key: 'daria',
-                        displayName: 'Daria Sabitova',
-                        email: 'dfdfas@sdfas.rt',
-                        avatarUrl: 'http://www.gravatar.com/avatar/64e1b8d34f425d19e1ee2ea7236d3028?d=mm&s=48',
-                        weeklyHours: 16
-                    }
-                ]
-            },
-            {
-                id: 2,
-                name: 'Test Team',
-                users: [
-                    {
-                        key: 'admin',
-                        displayName: 'Admin Admin',
-                        email: 'dfdfas@sdfas.rt',
-                        avatarUrl: 'http://www.gravatar.com/avatar/64e1b8d34f425d19e1ee2ea7236d3028?d=mm&s=48',
-                        weeklyHours: 40
-                    },
-                    {
-                        key: 'daria',
-                        displayName: 'Daria Sabitova',
-                        email: 'dfdfas@sdfas.rt',
-                        avatarUrl: 'http://www.gravatar.com/avatar/64e1b8d34f425d19e1ee2ea7236d3028?d=mm&s=48',
-                        weeklyHours: 16
-                    }
-                ]
-            }
-        ]
+    state = {
+        activeDialog: null
     };
 
     _toggleDialog = memoize(
@@ -121,8 +58,8 @@ class GanttTeamsInternal extends React.Component {
                 <div className="gantt-teams-list">
                     {teams.length === 0 ?
                         <div>There are no teams created yet. <Button appearance="link" spacing="none" onClick={this._toggleDialog('create')}>Create team.</Button></div> :
-                        teams.map((team, index) => (
-                            <GanttTeam team={team} key={index}/>
+                        teams.map((team) => (
+                            <GanttTeam team={team} key={team.id}/>
                         ))
                     }
                 </div>

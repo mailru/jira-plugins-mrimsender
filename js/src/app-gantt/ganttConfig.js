@@ -29,8 +29,8 @@ export function buildColumns(names) {
 }
 
 export function calculateDuration(startWorkingDay, endWorkingDay, taskStart, taskEnd) {
-    let start = Math.min(Math.max(startWorkingDay.getTime(), taskStart.getTime()), endWorkingDay.getTime());
-    let end = Math.max(Math.min(endWorkingDay.getTime(), taskEnd.getTime()), startWorkingDay.getTime());
+    const start = Math.min(Math.max(startWorkingDay.getTime(), taskStart.getTime()), endWorkingDay.getTime());
+    const end = Math.max(Math.min(endWorkingDay.getTime(), taskEnd.getTime()), startWorkingDay.getTime());
     return Math.round(moment.duration(end - start).asHours());
 }
 
@@ -39,7 +39,7 @@ export function calculateWorkingHours(tasks, startCell, endCell) {
 
     const scale = gantt.config.subscales[0].unit;
     const workingHours = gantt.getWorkHours(startCell);
-    let startWorkingDay = new Date(startCell.getTime());
+    const startWorkingDay = new Date(startCell.getTime());
     let endWorkingDay = new Date(endCell.getTime());
     if (scale !== 'hour') {
         startWorkingDay.setHours(workingHours[0]);
@@ -55,8 +55,8 @@ export function calculateWorkingHours(tasks, startCell, endCell) {
                 if (task.start_date >= startCell && task.end_date <= endCell) {
                     hours += Math.round(task.duration / 60);
                 } else {
-                    let startCurrentDay = new Date(startWorkingDay);
-                    let endCurrentDay = new Date(startWorkingDay.getTime() + 1000 * 60 * 60 * 8);
+                    const startCurrentDay = new Date(startWorkingDay);
+                    const endCurrentDay = new Date(startWorkingDay.getTime() + 1000 * 60 * 60 * 8);
                     while (startCurrentDay.getDate() <= endWorkingDay.getDate()) {
                         if (gantt.isWorkTime(startCurrentDay, 'day')) {
                             hours += calculateDuration(startCurrentDay, endCurrentDay, task.start_date, task.end_date);
@@ -74,15 +74,15 @@ export function calculateWorkingHours(tasks, startCell, endCell) {
 export const resourceConfig = {
     columns: [
         {
-            name: 'name', label: 'Name', tree: true, template: function (resource) {
+            name: 'name', label: 'Name', tree: true, template (resource) {
                 return resource.text;
             }
         },
         {
-            name: 'workload', label: 'Workload', template: function (resource) {
+            name: 'workload', label: 'Workload', template (resource) {
                 let tasks;
-                let store = gantt.getDatastore(gantt.config.resource_store),
-                    field = gantt.config.resource_property;
+                const store = gantt.getDatastore(gantt.config.resource_store);
+                const field = gantt.config.resource_property;
 
                 if (store.hasChild(resource.id)){
                     tasks = gantt.getTaskBy(field, store.getChildren(resource.id));
@@ -95,7 +95,7 @@ export const resourceConfig = {
                     totalDuration += Math.round(tasks[i].duration / 60);
                 }
 
-                return totalDuration + 'h';
+                return `${totalDuration}h`;
             }
         }
     ]
@@ -164,29 +164,29 @@ export const config = {
         ]
     },
 
-    types: {
-        ...gantt.config.types,
-        sprint: 'sprint'
-    },
-    type_renderers: {
-        ...gantt.config.type_renderers,
-        sprint: (task) => {
-            const el = document.createElement("div");
-            el.setAttribute(gantt.config.task_attribute, task.id);
-            const size = gantt.getTaskPosition(task);
-            el.innerHTML = [
-                "<div class='project-left'></div>",
-                "<div class='project-right'></div>"
-            ].join('');
-            el.className = "custom-project";
-
-            el.style.left = `${size.left}px`;
-            el.style.top = `${size.top + 7}px`;
-            el.style.width = `${size.width}px`;
-
-            return el;
-        }
-    },
+    // types: {
+    //     ...gantt.config.types,
+    //     sprint: 'sprint'
+    // },
+    // type_renderers: {
+    //     ...gantt.config.type_renderers,
+    //     sprint: (task) => {
+    //         const el = document.createElement("div");
+    //         el.setAttribute(gantt.config.task_attribute, task.id);
+    //         const size = gantt.getTaskPosition(task);
+    //         el.innerHTML = [
+    //             "<div class='project-left'></div>",
+    //             "<div class='project-right'></div>"
+    //         ].join('');
+    //         el.className = "custom-project";
+    //
+    //         el.style.left = `${size.left}px`;
+    //         el.style.top = `${size.top + 7}px`;
+    //         el.style.width = `${size.width}px`;
+    //
+    //         return el;
+    //     }
+    // },
 
     columns: buildColumns(defaultColumns),
     task_height: 20,
@@ -208,6 +208,7 @@ function createBox(sizes, className) {
     return box;
 }
 
+// eslint-disable-next-line no-unused-expressions
 gantt && gantt.addTaskLayer((task) => {
     if (task.type === 'group' && !task.$open && gantt.hasChild(task.id) && !task.unscheduled) {
         const el = document.createElement('div');
@@ -319,7 +320,7 @@ export const templates = {
         return '';
     },
     resource_cell_class: (_start, _end, resource, tasks) => {
-        let css = [];
+        const css = [];
         if (gantt.getScale().col_width < 28) {
             css.push('resource_marker_min');
         } else {
@@ -343,6 +344,6 @@ export const templates = {
         return css.join(' ');
     },
     resource_cell_value: (_start, _end, resource, tasks) => {
-        return '<div>' + calculateWorkingHours(tasks, _start, _end) + '</div>';
+        return `<div>${calculateWorkingHours(tasks, _start, _end)}</div>`;
     },
 };

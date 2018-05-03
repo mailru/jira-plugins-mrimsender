@@ -1,3 +1,4 @@
+/* eslint-disable flowtype/require-valid-file-annotation */
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -10,8 +11,8 @@ export class InlineEditSingleLineTextInput extends React.Component {
         label: PropTypes.string,
         isLabelHidden: PropTypes.bool,
         isFitContainerWidthReadView: PropTypes.bool,
-        id: PropTypes.any,
-        value: PropTypes.any,
+        id: PropTypes.any, // eslint-disable-line react/forbid-prop-types
+        value: PropTypes.any, // eslint-disable-line react/forbid-prop-types
         viewClassNames: PropTypes.string,
         onConfirm: PropTypes.func,
     };
@@ -43,7 +44,7 @@ export class InlineEditSingleLineTextInput extends React.Component {
         <SingleLineTextInput
             id={id}
             isEditing={isEditing}
-            isInitiallySelected={true}
+            isInitiallySelected
             label=""
             value={this.state.editValue}
             onChange={this._onChange}
@@ -59,7 +60,7 @@ export class InlineEditSingleLineTextInput extends React.Component {
                     this._exitEditingMode();
                     },
                     error => {
-                        if (error.response.data.hasOwnProperty('errors')) {
+                        if (Object.prototype.hasOwnProperty.call(error.response.data, 'errors')) {
                             this.setState({ hasError: true, errorMessage: error.response.data.errors.field });
                         }
                     }
@@ -85,7 +86,7 @@ export class InlineEditSingleLineTextInput extends React.Component {
                 editView={this._renderInput(true, id, this.state.editValue)}
                 readView={<span className={viewClassNames}>{this.state.readValue}</span>}
                 onConfirm={this._onConfirm}
-                shouldConfirmOnEnterboolean={true}
+                shouldConfirmOnEnterboolean
                 onCancel={this._onCancel}
                 isInvalid={hasError}
                 invalidMessage={errorMessage}
