@@ -51,31 +51,6 @@ gantt.config = {
     ...config
 };
 
-gantt.config.types = {
-    ...gantt.config.types,
-    sprint: 'sprint'
-};
-
-gantt.config.type_renderers = {
-    ...gantt.config.type_renderers,
-    sprint: (task) => {
-        const el = document.createElement("div");
-        el.setAttribute(gantt.config.task_attribute, task.id);
-        const size = gantt.getTaskPosition(task);
-        el.innerHTML = [
-            "<div class='project-left'></div>",
-            "<div class='project-right'></div>"
-        ].join('');
-        el.className = "custom-project";
-
-        el.style.left = `${size.left}px`;
-        el.style.top = `${size.top + 7}px`;
-        el.style.width = `${size.width}px`;
-
-        return el;
-    }
-};
-
 gantt.templates = {
     ...gantt.templates,
     ...templates
