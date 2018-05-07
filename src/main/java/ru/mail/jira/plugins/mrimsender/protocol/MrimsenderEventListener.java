@@ -5,7 +5,11 @@ import com.atlassian.event.api.EventPublisher;
 import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.notification.*;
+import com.atlassian.jira.notification.JiraNotificationReason;
+import com.atlassian.jira.notification.NotificationFilterContext;
+import com.atlassian.jira.notification.NotificationFilterManager;
+import com.atlassian.jira.notification.NotificationRecipient;
+import com.atlassian.jira.notification.NotificationSchemeManager;
 import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.scheme.SchemeEntity;
 import com.atlassian.jira.security.PermissionManager;
@@ -21,7 +25,11 @@ import org.springframework.beans.factory.InitializingBean;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class MrimsenderEventListener implements InitializingBean, DisposableBean {
 
@@ -36,7 +44,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     private final ProjectRoleManager projectRoleManager;
     private final UserData userData = new UserData();
 
-    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager,  NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, PluginData pluginData, ProjectRoleManager projectRoleManager) {
+    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, PluginData pluginData, ProjectRoleManager projectRoleManager) {
         this.eventPublisher = eventPublisher;
         this.groupManager = groupManager;
         this.notificationFilterManager = notificationFilterManager;
@@ -61,15 +69,17 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     private void sendMessage(Collection<ApplicationUser> recipients, Object event) {
         if (!StringUtils.isEmpty(pluginData.getLogin()) && !StringUtils.isEmpty(pluginData.getPassword()))
             for (ApplicationUser recipient : recipients) {
-                String mrimLogin = userData.getMrimLogin(recipient);
-                if (recipient.isActive() && !StringUtils.isBlank(mrimLogin) && userData.isEnabled(recipient)) {
-                    String message = null;
-                    if (event instanceof IssueEvent)
-                        message = new MessageFormatter(recipient).formatEvent((IssueEvent) event);
-                    if (event instanceof MentionIssueEvent)
-                        message = new MessageFormatter(recipient).formatEvent((MentionIssueEvent) event);
-                    if (message != null)
-                        MrimsenderThread.sendMessage(mrimLogin, message);
+                if (recipient.isActive() && userData.isEnabled(recipient)) {
+                    String mrimLogin = userData.getMrimLogin(recipient);
+                    if (StringUtils.isNotBlank(mrimLogin)) {
+                        String message = null;
+                        if (event instanceof IssueEvent)
+                            message = new MessageFormatter(recipient).formatEvent((IssueEvent) event);
+                        if (event instanceof MentionIssueEvent)
+                            message = new MessageFormatter(recipient).formatEvent((MentionIssueEvent) event);
+                        if (message != null)
+                            MrimsenderThread.sendMessage(mrimLogin, message);
+                    }
                 }
             }
     }
@@ -79,24 +89,21 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     public void onIssueEvent(IssueEvent issueEvent) {
         try {
             if (issueEvent.isSendMail()) {
-                Set<ApplicationUser> recipients = new HashSet<ApplicationUser>();
+                Set<ApplicationUser> recipients = new HashSet<>();
 
                 Set<NotificationRecipient> notificationRecipients = notificationSchemeManager.getRecipients(issueEvent);
                 NotificationFilterContext context = notificationFilterManager.makeContextFrom(JiraNotificationReason.ISSUE_EVENT, issueEvent);
-                for (SchemeEntity schemeEntity: notificationSchemeManager.getNotificationSchemeEntities(issueEvent.getProject(), issueEvent.getEventTypeId())) {
+                for (SchemeEntity schemeEntity : notificationSchemeManager.getNotificationSchemeEntities(issueEvent.getProject(), issueEvent.getEventTypeId())) {
                     context = notificationFilterManager.makeContextFrom(context, com.atlassian.jira.notification.type.NotificationType.from(schemeEntity.getType()));
                     Set<NotificationRecipient> recipientsFromScheme = notificationSchemeManager.getRecipients(issueEvent, schemeEntity);
                     recipientsFromScheme = Sets.newHashSet(notificationFilterManager.recomputeRecipients(recipientsFromScheme, context));
                     notificationRecipients.addAll(recipientsFromScheme);
                 }
 
-                for (NotificationRecipient notificationRecipient : notificationRecipients)
-                    recipients.add(notificationRecipient.getUser());
-
-                if (issueEvent.getWorklog() != null)
-                    recipients = getFilteredRecipients(recipients, issueEvent.getWorklog().getRoleLevel(), issueEvent.getWorklog().getGroupLevel(), issueEvent.getIssue());
-                else if (issueEvent.getComment() != null)
-                    recipients = getFilteredRecipients(recipients, issueEvent.getComment().getRoleLevel(), issueEvent.getComment().getGroupLevel(), issueEvent.getIssue());
+                for (NotificationRecipient notificationRecipient : notificationRecipients) {
+                    if (canSendEventToUser(notificationRecipient.getUser(), issueEvent))
+                        recipients.add(notificationRecipient.getUser());
+                }
 
                 sendMessage(recipients, issueEvent);
             }
@@ -105,25 +112,33 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
         }
     }
 
-    private Set<ApplicationUser> getFilteredRecipients(Collection<ApplicationUser> recipients, ProjectRole projectRole, String groupName, Issue issue) {
-        Set<ApplicationUser> result = new HashSet<ApplicationUser>();
-        for (ApplicationUser user : recipients) {
-            if (!permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issue, user))
-                 continue;
-            if (groupName != null && !groupManager.isUserInGroup(user.getName(), groupName))
-                continue;
-            if (projectRole != null && !projectRoleManager.isUserInProjectRole(user, projectRole, issue.getProjectObject()))
-                continue;
-            result.add(user);
+    private boolean canSendEventToUser(ApplicationUser user, IssueEvent issueEvent) {
+        ProjectRole projectRole = null;
+        String groupName = null;
+        Issue issue = issueEvent.getIssue();
+        if (issueEvent.getWorklog() != null) {
+            projectRole = issueEvent.getWorklog().getRoleLevel();
+            groupName = issueEvent.getWorklog().getGroupLevel();
+        } else if (issueEvent.getComment() != null) {
+            projectRole = issueEvent.getComment().getRoleLevel();
+            groupName = issueEvent.getComment().getGroupLevel();
         }
-        return result;
+
+        if (!permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issue, user))
+            return false;
+        if (groupName != null && !groupManager.isUserInGroup(user, groupName))
+            return false;
+        if (projectRole != null && !projectRoleManager.isUserInProjectRole(user, projectRole, issue.getProjectObject()))
+            return false;
+
+        return true;
     }
 
     @SuppressWarnings("unused")
     @EventListener
     public void onMentionIssueEvent(MentionIssueEvent mentionIssueEvent) {
         try {
-            List<ApplicationUser> recipients = new ArrayList<ApplicationUser>();
+            List<ApplicationUser> recipients = new ArrayList<>();
             for (ApplicationUser user : mentionIssueEvent.getToUsers())
                 if (!mentionIssueEvent.getCurrentRecipients().contains(new NotificationRecipient(user)))
                     recipients.add(user);

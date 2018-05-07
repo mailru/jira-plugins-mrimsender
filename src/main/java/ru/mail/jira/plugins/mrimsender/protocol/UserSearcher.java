@@ -1,5 +1,7 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
+import com.atlassian.jira.bc.user.search.UserSearchParams;
+import com.atlassian.jira.bc.user.search.UserSearchService;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
@@ -12,10 +14,11 @@ import java.util.concurrent.ConcurrentMap;
 public class UserSearcher {
     public static final UserSearcher INSTANCE = new UserSearcher();
 
-    private final ConcurrentMap<String, String> mrimLoginCache = new ConcurrentHashMap<String, String>();
-    private final ConcurrentMap<String, String> emailCache = new ConcurrentHashMap<String, String>();
+    private final ConcurrentMap<String, String> mrimLoginCache = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, String> emailCache = new ConcurrentHashMap<>();
     private final UserData userData = new UserData();
     private final UserManager userManager = ComponentAccessor.getUserManager();
+    private final UserSearchService userSearchService = ComponentAccessor.getComponentOfType(UserSearchService.class);
 
     private UserSearcher() {
         for (ApplicationUser user : userManager.getAllUsers())
@@ -69,7 +72,7 @@ public class UserSearcher {
                 emailCache.remove(email.toLowerCase());
         }
 
-        for (ApplicationUser user : userManager.getAllUsers())
+        for (ApplicationUser user : userSearchService.findUsersByEmail(email))
             try {
                 if (email.equalsIgnoreCase(user.getEmailAddress())) {
                     emailCache.put(email.toLowerCase(), user.getKey());

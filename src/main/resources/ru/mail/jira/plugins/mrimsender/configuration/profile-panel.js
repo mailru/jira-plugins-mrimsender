@@ -28,7 +28,6 @@
                 success: function (data) {
                     $('#mrimsender-notification').removeClass('hidden');
                     $('#mrimsender-mrim-login').text(mrimLogin);
-                    $('#mrimsender-mrim-login-icon').attr('src', 'https://status.mail.ru/?' + mrimLogin).toggleClass('hidden', !mrimLogin);
                     $('#mrimsender-enabled').data('enabled', enabled).text(enabled == 'true' ? AJS.I18n.getText('ru.mail.jira.plugins.mrimsender.profilePanel.notifications.enabled') : AJS.I18n.getText('ru.mail.jira.plugins.mrimsender.profilePanel.notifications.disabled'));
                     dialog.hide();
                 },

@@ -19,7 +19,6 @@
                 <dl>
                     <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.mrimLogin" ):</dt>
                     <dd>
-                        <img src="https://status.mail.ru/?$!mrimLogin" id="mrimsender-mrim-login-icon" #if( !$mrimLogin )class="hidden"#end>
                         <span id="mrimsender-mrim-login">$!mrimLogin</span>
                     </dd>
                 </dl>

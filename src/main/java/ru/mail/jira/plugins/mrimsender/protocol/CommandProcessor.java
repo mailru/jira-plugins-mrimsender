@@ -61,6 +61,7 @@ public class CommandProcessor extends Thread {
     private final IssueTypeSchemeManager issueTypeSchemeManager = ComponentAccessor.getIssueTypeSchemeManager();
     private final JiraAuthenticationContext jiraAuthenticationContext = ComponentAccessor.getJiraAuthenticationContext();
     private final ProjectService projectService = ComponentAccessor.getComponent(ProjectService.class);
+    private final SearchService searchService = ComponentAccessor.getComponent(SearchService.class);
     private final WorkflowManager workflowManager = ComponentAccessor.getWorkflowManager();
     private final WorklogService worklogService = ComponentAccessor.getComponent(WorklogService.class);
 
@@ -139,7 +140,6 @@ public class CommandProcessor extends Thread {
 
                         // Process #issues command
                         if ("#issues".equalsIgnoreCase(message)) {
-                            SearchService searchService = ComponentAccessor.getComponent(SearchService.class);
 
                             SearchService.ParseResult parseResult = searchService.parseQuery(fromUser, ISSUES_JQL);
                             if (!parseResult.isValid())
