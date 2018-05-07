@@ -2,6 +2,7 @@ package ru.mail.jira.plugins.calendar.rest.dto.gantt;
 
 import lombok.Getter;
 import lombok.Setter;
+import ru.mail.jira.plugins.calendar.rest.dto.UserDto;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -9,15 +10,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Setter
 @Getter
 @XmlRootElement
-public class GanttUserDto {
+public class GanttUserDto extends UserDto {
     @XmlElement
     private int id;
-    @XmlElement
-    private String key;
-    @XmlElement
-    private String displayName;
-    @XmlElement
-    private String avatarUrl;
     @XmlElement
     private String weeklyHours;
 

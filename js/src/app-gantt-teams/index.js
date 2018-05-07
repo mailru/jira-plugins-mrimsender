@@ -13,8 +13,8 @@ import Backbone from 'backbone';
 
 import {GanttTeams} from './GanttTeams';
 
-import {calendarService, store, ganttTeamService} from '../service/services';
-import {CalendarActionCreators, GanttTeamActionCreators} from '../service/gantt.reducer';
+import {calendarService, teamsStore, ganttTeamService} from '../service/gantt.team.store';
+import {CalendarActionCreators, GanttTeamActionCreators} from '../service/gantt.teams.reducer';
 
 import './gantt-teams.less';
 
@@ -30,12 +30,12 @@ AJS.toInit(() => {
                 calendarService
                     .getCalendar(id)
                     .then(calendar => {
-                        store.dispatch(CalendarActionCreators.setCalendar({...calendar, id}, []));
+                        teamsStore.dispatch(CalendarActionCreators.setCalendar({...calendar, id}, []));
                     });
                 ganttTeamService
                     .getTeams(id)
                     .then(teams => {
-                        store.dispatch(GanttTeamActionCreators.setTeams(teams));
+                        teamsStore.dispatch(GanttTeamActionCreators.setTeams(teams));
                     });
             }
         });
@@ -44,7 +44,7 @@ AJS.toInit(() => {
         const viewRouter = new ViewRouter();
 
         ReactDOM.render(
-            <Provider store={store}>
+            <Provider store={teamsStore}>
                 <LayerManager>
                     <GanttTeams/>
                 </LayerManager>

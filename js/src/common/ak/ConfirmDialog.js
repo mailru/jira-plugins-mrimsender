@@ -2,15 +2,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import {connect} from 'react-redux';
-
 import Modal from '@atlaskit/modal-dialog';
 import Spinner from '@atlaskit/spinner';
 
 import {noop} from '../util';
 
 
-class ConfirmDialogInternal extends React.Component {
+export class ConfirmDialog extends React.Component {
     static propTypes = {
         header: PropTypes.string.isRequired,
         onConfirm: PropTypes.func.isRequired,
@@ -67,12 +65,3 @@ class ConfirmDialogInternal extends React.Component {
     }
 }
 
-export const ConfirmDialog =
-    connect(
-        state => {
-            return {
-                calendar: state.calendar,
-                teams: state.teams
-            };
-        }
-    )(ConfirmDialogInternal);

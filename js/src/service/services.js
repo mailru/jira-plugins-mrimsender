@@ -3,7 +3,6 @@ import {createStore} from 'redux';
 
 import {GanttService} from './gantt.service';
 import {ganttReducer} from './gantt.reducer';
-import {GanttTeamService} from './gantt.team.service';
 import {StoreService} from './store.service';
 import {CalendarService} from './calendar.service';
 import {JiraService} from './jira.service';
@@ -13,7 +12,6 @@ import {defaultOptions} from '../app-gantt/staticOptions';
 
 
 export const ganttService = GanttService;
-export const ganttTeamService = GanttTeamService;
 export const calendarService = CalendarService;
 export const jiraService = JiraService;
 

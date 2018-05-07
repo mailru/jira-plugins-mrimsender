@@ -13,7 +13,7 @@ export class GanttTeamService {
     }
 
     static editTeam(team) {
-        return ajaxPut(`${getPluginBaseUrl()}/gantt/team/${team.id}`, team);
+        return ajaxPut(`${getPluginBaseUrl()}/gantt/team`, team);
     }
 
     static deleteTeam(team) {
@@ -21,7 +21,7 @@ export class GanttTeamService {
     }
 
     static findUsers(team, filter) {
-        return ajaxGet(`${getPluginBaseUrl()}/gantt/team/findUsers?filter=${filter}&&calendarId=${team.calendarId}`);
+        return ajaxGet(`${getPluginBaseUrl()}/gantt/team/findUsers?filter=${filter}&calendarId=${team.calendarId}`);
     }
 
     static addUsers(team, users) {

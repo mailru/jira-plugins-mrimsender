@@ -57,9 +57,7 @@ public class RestGanttTeamService {
     }
 
     @PUT
-    @Path("/{id}")
-    public Response editTeam(@PathParam("id") final int id,
-                             final GanttTeamDto teamDto) {
+    public Response editTeam(final GanttTeamDto teamDto) {
         return new RestExecutor<List<GanttTeamDto>>() {
             @Override
             protected List<GanttTeamDto> doAction() throws Exception {
@@ -91,7 +89,7 @@ public class RestGanttTeamService {
             protected List<GanttTeamDto> doAction() throws Exception {
                 licenseService.checkLicense();
 
-                return ganttTeamService.getTeams(calendarId);
+                return ganttTeamService.getTeams(jiraAuthenticationContext.getLoggedInUser(), calendarId);
             }
         }.getResponse();
     }
@@ -105,7 +103,7 @@ public class RestGanttTeamService {
             protected List<UserDto> doAction() throws Exception {
                 licenseService.checkLicense();
 
-                return ganttTeamService.findUsers(calendarId, filter);
+                return ganttTeamService.findUsers(jiraAuthenticationContext.getLoggedInUser(), calendarId, filter);
             }
         }.getResponse();
     }

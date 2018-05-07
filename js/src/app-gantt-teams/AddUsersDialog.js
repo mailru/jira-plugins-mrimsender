@@ -9,14 +9,15 @@ import Spinner from '@atlaskit/spinner';
 import {AsyncSelect} from '@atlaskit/select';
 
 import {noop} from '../common/util';
-import {GanttTeamActionCreators} from '../service/gantt.reducer';
-import {ganttTeamService, store} from '../service/services';
+import {GanttTeamActionCreators} from '../service/gantt.teams.reducer';
+import {ganttTeamService} from '../service/gantt.team.store';
 
 
 class AddUsersDialogInternal extends React.Component {
     static propTypes = {
         team: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
         onClose: PropTypes.func.isRequired,
+        setTeams: PropTypes.func
     };
 
     state = {
@@ -30,7 +31,7 @@ class AddUsersDialogInternal extends React.Component {
             .addUsers(this.props.team, this.state.selectedUsers)
             .then(
                 teams => {
-                    store.dispatch(GanttTeamActionCreators.setTeams(teams));
+                    this.props.setTeams(teams);
                     this.setState({ waitingForAdd: false });
                     this.props.onClose();
                 },
@@ -108,10 +109,6 @@ class AddUsersDialogInternal extends React.Component {
 
 export const AddUsersDialog =
     connect(
-        state => {
-            return {
-                calendar: state.calendar
-            };
-        },
+        null,
         GanttTeamActionCreators
     )(AddUsersDialogInternal);

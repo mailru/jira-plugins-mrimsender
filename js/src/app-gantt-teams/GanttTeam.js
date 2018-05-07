@@ -19,13 +19,14 @@ import {AddUsersDialog} from './AddUsersDialog';
 import {ConfirmDialog} from '../common/ak/ConfirmDialog';
 
 import {InlineEditSingleLineTextInput} from '../common/ak/InlineEditSingleLineTextInput';
-import {GanttTeamActionCreators} from '../service/gantt.reducer';
-import {ganttTeamService, store} from '../service/services';
+import {GanttTeamActionCreators} from '../service/gantt.teams.reducer';
+import {ganttTeamService} from '../service/gantt.team.store';
 
 
 class GanttTeamInternal extends React.Component {
     static propTypes = {
-        team: PropTypes.object.isRequired // eslint-disable-line react/forbid-prop-types
+        team: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+        setTeams: PropTypes.func
     };
 
     state = {
@@ -60,7 +61,7 @@ class GanttTeamInternal extends React.Component {
                 })
                 .then(
                     teams => {
-                        store.dispatch(GanttTeamActionCreators.setTeams(teams));
+                        this.props.setTeams(teams);
                         resolve();
                     },
                     error => {
@@ -77,7 +78,7 @@ class GanttTeamInternal extends React.Component {
                     .editUser(this.props.team, {...user, weeklyHours: hours})
                     .then(
                         teams => {
-                            store.dispatch(GanttTeamActionCreators.setTeams(teams));
+                            this.props.setTeams(teams);
                             resolve();
                         },
                         error => {
@@ -92,7 +93,7 @@ class GanttTeamInternal extends React.Component {
         ganttTeamService
             .deleteTeam(this.props.team)
             .then(teams => {
-                store.dispatch(GanttTeamActionCreators.setTeams(teams));
+                this.props.setTeams(teams);
             });
     };
 
@@ -100,7 +101,7 @@ class GanttTeamInternal extends React.Component {
         ganttTeamService
             .deleteUser(this.props.team, user)
             .then(teams => {
-                store.dispatch(GanttTeamActionCreators.setTeams(teams));
+                this.props.setTeams(teams);
             });
     };
 
@@ -128,8 +129,8 @@ class GanttTeamInternal extends React.Component {
 
     _getUsersRows = (team) => { // eslint-disable-line consistent-return
         if (team.users.length !== 0) {
-            return team.users.map((user, index) => ({
-                key: `gantt-team-${team.id}-user-row-${index}-${user.key}`,
+            return team.users.map((user) => ({
+                key: `gantt-team-${team.id}-user-row-${user.key}`,
                 cells: [
                     {
                         key: user.key,
@@ -293,11 +294,6 @@ class GanttTeamInternal extends React.Component {
 
 export const GanttTeam =
     connect(
-        state => {
-            return {
-                calendar: state.calendar,
-                teams: state.teams
-            };
-        },
+        null,
         GanttTeamActionCreators
     )(GanttTeamInternal);

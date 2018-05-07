@@ -12,9 +12,6 @@ import AddIcon from '@atlaskit/icon/glyph/add';
 import {CreateDialog} from './CreateDialog';
 import {GanttTeam} from './GanttTeam';
 
-import {GanttTeamActionCreators} from '../service/gantt.reducer';
-
-
 class GanttTeamsInternal extends React.Component {
     static propTypes = {
         teams: PropTypes.array // eslint-disable-line react/forbid-prop-types
@@ -72,9 +69,8 @@ export const GanttTeams =
     connect(
         state => {
             return {
-                calendar: state.calendar,
                 teams: state.teams
             };
         },
-        GanttTeamActionCreators
+        null
     )(GanttTeamsInternal);

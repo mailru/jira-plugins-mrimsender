@@ -15,7 +15,7 @@ import java.util.List;
 public interface GanttTeamService {
     GanttTeam getTeam(int id) throws GetException;
 
-    List<GanttTeamDto> getTeams(int calendarId);
+    List<GanttTeamDto> getTeams(ApplicationUser currentUser, int calendarId) throws GetException;
 
     List<GanttTeamDto> createTeam(ApplicationUser currentUser, GanttTeamDto teamDto) throws GetException;
 
@@ -23,7 +23,7 @@ public interface GanttTeamService {
 
     List<GanttTeamDto> deleteTeam(ApplicationUser currentUser, int id) throws GetException;
 
-    List<UserDto> findUsers(int calendarId, String filter) throws GetException;
+    List<UserDto> findUsers(ApplicationUser currentUser, int calendarId, String filter) throws GetException;
 
     List<GanttTeamDto> addUsers(ApplicationUser currentUser, int teamId, List<UserDto> selectedUsers) throws GetException;
 

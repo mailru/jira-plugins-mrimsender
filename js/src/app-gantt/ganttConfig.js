@@ -209,7 +209,7 @@ function createBox(sizes, className) {
 }
 
 // eslint-disable-next-line no-unused-expressions
-gantt && gantt.addTaskLayer((task) => {
+gantt.addTaskLayer((task) => {
     if (task.type === 'group' && !task.$open && gantt.hasChild(task.id) && !task.unscheduled) {
         const el = document.createElement('div');
         const sizes = gantt.getTaskPosition(task);

@@ -2,7 +2,6 @@ package ru.mail.jira.plugins.calendar.service.reminder;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.jira.avatar.Avatar;
-import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
@@ -24,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.calendar.common.UserUtils;
 import ru.mail.jira.plugins.calendar.model.*;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.CustomEventDto;
@@ -48,23 +48,23 @@ public class ReminderServiceImpl implements ReminderService {
     private final CalendarService calendarService;
     private final UserManager userManager;
     private final MailQueue mailQueue;
-    private final AvatarService avatarService;
     private final I18nResolver i18nResolver;
     private final LocaleManager localeManager;
     private final TimeZoneManager timeZoneManager;
+    private final UserUtils userUtils;
 
     @Autowired
     public ReminderServiceImpl(
-        @ComponentImport UserManager userManager,
-        @ComponentImport MailQueue mailQueue,
-        @ComponentImport AvatarService avatarService,
-        @ComponentImport I18nResolver i18nResolver,
-        @ComponentImport LocaleManager localeManager,
-        @ComponentImport TimeZoneManager timeZoneManager,
-        @ComponentImport ActiveObjects ao,
-        JiraDeprecatedService jiraDeprecatedService,
-        UserCalendarService userCalendarService,
-        CalendarService calendarService
+            @ComponentImport UserManager userManager,
+            @ComponentImport MailQueue mailQueue,
+            @ComponentImport I18nResolver i18nResolver,
+            @ComponentImport LocaleManager localeManager,
+            @ComponentImport TimeZoneManager timeZoneManager,
+            @ComponentImport ActiveObjects ao,
+            JiraDeprecatedService jiraDeprecatedService,
+            UserCalendarService userCalendarService,
+            CalendarService calendarService,
+            UserUtils userUtils
     ) {
         this.jiraDeprecatedService = jiraDeprecatedService;
         this.ao = ao;
@@ -72,10 +72,10 @@ public class ReminderServiceImpl implements ReminderService {
         this.calendarService = calendarService;
         this.userManager = userManager;
         this.mailQueue = mailQueue;
-        this.avatarService = avatarService;
         this.localeManager = localeManager;
         this.i18nResolver = i18nResolver;
         this.timeZoneManager = timeZoneManager;
+        this.userUtils = userUtils;
     }
 
     @Override
@@ -211,12 +211,7 @@ public class ReminderServiceImpl implements ReminderService {
             ApplicationUser participant = userManager.getUserByKey(participantKey);
 
             if (participant != null) {
-                UserDto userDto = new UserDto();
-                userDto.setKey(participant.getKey());
-                userDto.setName(participant.getName());
-                userDto.setDisplayName(participant.getDisplayName());
-                userDto.setAvatarUrl(avatarService.getAvatarURL(participant, participant, Avatar.Size.SMALL).toString());
-                result.add(userDto);
+                result.add(userUtils.buildUserDto(participant, Avatar.Size.SMALL));
             }
         }
 

@@ -126,7 +126,7 @@ public class GanttServiceImpl implements GanttService {
         return getGantt(events, user, calendarId, params.getGroupBy());
     }
 
-    private GanttDto getGantt(List<EventDto> eventDtoList, ApplicationUser user, int calendarId, String groupBy) {
+    private GanttDto getGantt(List<EventDto> eventDtoList, ApplicationUser user, int calendarId, String groupBy) throws GetException {
         GanttDto ganttDto = new GanttDto();
 
         List<GanttTaskDto> events = new ArrayList<>();
@@ -226,7 +226,7 @@ public class GanttServiceImpl implements GanttService {
         Set<String> resourceKeys = new HashSet<>();
         resources.add(new GanttResourceDto("-1", "Другие", null)); // Other team
         resources.add(new GanttResourceDto("null", "Не назначен", "-1")); // Unassigned
-        for (GanttTeamDto teamDto : ganttTeamService.getTeams(calendarId)) {
+        for (GanttTeamDto teamDto : ganttTeamService.getTeams(user, calendarId)) {
             resources.add(new GanttResourceDto(String.valueOf(teamDto.getId()), teamDto.getName(), null));
             for (GanttUserDto userDto : teamDto.getUsers()) {
                 resourceKeys.add(userDto.getKey());

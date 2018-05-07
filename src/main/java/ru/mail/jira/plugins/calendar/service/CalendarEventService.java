@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.common.FieldUtils;
+import ru.mail.jira.plugins.calendar.common.UserUtils;
 import ru.mail.jira.plugins.calendar.configuration.NonWorkingDay;
 import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
 import ru.mail.jira.plugins.calendar.model.Calendar;
@@ -109,29 +110,30 @@ public class CalendarEventService {
     private final AvatarService avatarService;
     private final JiraSoftwareHelper jiraSoftwareHelper;
     private final TimeZoneManager timeZoneManager;
+    private final UserUtils userUtils;
 
     @Autowired
     public CalendarEventService(
-        @ComponentImport ApplicationProperties applicationProperties,
-        @ComponentImport CustomFieldManager customFieldManager,
-        @ComponentImport FieldManager fieldManager,
-        @ComponentImport DateTimeFormatter dateTimeFormatter,
-        @ComponentImport IssueService issueService,
-        @ComponentImport LocaleManager localeManager,
-        @ComponentImport FieldLayoutManager fieldLayoutManager,
-        @ComponentImport RendererManager rendererManager,
-        @ComponentImport SearchRequestService searchRequestService,
-        @ComponentImport SearchService searchService,
-        @ComponentImport I18nResolver i18nResolver,
-        @ComponentImport AvatarService avatarService,
-        CalendarService calendarService,
-        CustomEventService customEventService,
-        JiraDeprecatedService jiraDeprecatedService,
-        UserCalendarService userCalendarService,
-        JiraSoftwareHelper jiraSoftwareHelper,
-        WorkingDaysService workingDaysService,
-        @ComponentImport TimeZoneManager timeZoneManager
-    ) {
+            @ComponentImport ApplicationProperties applicationProperties,
+            @ComponentImport CustomFieldManager customFieldManager,
+            @ComponentImport FieldManager fieldManager,
+            @ComponentImport DateTimeFormatter dateTimeFormatter,
+            @ComponentImport IssueService issueService,
+            @ComponentImport LocaleManager localeManager,
+            @ComponentImport FieldLayoutManager fieldLayoutManager,
+            @ComponentImport RendererManager rendererManager,
+            @ComponentImport SearchRequestService searchRequestService,
+            @ComponentImport SearchService searchService,
+            @ComponentImport I18nResolver i18nResolver,
+            @ComponentImport AvatarService avatarService,
+            CalendarService calendarService,
+            CustomEventService customEventService,
+            JiraDeprecatedService jiraDeprecatedService,
+            UserCalendarService userCalendarService,
+            JiraSoftwareHelper jiraSoftwareHelper,
+            WorkingDaysService workingDaysService,
+            @ComponentImport TimeZoneManager timeZoneManager,
+            UserUtils userUtils) {
         this.applicationProperties = applicationProperties;
         this.fieldManager = fieldManager;
         this.localeManager = localeManager;
@@ -151,6 +153,7 @@ public class CalendarEventService {
         this.avatarService = avatarService;
         this.jiraSoftwareHelper = jiraSoftwareHelper;
         this.timeZoneManager = timeZoneManager;
+        this.userUtils = userUtils;
     }
 
     public EventDto getEvent(int calendarId, final ApplicationUser user, String issueKey) throws GetException {
@@ -813,7 +816,7 @@ public class CalendarEventService {
         event.setTimeSpentSeconds(timeSpent);
         event.setTimeSpent(timeSpent != null ? ComponentAccessor.getJiraDurationUtils().getShortFormattedDuration(timeSpent) : null);
         event.setResolved(issue.getResolutionId() != null);
- 		event.setAssignee(issue.getAssignee() != null ? buildUser(issue.getAssignee()) : null);
+ 		event.setAssignee(issue.getAssignee() != null ? userUtils.buildUserDto(issue.getAssignee(), Avatar.Size.SMALL) : null);
 
         if (groups != null) {
             event.setGroupField(groupBy);
@@ -867,15 +870,6 @@ public class CalendarEventService {
             event.setIssueInfo(getEventInfo(calendar, issue, user));
 
         return event;
-    }
-
-    private UserDto buildUser(ApplicationUser user) {
-        UserDto result = new UserDto();
-        result.setKey(user.getKey());
-        result.setName(user.getName());
-        result.setDisplayName(user.getDisplayName());
-        result.setAvatarUrl(avatarService.getAvatarURL(user, user, Avatar.Size.SMALL).toString());
-        return result;
     }
 
     private String getBaseUrl() {

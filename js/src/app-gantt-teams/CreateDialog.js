@@ -9,14 +9,15 @@ import Modal from '@atlaskit/modal-dialog';
 import Spinner from '@atlaskit/spinner';
 
 import {noop} from '../common/util';
-import {GanttTeamActionCreators} from '../service/gantt.reducer';
-import {ganttTeamService, store} from '../service/services';
+import {GanttTeamActionCreators} from '../service/gantt.teams.reducer';
+import {ganttTeamService} from '../service/gantt.team.store';
 
 
 class CreateDialogInternal extends React.Component {
     static propTypes = {
         onClose: PropTypes.func.isRequired,
-        calendar: PropTypes.object.isRequired // eslint-disable-line react/forbid-prop-types
+        calendar: PropTypes.object.isRequired, // eslint-disable-line react/forbid-prop-types
+        setTeams: PropTypes.func
     };
 
     state = {
@@ -33,7 +34,7 @@ class CreateDialogInternal extends React.Component {
             calendarId: this.props.calendar.id
         }).then(
             teams => {
-                store.dispatch(GanttTeamActionCreators.setTeams(teams));
+                this.props.setTeams(teams);
                 this.setState({ waitingForCreate: false });
                 this.props.onClose();
             },
@@ -93,8 +94,7 @@ export const CreateDialog =
     connect(
         state => {
             return {
-                calendar: state.calendar,
-                teams: state.teams
+                calendar: state.calendar
             };
         },
         GanttTeamActionCreators

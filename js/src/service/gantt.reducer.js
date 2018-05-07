@@ -10,7 +10,6 @@ export const ganttReducer = combineReducers({
     calendar: calendarReducer,
     sprints: sprintsReducer,
     ganttReady: ganttReadyReducer,
-    teams: ganttTeamReducer
 });
 
 
@@ -18,7 +17,6 @@ const UPDATE_OPTIONS = 'UPDATE_OPTIONS';
 const SET_CALENDAR = 'SET_CALENDAR';
 const GANTT_READY = 'GANTT_READY';
 const UPDATE_ALL = 'UPDATE_ALL';
-const GANTT_SET_TEAMS = 'GANTT_SET_TEAMS';
 
 export function ganttReady() {
     return {
@@ -107,27 +105,4 @@ function ganttReadyReducer(state, action) {
     }
 
     return state;
-}
-
-export const GanttTeamActionCreators = {
-    setTeams: (teams) => {
-        return {
-            type: GANTT_SET_TEAMS,
-            teams
-        };
-    }
-};
-
-
-function ganttTeamReducer(state, action) {
-    if (state === undefined) {
-        return [];
-    }
-
-    switch (action.type) {
-        case GANTT_SET_TEAMS:
-            return action.teams;
-        default:
-            return state;
-    }
 }
