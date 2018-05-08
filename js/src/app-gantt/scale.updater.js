@@ -1,8 +1,8 @@
 /* eslint-disable flowtype/require-valid-file-annotation */
-import {DEFAULT_MIN_COLUMN_WIDTH, defaultTaskCell} from './ganttConfig';
-import {scaleConfigs} from './scaleConfigs';
+import { DEFAULT_MIN_COLUMN_WIDTH, defaultTaskCell } from './ganttConfig';
+import { scaleConfigs } from './scaleConfigs';
 
-import {storeService} from '../service/services';
+import { storeService } from '../service/services';
 
 
 export class ScaleUpdater {
@@ -63,6 +63,8 @@ export class ScaleUpdater {
             this.gantt.config.start_date = null;
             this.gantt.config.end_date = null;
         }
+
+        this.gantt.config.show_task_cells = this.gantt.getTaskCount() < 100;
 
         console.log('calling render');
     };

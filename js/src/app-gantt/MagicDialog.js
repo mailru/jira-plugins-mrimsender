@@ -123,6 +123,7 @@ class MagicDialogInternal extends React.Component<Props, State> {
                         start_date: new Date(),
                         css: 'today'
                     });
+                    gantt.config.show_task_cells = data.data.length < 100;
                     gantt.parse(data);
                     this.setState({ waitingForMagic: false });
                     this.props.updateOptions({ liveData: false });
