@@ -12,4 +12,6 @@ import java.util.List;
 public class GanttCollectionsDto {
     @XmlElement
     private List<GanttLinkDto> links;
+    @XmlElement
+    private List<GanttResourceDto> resources;
 }

@@ -1,4 +1,7 @@
 /* eslint-disable flowtype/require-valid-file-annotation */
+import {resourceConfig} from './ganttConfig';
+
+
 export const views = {
     basic: {
         key: 'basic',
@@ -7,7 +10,42 @@ export const views = {
             grid: true,
             gantt: true,
             resource: false
-        }
+        },
+        rows: [
+            {
+                cols: [
+                    {
+                        view: 'grid',
+                        id: 'grid',
+                        group: 'grids',
+                        scrollX: 'scrollHor',
+                        scrollY: 'scrollVer'
+                    },
+                    {
+                        resizer: true,
+                        width: 1
+                    },
+                    {
+                        view: 'timeline',
+                        id: 'timeline',
+                        scrollX: 'scrollHor',
+                        scrollY: 'scrollVer'
+                    },
+                    {
+                        view: 'scrollbar',
+                        scroll: 'y',
+                        id: 'scrollVer',
+                        group: 'vertical'
+                    }
+                ]
+            },
+            {
+                view: 'scrollbar',
+                scroll: 'x',
+                id: 'scrollHor',
+                height: 20
+            }
+        ]
     },
     ganttOnly: {
         key: 'ganttOnly',
@@ -16,7 +54,31 @@ export const views = {
             grid: false,
             gantt: true,
             resource: false
-        }
+        },
+        rows: [
+            {
+                cols: [
+                    {
+                        view: 'timeline',
+                        id: 'timeline',
+                        scrollX: 'scrollHor',
+                        scrollY: 'scrollVer'
+                    },
+                    {
+                        view: 'scrollbar',
+                        scroll: 'y',
+                        id: 'scrollVer',
+                        group: 'vertical'
+                    }
+                ]
+            },
+            {
+                view: 'scrollbar',
+                scroll: 'x',
+                id: 'scrollHor',
+                height: 20
+            }
+        ]
     },
     withResources: {
         key: 'withResources',
@@ -25,7 +87,73 @@ export const views = {
             grid: true,
             gantt: true,
             resource: true
-        }
+        },
+        rows: [
+            {
+                cols: [
+                    {
+                        view: 'grid',
+                        id: 'grid',
+                        group: 'grids',
+                        scrollX: 'scrollHor',
+                        scrollY: 'scrollVer'
+                    },
+                    {
+                        resizer: true,
+                        width: 1
+                    },
+                    {
+                        view: 'timeline',
+                        id: 'timeline',
+                        scrollX: 'scrollHor',
+                        scrollY: 'scrollVer'
+                    },
+                    {
+                        view: 'scrollbar',
+                        scroll: 'y',
+                        id: 'scrollVer',
+                        group: 'vertical'
+                    }
+                ],
+                gravity: 2
+            },
+            {
+                resizer: true,
+                width: 1
+            },
+            {
+                config: resourceConfig,
+                cols: [
+                    {
+                        view: 'resourceGrid',
+                        group: 'grids',
+                        scrollY: 'resourceScrollVer'
+                    },
+                    {
+                        resizer: true,
+                        width: 1
+                    },
+                    {
+                        view: 'resourceTimeline',
+                        scrollX: 'scrollHor',
+                        scrollY: 'resourceScrollVer'
+                    },
+                    {
+                        view: 'scrollbar',
+                        scroll: 'y',
+                        id: 'resourceScrollVer',
+                        group: 'vertical'
+                    }
+                ],
+                gravity: 1
+            },
+            {
+                view: 'scrollbar',
+                scroll: 'x',
+                id: 'scrollHor',
+                height: 20
+            }
+        ]
     }
 };
 

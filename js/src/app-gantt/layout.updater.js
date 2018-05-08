@@ -16,23 +16,17 @@ export class LayoutUpdater {
     _update = () => {
         const {view} = storeService.getOptions();
 
-        let render = false;
+        let init = false;
 
         if (this.view !== view) {
             this.view = view;
 
-            const viewObject = views[view];
-
-            //avoid unnecessary re-renders
-            const showGrid = viewObject.panels.grid;
-            if (this.gantt.config.show_grid !== showGrid) {
-                this.gantt.config.show_grid = showGrid;
-                render = true;
-            }
+            this.gantt.config.layout.rows = views[view].rows;
+            init = true;
         }
 
-        if (render && storeService.isGanttReady()) {
-            this.gantt.render();
+        if (init && storeService.isGanttReady()) {
+            this.gantt.init('gantt-diagram-calendar');
         }
     };
 }

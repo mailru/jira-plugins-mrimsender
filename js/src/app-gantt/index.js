@@ -179,8 +179,25 @@ AJS.toInit(() => {
         // eslint-disable-next-line no-unused-vars
         const layoutUpdaater = new LayoutUpdater(gantt, store);
 
+        const resourcesStore = gantt.createDatastore({
+            name: gantt.config.resource_store,
+            type: 'treeDatastore',
+            initItem (item) {
+                const newItem = item;
+                newItem.parent = item.parent || gantt.config.root_id;
+                newItem[gantt.config.resource_property] = item.parent;
+                newItem.open = true;
+                return newItem;
+            }
+        });
+
+        gantt.attachEvent('onBeforeParse', () => {
+            gantt.serverList('resources');
+        });
+
         gantt.attachEvent('onParse', () => {
             scaleUpdater.updateScales();
+            resourcesStore.parse(gantt.serverList('resources'));
         });
 
         /* Router */

@@ -1,6 +1,7 @@
 /* eslint-disable flowtype/require-valid-file-annotation */
 import {combineReducers} from 'redux';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 import {defaultOptions} from '../app-gantt/staticOptions';
 
 
@@ -8,7 +9,7 @@ export const ganttReducer = combineReducers({
     options: optionsReducer,
     calendar: calendarReducer,
     sprints: sprintsReducer,
-    ganttReady: ganttReadyReducer
+    ganttReady: ganttReadyReducer,
 });
 
 

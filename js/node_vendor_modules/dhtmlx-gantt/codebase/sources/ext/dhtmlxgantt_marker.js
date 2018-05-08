@@ -1,7 +1,7 @@
 /*!
  * @license
  * 
- * dhtmlxGantt v.5.1.2 Professional
+ * dhtmlxGantt v.5.1.5 Professional
  * This software is covered by DHTMLX Enterprise License. Usage without proper license is prohibited.
  * 
  * (c) Dinamenta, UAB.
@@ -116,7 +116,7 @@ function render_marker(marker){
 
 	var div = document.createElement("div");
 
-	div.setAttribute("marker_id", marker.id);
+	div.setAttribute("data-marker-id", marker.id);
 
 	var css = "gantt_marker";
 	if(gantt.templates.marker_class)

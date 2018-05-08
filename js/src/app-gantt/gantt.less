@@ -398,6 +398,49 @@
   }
 }
 
+.resource_marker,
+.resource_marker_min {
+  text-align: center;
+}
+
+.resource_marker {
+  & div {
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    display: inline-block;
+    border-radius: 14px;
+    color: #FFF;
+  }
+
+  &.workday_ok div {
+    background: @ak-color-G200;
+  }
+
+  &.workday_over div {
+    background: @ak-color-R200;
+  }
+}
+
+.resource_marker_min {
+  & div {
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    display: inline-block;
+    border-radius: 10px;
+    color: #FFF;
+  }
+
+  &.workday_ok div {
+    background: @ak-color-G200;
+  }
+
+  &.workday_over div {
+    background: @ak-color-R200;
+  }
+}
+
 #footer {
   display: none;
 }

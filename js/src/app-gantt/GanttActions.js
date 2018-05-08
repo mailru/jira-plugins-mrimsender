@@ -25,6 +25,7 @@ import SearchIcon from '@atlaskit/icon/glyph/search';
 import ListIcon from '@atlaskit/icon/glyph/list';
 import JiraLabsIcon from '@atlaskit/icon/glyph/jira/labs';
 import FilterIcon from '@atlaskit/icon/glyph/filter';
+import PeopleGroupIcon from '@atlaskit/icon/glyph/people-group';
 import CheckIcon from '@atlaskit/icon/glyph/check';
 import VidFullScreenOnIcon from '@atlaskit/icon/glyph/vid-full-screen-on';
 import VidFullScreenOffIcon from '@atlaskit/icon/glyph/vid-full-screen-off';
@@ -218,6 +219,10 @@ class GanttActionsInternal extends React.Component {
         }
     };
 
+    _handleTeams = () => {
+        window.location = `${AJS.contextPath()}/secure/MailRuGanttTeams.jspa#calendar=${this.props.calendar.id}`;
+    };
+
     _selectSprint = (sprint) => () => this.props.updateOptions({ sprint });
 
     _updateStructure = (isOpen) => {
@@ -328,6 +333,12 @@ class GanttActionsInternal extends React.Component {
                         </div>
                         <div>
                             <ButtonGroup>
+                                <Button
+                                    iconBefore={<PeopleGroupIcon/>}
+                                    onClick={this._handleTeams}
+                                >
+                                    Команды
+                                </Button>
                                 <InlineDialog
                                     position="bottom right"
                                     isOpen={activeDialog === 'dates'}

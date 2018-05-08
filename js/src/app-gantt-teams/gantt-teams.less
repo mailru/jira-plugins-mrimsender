@@ -1,0 +1,86 @@
+@import (reference) '~@atlaskit/util-shared-styles/src/borders';
+@import (reference) '~@atlaskit/util-shared-styles/src/colors';
+@import (reference) '~@atlaskit/util-shared-styles/src/fonts';
+@import (reference) '../common/vars';
+
+@import '~@atlaskit/reduced-ui-pack/dist/bundle.css';
+@import '../common/flex';
+
+
+#gantt-teams-content {
+  margin-top: 0;
+}
+
+.gantt-header {
+  display: flex;
+  min-width: 0;
+  flex-direction: row;
+  padding: 15px;
+  border-radius: 3px 3px 0 0;
+  border: 1px solid #DFE1E6;
+  border-bottom: none;
+}
+
+.gantt-header .gantt-title {
+  font-size: 1.71428571em;
+  font-style: inherit;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.16666667;
+}
+
+.flex-grow {
+  flex: 1 1 auto;
+}
+
+.gantt-teams-list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 15px;
+  border: 1px solid #DFE1E6;
+}
+
+.gantt-team:not(:first-child)  {
+  margin-top: 20px;
+}
+
+.gantt-team-header {
+  display: flex;
+  min-width: 0;
+  flex-direction: row;
+  padding: 15px;
+  border-radius: 3px 3px 0 0;
+  border: 1px solid #DFE1E6;
+  align-items: center;
+}
+
+.gantt-team-header .gantt-title {
+  margin-left: 10px;
+  width: 100%;
+}
+
+.gantt-title .gantt-team-name {
+  font-size: 1.3em;
+  font-style: inherit;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.16666667;
+  width: 100%;
+}
+
+.gantt-team-users {
+  display: flex;
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid #DFE1E6;
+  border-top: none;
+}
+
+.gantt-team-users table td {
+  overflow: visible;
+}
+
+#footer {
+  display: none;
+}

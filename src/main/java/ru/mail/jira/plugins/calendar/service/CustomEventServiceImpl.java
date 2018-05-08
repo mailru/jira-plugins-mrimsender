@@ -2,7 +2,6 @@ package ru.mail.jira.plugins.calendar.service;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.jira.avatar.Avatar;
-import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.exception.GetException;
@@ -21,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.calendar.common.UserUtils;
 import ru.mail.jira.plugins.calendar.model.*;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.*;
@@ -53,30 +53,29 @@ public class CustomEventServiceImpl implements CustomEventService {
     private final I18nResolver i18nResolver;
     private final JiraDeprecatedService jiraDeprecatedService;
     private final UserManager userManager;
-    private final AvatarService avatarService;
     private final CalendarService calendarService;
     private final PermissionService permissionService;
     private final TimeZoneManager timeZoneManager;
+    private final UserUtils userUtils;
 
     @Autowired
     public CustomEventServiceImpl(
-        @ComponentImport I18nResolver i18nResolver,
-        @ComponentImport UserManager userManager,
-        @ComponentImport AvatarService avatarService,
-        @ComponentImport ActiveObjects ao,
-        @ComponentImport TimeZoneManager timeZoneManager,
-        JiraDeprecatedService jiraDeprecatedService,
-        CalendarService calendarService,
-        PermissionService permissionService
-    ) {
+            @ComponentImport I18nResolver i18nResolver,
+            @ComponentImport UserManager userManager,
+            @ComponentImport ActiveObjects ao,
+            @ComponentImport TimeZoneManager timeZoneManager,
+            JiraDeprecatedService jiraDeprecatedService,
+            CalendarService calendarService,
+            PermissionService permissionService,
+            UserUtils userUtils) {
         this.ao = ao;
         this.i18nResolver = i18nResolver;
         this.jiraDeprecatedService = jiraDeprecatedService;
         this.userManager = userManager;
-        this.avatarService = avatarService;
         this.calendarService = calendarService;
         this.permissionService = permissionService;
         this.timeZoneManager = timeZoneManager;
+        this.userUtils = userUtils;
     }
 
     @Override
@@ -952,9 +951,9 @@ public class CustomEventServiceImpl implements CustomEventService {
             ApplicationUser participant = userManager.getUserByKey(participantKey);
 
             if (participant != null) {
-                result.add(buildUser(participant));
+                result.add(userUtils.buildUserDto(participant, Avatar.Size.SMALL));
             } else {
-                result.add(buildNonExistingUser(participantKey));
+                result.add(userUtils.buildNonExistingUserDto(participantKey));
             }
         }
 
@@ -1063,24 +1062,6 @@ public class CustomEventServiceImpl implements CustomEventService {
         result.setStartEditable(canEditEvents);
         result.setDurationEditable(canEditEvents);
 
-        return result;
-    }
-
-    private UserDto buildUser(ApplicationUser user) {
-        UserDto result = new UserDto();
-        result.setKey(user.getKey());
-        result.setName(user.getName());
-        result.setDisplayName(user.getDisplayName());
-        result.setAvatarUrl(avatarService.getAvatarURL(user, user, Avatar.Size.SMALL).toString());
-        return result;
-    }
-
-    private UserDto buildNonExistingUser(String key) {
-        UserDto result = new UserDto();
-        result.setKey(key);
-        result.setName(key);
-        result.setDisplayName(key);
-        result.setAvatarUrl(null);
         return result;
     }
 

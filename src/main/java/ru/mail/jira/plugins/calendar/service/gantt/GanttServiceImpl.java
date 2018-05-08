@@ -7,6 +7,7 @@ import com.atlassian.jira.issue.fields.*;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.google.common.collect.*;
@@ -54,17 +55,21 @@ public class GanttServiceImpl implements GanttService {
     private final CalendarEventService calendarEventService;
     private final CalendarService calendarService;
     private final WorkingDaysService workingDaysService;
+    private final GanttTeamService ganttTeamService;
+    private final UserManager userManager;
 
     @Autowired
     public GanttServiceImpl(
         @ComponentImport ActiveObjects ao,
         @ComponentImport TimeZoneManager timeZoneManager,
         @ComponentImport FieldManager fieldManager,
+        @ComponentImport UserManager userManager,
         @ComponentImport I18nHelper i18nHelper,
         PermissionService permissionService,
         CalendarEventService calendarEventService,
         CalendarService calendarService,
-        WorkingDaysService workingDaysService
+        WorkingDaysService workingDaysService,
+        GanttTeamService ganttTeamService
     ) {
         this.ao = ao;
         this.timeZoneManager = timeZoneManager;
@@ -74,6 +79,8 @@ public class GanttServiceImpl implements GanttService {
         this.calendarEventService = calendarEventService;
         this.calendarService = calendarService;
         this.workingDaysService = workingDaysService;
+        this.ganttTeamService = ganttTeamService;
+        this.userManager = userManager;
     }
 
     @Override
@@ -119,7 +126,7 @@ public class GanttServiceImpl implements GanttService {
         return getGantt(events, user, calendarId, params.getGroupBy());
     }
 
-    private GanttDto getGantt(List<EventDto> eventDtoList, ApplicationUser user, int calendarId, String groupBy) {
+    private GanttDto getGantt(List<EventDto> eventDtoList, ApplicationUser user, int calendarId, String groupBy) throws GetException {
         GanttDto ganttDto = new GanttDto();
 
         List<GanttTaskDto> events = new ArrayList<>();
@@ -214,6 +221,27 @@ public class GanttServiceImpl implements GanttService {
         }
 
         collectionsDto.setLinks(links);
+
+        List<GanttResourceDto> resources = new ArrayList<>();
+        Set<String> resourceKeys = new HashSet<>();
+        resources.add(new GanttResourceDto("-1", "Другие", null)); // Other team
+        resources.add(new GanttResourceDto("null", "Не назначен", "-1")); // Unassigned
+        for (GanttTeamDto teamDto : ganttTeamService.getTeams(user, calendarId)) {
+            resources.add(new GanttResourceDto(String.valueOf(teamDto.getId()), teamDto.getName(), null));
+            for (GanttUserDto userDto : teamDto.getUsers()) {
+                resourceKeys.add(userDto.getKey());
+                resources.add(new GanttResourceDto(userDto.getKey(), userDto.getDisplayName(), String.valueOf(teamDto.getId())));
+            }
+        }
+        for (GanttTaskDto event : events) {
+            ApplicationUser resourceUser = userManager.getUserByKey(event.getResource());
+            if (resourceUser != null && !resourceKeys.contains(resourceUser.getKey())) {
+                resourceKeys.add(user.getKey());
+                resources.add(new GanttResourceDto(resourceUser.getKey(), resourceUser.getDisplayName(), "-1"));
+            }
+        }
+        collectionsDto.setResources(resources);
+
         ganttDto.setCollections(collectionsDto);
         return ganttDto;
     }
@@ -414,9 +442,7 @@ public class GanttServiceImpl implements GanttService {
 
         IssueInfo issueInfo = event.getIssueInfo();
         if (issueInfo != null) {
-            if (event.getAssignee() != null) {
-                ganttTaskDto.setResource(event.getAssignee().getKey());
-            }
+            ganttTaskDto.setResource(event.getAssignee() != null ? event.getAssignee().getKey() : "null");
             ganttTaskDto.setAssignee(issueInfo.getAssignee());
 
             if (issueInfo.getCustomFields() != null) {

@@ -1,0 +1,32 @@
+#* @vtlvariable name="licenseStatus" type="ru.mail.jira.plugins.calendar.service.licence.LicenseStatus" *#
+<html>
+<head>
+    <title>$i18n.getText( "ru.mail.jira.plugins.calendar.gantt.teams.title" )</title>
+    <meta name="decorator" content="atl.general"/>
+    <meta name="ajs-advanced-search-help-url" content="https://docs.atlassian.com/jira/docs-064/Advanced+Searching"/>
+    <meta name="ajs-advanced-search-help-title" content="$i18n.getText( "navigator.advanced.query.syntax" )"/>
+    <meta name="ajs-mailrucal-use-iso8601" content="$iso8601Used"/>
+    $webResourceManager.requireResource( "jira.webresources:global-static" )
+    $webResourceManager.requireResource( "jira.webresources:jira-global" )
+    $webResourceManager.requireResource( "ru.mail.jira.plugins.mailrucal:gantt-teams-resources" )
+</head>
+<body>
+    #if (!$licenseStatus.valid)
+    <div class="aui-banner aui-banner-error">
+        #text("ru.mail.jira.plugins.calendar.gantt.linkTitleShort") #text("ru.mail.jira.plugins.license.readOnly"): ${licenseStatus.error}
+        #if ($isAdmin)
+            <br/>
+            <a href="https://my.atlassian.com/purchase/buyaddon?key=ru.mail.jira.plugins.mailrucal">#text("ru.mail.jira.plugins.license.purchase")</a>
+            <a href="$baseurl/plugins/servlet/upm#manage/ru.mail.jira.plugins.mailrucal">#text("ru.mail.jira.plugins.license.upm")</a>
+        #end
+    </div>
+    #end
+<div id="gantt-teams-content" class="aui-page-panel">
+    <div class="aui-page-panel-inner">
+        <section class="aui-page-panel-content">
+            <div id="gantt-teams"></div>
+        </section>
+    </div>
+</div>
+</body>
+</html>

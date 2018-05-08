@@ -27,6 +27,8 @@
         <entity>ru.mail.jira.plugins.calendar.model.GanttLink</entity>
         <entity>ru.mail.jira.plugins.calendar.schedule.model.Schedule</entity>
         <entity>ru.mail.jira.plugins.calendar.configuration.NonWorkingDay</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.gantt.GanttTeam</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.gantt.GanttUser</entity>
 
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v3.Version3UpgradeTask</upgradeTask>
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v4.Version4UpgradeTask</upgradeTask>
@@ -330,10 +332,8 @@
         <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>
         <resource type="download" name="moment-timezone-with-data.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment-timezone-with-data.js"/>
 
-        <resource type="download" name="common.css" location="ru/mail/jira/plugins/calendar/css/common.css"/>
         <resource type="download" name="gantt.css" location="ru/mail/jira/plugins/calendar/css/gantt.css"/>
         <resource type="download" name="i18n.js" location="ru/mail/jira/plugins/calendar/gantt/i18n.js"/>
-        <resource type="download" name="common.js" location="ru/mail/jira/plugins/calendar/js/common.js"/>
         <resource type="download" name="gantt.js" location="ru/mail/jira/plugins/calendar/js/gantt.js"/>
     </web-resource>
 
@@ -382,6 +382,25 @@
 
         <resource name="view" type="velocity" location="ru/mail/jira/plugins/calendar/gantt/issuepanel.vm"/>
     </web-panel>
+
+    <!--Gantt Resource-->
+
+    <webwork1 key="calendar-gantt-teams-action" class="java.lang.Object" roles-required="use">
+        <actions>
+            <action name="ru.mail.jira.plugins.calendar.MailRuGanttTeamsAction" alias="MailRuGanttTeams">
+                <view name="success">/ru/mail/jira/plugins/calendar/gantt/teams/view.vm</view>
+            </action>
+        </actions>
+    </webwork1>
+
+    <web-resource key="gantt-teams-resources">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <resource type="download" name="teams.css" location="ru/mail/jira/plugins/calendar/css/teams.css"/>
+        <resource type="download" name="teams.js" location="ru/mail/jira/plugins/calendar/js/teams.js"/>
+    </web-resource>
 
     <!-- todo: managed-access-level? -->
     <!--Custom Fields-->
