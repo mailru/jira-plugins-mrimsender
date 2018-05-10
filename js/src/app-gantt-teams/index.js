@@ -30,7 +30,7 @@ AJS.toInit(() => {
                 calendarService
                     .getCalendar(id)
                     .then(calendar => {
-                        teamsStore.dispatch(CalendarActionCreators.setCalendar({...calendar, id}, []));
+                        teamsStore.dispatch(CalendarActionCreators.setCalendar({...calendar, id}));
                     });
                 ganttTeamService
                     .getTeams(id)

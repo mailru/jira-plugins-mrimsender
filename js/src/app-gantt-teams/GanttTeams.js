@@ -14,6 +14,7 @@ import {GanttTeam} from './GanttTeam';
 
 class GanttTeamsInternal extends React.Component {
     static propTypes = {
+        calendar: PropTypes.object, // eslint-disable-line react/forbid-prop-types
         teams: PropTypes.array // eslint-disable-line react/forbid-prop-types
     };
 
@@ -36,12 +37,17 @@ class GanttTeamsInternal extends React.Component {
 
     render() {
         const {activeDialog} = this.state;
-        const {teams} = this.props;
+        const {teams, calendar} = this.props;
 
         return (
             <div className="gantt-teams">
                 <div className="gantt-header">
-                    <div className="gantt-title">Команды</div>
+                    <div className="gantt-title">
+                        {calendar == null ?
+                            `Команды` :
+                            `Команды для календаря "${calendar.selectedName}"`
+                        }
+                    </div>
                     <div className="flex-grow"/>
                     <ButtonGroup>
                         <Button
@@ -69,6 +75,7 @@ export const GanttTeams =
     connect(
         state => {
             return {
+                calendar: state.calendar,
                 teams: state.teams
             };
         },
