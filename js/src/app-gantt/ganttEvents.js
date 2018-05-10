@@ -3,6 +3,8 @@
 import moment from 'moment';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import AJS from 'AJS';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import JIRA from 'JIRA';
 // import debounce from 'lodash.debounce';
 
 import {ganttService, storeService} from '../service/services';
@@ -51,10 +53,13 @@ export function updateTask(task, data) {
 
 export const eventListeners = {
     onLoadStart: () => {
+        JIRA.Loading.showLoadingIndicator();
         AJS.dim();
     },
     onLoadEnd: () => {
+        JIRA.Loading.hideLoadingIndicator();
         AJS.undim();
+        gantt.config.show_task_cells = gantt.getTaskCount() < 100;
     },
     onAfterTaskAdd: (id, task) => {
         console.log('task add', id, task);

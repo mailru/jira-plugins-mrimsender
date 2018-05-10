@@ -116,7 +116,7 @@ export const config = {
     fit_tasks: true,
     details_on_dblclick: false,
     show_progress: false,
-    smart_rendering: true,
+    smart_rendering: false,
     smart_scales: true,
     open_tree_initially: true,
     static_background: false,
@@ -125,7 +125,7 @@ export const config = {
     auto_scheduling_strict: true,
     auto_scheduling_initial: false,
     keyboard_navigation: true,
-    //show_task_cells: false,
+    show_task_cells: true,
     resource_store: 'resources',
     resource_property: 'resource',
 
