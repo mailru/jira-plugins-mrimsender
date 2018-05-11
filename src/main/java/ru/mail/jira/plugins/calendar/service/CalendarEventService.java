@@ -77,6 +77,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Component
@@ -1059,12 +1060,10 @@ public class CalendarEventService {
         }
         if (estimate != null) {
             Long estimateSeconds = ComponentAccessor.getJiraDurationUtils().parseDuration(estimate, localeManager.getLocaleFor(user));
-            issueInputParams.setOriginalEstimate(estimateSeconds);
-            if (issue.getTimeSpent() != null) {
-                issueInputParams.setRemainingEstimate(estimateSeconds - issue.getTimeSpent());
-            } else {
-                issueInputParams.setRemainingEstimate(estimateSeconds);
-            }
+            issueInputParams.setOriginalAndRemainingEstimate(
+                TimeUnit.SECONDS.toMinutes(estimateSeconds) + "m",
+                TimeUnit.SECONDS.toMinutes(issue.getTimeSpent() != null ? estimateSeconds - issue.getTimeSpent() : estimateSeconds) + "m"
+            );
         }
 
         IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(user, issue.getId(), issueInputParams);
