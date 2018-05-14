@@ -8,6 +8,7 @@ import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
+import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.atlassian.scheduler.caesium.cron.CaesiumCronExpressionValidator;
@@ -42,6 +43,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
+@ExportAsService(CustomEventService.class)
 public class CustomEventServiceImpl implements CustomEventService {
     private static final Set<String> SUPPORTED_AVATAR_NAMES = ImmutableSet.of("event", "travel", "birthday", "leave");
     private static final TimeZone UTC_TZ = TimeZone.getTimeZone("UTC");

@@ -21,6 +21,7 @@ import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.MessageSet;
+import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.ImmutableSet;
@@ -51,6 +52,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 @Component
+@ExportAsService(CalendarService.class)
 public class CalendarServiceImpl implements CalendarService {
     private final static Logger log = LoggerFactory.getLogger(CalendarServiceImpl.class);
 
