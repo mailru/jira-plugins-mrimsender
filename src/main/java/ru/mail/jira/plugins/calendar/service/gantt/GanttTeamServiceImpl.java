@@ -142,8 +142,8 @@ public class GanttTeamServiceImpl implements GanttTeamService {
     @Override
     public List<GanttTeamDto> getTeams(ApplicationUser currentUser, int calendarId) throws GetException {
         Calendar calendar = calendarService.getCalendar(calendarId);
-        if (!permissionService.hasUsePermission(currentUser, calendar))
-            throw new SecurityException("No permission to create team");
+        if (!canUse(currentUser, calendar))
+            throw new SecurityException("No permission to access team");
         List<GanttTeamDto> teams = new ArrayList<>();
         for (GanttTeam team : ao.find(GanttTeam.class, Query.select().where("CALENDAR_ID = ?", calendarId))) {
             GanttTeamDto teamDto = new GanttTeamDto(team);
@@ -279,5 +279,9 @@ public class GanttTeamServiceImpl implements GanttTeamService {
         if (users.length > 1)
             throw new IllegalArgumentException(String.format("More than one gantt user is found by %s", key));
         return users[0];
+    }
+
+    private boolean canUse(ApplicationUser user, Calendar calendar) {
+        return permissionService.hasUsePermission(user, calendar) || permissionService.hasAdminPermission(user, calendar);
     }
 }
