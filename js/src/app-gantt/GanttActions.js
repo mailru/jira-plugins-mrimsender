@@ -395,7 +395,7 @@ class GanttActionsInternal extends React.Component<Props, State> {
                     <div className="gantt-header">
                         <ButtonGroup>
                             <DropdownMenu
-                                trigger={<span className="calendar-title">{calendar ? calendar.name : ''}</span>}
+                                trigger={<span className="calendar-title">{calendar ? calendar.name : 'Выберите источник'}</span>}
                                 triggerType="button"
                                 triggerButtonProps={{
                                     appearance: 'subtle',

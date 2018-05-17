@@ -38,7 +38,7 @@ import { LayoutUpdater } from './layout.updater';
 
 import { collectTopMailCounterScript } from '../common/top-mail-ru';
 
-import { calendarService, ganttService, store, storeService } from '../service/services';
+import {calendarService, ganttService, preferenceService, store, storeService} from '../service/services';
 import { CalendarActionCreators, ganttReady } from '../service/gantt.reducer';
 
 import './gantt.less';
@@ -205,15 +205,28 @@ AJS.toInit(() => {
             routes: {
                 'calendar=:calendar': 'setCalendar'
             },
-            setCalendar (idString) {
+            setCalendar(idString) {
                 const id = parseInt(idString, 10);
-                Promise
-                    .all([calendarService.getCalendar(id), ganttService.getCalendarSprints(id), ganttService.getErrors(id)])
-                    .then(
-                        ([calendar, sprints, errors]) => store.dispatch(CalendarActionCreators.setCalendar(
-                            {...calendar, errors, id}, sprints
-                        ))
-                    );
+                if (!Number.isNaN(id)) {
+                    if (id === -1) {
+                        const lastGantt = preferenceService.get('ru.mail.jira.gantt.lastGantt');
+                        if (lastGantt) {
+                            this.navigate(`calendar=${lastGantt}`, {trigger: true});
+                        } else {
+                            store.dispatch(CalendarActionCreators.setCalendar(null, []));
+                        }
+                    } else {
+                        Promise
+                            .all([calendarService.getCalendar(id), ganttService.getCalendarSprints(id), ganttService.getErrors(id)])
+                            .then(
+                                ([calendar, sprints, errors]) => store.dispatch(CalendarActionCreators.setCalendar(
+                                    {...calendar, errors, id}, sprints
+                                ))
+                            );
+                    }
+                } else {
+                    store.dispatch(CalendarActionCreators.setCalendar(null, []));
+                }
             }
         });
 

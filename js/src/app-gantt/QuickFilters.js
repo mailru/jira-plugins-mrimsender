@@ -34,11 +34,7 @@ class QuickFiltersInternal extends React.PureComponent<Props> {
     render() {
         const {calendar} = this.props;
 
-        if (!calendar) {
-            return null;
-        }
-
-        const quickFilters = this.props.calendar.favouriteQuickFilters;
+        const quickFilters = calendar ? this.props.calendar.favouriteQuickFilters : [];
         let selectedFilters = 0;
         for (const filter of quickFilters) {
             if (filter.selected) {

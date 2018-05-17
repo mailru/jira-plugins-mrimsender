@@ -34,6 +34,12 @@
                 </button>
             </div>
             <div class="aui-buttons">
+                <a href="$baseurl/secure/MailRuGanttDiagram.jspa#calendar=-1" class="aui-button">
+                    <span class="aui-icon aui-icon-small aui-iconfont-roadmap"></span>
+                    $i18n.getText( "ru.mail.jira.plugins.calendar.goToGantt" )
+                </a>
+            </div>
+            <div class="aui-buttons">
                 <button id="calendar-create-feed" class="aui-button">
                     <span class="aui-icon aui-icon-small aui-iconfont-blogroll"></span>
                     $i18n.getText( "ru.mail.jira.plugins.calendar.feedCalendar" )

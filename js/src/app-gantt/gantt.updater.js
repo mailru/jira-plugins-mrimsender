@@ -94,6 +94,7 @@ export class GanttUpdater {
 
                 storeService.dispatch(OptionsActionCreators.updateOptions({ liveData: true }));
                 preferenceService.saveOptions(storeService.getOptions());
+                preferenceService.put('ru.mail.jira.gantt.lastGantt', this.calendar.id);
             }
 
             if (filter !== this.filter) {
