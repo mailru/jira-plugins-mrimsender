@@ -483,6 +483,11 @@ public class CalendarEventService {
             queryBuilder.and().resolution().isEmpty();
         }
 
+        Clause selectedQuickFiltersClause = getSelectedQuickFilterClause(calendar, user);
+        if (selectedQuickFiltersClause != null) {
+            queryBuilder.and().sub().addClause(selectedQuickFiltersClause).endsub();
+        }
+
         return withOrder(queryBuilder.buildQuery(), order);
     }
 

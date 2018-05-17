@@ -1,5 +1,6 @@
 /* eslint-disable flowtype/require-valid-file-annotation */
 import queryString from 'query-string';
+import memoizeOne from 'memoize-one';
 
 import {buildColumns} from './ganttConfig';
 import {defaultColumns} from './ganttColumns';
@@ -36,10 +37,14 @@ export class GanttUpdater {
         );
     }
 
+    _collectFilters = memoizeOne((filters) => filters.filter(it => it.selected).map(it => it.id));
+
     _update = () => {
         const {startDate, endDate, groupBy, order, orderBy, columns, filter, sprint, withUnscheduled} = storeService.getOptions();
         const calendar = storeService.getCalendar();
         if (storeService.isGanttReady() && calendar) {
+            const filters = this._collectFilters(calendar.favouriteQuickFilters);
+
             if (
                 this.startDate !== startDate ||
                 this.endDate !== endDate ||
@@ -49,7 +54,8 @@ export class GanttUpdater {
                 this.columns !== columns ||
                 this.sprint !== sprint ||
                 this.withUnscheduled !== withUnscheduled ||
-                calendar.id !== (this.calendar || {}).id
+                calendar.id !== (this.calendar || {}).id ||
+                this.filters !== filters
             ) {
                 this.startDate = startDate;
                 this.endDate = endDate;
@@ -60,6 +66,7 @@ export class GanttUpdater {
                 this.columns = columns;
                 this.sprint = sprint;
                 this.withUnscheduled = withUnscheduled;
+                this.filters = filters;
 
                 console.log('loading gantt');
 

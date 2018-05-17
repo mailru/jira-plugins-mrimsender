@@ -28,6 +28,8 @@ public interface CalendarService {
 
     CalendarDto[] getUserCalendars(ApplicationUser user);
 
+    CalendarDto getUserCalendar(ApplicationUser user, int id) throws GetException;
+
     CalendarDto[] findCalendars(ApplicationUser user, Integer[] calendarIds);
 
     CalendarDto createCalendar(ApplicationUser user, CalendarSettingDto calendarSettingDto) throws GetException;

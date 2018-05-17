@@ -1,6 +1,5 @@
-/* eslint-disable flowtype/require-valid-file-annotation */
-import React from 'react';
-import PropTypes from 'prop-types';
+//@flow
+import React, {Fragment} from 'react';
 
 import {connect} from 'react-redux';
 
@@ -24,12 +23,12 @@ import CalendarIcon from '@atlaskit/icon/glyph/calendar-filled';
 import SearchIcon from '@atlaskit/icon/glyph/search';
 import ListIcon from '@atlaskit/icon/glyph/list';
 import JiraLabsIcon from '@atlaskit/icon/glyph/jira/labs';
-import FilterIcon from '@atlaskit/icon/glyph/filter';
 import PeopleGroupIcon from '@atlaskit/icon/glyph/people-group';
 import CheckIcon from '@atlaskit/icon/glyph/check';
 import VidFullScreenOnIcon from '@atlaskit/icon/glyph/vid-full-screen-on';
 import VidFullScreenOffIcon from '@atlaskit/icon/glyph/vid-full-screen-off';
 import WarningIcon from '@atlaskit/icon/glyph/warning';
+import PreferencesIcon from '@atlaskit/icon/glyph/preferences';
 
 import {ScheduleDialog} from './ScheduleDialog';
 import {keyedConfigs, scaleConfigs} from './scaleConfigs';
@@ -43,22 +42,31 @@ import {SprintState} from '../common/sprints';
 
 import {OptionsActionCreators} from '../service/gantt.reducer';
 import {calendarService, ganttService} from '../service/services';
+import type {CalendarType, CurrentCalendarType, GanttTaskType, GanttType, OptionsType, SprintType} from './types';
+import {QuickFilters} from './QuickFilters';
 
 
 const enableMagic = true;
 
-class GanttActionsInternal extends React.Component {
-    static propTypes = {
-        // eslint-disable-next-line react/forbid-prop-types
-        gantt: PropTypes.object.isRequired,
-        // eslint-disable-next-line react/forbid-prop-types
-        options: PropTypes.object.isRequired,
-        // eslint-disable-next-line react/forbid-prop-types
-        calendar: PropTypes.object,
-        sprints: PropTypes.arrayOf(PropTypes.object.isRequired),
-        updateOptions: PropTypes.func
-    };
+type Props = {
+    gantt: GanttType,
+    options: OptionsType,
+    calendar: CurrentCalendarType,
+    sprints: $ReadOnlyArray<SprintType>,
+    updateOptions: ($Shape<OptionsType>) => void
+};
 
+type DialogType = 'scheduleTask';
+
+type State = {
+    activeDialog: ?DialogType,
+    waitingForPlan: boolean,
+    calendars: ?$ReadOnlyArray<CalendarType>,
+    filter: string,
+    schedulingTask: ?GanttTaskType
+};
+
+class GanttActionsInternal extends React.Component<Props, State> {
     state = {
         activeDialog: null,
         waitingForPlan: false,
@@ -198,7 +206,7 @@ class GanttActionsInternal extends React.Component {
         })
     );
 
-    _setFilter = (e) => this.setState({ filter: e.target.value });
+    _setFilter = (e) => this.setState({ filter: e.currentTarget.value });
 
     _setScale = (scale) => () => this.props.updateOptions({ scale });
 
@@ -253,17 +261,37 @@ class GanttActionsInternal extends React.Component {
         const currentSprint = options.sprint ?
             (sprints.find(sprint => sprint.id === options.sprint) || { id: options.sprint, name: 'Неизвестный спринт' }) : null;
 
+        let errorBanner = null;
+
+        if (calendar && calendar.errors && calendar.errors.length) {
+            errorBanner = (
+                <div style={{margin: '0 -20px'}}>
+                    <Banner isOpen icon={<WarningIcon label="warning" secondaryColor="inherit"/>}>
+                        <div className="flex-column">
+                            {calendar.errors.map(e => <div key={e}>{e}</div>)}
+                        </div>
+                    </Banner>
+                </div>
+            );
+        }
+
+        let applyPlanButton;
+        if (!options.liveData) {
+            applyPlanButton = (
+                <Button
+                    onClick={this._applyPlan}
+
+                    isDisabled={waitingForPlan}
+                    iconBefore={waitingForPlan ? <Spinner/> : <CheckIcon label=""/>}
+                >
+                    Применить изменения
+                </Button>
+            );
+        }
+
         return (
             <div>
-                {calendar && calendar.errors && !!calendar.errors.length &&
-                    <div style={{margin: '0 -20px'}}>
-                        <Banner isOpen icon={<WarningIcon label="warning" secondaryColor="inherit"/>}>
-                            <div className="flex-column">
-                                {calendar.errors.map((e) => <div key={ e }>{e}</div>)}
-                            </div>
-                        </Banner>
-                    </div>
-                }
+                {errorBanner}
                 {activeDialog === 'scheduleTask' &&
                     <ScheduleDialog
                         gantt={gantt}
@@ -271,9 +299,6 @@ class GanttActionsInternal extends React.Component {
                         task={schedulingTask}
                     />
                 }
-                {/*<PageHeader>
-                    {calendar && i18n.calendarTitle(calendar.selectedName)}
-                </PageHeader>*/}
                 <div className="gantt-actions">
                     <div className="flex-row">
                         <div>
@@ -286,17 +311,9 @@ class GanttActionsInternal extends React.Component {
                                 >
                                     Запустить магию
                                 </Button>}
-                                {!options.liveData &&
-                                    <Button
-                                        onClick={this._applyPlan}
-
-                                        isDisabled={waitingForPlan}
-                                        iconBefore={waitingForPlan ? <Spinner/> : <CheckIcon label=""/>}
-                                    >
-                                        Применить изменения
-                                    </Button>
-                                }
-                                {activeDialog === 'magic' && <MagicDialog onClose={this._toggleDialog('magic')} gantt={gantt}/>}
+                                {applyPlanButton || <Fragment/>}
+                                {/*$FlowFixMe*/}
+                                {activeDialog === 'magic' ? <MagicDialog onClose={this._toggleDialog('magic')} gantt={gantt}/> : <Fragment/>}
                             </ButtonGroup>
                         </div>
                         <div className="flex-horizontal-middle flex-grow">
@@ -375,11 +392,10 @@ class GanttActionsInternal extends React.Component {
                             </ButtonGroup>
                         </div>
                     </div>
-
                     <div className="gantt-header">
                         <ButtonGroup>
                             <DropdownMenu
-                                trigger={<span className="calendar-title">{calendar && calendar.selectedName}</span>}
+                                trigger={<span className="calendar-title">{calendar ? calendar.name : ''}</span>}
                                 triggerType="button"
                                 triggerButtonProps={{
                                     appearance: 'subtle',
@@ -390,23 +406,23 @@ class GanttActionsInternal extends React.Component {
 
                                 isLoading={!calendars}
                             >
-                                {calendars &&
+                                {calendars ?
                                     <DropdownItemGroupRadio id="gantt-calendar">
                                         {calendars.map(cal =>
                                             <DropdownItemRadio
                                                 href={`#calendar=${cal.id}`}
                                                 key={cal.id}
-                                                id={cal.id}
+                                                id={cal.id.toString()}
 
-                                                isSelected={calendar && parseInt(calendar.id, 10) === cal.id}
+                                                isSelected={calendar ? (calendar.id === cal.id) : false}
                                             >
                                                 {cal.name}
                                             </DropdownItemRadio>
                                         )}
-                                    </DropdownItemGroupRadio>
+                                    </DropdownItemGroupRadio> : undefined
                                 }
                             </DropdownMenu>
-                            {!!sprints.length &&
+                            {sprints.length ?
                                 <DropdownMenu
                                     trigger={<span className="calendar-title">{(currentSprint && currentSprint.name) || 'Спринт'}</span>}
                                     triggerType="button"
@@ -429,11 +445,11 @@ class GanttActionsInternal extends React.Component {
                                         {sprints.map(sprintItem =>
                                             <DropdownItemRadio
                                                 key={sprintItem.id}
-                                                id={sprintItem.id}
+                                                id={sprintItem.id.toString()}
 
                                                 onClick={this._selectSprint(sprintItem.id)}
 
-                                                isSelected={currentSprint && (currentSprint.id === sprintItem.id)}
+                                                isSelected={currentSprint && (currentSprint.id === sprintItem.id) || false}
                                             >
                                                 <SprintState state={sprintItem.state}/>
                                                 {' '}
@@ -445,19 +461,21 @@ class GanttActionsInternal extends React.Component {
                                             </DropdownItemRadio>
                                         )}
                                     </DropdownItemGroupRadio>
-                                </DropdownMenu>
+                                </DropdownMenu> : <Fragment/>
                             }
                         </ButtonGroup>
                         <div className="flex-grow"/>
                         <ButtonGroup appearance="subtle">
                             <Tooltip content="Развернуть структуру">
                                 <Button
+                                    appearance="subtle"
                                     iconBefore={<VidFullScreenOnIcon label="Expand"/>}
                                     onClick={this._expandStructure}
                                 />
                             </Tooltip>
                             <Tooltip content="Свернуть структуру">
                                 <Button
+                                    appearance="subtle"
                                     iconBefore={<VidFullScreenOffIcon label="Collapse"/>}
                                     onClick={this._collapseStructure}
                                 />
@@ -467,11 +485,13 @@ class GanttActionsInternal extends React.Component {
                                 isOpen={activeDialog === 'params'}
                                 content={(activeDialog === 'params') && <OptionsDialog gantt={gantt} onClose={this._toggleDialog('params')}/>}
                             >
-                                <Button
-                                    appearance="subtle"
-                                    iconBefore={<FilterIcon label=""/>}
-                                    onClick={this._toggleDialog('params')}
-                                />
+                                <Tooltip content="Параметры">
+                                    <Button
+                                        appearance="subtle"
+                                        iconBefore={<PreferencesIcon label=""/>}
+                                        onClick={this._toggleDialog('params')}
+                                    />
+                                </Tooltip>
                             </InlineDialog>
                             <InlineDialog
                                 content={
@@ -488,12 +508,16 @@ class GanttActionsInternal extends React.Component {
                                 isOpen={activeDialog === 'filter'}
                                 onClose={this._toggleDialog('filter')}
                             >
-                                <Button
-                                    appearance="subtle"
-                                    iconBefore={<SearchIcon label=""/>}
-                                    onClick={this._toggleDialog('filter')}
-                                />
+                                <Tooltip content="Поиск">
+                                    <Button
+                                        appearance="subtle"
+                                        iconBefore={<SearchIcon label=""/>}
+                                        onClick={this._toggleDialog('filter')}
+                                    />
+                                </Tooltip>
                             </InlineDialog>
+                            {/*$FlowFixMe*/}
+                            <QuickFilters/>
                         </ButtonGroup>
                     </div>
                 </div>
@@ -504,12 +528,8 @@ class GanttActionsInternal extends React.Component {
 
 export const GanttActions =
     connect(
-        state => {
-            return {
-                options: state.options,
-                calendar: state.calendar,
-                sprints: state.sprints
-            };
+        ({options, calendar, sprints}) => {
+            return {options, calendar, sprints};
         },
         OptionsActionCreators
     )(GanttActionsInternal);

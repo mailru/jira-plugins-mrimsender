@@ -17,6 +17,7 @@ const UPDATE_OPTIONS = 'UPDATE_OPTIONS';
 const SET_CALENDAR = 'SET_CALENDAR';
 const GANTT_READY = 'GANTT_READY';
 const UPDATE_ALL = 'UPDATE_ALL';
+const SELECT_FILTER = 'SELECT_FILTER';
 
 export function ganttReady() {
     return {
@@ -37,14 +38,19 @@ export const CalendarActionCreators = {
     setCalendar: (calendar, sprints) => {
         return {
             type: SET_CALENDAR,
-            calendar,
-            sprints
+            calendar, sprints
         };
     },
     updateAll: (calendar, options) => {
         return {
             type: UPDATE_ALL,
             calendar, options
+        };
+    },
+    selectFilter: (id, selected) => {
+        return {
+            type: SELECT_FILTER,
+            id, selected
         };
     }
 };
@@ -78,6 +84,23 @@ function calendarReducer(state, action) {
 
     if (action.type === SET_CALENDAR || action.type === UPDATE_ALL) {
         return action.calendar;
+    }
+
+    if (action.type === SELECT_FILTER) {
+        return {
+            ...state,
+            favouriteQuickFilters: state
+                .favouriteQuickFilters
+                .map(filter => {
+                    if (filter.id === action.id) {
+                        return {
+                            ...filter,
+                            selected: action.selected
+                        };
+                    }
+                    return filter;
+                })
+        }
     }
 
     return state;

@@ -205,11 +205,14 @@ AJS.toInit(() => {
             routes: {
                 'calendar=:calendar': 'setCalendar'
             },
-            setCalendar (id) {
+            setCalendar (idString) {
+                const id = parseInt(idString, 10);
                 Promise
                     .all([calendarService.getCalendar(id), ganttService.getCalendarSprints(id), ganttService.getErrors(id)])
                     .then(
-                        ([calendar, sprints, errors]) => store.dispatch(CalendarActionCreators.setCalendar({...calendar, errors, id}, sprints))
+                        ([calendar, sprints, errors]) => store.dispatch(CalendarActionCreators.setCalendar(
+                            {...calendar, errors, id}, sprints
+                        ))
                     );
             }
         });

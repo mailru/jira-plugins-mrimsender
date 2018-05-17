@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.mail.jira.plugins.calendar.rest.dto.SingleValueDto;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
@@ -37,16 +38,7 @@ import ru.mail.jira.plugins.calendar.service.JiraDeprecatedService;
 import ru.mail.jira.plugins.calendar.service.UserDataService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
-import javax.ws.rs.DELETE;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
@@ -161,6 +153,17 @@ public class RestCalendarService {
     }
 
     @GET
+    @Path("/forUser/{calendarId}")
+    public Response getUserCalendar(@PathParam("calendarId") final int calendarId) {
+        return new RestExecutor<CalendarDto>() {
+            @Override
+            protected CalendarDto doAction() throws Exception {
+                return calendarService.getUserCalendar(jiraAuthenticationContext.getLoggedInUser(), calendarId);
+            }
+        }.getResponse();
+    }
+
+    @GET
     @Path("forUser")
     public Response getUserCalendars() {
         return new RestExecutor<CalendarDto[]>() {
@@ -201,6 +204,7 @@ public class RestCalendarService {
 
     @PUT
     @Path("/{calendarId}/selectQuickFilter/{id}")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response selectQuickFilter(@PathParam("calendarId") final int calendarId,
                                       @PathParam("id") final int id,
                                       @FormParam("selected") final boolean selected) {
@@ -208,6 +212,23 @@ public class RestCalendarService {
             @Override
             protected Void doAction() throws Exception {
                 calendarService.selectQuickFilter(calendarId, jiraAuthenticationContext.getLoggedInUser(), id, selected);
+                return null;
+            }
+        }.getResponse();
+    }
+
+    @PUT
+    @Path("/{calendarId}/selectQuickFilter/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response selectQuickFilterJson(
+        @PathParam("calendarId") final int calendarId,
+        @PathParam("id") final int id,
+        final SingleValueDto<Boolean> data
+    ) {
+        return new RestExecutor<Void>() {
+            @Override
+            protected Void doAction() throws Exception {
+                calendarService.selectQuickFilter(calendarId, jiraAuthenticationContext.getLoggedInUser(), id, data.getValue());
                 return null;
             }
         }.getResponse();
