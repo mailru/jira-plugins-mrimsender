@@ -170,6 +170,8 @@ function initGantt() {
 }
 
 AJS.toInit(() => {
+    JIRA.Loading.showLoadingIndicator();
+    AJS.dim();
     try {
         collectTopMailCounterScript();
 
@@ -216,13 +218,19 @@ AJS.toInit(() => {
                             store.dispatch(CalendarActionCreators.setCalendar(null, []));
                         }
                     } else {
+                        JIRA.Loading.showLoadingIndicator();
+                        AJS.dim();
                         Promise
                             .all([calendarService.getCalendar(id), ganttService.getCalendarSprints(id), ganttService.getErrors(id)])
                             .then(
                                 ([calendar, sprints, errors]) => store.dispatch(CalendarActionCreators.setCalendar(
                                     {...calendar, errors, id}, sprints
                                 ))
-                            );
+                            )
+                            .finally(() => {
+                                JIRA.Loading.hideLoadingIndicator();
+                                AJS.undim();
+                            });
                     }
                 } else {
                     store.dispatch(CalendarActionCreators.setCalendar(null, []));
@@ -265,5 +273,8 @@ AJS.toInit(() => {
             });
     } catch (e) {
         console.error(e);
+    } finally {
+        JIRA.Loading.hideLoadingIndicator();
+        AJS.undim();
     }
 });

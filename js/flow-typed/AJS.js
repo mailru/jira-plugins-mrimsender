@@ -15,6 +15,8 @@ declare module 'AJS' {
         contextPath(): string;
         flag(FlagParameters): FlagType;
         toInit(() => void): void;
+        dim(): void;
+        undim(): void;
         $: JQueryStatic;
     };
 }
