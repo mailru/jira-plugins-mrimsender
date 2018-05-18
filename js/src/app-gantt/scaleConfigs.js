@@ -1,4 +1,7 @@
 /* eslint-disable flowtype/require-valid-file-annotation */
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
+
 import {hoursTaskCell} from './ganttConfig';
 
 
@@ -17,7 +20,7 @@ export const scaleConfigs = [
     },
     {
         key: 'week',
-        title: 'Неделя',
+        title: i18n['ru.mail.jira.plugins.calendar.gantt.scales.week'],
         min_width_override: 40,
         unit: 'day', step: 1, scale_unit: 'month', date_scale: '%F',
         subscales: [
@@ -27,7 +30,7 @@ export const scaleConfigs = [
     // days
     {
         key: 'month',
-        title: 'Месяц',
+        title: i18n['ru.mail.jira.plugins.calendar.gantt.scales.month'],
         min_width_override: 20,
         unit: 'week', step: 1, scale_unit: 'month', date_scale: '%F',
         subscales: [
@@ -37,7 +40,7 @@ export const scaleConfigs = [
     // weeks
     {
         key: 'quarter',
-        title: 'Квартал',
+        title: i18n['ru.mail.jira.plugins.calendar.gantt.scales.quarter'],
         min_width_override: 40,
         unit: 'week', step: 1, scale_unit: 'month', date_scale: '%F',
         subscales: [

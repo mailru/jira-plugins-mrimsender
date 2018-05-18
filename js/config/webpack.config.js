@@ -104,7 +104,8 @@ module.exports = {
             path
                 .relative(paths.appSrc, info.absoluteResourcePath)
                 .replace(/\\/g, '/'),
-        jsonpFunction: 'mailruCalWebpackJsonp' //override default jsonpFunction to avoid collision with other webpack apps
+        jsonpFunction: 'mailruCalWebpackJsonp', //override default jsonpFunction to avoid collision with other webpack apps
+        sourceMapFilename: '[file].smap'
     },
     resolve: {
         // This allows you to set a fallback for where Webpack should look for modules.
@@ -259,7 +260,8 @@ module.exports = {
         'gantt-i18n': 'require("gantt-i18n")',
         moment: 'moment',
         JIRA: 'JIRA',
-        extDefine: 'define'
+        extDefine: 'define',
+        i18n: 'require("mailrucalendar-i18n")'
     },
     watch: watch
 };

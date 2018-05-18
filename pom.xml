@@ -240,6 +240,25 @@
                     <verbose>false</verbose>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>ru.mail.jira.plugins</groupId>
+                <artifactId>i18-js-generator-maven-plugin</artifactId>
+                <version>1.0</version>
+                <configuration>
+                    <charset>UTF-8</charset>
+                    <i18nFile>src/main/resources/ru/mail/jira/plugins/calendar/mailrucalendar.properties</i18nFile>
+                    <output>src/main/resources/ru/mail/jira/plugins/calendar/mailrucalendar-i18n.js</output>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-js-i18n</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>generate-js-i18n</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <properties>

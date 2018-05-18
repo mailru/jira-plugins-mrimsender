@@ -1,6 +1,8 @@
 /* eslint-disable flowtype/require-valid-file-annotation */
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
 
 import {buildJiraFieldColumn, ganttColumns, defaultColumns} from './ganttColumns';
 
@@ -82,12 +84,17 @@ export function calculateWorkingHours(tasks, startCell, endCell) {
 export const resourceConfig = {
     columns: [
         {
-            name: 'name', label: 'Name', tree: true, template (resource) {
+            name: 'name',
+            label: i18n['ru.mail.jira.plugins.calendar.gantt.columns.name'],
+            tree: true,
+            template (resource) {
                 return resource.text;
             }
         },
         {
-            name: 'workload', label: 'Workload', template (resource) {
+            name: 'workload',
+            label: i18n['ru.mail.jira.plugins.calendar.gantt.columns.workload'],
+            template (resource) {
                 let tasks;
                 const store = gantt.getDatastore(gantt.config.resource_store);
                 const field = gantt.config.resource_property;

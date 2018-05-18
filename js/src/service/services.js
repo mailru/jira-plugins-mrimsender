@@ -10,7 +10,6 @@ import {PreferenceService} from './PreferenceService';
 
 import {defaultOptions} from '../app-gantt/staticOptions';
 
-
 export const ganttService = GanttService;
 export const calendarService = CalendarService;
 export const jiraService = JiraService;

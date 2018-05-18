@@ -1,57 +1,29 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable flowtype/require-valid-file-annotation */
 import moment from 'moment';
+import i18n from 'i18n';
 
 import {keyedConfigs} from './scaleConfigs';
 import {views} from './views';
 
-
-export const groupOptions = [
-    {
-        value: 'assignee',
-        label: 'По исполнителю'
-    },
-    {
-        value: 'reporter',
-        label: 'По постановщику'
-    },
-    {
-        value: 'project',
-        label: 'По проекту'
-    },
-    {
-        value: 'issueType',
-        label: 'По типу задачи'
-    },
-    {
-        value: 'priority',
-        label: 'По приоритету'
-    },
-    {
-        value: 'resolution',
-        label: 'По резолюции'
-    },
-    {
-        value: 'component',
-        label: 'По компонентам'
-    },
-    {
-        value: 'fixVersion',
-        label: 'По версиям исправления'
-    },
-    {
-        value: 'affectsVersion',
-        label: 'По затронутым версиям'
-    },
-    {
-        value: 'labels',
-        label: 'По меткам'
-    },
-    {
-        value: 'epicLink',
-        label: 'По эпику'
-    },
+const groupKeys = [
+    'assignee',
+    'reporter',
+    'project',
+    'issueType',
+    'priority',
+    'resolution',
+    'component',
+    'fixVersion',
+    'affectsVersion',
+    'labels',
+    'epicLink'
 ];
+
+export const groupOptions = groupKeys.map(key => ({
+    value: key,
+    label: i18n[`ru.mail.jira.plugins.calendar.group.${key}`]
+}));
 
 export const defaultOptions = {
     liveData: true,
@@ -67,7 +39,7 @@ export const defaultOptions = {
     columns: [
         {
             key: 'timeoriginalestimate',
-            name: 'Оценка',
+            name: i18n['issue.field.timeoriginalestimate'],
             isJiraField: true,
             colParams: {
                 width: '53px'
@@ -75,7 +47,7 @@ export const defaultOptions = {
         },
         {
             key: 'assignee',
-            name: 'Исполнитель',
+            name: i18n['issue.field.assignee'],
             isJiraField: true,
             colParams: {
                 width: '200px'

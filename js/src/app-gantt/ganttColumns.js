@@ -1,4 +1,7 @@
 /* eslint-disable flowtype/require-valid-file-annotation */
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
+
 import {escapeHtml, getBaseUrl, getContextPath} from '../common/ajs-helpers';
 
 
@@ -45,7 +48,7 @@ export const ganttColumns = {
     name: {
         name: 'summary',
         resize: true,
-        label: 'Название',
+        label: i18n['ru.mail.jira.plugins.calendar.gantt.columns.name'],
         width: '*',
         align: 'left',
         template: (item) => {
@@ -61,7 +64,7 @@ export const ganttColumns = {
     },
     progress: {
         name: 'progress',
-        label: 'Прогресс',
+        label: i18n['ru.mail.jira.plugins.calendar.gantt.columns.progress'],
         width: '80px',
         template: (item) => {
             if (item.type !== 'issue') {

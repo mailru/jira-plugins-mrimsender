@@ -4,6 +4,9 @@ import PropTypes from 'prop-types';
 
 import {connect} from 'react-redux';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
+
 import Modal from '@atlaskit/modal-dialog';
 import Spinner from '@atlaskit/spinner';
 import {AsyncSelect} from '@atlaskit/select';
@@ -69,13 +72,13 @@ class AddUsersDialogInternal extends React.Component {
 
         const actions = [
             {
-                text: !waitingForAdd && 'Добавить',
+                text: !waitingForAdd && i18n['ru.mail.jira.plugins.calendar.common.add'],
                 onClick: this._addUsers,
                 iconBefore: waitingForAdd && <Spinner/>,
                 isDisabled: waitingForAdd
             },
             {
-                text: 'Отмена',
+                text: i18n['ru.mail.jira.plugins.calendar.common.cancel'],
                 onClick: onClose,
                 isDisabled: waitingForAdd
             }
@@ -83,7 +86,7 @@ class AddUsersDialogInternal extends React.Component {
 
         return (
             <Modal
-                heading="Добавить пользователей в команду"
+                heading={i18n['ru.mail.jira.plugins.calendar.teams.addUsers.title']}
                 scrollBehavior="outside"
 
                 actions={actions}
@@ -96,7 +99,7 @@ class AddUsersDialogInternal extends React.Component {
                         loadOptions={this._loadOptions}
                         defaultOptions
                         onChange={this._onChange}
-                        placeholder="Выберите пользователей"
+                        placeholder={i18n['ru.mail.jira.plugins.calendar.teams.addUsers.selectUsers']}
                         getOptionLabel={this._getOptionLabel}
                         getOptionValue={this._getOptionValue}
                         isMulti

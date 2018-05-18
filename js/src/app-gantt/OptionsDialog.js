@@ -3,6 +3,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
+
 import Button, {ButtonGroup} from '@atlaskit/button';
 import {CheckboxStateless} from '@atlaskit/checkbox';
 
@@ -100,7 +103,7 @@ class OptionsDialogInternal extends React.Component {
         return (
             <div className="flex-column">
                 <SingleSelect
-                    label="Группировка"
+                    label={i18n['ru.mail.jira.plugins.calendar.gantt.params.groupBy']}
                     isClearable
                     options={groupOptions}
 
@@ -110,7 +113,7 @@ class OptionsDialogInternal extends React.Component {
                 <div className="flex-row">
                     <div className="flex-grow">
                         <SingleSelect
-                            label="Сортировать по"
+                            label={i18n['ru.mail.jira.plugins.calendar.gantt.params.orderBy']}
                             isClearable
                             options={fields}
 
@@ -126,7 +129,7 @@ class OptionsDialogInternal extends React.Component {
                     </div>
                 </div>
                 <SingleSelect
-                    label="Дополнительные поля"
+                    label={i18n['ru.mail.jira.plugins.calendar.gantt.params.fields']}
                     options={fields}
 
                     isMulti
@@ -144,7 +147,7 @@ class OptionsDialogInternal extends React.Component {
                 />
                 <div className="ak-field-margin">
                     <CheckboxStateless
-                        label="Показывать задачи без оценки"
+                        label={i18n['ru.mail.jira.plugins.calendar.gantt.params.showUnestimated']}
                         isChecked={options.withUnscheduled}
                         onChange={this._toggleUnscheduled}
                     />
@@ -155,13 +158,13 @@ class OptionsDialogInternal extends React.Component {
                             appearance="primary"
                             onClick={this._saveOptions}
                         >
-                            Применить
+                            {i18n['ru.mail.jira.plugins.calendar.common.apply']}
                         </Button>
                         <Button
                             appearance="link"
                             onClick={onClose}
                         >
-                            Отменить
+                            {i18n['ru.mail.jira.plugins.calendar.common.cancel']}
                         </Button>
                     </ButtonGroup>
                 </div>

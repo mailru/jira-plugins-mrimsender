@@ -1,11 +1,14 @@
 /* eslint-disable flowtype/require-valid-file-annotation */
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
+
 import {resourceConfig} from './ganttConfig';
 
 
 export const views = {
     basic: {
         key: 'basic',
-        name: 'Диаграмма',
+        name: i18n['ru.mail.jira.plugins.calendar.gantt.views.basic'],
         panels: {
             grid: true,
             gantt: true,
@@ -49,7 +52,7 @@ export const views = {
     },
     ganttOnly: {
         key: 'ganttOnly',
-        name: 'Диаграмма без списка',
+        name: i18n['ru.mail.jira.plugins.calendar.gantt.views.ganttOnly'],
         panels: {
             grid: false,
             gantt: true,
@@ -82,7 +85,7 @@ export const views = {
     },
     withResources: {
         key: 'withResources',
-        name: 'Диаграмма с ресурсами',
+        name: i18n['ru.mail.jira.plugins.calendar.gantt.views.withResources'],
         panels: {
             grid: true,
             gantt: true,

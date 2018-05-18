@@ -6,6 +6,9 @@ import {connect} from 'react-redux';
 
 import memoize from 'lodash.memoize';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
+
 import Avatar, { AvatarItem, AvatarGroup }  from '@atlaskit/avatar';
 import Button, {ButtonGroup} from '@atlaskit/button';
 import Dropdown, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
@@ -110,17 +113,17 @@ class GanttTeamInternal extends React.Component {
             cells: [
                 {
                     key: 'name',
-                    content: 'Название',
+                    content: i18n['ru.mail.jira.plugins.calendar.teams.fields.name'],
                     isSortable: true,
                 },
                 {
                     key: 'weeklyHours',
-                    content: 'Продолжительность рабочей недели',
+                    content: i18n['ru.mail.jira.plugins.calendar.teams.fields.weeklyHours'],
                     isSortable: false,
                 },
                 {
                     key: 'options',
-                    content: 'Опции',
+                    content: i18n['ru.mail.jira.plugins.calendar.teams.fields.options'],
                     isSortable: false,
                 },
             ],
@@ -171,17 +174,17 @@ class GanttTeamInternal extends React.Component {
                                         <DropdownItem
                                             onClick={this._toggleDialog(`confirmDeleteUser${user.id}`)}
                                         >
-                                            Удалить
+                                            {i18n['ru.mail.jira.plugins.calendar.common.delete']}
                                         </DropdownItem>
                                     </DropdownItemGroup>
                                 </Dropdown>
                                 {this.state.activeDialog === `confirmDeleteUser${user.id}` ?
                                     <ConfirmDialog
-                                        header="Удалить пользователя из команды"
+                                        header={i18n['ru.mail.jira.plugins.calendar.teams.deleteTeamUser']}
                                         onConfirm={() => this._onConfirmDeleteUser(user)}
                                         onClose={this._toggleDialog(`confirmDeleteUser${user.id}`)}
                                     >
-                                        <div>{`Вы уверены, что хотите удалить пользователя ${user.displayName} из команды ${team.name}`}</div>
+                                        <div>{`${i18n['ru.mail.jira.plugins.calendar.teams.deleteTeamUserQuestion']} "${user.displayName}" ${i18n['ru.mail.jira.plugins.calendar.teams.deleteTeamUserQuestion2']} "${team.name}"?`}</div>
                                     </ConfirmDialog> :
                                     null
                                 }
@@ -242,12 +245,12 @@ class GanttTeamInternal extends React.Component {
                             <DropdownItem
                                 onClick={this._toggleDialog('addUsers')}
                             >
-                                Добавить пользователей
+                                {i18n['ru.mail.jira.plugins.calendar.teams.addUsers']}
                             </DropdownItem>
                             <DropdownItem
                                 onClick={this._toggleDialog('confirmDeleteTeam')}
                             >
-                                Удалить
+                                {i18n['ru.mail.jira.plugins.calendar.common.delete']}
                             </DropdownItem>
                         </DropdownItemGroup>
                     </Dropdown>
@@ -255,18 +258,16 @@ class GanttTeamInternal extends React.Component {
                         <AddUsersDialog
                             team={team}
                             onClose={this._toggleDialog('addUsers')}
-                        >
-                            <div>{`Вы уверены, что хотите удалить команду "${team.name}"`}</div>
-                        </AddUsersDialog> :
+                        /> :
                         null
                     }
                     {activeDialog === 'confirmDeleteTeam' ?
                         <ConfirmDialog
-                            header="Удалить команду"
+                            header={i18n['ru.mail.jira.plugins.calendar.teams.deleteTeam']}
                             onConfirm={this._onConfirmDeleteTeam}
                             onClose={this._toggleDialog('confirmDeleteTeam')}
                         >
-                            <div>{`Вы уверены, что хотите удалить команду ${team.name}`}</div>
+                            <div>{`${i18n['ru.mail.jira.plugins.calendar.teams.deleteTeamQuestion']} "${team.name}"?`}</div>
                         </ConfirmDialog> :
                         null
                     }
@@ -278,7 +279,7 @@ class GanttTeamInternal extends React.Component {
                             rows={this._getUsersRows(team)}
                             rowsPerPage={10}
                             defaultPage={1}
-                            emptyView={<div>There are no users added yet.</div>}
+                            emptyView={<div>${i18n['ru.mail.jira.plugins.calendar.teams.noUsers']}</div>}
                             loadingSpinnerSize="large"
                             isLoading={false}
                             isFixedSize

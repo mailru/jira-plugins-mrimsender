@@ -6,6 +6,9 @@ import {connect} from 'react-redux';
 
 import memoize from 'lodash.memoize';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
+
 import Button, {ButtonGroup} from '@atlaskit/button';
 import AddIcon from '@atlaskit/icon/glyph/add';
 
@@ -44,8 +47,8 @@ class GanttTeamsInternal extends React.Component {
                 <div className="gantt-header">
                     <div className="gantt-title">
                         {calendar == null ?
-                            `Команды` :
-                            `Команды для календаря "${calendar.selectedName}"`
+                            i18n['ru.mail.jira.plugins.calendar.teams.title'] :
+                            `${i18n['ru.mail.jira.plugins.calendar.teams.titleForCalendar']} "${calendar.name}"`
                         }
                     </div>
                     <div className="flex-grow"/>
@@ -60,7 +63,12 @@ class GanttTeamsInternal extends React.Component {
                 </div>
                 <div className="gantt-teams-list">
                     {teams.length === 0 ?
-                        <div>There are no teams created yet. <Button appearance="link" spacing="none" onClick={this._toggleDialog('create')}>Create team.</Button></div> :
+                        <div>
+                            {i18n['ru.mail.jira.plugins.calendar.teams.noTeams']}{' '}
+                            <Button appearance="link" spacing="none" onClick={this._toggleDialog('create')}>
+                                {i18n['ru.mail.jira.plugins.calendar.teams.createTeam']}
+                            </Button>
+                        </div> :
                         teams.map((team) => (
                             <GanttTeam team={team} key={team.id}/>
                         ))

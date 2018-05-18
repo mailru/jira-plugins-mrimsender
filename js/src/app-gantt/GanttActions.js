@@ -7,6 +7,8 @@ import memoize from 'lodash.memoize';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import AJS from 'AJS';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
 
 import {FieldTextStateless} from '@atlaskit/field-text';
 import Button, {ButtonGroup} from '@atlaskit/button';
@@ -135,7 +137,7 @@ class GanttActionsInternal extends React.Component<Props, State> {
                 error => {
                     this.setState({waitingForPlan: false});
                     AJS.flag({
-                        title: 'Не удалось применить изменения',
+                        title: i18n['ru.mail.jira.plugins.calendar.gantt.error.cantApplyPlan'],
                         body: error.response.responseText,
                         type: 'error',
                         close: 'manual'
@@ -259,7 +261,7 @@ class GanttActionsInternal extends React.Component<Props, State> {
         const {options, calendar, sprints, gantt} = this.props;
 
         const currentSprint = options.sprint ?
-            (sprints.find(sprint => sprint.id === options.sprint) || { id: options.sprint, name: 'Неизвестный спринт' }) : null;
+            (sprints.find(sprint => sprint.id === options.sprint) || { id: options.sprint, name: i18n['ru.mail.jira.plugins.calendar.gantt.error.unknownSprint'] }) : null;
 
         let errorBanner = null;
 
@@ -284,7 +286,7 @@ class GanttActionsInternal extends React.Component<Props, State> {
                     isDisabled={waitingForPlan}
                     iconBefore={waitingForPlan ? <Spinner/> : <CheckIcon label=""/>}
                 >
-                    Применить изменения
+                    {i18n['ru.mail.jira.plugins.calendar.gantt.actions.applyChanges']}
                 </Button>
             );
         }
@@ -309,7 +311,7 @@ class GanttActionsInternal extends React.Component<Props, State> {
 
                                     onClick={this._toggleDialog('magic')}
                                 >
-                                    Запустить магию
+                                    {i18n['ru.mail.jira.plugins.calendar.gantt.actions.runMagic']}
                                 </Button>}
                                 {applyPlanButton || <Fragment/>}
                                 {/*$FlowFixMe*/}
@@ -330,16 +332,12 @@ class GanttActionsInternal extends React.Component<Props, State> {
                                 )}
                                 <Button
                                     iconBefore={<MediaServicesZoomInIcon label="Zoom in"/>}
-
                                     isDisabled={options.scale === 0}
-
                                     onClick={this._zoomIn}
                                 />
                                 <Button
                                     iconBefore={<MediaServicesZoomOutIcon label="Zoom out"/>}
-
                                     isDisabled={options.scale+1 === scaleConfigs.length}
-
                                     onClick={this._zoomOut}
                                 />
                                 <Button
@@ -354,7 +352,7 @@ class GanttActionsInternal extends React.Component<Props, State> {
                                     iconBefore={<PeopleGroupIcon/>}
                                     onClick={this._handleTeams}
                                 >
-                                    Команды
+                                    {i18n['ru.mail.jira.plugins.calendar.gantt.actions.teams']}
                                 </Button>
                                 <InlineDialog
                                     position="bottom right"
@@ -365,11 +363,11 @@ class GanttActionsInternal extends React.Component<Props, State> {
                                         iconBefore={<CalendarIcon/>}
                                         onClick={this._toggleDialog('dates')}
                                     >
-                                        Период
+                                        {i18n['ru.mail.jira.plugins.calendar.gantt.actions.period']}
                                     </Button>
                                 </InlineDialog>
                                 <DropdownMenu
-                                    trigger="Вид"
+                                    trigger={i18n['ru.mail.jira.plugins.calendar.gantt.actions.view']}
                                     triggerType="button"
                                     triggerButtonProps={{iconBefore: <ListIcon label=""/>}}
                                     shouldFlip={false}
@@ -395,7 +393,7 @@ class GanttActionsInternal extends React.Component<Props, State> {
                     <div className="gantt-header">
                         <ButtonGroup>
                             <DropdownMenu
-                                trigger={<span className="calendar-title">{calendar ? calendar.name : 'Выберите источник'}</span>}
+                                trigger={<span className="calendar-title">{calendar ? calendar.name : i18n['ru.mail.jira.plugins.calendar.gantt.actions.chooseSource']}</span>}
                                 triggerType="button"
                                 triggerButtonProps={{
                                     appearance: 'subtle',
@@ -466,14 +464,14 @@ class GanttActionsInternal extends React.Component<Props, State> {
                         </ButtonGroup>
                         <div className="flex-grow"/>
                         <ButtonGroup appearance="subtle">
-                            <Tooltip content="Развернуть структуру">
+                            <Tooltip content={i18n['ru.mail.jira.plugins.calendar.gantt.actions.expandStructure']}>
                                 <Button
                                     appearance="subtle"
                                     iconBefore={<VidFullScreenOnIcon label="Expand"/>}
                                     onClick={this._expandStructure}
                                 />
                             </Tooltip>
-                            <Tooltip content="Свернуть структуру">
+                            <Tooltip content={i18n['ru.mail.jira.plugins.calendar.gantt.actions.collapseStructure']}>
                                 <Button
                                     appearance="subtle"
                                     iconBefore={<VidFullScreenOffIcon label="Collapse"/>}
@@ -485,7 +483,7 @@ class GanttActionsInternal extends React.Component<Props, State> {
                                 isOpen={activeDialog === 'params'}
                                 content={(activeDialog === 'params') && <OptionsDialog gantt={gantt} onClose={this._toggleDialog('params')}/>}
                             >
-                                <Tooltip content="Параметры">
+                                <Tooltip content={i18n['ru.mail.jira.plugins.calendar.gantt.actions.parameters']}>
                                     <Button
                                         appearance="subtle"
                                         iconBefore={<PreferencesIcon label=""/>}
@@ -499,7 +497,7 @@ class GanttActionsInternal extends React.Component<Props, State> {
                                         <FieldTextStateless isLabelHidden label="" value={filter} onChange={this._setFilter}/>
                                         <div style={{marginTop: '20px'}}>
                                             <Button onClick={this._applyFilter} shouldFitContainer>
-                                                Применить
+                                                {i18n['ru.mail.jira.plugins.calendar.common.apply']}
                                             </Button>
                                         </div>
                                     </div>
@@ -508,7 +506,7 @@ class GanttActionsInternal extends React.Component<Props, State> {
                                 isOpen={activeDialog === 'filter'}
                                 onClose={this._toggleDialog('filter')}
                             >
-                                <Tooltip content="Поиск">
+                                <Tooltip content={i18n['ru.mail.jira.plugins.calendar.gantt.actions.search']}>
                                     <Button
                                         appearance="subtle"
                                         iconBefore={<SearchIcon label=""/>}

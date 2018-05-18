@@ -332,9 +332,13 @@
         <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>
         <resource type="download" name="moment-timezone-with-data.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment-timezone-with-data.js"/>
 
-        <resource type="download" name="gantt.css" location="ru/mail/jira/plugins/calendar/css/gantt.css"/>
+        <resource type="download" name="mailrucalendar-i18n.js" location="ru/mail/jira/plugins/calendar/mailrucalendar-i18n.js"/>
         <resource type="download" name="i18n.js" location="ru/mail/jira/plugins/calendar/gantt/i18n.js"/>
+
+        <resource type="download" name="gantt.css" location="ru/mail/jira/plugins/calendar/css/gantt.css"/>
+        <resource type="download" name="gantt.css.smap" location="ru/mail/jira/plugins/calendar/css/gantt.css.smap"/>
         <resource type="download" name="gantt.js" location="ru/mail/jira/plugins/calendar/js/gantt.js"/>
+        <resource type="download" name="gantt.js.smap" location="ru/mail/jira/plugins/calendar/js/gantt.js.smap"/>
     </web-resource>
 
     <web-resource key="gantt-old-resources">
@@ -398,6 +402,9 @@
             <transformer key="jsI18n"/>
         </transformation>
         <dependency>com.atlassian.auiplugin:ajs</dependency>
+
+        <resource type="download" name="mailrucalendar-i18n.js" location="ru/mail/jira/plugins/calendar/mailrucalendar-i18n.js"/>
+
         <resource type="download" name="teams.css" location="ru/mail/jira/plugins/calendar/css/teams.css"/>
         <resource type="download" name="teams.js" location="ru/mail/jira/plugins/calendar/js/teams.js"/>
     </web-resource>

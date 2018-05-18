@@ -6,6 +6,8 @@ import {connect} from 'react-redux';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
 
 import memoize from 'lodash.memoize';
 
@@ -114,12 +116,12 @@ class ScheduleDialogInternal extends React.Component<Props, State> {
 
         const actions = [
             {
-                text: 'Запланировать',
+                text: i18n['ru.mail.jira.plugins.calendar.gantt.schedule.doEstimate'],
                 onClick: this._updateTask,
                 isDisabled: waiting
             },
             {
-                text: 'Отмена',
+                text: i18n['ru.mail.jira.plugins.calendar.common.cancel'],
                 onClick: onClose,
                 isDisabled: waiting
             }
@@ -127,7 +129,7 @@ class ScheduleDialogInternal extends React.Component<Props, State> {
 
         return (
             <Modal
-                heading={`Запланировать задачу ${task.entityId}`}
+                heading={`${i18n['ru.mail.jira.plugins.calendar.gantt.schedule.title']} ${task.entityId}`}
                 scrollBehavior="outside"
 
                 actions={actions}
@@ -141,7 +143,7 @@ class ScheduleDialogInternal extends React.Component<Props, State> {
                     />
                 }
                 <Label
-                    label="Дата начала"
+                    label={i18n['ru.mail.jira.plugins.calendar.gantt.schedule.startDate']}
                 />
                 <div
                     className="flex-row"
@@ -162,8 +164,8 @@ class ScheduleDialogInternal extends React.Component<Props, State> {
                     </div>
                 </div>
                 <FieldTextStateless
-                    label="Оценка"
-                    placeholder="Например 3w 4d 12h"
+                    label={i18n['ru.mail.jira.plugins.calendar.gantt.schedule.estimate']}
+                    placeholder={i18n['ru.mail.jira.plugins.calendar.gantt.schedule.estimatePlaceholder']}
                     isRequired
                     shouldFitContainer
 

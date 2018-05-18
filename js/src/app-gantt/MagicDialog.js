@@ -8,8 +8,11 @@ import Spinner from '@atlaskit/spinner';
 import { Label } from '@atlaskit/field-base';
 import { DatePicker } from '@atlaskit/datetime-picker';
 import Select from '@atlaskit/select';
+
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
 
 import { groupOptions } from './staticOptions';
 
@@ -25,11 +28,11 @@ import type { SelectOption } from '../common/types';
 const orderOptions: Array<SelectOption> = [
     {
         value: 'priority',
-        label: 'По приоритету'
+        label: i18n['ru.mail.jira.plugins.calendar.gantt.rankBy.priority']
     },
     {
         value: 'rank',
-        label: 'По рангу'
+        label: i18n['ru.mail.jira.plugins.calendar.gantt.rankBy.rank']
     }
 ];
 
@@ -151,13 +154,13 @@ class MagicDialogInternal extends React.Component<Props, State> {
 
         const actions = [
             {
-                text: !waitingForMagic && 'Запустить',
+                text: !waitingForMagic && i18n['ru.mail.jira.plugins.calendar.common.run'],
                 onClick: this._runMagic,
                 iconBefore: waitingForMagic && <Spinner />,
                 isDisabled: waitingForMagic
             },
             {
-                text: 'Отмена',
+                text: i18n['ru.mail.jira.plugins.calendar.common.cancel'],
                 onClick: onClose,
                 isDisabled: waitingForMagic
             }
@@ -165,7 +168,7 @@ class MagicDialogInternal extends React.Component<Props, State> {
 
         return (
             <Modal
-                heading="Параметры планирования"
+                heading={i18n['ru.mail.jira.plugins.calendar.gantt.planning.dialogTitle']}
                 scrollBehavior="outside"
 
                 actions={actions}
@@ -173,7 +176,7 @@ class MagicDialogInternal extends React.Component<Props, State> {
             >
                 <div className="flex-column full-width">
                     <SingleSelect
-                        label="Группировка"
+                        label={i18n['ru.mail.jira.plugins.calendar.gantt.params.groupBy']}
                         isClearable
                         isDisabled={waitingForMagic}
                         options={groupOptions}
@@ -182,7 +185,7 @@ class MagicDialogInternal extends React.Component<Props, State> {
                         onChange={this._setGroup}
                     />
                     <SingleSelect
-                        label="Ранжирование"
+                        label={i18n['ru.mail.jira.plugins.calendar.gantt.params.rankBy']}
                         isClearable
                         isDisabled={waitingForMagic}
                         options={orderOptions}
@@ -191,7 +194,7 @@ class MagicDialogInternal extends React.Component<Props, State> {
                         onChange={this._setOrder}
                     />
                     <div>
-                        <Label label="Спринт" />
+                        <Label label={i18n['ru.mail.jira.plugins.calendar.gantt.params.sprint']} />
                         <Select
                             defaultOptions
                             formatOptionLabel={formatSprintLabel}
@@ -202,7 +205,7 @@ class MagicDialogInternal extends React.Component<Props, State> {
                         />
                     </div>
                     <div>
-                        <Label label="Дедлайн" isRequired />
+                        <Label label={i18n['ru.mail.jira.plugins.calendar.gantt.params.deadline']} isRequired />
                         <DatePicker
                             value={deadline}
                             isDisabled={waitingForMagic}

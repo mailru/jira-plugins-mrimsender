@@ -4,6 +4,9 @@ import PropTypes from 'prop-types';
 
 import {connect} from 'react-redux';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
+
 import {FieldTextStateless} from '@atlaskit/field-text';
 import Modal from '@atlaskit/modal-dialog';
 import Spinner from '@atlaskit/spinner';
@@ -55,13 +58,13 @@ class CreateDialogInternal extends React.Component {
 
         const actions = [
             {
-                text: !waitingForCreate && 'Создать',
+                text: !waitingForCreate && i18n['ru.mail.jira.plugins.calendar.common.create'],
                 onClick: this._createTeam,
                 iconBefore: waitingForCreate && <Spinner/>,
                 isDisabled: waitingForCreate
             },
             {
-                text: 'Отмена',
+                text: i18n['ru.mail.jira.plugins.calendar.common.cancel'],
                 onClick: onClose,
                 isDisabled: waitingForCreate
             }
@@ -69,7 +72,7 @@ class CreateDialogInternal extends React.Component {
 
         return (
             <Modal
-                heading="Создать команду"
+                heading={i18n['ru.mail.jira.plugins.calendar.teams.createTeam']}
                 scrollBehavior="outside"
 
                 actions={actions}
@@ -79,7 +82,7 @@ class CreateDialogInternal extends React.Component {
                 <div className="flex-column full-width">
                     <FieldTextStateless
                         required
-                        label="Название команды"
+                        label={i18n['ru.mail.jira.plugins.calendar.teams.createTeam.teamName']}
                         onChange={this._setName}
                         isInvalid={hasError}
                         invalidMessage={errorMessage}

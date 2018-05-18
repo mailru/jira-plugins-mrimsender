@@ -3,6 +3,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
+
 import Button, {ButtonGroup} from '@atlaskit/button';
 import {DatePicker} from '@atlaskit/datetime-picker';
 import {Label} from '@atlaskit/field-base';
@@ -52,9 +55,9 @@ class DatesDialogInternal extends React.Component {
 
         return (
             <div className="flex-column">
-                <Label label="Дата начала" isFirstChild/>
+                <Label label={i18n['ru.mail.jira.plugins.calendar.gantt.period.startDate']} isFirstChild/>
                 <DatePicker value={options.startDate} onChange={this._setDate('startDate')}/>
-                <Label label="Дата конца"/>
+                <Label label={i18n['ru.mail.jira.plugins.calendar.gantt.period.endDate']}/>
                 <DatePicker value={options.endDate} onChange={this._setDate('endDate')}/>
                 <div className="ak-field-margin">
                     <ButtonGroup>
@@ -62,13 +65,13 @@ class DatesDialogInternal extends React.Component {
                             appearance="primary"
                             onClick={this._saveOptions}
                         >
-                            Применить
+                            {i18n['ru.mail.jira.plugins.calendar.common.apply']}
                         </Button>
                         <Button
                             appearance="link"
                             onClick={onClose}
                         >
-                            Отменить
+                            {i18n['ru.mail.jira.plugins.calendar.common.cancel']}
                         </Button>
                     </ButtonGroup>
                 </div>

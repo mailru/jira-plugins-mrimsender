@@ -1,9 +1,12 @@
 //@flow
-import React, {Fragment} from 'react';
+import React from 'react';
 
 import {connect} from 'react-redux';
 
 import memoizeOne from 'memoize-one';
+
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
 
 import DropdownMenu, {DropdownItemGroupCheckbox, DropdownItemCheckbox} from '@atlaskit/dropdown-menu';
 import Badge from '@atlaskit/badge';
@@ -42,15 +45,9 @@ class QuickFiltersInternal extends React.PureComponent<Props> {
             }
         }
 
-        const trigger = (
-            <Fragment>
-                Фильтры
-            </Fragment>
-        );
-
         return (
             <DropdownMenu
-                trigger={trigger}
+                trigger={i18n['ru.mail.jira.plugins.calendar.gantt.filters']}
                 triggerType="button"
                 triggerButtonProps={{
                     iconBefore: <FilterIcon label="filter"/>,

@@ -2,6 +2,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+// eslint-disable-next-line import/no-extraneous-dependencies
+import i18n from 'i18n';
+
 import Modal from '@atlaskit/modal-dialog';
 import Spinner from '@atlaskit/spinner';
 
@@ -36,13 +39,13 @@ export class ConfirmDialog extends React.Component {
 
         const actions = [
             {
-                text: !waiting && 'Подтвердить',
+                text: !waiting && i18n['ru.mail.jira.plugins.calendar.common.confirm'],
                 onClick: this._onConfirm,
                 iconBefore: waiting && <Spinner/>,
                 isDisabled: waiting
             },
             {
-                text: 'Отмена',
+                text: i18n['ru.mail.jira.plugins.calendar.common.cancel'],
                 onClick: onClose,
                 isDisabled: waiting
             }
