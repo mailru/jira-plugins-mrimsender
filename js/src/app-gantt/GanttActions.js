@@ -55,7 +55,7 @@ type Props = {
     options: OptionsType,
     calendar: CurrentCalendarType,
     sprints: $ReadOnlyArray<SprintType>,
-    updateOptions: ($Shape<OptionsType>) => void
+    updateOptions: (options: $Shape<OptionsType>) => void
 };
 
 type DialogType = 'scheduleTask';

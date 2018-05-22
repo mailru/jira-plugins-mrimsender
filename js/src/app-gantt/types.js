@@ -1,4 +1,7 @@
 //@flow
+import type{GanttGridColumn} from './gantt/types';
+import {views} from './views';
+
 
 //todo
 export type TaskType = any;
@@ -21,8 +24,6 @@ export type CurrentCalendarType = CalendarType & {
 
 export type VoidCallback = () => void;
 
-export type OptionsType = any; //todo
-
 export type QuickFilterType = {
     id: number,
     favourite: boolean,
@@ -38,4 +39,22 @@ export type SprintType = {
     state: 'FUTURE' | 'ACTIVE' | 'CLOSED',
     startDate: ?string,
     endDate: ?string
+};
+
+export type PersistentOptions = {
+    startDate: string,
+    endDate: string,
+    groupBy: ?string,
+    order: ?boolean,
+    orderBy: ?string,
+    columns: $ReadOnlyArray<GanttGridColumn>,
+    filter: ?string,
+    sprint: ?number,
+    withUnscheduled: boolean
+}
+
+export type OptionsType = PersistentOptions & {
+    liveData: boolean,
+    scale: number,
+    view: $Keys<views>
 };

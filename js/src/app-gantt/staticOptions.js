@@ -1,10 +1,13 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable flowtype/require-valid-file-annotation */
+//@flow
+// eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import i18n from 'i18n';
 
 import {keyedConfigs} from './scaleConfigs';
 import {views} from './views';
+import type {OptionsType} from './types';
+
 
 const groupKeys = [
     'assignee',
@@ -25,8 +28,9 @@ export const groupOptions = groupKeys.map(key => ({
     label: i18n[`ru.mail.jira.plugins.calendar.group.${key}`]
 }));
 
-export const defaultOptions = {
+export const defaultOptions: OptionsType = {
     liveData: true,
+    filter: '',
     scale: keyedConfigs[1].i,
     startDate: moment().subtract(1, 'months').format('YYYY-MM-DD'),
     endDate: moment().add(3, 'months').format('YYYY-MM-DD'),

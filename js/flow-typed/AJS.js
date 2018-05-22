@@ -20,3 +20,12 @@ declare module 'AJS' {
         $: JQueryStatic;
     };
 }
+
+declare module 'JIRA' {
+    declare export default {
+        Loading: {
+            showLoadingIndicator(): void,
+            hideLoadingIndicator(): void
+        }
+    }
+}
