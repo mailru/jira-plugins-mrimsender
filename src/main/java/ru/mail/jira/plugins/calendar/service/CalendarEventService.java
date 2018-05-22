@@ -395,7 +395,7 @@ public class CalendarEventService {
         List<Issue> issues = searchService
             .search(
                 user,
-                getUnboundedEventsQuery(user, calendar, sprintId, order, forPlan, true),
+                getUnboundedEventsQuery(user, calendar, sprintId, order, forPlan, forPlan),
                 PagerFilter.newPageAlignedFilter(0, 1000)
             )
             .getIssues();
