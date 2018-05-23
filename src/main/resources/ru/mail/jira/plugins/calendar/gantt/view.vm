@@ -44,7 +44,6 @@
         <div class="aui-page-panel-inner">
             <section class="aui-page-panel-content">
                 <div id="gantt-actions"></div>
-                <div id="gantt-diagram-calendar"/>
             </section>
         </div>
     </div>

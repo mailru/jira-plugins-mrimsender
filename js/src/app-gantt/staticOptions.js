@@ -4,7 +4,7 @@ import moment from 'moment';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import i18n from 'i18n';
 
-import {keyedConfigs} from './scaleConfigs';
+import {keyedConfigs} from './gantt/scaleConfigs';
 import {views} from './views';
 import type {OptionsType} from './types';
 

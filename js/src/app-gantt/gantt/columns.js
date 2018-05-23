@@ -1,8 +1,9 @@
-/* eslint-disable flowtype/require-valid-file-annotation */
-// eslint-disable-next-line import/no-extraneous-dependencies
+//@flow
+//eslint-disable-next-line import/no-extraneous-dependencies
 import i18n from 'i18n';
 
-import {escapeHtml, getBaseUrl, getContextPath} from '../common/ajs-helpers';
+import {escapeHtml, getBaseUrl, getContextPath} from '../../common/ajs-helpers';
+import type {GanttTask} from './types';
 
 
 function getIconSrc(src) {
@@ -37,7 +38,7 @@ export const ganttColumns = {
         width: '110px',
         label: 'Код',
         align: 'left',
-        template: (item) => {
+        template: (item: GanttTask) => {
             if (item.type === 'group' || item.type === 'sprint') {
                 return '';
             }
@@ -51,7 +52,7 @@ export const ganttColumns = {
         label: i18n['ru.mail.jira.plugins.calendar.gantt.columns.name'],
         width: '*',
         align: 'left',
-        template: (item) => {
+        template: (item: GanttTask) => {
             if (!item.icon_src) {
                 return escapeHtml(item.summary);
             }
@@ -66,19 +67,18 @@ export const ganttColumns = {
         name: 'progress',
         label: i18n['ru.mail.jira.plugins.calendar.gantt.columns.progress'],
         width: '80px',
-        template: (item) => {
-            if (item.type !== 'issue') {
-                return '';
-            }
+        template: (item: GanttTask) => {
+            if (item.type === 'issue') {
+                const progress = item.progress || 0;
+                const overdue = progress > 1;
 
-            const {progress} = item;
-            const overdue = progress > 1;
-
-            return (
-                `<div class="progressBar">
-                        <div class="progressIndicator ${overdue ? 'overdue' : ''}" style="width: ${(overdue ? 1 : item.progress) * (80 - 12)}px"></div>
+                return (
+                    `<div class="progressBar">
+                        <div class="progressIndicator ${overdue ? 'overdue' : ''}" style="width: ${(overdue ? 1 : progress) * (80 - 12)}px"></div>
                     </div>`
-            );
+                );
+            }
+            return '';
         },
     }
 };

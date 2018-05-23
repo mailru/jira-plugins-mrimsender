@@ -3,13 +3,6 @@ import type{GanttGridColumn} from './gantt/types';
 import {views} from './views';
 
 
-//todo
-export type TaskType = any;
-
-//todo
-export type GanttType = any;
-export type GanttTaskType = any;
-
 //todo: add all relevant fields
 export type CalendarType = {
     id: number,

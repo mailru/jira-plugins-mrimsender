@@ -6,29 +6,13 @@ import AJS from 'AJS';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import JIRA from 'JIRA';
 
+import {updateTask} from './util';
 import type {DhtmlxGantt} from './types';
 
 import {ganttService, storeService} from '../../service/services';
 
 
 export function bindEvents(gantt: DhtmlxGantt) {
-    function updateTask(task, data) {
-        // eslint-disable-next-line camelcase
-        const {start_date, id, duration, overdueSeconds, ...etc} = data;
-        const start = moment(start_date).toDate();
-
-        Object.assign(
-            task,
-            {
-                ...etc, duration,
-                start_date: start,
-                end_date: gantt.calculateEndDate(start, duration),
-                overdueSeconds: overdueSeconds || null
-            }
-        );
-        gantt.refreshTask(task.id);
-    }
-
     const eventListeners = {
         onLoadStart: () => {
             JIRA.Loading.showLoadingIndicator();
@@ -58,7 +42,7 @@ export function bindEvents(gantt: DhtmlxGantt) {
                 )
                 .then(updatedTasks => {
                     for (const newTask of updatedTasks) {
-                        updateTask(gantt.getTask(newTask.id), newTask);
+                        updateTask(gantt, gantt.getTask(newTask.id), newTask);
                     }
                 });
         },
@@ -82,12 +66,16 @@ export function bindEvents(gantt: DhtmlxGantt) {
             ganttService.deleteLink(storeService.getCalendar().id, id);
         },
         onBeforeTaskDrag: (id, mode) => {
-            switch (mode) {
-                case 'resize':
-                    return gantt.getTask(id).resizable;
-                default:
-                    return gantt.getTask(id).movable;
+            const task = gantt.getTask(id);
+            if (task.type === 'issue') {
+                switch (mode) {
+                    case 'resize':
+                        return task.resizable;
+                    default:
+                        return task.movable;
+                }
             }
+            return false;
         },
         onBeforeLinkDelete: (id) => {
             return id >= 0;
@@ -95,11 +83,13 @@ export function bindEvents(gantt: DhtmlxGantt) {
         onParse: () => {
             const {sprint} = storeService.getOptions();
 
+            console.log(sprint);
             if (sprint) {
                 const sprintObject = storeService
                     .getSprints()
                     .find(it => it.id === sprint);
 
+                console.log(sprint, sprintObject);
                 if (sprintObject) {
                     const {startDate, endDate} = sprintObject;
 
@@ -113,6 +103,8 @@ export function bindEvents(gantt: DhtmlxGantt) {
                         start_date: startDate ? moment(startDate).toDate() : null,
                         end_date: endDate ? moment(endDate).toDate() : null
                     }, null, 0);
+
+                    console.log(taskId);
 
                     for (const task of gantt.getTaskBy(it => !it.parent)) {
                         if (task.id !== taskId) {
