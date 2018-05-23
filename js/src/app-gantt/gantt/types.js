@@ -53,7 +53,6 @@ type GanttSprintTask = GanttGenericTask & {
     type: 'sprint'
 }
 
-//todo: split into task, group, sprint
 export type GanttTask = GanttIssueTask | GanttGroupTask | GanttSprintTask
 
 export type GanttLink = {}
