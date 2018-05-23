@@ -1,11 +1,7 @@
 //@flow
+import {views} from './views';
+import type {ColumnParams} from './gantt/columns';
 
-//todo
-export type TaskType = any;
-
-//todo
-export type GanttType = any;
-export type GanttTaskType = any;
 
 //todo: add all relevant fields
 export type CalendarType = {
@@ -20,8 +16,6 @@ export type CurrentCalendarType = CalendarType & {
 }
 
 export type VoidCallback = () => void;
-
-export type OptionsType = any; //todo
 
 export type QuickFilterType = {
     id: number,
@@ -38,4 +32,22 @@ export type SprintType = {
     state: 'FUTURE' | 'ACTIVE' | 'CLOSED',
     startDate: ?string,
     endDate: ?string
+};
+
+export type PersistentOptions = {
+    startDate: string,
+    endDate: string,
+    groupBy: ?string,
+    order: ?boolean,
+    orderBy: ?string,
+    columns: $ReadOnlyArray<ColumnParams>,
+    filter: ?string,
+    sprint: ?number,
+    withUnscheduled: boolean
+}
+
+export type OptionsType = PersistentOptions & {
+    liveData: boolean,
+    scale: number,
+    view: $Keys<views>
 };

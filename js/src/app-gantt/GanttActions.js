@@ -33,7 +33,7 @@ import WarningIcon from '@atlaskit/icon/glyph/warning';
 import PreferencesIcon from '@atlaskit/icon/glyph/preferences';
 
 import {ScheduleDialog} from './ScheduleDialog';
-import {keyedConfigs, scaleConfigs} from './scaleConfigs';
+import {keyedConfigs, scaleConfigs} from './gantt/scaleConfigs';
 import {viewItems} from './views';
 
 import {OptionsDialog} from './OptionsDialog';
@@ -44,18 +44,20 @@ import {SprintState} from '../common/sprints';
 
 import {OptionsActionCreators} from '../service/gantt.reducer';
 import {calendarService, ganttService} from '../service/services';
-import type {CalendarType, CurrentCalendarType, GanttTaskType, GanttType, OptionsType, SprintType} from './types';
 import {QuickFilters} from './QuickFilters';
+
+import type {CalendarType, CurrentCalendarType, OptionsType, SprintType} from './types';
+import type {DhtmlxGantt, GanttIssueTask} from './gantt/types';
 
 
 const enableMagic = true;
 
 type Props = {
-    gantt: GanttType,
+    gantt: ?DhtmlxGantt,
     options: OptionsType,
     calendar: CurrentCalendarType,
     sprints: $ReadOnlyArray<SprintType>,
-    updateOptions: ($Shape<OptionsType>) => void
+    updateOptions: (options: $Shape<OptionsType>) => void
 };
 
 type DialogType = 'scheduleTask';
@@ -65,10 +67,10 @@ type State = {
     waitingForPlan: boolean,
     calendars: ?$ReadOnlyArray<CalendarType>,
     filter: string,
-    schedulingTask: ?GanttTaskType
+    schedulingTask: ?GanttIssueTask
 };
 
-class GanttActionsInternal extends React.Component<Props, State> {
+class GanttActionsInternal extends React.PureComponent<Props, State> {
     state = {
         activeDialog: null,
         waitingForPlan: false,
@@ -78,32 +80,49 @@ class GanttActionsInternal extends React.Component<Props, State> {
     };
 
     componentDidMount() {
+        this._attachEvents();
+    }
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.gantt !== this.props.gantt) {
+            this._attachEvents();
+        }
+    }
+
+    _attachEvents = () => {
         const {gantt} = this.props;
 
-        gantt.attachEvent(
-            'onTaskDblClick',
-            (id) => {
-                if (id) {
-                    this._openScheduleDialog(gantt.getTask(id));
+        if (gantt) {
+            gantt.attachEvent(
+                'onTaskDblClick',
+                (id) => {
+                    if (id) {
+                        this._openScheduleDialog(gantt.getTask(id));
+                    }
+                    return true;
                 }
-                return true;
-            }
-        );
+            );
 
-        gantt.addShortcut(
-            'enter',
-            e => {
-                const taskId = gantt.locate(e);
-                if (taskId) {
-                    this._openScheduleDialog(gantt.getTask(taskId));
-                }
-            },
-            'taskRow'
-        );
-    }
+            gantt.addShortcut(
+                'enter',
+                e => {
+                    const taskId = gantt.locate(e);
+                    if (taskId) {
+                        this._openScheduleDialog(gantt.getTask(taskId));
+                    }
+                },
+                'taskRow'
+            );
+        }
+    };
 
     _applyPlan = () => {
         const {gantt, calendar, options} = this.props;
+
+        if (!gantt) {
+            alert('no gantt');
+            return;
+        }
 
         if (options.liveData) {
             return;
@@ -123,7 +142,8 @@ class GanttActionsInternal extends React.Component<Props, State> {
                     items: tasks.map(({id, start_date, duration}) => {
                         return {
                             taskId: id,
-                            start_date: gantt.templates.xml_format(start_date),
+                            // eslint-disable-next-line camelcase
+                            start_date: start_date ? gantt.templates.xml_format(start_date) : null,
                             duration
                         };
                     })
@@ -163,12 +183,18 @@ class GanttActionsInternal extends React.Component<Props, State> {
     _zoomToFit = () => {
         const {gantt} = this.props;
 
+        if (!gantt) {
+            alert('no gantt');
+            return;
+        }
+
         const project = gantt.getSubtaskDates();
         const areaWidth = gantt.$task.offsetWidth;
 
         let i;
         for (i = 0; i < scaleConfigs.length; i++) {
-            const columnCount = this._getUnitsBetween(project.start_date, project.end_date, scaleConfigs[i].unit, scaleConfigs[i].step);
+            const config = scaleConfigs[i].generate(gantt);
+            const columnCount = this._getUnitsBetween(project.start_date, project.end_date, config.unit, config.step);
             if ((columnCount + 2) * gantt.config.min_column_width <= areaWidth) {
                 break;
             }
@@ -182,8 +208,13 @@ class GanttActionsInternal extends React.Component<Props, State> {
     };
 
     // get number of columns in timeline
-    _getUnitsBetween =  (from, to, unit, step) => {
+    _getUnitsBetween = (from, to, unit, step) => {
         const {gantt} = this.props;
+
+        if (!gantt) {
+            alert('no gantt');
+            return 0;
+        }
 
         let start = new Date(from);
         const end = new Date(to);
@@ -237,6 +268,11 @@ class GanttActionsInternal extends React.Component<Props, State> {
 
     _updateStructure = (isOpen) => {
         const {gantt} = this.props;
+
+        if (!gantt) {
+            alert('no gantt');
+            return;
+        }
 
         gantt.eachTask((task) => {
             // eslint-disable-next-line no-param-reassign
@@ -294,12 +330,12 @@ class GanttActionsInternal extends React.Component<Props, State> {
         return (
             <div>
                 {errorBanner}
-                {activeDialog === 'scheduleTask' &&
+                {activeDialog === 'scheduleTask' && schedulingTask && gantt ?
                     <ScheduleDialog
                         gantt={gantt}
                         onClose={this._toggleDialog('scheduleTask')}
                         task={schedulingTask}
-                    />
+                    /> : undefined
                 }
                 <div className="gantt-actions">
                     <div className="flex-row">

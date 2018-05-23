@@ -1,8 +1,9 @@
-/* eslint-disable flowtype/require-valid-file-annotation */
+//@flow
 import {combineReducers} from 'redux';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {defaultOptions} from '../app-gantt/staticOptions';
+import type {CurrentCalendarType, OptionsType, SprintType} from '../app-gantt/types';
 
 
 export const ganttReducer = combineReducers({
@@ -19,14 +20,8 @@ const GANTT_READY = 'GANTT_READY';
 const UPDATE_ALL = 'UPDATE_ALL';
 const SELECT_FILTER = 'SELECT_FILTER';
 
-export function ganttReady() {
-    return {
-        type: GANTT_READY
-    };
-}
-
 export const OptionsActionCreators = {
-    updateOptions: (options) => {
+    updateOptions: (options: $Shape<OptionsType>) => {
         return {
             type: UPDATE_OPTIONS,
             options
@@ -35,19 +30,20 @@ export const OptionsActionCreators = {
 };
 
 export const CalendarActionCreators = {
-    setCalendar: (calendar, sprints) => {
+    setCalendar: (calendar: CurrentCalendarType, sprints: $ReadOnlyArray<SprintType>) => {
         return {
             type: SET_CALENDAR,
             calendar, sprints
         };
     },
-    updateAll: (calendar, options) => {
+    //todo: remove?
+    updateAll: (calendar: CurrentCalendarType, options: $Shape<OptionsType>) => {
         return {
             type: UPDATE_ALL,
             calendar, options
         };
     },
-    selectFilter: (id, selected) => {
+    selectFilter: (id: number, selected: boolean) => {
         return {
             type: SELECT_FILTER,
             id, selected

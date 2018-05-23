@@ -20,16 +20,17 @@ import Flag from '@atlaskit/flag';
 
 import ErrorIcon from '@atlaskit/icon/glyph/error';
 
-import {updateTask} from './ganttEvents';
+import {updateTask} from './gantt/util';
 
 import {ganttService} from '../service/services';
 
-import type {GanttType, TaskType, CalendarType, VoidCallback} from './types';
+import type {CalendarType, VoidCallback} from './types';
+import type {DhtmlxGantt, GanttIssueTask} from './gantt/types';
 
 
 type Props = {
-    task: TaskType,
-    gantt: GanttType,
+    task: GanttIssueTask,
+    gantt: DhtmlxGantt,
     calendar: CalendarType,
     onClose: VoidCallback
 }
@@ -61,7 +62,7 @@ class ScheduleDialogInternal extends React.Component<Props, State> {
                 calendar.id,
                 task.entityId,
                 {
-                    start: startDate ? gantt.templates.xml_format(moment(`${startDate} ${startTime}`)) : null,
+                    start: startDate ? gantt.templates.xml_format(moment(`${startDate} ${startTime}`).toDate()) : null,
                     estimate
                 },
                 {
@@ -70,7 +71,7 @@ class ScheduleDialogInternal extends React.Component<Props, State> {
             )
             .then(
                 newTask => {
-                    updateTask(task, newTask);
+                    updateTask(gantt, task, newTask);
                     onClose();
                 },
                 error => this.setState({ error: error.response.data })
