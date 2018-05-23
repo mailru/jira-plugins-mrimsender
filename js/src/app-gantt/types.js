@@ -1,6 +1,6 @@
 //@flow
-import type{GanttGridColumn} from './gantt/types';
 import {views} from './views';
+import type {ColumnParams} from './gantt/columns';
 
 
 //todo: add all relevant fields
@@ -40,7 +40,7 @@ export type PersistentOptions = {
     groupBy: ?string,
     order: ?boolean,
     orderBy: ?string,
-    columns: $ReadOnlyArray<GanttGridColumn>,
+    columns: $ReadOnlyArray<ColumnParams>,
     filter: ?string,
     sprint: ?number,
     withUnscheduled: boolean

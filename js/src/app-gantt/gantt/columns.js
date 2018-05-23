@@ -3,8 +3,14 @@
 import i18n from 'i18n';
 
 import {escapeHtml, getBaseUrl, getContextPath} from '../../common/ajs-helpers';
-import type {GanttTask} from './types';
+import type {GanttGridColumn, GanttTask} from './types';
 
+export type ColumnParams = {
+    key: string,
+    name?: string,
+    isJiraField: boolean,
+    colParams?: $Shape<GanttGridColumn>
+}
 
 function getIconSrc(src) {
     if (src.startsWith('http')) {
@@ -13,7 +19,7 @@ function getIconSrc(src) {
     return getContextPath() + src;
 }
 
-export function buildJiraFieldColumn({key, name, colParams}, resizable=true) {
+export function buildJiraFieldColumn({key, name, colParams}: ColumnParams, resizable: boolean = true) {
     return {
         ...colParams,
         name: key,
@@ -39,11 +45,11 @@ export const ganttColumns = {
         label: 'Код',
         align: 'left',
         template: (item: GanttTask) => {
-            if (item.type === 'group' || item.type === 'sprint') {
-                return '';
+            if (item.type === 'issue') {
+                const id = escapeHtml(item.entityId);
+                return `<a href="${getBaseUrl()}/browse/${id}" ${item.resolved ? 'style="text-decoration: line-through;"' : ''}>${id}</a>`;
             }
-            const id = escapeHtml(item.entityId);
-            return `<a href="${getBaseUrl()}/browse/${id}" ${item.resolved ? 'style="text-decoration: line-through;"' : ''}>${id}</a>`;
+            return '';
         }
     },
     name: {
@@ -95,6 +101,7 @@ export const defaultColumns = Object
     .keys(ganttColumns)
     .map(key => {
         return {
+            isJiraField: false,
             key
         };
     });

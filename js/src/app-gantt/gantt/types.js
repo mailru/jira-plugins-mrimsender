@@ -21,25 +21,24 @@ export type GanttTaskData = {
 }
 
 export type GanttTaskInternalState = {
-    $open: boolean
+    $open?: boolean
 }
 
-type GanttGenericTask = $Shape<GanttTaskInternalState> & {
-    entityId: number,
-    start_date: ?Date,
-    end_date: ?Date,
-    duration: ?number,
+type GanttGenericTask = GanttTaskInternalState & {
+    start_date?: ?Date,
+    end_date?: ?Date,
+    duration?: ?number,
     id: IdType,
     summary: string,
-    unscheduled?: boolean,
-    parent?: IdType,
-    icon_src?: string
+    unscheduled?: ?boolean,
+    parent?: ?IdType,
+    icon_src?: ?string
 }
 
-type GanttIssueTask = GanttGenericTask & {
-    +type: 'issue',
+export type GanttIssueTask = GanttGenericTask & {
+    type: 'issue',
+    entityId: number,
     progress?: number,
-    duration?: number, //maybe optional
     overdueSeconds?: number,
     resizable?: boolean,
     movable?: boolean,
@@ -47,19 +46,17 @@ type GanttIssueTask = GanttGenericTask & {
 }
 
 type GanttGroupTask = GanttGenericTask & {
-    +type: 'group'
+    type: 'group'
 }
 
 type GanttSprintTask = GanttGenericTask & {
-    +type: 'sprint'
+    type: 'sprint'
 }
 
 //todo: split into task, group, sprint
 export type GanttTask = GanttIssueTask | GanttGroupTask | GanttSprintTask
 
-export type GanttLink = {
-
-}
+export type GanttLink = {}
 
 type CalculationConfig = {
     start_date: Date,
@@ -70,7 +67,8 @@ type CalculationConfig = {
 
 export type GanttGridColumn = {
     isJiraField?: boolean,
-    name: string
+    name: string,
+    width?: string
 };
 
 type SubscaleConfig = {
@@ -254,7 +252,7 @@ export interface DhtmlxGantt {
     unselectTask(): void,
 
     //task
-    addTask(task: GanttTask, parent: ?string, index?: number): void,
+    addTask(task: GanttTask, parent: ?string, index?: number): IdType,
 
     eachTask(callback: TaskCallback, parent?: IdType, master?: any): void,
 

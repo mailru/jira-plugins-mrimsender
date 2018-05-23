@@ -25,11 +25,11 @@ import {updateTask} from './gantt/util';
 import {ganttService} from '../service/services';
 
 import type {CalendarType, VoidCallback} from './types';
-import type {DhtmlxGantt, GanttTask} from './gantt/types';
+import type {DhtmlxGantt, GanttIssueTask} from './gantt/types';
 
 
 type Props = {
-    task: GanttTask,
+    task: GanttIssueTask,
     gantt: DhtmlxGantt,
     calendar: CalendarType,
     onClose: VoidCallback

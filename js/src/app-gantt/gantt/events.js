@@ -27,14 +27,14 @@ export function bindEvents(gantt: DhtmlxGantt) {
         onAfterTaskAdd: (id, task) => {
             console.log('task add', id, task);
         },
-        onAfterTaskUpdate: (id, task) => {
+        onAfterTaskUpdate: (id, updatedTask) => {
             ganttService
                 .updateTask(
                     storeService.getCalendar().id,
                     id,
                     {
-                        start_date: gantt.templates.xml_format(task.start_date),
-                        duration: task.duration,
+                        start_date: gantt.templates.xml_format(updatedTask.start_date),
+                        duration: updatedTask.duration,
                     },
                     {
                         fields: gantt.config.columns.filter(col => col.isJiraField).map(col => col.name)
@@ -42,7 +42,13 @@ export function bindEvents(gantt: DhtmlxGantt) {
                 )
                 .then(updatedTasks => {
                     for (const newTask of updatedTasks) {
-                        updateTask(gantt, gantt.getTask(newTask.id), newTask);
+                        const task = gantt.getTask(newTask.id);
+
+                        if (task.type === 'issue') {
+                            updateTask(gantt, task, newTask);
+                        } else {
+                            console.error('not issue task', task.id);
+                        }
                     }
                 });
         },
@@ -83,13 +89,11 @@ export function bindEvents(gantt: DhtmlxGantt) {
         onParse: () => {
             const {sprint} = storeService.getOptions();
 
-            console.log(sprint);
             if (sprint) {
                 const sprintObject = storeService
                     .getSprints()
                     .find(it => it.id === sprint);
 
-                console.log(sprint, sprintObject);
                 if (sprintObject) {
                     const {startDate, endDate} = sprintObject;
 
@@ -102,9 +106,7 @@ export function bindEvents(gantt: DhtmlxGantt) {
                         unscheduled: !(startDate && endDate),
                         start_date: startDate ? moment(startDate).toDate() : null,
                         end_date: endDate ? moment(endDate).toDate() : null
-                    }, null, 0);
-
-                    console.log(taskId);
+                    }, null);
 
                     for (const task of gantt.getTaskBy(it => !it.parent)) {
                         if (task.id !== taskId) {

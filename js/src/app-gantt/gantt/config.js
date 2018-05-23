@@ -5,26 +5,31 @@ import moment from 'moment';
 
 import {buildJiraFieldColumn, ganttColumns, defaultColumns} from './columns';
 import type {DhtmlxGantt, GanttTask} from './types';
+import type {ColumnParams} from './columns';
 
 export const DEFAULT_MIN_COLUMN_WIDTH = 70;
 
-export function buildColumns(names) {
+export function buildColumns(names: $ReadOnlyArray<ColumnParams>) {
     const lastId = names.length - 1;
 
-    return names.map((column, i) => {
-        const builtInColumn = ganttColumns[column.key];
+    return names
+        .map((column, i) => {
+            if (column.key) {
+                const builtInColumn = ganttColumns[column.key];
 
-        if (builtInColumn) {
-            return {...builtInColumn};
-        }
+                if (builtInColumn) {
+                    return {...builtInColumn};
+                }
+            }
 
-        if (column.isJiraField) {
-            return buildJiraFieldColumn(column, i !== lastId);
-        }
+            if (column.isJiraField) {
+                return buildJiraFieldColumn(column, i !== lastId);
+            }
 
-        console.warn('unknown column', column);
-        return null;
-    });
+            console.warn('unknown column', column);
+            return null;
+        })
+        .filter(Boolean);
 }
 
 export function calculateDuration(startWorkingDay: Date, endWorkingDay: Date, taskStart: Date, taskEnd: Date) {
@@ -317,19 +322,23 @@ export function configure(gantt: DhtmlxGantt) {
             }
 
             const currentScale = gantt.config.subscales[0].unit;
-            const workingHours = {
-                'hour': 1,
-                'day': 8,
-                'week': 40,
-                'month': 160,
-                'year': 1920
-            };
 
-            if (calculateWorkingHours(tasks, _start, _end) <= (workingHours[currentScale] || 8)) {
-                css.push('workday_ok');
-            } else {
-                css.push('workday_over');
+            if (currentScale !== 'minute') {
+                const workingHours = {
+                    'hour': 1,
+                    'day': 8,
+                    'week': 40,
+                    'month': 160,
+                    'year': 1920
+                };
+
+                if (calculateWorkingHours(tasks, _start, _end) <= (workingHours[currentScale] || 8)) {
+                    css.push('workday_ok');
+                } else {
+                    css.push('workday_over');
+                }
             }
+
             return css.join(' ');
         },
         resource_cell_value: (_start, _end, resource, tasks) => {
@@ -338,7 +347,7 @@ export function configure(gantt: DhtmlxGantt) {
     };
 
     // eslint-disable-next-line no-param-reassign
-    gantt.config =  {
+    gantt.config = {
         ...gantt.config,
         ...config
     };

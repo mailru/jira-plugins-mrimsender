@@ -47,7 +47,7 @@ import {calendarService, ganttService} from '../service/services';
 import {QuickFilters} from './QuickFilters';
 
 import type {CalendarType, CurrentCalendarType, OptionsType, SprintType} from './types';
-import type {DhtmlxGantt, GanttTask} from './gantt/types';
+import type {DhtmlxGantt, GanttIssueTask} from './gantt/types';
 
 
 const enableMagic = true;
@@ -67,7 +67,7 @@ type State = {
     waitingForPlan: boolean,
     calendars: ?$ReadOnlyArray<CalendarType>,
     filter: string,
-    schedulingTask: ?GanttTask
+    schedulingTask: ?GanttIssueTask
 };
 
 class GanttActionsInternal extends React.PureComponent<Props, State> {

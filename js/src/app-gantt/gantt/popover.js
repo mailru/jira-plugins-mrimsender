@@ -24,11 +24,20 @@ export function attachPopover(gantt: DhtmlxGantt) {
             return;
         }
 
+        const task = gantt.getTask(eventId);
+
+        if (task.type !== 'issue') {
+            content.html('');
+            showPopup();
+            eventDialog.hide();
+            return;
+        }
+
         content.html('<span class="aui-icon aui-icon-wait">Loading...</span>');
         showPopup();
 
         calendarService
-            .getEventInfo(storeService.getCalendar().id, gantt.getTask(eventId).entityId)
+            .getEventInfo(storeService.getCalendar().id, task.entityId)
             .then(issue => {
                 content.html(JIRA.Templates.Plugins.MailRuCalendar.issueInfo({
                     issue,
@@ -44,11 +53,11 @@ export function attachPopover(gantt: DhtmlxGantt) {
                 if (target && target.length) {
                     const firstTarget = target[0];
 
-                    if (!document.body.contains(firstTarget)) {
+                    if (!document.contains(firstTarget)) {
                         const taskId = firstTarget.getAttribute('task_id');
 
                         if (taskId) {
-                            const targetOverride = document.querySelector(`.gantt_event_object[task_id="${taskId}"]`);
+                            const targetOverride = $(document.querySelector(`.gantt_event_object[task_id="${taskId}"]`) || []);
 
                             if (targetOverride) {
                                 return AJS.InlineDialog.opts.calculatePositions(popup, {target: targetOverride}, mousePosition, opts);
