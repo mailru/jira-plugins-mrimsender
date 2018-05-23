@@ -193,7 +193,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
 
         let i;
         for (i = 0; i < scaleConfigs.length; i++) {
-            const config = scaleConfigs[i].generate();
+            const config = scaleConfigs[i].generate(gantt);
             const columnCount = this._getUnitsBetween(project.start_date, project.end_date, config.unit, config.step);
             if ((columnCount + 2) * gantt.config.min_column_width <= areaWidth) {
                 break;

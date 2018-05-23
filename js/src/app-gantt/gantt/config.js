@@ -1,5 +1,4 @@
 //@flow
-/* eslint-disable flowtype/require-valid-file-annotation */
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
 

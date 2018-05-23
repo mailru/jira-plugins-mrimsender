@@ -70,11 +70,11 @@ export type GanttGridColumn = {
     width?: string
 };
 
-type SubscaleConfig = {
-    css: (Date) => string,
-    format: string,
+export type SubscaleConfig = {
+    css?: (Date) => string,
+    format?: string,
     step?: number,
-    template: (Date) => string,
+    template?: (Date) => string,
     unit: DurationUnit
 };
 
@@ -189,6 +189,7 @@ interface DatastoreType {
 
 type DateUtil = {
     add(date: Date, number: number, unit: DurationUnit): Date,
+    date_to_str(format: string, utc?: boolean): (Date) => string,
     day_start(Date): Date,
     week_start(Date): Date,
     month_start(Date): Date,

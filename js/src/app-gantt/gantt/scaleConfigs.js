@@ -1,13 +1,28 @@
-/* eslint-disable flowtype/require-valid-file-annotation */
-// eslint-disable-next-line import/no-extraneous-dependencies
+//@flow
+//eslint-disable-next-line import/no-extraneous-dependencies
 import i18n from 'i18n';
 
 import {hoursTaskCell} from './config';
-import type {DhtmlxGantt} from './types';
+import type {DhtmlxGantt, DurationUnit, GanttTask, SubscaleConfig} from './types';
 
+
+type ScaleConfigGenerator = {
+    key?: string,
+    title?: string,
+    generate: (gantt: DhtmlxGantt) => {
+        scale_unit: DurationUnit,
+        unit: DurationUnit,
+        min_width_override?: number,
+        task_cell?: (GanttTask, Date) => string,
+        date_scale?: string,
+        template?: (Date) => string,
+        step: number,
+        subscales: $ReadOnlyArray<SubscaleConfig>,
+    }
+}
 
 //Setting available scales
-export const scaleConfigs = [
+export const scaleConfigs: $ReadOnlyArray<ScaleConfigGenerator> = [
     // hours
     {
         generate: (gantt: DhtmlxGantt) => ({
@@ -83,7 +98,7 @@ export const scaleConfigs = [
             subscales: [
                 {
                     unit: 'month', step: 3,
-                    template(date) {
+                    template(date: Date) {
                         const dateToStr = gantt.date.date_to_str('%M');
                         const endDate = gantt.date.add(gantt.date.add(date, 3, 'month'), -1, 'day');
                         return `${dateToStr(date)  } - ${  dateToStr(endDate)}`;
@@ -99,7 +114,7 @@ export const scaleConfigs = [
             subscales: [
                 {
                     unit: 'year', step: 5,
-                    template(date) {
+                    template(date: Date) {
                         const dateToStr = gantt.date.date_to_str('%Y');
                         const endDate = gantt.date.add(gantt.date.add(date, 5, 'year'), -1, 'day');
                         return `${dateToStr(date)  } - ${  dateToStr(endDate)}`;
@@ -112,7 +127,7 @@ export const scaleConfigs = [
     {
         generate: (gantt: DhtmlxGantt) => ({
             unit: 'year', step: 10, scale_unit: 'year',
-            template(date) {
+            template(date: Date) {
                 const dateToStr = gantt.date.date_to_str('%Y');
                 const endDate = gantt.date.add(gantt.date.add(date, 10, 'year'), -1, 'day');
                 return `${dateToStr(date)  } - ${  dateToStr(endDate)}`;
@@ -120,7 +135,7 @@ export const scaleConfigs = [
             subscales: [
                 {
                     unit: 'year', step: 100,
-                    template(date) {
+                    template(date: Date) {
                         const dateToStr = gantt.date.date_to_str('%Y');
                         const endDate = gantt.date.add(gantt.date.add(date, 100, 'year'), -1, 'day');
                         return `${dateToStr(date)  } - ${  dateToStr(endDate)}`;

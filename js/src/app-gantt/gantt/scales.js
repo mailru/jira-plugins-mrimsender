@@ -25,8 +25,7 @@ export function updateScales(gantt: DhtmlxGantt, scale: number) {
     if (config.date_scale) {
         gantt.config.date_scale = config.date_scale;
         gantt.templates.date_scale = undefined;
-    }
-    else {
+    } else {
         gantt.templates.date_scale = config.template;
     }
 
