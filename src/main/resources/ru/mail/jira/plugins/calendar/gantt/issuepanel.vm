@@ -2,7 +2,7 @@
 #foreach($group in $linkGroups)
     <p>
         <span class="aui-icon aui-icon-small aui-iconfont-calendar">Insert meaningful text here for accessibility</span>
-        <a href="$baseUrl/secure/MailRuGanttDiagram.jspa#calendar=$group.calendarId"><strong>$group.calendarName</strong></a>
+        <a href="$baseUrl/secure/MailRuGanttDiagram.jspa?calendarId=$group.calendarId"><strong>$group.calendarName</strong></a>
     </p>
     <dl class="links-list">
         #foreach($link in $group.links)

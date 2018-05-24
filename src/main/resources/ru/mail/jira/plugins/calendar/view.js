@@ -206,7 +206,7 @@ require(['jquery',
                 this.$('.aui-page-panel-nav').click();
 
                 var calendarId = $(e.currentTarget).closest('div.aui-dropdown2').data('id');
-                window.open(AJS.format('{0}/secure/MailRuGanttDiagram.jspa#calendar={1}', AJS.contextPath(), calendarId));
+                window.open(AJS.format('{0}/secure/MailRuGanttDiagram.jspa?calendarId={1}', AJS.contextPath(), calendarId));
             },
             editCalendar: function(e) {
                 e.preventDefault();

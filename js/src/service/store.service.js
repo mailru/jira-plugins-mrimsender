@@ -1,7 +1,49 @@
-/* eslint-disable flowtype/require-valid-file-annotation */
+//@flow
+import {createStore, combineReducers, applyMiddleware, compose} from 'redux';
+import {connectRoutes} from 'redux-first-router';
+import createHistory from 'history/createBrowserHistory'
+import queryString from 'query-string';
+
+import {calendarReducer, isLoadingReducer, sprintsReducer, optionsReducer, calendarRouteThunk} from './gantt.reducer';
+import {preferenceService} from './services';
+import {defaultOptions} from '../app-gantt/staticOptions';
+import {getBaseUrl} from '../common/ajs-helpers';
+
 export class StoreService {
-    constructor(store) {
-        this.store = store;
+    store: * = null;
+
+    constructor() {
+        const history = createHistory();
+        const routesMap = {
+            CALENDAR_ROUTE: {
+                path: `${getBaseUrl()}/secure/MailRuGanttDiagram.jspa`,
+                thunk: calendarRouteThunk
+            }
+        };
+
+        const {reducer: routerReducer, middleware: routerMiddleware, enhancer: routerEnhancer} = connectRoutes(
+            history, routesMap, { querySerializer: queryString }
+        );
+
+        this.store = createStore(
+            combineReducers({
+                options: optionsReducer,
+                calendar: calendarReducer,
+                sprints: sprintsReducer,
+                isLoading: isLoadingReducer,
+                location: routerReducer
+            }),
+            {
+                options: {
+                    ...defaultOptions,
+                    ...preferenceService.getOptions()
+                }
+            },
+            compose(
+                routerEnhancer,
+                applyMiddleware(routerMiddleware)
+            )
+        );
     }
 
     getOptions() {
@@ -20,7 +62,7 @@ export class StoreService {
         return this.store.getState().ganttReady;
     }
 
-    dispatch(event) {
+    dispatch(event: *) {
         return this.store.dispatch(event);
     }
 }

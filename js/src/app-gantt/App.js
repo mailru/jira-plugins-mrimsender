@@ -14,7 +14,7 @@ type State = {
 };
 
 const ConnectedGanttComponent = connect(
-    memoizeOne(({options, calendar}) => ({options, calendar}))
+    memoizeOne(({options, calendar, isLoading}) => ({options, calendar, isLoading}))
 )(GanttComponent);
 
 export class App extends React.PureComponent<{}, State> {

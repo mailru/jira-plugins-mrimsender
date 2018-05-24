@@ -42,7 +42,7 @@ import {MagicDialog} from './MagicDialog';
 
 import {SprintState} from '../common/sprints';
 
-import {OptionsActionCreators} from '../service/gantt.reducer';
+import {CalendarActionCreators, OptionsActionCreators} from '../service/gantt.reducer';
 import {calendarService, ganttService} from '../service/services';
 import {QuickFilters} from './QuickFilters';
 
@@ -57,7 +57,8 @@ type Props = {
     options: OptionsType,
     calendar: CurrentCalendarType,
     sprints: $ReadOnlyArray<SprintType>,
-    updateOptions: (options: $Shape<OptionsType>) => void
+    updateOptions: (options: $Shape<OptionsType>) => void,
+    navigate: *
 };
 
 type DialogType = 'scheduleTask';
@@ -264,8 +265,6 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
         window.location = `${AJS.contextPath()}/secure/MailRuGanttTeams.jspa#calendar=${this.props.calendar.id}`;
     };
 
-    _selectSprint = (sprint) => () => this.props.updateOptions({ sprint });
-
     _updateStructure = (isOpen) => {
         const {gantt} = this.props;
 
@@ -291,6 +290,8 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
             this.setState({schedulingTask: task}, this._toggleDialog('scheduleTask'));
         }
     };
+
+    _navigate = (calendarId, sprintId) => () => this.props.navigate(calendarId, sprintId);
 
     render() {
         const {activeDialog, waitingForPlan, calendars, filter, schedulingTask} = this.state;
@@ -444,9 +445,9 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                     <DropdownItemGroupRadio id="gantt-calendar">
                                         {calendars.map(cal =>
                                             <DropdownItemRadio
-                                                href={`#calendar=${cal.id}`}
                                                 key={cal.id}
                                                 id={cal.id.toString()}
+                                                onClick={this._navigate(cal.id)}
 
                                                 isSelected={calendar ? (calendar.id === cal.id) : false}
                                             >
@@ -470,7 +471,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                             key="null"
                                             id="null"
 
-                                            onClick={this._selectSprint(null)}
+                                            onClick={this._navigate(calendar.id)}
 
                                             isSelected={!currentSprint}
                                         >
@@ -481,7 +482,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                                 key={sprintItem.id}
                                                 id={sprintItem.id.toString()}
 
-                                                onClick={this._selectSprint(sprintItem.id)}
+                                                onClick={this._navigate(calendar.id, sprintItem.id)}
 
                                                 isSelected={currentSprint && (currentSprint.id === sprintItem.id) || false}
                                             >
@@ -565,5 +566,8 @@ export const GanttActions =
         ({options, calendar, sprints}) => {
             return {options, calendar, sprints};
         },
-        OptionsActionCreators
+        {
+            ...OptionsActionCreators,
+            navigate: CalendarActionCreators.navigate
+        }
     )(GanttActionsInternal);

@@ -4,6 +4,11 @@ import React from 'react';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import moment from 'moment';
 // eslint-disable-next-line import/no-extraneous-dependencies
+import AJS from 'AJS';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import JIRA from 'JIRA';
+
+// eslint-disable-next-line import/no-extraneous-dependencies
 import 'dhtmlx-gantt';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import 'dhtmlx-gantt/codebase/ext/dhtmlxgantt_marker';
@@ -37,7 +42,8 @@ const {Gantt} = window;
 type Props = {
     calendar: ?CurrentCalendarType,
     options: OptionsType,
-    onGanttInit?: (gantt: DhtmlxGantt) => void
+    onGanttInit?: (gantt: DhtmlxGantt) => void,
+    isLoading: boolean
 }
 
 const urlParams = ['startDate', 'endDate', 'groupBy', 'orderBy', 'order', 'columns', 'sprint', 'withUnscheduled'];
@@ -45,7 +51,7 @@ const urlParams = ['startDate', 'endDate', 'groupBy', 'orderBy', 'order', 'colum
 export class GanttComponent extends React.PureComponent<Props> {
     //$FlowFixMe
     ganttElRef = React.createRef();
-    gantt: ?DhtmlxGantt = null;
+    gantt: DhtmlxGantt = Gantt.getGanttInstance();
 
     //attach listeners that depend on props
     _attachListeners(gantt: DhtmlxGantt) {
@@ -78,9 +84,10 @@ export class GanttComponent extends React.PureComponent<Props> {
     }
 
     componentDidMount() {
-        const gantt = Gantt.getGanttInstance();
-        this.gantt = gantt;
+        const {gantt} = this;
         console.log('created gantt');
+
+        this._init();
 
         if (this.props.onGanttInit) {
             this.props.onGanttInit(gantt);
@@ -97,23 +104,22 @@ export class GanttComponent extends React.PureComponent<Props> {
                     moment(workingTime.endTime, 'HH:mm').hours()
                 ];
                 for (let i = 0; i <= 6; i++) {
-                    gantt.setWorkTime({day: i, hours: workingDays.includes(i) ? workingHours : false});
+                    gantt.setWorkTime({
+                        //$FlowFixMe
+                        day: i,
+                        hours: workingDays.includes(i) ? workingHours : false
+                    });
                 }
                 for (const nonWorkingDay of preference.nonWorkingDays) {
                     gantt.setWorkTime({date: new Date(nonWorkingDay), hours: false});
                 }
 
-                this._init();
+                gantt.render();
             });
     }
 
     _init() {
         const {gantt} = this;
-
-        if (!gantt) {
-            alert('gantt istance is null');
-            return;
-        }
 
         configure(gantt);
 
@@ -124,7 +130,40 @@ export class GanttComponent extends React.PureComponent<Props> {
 
         gantt.init(this.ganttElRef.current);
         this.gantt = gantt;
+
+        this._fetchData();
     }
+
+    _fetchData = () => {
+        const {gantt} = this;
+        const {calendar, options} = this.props;
+
+        if (calendar) {
+            gantt.clearAll();
+            gantt.addMarker({
+                start_date: new Date(),
+                css: 'today',
+                //text: 'Today'
+            });
+
+            gantt.config.columns = buildColumns([...defaultColumns, ...(options.columns || [])]);
+            //no need to re-render here, gantt chart will be updated after data is parsed
+
+            const {startDate, endDate, order, groupBy, orderBy, sprint, withUnscheduled} = options;
+
+            const param = queryString.stringify({
+                start: startDate,
+                end: endDate,
+                order: order ? 'ASC' : 'DESC',
+                fields: gantt.config.columns.filter(col => col.isJiraField).map(col => col.name),
+                groupBy, orderBy, sprint, withUnscheduled
+            });
+
+            gantt.load(`${getPluginBaseUrl()}/gantt/${calendar.id}?${param}`);
+
+            storeService.dispatch(OptionsActionCreators.updateOptions({liveData: true}));
+        }
+    };
 
     componentWillUnmount() {
         if (this.gantt) {
@@ -133,6 +172,17 @@ export class GanttComponent extends React.PureComponent<Props> {
     }
 
     componentDidUpdate(prevProps: *) {
+        const {isLoading} = this.props;
+
+        if (isLoading && !prevProps.isLoading) {
+            JIRA.Loading.showLoadingIndicator();
+            AJS.dim();
+        }
+        if (!isLoading && prevProps.isLoading) {
+            JIRA.Loading.hideLoadingIndicator();
+            AJS.undim();
+        }
+
         const {gantt} = this;
         if (!gantt) {
             return;
@@ -152,29 +202,7 @@ export class GanttComponent extends React.PureComponent<Props> {
             const didFilersChange = calendar.favouriteQuickFilters !== prevCalendar.favouriteQuickFilters;
 
             if (didUrlParamsChange || didCalendarChange || didFilersChange) {
-                gantt.clearAll();
-                gantt.addMarker({
-                    start_date: new Date(),
-                    css: 'today',
-                    //text: 'Today'
-                });
-
-                gantt.config.columns = buildColumns([...defaultColumns, ...(options.columns || [])]);
-                //no need to re-render here, gantt chart will be updated after data is parsed
-
-                const {startDate, endDate, order, groupBy, orderBy, sprint, withUnscheduled} = options;
-
-                const param = queryString.stringify({
-                    start: startDate,
-                    end: endDate,
-                    order: order ? 'ASC' : 'DESC',
-                    fields: gantt.config.columns.filter(col => col.isJiraField).map(col => col.name),
-                    groupBy, orderBy, sprint, withUnscheduled
-                });
-
-                gantt.load(`${getPluginBaseUrl()}/gantt/${calendar.id}?${param}`);
-
-                storeService.dispatch(OptionsActionCreators.updateOptions({ liveData: true }));
+                this._fetchData();
                 preferenceService.saveOptions(storeService.getOptions());
                 preferenceService.put('ru.mail.jira.gantt.lastGantt', calendar.id);
             }

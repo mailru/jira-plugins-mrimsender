@@ -1,24 +1,16 @@
 //@flow
-import {combineReducers} from 'redux';
-
-// eslint-disable-next-line import/no-extraneous-dependencies
+import {type Dispatch} from "redux";
 import {defaultOptions} from '../app-gantt/staticOptions';
 import type {CurrentCalendarType, OptionsType, SprintType} from '../app-gantt/types';
-
-
-export const ganttReducer = combineReducers({
-    options: optionsReducer,
-    calendar: calendarReducer,
-    sprints: sprintsReducer,
-    ganttReady: ganttReadyReducer,
-});
+import {calendarService, ganttService, preferenceService} from './services';
 
 
 const UPDATE_OPTIONS = 'UPDATE_OPTIONS';
 const SET_CALENDAR = 'SET_CALENDAR';
-const GANTT_READY = 'GANTT_READY';
 const UPDATE_ALL = 'UPDATE_ALL';
 const SELECT_FILTER = 'SELECT_FILTER';
+const FETCH_CALENDAR = 'FETCH_CALENDAR';
+
 
 export const OptionsActionCreators = {
     updateOptions: (options: $Shape<OptionsType>) => {
@@ -30,17 +22,10 @@ export const OptionsActionCreators = {
 };
 
 export const CalendarActionCreators = {
-    setCalendar: (calendar: CurrentCalendarType, sprints: $ReadOnlyArray<SprintType>) => {
+    setCalendar: (calendar: ?CurrentCalendarType, sprints: $ReadOnlyArray<SprintType>, sprint: ?number) => {
         return {
             type: SET_CALENDAR,
-            calendar, sprints
-        };
-    },
-    //todo: remove?
-    updateAll: (calendar: CurrentCalendarType, options: $Shape<OptionsType>) => {
-        return {
-            type: UPDATE_ALL,
-            calendar, options
+            calendar, sprints, sprint
         };
     },
     selectFilter: (id: number, selected: boolean) => {
@@ -48,10 +33,13 @@ export const CalendarActionCreators = {
             type: SELECT_FILTER,
             id, selected
         };
-    }
+    },
+    navigate: (calendarId: number, sprintId?: number) => ({
+        type: 'CALENDAR_ROUTE', query: {calendarId, sprintId}
+    })
 };
 
-function optionsReducer(state, action) {
+export function optionsReducer(state: OptionsType, action: *) {
     if (state === undefined) {
         return defaultOptions;
     }
@@ -66,14 +54,14 @@ function optionsReducer(state, action) {
     if (action.type === SET_CALENDAR) {
         return {
             ...state,
-            sprint: undefined
+            sprint: action.sprint
         };
     }
 
     return state;
 }
 
-function calendarReducer(state, action) {
+export function calendarReducer(state: ?CurrentCalendarType, action: *) {
     if (state === undefined) {
         return null;
     }
@@ -82,7 +70,7 @@ function calendarReducer(state, action) {
         return action.calendar;
     }
 
-    if (action.type === SELECT_FILTER) {
+    if (action.type === SELECT_FILTER && state) {
         return {
             ...state,
             favouriteQuickFilters: state
@@ -102,7 +90,7 @@ function calendarReducer(state, action) {
     return state;
 }
 
-function sprintsReducer(state, action) {
+export function sprintsReducer(state: $ReadOnlyArray<SprintType>, action: *) {
     if (state === undefined) {
         return [];
     }
@@ -114,14 +102,47 @@ function sprintsReducer(state, action) {
     return state;
 }
 
-function ganttReadyReducer(state, action) {
-    if (state === undefined) {
-        return false;
+export function isLoadingReducer(state: boolean = false, action: *) {
+    switch (action.type) {
+        case FETCH_CALENDAR:
+            return true;
+        case SET_CALENDAR:
+            return false;
+        default:
+            return state;
     }
-
-    if (action.type === GANTT_READY) {
-        return true;
-    }
-
-    return state;
 }
+
+export const calendarRouteThunk = (dispatch: Dispatch, getState: *) => {
+    const {calendarId, sprintId} = (getState().location.query || {});
+
+    const id = calendarId ? parseInt(calendarId, 10) : -1;
+    const sprint = parseInt(sprintId, 10) || null;
+
+    if (!Number.isNaN(id)) {
+        if (getState().calendar && id === getState().calendar.id) {
+            dispatch(OptionsActionCreators.updateOptions({ sprint }));
+            return;
+        }
+
+        if (id === -1) {
+            const lastGantt = preferenceService.get('ru.mail.jira.gantt.lastGantt');
+            if (lastGantt) {
+                dispatch({ type: 'CALENDAR_ROUTE', query: { calendarId: lastGantt } })
+            } else {
+                dispatch(CalendarActionCreators.setCalendar(null, [], null));
+            }
+        } else {
+            dispatch({ type: 'FETCH_CALENDAR' });
+            Promise
+                .all([calendarService.getCalendar(id), ganttService.getCalendarSprints(id), ganttService.getErrors(id)])
+                .then(
+                    ([calendar, sprints, errors]) => dispatch(CalendarActionCreators.setCalendar(
+                        {...calendar, errors, id}, sprints, sprint
+                    ))
+                );
+        }
+    } else {
+        dispatch(CalendarActionCreators.setCalendar(null, [], null));
+    }
+};

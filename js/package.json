@@ -77,6 +77,7 @@
     "@atlaskit/toggle": "^3.0.0",
     "@atlaskit/tooltip": "^9.0.0",
     "@atlaskit/util-shared-styles": "^2.10.7",
+    "history": "^4.7.2",
     "lodash.debounce": "^4.0.8",
     "lodash.memoize": "^4.1.2",
     "memoize-one": "^3.1.1",
@@ -88,6 +89,7 @@
     "react-dom": "^16.3.2",
     "react-redux": "^5.0.6",
     "redux": "^3.7.2",
+    "redux-first-router": "^0.0.16-next",
     "whatwg-fetch": "^2.0.3"
   }
 }
