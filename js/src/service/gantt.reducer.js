@@ -35,7 +35,8 @@ export const CalendarActionCreators = {
         };
     },
     navigate: (calendarId: number, sprintId?: number) => ({
-        type: 'CALENDAR_ROUTE', query: {calendarId, sprintId}
+        type: 'CALENDAR_ROUTE',
+        query: {calendarId, sprintId}
     })
 };
 
@@ -103,6 +104,8 @@ export function sprintsReducer(state: $ReadOnlyArray<SprintType>, action: *) {
 }
 
 export function isLoadingReducer(state: boolean = false, action: *) {
+    console.log(action);
+
     switch (action.type) {
         case FETCH_CALENDAR:
             return true;
@@ -128,7 +131,7 @@ export const calendarRouteThunk = (dispatch: Dispatch, getState: *) => {
         if (id === -1) {
             const lastGantt = preferenceService.get('ru.mail.jira.gantt.lastGantt');
             if (lastGantt) {
-                dispatch({ type: 'CALENDAR_ROUTE', query: { calendarId: lastGantt } })
+                dispatch(CalendarActionCreators.navigate(lastGantt))
             } else {
                 dispatch(CalendarActionCreators.setCalendar(null, [], null));
             }

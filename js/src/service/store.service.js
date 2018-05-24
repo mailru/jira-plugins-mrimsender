@@ -9,42 +9,38 @@ import {preferenceService} from './services';
 import {defaultOptions} from '../app-gantt/staticOptions';
 import {getBaseUrl} from '../common/ajs-helpers';
 
-export class StoreService {
-    store: * = null;
-
-    constructor() {
-        const history = createHistory();
-        const routesMap = {
-            CALENDAR_ROUTE: {
-                path: `${getBaseUrl()}/secure/MailRuGanttDiagram.jspa`,
-                thunk: calendarRouteThunk
-            }
-        };
-
-        const {reducer: routerReducer, middleware: routerMiddleware, enhancer: routerEnhancer} = connectRoutes(
-            history, routesMap, { querySerializer: queryString }
-        );
-
-        this.store = createStore(
-            combineReducers({
-                options: optionsReducer,
-                calendar: calendarReducer,
-                sprints: sprintsReducer,
-                isLoading: isLoadingReducer,
-                location: routerReducer
-            }),
-            {
-                options: {
-                    ...defaultOptions,
-                    ...preferenceService.getOptions()
-                }
-            },
-            compose(
-                routerEnhancer,
-                applyMiddleware(routerMiddleware)
-            )
-        );
+const history = createHistory();
+const routesMap = {
+    CALENDAR_ROUTE: {
+        path: `${getBaseUrl()}/secure/MailRuGanttDiagram.jspa`,
+        thunk: calendarRouteThunk
     }
+};
+
+const {reducer: routerReducer, middleware: routerMiddleware, enhancer: routerEnhancer} = connectRoutes(
+    history, routesMap, { querySerializer: queryString }
+);
+
+export class StoreService {
+    store = createStore(
+        combineReducers({
+            options: optionsReducer,
+            calendar: calendarReducer,
+            sprints: sprintsReducer,
+            isLoading: isLoadingReducer,
+            location: routerReducer
+        }),
+        {
+            options: {
+                ...defaultOptions,
+                ...preferenceService.getOptions()
+            }
+        },
+        compose(
+            routerEnhancer,
+            applyMiddleware(routerMiddleware)
+        )
+    );
 
     getOptions() {
         return this.store.getState().options;

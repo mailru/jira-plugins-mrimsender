@@ -58,7 +58,7 @@ type Props = {
     calendar: CurrentCalendarType,
     sprints: $ReadOnlyArray<SprintType>,
     updateOptions: (options: $Shape<OptionsType>) => void,
-    navigate: *
+    navigate: typeof CalendarActionCreators.navigate
 };
 
 type DialogType = 'scheduleTask';
@@ -567,7 +567,7 @@ export const GanttActions =
             return {options, calendar, sprints};
         },
         {
-            ...OptionsActionCreators,
+            updateOptions: OptionsActionCreators.updateOptions,
             navigate: CalendarActionCreators.navigate
         }
     )(GanttActionsInternal);
