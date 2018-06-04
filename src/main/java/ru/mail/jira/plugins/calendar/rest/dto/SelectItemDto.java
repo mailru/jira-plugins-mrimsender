@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
 import com.atlassian.jira.issue.search.SearchRequest;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SelectItemDto {
     @XmlElement
     private String id;

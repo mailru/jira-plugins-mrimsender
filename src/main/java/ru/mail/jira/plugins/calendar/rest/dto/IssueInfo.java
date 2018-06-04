@@ -5,6 +5,7 @@ import com.atlassian.sal.api.message.I18nResolver;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class IssueInfo {
     @XmlElement
     private String key;

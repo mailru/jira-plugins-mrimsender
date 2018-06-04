@@ -2,6 +2,7 @@ package ru.mail.jira.plugins.calendar.rest.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -12,6 +13,7 @@ import java.util.Map;
 @XmlRootElement
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CalendarSettingDto {
     @XmlElement
     private Integer id;

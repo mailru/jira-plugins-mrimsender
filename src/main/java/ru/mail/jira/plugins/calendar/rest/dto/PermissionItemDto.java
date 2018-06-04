@@ -1,5 +1,6 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import ru.mail.jira.plugins.calendar.model.PermissionType;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -7,6 +8,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PermissionItemDto {
     @XmlElement
     private String id;

@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.calendar.rest.dto;
 
 import lombok.Setter;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.UserCalendar;
 
@@ -11,6 +12,7 @@ import java.util.List;
 @Setter
 @SuppressWarnings({"UnusedDeclaration", "FieldCanBeLocal"})
 @XmlRootElement
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CalendarDto {
     @XmlElement
     private int id;

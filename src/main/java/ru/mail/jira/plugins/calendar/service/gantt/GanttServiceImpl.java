@@ -20,6 +20,7 @@ import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
 import ru.mail.jira.plugins.calendar.configuration.WorkingTimeDto;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.GanttLink;
+import ru.mail.jira.plugins.calendar.model.UserCalendar;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventGroup;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
@@ -57,20 +58,21 @@ public class GanttServiceImpl implements GanttService {
     private final WorkingDaysService workingDaysService;
     private final GanttTeamService ganttTeamService;
     private final UserManager userManager;
+    private final UserCalendarService userCalendarService;
 
     @Autowired
     public GanttServiceImpl(
-        @ComponentImport ActiveObjects ao,
-        @ComponentImport TimeZoneManager timeZoneManager,
-        @ComponentImport FieldManager fieldManager,
-        @ComponentImport UserManager userManager,
-        @ComponentImport I18nHelper i18nHelper,
-        PermissionService permissionService,
-        CalendarEventService calendarEventService,
-        CalendarService calendarService,
-        WorkingDaysService workingDaysService,
-        GanttTeamService ganttTeamService
-    ) {
+            @ComponentImport ActiveObjects ao,
+            @ComponentImport TimeZoneManager timeZoneManager,
+            @ComponentImport FieldManager fieldManager,
+            @ComponentImport UserManager userManager,
+            @ComponentImport I18nHelper i18nHelper,
+            PermissionService permissionService,
+            CalendarEventService calendarEventService,
+            CalendarService calendarService,
+            WorkingDaysService workingDaysService,
+            GanttTeamService ganttTeamService,
+            UserCalendarService userCalendarService) {
         this.ao = ao;
         this.timeZoneManager = timeZoneManager;
         this.fieldManager = fieldManager;
@@ -81,6 +83,7 @@ public class GanttServiceImpl implements GanttService {
         this.workingDaysService = workingDaysService;
         this.ganttTeamService = ganttTeamService;
         this.userManager = userManager;
+        this.userCalendarService = userCalendarService;
     }
 
     @Override
@@ -350,6 +353,10 @@ public class GanttServiceImpl implements GanttService {
         }
 
         List<String> errors = new ArrayList<>();
+        UserCalendar userCalendar = userCalendarService.find(calendarId, user.getKey());
+        if (userCalendar == null) {
+            errors.add(i18nHelper.getText("ru.mail.jira.plugins.calendar.unavailable"));
+        }
 
         if (!isMutableField(calendar.getEventStart())) {
             errors.add(i18nHelper.getText("ru.mail.jira.plugins.calendar.gantt.error.startImmutable"));

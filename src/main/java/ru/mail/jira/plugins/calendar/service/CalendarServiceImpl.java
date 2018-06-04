@@ -226,8 +226,9 @@ public class CalendarServiceImpl implements CalendarService {
     @Override
     public CalendarDto getUserCalendar(ApplicationUser user, int id) throws GetException {
         CalendarDto result = null;
-        UserCalendar userCalendar = userCalendarService.get(id, user.getKey());
+        UserCalendar userCalendar = null;
         try {
+            userCalendar = userCalendarService.get(id, user.getKey());
             Calendar calendar = getCalendar(userCalendar.getCalendarId());
             boolean canAdmin = permissionService.hasAdminPermission(user, calendar);
             boolean canUse = canAdmin || permissionService.hasUsePermission(user, calendar);
