@@ -82,6 +82,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
 
     componentDidMount() {
         this._attachEvents();
+        this._fetchCalendars();
     }
 
     componentDidUpdate(prevProps) {
@@ -250,10 +251,16 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
 
     _fetchCalendars = () => calendarService
         .getUserCalendars()
-        .then(calendars => this.setState({
-            calendars: calendars
-                .filter(cal => cal.ganttEnabled)
-        }));
+        .then(calendars => {
+            const filteredCalendars = calendars.filter(cal => cal.ganttEnabled);
+            this.setState({
+                calendars: filteredCalendars
+            });
+            console.log(this.props.calendar, filteredCalendars);
+            if (!this.props.calendar && filteredCalendars.length) {
+                this._navigate(filteredCalendars[0].id)();
+            }
+        });
 
     _onCalendarListOpen = () => {
         if (!this.state.calendars) {
@@ -436,8 +443,6 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                     appearance: 'subtle',
                                     iconAfter: <ChevronDownIcon label=""/>
                                 }}
-
-                                onOpenChange={this._onCalendarListOpen}
 
                                 isLoading={!calendars}
                             >
