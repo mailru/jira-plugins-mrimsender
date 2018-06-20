@@ -36,6 +36,10 @@ public interface Calendar extends Entity {
     boolean isGanttEnabled();
     void setGanttEnabled(boolean ganttEnabled);
 
+    @StringLength(StringLength.UNLIMITED)
+    String getGanttMilestones();
+    void setGanttMilestones(String milestones);
+
     @Deprecated
     String getAuthorKey();
     @Deprecated

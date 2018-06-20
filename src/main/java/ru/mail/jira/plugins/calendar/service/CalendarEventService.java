@@ -60,11 +60,9 @@ import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter;
 import ru.mail.jira.plugins.calendar.model.QuickFilter;
 import ru.mail.jira.plugins.calendar.model.UserCalendar;
-import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
-import ru.mail.jira.plugins.calendar.rest.dto.EventGroup;
-import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
-import ru.mail.jira.plugins.calendar.rest.dto.UserDto;
+import ru.mail.jira.plugins.calendar.rest.dto.*;
 import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
+import ru.mail.jira.plugins.calendar.util.FieldUtil;
 import ru.mail.jira.plugins.commons.CommonUtils;
 
 import javax.annotation.Nullable;
@@ -576,16 +574,11 @@ public class CalendarEventService {
         return query;
     }
 
-    private String getClauseName(String fieldId) {
-        if (fieldId != null) {
-            if (DUE_DATE_KEY.equals(fieldId)) {
-                fieldId = "duedate";
-            } else if (RESOLVED_DATE_KEY.equals(fieldId)) {
-                fieldId = "resolutiondate";
-            }
+    private String getClauseName(String fieldKey) {
+        if (fieldKey != null) {
+            Field field = fieldManager.getField(FieldUtil.getFieldId(fieldKey));
 
-            Field field = fieldManager.getField(fieldId);
-            if (field != null && field instanceof NavigableField) {
+            if (field instanceof NavigableField) {
                 if (field instanceof CustomField) {
                     ClauseNames clauseNames = ((CustomField) field).getClauseNames();
                     if (clauseNames != null && clauseNames.getPrimaryName() != null) {
@@ -872,8 +865,39 @@ public class CalendarEventService {
         event.setStartEditable(dateFieldsIsDraggable && jiraDeprecatedService.issueService.isEditable(issue, user));
         event.setDurationEditable(isDateFieldResizable(endField, endCF) && startDate != null && endDate != null && jiraDeprecatedService.issueService.isEditable(issue, user));
 
-        if (includeIssueInfo)
+        if (includeIssueInfo) {
             event.setIssueInfo(getEventInfo(calendar, issue, user));
+
+            if (calendar.getGanttMilestones() != null) {
+                List<EventMilestoneDto> milestones = new ArrayList<>();
+
+                for (String fieldKey : calendar.getGanttMilestones().split(",")) {
+                    String fieldId = FieldUtil.getFieldId(fieldKey);
+
+                    Field field = fieldManager.getField(fieldId);
+
+                    if (field == null) {
+                        log.warn("non-existing field {}", fieldId);
+                        continue;
+                    }
+                    CustomField customField = field instanceof CustomField ? (CustomField) field : null;
+
+                    DateTimeFormatter fieldFormatter = fieldKey.equals(DUE_DATE_KEY) || customField != null && customField.getCustomFieldType() instanceof DateCFType ? userDateFormat.withSystemZone() : userDateTimeFormat;
+
+                    Date date = customField != null ? retrieveDateByField(issue, customField) : retrieveDateByField(issue, fieldKey);
+
+                    if (date != null) {
+                        milestones.add(new EventMilestoneDto(
+                            field.getId(),
+                            field.getName(),
+                            fieldFormatter.format(date))
+                        );
+                    }
+                }
+
+                event.setMilestones(milestones);
+            }
+        }
 
         return event;
     }

@@ -9,6 +9,8 @@ import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.exception.UpdateException;
 import com.atlassian.jira.issue.CustomFieldManager;
+import com.atlassian.jira.issue.fields.Field;
+import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.issue.search.SearchRequestManager;
 import com.atlassian.jira.permission.ProjectPermissions;
@@ -42,6 +44,7 @@ import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarSettingDto;
 import ru.mail.jira.plugins.calendar.rest.dto.PermissionItemDto;
 import ru.mail.jira.plugins.calendar.rest.dto.QuickFilterDto;
+import ru.mail.jira.plugins.calendar.util.FieldUtil;
 import ru.mail.jira.plugins.commons.RestFieldException;
 
 import javax.annotation.Nullable;
@@ -50,6 +53,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Component
 @ExportAsService(CalendarService.class)
@@ -113,6 +117,7 @@ public class CalendarServiceImpl implements CalendarService {
     private final SearchRequestManager searchRequestManager;
     private final UserCalendarService userCalendarService;
     private final UserManager userManager;
+    private final FieldManager fieldManager;
 
     @Autowired
     public CalendarServiceImpl(
@@ -126,6 +131,7 @@ public class CalendarServiceImpl implements CalendarService {
         @ComponentImport SearchRequestManager searchRequestManager,
         @ComponentImport UserManager userManager,
         @ComponentImport ActiveObjects ao,
+        @ComponentImport FieldManager fieldManager,
         JiraDeprecatedService jiraDeprecatedService,
         PermissionService permissionService,
         QuickFilterService quickFilterService,
@@ -145,6 +151,7 @@ public class CalendarServiceImpl implements CalendarService {
         this.searchRequestManager = searchRequestManager;
         this.userCalendarService = userCalendarService;
         this.userManager = userManager;
+        this.fieldManager = fieldManager;
     }
 
 
@@ -167,6 +174,10 @@ public class CalendarServiceImpl implements CalendarService {
             result.setSelectedDisplayedFields(Arrays.asList(calendar.getDisplayedFields().split(",")));
         result.setShowIssueStatus(calendar.isShowIssueStatus());
         result.setGanttEnabled(calendar.isGanttEnabled());
+        String milestonesString = calendar.getGanttMilestones();
+        if (milestonesString != null) {
+            result.setGanttMilestones(Arrays.asList(milestonesString.split(",")));
+        }
 
         fillSelectedSourceFields(user, result, calendar);
 
@@ -347,6 +358,12 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setDisplayedFields(StringUtils.join(calendarSettingDto.getSelectedDisplayedFields(), ","));
         calendar.setShowIssueStatus(calendarSettingDto.isShowIssueStatus());
         calendar.setGanttEnabled(calendarSettingDto.isGanttEnabled());
+        List<String> milestones = calendarSettingDto.getGanttMilestones();
+        if (milestones != null && milestones.size() > 0) {
+            calendar.setGanttMilestones(milestones.stream().collect(Collectors.joining(",")));
+        } else {
+            calendar.setGanttMilestones(null);
+        }
         calendar.save();
     }
 
@@ -532,6 +549,15 @@ public class CalendarServiceImpl implements CalendarService {
                         throw new RestFieldException("Can not find custom field with id => " + field, "fields");
                 } else if (!DISPLAYED_FIELDS.contains(field))
                     throw new RestFieldException(String.format("Can not find field %s among standart fields", field), "fields");
+        }
+
+        if (calendarSettingDto.isGanttEnabled()) {
+            for (String fieldKey : calendarSettingDto.getGanttMilestones()) {
+                Field field = fieldManager.getField(FieldUtil.getFieldId(fieldKey));
+                if (field == null) {
+                    throw new RestFieldException("Can not find field with id => " + fieldKey, "milestones");
+                }
+            }
         }
     }
 }

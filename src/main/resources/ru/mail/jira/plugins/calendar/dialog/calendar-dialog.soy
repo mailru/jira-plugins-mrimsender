@@ -28,6 +28,9 @@
                                 <a href="#calendar-dialog-eventTypes-tab">{getText( 'ru.mail.jira.plugins.calendar.dialog.eventTypes' )}</a>
                             </li>
                         {/if}
+                        <li>
+                            <a href="#calendar-dialog-gantt-tab">{getText( 'ru.mail.jira.plugins.calendar.dialog.ganttTab' )}</a>
+                        </li>
                     </ul>
                 </div>
             </nav>
@@ -137,12 +140,6 @@
                         </div>
                         <div id="calendar-dialog-source-error" class="error hidden"></div>
                     </div>
-                    <div class="field-group">
-                        <div class="checkbox">
-                            <input class="checkbox" type="checkbox" id="calendar-dialog-project-gantt-enabled" name="calendar-dialog-projectGanttEnabled">
-                            <label for="calendar-dialog-project-gantt-enabled">{getText( 'ru.mail.jira.plugins.calendar.dialog.projectGantt' )}</label>
-                        </div>
-                    </div>
                     <div class="field-group common-field">
                         <label for="calendar-dialog-event-start">
                             <span class="aui-icon icon-required"></span>
@@ -200,6 +197,24 @@
             <div id="calendar-dialog-eventTypes-tab" class="calendar-dialog-tab hidden">
                 <div id="calendar-dialog-eventTypes-content" class="tab-form unsectioned">
                 </div>
+            </div>
+            <div id="calendar-dialog-gantt-tab" class="calendar-dialog-tab hidden">
+                <form class="aui unsectioned ajs-dirty-warning-exempt calendar-dialog-form tab-form">
+                    <div id="calendar-dialog-gantt-error-panel" class="aui-message aui-message-error hidden"></div>
+                    <div class="field-group">
+                        <div class="checkbox">
+                            <input class="checkbox" type="checkbox" id="calendar-dialog-project-gantt-enabled" name="calendar-dialog-projectGanttEnabled">
+                            <label for="calendar-dialog-project-gantt-enabled">{getText( 'ru.mail.jira.plugins.calendar.dialog.projectGantt' )}</label>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label for="calendar-dialog-milestones">
+                            {getText( 'ru.mail.jira.plugins.calendar.common.milestones' )}
+                        </label>
+                        <input class="text medium-long-field" type="hidden" id="calendar-dialog-milestones" {not $canAdmin ? 'disabled' : ''}>
+                        <div id="calendar-dialog-milestones-error" class="error hidden"></div>
+                    </div>
+                </form>
             </div>
         </div>
         <footer class="aui-dialog2-footer" style="width: 100%">

@@ -49,6 +49,8 @@ public class CalendarSettingDto {
 
     @XmlElement
     private boolean ganttEnabled;
+    @XmlElement
+    private List<String> ganttMilestones;
 
     @XmlElement
     private boolean canAdmin;

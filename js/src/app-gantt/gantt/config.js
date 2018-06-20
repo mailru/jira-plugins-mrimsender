@@ -57,6 +57,19 @@ export function hoursTaskCell(gantt: DhtmlxGantt) {
 
 
 export function configure(gantt: DhtmlxGantt) {
+    // $FlowFixMe
+    gantt.$data.tasksStore._getIndexById = gantt.$data.tasksStore.getIndexById; //eslint-disable-line no-param-reassign
+    // $FlowFixMe
+    gantt.$data.tasksStore.getIndexById = function(id) { //eslint-disable-line no-param-reassign
+        const task = this.getItem(id);
+
+        if (task.type === 'milestone' && task.parent && !this.getItem(task.parent).$open) {
+            return this._getIndexById(task.parent);
+        }
+
+        return this._getIndexById(id);
+    };
+
     const config = {
         showGrid: true,
         work_time: true,
@@ -122,7 +135,8 @@ export function configure(gantt: DhtmlxGantt) {
 
         types: {
             ...gantt.config.types,
-            sprint: 'sprint'
+            sprint: 'sprint',
+            milestone: 'milestone'
         },
         type_renderers: {
             ...gantt.config.type_renderers,
@@ -141,6 +155,10 @@ export function configure(gantt: DhtmlxGantt) {
                 el.style.width = `${size.width}px`;
 
                 return el;
+            },
+            milestone: (task) => {
+                const size = gantt.getTaskPosition(task);
+                return createMilestone(size.top + 7, size.left - 10, task.id.toString());
             }
         },
 
@@ -164,6 +182,38 @@ export function configure(gantt: DhtmlxGantt) {
         return box;
     }
 
+    function createLinkEl(side, date) {
+        const el = document.createElement('div');
+        el.className = `gantt_link_control task_${side} task_${date}_date`;
+        el.style.height = '20px';
+        el.style.lineHeight = '20px';
+
+        const point = document.createElement('div');
+        point.className = 'gantt_link_point';
+
+        el.appendChild(point);
+
+        return el;
+    }
+
+    function createMilestone(top, left, taskId) {
+        const el = createBox({
+            height: 20,
+            width: 20,
+            top, left
+        }, 'gantt_task_line gantt_event_object no_move gantt_milestone');
+        el.setAttribute("task_id", taskId);
+
+        const content = document.createElement('div');
+        content.className = 'gantt_task_content';
+
+        el.appendChild(content);
+        el.appendChild(createLinkEl('left', 'start'));
+        el.appendChild(createLinkEl('right', 'end'));
+
+        return el;
+    }
+
     // eslint-disable-next-line no-unused-expressions
     gantt.addTaskLayer((task) => {
         if (task.type === 'group' && !task.$open && gantt.hasChild(task.id) && !task.unscheduled) {
@@ -184,6 +234,25 @@ export function configure(gantt: DhtmlxGantt) {
                         width: childSizes.width - 4,
                     }, 'child_preview gantt_task_line gantt_event_object');
                     el.appendChild(childEl);
+                }
+            }
+            return el;
+        } else if (task.type === 'issue' && !task.$open && gantt.hasChild(task.id) && !task.unscheduled) {
+            const el = document.createElement('div');
+            const sizes = gantt.getTaskPosition(task);
+
+            const subTasks = gantt.getChildren(task.id);
+
+            for (let i = 0; i < subTasks.length; i++) {
+                const child = gantt.getTask(subTasks[i]);
+                const childSizes = gantt.getTaskPosition(child);
+
+                if (!child.unscheduled) {
+                    const milestoneEl = createMilestone(sizes.top + 7, childSizes.left - 10, child.id.toString());
+                    milestoneEl.classList.add('no_link');
+                    el.appendChild(milestoneEl);
+
+                    gantt.refreshTask(child.id);
                 }
             }
             return el;
