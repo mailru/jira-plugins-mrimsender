@@ -256,7 +256,6 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
             this.setState({
                 calendars: filteredCalendars
             });
-            console.log(this.props.calendar, filteredCalendars);
             if (!this.props.calendar && filteredCalendars.length) {
                 this._navigate(filteredCalendars[0].id)();
             }
