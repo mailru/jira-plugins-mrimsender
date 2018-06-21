@@ -290,6 +290,11 @@ public class RestCalendarService {
                                 if (event.getIssueInfo() != null)
                                     vEvent.getProperties().add(new Description(event.getIssueInfo().toFormatString(i18nResolver)));
                             }
+
+                            if (event.getEnd() == null) {
+                                vEvent.getProperties().add(new Duration(new Dur(1, 0, 0, 0)));
+                            }
+
                             calendar.getComponents().add(vEvent);
                         }
                     }
