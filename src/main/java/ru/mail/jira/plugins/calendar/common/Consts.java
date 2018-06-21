@@ -1,6 +1,10 @@
 package ru.mail.jira.plugins.calendar.common;
 
+import java.util.TimeZone;
+
 public class Consts {
+    public static final TimeZone UTC_TZ = TimeZone.getTimeZone("UTC");
+
     public static final String SCHEDULE_PREFIX = "schedule";
     public static final String SCHEDULE_ID = "ru.mail.jira.plugins.calendar.schedule:scheduleId";
 

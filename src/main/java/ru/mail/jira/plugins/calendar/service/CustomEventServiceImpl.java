@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.calendar.common.Consts;
 import ru.mail.jira.plugins.calendar.model.*;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.*;
@@ -44,7 +45,6 @@ import java.util.stream.Collectors;
 @Component
 public class CustomEventServiceImpl implements CustomEventService {
     private static final Set<String> SUPPORTED_AVATAR_NAMES = ImmutableSet.of("event", "travel", "birthday", "leave");
-    private static final TimeZone UTC_TZ = TimeZone.getTimeZone("UTC");
     private static final long GENERATION_LIMIT_PER_REQUEST = 1000;
 
     private final Logger logger = LoggerFactory.getLogger(CustomEventServiceImpl.class);
@@ -693,7 +693,7 @@ public class CustomEventServiceImpl implements CustomEventService {
             .stream(recurringEvents)
             .flatMap(event -> {
                 boolean allDay = event.isAllDay();
-                ZoneId zoneId = allDay ? UTC_TZ.toZoneId() : userZoneId;
+                ZoneId zoneId = allDay ? Consts.UTC_TZ.toZoneId() : userZoneId;
 
                 return generateRecurringEvents(
                     event,
@@ -1096,7 +1096,7 @@ public class CustomEventServiceImpl implements CustomEventService {
 
     private DateTimeFormatter getDateFormatter(ApplicationUser user, boolean allDay) {
         if (allDay) {
-            return jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE).withZone(UTC_TZ);
+            return jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE).withZone(Consts.UTC_TZ);
         } else {
             return jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
         }

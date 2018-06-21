@@ -52,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.calendar.common.Consts;
 import ru.mail.jira.plugins.calendar.common.FieldUtils;
 import ru.mail.jira.plugins.calendar.configuration.NonWorkingDay;
 import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
@@ -74,7 +75,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Component
@@ -82,7 +82,6 @@ public class CalendarEventService {
     private final static Logger log = LoggerFactory.getLogger(CalendarEventService.class);
 
     private static final int MILLIS_IN_DAY = 86400000;
-    private static final TimeZone UTC_TZ = TimeZone.getTimeZone("UTC");
 
     public static final String CREATED_DATE_KEY = "created";
     public static final String UPDATED_DATE_KEY = "updated";
@@ -166,7 +165,7 @@ public class CalendarEventService {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         dateFormat.setTimeZone(timeZoneManager.getTimeZoneforUser(user));
         SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd");
-        utcFormat.setTimeZone(UTC_TZ);
+        utcFormat.setTimeZone(Consts.UTC_TZ);
 
         String source = calendarModel.getSource();
 
