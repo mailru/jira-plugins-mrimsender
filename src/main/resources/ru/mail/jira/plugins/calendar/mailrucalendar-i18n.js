@@ -364,6 +364,7 @@ define('mailrucalendar-i18n', function() {
 		'ru.mail.jira.plugins.calendar.gantt.views.ganttOnly': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.views.ganttOnly'),
 		'ru.mail.jira.plugins.calendar.gantt.views.withResources': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.views.withResources'),
 		'ru.mail.jira.plugins.calendar.gantt.error.cantApplyPlan': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.error.cantApplyPlan'),
+		'ru.mail.jira.plugins.calendar.gantt.error.noCalendars': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.error.noCalendars'),
 		'ru.mail.jira.plugins.calendar.gantt.error.unknownSprint': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.error.unknownSprint'),
 		'ru.mail.jira.plugins.calendar.teams.addUsers': AJS.I18n.getText('ru.mail.jira.plugins.calendar.teams.addUsers'),
 		'ru.mail.jira.plugins.calendar.teams.addUsers.title': AJS.I18n.getText('ru.mail.jira.plugins.calendar.teams.addUsers.title'),

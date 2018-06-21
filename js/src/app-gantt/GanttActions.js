@@ -67,6 +67,7 @@ type State = {
     activeDialog: ?DialogType,
     waitingForPlan: boolean,
     calendars: ?$ReadOnlyArray<CalendarType>,
+    errors: $ReadOnlyArray<string>,
     filter: string,
     schedulingTask: ?GanttIssueTask
 };
@@ -76,6 +77,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
         activeDialog: null,
         waitingForPlan: false,
         calendars: null,
+        errors: [],
         filter: '',
         schedulingTask: null
     };
@@ -254,7 +256,8 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
         .then(calendars => {
             const filteredCalendars = calendars.filter(cal => cal.ganttEnabled);
             this.setState({
-                calendars: filteredCalendars
+                calendars: filteredCalendars,
+                errors: filteredCalendars.length ? [] : [i18n['ru.mail.jira.plugins.calendar.gantt.error.noCalendars']]
             });
             if (!this.props.calendar && filteredCalendars.length) {
                 this._navigate(filteredCalendars[0].id)();
@@ -308,12 +311,14 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
 
         let errorBanner = null;
 
-        if (calendar && calendar.errors && calendar.errors.length) {
+        const errors = [...(calendar ? calendar.errors || [] : []), ...this.state.errors];
+
+        if (errors.length) {
             errorBanner = (
                 <div style={{margin: '0 -20px'}}>
                     <Banner isOpen icon={<WarningIcon label="warning" secondaryColor="inherit"/>}>
                         <div className="flex-column">
-                            {calendar.errors.map(e => <div key={e}>{e}</div>)}
+                            {errors.map(e => <div key={e}>{e}</div>)}
                         </div>
                     </Banner>
                 </div>
