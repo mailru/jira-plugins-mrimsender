@@ -365,12 +365,10 @@ define('calendar/calendar-view', [
             !canZoomIn && view.calendar.header.disableButton('zoom-in');
             view.calendar.header.enableButton('zoom-out');
         },
-        init: function(view, hideWeekends, workingDays) {
+        init: function(view, hideWeekends, workingDays, start, end) {
             var viewRenderFirstTime = true;
             var contextPath = this.contextPath;
             var self = this;
-            var start = Preferences.getItem('mailrucalendar.start');
-            var end = Preferences.getItem('mailrucalendar.end');
             this.$el.fullCalendar({
                 contentHeight: 'auto',
                 defaultView: view,

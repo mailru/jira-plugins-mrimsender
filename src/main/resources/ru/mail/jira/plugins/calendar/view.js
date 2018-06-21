@@ -153,7 +153,9 @@ require(['jquery',
             loadFullCalendar: function(view, hideWeekends, timezone, workingDays) {
                 this.updatePeriodButton(view);
                 this.calendarView.setTimezone(timezone);
-                this.calendarView.init(view, hideWeekends, workingDays);
+                var start = Preferences.getItem('mailrucalendar.start');
+                var end = Preferences.getItem('mailrucalendar.end');
+                this.calendarView.init(view, hideWeekends, workingDays, start, end);
                 var $calendarEl = $("#calendar-full-calendar");
                 $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-state-default fc-button').addClass('aui-button');
                 $calendarEl.find('.fc-button-group').addClass('aui-buttons');
