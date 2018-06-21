@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.common.UserUtils;
+import ru.mail.jira.plugins.calendar.common.Consts;
 import ru.mail.jira.plugins.calendar.model.*;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.*;
@@ -46,7 +47,6 @@ import java.util.stream.Collectors;
 @ExportAsService(CustomEventService.class)
 public class CustomEventServiceImpl implements CustomEventService {
     private static final Set<String> SUPPORTED_AVATAR_NAMES = ImmutableSet.of("event", "travel", "birthday", "leave");
-    private static final TimeZone UTC_TZ = TimeZone.getTimeZone("UTC");
     private static final long GENERATION_LIMIT_PER_REQUEST = 1000;
 
     private final Logger logger = LoggerFactory.getLogger(CustomEventServiceImpl.class);
@@ -672,11 +672,11 @@ public class CustomEventServiceImpl implements CustomEventService {
         for (Event customEvent : customEvents) {
             result.add(buildEvent(user, customEvent, calendar, canEditEvents));
         }
-        result.addAll(collectRecurringEvents(user, calendar, start, end));
+        result.addAll(collectRecurringEvents(user, calendar, start, end, startUtc, endUtc));
         return result;
     }
 
-    private List<EventDto> collectRecurringEvents(ApplicationUser user, Calendar calendar, Date start, Date end) {
+    private List<EventDto> collectRecurringEvents(ApplicationUser user, Calendar calendar, Date start, Date end, Date startUtc, Date endUtc) {
         Event[] recurringEvents = ao.find(
             Event.class,
             Query
@@ -688,19 +688,23 @@ public class CustomEventServiceImpl implements CustomEventService {
         );
 
         boolean canEditEvents = permissionService.hasEditEventsPermission(user, calendar);
-        ZoneId zoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
+        ZoneId userZoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
 
         return Arrays
             .stream(recurringEvents)
-            .flatMap(event -> generateRecurringEvents(
+            .flatMap(event -> {
+                boolean allDay = event.isAllDay();
+                ZoneId zoneId = allDay ? Consts.UTC_TZ.toZoneId() : userZoneId;
+
+                return generateRecurringEvents(
                     event,
                     calendar,
                     user, canEditEvents,
-                    start.toInstant().atZone(zoneId), end.toInstant().atZone(zoneId),
-                    event.isAllDay() ? UTC_TZ.toZoneId() : zoneId
-                )
-                .stream()
-            )
+                    (allDay ? startUtc : start).toInstant().atZone(zoneId),
+                    (allDay ? endUtc : end).toInstant().atZone(zoneId),
+                    zoneId
+                ).stream();
+            })
             .collect(Collectors.toList());
     }
 
@@ -748,7 +752,7 @@ public class CustomEventServiceImpl implements CustomEventService {
         int number = 0;
 
         while (startDate.isBefore(until) && isBeforeEnd(startDate, recurrenceEndDate) && isCountOk(number, recurrenceCount)) {
-            if (startDate.isAfter(since) || endDate != null && endDate.isAfter(since)) {
+            if (startDate.isAfter(since) || startDate.equals(since) || endDate != null && (endDate.isAfter(since) || endDate.equals(since))) {
                 result.add(buildRecurrentEvent(event, number, children.get(number), startDate, endDate, calendar, user, canEditEvents));
             }
 
@@ -1084,7 +1088,7 @@ public class CustomEventServiceImpl implements CustomEventService {
 
     private DateTimeFormatter getDateFormatter(ApplicationUser user, boolean allDay) {
         if (allDay) {
-            return jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE).withZone(UTC_TZ);
+            return jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE).withZone(Consts.UTC_TZ);
         } else {
             return jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
         }

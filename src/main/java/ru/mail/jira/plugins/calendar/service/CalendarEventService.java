@@ -52,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.calendar.common.Consts;
 import ru.mail.jira.plugins.calendar.common.FieldUtils;
 import ru.mail.jira.plugins.calendar.common.UserUtils;
 import ru.mail.jira.plugins.calendar.configuration.NonWorkingDay;
@@ -63,7 +64,6 @@ import ru.mail.jira.plugins.calendar.model.UserCalendar;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventGroup;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
-import ru.mail.jira.plugins.calendar.rest.dto.UserDto;
 import ru.mail.jira.plugins.calendar.service.applications.JiraSoftwareHelper;
 import ru.mail.jira.plugins.commons.CommonUtils;
 
@@ -76,7 +76,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -85,7 +84,6 @@ public class CalendarEventService {
     private final static Logger log = LoggerFactory.getLogger(CalendarEventService.class);
 
     private static final int MILLIS_IN_DAY = 86_400_000;
-    private static final TimeZone UTC_TZ = TimeZone.getTimeZone("UTC");
 
     public static final String CREATED_DATE_KEY = "created";
     public static final String UPDATED_DATE_KEY = "updated";
@@ -223,13 +221,15 @@ public class CalendarEventService {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         dateFormat.setTimeZone(timeZoneManager.getTimeZoneforUser(user));
         SimpleDateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd");
-        utcFormat.setTimeZone(UTC_TZ);
+        utcFormat.setTimeZone(Consts.UTC_TZ);
 
         String source = calendarModel.getSource();
 
         List<EventDto> result;
         Date parsedStart = dateFormat.parse(start);
         Date parsedEnd = dateFormat.parse(end);
+        Date utcStart = utcFormat.parse(start);
+        Date utcEnd = utcFormat.parse(end);
 
         if (source.startsWith("project_"))
             result = getProjectEvents(calendarModel, groupBy, Long.parseLong(source.substring("project_".length())),
@@ -244,7 +244,7 @@ public class CalendarEventService {
             result = new ArrayList<>();
         }
 
-        result.addAll(customEventService.getEvents(user, calendarModel, parsedStart, parsedEnd, utcFormat.parse(start), utcFormat.parse(end)));
+        result.addAll(customEventService.getEvents(user, calendarModel, parsedStart, parsedEnd, utcStart, utcEnd));
 
         return result;
     }

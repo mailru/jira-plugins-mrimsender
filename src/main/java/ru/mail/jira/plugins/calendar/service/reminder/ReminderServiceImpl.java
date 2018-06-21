@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.common.UserUtils;
+import ru.mail.jira.plugins.calendar.common.Consts;
 import ru.mail.jira.plugins.calendar.model.*;
 import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.CustomEventDto;
@@ -38,8 +39,6 @@ import java.util.stream.Collectors;
 
 @Component
 public class ReminderServiceImpl implements ReminderService {
-    private static final TimeZone UTC_TZ = TimeZone.getTimeZone("UTC");
-
     private final Logger logger = LoggerFactory.getLogger(ReminderServiceImpl.class);
 
     private final JiraDeprecatedService jiraDeprecatedService;
@@ -176,7 +175,7 @@ public class ReminderServiceImpl implements ReminderService {
 
             DateTimeFormatter dateFormatter;
             if (event.isAllDay()) {
-                dateFormatter = jiraDeprecatedService.dateTimeFormatter.forUser(recipient).withStyle(DateTimeStyle.DATE_PICKER).withZone(UTC_TZ);
+                dateFormatter = jiraDeprecatedService.dateTimeFormatter.forUser(recipient).withStyle(DateTimeStyle.DATE_PICKER).withZone(Consts.UTC_TZ);
             } else {
                 dateFormatter = jiraDeprecatedService.dateTimeFormatter.forUser(recipient).withStyle(DateTimeStyle.DATE_TIME_PICKER);
             }

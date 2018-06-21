@@ -1,3 +1,5 @@
+var calendarMoment = window.moment;
+
 define('calendar/calendar-view', [
     'jquery',
     'underscore',
@@ -7,6 +9,8 @@ define('calendar/calendar-view', [
     'calendar/recurrence',
     'calendar/preferences'
 ], function($, _, Backbone, Reminder, EditTypeDialog, Recurring, Preferences) {
+    window.moment = calendarMoment;
+
     function getContextPath() {
         if (AJS.gadget) {
             return AJS.gadget.getBaseUrl();
@@ -361,12 +365,10 @@ define('calendar/calendar-view', [
             !canZoomIn && view.calendar.header.disableButton('zoom-in');
             view.calendar.header.enableButton('zoom-out');
         },
-        init: function(view, hideWeekends, workingDays) {
+        init: function(view, hideWeekends, workingDays, start, end) {
             var viewRenderFirstTime = true;
             var contextPath = this.contextPath;
             var self = this;
-            var start = Preferences.getItem('mailrucalendar.start');
-            var end = Preferences.getItem('mailrucalendar.end');
             this.$el.fullCalendar({
                 contentHeight: 'auto',
                 defaultView: view,
