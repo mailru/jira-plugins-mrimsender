@@ -671,11 +671,11 @@ public class CustomEventServiceImpl implements CustomEventService {
         for (Event customEvent : customEvents) {
             result.add(buildEvent(user, customEvent, calendar, canEditEvents));
         }
-        result.addAll(collectRecurringEvents(user, calendar, start, end));
+        result.addAll(collectRecurringEvents(user, calendar, start, end, startUtc, endUtc));
         return result;
     }
 
-    private List<EventDto> collectRecurringEvents(ApplicationUser user, Calendar calendar, Date start, Date end) {
+    private List<EventDto> collectRecurringEvents(ApplicationUser user, Calendar calendar, Date start, Date end, Date startUtc, Date endUtc) {
         Event[] recurringEvents = ao.find(
             Event.class,
             Query
@@ -687,19 +687,23 @@ public class CustomEventServiceImpl implements CustomEventService {
         );
 
         boolean canEditEvents = permissionService.hasEditEventsPermission(user, calendar);
-        ZoneId zoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
+        ZoneId userZoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
 
         return Arrays
             .stream(recurringEvents)
-            .flatMap(event -> generateRecurringEvents(
+            .flatMap(event -> {
+                boolean allDay = event.isAllDay();
+                ZoneId zoneId = allDay ? UTC_TZ.toZoneId() : userZoneId;
+
+                return generateRecurringEvents(
                     event,
                     calendar,
                     user, canEditEvents,
-                    start.toInstant().atZone(zoneId), end.toInstant().atZone(zoneId),
-                    event.isAllDay() ? UTC_TZ.toZoneId() : zoneId
-                )
-                .stream()
-            )
+                    (allDay ? startUtc : start).toInstant().atZone(zoneId),
+                    (allDay ? endUtc : end).toInstant().atZone(zoneId),
+                    zoneId
+                ).stream();
+            })
             .collect(Collectors.toList());
     }
 
@@ -747,7 +751,7 @@ public class CustomEventServiceImpl implements CustomEventService {
         int number = 0;
 
         while (startDate.isBefore(until) && isBeforeEnd(startDate, recurrenceEndDate) && isCountOk(number, recurrenceCount)) {
-            if (startDate.isAfter(since) || endDate != null && endDate.isAfter(since)) {
+            if (startDate.isAfter(since) || startDate.equals(since) || endDate != null && (endDate.isAfter(since) || endDate.equals(since))) {
                 result.add(buildRecurrentEvent(event, number, children.get(number), startDate, endDate, calendar, user, canEditEvents));
             }
 

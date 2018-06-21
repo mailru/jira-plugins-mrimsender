@@ -173,6 +173,8 @@ public class CalendarEventService {
         List<EventDto> result;
         Date parsedStart = dateFormat.parse(start);
         Date parsedEnd = dateFormat.parse(end);
+        Date utcStart = utcFormat.parse(start);
+        Date utcEnd = utcFormat.parse(end);
 
         if (source.startsWith("project_"))
             result = getProjectEvents(calendarModel, groupBy, Long.parseLong(source.substring("project_".length())),
@@ -187,7 +189,7 @@ public class CalendarEventService {
             result = new ArrayList<>();
         }
 
-        result.addAll(customEventService.getEvents(user, calendarModel, parsedStart, parsedEnd, utcFormat.parse(start), utcFormat.parse(end)));
+        result.addAll(customEventService.getEvents(user, calendarModel, parsedStart, parsedEnd, utcStart, utcEnd));
 
         return result;
     }
