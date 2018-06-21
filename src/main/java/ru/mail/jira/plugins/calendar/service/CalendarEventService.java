@@ -21,7 +21,13 @@ import com.atlassian.jira.issue.RendererManager;
 import com.atlassian.jira.issue.customfields.impl.CalculatedCFType;
 import com.atlassian.jira.issue.customfields.impl.DateCFType;
 import com.atlassian.jira.issue.customfields.impl.DateTimeCFType;
-import com.atlassian.jira.issue.fields.*;
+import com.atlassian.jira.issue.fields.AssigneeSystemField;
+import com.atlassian.jira.issue.fields.CustomField;
+import com.atlassian.jira.issue.fields.Field;
+import com.atlassian.jira.issue.fields.FieldManager;
+import com.atlassian.jira.issue.fields.LabelsSystemField;
+import com.atlassian.jira.issue.fields.NavigableField;
+import com.atlassian.jira.issue.fields.ReporterSystemField;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
 import com.atlassian.jira.issue.fields.renderer.JiraRendererPlugin;
@@ -78,6 +84,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 public class CalendarEventService {
@@ -376,16 +383,14 @@ public class CalendarEventService {
         }
     }
 
-    public List<EventDto> getUnboundedEvents(
-        Calendar calendar,
-        String groupBy,
-        ApplicationUser user,
-        boolean includeIssueInfo,
-        Order order,
-        Long sprintId,
-        List<String> fields,
-        boolean forPlan
-    ) throws SearchException {
+    public Stream<EventDto> getUnboundedEvents(Calendar calendar,
+                                               String groupBy,
+                                               ApplicationUser user,
+                                               boolean includeIssueInfo,
+                                               Order order,
+                                               Long sprintId,
+                                               List<String> fields,
+                                               boolean forPlan) throws SearchException {
         String startField = calendar.getEventStart();
         String endField = calendar.getEventEnd();
 
@@ -393,52 +398,59 @@ public class CalendarEventService {
         CustomField endCF = getCf(endField);
 
         List<Issue> issues = searchService
-            .search(
-                user,
-                getUnboundedEventsQuery(user, calendar, sprintId, order, forPlan, forPlan),
-                PagerFilter.newPageAlignedFilter(0, 1000)
-            )
-            .getIssues();
+                .search(
+                        user,
+                        getUnboundedEventsQuery(user, calendar, sprintId, order, forPlan, forPlan),
+                        PagerFilter.getUnlimitedFilter()
+                )
+                .getIssues();
         return issues
-            .stream()
-            .map(issue -> buildEventWithGroups(
-                calendar,
-                groupBy,
-                user,
-                issue,
-                includeIssueInfo,
-                startField,
-                startCF,
-                endField,
-                endCF,
-                fields,
-                true
-            ))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(Collectors.toList());
+                .stream()
+                .map(issue -> buildEventWithGroups(
+                        calendar,
+                        groupBy,
+                        user,
+                        issue,
+                        includeIssueInfo,
+                        startField,
+                        startCF,
+                        endField,
+                        endCF,
+                        fields,
+                        true
+                ))
+                .filter(Optional::isPresent)
+                .map(Optional::get);
     }
 
-    public List<EventDto> getEventsWithDuration(
-        Calendar calendar,
-        String groupBy,
-        ApplicationUser user,
-        boolean includeIssueInfo,
-        Order order,
-        List<String> fields,
-        Date startTime,
-        Date endTime
-    ) throws SearchException {
-        return getEvents(
-            calendar, groupBy,
-            JqlQueryBuilder.newBuilder(getUnboundedEventsQuery(user, calendar, null, order, true, false)).where(),
-            calendar.getEventStart(), calendar.getEventEnd(), startTime, endTime, user, includeIssueInfo, null, fields
-        );
+    public Stream<EventDto> getEventsWithDuration(Calendar calendar,
+                                                  String groupBy,
+                                                  ApplicationUser user,
+                                                  boolean includeIssueInfo,
+                                                  Order order,
+                                                  List<String> fields,
+                                                  Date startTime,
+                                                  Date endTime) throws SearchException {
+        return getEvents(calendar,
+                         groupBy,
+                         JqlQueryBuilder.newBuilder(getUnboundedEventsQuery(user, calendar, null, order, true, false)).where(),
+                         calendar.getEventStart(),
+                         calendar.getEventEnd(),
+                         startTime,
+                         endTime,
+                         user,
+                         includeIssueInfo,
+                         null,
+                         fields)
+                .stream();
     }
 
-    public Query getUnboundedEventsQuery(
-        ApplicationUser user, Calendar calendar, Long sprintId, Order order, boolean onlyEstimated, boolean onlyUnresolved
-    ) {
+    public Query getUnboundedEventsQuery(ApplicationUser user,
+                                         Calendar calendar,
+                                         Long sprintId,
+                                         Order order,
+                                         boolean onlyEstimated,
+                                         boolean onlyUnresolved) {
         JqlClauseBuilder queryBuilder = getCalendarQueryBuilder(user, calendar);
         if (queryBuilder == null) {
             throw new RuntimeException("Unable to get calendar query");
@@ -446,9 +458,9 @@ public class CalendarEventService {
 
         if (onlyEstimated) {
             queryBuilder
-                .and()
-                .sub()
-                .originalEstimate().isNotEmpty();
+                    .and()
+                    .sub()
+                    .originalEstimate().isNotEmpty();
 
             String startField = calendar.getEventStart();
             String endField = calendar.getEventEnd();
@@ -458,11 +470,11 @@ public class CalendarEventService {
 
             if (startFieldClause != null && endFieldClause != null) {
                 queryBuilder
-                    .or()
-                    .sub()
-                    .addCondition(startFieldClause).isNotEmpty()
-                    .and().addCondition(endFieldClause).isNotEmpty()
-                    .endsub();
+                        .or()
+                        .sub()
+                        .addCondition(startFieldClause).isNotEmpty()
+                        .and().addCondition(endFieldClause).isNotEmpty()
+                        .endsub();
             }
 
             queryBuilder.endsub();
@@ -474,9 +486,9 @@ public class CalendarEventService {
             }
 
             queryBuilder
-                .and()
-                .customField(jiraSoftwareHelper.getSprintField().getIdAsLong())
-                .eq(sprintId);
+                    .and()
+                    .customField(jiraSoftwareHelper.getSprintField().getIdAsLong())
+                    .eq(sprintId);
         }
 
         if (onlyUnresolved) {
@@ -1160,7 +1172,7 @@ public class CalendarEventService {
             for (String fieldId : fields) {
                 Field field = fieldManager.getField(fieldId);
                 //todo: if orderablefield, maybe render viewHtml
-                if (field != null && field instanceof NavigableField) {
+                if (field instanceof NavigableField) {
                     FieldLayoutItem fieldLayoutItem = fieldLayoutManager.getFieldLayout(issue).getFieldLayoutItem(fieldId);
                     String columnViewHtml = ((NavigableField) field).getColumnViewHtml(fieldLayoutItem, ImmutableMap.of(), issue);
                     if (StringUtils.isNotEmpty(columnViewHtml))
