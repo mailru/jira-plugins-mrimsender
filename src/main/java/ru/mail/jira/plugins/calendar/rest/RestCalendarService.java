@@ -14,9 +14,7 @@ import com.atlassian.sal.api.message.I18nResolver;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.extensions.property.RefreshInterval;
 import net.fortuna.ical4j.extensions.property.WrCalName;
-import net.fortuna.ical4j.model.Date;
-import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.ParameterList;
+import net.fortuna.ical4j.model.*;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.model.property.*;
@@ -27,6 +25,7 @@ import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.rest.dto.SingleValueDto;
+import ru.mail.jira.plugins.calendar.common.Consts;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
@@ -43,7 +42,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
 
@@ -257,7 +255,7 @@ public class RestCalendarService {
                         return null;
 
                     //todo: check windows outlook & google calendar
-                    DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
+                    DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withZone(Consts.UTC_TZ).withStyle(DateTimeStyle.ISO_8601_DATE);
                     DateTimeFormatter userDateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
                     final net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
                     calendar.getProperties().add(new ProdId("-//MailRu Calendar/" + icalUid + "/iCal4j 1.0//EN"));
@@ -282,18 +280,21 @@ public class RestCalendarService {
                                                                              true, null, null);
 
                         for (EventDto event : events) {
-                            Date start = new DateTime(true);
+                            Date start;
                             try {
+                                start = new DateTime(true);
                                 start.setTime(userDateTimeFormat.parse(event.getStart()).getTime());
                             } catch (Exception e) {
+                                start = new Date();
                                 start.setTime(userDateFormat.parse(event.getStart()).getTime());
                             }
                             Date end = null;
                             if (event.getEnd() != null) {
-                                end = new DateTime(true);
                                 try {
+                                    end = new DateTime(true);
                                     end.setTime(userDateTimeFormat.parse(event.getEnd()).getTime());
                                 } catch (Exception e) {
+                                    end = new Date();
                                     end.setTime(userDateFormat.parse(event.getEnd()).getTime());
                                 }
                             }
@@ -311,6 +312,11 @@ public class RestCalendarService {
                                 if (event.getIssueInfo() != null)
                                     vEvent.getProperties().add(new Description(event.getIssueInfo().toFormatString(i18nResolver)));
                             }
+
+                            if (event.getEnd() == null) {
+                                vEvent.getProperties().add(new Duration(new Dur(1, 0, 0, 0)));
+                            }
+
                             calendar.getComponents().add(vEvent);
                         }
                     }

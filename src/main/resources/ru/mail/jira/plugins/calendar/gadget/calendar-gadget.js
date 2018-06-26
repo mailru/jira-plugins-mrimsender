@@ -217,8 +217,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                         gadget.hideLoading();
                     });
                     gadget.calendarView.setTimezone(args.props.timezone);
-                    gadget.calendarView.init(view, hideWeekends);
-                    gadget.calendarView.init(view, hideWeekends, args.props.workingDays);
+                    gadget.calendarView.init(view, hideWeekends, args.props.workingDays, null, null);
                     var $calendarEl = AJS.$("#mailru-calendar-gadget-full-calendar");
                     $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-state-default fc-button').addClass('aui-button');
                     $calendarEl.find('.fc-button-group').addClass('aui-buttons');
