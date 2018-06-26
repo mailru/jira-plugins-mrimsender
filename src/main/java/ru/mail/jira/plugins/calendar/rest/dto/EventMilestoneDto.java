@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter @Setter
 @AllArgsConstructor @NoArgsConstructor
 public class EventMilestoneDto {
-    private String fieldKey;
+    private String fieldId;
     private String fieldName;
     private String date;
 }

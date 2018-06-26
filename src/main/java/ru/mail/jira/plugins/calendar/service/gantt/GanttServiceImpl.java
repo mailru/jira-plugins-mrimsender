@@ -466,7 +466,7 @@ public class GanttServiceImpl implements GanttService {
         result.setEndDate(milestone.getDate());
         result.setSummary(task.getSummary() + " - " + milestone.getFieldName());
         result.setParent(task.getId());
-        result.setId(task.getId() + "-" + milestone.getFieldKey());
+        result.setId(task.getId() + "-" + milestone.getFieldId());
         result.setType("milestone");
         result.setLinkable(task.isLinkable());
         result.setUnscheduled(task.getUnscheduled());
