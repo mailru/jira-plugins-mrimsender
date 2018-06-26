@@ -360,7 +360,7 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setGanttEnabled(calendarSettingDto.isGanttEnabled());
         List<String> milestones = calendarSettingDto.getGanttMilestones();
         if (milestones != null && milestones.size() > 0) {
-            calendar.setGanttMilestones(milestones.stream().collect(Collectors.joining(",")));
+            calendar.setGanttMilestones(StringUtils.join(milestones, ','));
         } else {
             calendar.setGanttMilestones(null);
         }
