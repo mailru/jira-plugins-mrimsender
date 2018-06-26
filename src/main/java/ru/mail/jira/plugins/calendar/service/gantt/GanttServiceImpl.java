@@ -3,14 +3,21 @@ package ru.mail.jira.plugins.calendar.service.gantt;
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.issue.customfields.impl.CalculatedCFType;
-import com.atlassian.jira.issue.fields.*;
+import com.atlassian.jira.issue.fields.CreatedSystemField;
+import com.atlassian.jira.issue.fields.Field;
+import com.atlassian.jira.issue.fields.FieldManager;
+import com.atlassian.jira.issue.fields.ResolutionDateSystemField;
+import com.atlassian.jira.issue.fields.UpdatedSystemField;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,17 +32,38 @@ import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventGroup;
 import ru.mail.jira.plugins.calendar.rest.dto.EventMilestoneDto;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
-import ru.mail.jira.plugins.calendar.rest.dto.gantt.*;
+import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttCollectionsDto;
+import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttDto;
+import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttEstimateForm;
+import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttLinkDto;
+import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttLinkForm;
+import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttResourceDto;
+import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttTaskDto;
+import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttTaskForm;
+import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttTeamDto;
+import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttUserDto;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanForm;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanItem;
-import ru.mail.jira.plugins.calendar.service.*;
+import ru.mail.jira.plugins.calendar.service.CalendarEventService;
+import ru.mail.jira.plugins.calendar.service.CalendarService;
+import ru.mail.jira.plugins.calendar.service.PermissionService;
+import ru.mail.jira.plugins.calendar.service.UserCalendarService;
 import ru.mail.jira.plugins.calendar.util.DateUtil;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -103,17 +131,17 @@ public class GanttServiceImpl implements GanttService {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         dateFormat.setTimeZone(timeZoneManager.getTimeZoneforUser(user));
 
-        List<EventDto> eventDtoList;
+        Stream<EventDto> eventDtoStream;
         if (params.isIncludeUnscheduled()) {
-            eventDtoList = calendarEventService.getUnboundedEvents(calendar, params.getGroupBy(), user, true, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan());
+            eventDtoStream = calendarEventService.getUnboundedEvents(calendar, params.getGroupBy(), user, true, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan());
         } else {
-            eventDtoList = calendarEventService.getEventsWithDuration(
+            eventDtoStream = calendarEventService.getEventsWithDuration(
                 calendar, params.getGroupBy(), user, true, params.getOrder(), params.getFields(),
                 dateFormat.parse(startDate), dateFormat.parse(endDate)
             );
         }
 
-        return getGantt(eventDtoList, user, calendarId, params.getGroupBy());
+        return getGantt(eventDtoStream, user, calendarId, params.getGroupBy());
     }
 
     @Override
@@ -124,46 +152,60 @@ public class GanttServiceImpl implements GanttService {
             throw new SecurityException("No permission");
         }
 
-        List<EventDto> events = calendarEventService.getUnboundedEvents(
+        Stream<EventDto> events = calendarEventService.getUnboundedEvents(
             calendar, params.getGroupBy(), user, true, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan()
         );
         return getGantt(events, user, calendarId, params.getGroupBy());
     }
 
-    private GanttDto getGantt(List<EventDto> eventDtoList, ApplicationUser user, int calendarId, String groupBy) throws GetException {
-        GanttDto ganttDto = new GanttDto();
-
+    private GanttDto getGantt(Stream<EventDto> eventDtoStream, ApplicationUser user, int calendarId, String groupBy) throws GetException {
+        List<GanttResourceDto> resources = new ArrayList<>();
+        Set<String> resourceKeys = new HashSet<>();
         List<GanttTaskDto> events = new ArrayList<>();
+        Set<EventGroup> groups = new HashSet<>();
+
+        resources.add(new GanttResourceDto("-1", "Другие", null)); // Other team
+        resources.add(new GanttResourceDto("null", "Не назначен", "-1")); // Unassigned
+        for (GanttTeamDto teamDto : ganttTeamService.getTeams(user, calendarId)) {
+            resources.add(new GanttResourceDto(String.valueOf(teamDto.getId()), teamDto.getName(), null));
+            for (GanttUserDto userDto : teamDto.getUsers()) {
+                resourceKeys.add(userDto.getKey());
+                resources.add(new GanttResourceDto(userDto.getKey(), userDto.getDisplayName(), String.valueOf(teamDto.getId())));
+            }
+        }
 
         boolean shouldAppendGroupToId = MULTI_GROUP_TYPES.contains(groupBy);
 
-        eventDtoList
-            .stream()
-            .filter(e -> e.getType() == EventDto.Type.ISSUE)
-            .flatMap(eventDto -> buildEvenWithGroups(eventDto, user, shouldAppendGroupToId))
-            .forEach(events::add);
+        eventDtoStream
+                .peek(eventDto -> {
+                    if (eventDto.getGroups() != null)
+                        groups.addAll(eventDto.getGroups());
 
-        eventDtoList
-            .stream()
-            .map(EventDto::getGroups)
-            .filter(Objects::nonNull)
-            .flatMap(List::stream)
-            .distinct()
-            .map(group -> buildGroup(
-                group,
-                events
-                    .stream()
-                    .filter(event -> Objects.equals(event.getParent(), group.getId()))
-                    .allMatch(GanttTaskDto::getUnscheduled)
-            ))
-            .forEach(events::add);
+                    String resource = eventDto.getAssignee() != null ? eventDto.getAssignee().getKey() : "null";
+                    if(!resourceKeys.contains(resource)) {
+                        ApplicationUser resourceUser = userManager.getUserByKey(resource);
+                        if (resourceUser != null) {
+                            resourceKeys.add(resourceUser.getKey());
+                            resources.add(new GanttResourceDto(resourceUser.getKey(), resourceUser.getDisplayName(), "-1"));
+                        }
+                    }
+                })
+                .filter(e -> e.getType() == EventDto.Type.ISSUE)
+                .flatMap(eventDto -> buildEvenWithGroups(eventDto, user, shouldAppendGroupToId))
+                .forEach(events::add);
 
-        ganttDto.setData(events);
-        GanttCollectionsDto collectionsDto = new GanttCollectionsDto();
-        List<GanttLinkDto> links = Arrays
-            .stream(ao.find(GanttLink.class, Query.select().where("CALENDAR_ID = ?", calendarId)))
-            .map(GanttServiceImpl::buildLinkDto)
-            .collect(Collectors.toList());
+        groups.stream()
+              .map(group -> buildGroup(
+                      group,
+                      events.stream()
+                            .filter(event -> Objects.equals(event.getParent(), group.getId()))
+                            .allMatch(GanttTaskDto::getUnscheduled)
+              ))
+              .forEach(events::add);
+
+        List<GanttLinkDto> links = Arrays.stream(ao.find(GanttLink.class, Query.select().where("CALENDAR_ID = ?", calendarId)))
+                                         .map(GanttServiceImpl::buildLinkDto)
+                                         .collect(Collectors.toList());
 
         if (shouldAppendGroupToId) {
             Multimap<String, String> groupedTasks = HashMultimap.create();
@@ -224,28 +266,12 @@ public class GanttServiceImpl implements GanttService {
             }
         }
 
+        GanttCollectionsDto collectionsDto = new GanttCollectionsDto();
+        collectionsDto.setResources(resources);
         collectionsDto.setLinks(links);
 
-        List<GanttResourceDto> resources = new ArrayList<>();
-        Set<String> resourceKeys = new HashSet<>();
-        resources.add(new GanttResourceDto("-1", "Другие", null)); // Other team
-        resources.add(new GanttResourceDto("null", "Не назначен", "-1")); // Unassigned
-        for (GanttTeamDto teamDto : ganttTeamService.getTeams(user, calendarId)) {
-            resources.add(new GanttResourceDto(String.valueOf(teamDto.getId()), teamDto.getName(), null));
-            for (GanttUserDto userDto : teamDto.getUsers()) {
-                resourceKeys.add(userDto.getKey());
-                resources.add(new GanttResourceDto(userDto.getKey(), userDto.getDisplayName(), String.valueOf(teamDto.getId())));
-            }
-        }
-        for (GanttTaskDto event : events) {
-            ApplicationUser resourceUser = userManager.getUserByKey(event.getResource());
-            if (resourceUser != null && !resourceKeys.contains(resourceUser.getKey())) {
-                resourceKeys.add(user.getKey());
-                resources.add(new GanttResourceDto(resourceUser.getKey(), resourceUser.getDisplayName(), "-1"));
-            }
-        }
-        collectionsDto.setResources(resources);
-
+        GanttDto ganttDto = new GanttDto();
+        ganttDto.setData(events);
         ganttDto.setCollections(collectionsDto);
         return ganttDto;
     }
@@ -411,7 +437,7 @@ public class GanttServiceImpl implements GanttService {
 
     private Stream<GanttTaskDto> buildEvenWithGroups(EventDto event, ApplicationUser user, boolean addGroupId) {
         if (addGroupId) {
-            if (event.getGroups() != null && event.getGroups().size() > 0) {
+            if (event.getGroups() != null && !event.getGroups().isEmpty()) {
                 return event
                     .getGroups()
                     .stream()
