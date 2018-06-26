@@ -182,7 +182,7 @@ export function configure(gantt: DhtmlxGantt) {
         return box;
     }
 
-    function createLinkEl(side, date) {
+    function createLinkControlEl(side, date) {
         const el = document.createElement('div');
         el.className = `gantt_link_control task_${side} task_${date}_date`;
         el.style.height = '20px';
@@ -201,15 +201,15 @@ export function configure(gantt: DhtmlxGantt) {
             height: 20,
             width: 20,
             top, left
-        }, 'gantt_task_line gantt_event_object no_move gantt_milestone');
+        }, 'gantt_task_line gantt_event_object no_move gantt_milestone gantt-with-tooltip');
         el.setAttribute("task_id", taskId);
 
         const content = document.createElement('div');
         content.className = 'gantt_task_content';
 
         el.appendChild(content);
-        el.appendChild(createLinkEl('left', 'start'));
-        el.appendChild(createLinkEl('right', 'end'));
+        el.appendChild(createLinkControlEl('left', 'start'));
+        el.appendChild(createLinkControlEl('right', 'end'));
 
         return el;
     }
@@ -249,6 +249,7 @@ export function configure(gantt: DhtmlxGantt) {
 
                 if (!child.unscheduled) {
                     const milestoneEl = createMilestone(sizes.top + 7, childSizes.left - 10, child.id.toString());
+                    milestoneEl.setAttribute('title', child.summary);
                     milestoneEl.classList.add('no_link');
                     el.appendChild(milestoneEl);
 
