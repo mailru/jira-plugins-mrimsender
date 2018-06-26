@@ -13,6 +13,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class GanttTaskForm {
     @XmlElement(name = "start_date")
     private String startDate;
+    @XmlElement(name = "end_date")
+    private String endDate;
     @XmlElement
     private Long duration;
 }

@@ -1,4 +1,4 @@
-src/vendor/*
+node_vendor_modules/*
 config/*
 flow-typed/npm/*
 **/__tests__/*

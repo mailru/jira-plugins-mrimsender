@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>mailrucal</artifactId>
-    <version>3.6.37</version>
+    <version>3.6.38</version>
     <organization>
         <name>Mail.Ru Group</name>
         <url>http://mail.ru</url>
@@ -129,6 +129,16 @@
             <groupId>org.jacop</groupId>
             <artifactId>jacop</artifactId>
             <version>4.5.1</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>slf4j-api</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>slf4j-log4j12</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
     <build>

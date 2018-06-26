@@ -30,6 +30,7 @@ import ru.mail.jira.plugins.calendar.model.GanttLink;
 import ru.mail.jira.plugins.calendar.model.UserCalendar;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventGroup;
+import ru.mail.jira.plugins.calendar.rest.dto.EventMilestoneDto;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttCollectionsDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttDto;
@@ -443,13 +444,41 @@ public class GanttServiceImpl implements GanttService {
                     .map(group -> buildEvent(event, user, group.getId()));
             }
         }
-        return Stream.of(buildEvent(event, user, null));
+
+        GanttTaskDto task = buildEvent(event, user, null);
+
+        if (event.getMilestones() != null) {
+            return Stream.concat(
+                Stream.of(task),
+                event
+                    .getMilestones()
+                    .stream()
+                    .map(milestone -> buildMilestone(task, milestone))
+            );
+        }
+
+        return Stream.of(task);
+    }
+
+    private GanttTaskDto buildMilestone(GanttTaskDto task, EventMilestoneDto milestone) {
+        GanttTaskDto result = new GanttTaskDto();
+        result.setStartDate(milestone.getDate());
+        result.setEndDate(milestone.getDate());
+        result.setSummary(task.getSummary() + " - " + milestone.getFieldName());
+        result.setParent(task.getId());
+        result.setId(task.getId() + "-" + milestone.getFieldId());
+        result.setType("milestone");
+        result.setLinkable(task.isLinkable());
+        result.setUnscheduled(task.getUnscheduled());
+
+        return result;
     }
 
     private GanttTaskDto buildEvent(EventDto event, ApplicationUser user, String groupId) {
         GanttTaskDto ganttTaskDto = new GanttTaskDto();
         ganttTaskDto.setType("issue");
         ganttTaskDto.setOriginalEvent(event);
+        ganttTaskDto.setOpen(false);
 
         List<EventGroup> groups = event.getGroups();
         if (groupId != null) {

@@ -87,6 +87,7 @@ public class EventDto {
     private Long timeSpentSeconds;
     @XmlElement
     private UserDto assignee;
+    private List<EventMilestoneDto> milestones;
     private boolean resolved;
 
     public enum Type {

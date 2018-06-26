@@ -118,7 +118,8 @@ export function bindEvents(gantt: DhtmlxGantt) {
                     }
                 }
             }
-        }
+        },
+        onBeforeTaskAutoSchedule: (task) => task.type !== 'milestone'
         /*onGanttScroll: (oldLeft, oldTop, left, top) => {
             //updateRender(oldLeft, oldTop, left, top);
             if (oldTop !== top) {

@@ -5,7 +5,7 @@ export type IdType = string | number;
 export type GanttEventType = (
     'onLoadStart' | 'onLoadEnd' | 'onAfterTaskAdd' | 'onAfterTaskUpdate' | 'onAfterTaskDelete' | 'onAfterLinkAdd' |
     'onAfterLinkUpdate' | 'onAfterLinkDelete' | 'onBeforeTaskDrag' | 'onBeforeLinkDelete' | 'onParse' |
-    'onBeforeTaskDisplay' | 'onBeforeParse' | 'onTaskDblClick'
+    'onBeforeTaskDisplay' | 'onBeforeParse' | 'onTaskDblClick' | 'onBeforeTaskAutoSchedule'
 );
 
 export type ShortcutScope = 'gantt' | 'taskRow' | 'taskCell' | 'headerCell';
@@ -184,7 +184,8 @@ type Position = {
 interface DatastoreType {
     parse($ReadOnlyArray<any>): void,
     hasChild(id: string): boolean,
-    getChildren(id: string): $ReadOnlyArray<string>
+    getChildren(id: string): $ReadOnlyArray<string>,
+    getIndexById(id: string): number,
 }
 
 type DateUtil = {
@@ -203,6 +204,9 @@ export interface DhtmlxGantt {
 
     //internal things
     $task: any, //todo
+    $data: {
+        tasksStore: DatastoreType,
+    },
 
     //initialize & refresh
     load(url: string, type?: 'json' | 'xml' | 'oldxml', callback?: Function): void,

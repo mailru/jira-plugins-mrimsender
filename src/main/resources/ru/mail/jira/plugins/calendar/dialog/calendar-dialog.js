@@ -105,6 +105,7 @@ define('calendar/calendar-dialog', [
             'click a[href=#calendar-dialog-source-tab]': '_selectSourceTab',
             'click a[href=#calendar-dialog-permissions-tab]': '_selectPermissionTab',
             'click a[href=#calendar-dialog-eventTypes-tab]': '_selectEventTypesTab',
+            'click a[href=#calendar-dialog-gantt-tab]': '_selectGanttTab',
             'change #calendar-dialog-permission-table-subject': '_onChangeSubjectSelect',
             'focus .calendar-dialog-permission-table-action a': '_onPermissionTableActionFocus',
             'blur .calendar-dialog-permission-table-action a': '_onPermissionTableActionBlur',
@@ -263,6 +264,8 @@ define('calendar/calendar-dialog', [
                 allowClear: true,
                 data: [{ id: '', text: ' ' }].concat(dateFieldsData)
             });
+
+            this.$('#calendar-dialog-milestones').auiSelect2({ data: dateFieldsData, multiple: true });
         },
         _initDisplayedFieldsField: function() {
             this.$('#calendar-dialog-displayed-fields').auiSelect2({
@@ -383,6 +386,7 @@ define('calendar/calendar-dialog', [
                 || orig.selectedSourceType != changed.selectedSourceType || orig.selectedSourceValue != changed.selectedSourceValue
                 || orig.selectedEventStartId != changed.selectedEventStartId || orig.selectedEventEndId != changed.selectedEventEndId
                 || !_.isEqual(orig.selectedDisplayedFields, changed.selectedDisplayedFields)
+                || !_.isEqual(orig.ganttMilestones, changed.ganttMilestones)
                 || this.isPermissionTableChanged;
         },
         /* Private methods */
@@ -460,8 +464,12 @@ define('calendar/calendar-dialog', [
                     this._onJqlChange();
                 }
 
-                if (this.model.has('selectedDisplayedFields'))
+                if (this.model.has('selectedDisplayedFields')) {
                     this.$('#calendar-dialog-displayed-fields').auiSelect2('val', this.model.get('selectedDisplayedFields'));
+                }
+                if (this.model.has('ganttMilestones')) {
+                    this.$('#calendar-dialog-milestones').auiSelect2('val', this.model.get('ganttMilestones'));
+                }
 
                 this.$('#calendar-dialog-show-issue-status').attr('checked', !!this.model.get('showIssueStatus'));
 
@@ -538,6 +546,11 @@ define('calendar/calendar-dialog', [
             });
             var timelineGroup = this.$('#calendar-dialog-timelineGroup').val();
 
+            var ganttMilestones = null;
+            if (ganttEnabled) {
+                ganttMilestones = this.$('#calendar-dialog-milestones').val();
+            }
+
             return {
                 selectedName: name,
                 selectedColor: color,
@@ -549,6 +562,7 @@ define('calendar/calendar-dialog', [
                 showIssueStatus: showIssueStatus,
                 ganttEnabled: ganttEnabled,
                 timelineGroup: timelineGroup,
+                ganttMilestones: ganttMilestones ? ganttMilestones.split(',') : [],
                 permissions: permissions && permissions.length ? permissions : []
             };
         },
@@ -640,6 +654,15 @@ define('calendar/calendar-dialog', [
                     this._renderEventTypeTable();
                 }, this)
             });
+        },
+        _selectGanttTab: function(e) {
+            e && e.preventDefault();
+
+            this.$('.aui-navgroup li.aui-nav-selected').removeClass('aui-nav-selected');
+            this.$('.calendar-dialog-tab').addClass('hidden');
+
+            this.$('#calendar-dialog-gantt-tab').removeClass('hidden');
+            this.$('a[href=#calendar-dialog-gantt-tab]').closest('li').addClass('aui-nav-selected');
         },
         _renderEventTypeTable: function() {
             this.$('#calendar-dialog-ok, #calendar-dialog-cancel, #calendar-dialog .aui-nav > li > a').attr('disabled', null);
