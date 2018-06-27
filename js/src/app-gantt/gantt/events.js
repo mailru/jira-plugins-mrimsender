@@ -97,24 +97,23 @@ export function bindEvents(gantt: DhtmlxGantt) {
                 if (sprintObject) {
                     const {startDate, endDate} = sprintObject;
 
-                    const taskId = gantt.addTask({
-                        id: 'sprint',
-                        summary: sprintObject.name,
-                        name: sprintObject.name,
-                        type: 'sprint',
-                        $open: true,
-                        unscheduled: !(startDate && endDate),
-                        start_date: startDate ? moment(startDate).toDate() : null,
-                        end_date: endDate ? moment(endDate).toDate() : null
-                    }, null);
+                    if (startDate && endDate) {
+                        const taskId = gantt.addTask({
+                            id: `sprint-${sprintObject.id}`,
+                            summary: sprintObject.name,
+                            type: 'sprint',
+                            linkable: false,
+                            $open: true,
+                            start_date: moment(startDate).toDate(),
+                            end_date: moment(endDate).toDate()
+                        });
 
-                    for (const task of gantt.getTaskBy(it => !it.parent)) {
-                        if (task.id !== taskId) {
-                            //console.log(task.id, taskId);
-                            //gantt.setParent(task.id, taskId);
-                            task.parent = taskId;
-                            gantt.refreshTask(task.id);
+                        for (const task of gantt.getTaskBy(it => !it.parent)) {
+                            if (task.id !== taskId) {
+                                task.parent = taskId;
+                            }
                         }
+                        gantt.refreshData();
                     }
                 }
             }

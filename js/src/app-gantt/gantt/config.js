@@ -63,6 +63,10 @@ export function configure(gantt: DhtmlxGantt) {
     gantt.$data.tasksStore.getIndexById = function(id) { //eslint-disable-line no-param-reassign
         const task = this.getItem(id);
 
+        if (!task) {
+            return -1;
+        }
+
         if (task.type === 'milestone' && task.parent && !this.getItem(task.parent).$open) {
             return this._getIndexById(task.parent);
         }

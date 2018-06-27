@@ -256,7 +256,7 @@ export interface DhtmlxGantt {
     unselectTask(): void,
 
     //task
-    addTask(task: GanttTask, parent: ?string, index?: number): IdType,
+    addTask(task: GanttTask, parent: ?IdType, index?: number): IdType,
 
     eachTask(callback: TaskCallback, parent?: IdType, master?: any): void,
 
