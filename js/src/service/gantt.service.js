@@ -4,7 +4,7 @@ import queryString from 'query-string';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import $ from 'jquery';
 
-import {ajaxDelete, ajaxGet, ajaxPost, ajaxPut, getPluginBaseUrl} from '../common/ajs-helpers';
+import {ajaxDelete, ajaxGet, ajaxPost, ajaxPut, getPluginBaseUrl, getBaseUrl} from '../common/ajs-helpers';
 
 
 export class GanttService {
@@ -46,5 +46,9 @@ export class GanttService {
 
     static getErrors(calendarId) {
         return ajaxGet(`${getPluginBaseUrl()}/gantt/errors/${calendarId}`);
+    }
+
+    static updateTaskRank(data) {
+        return ajaxPut(`${getBaseUrl()}/rest/agile/1.0/issue/rank`, data);
     }
 }

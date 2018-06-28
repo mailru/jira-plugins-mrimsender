@@ -40,6 +40,7 @@ export type PersistentOptions = {
     groupBy: ?string,
     order: ?boolean,
     orderBy: ?string,
+    isOrderedByRank: boolean,
     columns: $ReadOnlyArray<ColumnParams>,
     filter: ?string,
     sprint: ?number,

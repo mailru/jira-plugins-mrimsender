@@ -6,10 +6,10 @@ import AJS from 'AJS';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import JIRA from 'JIRA';
 
-import {updateTask} from './util';
-import type {DhtmlxGantt} from './types';
+import { updateTask } from './util';
+import type { DhtmlxGantt } from './types';
 
-import {ganttService, storeService} from '../../service/services';
+import { ganttService, storeService } from '../../service/services';
 
 
 export function bindEvents(gantt: DhtmlxGantt) {
@@ -118,7 +118,35 @@ export function bindEvents(gantt: DhtmlxGantt) {
                 }
             }
         },
-        onBeforeTaskAutoSchedule: (task) => task.type !== 'milestone'
+        onBeforeTaskAutoSchedule: (task) => task.type !== 'milestone',
+        onBeforeTaskMove: (id, parent) => {
+            const task = gantt.getTask(id);
+            return task.parent === parent;
+        },
+        onBeforeRowDragEnd: (id, parent) => {
+            const task = gantt.getTask(id);
+            const dropTarget = task.$drop_target;
+            if(dropTarget) {
+                const targetTask = gantt.getTask(dropTarget.substring(dropTarget.indexOf(':') + 1));
+                return task.parent === parent && task.type === 'issue' && targetTask.type === 'issue';
+            }
+            return false;
+        },
+        onRowDragEnd: (dragId) => {
+            const task = gantt.getTask(dragId);
+            const dropTarget = task.$drop_target;
+            const rankUpdateData:{issues: Array<string>, rankAfterIssue?: string, rankBeforeIssue?: string} = {issues: [task.entityId]};
+            if(dropTarget) {
+                if (dropTarget.startsWith('next:')) {
+                    const afterTask = gantt.getTask(dropTarget.substring(dropTarget.indexOf(':') + 1));
+                    rankUpdateData.rankAfterIssue = afterTask.entityId;
+                } else {
+                    const beforeTask = gantt.getTask(dropTarget);
+                    rankUpdateData.rankBeforeIssue = beforeTask.entityId;
+                }
+                ganttService.updateTaskRank(rankUpdateData);
+            }
+        }
         /*onGanttScroll: (oldLeft, oldTop, left, top) => {
             //updateRender(oldLeft, oldTop, left, top);
             if (oldTop !== top) {

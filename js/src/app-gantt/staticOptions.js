@@ -36,6 +36,7 @@ export const defaultOptions: OptionsType = {
     endDate: moment().add(3, 'months').format('YYYY-MM-DD'),
     groupBy: undefined,
     orderBy: undefined,
+    isOrderedByRank: false,
     sprint: undefined,
     order: true,
     withUnscheduled: false,

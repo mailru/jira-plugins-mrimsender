@@ -128,6 +128,8 @@ export class GanttComponent extends React.PureComponent<Props> {
         setupShortcuts(gantt);
         attachPopover(gantt);
 
+        gantt.config.order_branch = this.props.options.isOrderedByRank;
+
         gantt.init(this.ganttElRef.current);
         this.gantt = gantt;
 
@@ -219,6 +221,11 @@ export class GanttComponent extends React.PureComponent<Props> {
 
         if (prevProps.options.view !== options.view) {
             gantt.config.layout.rows = getRowsForView(gantt, options.view);
+            init = true;
+        }
+
+        if (prevProps.options.isOrderedByRank !== options.isOrderedByRank) {
+            gantt.config.order_branch = options.isOrderedByRank;
             init = true;
         }
 

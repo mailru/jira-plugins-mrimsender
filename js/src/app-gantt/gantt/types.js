@@ -5,7 +5,7 @@ export type IdType = string | number;
 export type GanttEventType = (
     'onLoadStart' | 'onLoadEnd' | 'onAfterTaskAdd' | 'onAfterTaskUpdate' | 'onAfterTaskDelete' | 'onAfterLinkAdd' |
     'onAfterLinkUpdate' | 'onAfterLinkDelete' | 'onBeforeTaskDrag' | 'onBeforeLinkDelete' | 'onParse' |
-    'onBeforeTaskDisplay' | 'onBeforeParse' | 'onTaskDblClick' | 'onBeforeTaskAutoSchedule'
+    'onBeforeTaskDisplay' | 'onBeforeParse' | 'onTaskDblClick' | 'onBeforeTaskAutoSchedule' | 'onBeforeRowDragEnd' | 'onRowDragEnd'
 );
 
 export type ShortcutScope = 'gantt' | 'taskRow' | 'taskCell' | 'headerCell';
@@ -13,7 +13,7 @@ export type ShortcutScope = 'gantt' | 'taskRow' | 'taskCell' | 'headerCell';
 export type DurationUnit = 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
 
 export type GanttTaskData = {
-    entityId: number,
+    entityId: string,
     start_date: string,
     id: number,
     duration: number,  //maybe optional
@@ -21,7 +21,8 @@ export type GanttTaskData = {
 }
 
 export type GanttTaskInternalState = {
-    $open?: boolean
+    $open?: boolean,
+    $drop_target?: string
 }
 
 type GanttGenericTask = GanttTaskInternalState & {
@@ -37,7 +38,7 @@ type GanttGenericTask = GanttTaskInternalState & {
 
 export type GanttIssueTask = GanttGenericTask & {
     type: 'issue',
-    entityId: number,
+    entityId: string,
     progress?: number,
     overdueSeconds?: number,
     resizable?: boolean,
@@ -134,7 +135,9 @@ type GanttConfig = {
     resource_property: string,
     resource_store: string,
 
-    task_attribute: string //??
+    task_attribute: string, //??
+
+    order_branch: boolean,
 };
 
 type GanttTemplates = {

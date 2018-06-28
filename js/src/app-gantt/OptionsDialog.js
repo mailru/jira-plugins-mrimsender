@@ -45,7 +45,7 @@ class OptionsDialogInternal extends React.Component {
 
     _setGroup = (value) => this._updateOptions({ groupBy: value ? value.value : null });
 
-    _setOrder = (value) => this._updateOptions({ orderBy: value ? value.value : null });
+    _setOrder = (value) => this._updateOptions({ orderBy: value ? value.value : null, isOrderedByRank: value && value.isRank });
 
     _setFields = (value) => this._updateOptions({
         columns: value ?
@@ -89,7 +89,8 @@ class OptionsDialogInternal extends React.Component {
                         .map(field => {
                             return {
                                 label: field.name,
-                                value: field.id
+                                value: field.id,
+                                isRank: field.schema && field.schema.custom === 'com.pyxis.greenhopper.jira:gh-lexo-rank'
                             };
                         })
                 })

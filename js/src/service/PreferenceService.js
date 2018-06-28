@@ -6,6 +6,7 @@ export const properties = {
     endDate: `${prefix}endDate`,
     groupBy: `${prefix}groupBy`,
     orderBy: `${prefix}orderBy`,
+    isOrderedByRank: `${prefix}isOrderedByRank`,
     order: `${prefix}order`,
     columns: `${prefix}columns`,
     withUnscheduled: `${prefix}withUnscheduled`
