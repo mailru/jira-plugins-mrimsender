@@ -479,7 +479,8 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 #calendar-dialog-common-tab,
 #calendar-dialog-source-tab,
 #calendar-dialog-permissions-tab,
-#calendar-dialog-eventTypes-tab {
+#calendar-dialog-eventTypes-tab,
+#calendar-dialog-gantt-tab {
     display: table-cell;
     width: 600px;
 }
