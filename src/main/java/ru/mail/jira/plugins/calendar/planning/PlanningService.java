@@ -101,7 +101,7 @@ public class PlanningService {
         List<GanttTaskDto> ganttEvents = ganttData.getData();
         List<EventDto> events = ganttEvents
                 .stream()
-                .filter(task -> !"group".equals(task.getType()))
+                .filter(task -> "issue".equals(task.getType()))
                 .map(GanttTaskDto::getOriginalEvent)
                 .collect(Collectors.toList());
         List<GanttLinkDto> links = ganttData.getCollections().getLinks();
@@ -144,7 +144,7 @@ public class PlanningService {
         Map<EventDto, Integer> issueDuration =
             ganttEvents
                 .stream()
-                .filter(task -> !"group".equals(task.getType()))
+                .filter(task -> "issue".equals(task.getType()))
                 .collect(Collectors.toMap(
                     GanttTaskDto::getOriginalEvent,
                     event -> {
