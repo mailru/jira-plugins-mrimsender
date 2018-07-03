@@ -130,7 +130,7 @@ class ScheduleDialogInternal extends React.Component<Props, State> {
 
         return (
             <Modal
-                heading={`${i18n['ru.mail.jira.plugins.calendar.gantt.schedule.title']} ${task.entityId}`}
+                heading={`${i18n['ru.mail.jira.plugins.calendar.gantt.schedule.title']} ${task.entityId ? task.entityId : ''}`}
                 scrollBehavior="outside"
 
                 actions={actions}

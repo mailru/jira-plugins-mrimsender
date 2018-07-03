@@ -135,6 +135,8 @@ export function bindEvents(gantt: DhtmlxGantt) {
         onRowDragEnd: (dragId) => {
             const task = gantt.getTask(dragId);
             const dropTarget = task.$drop_target;
+            if(!task.entityId)
+                return;
             const rankUpdateData:{issues: Array<string>, rankAfterIssue?: string, rankBeforeIssue?: string} = {issues: [task.entityId]};
             if(dropTarget) {
                 if (dropTarget.startsWith('next:')) {

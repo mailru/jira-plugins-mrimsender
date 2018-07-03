@@ -5,7 +5,8 @@ export type IdType = string | number;
 export type GanttEventType = (
     'onLoadStart' | 'onLoadEnd' | 'onAfterTaskAdd' | 'onAfterTaskUpdate' | 'onAfterTaskDelete' | 'onAfterLinkAdd' |
     'onAfterLinkUpdate' | 'onAfterLinkDelete' | 'onBeforeTaskDrag' | 'onBeforeLinkDelete' | 'onParse' |
-    'onBeforeTaskDisplay' | 'onBeforeParse' | 'onTaskDblClick' | 'onBeforeTaskAutoSchedule' | 'onBeforeRowDragEnd' | 'onRowDragEnd'
+    'onBeforeTaskDisplay' | 'onBeforeParse' | 'onTaskDblClick' | 'onBeforeTaskAutoSchedule' |
+    'onBeforeTaskMove' | 'onBeforeRowDragEnd' | 'onRowDragEnd'
 );
 
 export type ShortcutScope = 'gantt' | 'taskRow' | 'taskCell' | 'headerCell';
@@ -30,6 +31,7 @@ type GanttGenericTask = GanttTaskInternalState & {
     end_date?: ?Date,
     duration?: ?number,
     id: IdType,
+    entityId?: string,
     summary: string,
     unscheduled?: ?boolean,
     parent?: ?IdType,
@@ -38,7 +40,6 @@ type GanttGenericTask = GanttTaskInternalState & {
 
 export type GanttIssueTask = GanttGenericTask & {
     type: 'issue',
-    entityId: string,
     progress?: number,
     overdueSeconds?: number,
     resizable?: boolean,
