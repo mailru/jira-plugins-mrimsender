@@ -136,7 +136,7 @@ public class PlanningService {
             double maxSequence = priorityManager.getPriorities().stream().mapToLong(Priority::getSequence).max().orElse(1) + 1;
 
             for (EventDto event : events) {
-                priorities.put(event, (maxSequence - event.getIssueInfo().getPrioritySequence()) / maxSequence);
+                priorities.put(event, event.getIssueInfo().getPrioritySequence() / maxSequence);
             }
         }
 
