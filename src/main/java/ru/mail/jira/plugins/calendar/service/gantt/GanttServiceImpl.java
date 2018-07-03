@@ -545,7 +545,7 @@ public class GanttServiceImpl implements GanttService {
                 int durationDays = DateUtil.countWorkDays(
                     event.getStartDate().toInstant().atZone(zoneId).toLocalDate(),
                     event.getEndDate().toInstant().atZone(zoneId).toLocalDate(),
-                    workingDays, nonWorkingDays
+                    workingDays, nonWorkingDays, false
                 );
 
                 WorkingTimeDto workingTime = workingDaysService.getWorkingTime();

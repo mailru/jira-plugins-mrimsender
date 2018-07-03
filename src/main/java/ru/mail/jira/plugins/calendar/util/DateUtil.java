@@ -121,9 +121,13 @@ public final class DateUtil {
     }
 
     //todo: more precise calculation with time
-    public static int countWorkDays(LocalDate start, LocalDate end, List<Integer> workingDays, Set<java.time.LocalDate> nonWorkingDays) {
+    public static int countWorkDays(LocalDate start, LocalDate end, List<Integer> workingDays, Set<java.time.LocalDate> nonWorkingDays, boolean throwOnInvalid) {
         if (start.isAfter(end) || start.isEqual(end)) {
-            throw new RuntimeException("end is after today");
+            if (throwOnInvalid) {
+                throw new RuntimeException("end is after today");
+            } else {
+                return 0;
+            }
         }
 
         int i = 0;

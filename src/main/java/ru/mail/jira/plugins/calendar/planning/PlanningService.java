@@ -170,7 +170,7 @@ public class PlanningService {
                 ImmutableMap.of(), //todo
                 dependencies,
                 priorities,
-                DateUtil.countWorkDays(LocalDate.now(), LocalDate.parse(deadline), workingDays, nonWorkingDays),
+                DateUtil.countWorkDays(LocalDate.now(), LocalDate.parse(deadline), workingDays, nonWorkingDays, true),
                 workingHours
         );
 
