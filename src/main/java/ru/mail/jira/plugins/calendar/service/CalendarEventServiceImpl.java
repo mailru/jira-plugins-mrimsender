@@ -185,7 +185,6 @@ public class CalendarEventServiceImpl implements CalendarEventService {
 
         return buildEvent(
             calendar,
-            null,
             user,
             issueService.getIssue(user, issueKey).getIssue(),
             startField,
@@ -205,11 +204,18 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         final ApplicationUser user,
         boolean includeIssueInfo
     ) throws ParseException, SearchException, GetException {
-        return findEvents(calendarId, groupBy, start, end, user, null, EventBuilderOptions.builder().includeIssueInfo(includeIssueInfo).build());
+        return findEvents(
+            calendarId, start, end, user, null,
+            EventBuilderOptions
+                .builder()
+                .includeIssueInfo(includeIssueInfo)
+                .groupBy(groupBy)
+                .build()
+        );
     }
 
     private List<EventDto> findEvents(
-        final int calendarId, String groupBy,
+        final int calendarId,
         final String start,
         final String end,
         final ApplicationUser user,
@@ -236,13 +242,13 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         Date utcEnd = utcFormat.parse(end);
 
         if (source.startsWith("project_"))
-            result = getProjectEvents(calendarModel, groupBy, Long.parseLong(source.substring("project_".length())),
+            result = getProjectEvents(calendarModel, Long.parseLong(source.substring("project_".length())),
                                       calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, order, options);
         else if (source.startsWith("filter_"))
-            result = getFilterEvents(calendarModel, groupBy, Long.parseLong(source.substring("filter_".length())),
+            result = getFilterEvents(calendarModel, Long.parseLong(source.substring("filter_".length())),
                                      calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, order, options);
         else if (source.startsWith("jql_"))
-            result = getJqlEvents(calendarModel, groupBy, StringUtils.substringAfter(source, "jql_"),
+            result = getJqlEvents(calendarModel, StringUtils.substringAfter(source, "jql_"),
                                   calendarModel.getEventStart(), calendarModel.getEventEnd(), parsedStart, parsedEnd, user, order, options);
         else {
             result = new ArrayList<>();
@@ -261,13 +267,13 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         return getEventInfo(calendar, issue, user);
     }
 
-    private List<EventDto> getProjectEvents(Calendar calendar, String groupBy, long projectId,
+    private List<EventDto> getProjectEvents(Calendar calendar, long projectId,
                                             String startField, String endField,
                                             Date startTime, Date endTime,
                                             ApplicationUser user, Order order, EventBuilderOptions options) throws SearchException {
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder();
         jqlBuilder.project(projectId);
-        return getEvents(calendar, groupBy, jqlBuilder, startField, endField, startTime, endTime, user, order, options);
+        return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user, order, options);
     }
 
     private Clause getSelectedQuickFilterClause(Calendar calendar, ApplicationUser user) {
@@ -292,7 +298,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     }
 
     private List<EventDto> getFilterEvents(
-        Calendar calendar, String groupBy,
+        Calendar calendar,
         long filterId,
         String startField,
         String endField,
@@ -316,7 +322,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         }
 
         JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder(filter.getQuery());
-        return getEvents(calendar, groupBy, jqlBuilder, startField, endField, startTime, endTime, user, order, options);
+        return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user, order, options);
     }
 
     private JqlClauseBuilder getCalendarQueryBuilder(ApplicationUser user, Calendar calendar) {
@@ -355,7 +361,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     }
 
     private List<EventDto> getJqlEvents(
-        Calendar calendar, String groupBy,
+        Calendar calendar,
         String jql,
         String startField,
         String endField,
@@ -378,7 +384,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
 
         if (parseResult.isValid()) {
             JqlClauseBuilder jqlBuilder = JqlQueryBuilder.newClauseBuilder(parseResult.getQuery());
-            return getEvents(calendar, groupBy, jqlBuilder, startField, endField, startTime, endTime, user, order, options);
+            return getEvents(calendar, jqlBuilder, startField, endField, startTime, endTime, user, order, options);
         } else {
             log.error("JQL is invalid => {}", jql);
             return new ArrayList<>(0);
@@ -412,7 +418,6 @@ public class CalendarEventServiceImpl implements CalendarEventService {
                 .stream()
                 .map(issue -> buildEventWithGroups(
                         calendar,
-                        groupBy,
                         user,
                         issue,
                         startField,
@@ -422,6 +427,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
                         EventBuilderOptions
                             .builder()
                             .fields(fields)
+                            .groupBy(groupBy)
                             .includeIssueInfo(true)
                             .ignoreMissingStart(true)
                             .forGantt(true)
@@ -443,7 +449,6 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     ) throws SearchException {
         return getEvents(
             calendar,
-            groupBy,
             JqlQueryBuilder.newBuilder(getUnboundedEventsQuery(user, calendar, null, order, true, false)).where(),
             calendar.getEventStart(),
             calendar.getEventEnd(),
@@ -451,7 +456,14 @@ public class CalendarEventServiceImpl implements CalendarEventService {
             endTime,
             user,
             null,
-            EventBuilderOptions.builder().includeIssueInfo(true).ignoreMissingStart(true).fields(fields).forGantt(true).build()
+            EventBuilderOptions
+                .builder()
+                .includeIssueInfo(true)
+                .ignoreMissingStart(true)
+                .fields(fields)
+                .forGantt(true)
+                .groupBy(groupBy)
+                .build()
         ).stream();
     }
 
@@ -530,7 +542,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     }
 
     private List<EventDto> getEvents(
-        Calendar calendar, String groupBy,
+        Calendar calendar,
         JqlClauseBuilder jqlBuilder,
         String startField,
         String endField,
@@ -583,7 +595,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         for (Issue issue : issues) {
             try {
                 //todo: ignoreMissingStart=false
-                buildEventWithGroups(calendar, groupBy, user, issue, startField, startCF, endField, endCF, options).ifPresent(result::add);
+                buildEventWithGroups(calendar, user, issue, startField, startCF, endField, endCF, options).ifPresent(result::add);
             } catch (Exception e) {
                 log.error(String.format("Error while trying to translate issue => %s to event", issue.getKey()), e);
             }
@@ -621,12 +633,14 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     }
 
     private Optional<EventDto> buildEventWithGroups(
-            Calendar calendar, String groupBy, ApplicationUser user, Issue issue,
+            Calendar calendar, ApplicationUser user, Issue issue,
             String startField, CustomField startCF, String endField, CustomField endCF, EventBuilderOptions options
     ) {
         if (calendar == null || issue == null) {
             return Optional.empty();
         }
+
+        String groupBy = options.getGroupBy();
 
         List<EventGroup> groups = null;
         if ("component".equals(groupBy)) {
@@ -791,7 +805,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
             }
         }
         Optional<EventDto> event = Optional.of(buildEvent(
-            calendar, groupBy, user, issue, startField, startCF, endField, endCF, groups, options
+            calendar, user, issue, startField, startCF, endField, endCF, groups, options
         ));
 
         event.ifPresent(eventDto -> fillExtraFields(eventDto.getIssueInfo(), options.getFields(), issue));
@@ -800,7 +814,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     }
 
     private EventDto buildEvent(
-        Calendar calendar, String groupBy, ApplicationUser user, Issue issue,
+        Calendar calendar, ApplicationUser user, Issue issue,
         String startField, CustomField startCF, String endField, CustomField endCF, List<EventGroup> groups,
         EventBuilderOptions options
     ) {
@@ -845,7 +859,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
  		event.setAssignee(issue.getAssignee() != null ? userUtils.buildUserDto(issue.getAssignee(), Avatar.Size.SMALL) : null);
 
         if (groups != null) {
-            event.setGroupField(groupBy);
+            event.setGroupField(options.getGroupBy());
             event.setGroups(groups);
         }
 
@@ -1137,7 +1151,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
 
         EventDto event = buildEvent(
-            calendar, null, user, issueService.getIssue(user, eventId).getIssue(),
+            calendar, user, issueService.getIssue(user, eventId).getIssue(),
             calendar.getEventStart(), eventStartCF, calendar.getEventEnd(), eventEndCF, ImmutableList.of(),
             EventBuilderOptions.builder().forGantt(forGantt).ignoreMissingStart(true).includeIssueInfo(true).build()
         );

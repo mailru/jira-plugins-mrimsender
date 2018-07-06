@@ -7,6 +7,7 @@ import java.util.List;
 @Getter @Builder @AllArgsConstructor(access = AccessLevel.PRIVATE) @NoArgsConstructor
 public class EventBuilderOptions {
     private List<String> fields = null;
+    private String groupBy = null;
     private boolean includeIssueInfo = false;
     private boolean ignoreMissingStart = false;
     private boolean forGantt = false;
