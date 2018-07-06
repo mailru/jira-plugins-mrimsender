@@ -126,7 +126,7 @@ export function addLayers(gantt: DhtmlxGantt) {
                 }
             }
             return el;
-        } else if (task.type === 'issue' && !task.$open && gantt.hasChild(task.id) && !task.unscheduled) {
+        } else if (task.type === 'issue' && !task.$open && gantt.hasChild(task.id)) {
             const el = document.createElement('div');
             const sizes = gantt.getTaskPosition(task);
 
