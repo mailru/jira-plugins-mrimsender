@@ -203,9 +203,9 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         final String start,
         final String end,
         final ApplicationUser user,
-        boolean forGantt
+        boolean includeIssueInfo
     ) throws ParseException, SearchException, GetException {
-        return findEvents(calendarId, groupBy, start, end, user, null, EventBuilderOptions.builder().forGantt(forGantt).build());
+        return findEvents(calendarId, groupBy, start, end, user, null, EventBuilderOptions.builder().includeIssueInfo(includeIssueInfo).build());
     }
 
     private List<EventDto> findEvents(

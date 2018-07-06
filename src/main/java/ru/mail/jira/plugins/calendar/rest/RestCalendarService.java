@@ -275,7 +275,7 @@ public class RestCalendarService {
                             startSearch.toString("yyyy-MM-dd"),
                             endSearch.toString("yyyy-MM-dd"),
                             userManager.getUserByKey(userData.getUserKey()),
-                            false
+                            true
                         );
 
                         for (EventDto event : events) {

@@ -26,7 +26,7 @@ public interface CalendarEventService {
         String start,
         String end,
         ApplicationUser user,
-        boolean forGantt
+        boolean includeIssueInfo
     ) throws ParseException, SearchException, GetException;
 
     IssueInfo getEventInfo(ApplicationUser user, int calendarId, String eventId) throws GetException;
