@@ -31,7 +31,7 @@ import {defaultColumns} from './columns';
 import {OptionsActionCreators} from '../../service/gantt.reducer';
 import {getPluginBaseUrl} from '../../common/ajs-helpers';
 import {calendarService, preferenceService, storeService} from '../../service/services';
-import {buildColumns, configure} from './config';
+import {buildColumns, configure, addLayers} from './config';
 import {attachPopover} from './popover';
 import {updateScales} from './scales';
 import {getRowsForView} from './views';
@@ -81,6 +81,11 @@ export class GanttComponent extends React.PureComponent<Props> {
 
             resourcesStore.parse(gantt.serverList('resources'));
         });
+
+        gantt.attachEvent('onGanttReady', () => {
+            addLayers(gantt);
+            return false;
+        })
     }
 
     componentDidMount() {

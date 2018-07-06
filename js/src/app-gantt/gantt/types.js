@@ -6,7 +6,7 @@ export type GanttEventType = (
     'onLoadStart' | 'onLoadEnd' | 'onAfterTaskAdd' | 'onAfterTaskUpdate' | 'onAfterTaskDelete' | 'onAfterLinkAdd' |
     'onAfterLinkUpdate' | 'onAfterLinkDelete' | 'onBeforeTaskDrag' | 'onBeforeLinkDelete' | 'onParse' |
     'onBeforeTaskDisplay' | 'onBeforeParse' | 'onTaskDblClick' | 'onBeforeTaskAutoSchedule' |
-    'onBeforeTaskMove' | 'onBeforeRowDragEnd' | 'onRowDragEnd'
+    'onBeforeTaskMove' | 'onBeforeRowDragEnd' | 'onRowDragEnd' | 'onGanttReady'
 );
 
 export type ShortcutScope = 'gantt' | 'taskRow' | 'taskCell' | 'headerCell';
