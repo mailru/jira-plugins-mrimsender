@@ -469,7 +469,7 @@ public class GanttServiceImpl implements GanttService {
         result.setId(task.getId() + "-" + milestone.getFieldId());
         result.setType("milestone");
         result.setLinkable(task.isLinkable());
-        result.setUnscheduled(task.getUnscheduled());
+        result.setUnscheduled(false);
 
         return result;
     }
