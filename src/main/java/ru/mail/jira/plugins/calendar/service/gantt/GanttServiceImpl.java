@@ -44,10 +44,7 @@ import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttTeamDto;
 import ru.mail.jira.plugins.calendar.rest.dto.gantt.GanttUserDto;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanForm;
 import ru.mail.jira.plugins.calendar.rest.dto.plan.GanttPlanItem;
-import ru.mail.jira.plugins.calendar.service.CalendarEventService;
-import ru.mail.jira.plugins.calendar.service.CalendarService;
-import ru.mail.jira.plugins.calendar.service.PermissionService;
-import ru.mail.jira.plugins.calendar.service.UserCalendarService;
+import ru.mail.jira.plugins.calendar.service.*;
 import ru.mail.jira.plugins.calendar.util.DateUtil;
 
 import java.text.ParseException;
@@ -133,11 +130,14 @@ public class GanttServiceImpl implements GanttService {
 
         Stream<EventDto> eventDtoStream;
         if (params.isIncludeUnscheduled()) {
-            eventDtoStream = calendarEventService.getUnboundedEvents(calendar, params.getGroupBy(), user, true, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan());
+            eventDtoStream = calendarEventService.getGanttUnboundedEvents(
+                calendar, params.getGroupBy(), user, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan()
+            );
         } else {
-            eventDtoStream = calendarEventService.getEventsWithDuration(
-                calendar, params.getGroupBy(), user, true, params.getOrder(), params.getFields(),
-                dateFormat.parse(startDate), dateFormat.parse(endDate)
+            eventDtoStream = calendarEventService.getGanttEventsWithDuration(
+                calendar, params.getGroupBy(), user, params.getOrder(),
+                dateFormat.parse(startDate), dateFormat.parse(endDate),
+                params.getFields()
             );
         }
 
@@ -152,8 +152,8 @@ public class GanttServiceImpl implements GanttService {
             throw new SecurityException("No permission");
         }
 
-        Stream<EventDto> events = calendarEventService.getUnboundedEvents(
-            calendar, params.getGroupBy(), user, true, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan()
+        Stream<EventDto> events = calendarEventService.getGanttUnboundedEvents(
+            calendar, params.getGroupBy(), user, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan()
         );
         return getGantt(events, user, calendarId, params.getGroupBy());
     }
@@ -361,14 +361,15 @@ public class GanttServiceImpl implements GanttService {
                 item.getTaskId(),
                 item.getStartDate(),
                 null,
-                item.getDuration() != null ? item.getDuration() + "m" : null
+                item.getDuration() != null ? item.getDuration() + "m" : null,
+                true
             );
         }
     }
 
     @Override
     public GanttTaskDto setEstimate(ApplicationUser user, int calendarId, String issueKey, GanttEstimateForm form, List<String> fields) throws Exception {
-        return buildEvent(calendarEventService.moveEvent(user, calendarId, issueKey, form.getStart(), null, form.getEstimate(), fields), user, null);
+        return buildEvent(calendarEventService.moveEvent(user, calendarId, issueKey, form.getStart(), null, form.getEstimate(), fields, true), user, null);
     }
 
     @Override
@@ -427,7 +428,8 @@ public class GanttServiceImpl implements GanttService {
             startDate,
             null,
             duration != null ? duration + "m" : null,
-            fields
+            fields,
+            true
         );
 
         result.add(buildEvent(event, user, null));

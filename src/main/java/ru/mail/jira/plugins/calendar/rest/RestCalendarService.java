@@ -26,15 +26,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.rest.dto.SingleValueDto;
 import ru.mail.jira.plugins.calendar.common.Consts;
+import ru.mail.jira.plugins.calendar.service.*;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarSettingDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
-import ru.mail.jira.plugins.calendar.service.CalendarEventService;
-import ru.mail.jira.plugins.calendar.service.CalendarService;
-import ru.mail.jira.plugins.calendar.service.JiraDeprecatedService;
-import ru.mail.jira.plugins.calendar.service.UserDataService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.*;
@@ -273,11 +270,13 @@ public class RestCalendarService {
                     LocalDate endSearch = LocalDate.now().plusMonths(1);
 
                     for (String calendarId : calendarIds) {
-                        List<EventDto> events = calendarEventService.findEvents(Integer.parseInt(calendarId), null,
-                                                                             startSearch.toString("yyyy-MM-dd"),
-                                                                             endSearch.toString("yyyy-MM-dd"),
-                                                                             userManager.getUserByKey(userData.getUserKey()),
-                                                                             true, null, null);
+                        List<EventDto> events = calendarEventService.findEvents(
+                            Integer.parseInt(calendarId), null,
+                            startSearch.toString("yyyy-MM-dd"),
+                            endSearch.toString("yyyy-MM-dd"),
+                            userManager.getUserByKey(userData.getUserKey()),
+                            false
+                        );
 
                         for (EventDto event : events) {
                             Date start;

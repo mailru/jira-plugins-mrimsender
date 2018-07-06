@@ -84,7 +84,7 @@ public class RestCalendarEventService {
         try {
             if (log.isDebugEnabled())
                 log.debug("getEvents with params. calendarId={}, start={}, end={}", calendarId, start, end);
-            List<EventDto> result = calendarEventService.findEvents(calendarId, StringUtils.trimToNull(groupBy), start, end, jiraAuthenticationContext.getUser());
+            List<EventDto> result = calendarEventService.findEvents(calendarId, StringUtils.trimToNull(groupBy), start, end, jiraAuthenticationContext.getLoggedInUser(), false);
             CacheControl cacheControl = new CacheControl();
             cacheControl.setNoCache(true);
             cacheControl.setNoStore(true);
@@ -107,7 +107,7 @@ public class RestCalendarEventService {
             protected EventDto doAction() throws Exception {
                 licenseService.checkLicense();
                 ApplicationUser user = jiraAuthenticationContext.getUser();
-                return calendarEventService.moveEvent(user, calendarId, eventId, StringUtils.trimToNull(start), StringUtils.trimToNull(end));
+                return calendarEventService.moveEvent(user, calendarId, eventId, StringUtils.trimToNull(start), StringUtils.trimToNull(end), false);
             }
         }.getResponse();
     }
