@@ -279,7 +279,7 @@ class GanttTeamInternal extends React.Component {
                             rows={this._getUsersRows(team)}
                             rowsPerPage={10}
                             defaultPage={1}
-                            emptyView={<div>${i18n['ru.mail.jira.plugins.calendar.teams.noUsers']}</div>}
+                            emptyView={<div>{i18n['ru.mail.jira.plugins.calendar.teams.noUsers']}</div>}
                             loadingSpinnerSize="large"
                             isLoading={false}
                             isFixedSize
