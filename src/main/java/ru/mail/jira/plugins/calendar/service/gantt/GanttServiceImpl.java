@@ -301,6 +301,18 @@ public class GanttServiceImpl implements GanttService {
             throw new SecurityException("No permission");
         }
 
+        if (ao.count(
+            GanttLink.class,
+            Query
+                .select()
+                .where(
+                    "CALENDAR_ID = ? AND SOURCE = ? AND TARGET = ? AND TYPE = ?",
+                    calendarId, form.getSource(), form.getTarget(), form.getType()
+                )
+        ) > 0) {
+            throw new IllegalArgumentException("Duplicate link");
+        }
+
         GanttLink ganttLink = ao.create(GanttLink.class);
         ganttLink.setCalendarId(calendarId);
         ganttLink.setSource(form.getSource());

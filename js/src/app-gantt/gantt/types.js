@@ -184,6 +184,11 @@ type Position = {
     width: number
 }
 
+type GanttMessage = {
+    type: 'error' | 'info' | 'warning',
+    text: string
+}
+
 //todo: update when datastore will be documented
 interface DatastoreType {
     parse($ReadOnlyArray<any>): void,
@@ -222,6 +227,8 @@ export interface DhtmlxGantt {
 
     addTaskLayer((task: GanttTask) => (HTMLElement | false)): void,
 
+    message(string | GanttMessage): void,
+
     //scale
     getScale(): ScaleConfig,
 
@@ -249,6 +256,7 @@ export interface DhtmlxGantt {
     getLink(id: IdType): GanttLink;
     changeLinkId(id: IdType, new_id: IdType): void,
     refreshLink(id: IdType): void,
+    deleteLink(id: IdType): void,
 
     //open/close
     close(id: IdType): void,

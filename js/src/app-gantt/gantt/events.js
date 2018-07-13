@@ -63,13 +63,22 @@ export function bindEvents(gantt: DhtmlxGantt) {
                     gantt.changeLinkId(id, link.id);
                     Object.assign(gantt.getLink(link.id), link);
                     gantt.refreshLink(link.id);
-                });
+                })
+                .catch(e => {
+                    console.error('unable to create link', e);
+                    gantt.deleteLink(id);
+                    if (e.response && e.response.responseText) {
+                        gantt.message({type: 'error', text: e.response.responseText});
+                    }
+                })
         },
         onAfterLinkUpdate: (id, link) => {
             console.log('todo: link update', id, link);
         },
-        onAfterLinkDelete: (id) => {
-            ganttService.deleteLink(storeService.getCalendar().id, id);
+        onAfterLinkDelete: (id, item) => {
+            if (item.entityId !== null && item.entityId !== undefined) {
+                ganttService.deleteLink(storeService.getCalendar().id, id);
+            }
         },
         onBeforeTaskDrag: (id, mode) => {
             const task = gantt.getTask(id);
