@@ -10,6 +10,7 @@ import i18n from 'i18n';
 
 import DropdownMenu, {DropdownItemGroupCheckbox, DropdownItemCheckbox} from '@atlaskit/dropdown-menu';
 import Badge from '@atlaskit/badge';
+import {defaultProps as defaultButtonProps} from '@atlaskit/button';
 
 import FilterIcon from '@atlaskit/icon/glyph/filter';
 
@@ -50,6 +51,7 @@ class QuickFiltersInternal extends React.PureComponent<Props> {
                 trigger={i18n['ru.mail.jira.plugins.calendar.gantt.filters']}
                 triggerType="button"
                 triggerButtonProps={{
+                    ...defaultButtonProps,
                     iconBefore: <FilterIcon label="filter"/>,
                     iconAfter: <Badge appearance={selectedFilters > 0 ? 'primary' : 'default'} value={selectedFilters}/>,
                     isDisabled: quickFilters.length === 0

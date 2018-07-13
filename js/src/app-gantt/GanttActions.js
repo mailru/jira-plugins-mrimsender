@@ -11,7 +11,7 @@ import AJS from 'AJS';
 import i18n from 'i18n';
 
 import {FieldTextStateless} from '@atlaskit/field-text';
-import Button, {ButtonGroup} from '@atlaskit/button';
+import Button, {ButtonGroup, defaultProps as defaultButtonProps} from '@atlaskit/button';
 import InlineDialog from '@atlaskit/inline-dialog';
 import DropdownMenu, { DropdownItemGroupRadio, DropdownItemRadio } from '@atlaskit/dropdown-menu';
 import Spinner from '@atlaskit/spinner';
@@ -57,7 +57,7 @@ type Props = {
     options: OptionsType,
     calendar: CurrentCalendarType,
     sprints: $ReadOnlyArray<SprintType>,
-    updateOptions: (options: $Shape<OptionsType>) => void,
+    updateOptions: typeof OptionsActionCreators.updateOptions,
     navigate: typeof CalendarActionCreators.navigate
 };
 
@@ -417,7 +417,10 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                 <DropdownMenu
                                     trigger={i18n['ru.mail.jira.plugins.calendar.gantt.actions.view']}
                                     triggerType="button"
-                                    triggerButtonProps={{iconBefore: <ListIcon label=""/>}}
+                                    triggerButtonProps={{
+                                        ...defaultButtonProps,
+                                        iconBefore: <ListIcon label=""/>
+                                    }}
                                     shouldFlip={false}
                                     position="bottom right"
                                     boundariesElement="window"
@@ -444,6 +447,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                 trigger={<span className="calendar-title">{calendar ? calendar.name : i18n['ru.mail.jira.plugins.calendar.gantt.actions.chooseSource']}</span>}
                                 triggerType="button"
                                 triggerButtonProps={{
+                                    ...defaultButtonProps,
                                     appearance: 'subtle',
                                     iconAfter: <ChevronDownIcon label=""/>
                                 }}
@@ -471,6 +475,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                     trigger={<span className="calendar-title">{(currentSprint && currentSprint.name) || 'Спринт'}</span>}
                                     triggerType="button"
                                     triggerButtonProps={{
+                                        ...defaultButtonProps,
                                         appearance: 'subtle',
                                         iconAfter: <ChevronDownIcon label=""/>
                                     }}

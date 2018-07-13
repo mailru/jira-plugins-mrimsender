@@ -1,16 +1,16 @@
 // @flow
-import React from 'react';
+import React, { type ElementProps } from 'react';
 
 import Lozenge from '@atlaskit/lozenge';
-import type { Appearances } from '@atlaskit/lozenge/dist/cjs/Lozenge/index';
-import { APPEARANCE_ENUM } from '@atlaskit/lozenge/dist/cjs/Lozenge/index';
 
 type Props = {
     state?: string,
 };
 
+type Appearances = $PropertyType<ElementProps<typeof Lozenge>, 'appearance'>;
+
 export const SprintState = ({ state }: Props) => {
-    let appearance: Appearances = APPEARANCE_ENUM.defaultValue;
+    let appearance: ?Appearances;
 
     switch (state) {
         case 'FUTURE':
@@ -23,7 +23,9 @@ export const SprintState = ({ state }: Props) => {
             appearance = 'default';
             break;
         default:
-            appearance = APPEARANCE_ENUM.defaultValue;
+            appearance = undefined; //default appearance is specified in defaultProps in Lozenge
+            break;
     }
+
     return <Lozenge appearance={appearance}>{state}</Lozenge>;
 };

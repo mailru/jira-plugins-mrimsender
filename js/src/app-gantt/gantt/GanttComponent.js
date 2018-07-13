@@ -135,6 +135,11 @@ export class GanttComponent extends React.PureComponent<Props> {
 
         gantt.config.order_branch = this.props.options.isOrderedByRank;
 
+        if (!this.ganttElRef.current) {
+            console.error("ganttElRef is not set");
+            return;
+        }
+
         gantt.init(this.ganttElRef.current);
         this.gantt = gantt;
 
@@ -235,6 +240,11 @@ export class GanttComponent extends React.PureComponent<Props> {
         }
 
         if (init) {
+            if (!this.ganttElRef.current) {
+                console.error("ganttElRef is not set");
+                return;
+            }
+
             gantt.init(this.ganttElRef.current);
             return;
         }

@@ -97,7 +97,7 @@ export const emptyColumn = {
     template: () => ''
 };
 
-export const defaultColumns = Object
+export const defaultColumns: $ReadOnlyArray<ColumnParams> = Object
     .keys(ganttColumns)
     .map(key => {
         return {

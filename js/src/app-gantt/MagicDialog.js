@@ -68,7 +68,7 @@ function formatSprintLabel({ boardName, state, label }: { boardName: string, sta
 
 type Props = {
     onClose: () => void,
-    updateOptions: ({ liveData: bool }) => void,
+    updateOptions: typeof OptionsActionCreators.updateOptions,
     gantt: any,// todo
     sprints: Array<{ id: string, name: string }>,
     groupBy: { value: string } | null,

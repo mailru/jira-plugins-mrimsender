@@ -23,7 +23,7 @@ const groupKeys = [
     'epicLink'
 ];
 
-export const groupOptions = groupKeys.map(key => ({
+export const groupOptions: $ReadOnlyArray<{value:string, label: string}> = groupKeys.map(key => ({
     value: key,
     label: i18n[`ru.mail.jira.plugins.calendar.group.${key}`]
 }));

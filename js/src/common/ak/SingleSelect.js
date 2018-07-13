@@ -14,7 +14,7 @@ type Props = {
     isLabelHidden?: bool,
     value?: SelectOption | null,
     onChange?: (SelectOption, {}) => void,
-    options: Array<SelectOption>
+    options: $ReadOnlyArray<SelectOption>
 };
 
 export class SingleSelect extends React.Component<Props> {

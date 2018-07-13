@@ -9,7 +9,8 @@ import memoize from 'lodash.memoize';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import i18n from 'i18n';
 
-import Avatar, { AvatarItem, AvatarGroup }  from '@atlaskit/avatar';
+import Avatar, { AvatarItem }  from '@atlaskit/avatar';
+import AvatarGroup from '@atlaskit/avatar-group';
 import Button, {ButtonGroup} from '@atlaskit/button';
 import Dropdown, { DropdownItemGroup, DropdownItem } from '@atlaskit/dropdown-menu';
 import DynamicTable from '@atlaskit/dynamic-table';

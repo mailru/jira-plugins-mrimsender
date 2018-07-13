@@ -146,9 +146,10 @@ export const scaleConfigs: $ReadOnlyArray<ScaleConfigGenerator> = [
     }
 ];
 
-export const keyedConfigs = scaleConfigs
+export const keyedConfigs: $ReadOnlyArray<{key: string, i: number}> = scaleConfigs
     .map((config, i) => {
         return {
+            //$FlowFixMe
             key: config.key,
             i
         };

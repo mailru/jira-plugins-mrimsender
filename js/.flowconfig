@@ -3,6 +3,11 @@
 .*/node_modules/stylelint/.*
 .*/node_modules/babel-flow-types/.*
 .*/node_modules/babel-normalize-comments/.*
+
+[untyped]
+#todo: remove when select flow issues are resolved in atlaskit
+.*/node_modules/react-select
+
 [include]
 
 [libs]
