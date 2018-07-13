@@ -90,8 +90,10 @@ class ScheduleDialogInternal extends React.Component<Props, State> {
 
         if (unscheduled) {
             this.state = {
-                startDate: '',
-                startTime: '',
+                // eslint-disable-next-line camelcase
+                startDate: start_date ? startMoment.format('YYYY-MM-DD') : '',
+                // eslint-disable-next-line camelcase
+                startTime: start_date ? startMoment.format('HH:mm') : '',
                 estimate: estimate || '',
                 error: null
             };
