@@ -57,7 +57,7 @@ export class GanttComponent extends React.PureComponent<Props> {
     _attachListeners(gantt: DhtmlxGantt) {
         gantt.attachEvent(
             'onBeforeTaskDisplay',
-            id => (this.filter && this.filter.length) ? matchesFilter(gantt, id, this.props.options.filter || '') : true
+            id => (this.props.options.filter && this.props.options.filter.length) ? matchesFilter(gantt, id, this.props.options.filter || '') : true
         );
 
         const resourcesStore = gantt.createDatastore({
