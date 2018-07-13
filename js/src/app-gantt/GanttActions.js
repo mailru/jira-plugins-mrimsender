@@ -405,6 +405,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                 <InlineDialog
                                     position="bottom right"
                                     isOpen={activeDialog === 'dates'}
+                                    onClose={this._toggleDialog('dates')}
                                     content={(activeDialog === 'dates') && <DatesDialog gantt={gantt} onClose={this._toggleDialog('dates')}/>}
                                 >
                                     <Button
@@ -532,6 +533,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                             <InlineDialog
                                 position="bottom right"
                                 isOpen={activeDialog === 'params'}
+                                onClose={this._toggleDialog('params')}
                                 content={(activeDialog === 'params') && <OptionsDialog gantt={gantt} onClose={this._toggleDialog('params')}/>}
                             >
                                 <Tooltip content={i18n['ru.mail.jira.plugins.calendar.gantt.actions.parameters']}>
@@ -565,7 +567,6 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                     />
                                 </Tooltip>
                             </InlineDialog>
-                            {/*$FlowFixMe*/}
                             <QuickFilters/>
                         </ButtonGroup>
                     </div>
