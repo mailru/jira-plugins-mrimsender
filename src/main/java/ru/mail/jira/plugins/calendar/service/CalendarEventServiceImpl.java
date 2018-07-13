@@ -868,19 +868,23 @@ public class CalendarEventServiceImpl implements CalendarEventService {
             return null;
         }
 
-        if (!options.isForGantt() && startDate != null && endDate != null) {
+        if (startDate != null && endDate != null) {
             if ((!DUE_DATE_KEY.equals(endField) && !(endCF != null && endCF.getCustomFieldType() instanceof DateCFType)) && startDate.after(endDate) || startDate.after(new Date(endDate.getTime() + MILLIS_IN_DAY))) {
-                Date tmpDate = startDate;
-                String tmpField = startField;
-                CustomField tmpCF = startCF;
-                startDate = endDate;
-                startField = endField;
-                startCF = endCF;
-                endDate = tmpDate;
-                endField = tmpField;
-                endCF = tmpCF;
-                event.setDatesError(true);
-                dateFieldsIsDraggable = false;
+                if (!options.isForGantt()) {
+                    Date tmpDate = startDate;
+                    String tmpField = startField;
+                    CustomField tmpCF = startCF;
+                    startDate = endDate;
+                    startField = endField;
+                    startCF = endCF;
+                    endDate = tmpDate;
+                    endField = tmpField;
+                    endCF = tmpCF;
+                    event.setDatesError(true);
+                    dateFieldsIsDraggable = false;
+                } else {
+                    endDate = null;
+                }
             }
         }
 
