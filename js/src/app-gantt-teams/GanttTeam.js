@@ -114,7 +114,7 @@ class GanttTeamInternal extends React.Component {
             cells: [
                 {
                     key: 'name',
-                    content: i18n['ru.mail.jira.plugins.calendar.teams.fields.name'],
+                    content: i18n['ru.mail.jira.plugins.calendar.gantt.columns.userName'],
                     isSortable: true,
                 },
                 {

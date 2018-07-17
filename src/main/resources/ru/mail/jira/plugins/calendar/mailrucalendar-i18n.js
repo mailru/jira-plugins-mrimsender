@@ -341,6 +341,7 @@ define('mailrucalendar-i18n', function() {
 		'ru.mail.jira.plugins.calendar.gantt.actions.parameters': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.actions.parameters'),
 		'ru.mail.jira.plugins.calendar.gantt.actions.search': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.actions.search'),
 		'ru.mail.jira.plugins.calendar.gantt.columns.name': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.columns.name'),
+		'ru.mail.jira.plugins.calendar.gantt.columns.userName': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.columns.userName'),
 		'ru.mail.jira.plugins.calendar.gantt.columns.progress': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.columns.progress'),
 		'ru.mail.jira.plugins.calendar.gantt.columns.workload': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.columns.workload'),
 		'ru.mail.jira.plugins.calendar.gantt.rankBy.priority': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.rankBy.priority'),
