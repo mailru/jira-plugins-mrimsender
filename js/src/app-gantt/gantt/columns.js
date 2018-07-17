@@ -2,8 +2,10 @@
 //eslint-disable-next-line import/no-extraneous-dependencies
 import i18n from 'i18n';
 
-import {escapeHtml, getBaseUrl, getContextPath} from '../../common/ajs-helpers';
 import type {GanttGridColumn, GanttTask} from './types';
+
+import {escapeHtml, getBaseUrl, getContextPath} from '../../common/ajs-helpers';
+import {PreferenceService} from '../../service/PreferenceService';
 
 export type ColumnParams = {
     key: string,
@@ -27,6 +29,7 @@ export function buildJiraFieldColumn({key, name, colParams}: ColumnParams, resiz
         align: 'left',
         isJiraField: true,
         resize: resizable,
+        width: PreferenceService.get(`${PreferenceService.getPropertyPrefix()}column.${key}.width`),
         template: (item) => {
             if (item.fields) {
                 return item.fields[key] || '';
@@ -71,6 +74,7 @@ export const ganttColumns = {
     },
     progress: {
         name: 'progress',
+        resize: false,
         label: i18n['ru.mail.jira.plugins.calendar.gantt.columns.progress'],
         width: '80px',
         template: (item: GanttTask) => {

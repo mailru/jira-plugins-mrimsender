@@ -13,6 +13,14 @@ import {ganttService, preferenceService, storeService} from '../../service/servi
 
 
 export function bindEvents(gantt: DhtmlxGantt) {
+    function saveColumnWidths() {
+        for (const col of gantt.config.columns) {
+            if (col.name !== 'summary' && col.name !== 'progress') {
+                preferenceService.put(`${preferenceService.getPropertyPrefix()}column.${col.name}.width`, col.width);
+            }
+        }
+    }
+
     const eventListeners = {
         onLoadStart: () => {
             JIRA.Loading.showLoadingIndicator();
@@ -26,6 +34,11 @@ export function bindEvents(gantt: DhtmlxGantt) {
         },
         onGridResizeEnd: (_, width) => {
             preferenceService.put(`${preferenceService.getPropertyPrefix()}gridWidth`, width);
+            saveColumnWidths();
+            return true;
+        },
+        onColumnResizeEnd: () => {
+            saveColumnWidths();
             return true;
         },
         onAfterTaskAdd: (id, task) => {

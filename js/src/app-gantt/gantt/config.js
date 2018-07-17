@@ -6,19 +6,23 @@ import {buildJiraFieldColumn, ganttColumns, defaultColumns} from './columns';
 import type {DhtmlxGantt, GanttTask} from './types';
 import type {ColumnParams} from './columns';
 import {preferenceService} from '../../service/services';
+import {PreferenceService} from '../../service/PreferenceService';
 
 export const DEFAULT_MIN_COLUMN_WIDTH = 70;
 
 export function buildColumns(names: $ReadOnlyArray<ColumnParams>) {
     const lastId = names.length - 1;
 
-    return names
+    const res = names
         .map((column, i) => {
             if (column.key) {
                 const builtInColumn = ganttColumns[column.key];
 
                 if (builtInColumn) {
-                    return {...builtInColumn};
+                    return {
+                        ...builtInColumn,
+                        width: PreferenceService.get(`${PreferenceService.getPropertyPrefix()}column.${builtInColumn.name}.width`) || builtInColumn.width || undefined
+                    };
                 }
             }
 
@@ -30,6 +34,10 @@ export function buildColumns(names: $ReadOnlyArray<ColumnParams>) {
             return null;
         })
         .filter(Boolean);
+
+    console.log(res.map(it => it.width));
+
+    return res;
 }
 
 export function calculateDuration(startWorkingDay: Date, endWorkingDay: Date, taskStart: Date, taskEnd: Date) {
@@ -264,7 +272,9 @@ export function configure(gantt: DhtmlxGantt) {
         columns: buildColumns(defaultColumns),
         task_height: 20,
         row_height: 34,
-        grid_width: preferenceService.get(`${preferenceService.getPropertyPrefix()}gridWidth`) || 600,
+
+        keep_grid_width: true,
+        grid_width: preferenceService.get(`${preferenceService.getPropertyPrefix()}gridWidth`) || 600
     };
 
 

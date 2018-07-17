@@ -78,7 +78,7 @@ export function getRowsForView(gantt: DhtmlxGantt, view: $Keys<views>): $ReadOnl
                         id: 'grid',
                         group: 'grids',
                         scrollX: 'scrollHor',
-                        scrollY: 'scrollVer'
+                        scrollY: 'scrollVer',
                     },
                     {
                         resizer: true,
