@@ -533,7 +533,7 @@ public class GanttServiceImpl implements GanttService {
         Long timeSpent = event.getTimeSpentSeconds();
 
         if (eventStart != null) {
-            if (originalEstimate != null) {
+            if (originalEstimate != null && originalEstimate > 0) {
                 ganttTaskDto.setDuration(TimeUnit.SECONDS.toMinutes(originalEstimate));
 
                 if (timeSpent != null) {
