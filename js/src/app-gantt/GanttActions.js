@@ -11,7 +11,7 @@ import AJS from 'AJS';
 import i18n from 'i18n';
 
 import {FieldTextStateless} from '@atlaskit/field-text';
-import Button, {ButtonGroup, defaultProps as defaultButtonProps} from '@atlaskit/button';
+import Button, {ButtonGroup} from '@atlaskit/button';
 import InlineDialog from '@atlaskit/inline-dialog';
 import DropdownMenu, { DropdownItemGroupRadio, DropdownItemRadio } from '@atlaskit/dropdown-menu';
 import Spinner from '@atlaskit/spinner';
@@ -409,6 +409,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                     content={(activeDialog === 'dates') && <DatesDialog gantt={gantt} onClose={this._toggleDialog('dates')}/>}
                                 >
                                     <Button
+                                        isSelected={activeDialog === 'dates'}
                                         iconBefore={<CalendarIcon/>}
                                         onClick={this._toggleDialog('dates')}
                                     >
@@ -418,10 +419,8 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                 <DropdownMenu
                                     trigger={i18n['ru.mail.jira.plugins.calendar.gantt.actions.view']}
                                     triggerType="button"
-                                    triggerButtonProps={{
-                                        ...defaultButtonProps,
-                                        iconBefore: <ListIcon label=""/>
-                                    }}
+                                    //$FlowFixMe
+                                    triggerButtonProps={{ iconBefore: <ListIcon label=""/> }}
                                     shouldFlip={false}
                                     position="bottom right"
                                     boundariesElement="window"
@@ -447,12 +446,8 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                             <DropdownMenu
                                 trigger={<span className="calendar-title">{calendar ? calendar.name : i18n['ru.mail.jira.plugins.calendar.gantt.actions.chooseSource']}</span>}
                                 triggerType="button"
-                                triggerButtonProps={{
-                                    ...defaultButtonProps,
-                                    appearance: 'subtle',
-                                    iconAfter: <ChevronDownIcon label=""/>
-                                }}
-
+                                //$FlowFixMe
+                                triggerButtonProps={{ appearance: 'subtle', iconAfter: <ChevronDownIcon label=""/> }}
                                 isLoading={!calendars}
                             >
                                 {calendars ?
@@ -475,11 +470,8 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                 <DropdownMenu
                                     trigger={<span className="calendar-title">{(currentSprint && currentSprint.name) || 'Спринт'}</span>}
                                     triggerType="button"
-                                    triggerButtonProps={{
-                                        ...defaultButtonProps,
-                                        appearance: 'subtle',
-                                        iconAfter: <ChevronDownIcon label=""/>
-                                    }}
+                                    //$FlowFixMe
+                                    triggerButtonProps={{ appearance: 'subtle', iconAfter: <ChevronDownIcon label=""/> }}
                                 >
                                     <DropdownItemGroupRadio id="gantt-sprint">
                                         <DropdownItemRadio
@@ -540,6 +532,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                     <Button
                                         appearance="subtle"
                                         iconBefore={<PreferencesIcon label=""/>}
+                                        isSelected={activeDialog === 'params'}
                                         onClick={this._toggleDialog('params')}
                                     />
                                 </Tooltip>
@@ -563,6 +556,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                                     <Button
                                         appearance="subtle"
                                         iconBefore={<SearchIcon label=""/>}
+                                        isSelected={activeDialog === 'filter'}
                                         onClick={this._toggleDialog('filter')}
                                     />
                                 </Tooltip>
