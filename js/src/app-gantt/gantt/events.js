@@ -9,7 +9,7 @@ import JIRA from 'JIRA';
 import { updateTask } from './util';
 import type { DhtmlxGantt } from './types';
 
-import { ganttService, storeService } from '../../service/services';
+import {ganttService, preferenceService, storeService} from '../../service/services';
 
 
 export function bindEvents(gantt: DhtmlxGantt) {
@@ -23,6 +23,10 @@ export function bindEvents(gantt: DhtmlxGantt) {
             AJS.undim();
             // eslint-disable-next-line no-param-reassign
             gantt.config.show_task_cells = gantt.getTaskCount() < 100;
+        },
+        onGridResizeEnd: (_, width) => {
+            preferenceService.put(`${preferenceService.getPropertyPrefix()}gridWidth`, width);
+            return true;
         },
         onAfterTaskAdd: (id, task) => {
             console.log('task add', id, task);

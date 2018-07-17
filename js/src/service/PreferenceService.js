@@ -13,6 +13,10 @@ export const properties = {
 };
 
 export class PreferenceService {
+    static getPropertyPrefix() {
+        return prefix;
+    }
+
     static get(key) {
         const item = localStorage.getItem(key);
         return item ? JSON.parse(item) : null;

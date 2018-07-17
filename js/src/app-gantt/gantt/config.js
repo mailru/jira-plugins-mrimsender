@@ -5,6 +5,7 @@ import moment from 'moment';
 import {buildJiraFieldColumn, ganttColumns, defaultColumns} from './columns';
 import type {DhtmlxGantt, GanttTask} from './types';
 import type {ColumnParams} from './columns';
+import {preferenceService} from '../../service/services';
 
 export const DEFAULT_MIN_COLUMN_WIDTH = 70;
 
@@ -264,7 +265,7 @@ export function configure(gantt: DhtmlxGantt) {
         columns: buildColumns(defaultColumns),
         task_height: 20,
         row_height: 34,
-        grid_width: 600,
+        grid_width: preferenceService.get(`${preferenceService.getPropertyPrefix()}gridWidth`) || 600,
     };
 
 
