@@ -171,7 +171,6 @@ export function configure(gantt: DhtmlxGantt) {
     };
 
     const config = {
-        showGrid: true,
         work_time: true,
         //skip_off_time: true,
         fit_tasks: true,

@@ -6,7 +6,7 @@ export type GanttEventType = (
     'onLoadStart' | 'onLoadEnd' | 'onAfterTaskAdd' | 'onAfterTaskUpdate' | 'onAfterTaskDelete' | 'onAfterLinkAdd' |
     'onAfterLinkUpdate' | 'onAfterLinkDelete' | 'onBeforeTaskDrag' | 'onBeforeLinkDelete' | 'onParse' |
     'onBeforeTaskDisplay' | 'onBeforeParse' | 'onTaskDblClick' | 'onBeforeTaskAutoSchedule' |
-    'onBeforeTaskMove' | 'onBeforeRowDragEnd' | 'onRowDragEnd' | 'onGanttReady' | 'onGridResizeEnd'
+    'onBeforeTaskMove' | 'onBeforeRowDragEnd' | 'onRowDragEnd' | 'onGanttReady' | 'onGridResizeEnd' | 'onColumnResizeEnd'
 );
 
 export type ShortcutScope = 'gantt' | 'taskRow' | 'taskCell' | 'headerCell';
@@ -69,6 +69,7 @@ type CalculationConfig = {
 export type GanttGridColumn = {
     isJiraField?: boolean,
     name: string,
+    resize?: boolean,
     width?: string
 };
 
@@ -112,7 +113,7 @@ export type Layout = {
     rows: $ReadOnlyArray<LayoutRow>
 }
 
-type GanttConfig = {
+type GanttConfig = {|
     layout: Layout,
 
     min_column_width: number,
@@ -139,7 +140,39 @@ type GanttConfig = {
     task_attribute: string, //??
 
     order_branch: boolean,
-};
+
+    auto_scheduling?: boolean,
+    auto_scheduling_initial?: boolean,
+    auto_scheduling_strict?: boolean,
+
+    details_on_dblclick?: boolean,
+
+    duration_step?: number,
+    min_duration?: number,
+    duration_unit?: DurationUnit,
+
+    fit_tasks?: boolean,
+
+    keyboard_navigation?: boolean,
+
+    open_tree_initially?: boolean,
+
+    row_height?: number,
+    task_height?: number,
+
+    show_grid?: boolean,
+    show_progress?: boolean,
+    show_unscheduled?: boolean,
+
+    smart_rendering?: boolean,
+    smart_scales?: boolean,
+    static_background?: boolean,
+
+    work_time?: boolean,
+
+    grid_width?: number,
+    keep_grid_width?: boolean
+|};
 
 type GanttTemplates = {
     xml_format(Date): string,
