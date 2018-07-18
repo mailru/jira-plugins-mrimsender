@@ -1119,6 +1119,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         DateTimeFormatter dateTimePickerFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.DATE_TIME_PICKER);
 
         IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
+        issueInputParams.setSkipScreenCheck(true);
 
         if (start != null && isDateFieldResizable(calendar.getEventStart(), eventStartCF)) {
             Date startDate = dateTimeFormat.parse(start);
@@ -1147,12 +1148,14 @@ public class CalendarEventServiceImpl implements CalendarEventService {
         }
 
         IssueService.UpdateValidationResult updateValidationResult = issueService.validateUpdate(user, issue.getId(), issueInputParams);
-        if (!updateValidationResult.isValid())
+        if (!updateValidationResult.isValid()) {
             throw new Exception(CommonUtils.formatErrorCollection(updateValidationResult.getErrorCollection()));
+        }
 
         IssueService.IssueResult updateResult = issueService.update(user, updateValidationResult);
-        if (!updateResult.isValid())
+        if (!updateResult.isValid()) {
             throw new Exception(CommonUtils.formatErrorCollection(updateResult.getErrorCollection()));
+        }
 
         EventDto event = buildEvent(
             calendar, user, issueService.getIssue(user, eventId).getIssue(),
