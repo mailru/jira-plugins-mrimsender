@@ -199,7 +199,11 @@ public class GanttServiceImpl implements GanttService {
 
                     if ("ganttTeam".equals(groupBy)) {
                         if (eventDto.getAssignee() != null) {
-                            eventDto.setGroups(ImmutableList.of(userTeams.get(eventDto.getAssignee().getKey())));
+                            EventGroup group = userTeams.get(eventDto.getAssignee().getKey());
+
+                            if (group != null) {
+                                eventDto.setGroups(ImmutableList.of(group));
+                            }
                         }
                     }
 
