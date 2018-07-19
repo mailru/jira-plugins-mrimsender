@@ -126,6 +126,7 @@ define('mailrucalendar-i18n', function() {
 		'ru.mail.jira.plugins.calendar.addSharedCalendars': AJS.I18n.getText('ru.mail.jira.plugins.calendar.addSharedCalendars'),
 		'ru.mail.jira.plugins.calendar.groupBy': AJS.I18n.getText('ru.mail.jira.plugins.calendar.groupBy'),
 		'ru.mail.jira.plugins.calendar.goToGantt': AJS.I18n.getText('ru.mail.jira.plugins.calendar.goToGantt'),
+		'ru.mail.jira.plugins.calendar.group.ganttTeam': AJS.I18n.getText('ru.mail.jira.plugins.calendar.group.ganttTeam'),
 		'ru.mail.jira.plugins.calendar.addCustomEvent': AJS.I18n.getText('ru.mail.jira.plugins.calendar.addCustomEvent'),
 		'ru.mail.jira.plugins.calendar.createEvent': AJS.I18n.getText('ru.mail.jira.plugins.calendar.createEvent'),
 		'ru.mail.jira.plugins.calendar.editEvent': AJS.I18n.getText('ru.mail.jira.plugins.calendar.editEvent'),

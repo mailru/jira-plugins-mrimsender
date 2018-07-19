@@ -20,7 +20,8 @@ const groupKeys = [
     'fixVersion',
     'affectsVersion',
     'labels',
-    'epicLink'
+    'epicLink',
+    'ganttTeam'
 ];
 
 export const groupOptions: $ReadOnlyArray<{value:string, label: string}> = groupKeys.map(key => ({

@@ -53,14 +53,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -163,10 +156,13 @@ public class GanttServiceImpl implements GanttService {
         Set<String> resourceKeys = new HashSet<>();
         List<GanttTaskDto> events = new ArrayList<>();
         Set<EventGroup> groups = new HashSet<>();
+        Map<String, EventGroup> userTeams = new HashMap<>();
 
         resources.add(new GanttResourceDto("-1", "Другие", null)); // Other team
         resources.add(new GanttResourceDto("null", "Не назначен", "-1")); // Unassigned
-        for (GanttTeamDto teamDto : ganttTeamService.getTeams(user, calendarId)) {
+        List<GanttTeamDto> teams = ganttTeamService.getTeams(user, calendarId);
+
+        for (GanttTeamDto teamDto : teams) {
             resources.add(new GanttResourceDto(String.valueOf(teamDto.getId()), teamDto.getName(), null));
             for (GanttUserDto userDto : teamDto.getUsers()) {
                 resourceKeys.add(userDto.getKey());
@@ -174,13 +170,24 @@ public class GanttServiceImpl implements GanttService {
             }
         }
 
+        if ("ganttTeam".equals(groupBy)) {
+            for (GanttTeamDto team : teams) {
+                EventGroup eventGroup = EventGroup
+                    .builder()
+                    .id("gantt_team/" + team.getId())
+                    .name(team.getName())
+                    .build();
+
+                for (GanttUserDto teamUser : team.getUsers()) {
+                    userTeams.put(teamUser.getKey(), eventGroup);
+                }
+            }
+        }
+
         boolean shouldAppendGroupToId = MULTI_GROUP_TYPES.contains(groupBy);
 
         eventDtoStream
                 .peek(eventDto -> {
-                    if (eventDto.getGroups() != null)
-                        groups.addAll(eventDto.getGroups());
-
                     String resource = eventDto.getAssignee() != null ? eventDto.getAssignee().getKey() : "null";
                     if(!resourceKeys.contains(resource)) {
                         ApplicationUser resourceUser = userManager.getUserByKey(resource);
@@ -188,6 +195,16 @@ public class GanttServiceImpl implements GanttService {
                             resourceKeys.add(resourceUser.getKey());
                             resources.add(new GanttResourceDto(resourceUser.getKey(), resourceUser.getDisplayName(), "-1"));
                         }
+                    }
+
+                    if ("ganttTeam".equals(groupBy)) {
+                        if (eventDto.getAssignee() != null) {
+                            eventDto.setGroups(ImmutableList.of(userTeams.get(eventDto.getAssignee().getKey())));
+                        }
+                    }
+
+                    if (eventDto.getGroups() != null) {
+                        groups.addAll(eventDto.getGroups());
                     }
                 })
                 .filter(e -> e.getType() == EventDto.Type.ISSUE)
