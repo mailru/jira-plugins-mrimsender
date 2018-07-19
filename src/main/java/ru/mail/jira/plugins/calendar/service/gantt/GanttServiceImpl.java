@@ -588,6 +588,7 @@ public class GanttServiceImpl implements GanttService {
         GanttTaskDto result = new GanttTaskDto();
 
         result.setId(group.getId());
+        result.setEntityId(group.getEntityId());
         result.setText(group.getName());
         result.setSummary(group.getName());
         result.setIconSrc(group.getAvatar());

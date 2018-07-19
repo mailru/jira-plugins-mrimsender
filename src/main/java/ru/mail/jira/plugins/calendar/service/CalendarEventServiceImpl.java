@@ -766,20 +766,24 @@ public class CalendarEventServiceImpl implements CalendarEventService {
 
                 if (epicLink != null) {
                     groups = ImmutableList.of(
-                            EventGroup
-                                    .builder()
-                                    .id("epic/" + epicLink.getKey())
-                                    .name(issue.getKey() + " - " + epicLink.getSummary())
-                                    .build()
+                        EventGroup
+                            .builder()
+                            .id("epic/" + epicLink.getKey())
+                            .entityId(epicLink.getKey())
+                            .name(epicLink.getSummary())
+                            .avatar(epicLink.getIssueType().getCompleteIconUrl())
+                            .build()
                     );
                 } else {
                     if (jiraSoftwareHelper.getEpicIssueType().equals(issue.getIssueType())) {
                         groups = ImmutableList.of(
-                                EventGroup
-                                        .builder()
-                                        .id("epic/" + issue.getKey())
-                                        .name(issue.getKey() + " - " + issue.getSummary())
-                                        .build()
+                            EventGroup
+                                .builder()
+                                .id("epic/" + issue.getKey())
+                                .entityId(issue.getKey())
+                                .name(issue.getSummary())
+                                .avatar(issue.getIssueType().getCompleteIconUrl())
+                                .build()
                         );
                     }
                 }

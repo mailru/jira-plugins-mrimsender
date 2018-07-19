@@ -48,9 +48,9 @@ export const ganttColumns = {
         label: 'Код',
         align: 'left',
         template: (item: GanttTask) => {
-            if (item.type === 'issue') {
+            if (item.entityId) {
                 const id = escapeHtml(item.entityId);
-                return `<a href="${getBaseUrl()}/browse/${id}" ${item.resolved ? 'style="text-decoration: line-through;"' : ''}>${id}</a>`;
+                return `<a href="${getBaseUrl()}/browse/${id}" ${(item.type === 'issue' && item.resolved) ? 'style="text-decoration: line-through;"' : ''}>${id}</a>`;
             }
             return '';
         }

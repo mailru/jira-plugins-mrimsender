@@ -15,6 +15,8 @@ public class EventGroup {
     @XmlElement
     private String id;
     @XmlElement
+    private String entityId;
+    @XmlElement
     private String name;
     @XmlElement
     private String avatar;
