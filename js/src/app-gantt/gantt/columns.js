@@ -62,14 +62,17 @@ export const ganttColumns = {
         width: '*',
         align: 'left',
         template: (item: GanttTask) => {
+            const escapedSummary = escapeHtml(item.summary);
+            const summary = `<span title="${escapedSummary}" class="gantt-with-tooltip">${escapedSummary}</span>`;
+
             if (!item.icon_src) {
-                return escapeHtml(item.summary);
+                return summary;
             }
 
             return `<img
                 class="calendar-event-issue-type"
                 alt="" height="16" width="16" style="margin-right: 5px;"
-                src="${item.type === 'group' ? item.icon_src : getIconSrc(item.icon_src)}"/> ${escapeHtml(item.summary)}`
+                src="${item.type === 'group' ? item.icon_src : getIconSrc(item.icon_src)}"/> ${summary}`
         }
     },
     progress: {

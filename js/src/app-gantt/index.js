@@ -20,7 +20,7 @@ import './gantt.less';
 AJS.toInit(() => {
     collectTopMailCounterScript();
 
-    AJS.$('.gantt-with-tooltip').tooltip({live: true})
+    AJS.$('.gantt-with-tooltip').tooltip({live: true});
 
     ReactDOM.render(
         <Provider store={storeService.store}>
