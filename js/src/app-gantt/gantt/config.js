@@ -10,11 +10,15 @@ import {PreferenceService} from '../../service/PreferenceService';
 
 export const DEFAULT_MIN_COLUMN_WIDTH = 70;
 
-export function buildColumns(names: $ReadOnlyArray<ColumnParams>) {
+export function buildColumns(names: $ReadOnlyArray<ColumnParams>, hideProgress: boolean) {
     const lastId = names.length - 1;
 
     const res = names
         .map((column, i) => {
+            if (hideProgress && column.key === 'progress') {
+                return null;
+            }
+
             if (column.key) {
                 const builtInColumn = ganttColumns[column.key];
 
@@ -269,7 +273,7 @@ export function configure(gantt: DhtmlxGantt) {
             }
         },
 
-        columns: buildColumns(defaultColumns),
+        columns: buildColumns(defaultColumns, false),
         task_height: 20,
         row_height: 34,
 

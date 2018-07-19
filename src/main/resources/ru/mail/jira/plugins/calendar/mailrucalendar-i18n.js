@@ -354,6 +354,7 @@ define('mailrucalendar-i18n', function() {
 		'ru.mail.jira.plugins.calendar.gantt.params.sprint': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.params.sprint'),
 		'ru.mail.jira.plugins.calendar.gantt.params.deadline': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.params.deadline'),
 		'ru.mail.jira.plugins.calendar.gantt.params.showUnestimated': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.params.showUnestimated'),
+		'ru.mail.jira.plugins.calendar.gantt.params.hideProgress': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.params.hideProgress'),
 		'ru.mail.jira.plugins.calendar.gantt.schedule.title': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.schedule.title'),
 		'ru.mail.jira.plugins.calendar.gantt.schedule.estimate': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.schedule.estimate'),
 		'ru.mail.jira.plugins.calendar.gantt.schedule.estimatePlaceholder': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gantt.schedule.estimatePlaceholder'),

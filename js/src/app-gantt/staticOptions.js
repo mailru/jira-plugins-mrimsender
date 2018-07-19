@@ -40,6 +40,7 @@ export const defaultOptions: OptionsType = {
     sprint: undefined,
     order: true,
     withUnscheduled: false,
+    hideProgress: false,
     view: views.basic.key,
     columns: [
         {

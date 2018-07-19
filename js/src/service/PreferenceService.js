@@ -9,7 +9,8 @@ export const properties = {
     isOrderedByRank: `${prefix}isOrderedByRank`,
     order: `${prefix}order`,
     columns: `${prefix}columns`,
-    withUnscheduled: `${prefix}withUnscheduled`
+    withUnscheduled: `${prefix}withUnscheduled`,
+    hideProgress: `${prefix}hideProgress`
 };
 
 export class PreferenceService {

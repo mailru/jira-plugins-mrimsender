@@ -7,7 +7,7 @@ import {connect} from 'react-redux';
 import i18n from 'i18n';
 
 import Button, {ButtonGroup} from '@atlaskit/button';
-import {CheckboxStateless} from '@atlaskit/checkbox';
+import {CheckboxStateless, CheckboxGroup} from '@atlaskit/checkbox';
 
 import ArrowDownIcon from '@atlaskit/icon/glyph/arrow-down';
 import ArrowUpIcon from '@atlaskit/icon/glyph/arrow-up';
@@ -62,6 +62,8 @@ class OptionsDialogInternal extends React.Component {
     _toggleOrder = () => this._updateOptions({ order: !this.state.options.order });
 
     _toggleUnscheduled = () => this._updateOptions({ withUnscheduled: !this.state.options.withUnscheduled });
+
+    _toggleProgress = () => this._updateOptions({ hideProgress: !this.state.options.hideProgress });
 
     _saveOptions = () => {
         const {onClose, updateOptions} = this.props;
@@ -147,11 +149,18 @@ class OptionsDialogInternal extends React.Component {
                     onChange={this._setFields}
                 />
                 <div className="ak-field-margin">
-                    <CheckboxStateless
-                        label={i18n['ru.mail.jira.plugins.calendar.gantt.params.showUnestimated']}
-                        isChecked={options.withUnscheduled}
-                        onChange={this._toggleUnscheduled}
-                    />
+                    <CheckboxGroup>
+                        <CheckboxStateless
+                            label={i18n['ru.mail.jira.plugins.calendar.gantt.params.hideProgress']}
+                            isChecked={options.hideProgress}
+                            onChange={this._toggleProgress}
+                        />
+                        <CheckboxStateless
+                            label={i18n['ru.mail.jira.plugins.calendar.gantt.params.showUnestimated']}
+                            isChecked={options.withUnscheduled}
+                            onChange={this._toggleUnscheduled}
+                        />
+                    </CheckboxGroup>
                 </div>
                 <div className="ak-field-margin">
                     <ButtonGroup>

@@ -46,7 +46,7 @@ type Props = {
     isLoading: boolean
 }
 
-const urlParams = ['startDate', 'endDate', 'groupBy', 'orderBy', 'order', 'columns', 'sprint', 'withUnscheduled'];
+const urlParams = ['startDate', 'endDate', 'groupBy', 'orderBy', 'order', 'columns', 'sprint', 'withUnscheduled', 'hideProgress'];
 
 export class GanttComponent extends React.PureComponent<Props> {
     //$FlowFixMe
@@ -158,7 +158,7 @@ export class GanttComponent extends React.PureComponent<Props> {
                 //text: 'Today'
             });
 
-            gantt.config.columns = buildColumns([...defaultColumns, ...(options.columns || [])]);
+            gantt.config.columns = buildColumns([...defaultColumns, ...(options.columns || [])], options.hideProgress);
             //no need to re-render here, gantt chart will be updated after data is parsed
 
             const {startDate, endDate, order, groupBy, orderBy, sprint, withUnscheduled} = options;

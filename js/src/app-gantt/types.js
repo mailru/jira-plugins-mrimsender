@@ -44,7 +44,8 @@ export type PersistentOptions = {
     columns: $ReadOnlyArray<ColumnParams>,
     filter: ?string,
     sprint: ?number,
-    withUnscheduled: boolean
+    withUnscheduled: boolean,
+    hideProgress: boolean
 }
 
 export type OptionsType = PersistentOptions & {
