@@ -84,7 +84,6 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
 
     componentDidMount() {
         this._attachEvents();
-        this._fetchCalendars();
     }
 
     componentDidUpdate(prevProps) {
@@ -259,9 +258,6 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                 calendars: filteredCalendars,
                 errors: filteredCalendars.length ? [] : [i18n['ru.mail.jira.plugins.calendar.gantt.error.noCalendars']]
             });
-            if (!this.props.calendar && filteredCalendars.length) {
-                this._navigate(filteredCalendars[0].id)();
-            }
         });
 
     _onCalendarListOpen = () => {
@@ -446,6 +442,7 @@ class GanttActionsInternal extends React.PureComponent<Props, State> {
                             <DropdownMenu
                                 trigger={<span className="calendar-title">{calendar ? calendar.name : i18n['ru.mail.jira.plugins.calendar.gantt.actions.chooseSource']}</span>}
                                 triggerType="button"
+                                onOpenChange={this._onCalendarListOpen}
                                 //$FlowFixMe
                                 triggerButtonProps={{ appearance: 'subtle', iconAfter: <ChevronDownIcon label=""/> }}
                                 isLoading={!calendars}

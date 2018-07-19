@@ -122,6 +122,8 @@ export const calendarRouteThunk = (dispatch: Dispatch, getState: *) => {
     const id = calendarId ? parseInt(calendarId, 10) : -1;
     const sprint = parseInt(sprintId, 10) || null;
 
+    let navigateToFirstAvailable = false;
+
     if (!Number.isNaN(id)) {
         if (getState().calendar && id === getState().calendar.id) {
             dispatch(OptionsActionCreators.updateOptions({ sprint }));
@@ -133,7 +135,7 @@ export const calendarRouteThunk = (dispatch: Dispatch, getState: *) => {
             if (lastGantt) {
                 dispatch(CalendarActionCreators.navigate(lastGantt))
             } else {
-                dispatch(CalendarActionCreators.setCalendar(null, [], null));
+                navigateToFirstAvailable = true;
             }
         } else {
             dispatch({ type: 'FETCH_CALENDAR' });
@@ -143,9 +145,37 @@ export const calendarRouteThunk = (dispatch: Dispatch, getState: *) => {
                     ([calendar, sprints, errors]) => dispatch(CalendarActionCreators.setCalendar(
                         {...calendar, errors, id}, sprints, sprint
                     ))
-                );
+                )
+                .catch(e => {
+                    console.error(e);
+                    if (e && e.response && e.response.responseText) {
+                        alert(e.response.responseText);
+                    }
+                    dispatch(CalendarActionCreators.setCalendar(null, [], null));
+                })
         }
     } else {
-        dispatch(CalendarActionCreators.setCalendar(null, [], null));
+        navigateToFirstAvailable = true;
+    }
+
+    if (navigateToFirstAvailable) {
+        calendarService
+            .getUserCalendars()
+            .then(calendars => {
+                const ganttCalendars = calendars.filter(cal => cal.ganttEnabled);
+
+                if (ganttCalendars.length > 0) {
+                    dispatch(CalendarActionCreators.navigate(ganttCalendars[0].id));
+                } else {
+                    dispatch(CalendarActionCreators.setCalendar(null, [], null));
+                }
+            })
+            .catch(e => {
+                console.error(e);
+                if (e && e.response && e.response.responseText) {
+                    alert(e.response.responseText);
+                }
+                dispatch(CalendarActionCreators.setCalendar(null, [], null));
+            })
     }
 };
