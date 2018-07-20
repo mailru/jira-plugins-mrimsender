@@ -12,3 +12,6 @@ export const jiraService = JiraService;
 export const preferenceService = PreferenceService;
 
 export const storeService = new StoreService();
+
+
+storeService.store.subscribe(preferenceService.handleStateChange);

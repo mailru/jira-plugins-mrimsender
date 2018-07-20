@@ -1,13 +1,12 @@
 //@flow
-import {type Dispatch} from "redux";
-import {defaultOptions} from '../app-gantt/staticOptions';
-import type {CurrentCalendarType, OptionsType, SprintType} from '../app-gantt/types';
-import {calendarService, ganttService, preferenceService} from './services';
+import { type Dispatch } from 'redux';
+import type { CurrentCalendarType, OptionsType, SprintType } from '../app-gantt/types';
+import { defaultOptions } from '../app-gantt/staticOptions';
+import { calendarService, ganttService, preferenceService } from './services';
 
 
 const UPDATE_OPTIONS = 'UPDATE_OPTIONS';
 const SET_CALENDAR = 'SET_CALENDAR';
-const UPDATE_ALL = 'UPDATE_ALL';
 const SELECT_FILTER = 'SELECT_FILTER';
 const FETCH_CALENDAR = 'FETCH_CALENDAR';
 
@@ -45,16 +44,18 @@ export function optionsReducer(state: OptionsType, action: *) {
         return defaultOptions;
     }
 
-    if (action.type === UPDATE_OPTIONS || action.type === UPDATE_ALL) {
-        return {
+    if (action.type === UPDATE_OPTIONS) {
+        const newState = {
             ...state,
             ...action.options
         };
+        return newState;
     }
 
     if (action.type === SET_CALENDAR) {
         return {
             ...state,
+            ...preferenceService.getOptions(action.calendar.id) || defaultOptions,
             sprint: action.sprint
         };
     }
@@ -67,7 +68,7 @@ export function calendarReducer(state: ?CurrentCalendarType, action: *) {
         return null;
     }
 
-    if (action.type === SET_CALENDAR || action.type === UPDATE_ALL) {
+    if (action.type === SET_CALENDAR) {
         return action.calendar;
     }
 

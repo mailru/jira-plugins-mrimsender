@@ -1,21 +1,25 @@
 /* eslint-disable flowtype/require-valid-file-annotation */
-const prefix = 'ru.mail.jira.gantt.';
+import { preferenceService, storeService } from './services';
 
-export const properties = {
-    startDate: `${prefix}startDate`,
-    endDate: `${prefix}endDate`,
-    groupBy: `${prefix}groupBy`,
-    orderBy: `${prefix}orderBy`,
-    isOrderedByRank: `${prefix}isOrderedByRank`,
-    order: `${prefix}order`,
-    columns: `${prefix}columns`,
-    withUnscheduled: `${prefix}withUnscheduled`,
-    hideProgress: `${prefix}hideProgress`
-};
+const OPTIONS_KEY_PREFIX = 'ru.mail.jira.gantt.options';
+const properties = [
+    'startDate',
+    'endDate',
+    'groupBy',
+    'orderBy',
+    'isOrderedByRank',
+    'order',
+    'columns',
+    'withUnscheduled',
+    'hideProgress',
+];
 
 export class PreferenceService {
+    static currentOptions;
+    static currentCalendarId;
+
     static getPropertyPrefix() {
-        return prefix;
+        return 'ru.mail.jira.gantt.';
     }
 
     static get(key) {
@@ -35,28 +39,34 @@ export class PreferenceService {
         localStorage.removeItem(key);
     }
 
-    static getOptions() {
-        const result = {};
-
-        for (const key of Object.keys(properties)) {
-            const value = PreferenceService.get(properties[key]);
-
-            if (value !== null && value !== undefined) {
-                result[key] = value;
-            }
-        }
-
-        return result;
+    static getOptions(calendarId) {
+        return PreferenceService.get(`${OPTIONS_KEY_PREFIX}.${calendarId || PreferenceService.get('ru.mail.jira.gantt.lastGantt')}`);
     }
 
     static saveOptions(options) {
-        for (const key of Object.keys(properties)) {
-            const storeKey = properties[key];
-            if (storeKey) {
-                PreferenceService.put(storeKey, options[key]);
-            } else {
-                console.warn('unknwon store key', storeKey);
-            }
+        const calendarId = PreferenceService.get('ru.mail.jira.gantt.lastGantt');
+        if (!calendarId)
+            return;
+        const updateOptions = PreferenceService.getOptions(calendarId) || {};
+        for (const key of Object.keys(options)) {
+            if (properties.includes(key))
+                updateOptions[key] = options[key];
+        }
+
+        PreferenceService.put(`${OPTIONS_KEY_PREFIX}.${calendarId}`, updateOptions);
+    }
+
+    static handleStateChange() {
+        const previousValue = PreferenceService.currentOptions;
+        PreferenceService.currentOptions = storeService.store.getState().options;
+        if (PreferenceService.currentOptions && (!previousValue || properties.some((key) => previousValue[key] !== PreferenceService.currentOptions[key]))) {
+            PreferenceService.saveOptions(PreferenceService.currentOptions);
+        }
+
+        const previousId = PreferenceService.currentCalendarId;
+        PreferenceService.currentCalendarId = storeService.store.getState().calendar.id;
+        if(!previousId || previousId !== PreferenceService.currentCalendarId) {
+            preferenceService.put('ru.mail.jira.gantt.lastGantt', PreferenceService.currentCalendarId);
         }
     }
 }

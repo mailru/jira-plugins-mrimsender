@@ -30,7 +30,7 @@ import {matchesFilter} from './util';
 import {defaultColumns} from './columns';
 import {OptionsActionCreators} from '../../service/gantt.reducer';
 import {getPluginBaseUrl} from '../../common/ajs-helpers';
-import {calendarService, preferenceService, storeService} from '../../service/services';
+import {calendarService, storeService} from '../../service/services';
 import {buildColumns, configure, addLayers} from './config';
 import {attachPopover} from './popover';
 import {updateScales} from './scales';
@@ -215,8 +215,6 @@ export class GanttComponent extends React.PureComponent<Props> {
 
             if (didUrlParamsChange || didCalendarChange || didFilersChange) {
                 this._fetchData();
-                preferenceService.saveOptions(storeService.getOptions());
-                preferenceService.put('ru.mail.jira.gantt.lastGantt', calendar.id);
             }
         }
 
