@@ -163,6 +163,7 @@ define('mailrucalendar-i18n', function() {
 		'ru.mail.jira.plugins.calendar.dialog.no.edit.permission': AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.no.edit.permission'),
 		'ru.mail.jira.plugins.calendar.gadget.project.unavailable': AJS.I18n.getText('ru.mail.jira.plugins.calendar.gadget.project.unavailable'),
 		'ru.mail.jira.plugins.calendar.dialog.hideConfirm': AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.hideConfirm'),
+		'ru.mail.jira.plugins.calendar.dialog.estimateByDate': AJS.I18n.getText('ru.mail.jira.plugins.calendar.dialog.estimateByDate'),
 		'ru.mail.jira.plugins.calendar.import.dialog.noCalendarsForImport': AJS.I18n.getText('ru.mail.jira.plugins.calendar.import.dialog.noCalendarsForImport'),
 		'ru.mail.jira.plugins.calendar.import.dialog.noResultFound': AJS.I18n.getText('ru.mail.jira.plugins.calendar.import.dialog.noResultFound'),
 		'ru.mail.jira.plugins.calendar.quick.filter.label': AJS.I18n.getText('ru.mail.jira.plugins.calendar.quick.filter.label'),

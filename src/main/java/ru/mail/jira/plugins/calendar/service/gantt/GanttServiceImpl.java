@@ -134,7 +134,7 @@ public class GanttServiceImpl implements GanttService {
             );
         }
 
-        return getGantt(eventDtoStream, user, calendarId, params.getGroupBy());
+        return getGantt(eventDtoStream, user, calendar, params.getGroupBy());
     }
 
     @Override
@@ -148,10 +148,10 @@ public class GanttServiceImpl implements GanttService {
         Stream<EventDto> events = calendarEventService.getGanttUnboundedEvents(
             calendar, params.getGroupBy(), user, params.getOrder(), params.getSprintId(), params.getFields(), params.isForPlan()
         );
-        return getGantt(events, user, calendarId, params.getGroupBy());
+        return getGantt(events, user, calendar, params.getGroupBy());
     }
 
-    private GanttDto getGantt(Stream<EventDto> eventDtoStream, ApplicationUser user, int calendarId, String groupBy) throws GetException {
+    private GanttDto getGantt(Stream<EventDto> eventDtoStream, ApplicationUser user, Calendar calendar, String groupBy) throws GetException {
         List<GanttResourceDto> resources = new ArrayList<>();
         Set<String> resourceKeys = new HashSet<>();
         List<GanttTaskDto> events = new ArrayList<>();
@@ -160,7 +160,7 @@ public class GanttServiceImpl implements GanttService {
 
         resources.add(new GanttResourceDto("-1", "Другие", null)); // Other team
         resources.add(new GanttResourceDto("null", "Не назначен", "-1")); // Unassigned
-        List<GanttTeamDto> teams = ganttTeamService.getTeams(user, calendarId);
+        List<GanttTeamDto> teams = ganttTeamService.getTeams(user, calendar.getID());
 
         for (GanttTeamDto teamDto : teams) {
             resources.add(new GanttResourceDto(String.valueOf(teamDto.getId()), teamDto.getName(), null));
@@ -212,7 +212,7 @@ public class GanttServiceImpl implements GanttService {
                     }
                 })
                 .filter(e -> e.getType() == EventDto.Type.ISSUE)
-                .flatMap(eventDto -> buildEvenWithGroups(eventDto, user, shouldAppendGroupToId))
+                .flatMap(eventDto -> buildEvenWithGroups(eventDto, calendar, user, shouldAppendGroupToId))
                 .forEach(events::add);
 
         groups.stream()
@@ -224,7 +224,7 @@ public class GanttServiceImpl implements GanttService {
               ))
               .forEach(events::add);
 
-        List<GanttLinkDto> links = Arrays.stream(ao.find(GanttLink.class, Query.select().where("CALENDAR_ID = ?", calendarId)))
+        List<GanttLinkDto> links = Arrays.stream(ao.find(GanttLink.class, Query.select().where("CALENDAR_ID = ?", calendar.getID())))
                                          .map(GanttServiceImpl::buildLinkDto)
                                          .collect(Collectors.toList());
 
@@ -372,7 +372,12 @@ public class GanttServiceImpl implements GanttService {
 
     @Override
     public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, GanttTaskForm form, List<String> fields) throws Exception {
-        return updateDates(user, calendarId, issueKey, form.getStartDate(), form.getDuration(), fields);
+        Calendar calendar = calendarService.getCalendar(calendarId);
+        if (calendar.isEstimateByDate() && calendar.getEventEnd() != null) {
+            return updateDates(user, calendarId, issueKey, form.getStartDate(), form.getEndDate(), fields);
+        } else {
+            return updateDates(user, calendarId, issueKey, form.getStartDate(), form.getDuration(), fields);
+        }
     }
 
     @Override
@@ -402,7 +407,10 @@ public class GanttServiceImpl implements GanttService {
 
     @Override
     public GanttTaskDto setEstimate(ApplicationUser user, int calendarId, String issueKey, GanttEstimateForm form, List<String> fields) throws Exception {
-        return buildEvent(calendarEventService.moveEvent(user, calendarId, issueKey, form.getStart(), null, form.getEstimate(), fields, true), user, null);
+        return buildEvent(
+            calendarEventService.moveEvent(user, calendarId, issueKey, form.getStart(), null, form.getEstimate(), fields, true),
+            calendarService.getCalendar(calendarId), user, null
+        );
     }
 
     @Override
@@ -465,22 +473,47 @@ public class GanttServiceImpl implements GanttService {
             true
         );
 
-        result.add(buildEvent(event, user, null));
+        result.add(buildEvent(event, calendar, user, null));
 
         return result;
     }
 
-    private Stream<GanttTaskDto> buildEvenWithGroups(EventDto event, ApplicationUser user, boolean addGroupId) {
+    public List<GanttTaskDto> updateDates(ApplicationUser user, int calendarId, String issueKey, String startDate, String endDate, List<String> fields) throws Exception {
+        Calendar calendar = calendarService.getCalendar(calendarId);
+
+        if (!canUse(user, calendar)) {
+            throw new SecurityException("No permission");
+        }
+
+        List<GanttTaskDto> result = new ArrayList<>();
+
+        EventDto event = calendarEventService.moveEvent(
+            user,
+            calendarId,
+            issueKey,
+            startDate,
+            endDate,
+            null,
+            fields,
+            true
+        );
+
+        result.add(buildEvent(event, calendar, user, null));
+
+        return result;
+    }
+
+    private Stream<GanttTaskDto> buildEvenWithGroups(EventDto event, Calendar calendar, ApplicationUser user, boolean addGroupId) {
         if (addGroupId) {
             if (event.getGroups() != null && !event.getGroups().isEmpty()) {
                 return event
                     .getGroups()
                     .stream()
-                    .map(group -> buildEvent(event, user, group.getId()));
+                    .map(group -> buildEvent(event, calendar, user, group.getId()));
             }
         }
 
-        GanttTaskDto task = buildEvent(event, user, null);
+        GanttTaskDto task = buildEvent(event, calendar, user, null);
 
         if (event.getMilestones() != null) {
             return Stream.concat(
@@ -509,7 +542,7 @@ public class GanttServiceImpl implements GanttService {
         return result;
     }
 
-    private GanttTaskDto buildEvent(EventDto event, ApplicationUser user, String groupId) {
+    private GanttTaskDto buildEvent(EventDto event, Calendar calendar, ApplicationUser user, String groupId) {
         GanttTaskDto ganttTaskDto = new GanttTaskDto();
         ganttTaskDto.setType("issue");
         ganttTaskDto.setOriginalEvent(event);
@@ -554,37 +587,14 @@ public class GanttServiceImpl implements GanttService {
         Long timeSpent = event.getTimeSpentSeconds();
 
         if (eventStart != null) {
-            if (originalEstimate != null && originalEstimate > 0) {
-                ganttTaskDto.setDuration(TimeUnit.SECONDS.toMinutes(originalEstimate));
-
-                if (timeSpent != null) {
-                    if (timeSpent > originalEstimate) {
-                        ganttTaskDto.setPlannedDuration(ganttTaskDto.getDuration());
-                        ganttTaskDto.setDuration(TimeUnit.SECONDS.toMinutes(timeSpent));
-                        ganttTaskDto.setOverdueSeconds(timeSpent - originalEstimate);
-                    } else if (event.isResolved() && timeSpent < originalEstimate) {
-                        ganttTaskDto.setEarlyDuration(TimeUnit.SECONDS.toMinutes(originalEstimate - timeSpent));
-                    }
+            if (calendar.isEstimateByDate()) {
+                if (!setDurationFromEndDate(event, ganttTaskDto, user)) {
+                    setDurationFromEstimate(event, ganttTaskDto);
                 }
-            } else if (event.getEndDate() != null) {
-                ZoneId zoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
-
-                Set<LocalDate> nonWorkingDays = Arrays
-                    .stream(workingDaysService.getNonWorkingDays())
-                    .map(NonWorkingDay::getDate)
-                    .map(date -> date.toInstant().atZone(timeZoneManager.getDefaultTimezone().toZoneId()))
-                    .map(ZonedDateTime::toLocalDate)
-                    .collect(Collectors.toSet());
-                List<Integer> workingDays = workingDaysService.getWorkingDays();
-
-                int durationDays = DateUtil.countWorkDays(
-                    event.getStartDate().toInstant().atZone(zoneId).toLocalDate(),
-                    event.getEndDate().toInstant().atZone(zoneId).toLocalDate(),
-                    workingDays, nonWorkingDays, false
-                );
-
-                WorkingTimeDto workingTime = workingDaysService.getWorkingTime();
-                ganttTaskDto.setDuration(durationDays * workingTime.getStartTime().until(workingTime.getEndTime(), ChronoUnit.MINUTES));
+            } else {
+                if (!setDurationFromEstimate(event, ganttTaskDto)) {
+                    setDurationFromEndDate(event, ganttTaskDto, user);
+                }
             }
         }
 
@@ -603,6 +613,57 @@ public class GanttServiceImpl implements GanttService {
         }
 
         return ganttTaskDto;
+    }
+
+    private boolean setDurationFromEstimate(EventDto event, GanttTaskDto task) {
+        Long originalEstimate = event.getOriginalEstimateSeconds();
+        Long timeSpent = event.getTimeSpentSeconds();
+
+        if (originalEstimate == null || originalEstimate <= 0) {
+            return false;
+        }
+
+        task.setDuration(TimeUnit.SECONDS.toMinutes(originalEstimate));
+
+        if (timeSpent != null) {
+            if (timeSpent > originalEstimate) {
+                task.setPlannedDuration(task.getDuration());
+                task.setDuration(TimeUnit.SECONDS.toMinutes(timeSpent));
+                task.setOverdueSeconds(timeSpent - originalEstimate);
+            } else if (event.isResolved() && timeSpent < originalEstimate) {
+                task.setEarlyDuration(TimeUnit.SECONDS.toMinutes(originalEstimate - timeSpent));
+            }
+        }
+
+        return true;
+
+    }
+
+    private boolean setDurationFromEndDate(EventDto event, GanttTaskDto task, ApplicationUser user) {
+        if (event.getEnd() == null) {
+            return false;
+        }
+
+        ZoneId zoneId = timeZoneManager.getTimeZoneforUser(user).toZoneId();
+
+        Set<LocalDate> nonWorkingDays = Arrays
+            .stream(workingDaysService.getNonWorkingDays())
+            .map(NonWorkingDay::getDate)
+            .map(date -> date.toInstant().atZone(timeZoneManager.getDefaultTimezone().toZoneId()))
+            .map(ZonedDateTime::toLocalDate)
+            .collect(Collectors.toSet());
+        List<Integer> workingDays = workingDaysService.getWorkingDays();
+
+        int durationDays = DateUtil.countWorkDays(
+            event.getStartDate().toInstant().atZone(zoneId).toLocalDate(),
+            event.getEndDate().toInstant().atZone(zoneId).toLocalDate(),
+            workingDays, nonWorkingDays, false
+        );
+
+        WorkingTimeDto workingTime = workingDaysService.getWorkingTime();
+        task.setDuration(durationDays * workingTime.getStartTime().until(workingTime.getEndTime(), ChronoUnit.MINUTES));
+
+        return true;
     }
 
     private GanttTaskDto buildGroup(EventGroup group, boolean unscheduled) {

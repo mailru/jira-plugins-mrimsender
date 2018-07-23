@@ -474,6 +474,7 @@ define('calendar/calendar-dialog', [
                 this.$('#calendar-dialog-show-issue-status').attr('checked', !!this.model.get('showIssueStatus'));
 
                 this.$('#calendar-dialog-project-gantt-enabled').attr('checked', !!this.model.get('ganttEnabled'));
+                this.$('#calendar-dialog-project-gantt-estimateByDate').attr('checked', !!this.model.get('estimateByDate'));
 
                 if (this.model.has('permissions')) {
                     var sortOrder = { 'USER': 1, 'GROUP': 2, 'PROJECT_ROLE': 3 };
@@ -547,8 +548,10 @@ define('calendar/calendar-dialog', [
             var timelineGroup = this.$('#calendar-dialog-timelineGroup').val();
 
             var ganttMilestones = null;
+            var estimateByDate = null;
             if (ganttEnabled) {
                 ganttMilestones = this.$('#calendar-dialog-milestones').val();
+                estimateByDate = !!this.$('#calendar-dialog-project-gantt-estimateByDate:checked').length;
             }
 
             return {
@@ -563,6 +566,7 @@ define('calendar/calendar-dialog', [
                 ganttEnabled: ganttEnabled,
                 timelineGroup: timelineGroup,
                 ganttMilestones: ganttMilestones ? ganttMilestones.split(',') : [],
+                estimateByDate: estimateByDate,
                 permissions: permissions && permissions.length ? permissions : []
             };
         },

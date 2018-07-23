@@ -169,6 +169,7 @@ public class CalendarServiceImpl implements CalendarService {
         result.setSelectedColor(calendar.getColor());
         result.setSelectedEventStartId(calendar.getEventStart());
         result.setSelectedEventEndId(calendar.getEventEnd());
+        result.setEstimateByDate(calendar.isEstimateByDate());
 
         if (StringUtils.isNotEmpty(calendar.getDisplayedFields()))
             result.setSelectedDisplayedFields(Arrays.asList(calendar.getDisplayedFields().split(",")));
@@ -358,6 +359,7 @@ public class CalendarServiceImpl implements CalendarService {
         calendar.setDisplayedFields(StringUtils.join(calendarSettingDto.getSelectedDisplayedFields(), ","));
         calendar.setShowIssueStatus(calendarSettingDto.isShowIssueStatus());
         calendar.setGanttEnabled(calendarSettingDto.isGanttEnabled());
+        calendar.setEstimateByDate(calendarSettingDto.isEstimateByDate());
         List<String> milestones = calendarSettingDto.getGanttMilestones();
         if (milestones != null && milestones.size() > 0) {
             calendar.setGanttMilestones(StringUtils.join(milestones, ','));

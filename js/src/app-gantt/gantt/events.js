@@ -51,6 +51,7 @@ export function bindEvents(gantt: DhtmlxGantt) {
                     id,
                     {
                         start_date: gantt.templates.xml_format(updatedTask.start_date),
+                        end_date: gantt.templates.xml_format(updatedTask.end_date),
                         duration: updatedTask.duration,
                     },
                     {

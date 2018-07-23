@@ -50,6 +50,8 @@ public class CalendarSettingDto {
     @XmlElement
     private boolean ganttEnabled;
     @XmlElement
+    private boolean estimateByDate;
+    @XmlElement
     private List<String> ganttMilestones;
 
     @XmlElement

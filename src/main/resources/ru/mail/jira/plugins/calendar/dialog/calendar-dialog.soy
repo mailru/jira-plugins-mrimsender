@@ -214,6 +214,12 @@
                         <input class="text medium-long-field" type="hidden" id="calendar-dialog-milestones" {not $canAdmin ? 'disabled' : ''}>
                         <div id="calendar-dialog-milestones-error" class="error hidden"></div>
                     </div>
+                    <div class="field-group">
+                        <div class="checkbox">
+                            <input class="checkbox" type="checkbox" id="calendar-dialog-project-gantt-estimateByDate" name="calendar-dialog-estimateByDate">
+                            <label for="calendar-dialog-project-gantt-estimateByDate">{getText( 'ru.mail.jira.plugins.calendar.dialog.estimateByDate' )}</label>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
