@@ -40,6 +40,9 @@ public interface Calendar extends Entity {
     String getGanttMilestones();
     void setGanttMilestones(String milestones);
 
+    boolean isEstimateByDate();
+    void setEstimateByDate(boolean estimateByDate);
+
     @Deprecated
     String getAuthorKey();
     @Deprecated
