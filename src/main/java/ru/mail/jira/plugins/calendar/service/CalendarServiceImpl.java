@@ -11,6 +11,7 @@ import com.atlassian.jira.exception.UpdateException;
 import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
+import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.issue.search.SearchRequestManager;
 import com.atlassian.jira.permission.ProjectPermissions;
@@ -543,8 +544,35 @@ public class CalendarServiceImpl implements CalendarService {
             throw new IllegalArgumentException("Bad color => " + calendarSettingDto.getSelectedColor());
 
         if (!selectedSourceType.equals("basic")) {
-            if (StringUtils.isBlank(calendarSettingDto.getSelectedEventStartId()))
+            String startId = calendarSettingDto.getSelectedEventStartId();
+            String endId = calendarSettingDto.getSelectedEventEndId();
+            if (StringUtils.isBlank(startId))
                 throw new RestFieldException(i18nResolver.getText("issue.field.required", i18nResolver.getText("ru.mail.jira.plugins.calendar.dialog.eventStart")), "event-start");
+
+            if (startId.startsWith("customfield_")) {
+                CustomField customField = customFieldManager.getCustomFieldObject(startId);
+
+                if (customField == null) {
+                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.dialog.field.notFound"), "event-start");
+                }
+
+                if (customField.getCustomFieldSearcher()  == null) {
+                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.dialog.field.notSearchable"), "event-start");
+                }
+            }
+
+            if (endId != null && startId.startsWith("customfield_")) {
+                CustomField customField = customFieldManager.getCustomFieldObject(endId);
+
+                if (customField == null) {
+                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.dialog.field.notFound"), "event-end");
+                }
+
+                if (customField.getCustomFieldSearcher()  == null) {
+                    throw new RestFieldException(i18nResolver.getText("ru.mail.jira.plugins.calendar.dialog.field.notSearchable"), "event-end");
+                }
+            }
+
             for (String field : calendarSettingDto.getSelectedDisplayedFields())
                 if (field.startsWith("customfield_")) {
                     if (customFieldManager.getCustomFieldObject(field) == null)
