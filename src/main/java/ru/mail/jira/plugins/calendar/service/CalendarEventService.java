@@ -477,7 +477,7 @@ public class CalendarEventService {
                             EventGroup
                                     .builder()
                                     .id("epic/" + epicLink.getKey())
-                                    .name(issue.getKey() + " - " + epicLink.getSummary())
+                                    .name(epicLink.getKey() + " - " + epicLink.getSummary())
                                     .build()
                     );
                 } else {
