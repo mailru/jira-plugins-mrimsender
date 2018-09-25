@@ -41,6 +41,7 @@ import com.atlassian.jira.project.version.Version;
 import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.bean.PagerFilter;
+import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.clause.Clause;
 import com.atlassian.sal.api.ApplicationProperties;
@@ -78,10 +79,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
+@ExportAsService
 public class CalendarEventService {
     private final static Logger log = LoggerFactory.getLogger(CalendarEventService.class);
 
     private static final int MILLIS_IN_DAY = 86400000;
+    private static final int MAX_EVENTS_PER_REQUEST = 15_000;
 
     public static final String CREATED_DATE_KEY = "created";
     public static final String UPDATED_DATE_KEY = "updated";
@@ -329,9 +332,13 @@ public class CalendarEventService {
         if (selectedQuickFiltersClause != null)
             jqlBuilder.and().sub().addClause(selectedQuickFiltersClause).endsub();
 
-        List<Issue> issues = searchProvider.search(jqlBuilder.buildQuery(), user, PagerFilter.getUnlimitedFilter()).getIssues();
-        if (log.isDebugEnabled())
+        List<Issue> issues = searchProvider.search(jqlBuilder.buildQuery(), user, PagerFilter.newPageAlignedFilter(0, MAX_EVENTS_PER_REQUEST)).getIssues();
+        if (log.isDebugEnabled()) {
             log.debug("searchProvider.search(). query={}, user={}, issues.size()={}", jqlBuilder.buildQuery().toString(), user, issues.size());
+        }
+        if (issues.size() == MAX_EVENTS_PER_REQUEST) {
+            log.warn("Search resulted in too many issues, returning first {} issues", MAX_EVENTS_PER_REQUEST);
+        }
         for (Issue issue : issues) {
             try {
                 buildEventWithGroups(calendar, groupBy, user, issue, includeIssueInfo, startField, startCF, endField, endCF).ifPresent(result::add);
