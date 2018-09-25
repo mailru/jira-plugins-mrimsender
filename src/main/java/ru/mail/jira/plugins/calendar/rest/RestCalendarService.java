@@ -217,11 +217,12 @@ public class RestCalendarService {
     public Response getIcsCalendar(
         @PathParam("icalUid") final String icalUid,
         @PathParam("calendars") final String calendars,
-        @QueryParam("issueKeys") boolean withIssueKeys
+        @QueryParam("issueKeys") boolean withIssueKeys,
+        @QueryParam("period") String period
     ) {
         return new RestExecutor<StreamingOutput>() {
             @Override
-            protected StreamingOutput doAction() throws Exception {
+            protected StreamingOutput doAction() {
                 try {
                     String[] calendarIds = StringUtils.split(calendars, "-");
 
@@ -247,8 +248,26 @@ public class RestCalendarService {
                     calendar.getProperties().add(new WrCalName(null, "Jira Calendar"));
                     calendar.getProperties().add(new Name(null, "Jira Calendar"));
 
-                    LocalDate startSearch = LocalDate.now().minusMonths(3);
-                    LocalDate endSearch = LocalDate.now().plusMonths(1);
+                    LocalDate today = LocalDate.now();
+                    LocalDate startSearch = today.minusMonths(3);
+                    LocalDate endSearch = today.plusMonths(1);
+
+                    if (period != null) {
+                        switch (period) {
+                            case "3m":
+                                endSearch = today.plusMonths(3);
+                                break;
+                            case "6m":
+                                endSearch = today.plusMonths(6);
+                                break;
+                            case "1y":
+                                endSearch = today.plusYears(1);
+                                break;
+                            case "2y":
+                                endSearch = today.plusYears(2);
+                                break;
+                        }
+                    }
 
                     for (String calendarId : calendarIds) {
                         List<EventDto> events = calendarEventService.findEvents(Integer.parseInt(calendarId), null,

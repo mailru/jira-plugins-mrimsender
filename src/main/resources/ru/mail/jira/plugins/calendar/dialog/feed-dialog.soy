@@ -26,7 +26,17 @@
                         </div>
                     </div>
                     <div class="field-group">
-                        <label>2. {getText( 'ru.mail.jira.plugins.calendar.feed.dialog.text.useurl' )}</label>
+                        <label for="calendar-feed-dialog-period">2. {getText('ru.mail.jira.plugins.calendar.feed.dialog.period.label')}</label>
+                        <select id="calendar-feed-dialog-period" class="select">
+                            <option value="1m">{getText('ru.mail.jira.plugins.calendar.feed.dialog.period.default')}</option>
+                            <option value="3m">{getText('ru.mail.jira.plugins.calendar.feed.dialog.period.3m')}</option>
+                            <option value="6m">{getText('ru.mail.jira.plugins.calendar.feed.dialog.period.6m')}</option>
+                            <option value="1y">{getText('ru.mail.jira.plugins.calendar.feed.dialog.period.1y')}</option>
+                            <option value="2y">{getText('ru.mail.jira.plugins.calendar.feed.dialog.period.2y')}</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label>3. {getText( 'ru.mail.jira.plugins.calendar.feed.dialog.text.useurl' )}</label>
                         <input class="text long-field url-field working" type="text" readonly></input>
                         <button id="url-field-copy" class="aui-button aui-button-subtle" data-clipboard-target=".url-field" tabindex="0">
                             <span class="aui-icon aui-icon-small aui-iconfont-copy-clipboard"/>
