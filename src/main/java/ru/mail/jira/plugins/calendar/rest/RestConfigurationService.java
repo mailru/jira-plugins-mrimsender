@@ -325,27 +325,27 @@ public class RestConfigurationService {
             return;
         filter = filter.trim().toLowerCase();
 
-        List<PermissionItemDto> result = userSearchService
-            .findUsers(
-                filter,
-                filter,
-                UserSearchParams
-                    .builder()
-                    .allowEmptyQuery(true)
-                    .canMatchEmail(true)
-                    .includeActive(true)
-                    .includeInactive(false)
-                    .maxResults(10)
-                    .build()
-            )
-            .stream()
-            .map(user -> PermissionItemDto.buildUserDto(
-                user.getKey(),
-                user.getDisplayName(), user.getEmailAddress(), user.getName(),
-                null,
-                getUserAvatarSrc(user)
-            ))
-            .collect(Collectors.toList());
+        List<PermissionItemDto> result =
+            userSearchService
+                .findUsers(
+                    filter,
+                    UserSearchParams
+                        .builder()
+                        .allowEmptyQuery(true)
+                        .canMatchEmail(true)
+                        .includeActive(true)
+                        .includeInactive(false)
+                        .maxResults(20)
+                        .build()
+                )
+                .stream()
+                .map(user -> PermissionItemDto.buildUserDto(
+                    user.getKey(),
+                    user.getDisplayName(), user.getEmailAddress(), user.getName(),
+                    null,
+                    getUserAvatarSrc(user)
+                ))
+                .collect(Collectors.toList());
 
         subjectDto.setUsersCount(result.size());
         subjectDto.setUsers(result);
