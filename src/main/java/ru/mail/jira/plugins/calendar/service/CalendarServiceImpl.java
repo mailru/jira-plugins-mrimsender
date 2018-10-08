@@ -517,7 +517,7 @@ public class CalendarServiceImpl implements CalendarService {
                 }
             }
 
-            if (endId != null && startId.startsWith("customfield_")) {
+            if (endId != null && endId.startsWith("customfield_")) {
                 CustomField customField = customFieldManager.getCustomFieldObject(endId);
 
                 if (customField == null) {
