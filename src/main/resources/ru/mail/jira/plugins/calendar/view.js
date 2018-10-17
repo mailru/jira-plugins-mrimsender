@@ -555,10 +555,11 @@ require(['jquery',
                 this.$('.calendar-quick-filters dd').remove();
                 var htmlQuickFilters = '';
                 this.collection.each(function(calendar) {
-                    if (calendar.get('visible') && !calendar.get('hasError'))
+                    if (calendar.get('visible') && !calendar.get('hasError')) {
                         htmlQuickFilters += JIRA.Templates.Plugins.MailRuCalendar.quickFilters({
                             calendar: calendar.toJSON()
                         });
+                    }
                 }, this);
                 if (htmlQuickFilters.length === 0)
                     htmlQuickFilters = '<dd>' + AJS.I18n.getText('ru.mail.jira.plugins.calendar.quick.filter.empty') + '</dd>';

@@ -24,6 +24,7 @@ import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.MessageSet;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
@@ -246,6 +247,7 @@ public class CalendarServiceImpl implements CalendarService {
         result.setChangable(canAdmin);
         result.setViewable(canUse);
         result.setEventsEditable(canAdmin);
+        result.setFavouriteQuickFilters(ImmutableList.of());
         if (!canAdmin && !canUse) {
             result.setHasError(true);
             result.setError(i18nResolver.getText("ru.mail.jira.plugins.calendar.unavailable"));
