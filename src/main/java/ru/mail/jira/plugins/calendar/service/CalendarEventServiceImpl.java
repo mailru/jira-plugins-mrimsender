@@ -93,6 +93,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
     private final static Logger log = LoggerFactory.getLogger(CalendarEventServiceImpl.class);
 
     private static final int MILLIS_IN_DAY = 86_400_000;
+    private static final int MAX_EVENTS_PER_REQUEST = 15_000;
 
     private final ApplicationProperties applicationProperties;
     private final CalendarService calendarService;
@@ -589,9 +590,13 @@ public class CalendarEventServiceImpl implements CalendarEventService {
 
         Query query = withOrder(jqlBuilder.buildQuery(), order);
 
-        List<Issue> issues = searchService.search(user, query, PagerFilter.getUnlimitedFilter()).getIssues();
-        if (log.isDebugEnabled())
+        List<Issue> issues = searchService.search(user, query, PagerFilter.newPageAlignedFilter(0, MAX_EVENTS_PER_REQUEST)).getIssues();
+        if (log.isDebugEnabled()) {
             log.debug("searchProvider.search(). query={}, user={}, issues.size()={}", query.toString(), user, issues.size());
+        }
+        if (issues.size() == MAX_EVENTS_PER_REQUEST) {
+            log.warn("Search resulted in too many issues, returning first {} issues", MAX_EVENTS_PER_REQUEST);
+        }
         for (Issue issue : issues) {
             try {
                 //todo: ignoreMissingStart=false
