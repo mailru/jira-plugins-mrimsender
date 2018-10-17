@@ -5,11 +5,11 @@ import com.atlassian.crowd.embedded.api.Group;
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.permission.GlobalPermissionKey;
+import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.PermissionManager;
-import com.atlassian.jira.security.Permissions;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
@@ -18,6 +18,8 @@ import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import net.java.ao.ActiveObjectsException;
 import net.java.ao.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.calendar.model.Calendar;
@@ -31,6 +33,8 @@ import java.util.Map;
 
 @Component
 public class PermissionServiceImpl implements PermissionService {
+    private final Logger logger = LoggerFactory.getLogger(PermissionServiceImpl.class);
+
     private final ActiveObjects ao;
     private final AvatarService avatarService;
     private final GlobalPermissionManager globalPermissionManager;
@@ -107,13 +111,22 @@ public class PermissionServiceImpl implements PermissionService {
                             Long projectRoleId = PermissionUtils.getProjectRole(subject);
                             if (projectId == null)
                                 continue;
+
                             Project project = projectManager.getProjectObj(projectId);
+                            if (project == null) {
+                                logger.warn("Can't find project with id {}", projectId);
+                                continue;
+                            }
+
                             if (projectRoleId != null) {
                                 ProjectRole projectRole = projectRoleManager.getProjectRole(projectRoleId);
-                                if (projectRole != null && projectRoleManager.isUserInProjectRole(user, projectRole, project))
+                                if (projectRole != null && projectRoleManager.isUserInProjectRole(user, projectRole, project)) {
                                     return true;
-                            } else if (permissionManager.hasPermission(Permissions.ADMINISTER, project, user, false))
+                                }
+                            } else if (permissionManager.hasPermission(ProjectPermissions.ADMINISTER_PROJECTS, project, user, false)) {
                                 return true;
+                            }
+
                             break;
                     }
                 }
@@ -142,11 +155,18 @@ public class PermissionServiceImpl implements PermissionService {
                     if (projectId == null)
                         continue;
                     Project project = projectManager.getProjectObj(projectId);
+
+                    if (project == null) {
+                        logger.warn("Can't find project with id {}", projectId);
+                        continue;
+                    }
+
                     if (projectRoleId != null) {
                         ProjectRole projectRole = projectRoleManager.getProjectRole(projectRoleId);
-                        if (projectRole != null && projectRoleManager.isUserInProjectRole(user, projectRole, project))
+                        if (projectRole != null && projectRoleManager.isUserInProjectRole(user, projectRole, project)) {
                             return true;
-                    } else if (permissionManager.hasPermission(Permissions.BROWSE, project, user, false))
+                        }
+                    } else if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false))
                         return true;
                     break;
             }
@@ -176,7 +196,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public void updatePermissions(Calendar calendar, List<PermissionItemDto> permissions) {
-        Map<Integer, Permission> toDelete = new HashMap<Integer, Permission>();
+        Map<Integer, Permission> toDelete = new HashMap<>();
         for (Permission permission : calendar.getPermissions())
             toDelete.put(permission.getID(), permission);
         for (PermissionItemDto permissionDto : permissions) {

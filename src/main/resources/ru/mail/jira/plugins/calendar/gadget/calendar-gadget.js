@@ -1,4 +1,4 @@
-define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/timeline-view', 'underscore'], function(CalendarView, TimeLineView, _) {
+define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/timeline-view', 'underscore', 'mailrucal/moment'], function(CalendarView, TimeLineView, _, moment) {
     function genArray(size, object) {
         return _.map(_.range(size), function(i) {
             return object;

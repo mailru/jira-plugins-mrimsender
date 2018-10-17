@@ -4,6 +4,7 @@ define('calendar/feed-dialog', ['jquery', 'underscore', 'backbone', 'calendar/co
             'click #calendar-feed-dialog-ok': 'hide',
             'click #calendar-feed-dialog-delete': '_resetLink',
             'change #calendar-feed-dialog-calendars': '_updateCalendarFeedUrl',
+            'change #calendar-feed-dialog-period': '_updateCalendarFeedUrl',
             'change #calendar-feed-dialog-withIssueKeys': '_updateCalendarFeedUrl'
         },
         render: function() {
@@ -18,6 +19,7 @@ define('calendar/feed-dialog', ['jquery', 'underscore', 'backbone', 'calendar/co
             new Clipboard('#url-field-copy');
             this.dialog = AJS.dialog2('#calendar-feed-dialog');
             this.$calendarSelect = this.$('#calendar-feed-dialog-calendars');
+            this.$periodSelect = this.$('#calendar-feed-dialog-period');
             this.$issueKeysCheckbox = this.$('#calendar-feed-dialog-withIssueKeys');
             this.$urlField = this.$('.url-field');
 
@@ -92,11 +94,15 @@ define('calendar/feed-dialog', ['jquery', 'underscore', 'backbone', 'calendar/co
             }
             var calendars = this.$calendarSelect.val();
             var withIssueKeys = this.$issueKeysCheckbox.is(':checked');
+            var period = this.$periodSelect.val() || '1m';
             if (calendars) {
                 var calUrl = calendars.split(',').join('-');
                 this.$urlField.val(
-                    window.location.origin + AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + this.model.get('icalUid') + '/' + calUrl + '.ics' +
-                    (withIssueKeys ? '?issueKeys=true' : '')
+                    window.location.origin + AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + this.model.get('icalUid') + '/' + calUrl + '.ics?' +
+                    $.param({
+                        period: period,
+                        issueKeys: withIssueKeys
+                    })
                 );
             }
         }
