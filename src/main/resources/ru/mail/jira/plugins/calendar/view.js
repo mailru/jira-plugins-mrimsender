@@ -1,5 +1,6 @@
 require(['jquery',
     'underscore',
+    'mailrucal/moment',
     'backbone',
     'calendar/feedback-flag',
     'calendar/calendar-view',
@@ -10,8 +11,8 @@ require(['jquery',
     'calendar/quick-filter-dialog',
     'calendar/custom-event-dialog',
     'calendar/preferences',
-    'calendar/timeline-view'
-], function($, _, Backbone, LikeFlag, CalendarView, CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog, QuickFilterDialog, CustomEventDialog, Preferences) {
+    'calendar/timeline-view',
+], function($, _, moment, Backbone, LikeFlag, CalendarView, CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog, QuickFilterDialog, CustomEventDialog, Preferences) {
     // Override default texts for auiSelect2 messages
     $.fn.select2.defaults = $.extend($.fn.select2.defaults, {
         formatNoMatches: function() {

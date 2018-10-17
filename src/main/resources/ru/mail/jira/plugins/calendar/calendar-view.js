@@ -1,4 +1,8 @@
-var calendarMoment = window.moment;
+var mailrucalMoment = window.moment;
+
+define('mailrucal/moment', [], function() {
+    return mailrucalMoment;
+});
 
 define('calendar/calendar-view', [
     'jquery',
@@ -7,10 +11,9 @@ define('calendar/calendar-view', [
     'calendar/reminder',
     'calendar/edit-type-dialog',
     'calendar/recurrence',
-    'calendar/preferences'
-], function($, _, Backbone, Reminder, EditTypeDialog, Recurring, Preferences) {
-    window.moment = calendarMoment;
-
+    'calendar/preferences',
+    'mailrucal/moment'
+], function($, _, Backbone, Reminder, EditTypeDialog, Recurring, Preferences, moment) {
     function getContextPath() {
         if (AJS.gadget) {
             return AJS.gadget.getBaseUrl();
