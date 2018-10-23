@@ -48,7 +48,7 @@ public class CommandProcessor extends Thread {
     private static final String LOCK_NAME = CommandProcessor.class.getName() + ".myLockedTask";
 
     private static final Locale DEFAULT_LOCALE = new Locale("ru");
-    private static final String ISSUES_JQL = "assignee = currentUser() AND status not in (Closed, Done, Ready)";
+    private static final String ISSUES_JQL = "assignee = currentUser() AND resolution is empty";
 
     private static final Logger log = Logger.getLogger(CommandProcessor.class);
 
