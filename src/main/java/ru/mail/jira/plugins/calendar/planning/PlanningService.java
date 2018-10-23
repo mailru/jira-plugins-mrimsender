@@ -30,13 +30,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -125,11 +119,11 @@ public class PlanningService {
         Map<EventDto, Double> priorities = new HashMap<>();
 
         if (useRank) {
-            int i = 0;
+            int i = events.size();
             double total = events.size();
 
             for (EventDto event : events) {
-                priorities.put(event, (total - i) / total);
+                priorities.put(event, i/total);
                 ++i;
             }
         } else if (usePriority) {
