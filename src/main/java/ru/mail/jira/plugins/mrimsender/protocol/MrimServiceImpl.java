@@ -6,6 +6,11 @@ import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 
 public class MrimServiceImpl implements MrimService {
     private final UserData userData = new UserData();
+    private final IcqBot icqBot;
+
+    public MrimServiceImpl(IcqBot icqBot) {
+        this.icqBot = icqBot;
+    }
 
     @Override
     public boolean sendMessage(ApplicationUser user, String message) {
@@ -14,7 +19,7 @@ public class MrimServiceImpl implements MrimService {
 
         String mrimLogin = userData.getMrimLogin(user);
         if (user.isActive() && !StringUtils.isBlank(mrimLogin) && userData.isEnabled(user)) {
-            MrimsenderThread.sendMessage(mrimLogin, message);
+            icqBot.sendMessage(mrimLogin, message);
             return true;
         }
         return false;

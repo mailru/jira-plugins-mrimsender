@@ -30,25 +30,9 @@
     #end
     <input type="hidden" name="atl_token" value="$atl_token" />
     <div class="field-group">
-        <label for="host">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.host" )</label>
-        <input type="text" class="text" id="host" name="host" value="$!host" />
-        #fieldError( "host" )
-    </div>
-    <div class="field-group">
-        <label for="port">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.port" )</label>
-        <input type="text" class="text" id="port" name="port" value="$!port" />
-        <div class="description">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.portDescription" )</div>
-        #fieldError( "port" )
-    </div>
-    <div class="field-group">
-        <label for="login">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.login" )<span class="aui-icon icon-required"></span></label>
-        <input type="text" class="text" id="login" name="login" value="$!login" />
-        #fieldError( "login" )
-    </div>
-    <div class="field-group">
-        <label for="password">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.password" )<span class="aui-icon icon-required"></span></label>
-        <input type="password" class="password" id="password" name="password" value="$!password" />
-        #fieldError( "password" )
+        <label for="token">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.token" )<span class="aui-icon icon-required"></span></label>
+        <input type="password" class="password" id="token" name="token" value="$!token" />
+        #fieldError( "token" )
     </div>
     <div class="field-group">
         <label for="enabledByDefault">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.enabledByDefault" )</label>

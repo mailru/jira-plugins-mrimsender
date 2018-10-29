@@ -4,35 +4,29 @@ import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.commons.CommonUtils;
-import ru.mail.jira.plugins.mrimsender.protocol.MrimsenderThread;
-import ru.mail.jira.plugins.mrimsender.protocol.packages.Worker;
+import ru.mail.jira.plugins.mrimsender.protocol.IcqBot;
 
 import java.util.List;
 
 public class MrimsenderConfigurationAction extends JiraWebActionSupport {
     private final PluginData pluginData;
+    private final IcqBot icqBot;
 
     private boolean saved;
-    private String host;
-    private String port;
-    private String login;
-    private String password;
+    private String token;
     private boolean enabledByDefault;
     private String notifiedUsers;
 
-    private Integer portParsed;
     private List<String> notifiedUserKeys;
 
-    public MrimsenderConfigurationAction(PluginData pluginData) {
+    public MrimsenderConfigurationAction(PluginData pluginData, IcqBot icqBot) {
         this.pluginData = pluginData;
+        this.icqBot = icqBot;
     }
 
     @Override
-    public String doDefault() throws Exception {
-        host = pluginData.getHost();
-        port = pluginData.getPort() == null ? null : pluginData.getPort().toString();
-        login = pluginData.getLogin();
-        password = pluginData.getPassword();
+    public String doDefault() {
+        token = pluginData.getToken();
         enabledByDefault = pluginData.isEnabledByDefault();
         notifiedUsers = CommonUtils.convertUserKeysToJoinedString(pluginData.getNotifiedUserKeys());
         return INPUT;
@@ -40,57 +34,22 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
 
     @RequiresXsrfCheck
     @Override
-    protected String doExecute() throws Exception {
-        pluginData.setHost(host);
-        pluginData.setPort(portParsed);
-        pluginData.setLogin(login);
-        pluginData.setPassword(password);
+    protected String doExecute() {
+        pluginData.setToken(token);
         pluginData.setEnabledByDefault(enabledByDefault);
         pluginData.setNotifiedUserKeys(notifiedUserKeys);
-        MrimsenderThread.relogin();
 
         saved = true;
-        port = portParsed == null ? null : portParsed.toString();
         notifiedUsers = CommonUtils.convertUserKeysToJoinedString(notifiedUserKeys);
         return INPUT;
     }
 
     @Override
     protected void doValidation() {
-        if (!StringUtils.isBlank(port))
-            try {
-                portParsed = Integer.valueOf(port.trim());
-            } catch (NumberFormatException e) {
-                addError("port", getText("ru.mail.jira.plugins.mrimsender.configuration.specifyPort"));
-            }
+        if (StringUtils.isEmpty(token))
+            addError("token", getText("ru.mail.jira.plugins.mrimsender.configuration.specifyToken"));
 
-        if (!getErrors().containsKey("port"))
-            if (StringUtils.isEmpty(host) ^ portParsed == null)
-                addError("port", getText("ru.mail.jira.plugins.mrimsender.configuration.specifyHostAndPort"));
-
-        if (StringUtils.isEmpty(login))
-            addError("login", getText("ru.mail.jira.plugins.mrimsender.configuration.specifyLogin"));
-
-        if (StringUtils.isEmpty(password))
-            addError("password", getText("ru.mail.jira.plugins.mrimsender.configuration.specifyPassword"));
-
-        if (!invalidInput())
-            try {
-                Worker worker = new Worker(host.trim(), portParsed);
-                try {
-                    if (!worker.login(login, password))
-                        addError("password", getText("ru.mail.jira.plugins.mrimsender.configuration.invalidLoginAndPassword"));
-                } finally {
-                    worker.close();
-                }
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                if (StringUtils.isEmpty(host) && portParsed == null)
-                    addErrorMessage(getText("ru.mail.jira.plugins.mrimsender.configuration.invalidHostAndPort"));
-                else
-                    addError("port", getText("ru.mail.jira.plugins.mrimsender.configuration.invalidHostAndPort"));
-            }
-
+        icqBot.initToken();
         try {
             notifiedUserKeys = CommonUtils.convertJoinedStringToUserKeys(notifiedUsers);
         } catch (IllegalArgumentException e) {
@@ -104,43 +63,13 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public String getHost() {
-        return host;
+    public String getToken() {
+        return token;
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public String getPort() {
-        return port;
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public void setPort(String port) {
-        this.port = port;
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public String getLogin() {
-        return login;
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public void setLogin(String login) {
-        this.login = login;
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public String getPassword() {
-        return password;
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public void setPassword(String password) {
-        this.password = password;
+    public void setToken(String token) {
+        this.token = token;
     }
 
     @SuppressWarnings("UnusedDeclaration")

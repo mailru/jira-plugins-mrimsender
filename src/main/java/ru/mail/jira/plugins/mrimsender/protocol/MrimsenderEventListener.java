@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Set;
 
 public class MrimsenderEventListener implements InitializingBean, DisposableBean {
-
     private static final Logger log = Logger.getLogger(MrimsenderEventListener.class);
 
     private final EventPublisher eventPublisher;
@@ -43,8 +42,9 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     private final PluginData pluginData;
     private final ProjectRoleManager projectRoleManager;
     private final UserData userData = new UserData();
+    private final IcqBot icqBot;
 
-    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, PluginData pluginData, ProjectRoleManager projectRoleManager) {
+    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, PluginData pluginData, ProjectRoleManager projectRoleManager, IcqBot icqBot) {
         this.eventPublisher = eventPublisher;
         this.groupManager = groupManager;
         this.notificationFilterManager = notificationFilterManager;
@@ -52,17 +52,16 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
         this.permissionManager = permissionManager;
         this.pluginData = pluginData;
         this.projectRoleManager = projectRoleManager;
+        this.icqBot = icqBot;
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
-        MrimsenderThread.startInstance();
+    public void afterPropertiesSet() {
         eventPublisher.register(this);
     }
 
     @Override
-    public void destroy() throws Exception {
-        MrimsenderThread.stopInstance();
+    public void destroy() {
         eventPublisher.unregister(this);
     }
 
@@ -78,7 +77,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                         if (event instanceof MentionIssueEvent)
                             message = new MessageFormatter(recipient).formatEvent((MentionIssueEvent) event);
                         if (message != null)
-                            MrimsenderThread.sendMessage(mrimLogin, message);
+                            icqBot.sendMessage(mrimLogin, message);
                     }
                 }
             }

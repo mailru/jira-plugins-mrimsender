@@ -32,6 +32,15 @@
                         #end
                     </dd>
                 </dl>
+                #if ($enabled)
+                    <dl>
+                        <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNick" ):</dt>
+                        <dd>
+                            <div><a href="https://icq.com/745485158" target="_blank">MRGJiraBot</a></div>
+                            <div>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNickDescription" )</div>
+                        </dd>
+                    </dl>
+                #end
             </li>
         </ul>
     </div>

@@ -84,13 +84,13 @@ public class MessageFormatter {
     public String formatSystemFields(Issue issue) {
         StringBuilder sb = new StringBuilder();
 
-        if (issue.getIssueTypeObject() != null)
-            appendField(sb, i18nHelper.getText("issue.field.issuetype"), issue.getIssueTypeObject().getNameTranslation(i18nHelper), false);
+        if (issue.getIssueType() != null)
+            appendField(sb, i18nHelper.getText("issue.field.issuetype"), issue.getIssueType().getNameTranslation(i18nHelper), false);
 
         appendField(sb, i18nHelper.getText("issue.field.affectsversions"), issue.getAffectedVersions());
         appendField(sb, i18nHelper.getText("issue.field.assignee"), formatUser(issue.getAssignee(), "common.concepts.unassigned"), false);
         appendField(sb, i18nHelper.getText("issue.field.attachment"), issue.getAttachments());
-        appendField(sb, i18nHelper.getText("issue.field.components"), issue.getComponentObjects());
+        appendField(sb, i18nHelper.getText("issue.field.components"), issue.getComponents());
 
         if (issue.getCreated() != null)
             appendField(sb, i18nHelper.getText("issue.field.created"), dateTimeFormatter.forUser(recipient).withStyle(DateTimeStyle.COMPLETE).format(issue.getCreated()), false);
