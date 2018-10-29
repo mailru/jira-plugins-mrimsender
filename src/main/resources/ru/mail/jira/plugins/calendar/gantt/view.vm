@@ -28,7 +28,7 @@
             </div>
         </div>
     </header-->
-    <div id="gantt-content" class="aui-page-panel gantt-view-page-panel">
+    <div id="gantt-content" class="aui-page-panel gantt-view-page-panel" data-skate-ignore>
         <!--form class="aui gantt-diagram-actions">
             <div class="gantt-diagram-actions-period">
                 <input class="text date-field" id="gantt-diagram-period-startDate" type="text" dateFormat="yyyy-mm-dd" placeholder="yyyy-mm-dd"/>
