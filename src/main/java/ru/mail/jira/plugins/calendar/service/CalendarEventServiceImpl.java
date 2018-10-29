@@ -1129,6 +1129,7 @@ public class CalendarEventServiceImpl implements CalendarEventService {
 
         IssueInputParameters issueInputParams = issueService.newIssueInputParameters();
         issueInputParams.setSkipScreenCheck(true);
+        issueInputParams.setRetainExistingValuesWhenParameterNotProvided(true, true);
 
         if (start != null && isDateFieldResizable(calendar.getEventStart(), eventStartCF)) {
             Date startDate = dateTimeFormat.parse(start);
