@@ -1,7 +1,6 @@
 package ru.mail.jira.plugins.calendar.model.gantt;
 
 import net.java.ao.Entity;
-import net.java.ao.ManyToMany;
 import net.java.ao.schema.Table;
 
 @Table("USER")

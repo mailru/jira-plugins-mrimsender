@@ -33,5 +33,5 @@ public interface GanttTeamService {
 
     GanttUser getUser(int id) throws GetException;
 
-    GanttUser getUser(String key);
+    GanttUser getUser(String key, int teamId);
 }

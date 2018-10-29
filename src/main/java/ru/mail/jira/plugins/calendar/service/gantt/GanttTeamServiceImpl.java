@@ -229,7 +229,25 @@ public class GanttTeamServiceImpl implements GanttTeamService {
         if (!permissionService.hasAdminPermission(currentUser, calendar))
             throw new SecurityException("No permission to edit team");
         for (UserDto selectedUser : selectedUsers) {
-            GanttUser user = getUser(selectedUser.getKey());
+            int inTeams = ao.count(
+                GanttUser.class,
+                Query
+                    .select()
+                    .from(GanttUser.class)
+                    .alias(GanttUser.class, "user")
+                    .alias(GanttTeam.class, "team")
+                    .join(GanttTeam.class, "user.TEAM_ID = team.ID")
+                    .where(
+                        "user.KEY = ? AND user.TEAM_ID <> ? AND team.CALENDAR_ID = ?",
+                        selectedUser.getKey(), team.getID(), calendar.getID()
+                    )
+            );
+
+            if (inTeams > 0) {
+                throw new IllegalArgumentException("User exists in another team");
+            }
+
+            GanttUser user = getUser(selectedUser.getKey(), team.getID());
             if (user == null) {
                 user = ao.create(GanttUser.class);
                 user.setKey(selectedUser.getKey());
@@ -272,8 +290,8 @@ public class GanttTeamServiceImpl implements GanttTeamService {
     }
 
     @Override
-    public GanttUser getUser(String key) {
-        GanttUser[] users = ao.find(GanttUser.class, Query.select().where("KEY = ?", key));
+    public GanttUser getUser(String key, int teamId) {
+        GanttUser[] users = ao.find(GanttUser.class, Query.select().where("KEY = ? AND TEAM_ID = ?", key, teamId));
         if (users.length == 0)
             return null;
         if (users.length > 1)
