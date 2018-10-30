@@ -54,14 +54,12 @@
 
     <component-import key="event-publisher" interface="com.atlassian.event.api.EventPublisher" />
     <component key="mrimsender-event-listener" class="ru.mail.jira.plugins.mrimsender.protocol.MrimsenderEventListener" />
+    <component key="icq-bot-message-formatter" class="ru.mail.jira.plugins.mrimsender.protocol.MessageFormatter" />
+
     <component key="icq-bot-service" class="ru.mail.jira.plugins.mrimsender.protocol.IcqBot" />
 
     <component key="mrim-service-module" class="ru.mail.jira.plugins.mrimsender.protocol.MrimServiceImpl" public="true">
         <interface>ru.mail.jira.plugins.mrimsender.protocol.MrimService</interface>
     </component>
-
-    <!--<component key="command-processor-scheduler" class="ru.mail.jira.plugins.mrimsender.CommandProcessorScheduler" public="true">-->
-        <!--<interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>-->
-    <!--</component>-->
 
 </atlassian-plugin>

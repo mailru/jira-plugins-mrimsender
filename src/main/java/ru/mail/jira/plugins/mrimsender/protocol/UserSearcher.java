@@ -1,6 +1,5 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
-import com.atlassian.jira.bc.user.search.UserSearchParams;
 import com.atlassian.jira.bc.user.search.UserSearchService;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.user.ApplicationUser;

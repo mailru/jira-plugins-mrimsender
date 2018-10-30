@@ -22,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 
 import java.util.ArrayList;
@@ -39,19 +38,19 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     private final NotificationFilterManager notificationFilterManager;
     private final NotificationSchemeManager notificationSchemeManager;
     private final PermissionManager permissionManager;
-    private final PluginData pluginData;
     private final ProjectRoleManager projectRoleManager;
     private final UserData userData = new UserData();
+    private final MessageFormatter messageFormatter;
     private final IcqBot icqBot;
 
-    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, PluginData pluginData, ProjectRoleManager projectRoleManager, IcqBot icqBot) {
+    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, ProjectRoleManager projectRoleManager, MessageFormatter messageFormatter, IcqBot icqBot) {
         this.eventPublisher = eventPublisher;
         this.groupManager = groupManager;
         this.notificationFilterManager = notificationFilterManager;
         this.notificationSchemeManager = notificationSchemeManager;
         this.permissionManager = permissionManager;
-        this.pluginData = pluginData;
         this.projectRoleManager = projectRoleManager;
+        this.messageFormatter = messageFormatter;
         this.icqBot = icqBot;
     }
 
@@ -63,24 +62,6 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     @Override
     public void destroy() {
         eventPublisher.unregister(this);
-    }
-
-    private void sendMessage(Collection<ApplicationUser> recipients, Object event) {
-        if (!StringUtils.isEmpty(pluginData.getLogin()) && !StringUtils.isEmpty(pluginData.getPassword()))
-            for (ApplicationUser recipient : recipients) {
-                if (recipient.isActive() && userData.isEnabled(recipient)) {
-                    String mrimLogin = userData.getMrimLogin(recipient);
-                    if (StringUtils.isNotBlank(mrimLogin)) {
-                        String message = null;
-                        if (event instanceof IssueEvent)
-                            message = new MessageFormatter(recipient).formatEvent((IssueEvent) event);
-                        if (event instanceof MentionIssueEvent)
-                            message = new MessageFormatter(recipient).formatEvent((MentionIssueEvent) event);
-                        if (message != null)
-                            icqBot.sendMessage(mrimLogin, message);
-                    }
-                }
-            }
     }
 
     @SuppressWarnings("unused")
@@ -111,6 +92,20 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
         }
     }
 
+    @SuppressWarnings("unused")
+    @EventListener
+    public void onMentionIssueEvent(MentionIssueEvent mentionIssueEvent) {
+        try {
+            List<ApplicationUser> recipients = new ArrayList<>();
+            for (ApplicationUser user : mentionIssueEvent.getToUsers())
+                if (!mentionIssueEvent.getCurrentRecipients().contains(new NotificationRecipient(user)))
+                    recipients.add(user);
+            sendMessage(recipients, mentionIssueEvent);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
     private boolean canSendEventToUser(ApplicationUser user, IssueEvent issueEvent) {
         ProjectRole projectRole = null;
         String groupName = null;
@@ -133,17 +128,21 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
         return true;
     }
 
-    @SuppressWarnings("unused")
-    @EventListener
-    public void onMentionIssueEvent(MentionIssueEvent mentionIssueEvent) {
-        try {
-            List<ApplicationUser> recipients = new ArrayList<>();
-            for (ApplicationUser user : mentionIssueEvent.getToUsers())
-                if (!mentionIssueEvent.getCurrentRecipients().contains(new NotificationRecipient(user)))
-                    recipients.add(user);
-            sendMessage(recipients, mentionIssueEvent);
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
+    private void sendMessage(Collection<ApplicationUser> recipients, Object event) {
+        for (ApplicationUser recipient : recipients) {
+            if (recipient.isActive() && userData.isEnabled(recipient)) {
+                String mrimLogin = userData.getMrimLogin(recipient);
+                if (StringUtils.isNotBlank(mrimLogin)) {
+                    String message = null;
+                    if (event instanceof IssueEvent)
+                        message = messageFormatter.formatEvent(recipient, (IssueEvent) event);
+                    if (event instanceof MentionIssueEvent)
+                        message = messageFormatter.formatEvent((MentionIssueEvent) event);
+
+                    if (message != null)
+                        icqBot.sendMessage(mrimLogin, message);
+                }
+            }
         }
     }
 }

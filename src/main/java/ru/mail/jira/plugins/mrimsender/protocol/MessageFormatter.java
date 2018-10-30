@@ -1,8 +1,8 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
-import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.ConstantsManager;
 import com.atlassian.jira.config.properties.APKeys;
+import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.event.issue.IssueEvent;
@@ -28,16 +28,20 @@ import java.util.Collection;
 import java.util.Iterator;
 
 public class MessageFormatter {
-    private final ConstantsManager constantsManager = ComponentAccessor.getConstantsManager();
-    private final DateTimeFormatter dateTimeFormatter = ComponentAccessor.getComponentOfType(DateTimeFormatter.class);
-    private final FieldManager fieldManager = ComponentAccessor.getFieldManager();
-    private final IssueSecurityLevelManager issueSecurityLevelManager = ComponentAccessor.getIssueSecurityLevelManager();
-    private final ApplicationUser recipient;
+    private final ApplicationProperties applicationProperties;
+    private final ConstantsManager constantsManager;
+    private final DateTimeFormatter dateTimeFormatter;
+    private final FieldManager fieldManager;
+    private final IssueSecurityLevelManager issueSecurityLevelManager;
     private final I18nHelper i18nHelper;
 
-    public MessageFormatter(ApplicationUser recipient) {
-        this.i18nHelper = ComponentAccessor.getI18nHelperFactory().getInstance(recipient);
-        this.recipient = recipient;
+    public MessageFormatter(ApplicationProperties applicationProperties, ConstantsManager constantsManager, DateTimeFormatter dateTimeFormatter, FieldManager fieldManager, IssueSecurityLevelManager issueSecurityLevelManager, I18nHelper i18nHelper) {
+        this.applicationProperties = applicationProperties;
+        this.constantsManager = constantsManager;
+        this.dateTimeFormatter = dateTimeFormatter;
+        this.fieldManager = fieldManager;
+        this.issueSecurityLevelManager = issueSecurityLevelManager;
+        this.i18nHelper = i18nHelper;
     }
 
     private String formatUser(ApplicationUser user, String messageKey) {
@@ -81,7 +85,7 @@ public class MessageFormatter {
         }
     }
 
-    public String formatSystemFields(Issue issue) {
+    public String formatSystemFields(ApplicationUser recipient, Issue issue) {
         StringBuilder sb = new StringBuilder();
 
         if (issue.getIssueType() != null)
@@ -101,7 +105,7 @@ public class MessageFormatter {
         appendField(sb, i18nHelper.getText("issue.field.environment"), issue.getEnvironment(), false);
         appendField(sb, i18nHelper.getText("issue.field.fixversions"), issue.getFixVersions());
         appendField(sb, i18nHelper.getText("issue.field.labels"), issue.getLabels());
-        appendField(sb, i18nHelper.getText("issue.field.priority"), formatPriority(issue.getPriorityObject()), false);
+        appendField(sb, i18nHelper.getText("issue.field.priority"), formatPriority(issue.getPriority()), false);
         appendField(sb, i18nHelper.getText("issue.field.reporter"), formatUser(issue.getReporter(), "common.concepts.no.reporter"), false);
 
         if (issue.getSecurityLevelId() != null) {
@@ -155,10 +159,10 @@ public class MessageFormatter {
         return sb.toString();
     }
 
-    public String formatEvent(IssueEvent issueEvent) {
+    public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
         Issue issue = issueEvent.getIssue();
         ApplicationUser user = issueEvent.getUser();
-        String issueLink = String.format("%s/browse/%s", ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL), issue.getKey());
+        String issueLink = String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
 
         StringBuilder sb = new StringBuilder();
 
@@ -170,10 +174,10 @@ public class MessageFormatter {
         } else if (EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId)) {
             sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.assigned", formatUser(user, "common.words.anonymous"), issueLink, formatUser(issue.getAssignee(), "common.concepts.unassigned")));
         } else if (EventType.ISSUE_RESOLVED_ID.equals(eventTypeId)) {
-            Resolution resolution = issue.getResolutionObject();
+            Resolution resolution = issue.getResolution();
             sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.resolved", formatUser(user, "common.words.anonymous"), issueLink, resolution != null ? resolution.getNameTranslation(i18nHelper) : i18nHelper.getText("common.resolution.unresolved")));
         } else if (EventType.ISSUE_CLOSED_ID.equals(eventTypeId)) {
-            Resolution resolution = issue.getResolutionObject();
+            Resolution resolution = issue.getResolution();
             sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.closed", formatUser(user, "common.words.anonymous"), issueLink, resolution != null ? resolution.getNameTranslation(i18nHelper) : i18nHelper.getText("common.resolution.unresolved")));
         } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)) {
             sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.commented", formatUser(user, "common.words.anonymous"), issueLink));
@@ -204,7 +208,7 @@ public class MessageFormatter {
             sb.append("\n\n").append(issueEvent.getWorklog().getComment());
 
         if (EventType.ISSUE_CREATED_ID.equals(eventTypeId))
-            sb.append(formatSystemFields(issue));
+            sb.append(formatSystemFields(recipient, issue));
 
         sb.append(formatChangeLog(issueEvent.getChangeLog(), EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId)));
 
@@ -217,7 +221,7 @@ public class MessageFormatter {
     public String formatEvent(MentionIssueEvent mentionIssueEvent) {
         Issue issue = mentionIssueEvent.getIssue();
         ApplicationUser user = mentionIssueEvent.getFromUser();
-        String issueLink = String.format("%s/browse/%s", ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL), issue.getKey());
+        String issueLink = String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
 
         StringBuilder sb = new StringBuilder();
         sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.mentioned", formatUser(user, "common.words.anonymous"), issueLink));

@@ -41,6 +41,8 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
 
         saved = true;
         notifiedUsers = CommonUtils.convertUserKeysToJoinedString(notifiedUserKeys);
+
+        icqBot.initToken();
         return INPUT;
     }
 
@@ -49,7 +51,6 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
         if (StringUtils.isEmpty(token))
             addError("token", getText("ru.mail.jira.plugins.mrimsender.configuration.specifyToken"));
 
-        icqBot.initToken();
         try {
             notifiedUserKeys = CommonUtils.convertJoinedStringToUserKeys(notifiedUsers);
         } catch (IllegalArgumentException e) {
