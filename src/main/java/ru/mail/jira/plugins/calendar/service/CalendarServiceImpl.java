@@ -316,6 +316,7 @@ public class CalendarServiceImpl implements CalendarService {
         ao.delete(ao.find(Event.class, Query.select().where("CALENDAR_ID = ?", calendarId)));
         ao.delete(ao.find(EventTypeReminder.class, Query.select().where("CALENDAR_ID = ?", calendarId)));
         ao.delete(ao.find(EventType.class, Query.select().where("CALENDAR_ID = ?", calendarId)));
+        ao.delete(ao.find(GanttLink.class, Query.select().where("CALENDAR_ID = ?", calendarId)));
         userCalendarService.removeCalendar(user.getKey(), calendarId);
         quickFilterService.deleteQuickFilterByCalendarId(calendarId);
         ao.delete(calendar);
