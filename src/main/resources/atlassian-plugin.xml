@@ -408,40 +408,4 @@
         <resource type="download" name="teams.css" location="ru/mail/jira/plugins/calendar/css/teams.css"/>
         <resource type="download" name="teams.js" location="ru/mail/jira/plugins/calendar/js/teams.js"/>
     </web-resource>
-
-    <!-- todo: managed-access-level? -->
-    <!--Custom Fields-->
-    <customfield-type
-            key="calendar-issue-progress-cf"
-            name="Calendar Issue Progress for Gantt"
-            i18n-name-key="ru.mail.jira.plugins.calendar.cf.progress.title"
-            class="ru.mail.jira.plugins.calendar.customfield.IssueProgressCFType"
-    >
-        <description>Calendar Issue Progress for Gantt Diagram.</description>
-        <resource type="velocity" name="view" location="ru/mail/jira/plugins/calendar/cf/progress-cf-view.vm" />
-        <resource type="velocity" name="edit" location="ru/mail/jira/plugins/calendar/cf/progress-cf-edit.vm" />
-    </customfield-type>
-
-    <customfield-type
-            key="calendar-issue-duration-cf"
-            name="Calendar Issue Duration for Gantt"
-            i18n-name-key="ru.mail.jira.plugins.calendar.cf.duration.title"
-            class="ru.mail.jira.plugins.calendar.customfield.IssueDurationCFType"
-    >
-        <description>Calendar Issue Duration for Gantt Diagram.</description>
-        <resource type="velocity" name="view" location="ru/mail/jira/plugins/calendar/cf/duration-cf-view.vm" />
-        <resource type="velocity" name="edit" location="ru/mail/jira/plugins/calendar/cf/duration-cf-edit.vm" />
-    </customfield-type>
-
-    <customfield-type
-            key="calendar-issue-parent-cf"
-            name="Calendar Issue Parent for Gantt"
-            i18n-name-key="ru.mail.jira.plugins.calendar.cf.issueParent.title"
-            class="ru.mail.jira.plugins.calendar.customfield.IssueParentCFType"
-    >
-        <description>Calendar Issue Parent for Gantt Diagram.</description>
-        <resource type="velocity" name="view" location="ru/mail/jira/plugins/calendar/cf/parent-cf-view.vm" />
-        <resource type="velocity" name="edit" location="ru/mail/jira/plugins/calendar/cf/parent-cf-edit.vm" />
-    </customfield-type>
-
 </atlassian-plugin>
