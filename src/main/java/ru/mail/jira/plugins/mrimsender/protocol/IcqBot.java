@@ -10,17 +10,15 @@ import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class IcqBot implements InitializingBean, DisposableBean {
     private static final Logger log = Logger.getLogger(IcqBot.class);
     private static final String BOT_SEND_URL = "https://botapi.icq.net/im/sendIM";
     private static final String THREAD_NAME_PREFIX = "icq-bot-thread-pool";
+    private static final int MAX_LENGTH = 9999;
+    private static final String END_POSTFIX = "...";
 
     private final PluginData pluginData;
     private final ConcurrentLinkedQueue<Pair<String, String>> queue = new ConcurrentLinkedQueue<>();
@@ -67,11 +65,15 @@ public class IcqBot implements InitializingBean, DisposableBean {
             try {
                 HttpSender httpSender = new HttpSender(BOT_SEND_URL);
                 httpSender.setHeader("Content-Type", "application/x-www-form-urlencoded");
+                String message = msg.getValue();
+                if (message.length() > MAX_LENGTH) {
+                    message = message.substring(0, MAX_LENGTH - END_POSTFIX.length()) + END_POSTFIX;
+                }
                 String result = encodeFormParam("aimsid", botToken) +
                         "&" +
                         encodeFormParam("t", msg.getKey()) +
                         "&" +
-                        encodeFormParam("message", msg.getValue());
+                        encodeFormParam("message", message);
                 httpSender.sendPost(result);
             } catch (IOException e) {
                 log.error("sending to " + msg.getKey(), e);
