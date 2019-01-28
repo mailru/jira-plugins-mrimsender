@@ -143,6 +143,12 @@ public class MessageFormatter {
                     if (!"custom".equalsIgnoreCase(changeItem.getString("fieldtype")))
                         title = i18nHelper.getText("issue.field." + field.replaceAll(" ", "").toLowerCase());
 
+                    if (("Fix Version".equals(field) || "Component".equals(field) || "Version".equals(field))
+                            && changeItem.get("oldvalue") != null && changeItem.get("newvalue") == null) {
+                        newString = changeItem.getString("oldstring");
+                        title = i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.deleted", title);
+                    }
+
                     if (fieldManager.isNavigableField(field)) {
                         final NavigableField navigableField = fieldManager.getNavigableField(field);
                         if (navigableField != null)
