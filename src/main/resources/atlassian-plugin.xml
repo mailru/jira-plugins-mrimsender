@@ -287,6 +287,7 @@
             <transformer key="jsI18n"/>
         </transformation>
         <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <dependency>com.atlassian.auiplugin:dialog2</dependency>
         <dependency>jira.webresources:calendar</dependency>
         <dependency>jira.webresources:calendar-en</dependency>
         <dependency>jira.webresources:calendar-localisation-moment</dependency>
