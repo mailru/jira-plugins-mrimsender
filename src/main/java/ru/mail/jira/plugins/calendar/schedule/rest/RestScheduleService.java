@@ -11,7 +11,6 @@ import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.web.component.cron.CronEditorBean;
 import com.atlassian.jira.web.component.cron.generator.CronExpressionDescriptor;
 import com.atlassian.jira.web.component.cron.parser.CronExpressionParser;
-import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.scheduler.SchedulerService;
 import com.atlassian.scheduler.config.JobId;
@@ -36,7 +35,6 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 
-@Scanned
 @Path("/schedule")
 @Produces({MediaType.APPLICATION_JSON})
 public class RestScheduleService {

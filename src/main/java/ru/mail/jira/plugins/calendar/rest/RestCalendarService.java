@@ -7,7 +7,6 @@ import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
-import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.plugins.rest.common.security.AnonymousAllowed;
 import com.atlassian.sal.api.message.I18nResolver;
@@ -52,7 +51,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-@Scanned
 @Path("/calendar")
 @Produces(MediaType.APPLICATION_JSON)
 public class RestCalendarService {
