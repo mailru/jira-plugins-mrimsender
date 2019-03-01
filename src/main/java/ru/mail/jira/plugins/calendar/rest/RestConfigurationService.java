@@ -33,6 +33,7 @@ import com.atlassian.jira.sharing.search.SharedEntitySearchResult;
 import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.ImmutableMap;
@@ -68,6 +69,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Scanned
 @Path("/calendar/config")
 @Produces(MediaType.APPLICATION_JSON)
 public class RestConfigurationService {

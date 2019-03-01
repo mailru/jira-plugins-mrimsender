@@ -32,6 +32,7 @@ import com.atlassian.jira.issue.label.Label;
 import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.jira.issue.resolution.Resolution;
 import com.atlassian.jira.issue.search.SearchException;
+import com.atlassian.jira.issue.search.SearchProvider;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.jql.builder.JqlClauseBuilder;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
@@ -101,7 +102,7 @@ public class CalendarEventService {
     private final WorkingDaysService workingDaysService;
     private final RendererManager rendererManager;
     private final SearchRequestService searchRequestService;
-    private final SearchService searchService;
+    private final SearchProvider searchProvider;
     private final UserCalendarService userCalendarService;
     private final I18nResolver i18nResolver;
     private final AvatarService avatarService;
@@ -117,7 +118,7 @@ public class CalendarEventService {
             @ComponentImport FieldLayoutManager fieldLayoutManager,
             @ComponentImport RendererManager rendererManager,
             @ComponentImport SearchRequestService searchRequestService,
-            @ComponentImport SearchService searchService,
+            @ComponentImport SearchProvider searchProvider,
             @ComponentImport I18nResolver i18nResolver,
             @ComponentImport AvatarService avatarService,
             CalendarService calendarService,
@@ -138,7 +139,7 @@ public class CalendarEventService {
         this.workingDaysService = workingDaysService;
         this.rendererManager = rendererManager;
         this.searchRequestService = searchRequestService;
-        this.searchService = searchService;
+        this.searchProvider = searchProvider;
         this.userCalendarService = userCalendarService;
         this.i18nResolver = i18nResolver;
         this.avatarService = avatarService;
@@ -331,7 +332,7 @@ public class CalendarEventService {
         if (selectedQuickFiltersClause != null)
             jqlBuilder.and().sub().addClause(selectedQuickFiltersClause).endsub();
 
-        List<Issue> issues = searchService.search(user, jqlBuilder.buildQuery(), PagerFilter.newPageAlignedFilter(0, MAX_EVENTS_PER_REQUEST)).getResults();
+        List<Issue> issues = searchProvider.search(jqlBuilder.buildQuery(), user, PagerFilter.newPageAlignedFilter(0, MAX_EVENTS_PER_REQUEST)).getIssues();
         if (log.isDebugEnabled()) {
             log.debug("searchProvider.search(). query={}, user={}, issues.size()={}", jqlBuilder.buildQuery().toString(), user, issues.size());
         }

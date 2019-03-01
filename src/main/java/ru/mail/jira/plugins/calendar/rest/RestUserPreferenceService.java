@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.calendar.rest;
 
 import com.atlassian.jira.security.JiraAuthenticationContext;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDataDto;
@@ -17,6 +18,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+@Scanned
 @Path("/calendar/userPreference")
 @Produces(MediaType.APPLICATION_JSON)
 public class RestUserPreferenceService {

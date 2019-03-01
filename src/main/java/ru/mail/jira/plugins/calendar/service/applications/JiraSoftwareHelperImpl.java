@@ -4,8 +4,10 @@ import com.atlassian.greenhopper.api.customfield.ManagedCustomFieldsService;
 import com.atlassian.greenhopper.api.issuetype.ManagedIssueTypesService;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.issuetype.IssueType;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 
+@Scanned
 public class JiraSoftwareHelperImpl implements JiraSoftwareHelper {
     private final ManagedIssueTypesService managedIssueTypesService;
     private final ManagedCustomFieldsService managedCustomFieldsService;

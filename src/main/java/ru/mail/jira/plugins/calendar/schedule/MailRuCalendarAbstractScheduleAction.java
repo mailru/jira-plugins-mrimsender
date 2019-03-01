@@ -8,6 +8,7 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import com.atlassian.jira.web.component.cron.CronEditorBean;
 import com.atlassian.jira.web.component.cron.parser.CronExpressionParser;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.calendar.common.CalendarUtils;
@@ -18,6 +19,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+@Scanned
 public class MailRuCalendarAbstractScheduleAction extends JiraWebActionSupport {
     private Integer id = null;
     private String name = "";

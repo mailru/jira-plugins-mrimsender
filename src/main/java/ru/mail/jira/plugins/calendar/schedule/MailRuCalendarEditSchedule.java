@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.calendar.schedule;
 import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import ru.mail.jira.plugins.calendar.common.CalendarUtils;
 import ru.mail.jira.plugins.calendar.schedule.model.Schedule;
@@ -10,6 +11,7 @@ import ru.mail.jira.plugins.calendar.schedule.service.ScheduleService;
 
 import java.util.Map;
 
+@Scanned
 public class MailRuCalendarEditSchedule extends MailRuCalendarAbstractScheduleAction {
     private static final String SECURITY_BREACH = "securitybreach";
 

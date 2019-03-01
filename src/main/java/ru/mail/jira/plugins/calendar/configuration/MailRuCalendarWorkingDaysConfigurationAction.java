@@ -4,7 +4,9 @@ import com.atlassian.jira.datetime.DateTimeFormatUtils;
 import com.atlassian.jira.datetime.DateTimeFormatterFactory;
 import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
+import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import electric.soap.rpc.In;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.DELETE;
@@ -17,11 +19,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Scanned
 @Path("/configuration/workingDays")
 @Produces(MediaType.APPLICATION_JSON)
 public class MailRuCalendarWorkingDaysConfigurationAction extends JiraWebActionSupport {
