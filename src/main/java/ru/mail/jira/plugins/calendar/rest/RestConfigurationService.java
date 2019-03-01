@@ -49,7 +49,6 @@ import ru.mail.jira.plugins.calendar.rest.dto.SelectItemDto;
 import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.CalendarServiceImpl;
 import ru.mail.jira.plugins.calendar.service.PermissionUtils;
-import ru.mail.jira.plugins.calendar.service.JiraDeprecatedService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.GET;
@@ -79,7 +78,6 @@ public class RestConfigurationService {
     private final GroupManager groupManager;
     private final I18nResolver i18nHelper;
     private final JiraAuthenticationContext jiraAuthenticationContext;
-    private final JiraDeprecatedService jiraDeprecatedService;
     private final ProjectManager projectManager;
     private final ProjectService projectService;
     private final ProjectRoleManager projectRoleManager;
@@ -89,26 +87,28 @@ public class RestConfigurationService {
     private final LicenseService licenseService;
     private final WorkingDaysService workingDaysService;
     private final TimeZoneManager timeZoneManager;
+    private final SearchService searchService;
 
     public RestConfigurationService(
-            @ComponentImport ApplicationAuthorizationService applicationAuthorizationService,
-            @ComponentImport("com.atlassian.jira.config.properties.ApplicationProperties") ApplicationProperties applicationProperties,
-            @ComponentImport AvatarService avatarService,
-            @ComponentImport CustomFieldManager customFieldManager,
-            @ComponentImport GlobalPermissionManager globalPermissionManager,
-            @ComponentImport GroupManager groupManager,
-            @ComponentImport I18nResolver i18nResolver,
-            @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-            @ComponentImport ProjectManager projectManager,
-            @ComponentImport ProjectService projectService,
-            @ComponentImport ProjectRoleManager projectRoleManager,
-            @ComponentImport SearchRequestService searchRequestService,
-            @ComponentImport UserManager userManager,
-            @ComponentImport UserSearchService userSearchService,
-            @ComponentImport TimeZoneManager timeZoneManager,
-            WorkingDaysService workingDaysService,
-            JiraDeprecatedService jiraDeprecatedService,
-            LicenseService licenseService) {
+        @ComponentImport ApplicationAuthorizationService applicationAuthorizationService,
+        @ComponentImport("com.atlassian.jira.config.properties.ApplicationProperties") ApplicationProperties applicationProperties,
+        @ComponentImport AvatarService avatarService,
+        @ComponentImport CustomFieldManager customFieldManager,
+        @ComponentImport GlobalPermissionManager globalPermissionManager,
+        @ComponentImport GroupManager groupManager,
+        @ComponentImport I18nResolver i18nResolver,
+        @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+        @ComponentImport ProjectManager projectManager,
+        @ComponentImport ProjectService projectService,
+        @ComponentImport ProjectRoleManager projectRoleManager,
+        @ComponentImport SearchRequestService searchRequestService,
+        @ComponentImport UserManager userManager,
+        @ComponentImport UserSearchService userSearchService,
+        @ComponentImport TimeZoneManager timeZoneManager,
+        @ComponentImport SearchService searchService,
+        WorkingDaysService workingDaysService,
+        LicenseService licenseService
+    ) {
         this.applicationAuthorizationService = applicationAuthorizationService;
         this.applicationProperties = applicationProperties;
         this.avatarService = avatarService;
@@ -117,7 +117,6 @@ public class RestConfigurationService {
         this.groupManager = groupManager;
         this.i18nHelper = i18nResolver;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
-        this.jiraDeprecatedService = jiraDeprecatedService;
         this.projectManager = projectManager;
         this.projectService = projectService;
         this.projectRoleManager = projectRoleManager;
@@ -127,6 +126,7 @@ public class RestConfigurationService {
         this.licenseService = licenseService;
         this.workingDaysService = workingDaysService;
         this.timeZoneManager = timeZoneManager;
+        this.searchService = searchService;
     }
 
     @GET
@@ -243,9 +243,9 @@ public class RestConfigurationService {
                 ApplicationUser user = jiraAuthenticationContext.getUser();
                 Map<String, Object> result = new HashMap<String, Object>();
                 if (StringUtils.isNotBlank(jql)) {
-                    SearchService.ParseResult parseResult = jiraDeprecatedService.searchService.parseQuery(user, jql);
+                    SearchService.ParseResult parseResult = searchService.parseQuery(user, jql);
                     if (parseResult.isValid())
-                        result.put("issueCount", jiraDeprecatedService.searchService.searchCount(user, parseResult.getQuery()));
+                        result.put("issueCount", searchService.searchCount(user, parseResult.getQuery()));
                 }
                 return result;
             }

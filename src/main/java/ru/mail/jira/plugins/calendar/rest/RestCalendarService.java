@@ -31,7 +31,6 @@ import ru.mail.jira.plugins.calendar.rest.dto.CalendarSettingDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.CalendarService;
-import ru.mail.jira.plugins.calendar.service.JiraDeprecatedService;
 import ru.mail.jira.plugins.calendar.service.UserDataService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
@@ -60,8 +59,8 @@ public class RestCalendarService {
     private final CalendarEventService calendarEventService;
 
     private final I18nResolver i18nResolver;
+    private final DateTimeFormatter dateTimeFormatter;
     private final JiraAuthenticationContext jiraAuthenticationContext;
-    private final JiraDeprecatedService jiraDeprecatedService;
     private final UserDataService userDataService;
     private final UserManager userManager;
     private final LicenseService licenseService;
@@ -70,9 +69,9 @@ public class RestCalendarService {
         @ComponentImport I18nResolver i18nResolver,
         @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
         @ComponentImport UserManager userManager,
+        @ComponentImport DateTimeFormatter dateTimeFormatter,
         CalendarService calendarService,
         CalendarEventService calendarEventService,
-        JiraDeprecatedService jiraDeprecatedService,
         UserDataService userDataService,
         LicenseService licenseService
     ) {
@@ -80,7 +79,7 @@ public class RestCalendarService {
         this.calendarEventService = calendarEventService;
         this.i18nResolver = i18nResolver;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
-        this.jiraDeprecatedService = jiraDeprecatedService;
+        this.dateTimeFormatter = dateTimeFormatter;
         this.userDataService = userDataService;
         this.userManager = userManager;
         this.licenseService = licenseService;
@@ -232,8 +231,8 @@ public class RestCalendarService {
                         return null;
 
                     //todo: check windows outlook & google calendar
-                    DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withZone(Consts.UTC_TZ).withStyle(DateTimeStyle.ISO_8601_DATE);
-                    DateTimeFormatter userDateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+                    DateTimeFormatter userDateFormat = dateTimeFormatter.forUser(user).withZone(Consts.UTC_TZ).withStyle(DateTimeStyle.ISO_8601_DATE);
+                    DateTimeFormatter userDateTimeFormat = dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
                     final net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
                     calendar.getProperties().add(new ProdId("-//MailRu Calendar/" + icalUid + "/iCal4j 1.0//EN"));
                     calendar.getProperties().add(Version.VERSION_2_0);

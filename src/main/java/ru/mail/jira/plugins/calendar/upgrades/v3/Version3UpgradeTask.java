@@ -33,7 +33,6 @@ import ru.mail.jira.plugins.calendar.model.UserCalendar;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.CalendarServiceImpl;
-import ru.mail.jira.plugins.calendar.service.JiraDeprecatedService;
 
 import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
@@ -66,7 +65,6 @@ public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
 
     private final GlobalPermissionManager globalPermissionManager;
     private final GroupManager groupManager;
-    private final JiraDeprecatedService jiraDeprecatedService;
     private final PermissionManager permissionManager;
     private final PluginSettingsFactory pluginSettingsFactory;
     private final ProjectManager projectManager;
@@ -76,7 +74,6 @@ public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
     public Version3UpgradeTask(
         @ComponentImport GlobalPermissionManager globalPermissionManager,
         @ComponentImport GroupManager groupManager,
-        JiraDeprecatedService jiraDeprecatedService,
         @ComponentImport PermissionManager permissionManager,
         @ComponentImport PluginSettingsFactory pluginSettingsFactory,
         @ComponentImport ProjectManager projectManager,
@@ -85,7 +82,6 @@ public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
     ) {
         this.globalPermissionManager = globalPermissionManager;
         this.groupManager = groupManager;
-        this.jiraDeprecatedService = jiraDeprecatedService;
         this.permissionManager = permissionManager;
         this.pluginSettingsFactory = pluginSettingsFactory;
         this.projectManager = projectManager;
@@ -529,7 +525,7 @@ public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
                         for (Permission permission : permissions) {
                             if (permission.getGroup() != null) {
                                 Group group = groupManager.getGroup(permission.getGroup());
-                                if (group != null && jiraDeprecatedService.groupManager.isUserInGroup(user, group)) {
+                                if (group != null && groupManager.isUserInGroup(user, group)) {
                                     showedCalendars.add(calendar.getID());
                                     break;
                                 }
