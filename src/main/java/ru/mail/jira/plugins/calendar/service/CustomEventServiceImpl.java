@@ -983,6 +983,7 @@ public class CustomEventServiceImpl implements CustomEventService {
         result.setIssueTypeImgUrl(event.getEventType().getAvatar());
         result.setStatus(null);
         result.setType(EventDto.Type.CUSTOM);
+        result.setEventType(buildEventType(event.getEventType(), getEventReminderOption(event.getEventType().getID(), calendar.getID())));
         result.setParticipants(parseParticipants(event.getParticipants()));
         result.setStart(dateFormatter.format(event.getStartDate()));
         result.setStartDate(event.getStartDate());
@@ -1062,6 +1063,7 @@ public class CustomEventServiceImpl implements CustomEventService {
 
         result.setColor(calendar.getColor());
         result.setType(EventDto.Type.CUSTOM);
+        result.setEventType(buildEventType(event.getEventType(), getEventReminderOption(event.getEventType().getID(), calendar.getID())));
         result.setIssueTypeImgUrl(event.getEventType().getAvatar());
         result.setRecurring(true);
 

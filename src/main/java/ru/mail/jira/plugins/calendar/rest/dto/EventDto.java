@@ -25,6 +25,8 @@ public class EventDto {
     @XmlElement
     private Type type;
     @XmlElement
+    private EventTypeDto eventType;
+    @XmlElement
     private String issueKey;
     @XmlElement
     private String issueTypeImgUrl;
