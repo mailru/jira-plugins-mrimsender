@@ -40,9 +40,6 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.calendar.common.FieldUtils;
 import ru.mail.jira.plugins.calendar.configuration.WorkingDaysService;
-import ru.mail.jira.plugins.calendar.customfield.IssueDurationCFType;
-import ru.mail.jira.plugins.calendar.customfield.IssueParentCFType;
-import ru.mail.jira.plugins.calendar.customfield.IssueProgressCFType;
 import ru.mail.jira.plugins.calendar.rest.dto.DateField;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueSourceDto;
 import ru.mail.jira.plugins.calendar.rest.dto.PermissionItemDto;
@@ -200,32 +197,23 @@ public class RestConfigurationService {
 
     @GET
     @Path("/durationFields")
+    @Deprecated
     public List<SelectItemDto> getDurationFields() {
-        return customFieldManager.getCustomFieldObjects()
-                                 .stream()
-                                 .filter(customField -> customField.getCustomFieldType() instanceof IssueDurationCFType)
-                                 .map(customField -> new SelectItemDto(customField.getId(), customField.getName()))
-                                 .collect(Collectors.toList());
+        return Collections.emptyList();
     }
 
     @GET
     @Path("/progressFields")
+    @Deprecated
     public List<SelectItemDto> getProgressFields() {
-        return customFieldManager.getCustomFieldObjects()
-                                 .stream()
-                                 .filter(customField -> customField.getCustomFieldType() instanceof IssueProgressCFType)
-                                 .map(customField -> new SelectItemDto(customField.getId(), customField.getName()))
-                                 .collect(Collectors.toList());
+        return Collections.emptyList();
     }
 
     @GET
     @Path("/parentFields")
+    @Deprecated
     public List<SelectItemDto> getParentFields() {
-        return customFieldManager.getCustomFieldObjects()
-                                 .stream()
-                                 .filter(customField -> customField.getCustomFieldType() instanceof IssueParentCFType)
-                                 .map(customField -> new SelectItemDto(customField.getId(), customField.getName()))
-                                 .collect(Collectors.toList());
+        return Collections.emptyList();
     }
 
     @GET
