@@ -27,7 +27,7 @@ define(
             events: {
                 'click #calendar-import-dialog-ok': 'save',
                 'click #calendar-import-dialog-cancel': 'hide',
-                'click #mailrucalendar-calendar-import-dialog tbody tr': 'selectRow',
+                'click tbody tr': 'selectRow',
                 'keyup #mailrucalendar-query': '_fillSearchResultTable'
             },
             render: function() {
