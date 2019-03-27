@@ -68,6 +68,7 @@
 
         <dependency>com.atlassian.auiplugin:ajs</dependency>
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
+        <dependency>com.atlassian.auiplugin:dialog2</dependency>
         <dependency>jira.webresources:jquery-livestamp</dependency>
         <dependency>ru.mail.jira.plugins.mailrucal:mailru-calendar-soy-templates</dependency>
 
