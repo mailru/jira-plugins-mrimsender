@@ -205,8 +205,9 @@ public class MessageFormatter {
             sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.worklogUpdated", formatUser(user, "common.words.anonymous"), issueLink));
         } else if (EventType.ISSUE_WORKLOG_DELETED_ID.equals(eventTypeId)) {
             sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.worklogDeleted", formatUser(user, "common.words.anonymous"), issueLink));
-        } else
-            return null;
+        } else {
+            sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.updated", formatUser(user, "common.words.anonymous"), issueLink));
+        }
 
         sb.append("\n").append(issue.getSummary());
 

@@ -7,7 +7,6 @@ import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.ContextProvider;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.commons.RestExecutor;
-import ru.mail.jira.plugins.mrimsender.protocol.UserSearcher;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
@@ -34,7 +33,7 @@ public class ProfilePanel implements ContextProvider {
 
     @Override
     public Map<String, Object> getContextMap(Map<String, Object> paramMap) {
-        ApplicationUser user = jiraAuthenticationContext.getUser();
+        ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
         Map<String, Object> result = new HashMap<String, Object>();
         result.put("mrimLogin", userData.getMrimLogin(user));
         result.put("enabled", userData.isEnabled(user));
@@ -54,7 +53,6 @@ public class ProfilePanel implements ContextProvider {
                 ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
                 userData.setMrimLogin(user, StringUtils.defaultString(mrimLogin).trim());
                 userData.setEnabled(user, enabled);
-                UserSearcher.INSTANCE.updateUser(user);
                 return null;
             }
         }.getResponse();

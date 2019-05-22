@@ -1,4 +1,4 @@
-(function ($) {
+require(['jquery', 'wrm/context-path'], function($, contextPath) {
     AJS.toInit(function () {
         var dialog = new AJS.Dialog({
             width: 540,
@@ -19,7 +19,7 @@
 
             $.ajax({
                 type: 'POST',
-                url: AJS.contextPath() + '/rest/mrimsender/1.0/preferences',
+                url: contextPath() + '/rest/mrimsender/1.0/preferences',
                 data: {
                     atl_token: atl_token(),
                     mrim_login: mrimLogin,
@@ -51,4 +51,4 @@
             dialog.show().updateHeight();
         })
     });
-})(AJS.$);
+});
