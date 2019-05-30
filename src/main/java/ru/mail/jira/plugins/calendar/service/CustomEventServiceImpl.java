@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableSet;
 import net.java.ao.DBParam;
 import net.java.ao.Query;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -708,10 +709,17 @@ public class CustomEventServiceImpl implements CustomEventService {
     }
 
     private List<EventDto> generateRecurringEvents(Event event, Calendar calendar, ApplicationUser user, boolean canEditEvents, ZonedDateTime since, ZonedDateTime until, ZoneId zoneId) {
-        DateGenerator dateGenerator = getDateGenerator(event, zoneId);
+        Map<Integer, Pair<ZonedDateTime, ZonedDateTime>> generateEvents = generateEventDefinitions(event, since, until, zoneId);
 
-        Map<Integer, Event> children = Arrays
-            .stream(getChildEvents(Date.from(since.toInstant()), Date.from(until.toInstant()), event))
+        if (generateEvents == null) {
+            return new ArrayList<>();
+        }
+
+        Integer recurrenceCount = event.getRecurrenceCount();
+        List<EventDto> result = new ArrayList<>();
+
+        Map<Integer, Event> childrenInInterval = Arrays
+            .stream(getChildEventsForInterval(Date.from(since.toInstant()), Date.from(until.toInstant()), event))
             .collect(Collectors.toMap(
                 Event::getRecurrenceNumber,
                 Function.identity(),
@@ -727,10 +735,78 @@ public class CustomEventServiceImpl implements CustomEventService {
                 }
             ));
 
+        for (Event child : childrenInInterval.values()) {
+            if (!isCountOk(child.getRecurrenceNumber(), recurrenceCount)) {
+                continue;
+            }
+
+            ZonedDateTime childStart = child.getStartDate().toInstant().atZone(zoneId);
+            ZonedDateTime childEnd = null;
+            if (child.getEndDate() != null) {
+                childEnd = child.getEndDate().toInstant().atZone(zoneId);
+            }
+
+            if (isInInterval(childStart, childEnd, since)) {
+                result.add(buildRecurrentEvent(event, child.getRecurrenceNumber(), child, childStart, childEnd, calendar, user, canEditEvents));
+                generateEvents.remove(child.getRecurrenceNumber());
+            }
+        }
+
+        //we're requesting childrenByNumbers because some events might be overridden to be outside requested time interval
+        Map<Integer, Event> childrenByNumbers = Arrays
+            .stream(getChildEventsByNumbers(event, new ArrayList<>(generateEvents.keySet())))
+            .collect(Collectors.toMap(
+                Event::getRecurrenceNumber,
+                Function.identity(),
+                (a, b) -> {
+                    logger.warn(
+                        "found events ({}, {}) with same parent ({}) and recurrent number ({})",
+                        a.getID(), b.getID(), event.getID(), a.getRecurrenceNumber()
+                    );
+                    if (a.getID() > b.getID()) {
+                        return a;
+                    }
+                    return b;
+                }
+            ));
+
+        for (Map.Entry<Integer, Pair<ZonedDateTime, ZonedDateTime>> entry : generateEvents.entrySet()) {
+            Integer entryNumber = entry.getKey();
+            Pair<ZonedDateTime, ZonedDateTime> dates = entry.getValue();
+            Event child = childrenByNumbers.get(entryNumber);
+
+            if (child != null) {
+                ZonedDateTime childStart = child.getStartDate().toInstant().atZone(zoneId);
+                ZonedDateTime childEnd = null;
+                if (child.getEndDate() != null) {
+                    childEnd = child.getEndDate().toInstant().atZone(zoneId);
+                }
+
+                //filter out overrides outside of interval
+                if (!isInInterval(childStart, childEnd, since)) {
+                    continue;
+                }
+            }
+
+            result.add(buildRecurrentEvent(event, entryNumber, child, dates.getLeft(), dates.getRight(), calendar, user, canEditEvents));
+        }
+
+        return result;
+    }
+
+    private Map<Integer, Pair<ZonedDateTime, ZonedDateTime>> generateEventDefinitions(
+        Event event,
+        ZonedDateTime since, ZonedDateTime until, ZoneId zoneId
+    ) {
+        DateGenerator dateGenerator = getDateGenerator(event, zoneId);
+
         if (dateGenerator == null) {
             logger.error("Unable to create date generator for event {} with recurrence type {}", event.getID(), event.getRecurrenceType().name());
-            return new ArrayList<>();
+            return null;
         }
+
+        Map<Integer, Pair<ZonedDateTime, ZonedDateTime>> result = new HashMap<>();
+        Integer recurrenceCount = event.getRecurrenceCount();
 
         ZonedDateTime startDate = dateGenerator.nextDate();
 
@@ -741,18 +817,18 @@ public class CustomEventServiceImpl implements CustomEventService {
             endDate = event.getEndDate().toInstant().atZone(zoneId); //get initial end date from event
         }
 
-        Integer recurrenceCount = event.getRecurrenceCount();
         ZonedDateTime recurrenceEndDate = null;
         if (event.getRecurrenceEndDate() != null) {
             recurrenceEndDate = event.getRecurrenceEndDate().toInstant().atZone(zoneId);
         }
 
-        List<EventDto> result = new ArrayList<>();
         int number = 0;
 
-        while (startDate.isBefore(until) && isBeforeEnd(startDate, recurrenceEndDate) && isCountOk(number, recurrenceCount)) {
-            if (startDate.isAfter(since) || startDate.equals(since) || endDate != null && (endDate.isAfter(since) || endDate.equals(since))) {
-                result.add(buildRecurrentEvent(event, number, children.get(number), startDate, endDate, calendar, user, canEditEvents));
+        while (startDate.isBefore(until) && isBeforeEnd(startDate, recurrenceEndDate)) {
+            if (!isCountOk(number, recurrenceCount)) break;
+
+            if (isInInterval(startDate, endDate, since)) {
+                result.put(number, Pair.of(startDate, endDate));
             }
 
             number++;
@@ -767,6 +843,10 @@ public class CustomEventServiceImpl implements CustomEventService {
         }
 
         return result;
+    }
+
+    private boolean isInInterval(ZonedDateTime start, ZonedDateTime end, ZonedDateTime since) {
+        return start.isAfter(since) || start.equals(since) || end != null && (end.isAfter(since) || end.equals(since));
     }
 
     @Override
@@ -804,7 +884,34 @@ public class CustomEventServiceImpl implements CustomEventService {
         return buildEventType(eventType, reminder);
     }
 
-    private Event[] getChildEvents(Date start, Date end, Event event) {
+    private Event[] getChildEventsByNumbers(Event event, List<Integer> numbers) {
+        if (numbers.size() == 0) {
+            return new Event[0];
+        }
+
+        StringBuilder stubsBuilder = new StringBuilder("?");
+
+        Object[] queryParams = new Object[1 + numbers.size()];
+        queryParams[0] = event.getID();
+        for (int i = 0; i < numbers.size(); i++) {
+            queryParams[1+i] = numbers.get(i);
+            if (i > 0) {
+                stubsBuilder.append(",?");
+            }
+        }
+
+        return ao.find(
+            Event.class,
+            Query
+                .select()
+                .where(
+                    "PARENT_ID = ? AND RECURRENCE_NUMBER IN (" + stubsBuilder.toString() + ") AND RECURRENCE_TYPE IS NULL",
+                    queryParams
+                )
+        );
+    }
+
+    private Event[] getChildEventsForInterval(Date start, Date end, Event event) {
         return ao.find(
             Event.class,
             Query
