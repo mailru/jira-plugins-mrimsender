@@ -83,7 +83,7 @@ public class CalendarServiceImpl implements CalendarService {
     public static final String UPDATED = "issue.field.updated";
     public static final String REPORTER = "issue.field.reporter";
     public static final String ASSIGNEE = "issue.field.assignee";
-    public static final String FIX_VERSION = "common.concepts.fixfor";
+    public static final String FIX_VERSION = "issue.field.fixversion";
     public static final List<String> DISPLAYED_FIELDS = new ArrayList<String>() {{
         add(DESCRIPTION);
         add(STATUS);

@@ -108,6 +108,12 @@
                         {param label: getText('issue.field.version') /}
                     {/call}
                 {/if}
+                {if $issue.fixes}
+                    {call .issueInfoBuildField}
+                        {param value: $issue.fixes /}
+                        {param label: getText('issue.field.fixversion') /}
+                    {/call}
+                {/if}
                 {if $issue.created}
                     {call .issueInfoBuildField}
                         {param value: $issue.created /}
