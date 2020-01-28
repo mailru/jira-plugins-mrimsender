@@ -20,12 +20,32 @@
             <artifactId>jira-api</artifactId>
             <version>${jira.version}</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>jndi</groupId>
+                    <artifactId>jndi</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>jta</groupId>
+                    <artifactId>jta</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.atlassian.jira</groupId>
             <artifactId>jira-core</artifactId>
             <version>${jira.version}</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>jndi</groupId>
+                    <artifactId>jndi</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>jta</groupId>
+                    <artifactId>jta</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.atlassian.jira.plugins</groupId>
@@ -48,12 +68,16 @@
         <dependency>
             <groupId>ru.mail.jira.plugins</groupId>
             <artifactId>commons</artifactId>
-            <version>1.0</version>
+            <version>1.2</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
                     <artifactId>slf4j-api</artifactId>
                     <groupId>org.slf4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>sentry</artifactId>
+                    <groupId>io.sentry</groupId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -129,7 +153,7 @@
         <plugins>
             <plugin>
                 <groupId>com.atlassian.maven.plugins</groupId>
-                <artifactId>maven-jira-plugin</artifactId>
+                <artifactId>jira-maven-plugin</artifactId>
                 <version>${amps.version}</version>
                 <extensions>true</extensions>
                 <configuration>
@@ -237,7 +261,7 @@
     </build>
     <properties>
         <jira.version>7.10.2</jira.version>
-        <amps.version>6.2.11</amps.version>
+        <amps.version>8.0.0</amps.version>
         <ao.version>1.2.0</ao.version>
         <quick.reload.version>2.0.0</quick.reload.version>
         <atlassian.spring.scanner.version>1.2.13</atlassian.spring.scanner.version>
@@ -250,7 +274,14 @@
     <repositories>
         <repository>
             <id>atlassian</id>
-            <url>https://maven.atlassian.com/repository/public</url>
+            <url>https://packages.atlassian.com/maven/repository/public</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>jira-plugins</id>
+            <url>https://is-artifactory.corp.mail.ru/artifactory/jira-plugins</url>
         </repository>
     </repositories>
 </project>
