@@ -922,6 +922,14 @@ public class CalendarEventService {
                         renderedDescription = rendererManager.getRendererForType("atlassian-wiki-renderer").render(issue.getDescription(), null);
                     issueInfo.setDescription(renderedDescription);
                 }
+            } else if (extraField.equals(CalendarServiceImpl.FIX_VERSION)) {
+                if (issue.getFixVersions() != null && !issue.getFixVersions().isEmpty()) {
+                    List<String> fixVersions = new ArrayList<>();
+                    for (Version ver : issue.getFixVersions()) {
+                        fixVersions.add(ver.getName());
+                    }
+                    issueInfo.setFixes(fixVersions.toString());
+                }
             }
         }
     }
