@@ -1,13 +1,12 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
+import com.mashape.unirest.http.Unirest;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import ru.mail.jira.plugins.commons.HttpSender;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -19,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class IcqBot implements InitializingBean, DisposableBean {
     private static final Logger log = Logger.getLogger(IcqBot.class);
-    private static final String BOT_SEND_URL = "https://botapi.icq.net/im/sendIM";
+    private static final String BOT_SEND_URL = "https://api.icq.net/bot/v1";
     private static final String THREAD_NAME_PREFIX = "icq-bot-thread-pool";
 
     private final PluginData pluginData;
@@ -64,18 +63,11 @@ public class IcqBot implements InitializingBean, DisposableBean {
     private void processMessages() {
         Pair<String, String> msg;
         while ((msg = queue.poll()) != null) {
-            try {
-                HttpSender httpSender = new HttpSender(BOT_SEND_URL);
-                httpSender.setHeader("Content-Type", "application/x-www-form-urlencoded");
-                String result = encodeFormParam("aimsid", botToken) +
-                        "&" +
-                        encodeFormParam("t", msg.getKey()) +
-                        "&" +
-                        encodeFormParam("message", msg.getValue());
-                httpSender.sendPost(result);
-            } catch (IOException e) {
-                log.error("sending to " + msg.getKey(), e);
-            }
+            Unirest.get(BOT_SEND_URL + "/messages/sendText")
+                   .queryString("token", botToken)
+                   .queryString("chatId", msg.getKey())
+                   .queryString("text", msg.getValue())
+                   .asJsonAsync();
         }
     }
 

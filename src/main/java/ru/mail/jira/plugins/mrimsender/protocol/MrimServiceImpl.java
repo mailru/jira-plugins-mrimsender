@@ -19,9 +19,14 @@ public class MrimServiceImpl implements MrimService {
 
         String mrimLogin = userData.getMrimLogin(user);
         if (user.isActive() && !StringUtils.isBlank(mrimLogin) && userData.isEnabled(user)) {
-            icqBot.sendMessage(mrimLogin, message);
+            sendMessage(mrimLogin, message);
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void sendMessage(String chatId, String message) {
+        icqBot.sendMessage(chatId, message);
     }
 }

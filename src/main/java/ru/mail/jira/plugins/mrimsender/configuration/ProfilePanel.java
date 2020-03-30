@@ -6,7 +6,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.PluginParseException;
 import com.atlassian.plugin.web.ContextProvider;
 import org.apache.commons.lang3.StringUtils;
-import ru.mail.jira.plugins.commons.RestExecutor;
+import ru.mail.jira.plugins.commons.RestUtils;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
@@ -17,7 +17,7 @@ import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 
-@Produces({ MediaType.APPLICATION_JSON })
+@Produces({MediaType.APPLICATION_JSON})
 @Path("/preferences")
 public class ProfilePanel implements ContextProvider {
     private final JiraAuthenticationContext jiraAuthenticationContext;
@@ -42,19 +42,16 @@ public class ProfilePanel implements ContextProvider {
 
     @RequiresXsrfCheck
     @POST
-    public Response updateCfo(@FormParam("mrim_login") final String mrimLogin,
-                              @FormParam("enabled") final boolean enabled) {
-        return new RestExecutor<Void>() {
-            @Override
-            protected Void doAction() {
-                if (enabled && StringUtils.isBlank(mrimLogin))
-                    throw new IllegalArgumentException(jiraAuthenticationContext.getI18nHelper().getText("ru.mail.jira.plugins.mrimsender.profilePanel.mrimLoginMustBeSpecified"));
+    public Response updateMrimEnabled(@FormParam("mrim_login") final String mrimLogin,
+                                      @FormParam("enabled") final boolean enabled) {
 
-                ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-                userData.setMrimLogin(user, StringUtils.defaultString(mrimLogin).trim());
-                userData.setEnabled(user, enabled);
-                return null;
-            }
-        }.getResponse();
+        if (enabled && StringUtils.isBlank(mrimLogin))
+            throw new IllegalArgumentException(jiraAuthenticationContext.getI18nHelper().getText("ru.mail.jira.plugins.mrimsender.profilePanel.mrimLoginMustBeSpecified"));
+
+        ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+        userData.setMrimLogin(user, StringUtils.defaultString(mrimLogin).trim());
+        userData.setEnabled(user, enabled);
+
+        return RestUtils.success(null);
     }
 }
