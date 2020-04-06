@@ -73,6 +73,7 @@ public class IcqEventsFetcherTest {
         String example = "{\"eventId\":1,\"payload\":{\"chat\":{\"chatId\":\"example@example.ru\",\"type\":\"private\"},\"msgId\":\"6811058128403038841\",\"from\":{\"firstName\":\"Данил\",\"userId\":\"example@example.ru\"},\"text\":\"meh\",\"timestamp\":1585823048},\"type\":\"newMessage\"}";
         org.codehaus.jackson.map.ObjectMapper objectMapper = new org.codehaus.jackson.map.ObjectMapper();
         Event<?> e = objectMapper.readValue(example, Event.class);
+        System.out.println(e);
         assertEquals(e.getEventId(), 1);
         assertEquals(e.getType(), "newMessage");
         NewMessageEvent newMessageEvent = (NewMessageEvent)e;

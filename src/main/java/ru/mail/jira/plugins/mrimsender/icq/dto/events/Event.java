@@ -1,9 +1,21 @@
 package ru.mail.jira.plugins.mrimsender.icq.dto.events;
 
+
+import org.codehaus.jackson.annotate.JsonSubTypes;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import ru.mail.jira.plugins.mrimsender.icq.dto.EventsDeserializer;
 
 @JsonDeserialize(using = EventsDeserializer.class)
+/*@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type",
+        visible = true)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = CallbackQueryEvent.class, name = "callbackQuery"),
+        @JsonSubTypes.Type(value = NewMessageEvent.class, name = "newMessage")
+})*/
 public abstract class Event<T> {
     private long eventId;
     private String type;

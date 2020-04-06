@@ -1,10 +1,20 @@
 package ru.mail.jira.plugins.mrimsender.icq.dto.parts;
 
+import org.codehaus.jackson.annotate.JsonSubTypes;
+import org.codehaus.jackson.annotate.JsonTypeInfo;
 import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import ru.mail.jira.plugins.mrimsender.icq.dto.PartsDeserializer;
 
 
 @JsonDeserialize(using = PartsDeserializer.class)
+/*@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = File.class, name = "file"),
+        @JsonSubTypes.Type(value = Mention.class, name = "mention")
+})*/
 public abstract class Part<T> {
     private String type;
     private T payload;

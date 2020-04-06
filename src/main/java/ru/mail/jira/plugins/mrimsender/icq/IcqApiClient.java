@@ -10,7 +10,7 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.MessageResponse;
 import java.util.List;
 
 public interface IcqApiClient {
-    public HttpResponse<MessageResponse> sendMessageText(String chatId, String text, List<Integer> replyMsgId, String forwardChatId, String forwardMsgId, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup) throws UnirestException;
+    public HttpResponse<MessageResponse> sendMessageText(String chatId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup) throws UnirestException;
 
     public HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime) throws UnirestException;
 

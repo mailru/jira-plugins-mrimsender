@@ -10,12 +10,8 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.codehaus.jackson.node.TextNode;
 import ru.mail.jira.plugins.mrimsender.icq.Consts;
 import ru.mail.jira.plugins.mrimsender.icq.dto.parts.File;
-import ru.mail.jira.plugins.mrimsender.icq.dto.parts.Forward;
 import ru.mail.jira.plugins.mrimsender.icq.dto.parts.Mention;
 import ru.mail.jira.plugins.mrimsender.icq.dto.parts.Part;
-import ru.mail.jira.plugins.mrimsender.icq.dto.parts.Reply;
-import ru.mail.jira.plugins.mrimsender.icq.dto.parts.Sticker;
-import ru.mail.jira.plugins.mrimsender.icq.dto.parts.Voice;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -50,20 +46,8 @@ public class PartsDeserializer extends StdDeserializer<Part<?>> {
         if (partType.equals(Consts.PartType.FILE_TYPE.getTypeStrValue())) {
             return ((ObjectMapper) jsonParser.getCodec()).readValue(node, File.class);
         }
-        if (partType.equals(Consts.PartType.FORWARD_TYPE.getTypeStrValue())) {
-            return ((ObjectMapper) jsonParser.getCodec()).readValue(node, Forward.class);
-        }
         if (partType.equals(Consts.PartType.MENTION_TYPE.getTypeStrValue())) {
             return ((ObjectMapper) jsonParser.getCodec()).readValue(node, Mention.class);
-        }
-        if (partType.equals(Consts.PartType.REPLY_TYPE.getTypeStrValue())) {
-            return ((ObjectMapper) jsonParser.getCodec()).readValue(node, Reply.class);
-        }
-        if (partType.equals(Consts.PartType.STICKER_TYPE.getTypeStrValue())) {
-            return ((ObjectMapper) jsonParser.getCodec()).readValue(node, Sticker.class);
-        }
-        if (partType.equals(Consts.PartType.VOICE_TYPE.getTypeStrValue())) {
-            return ((ObjectMapper) jsonParser.getCodec()).readValue(node, Voice.class);
         }
         return null;
     }

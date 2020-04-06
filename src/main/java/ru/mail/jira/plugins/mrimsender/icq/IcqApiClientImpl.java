@@ -19,16 +19,21 @@ public class IcqApiClientImpl implements IcqApiClient {
         this.pluginData = pluginData;
     }
 
-    public HttpResponse<MessageResponse> sendMessageText(String chatId, String text, List<Integer> replyMsgId, String forwardChatId, String forwardMsgId, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup) throws UnirestException {
+    public HttpResponse<MessageResponse> sendMessageText(String chatId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup) throws UnirestException {
+        if (inlineKeyboardMarkup == null)
+            return Unirest.get(BASE_API_URL)
+                          .queryString("token", pluginData.getToken())
+                          .queryString("chatId", chatId)
+                          .queryString("text", text)
+                          .asObject(MessageResponse.class);
         return Unirest.get(BASE_API_URL)
                       .queryString("token", pluginData.getToken())
                       .queryString("chatId", chatId)
-                      .queryString("replyMsgId", replyMsgId)
-                      .queryString("forwardChatId", forwardChatId)
-                      .queryString("forwardMsgId", forwardMsgId)
+                      .queryString("text", text)
                       .queryString("inlineKeyboardMarkup", inlineKeyboardMarkup)
                       .asObject(MessageResponse.class);
     }
+
 
     public HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime) throws UnirestException {
         return Unirest.get(BASE_API_URL)
