@@ -28,9 +28,9 @@ public class IcqEventsFetcher {
     // TODO still didn't initialized
     private Map<Class, Consumer<Event<?>>> handlersMap;
 
-    public IcqEventsFetcher(PluginData pluginData) {
+    public IcqEventsFetcher(PluginData pluginData, IcqApiClient icqApiClient) {
         isRunning = new AtomicBoolean(false);
-        this.icqApiClient = new IcqApiClientImpl(pluginData);
+        this.icqApiClient = icqApiClient;
     }
 
     public void start() {

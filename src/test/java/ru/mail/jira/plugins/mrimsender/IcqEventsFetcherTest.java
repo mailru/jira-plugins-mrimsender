@@ -1,18 +1,29 @@
 package ru.mail.jira.plugins.mrimsender;
 
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
+import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
+import ru.mail.jira.plugins.mrimsender.icq.IcqApiClientImpl;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
+import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.Event;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
+import ru.mail.jira.plugins.mrimsender.icq.dto.parts.File;
+import ru.mail.jira.plugins.mrimsender.icq.dto.parts.InlineKeyboardMarkup;
+import ru.mail.jira.plugins.mrimsender.icq.dto.parts.Part;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -21,6 +32,7 @@ import static org.mockito.Mockito.when;
 
 public class IcqEventsFetcherTest {
     private PluginData pluginData;
+    private IcqApiClient icqApiClient;
 
     @Before
     public void init() {
@@ -48,16 +60,14 @@ public class IcqEventsFetcherTest {
         });
         this.pluginData = Mockito.mock(PluginData.class);
         when(pluginData.getToken()).thenReturn("001.0352397737.0323867025:751619011");
+        this.icqApiClient = new IcqApiClientImpl(this.pluginData);
     }
 
-    @Ignore
-    public void fetchIcqEvents() throws UnirestException, IOException {
-        /*HttpResponse<JsonNode> jsonHttpResponse = Unirest.get(ApiUrlsHelper.getEventsUrl(pluginData.getToken(), 3, 60)).asJson();
-        System.out.println(jsonHttpResponse.getBody());
-        HttpResponse<FetchResponseDto> eventHttpResponse = Unirest.get(ApiUrlsHelper.getEventsUrl(pluginData.getToken(), 3, 60)).asObject(FetchResponseDto.class);
-
+    @Test
+    public void fetchIcqEvents() throws UnirestException {
+        HttpResponse<FetchResponseDto> eventHttpResponse = this.icqApiClient.getEvents(0, 60);
         System.out.println(eventHttpResponse.getBody());
-        System.out.println(eventHttpResponse.getBody().getEvents());*/
+        System.out.println(eventHttpResponse.getBody().getEvents());
     }
 
     @Test
@@ -88,17 +98,44 @@ public class IcqEventsFetcherTest {
         assertNull(newMessageEvent.getFrom().getLastName());
         assertNull(newMessageEvent.getFrom().getNick());
         assertEquals(newMessageEvent.getFrom().getUserId(), "example@example.ru");
-        assertNull(newMessageEvent.getParts());
     }
 
-    // TODO написать нормальный тест
-    @Ignore
-    public void deserializationNewMessageWithReplyEventTest() throws IOException {
-        String example3 = "{\"ok\":true,\"events\":[{\"eventId\":2,\"payload\":{\"chat\":{\"chatId\":\"example@example.ru\",\"type\":\"private\"},\"parts\":[{\"payload\":{\"message\":{\"msgId\":\"6811210290504401070\",\"from\":{\"nick\":\"OnlyMineAgentBot\",\"firstName\":\"OnlyMineAgentBot\",\"userId\":\"751619011\"},\"text\":\"kek\",\"timestamp\":1585858476}},\"type\":\"reply\"}],\"msgId\":\"6811297959376846925\",\"from\":{\"firstName\":\"Данил\",\"userId\":\"example@example.ru\"},\"text\":\"LA KEK!\",\"timestamp\":1585878888},\"type\":\"newMessage\"}]}";
+    @Test
+    public void deserializationCallbackQueryEventWithManyButtonsTest() throws IOException {
+        String example = "{\"eventId\":5,\"payload\":{\"callbackData\":\"next-page1\",\"from\":{\"firstName\":\"Данил\",\"userId\":\"example@example.ru\"},\"message\":{\"chat\":{\"chatId\":\"example@example.ru\",\"type\":\"private\"},\"parts\":[{\"payload\":[[{\"callbackData\":\"next-page1\",\"text\":\"asdad1\"},{\"callbackData\":\"next-page2\",\"text\":\"asdad2\"}],[{\"callbackData\":\"next-page3\",\"text\":\"asdad3\"},{\"callbackData\":\"next-page4\",\"text\":\"asdad4\"}]],\"type\":\"inlineKeyboardMarkup\"}],\"msgId\":\"6812931455698600506\",\"from\":{\"nick\":\"OnlyMineAgentBot\",\"firstName\":\"OnlyMineAgentBot\",\"userId\":\"751619011\"},\"text\":\"kek\",\"timestamp\":1586259216},\"queryId\":\"SVR:example@example.ru:751619011:1586266646713388:333-1586266647\"},\"type\":\"callbackQuery\"}";
         org.codehaus.jackson.map.ObjectMapper objectMapper = new org.codehaus.jackson.map.ObjectMapper();
-        System.out.println(objectMapper.readTree(example3));
-        FetchResponseDto fetchResponseDto = objectMapper.readValue(example3, FetchResponseDto.class);
-        System.out.println(fetchResponseDto);
+        Event<?> e = objectMapper.readValue(example, Event.class);
+        System.out.println(e);
+        assertEquals(5, e.getEventId());
+        assertEquals(CallbackQueryEvent.class, e.getClass());
+        CallbackQueryEvent callbackQueryEvent = (CallbackQueryEvent)e;
+        assertEquals("SVR:example@example.ru:751619011:1586266646713388:333-1586266647", callbackQueryEvent.getQueryId());
+        assertEquals("next-page1", callbackQueryEvent.getCallbackData());
+        assertEquals("Данил", callbackQueryEvent.getFrom().getFirstName());
+        assertNull(callbackQueryEvent.getFrom().getLastName());
+        assertNull(callbackQueryEvent.getFrom().getNick());
+        assertEquals("example@example.ru", callbackQueryEvent.getFrom().getUserId());
+        assertEquals(callbackQueryEvent.getMessage().getParts().size(), 1);
+        assertEquals(callbackQueryEvent.getMessage().getChat().getChatId(), "example@example.ru");
+        assertEquals(callbackQueryEvent.getMessage().getChat().getType(), "private");
+        assertEquals(callbackQueryEvent.getMessage().getMsgId(), 6812931455698600506L);
+        assertEquals(callbackQueryEvent.getMessage().getTimestamp(), 1586259216);
+        assertEquals(callbackQueryEvent.getMessage().getText(), "kek");
+        assertEquals(callbackQueryEvent.getMessage().getFrom().getUserId(), "751619011");
+        assertEquals(callbackQueryEvent.getMessage().getFrom().getFirstName(), "OnlyMineAgentBot");
+        assertEquals(callbackQueryEvent.getMessage().getFrom().getNick(), "OnlyMineAgentBot");
+        assertEquals(callbackQueryEvent.getMessage().getParts().stream().map(part -> {
+            if (part instanceof InlineKeyboardMarkup) {
+                InlineKeyboardMarkup inlineKeyboardMarkup = (InlineKeyboardMarkup) part;
+                return inlineKeyboardMarkup.getPayload()
+                                           .stream()
+                                           .map(buttonsRow -> buttonsRow.stream()
+                                                                        .map(InlineKeyboardMarkupButton::getText)
+                                                                        .collect(Collectors.toList()))
+                                           .collect(Collectors.toList());
+            }
+            return "";
+        }).collect(Collectors.toList()).toString(), "[[asdad1, asdad2], [asdad3, asdad4]]" );
     }
 
 }

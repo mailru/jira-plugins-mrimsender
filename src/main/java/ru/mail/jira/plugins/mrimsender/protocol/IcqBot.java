@@ -1,12 +1,15 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
 import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
+import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -22,6 +25,7 @@ public class IcqBot implements InitializingBean, DisposableBean {
     private static final String THREAD_NAME_PREFIX = "icq-bot-thread-pool";
 
     private final PluginData pluginData;
+    private final IcqApiClient icqApiClient;
     private final ConcurrentLinkedQueue<Pair<String, String>> queue = new ConcurrentLinkedQueue<>();
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2, new ThreadFactory() {
         private final AtomicInteger threadNumber = new AtomicInteger(1);
@@ -37,8 +41,9 @@ public class IcqBot implements InitializingBean, DisposableBean {
 
     private volatile String botToken;
 
-    public IcqBot(PluginData pluginData) {
+    public IcqBot(PluginData pluginData, IcqApiClient icqApiClient) {
         this.pluginData = pluginData;
+        this.icqApiClient = icqApiClient;
     }
 
     public void sendMessage(String mrimLogin, String message) {
@@ -63,11 +68,11 @@ public class IcqBot implements InitializingBean, DisposableBean {
     private void processMessages() {
         Pair<String, String> msg;
         while ((msg = queue.poll()) != null) {
-            Unirest.get(BOT_SEND_URL + "/messages/sendText")
-                   .queryString("token", botToken)
-                   .queryString("chatId", msg.getKey())
-                   .queryString("text", msg.getValue())
-                   .asJsonAsync();
+            try {
+                icqApiClient.sendMessageText(msg.getKey(), msg.getValue(), null);
+            } catch (UnirestException | IOException e) {
+                //e.printStackTrace();
+            }
         }
     }
 

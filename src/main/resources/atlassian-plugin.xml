@@ -18,6 +18,10 @@
         <interface>ru.mail.jira.plugins.mrimsender.configuration.PluginData</interface>
     </component>
 
+    <component key="icq-api-client-impl" class="ru.mail.jira.plugins.mrimsender.icq.IcqApiClient" public="true">
+        <interface>ru.mail.jira.plugins.mrimsender.icq.IcqApiClient</interface>
+    </component>
+
     <web-item key="configuration-link" section="admin_plugins_menu/top_plugins_section">
         <label key="ru.mail.jira.plugins.mrimsender.title" />
         <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
