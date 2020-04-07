@@ -5,30 +5,28 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
-import ru.mail.jira.plugins.mrimsender.icq.dto.events.Event;
+import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
+import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 @Slf4j
 public class IcqEventsFetcher {
 
+    private final IcqEventsHandler icqEventsHandler;
     // default api value
     private long lastEventId = 0;
     private AtomicBoolean isRunning;
     private ExecutorService fetcherExecutorService;
     private volatile Future<?> currentFetchJobFuture;
-
     private IcqApiClient icqApiClient;
-    // TODO still didn't initialized
-    private Map<Class, Consumer<Event<?>>> handlersMap;
 
-    public IcqEventsFetcher(PluginData pluginData) {
+    public IcqEventsFetcher(PluginData pluginData, IcqEventsHandler icqEventsHandler) {
+        this.icqEventsHandler = icqEventsHandler;
         isRunning = new AtomicBoolean(false);
         this.icqApiClient = new IcqApiClientImpl(pluginData);
     }
@@ -63,8 +61,13 @@ public class IcqEventsFetcher {
             return;
         httpResponse.getBody()
                     .getEvents()
-                    .forEach(event -> handlersMap.getOrDefault(event.getClass(), event1 -> log.debug("Receive not supported event - {}", event1))
-                                                 .accept(event));
+                    .forEach(event -> {
+                        if (event instanceof NewMessageEvent) {
+                            icqEventsHandler.handleEvent((NewMessageEvent) event);
+                        } else if (event instanceof CallbackQueryEvent) {
+                            icqEventsHandler.handleEvent((CallbackQueryEvent) event);
+                        }
+                    });
         int eventsNum = httpResponse.getBody().getEvents().size();
         this.lastEventId = httpResponse.getBody().getEvents().get(eventsNum - 1).getEventId();
     }
