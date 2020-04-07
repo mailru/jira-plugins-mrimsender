@@ -4,7 +4,6 @@ import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import ru.mail.jira.plugins.mrimsender.icq.dto.Chat;
 import ru.mail.jira.plugins.mrimsender.icq.dto.User;
 
-@JsonDeserialize(as = CallbackQueryEvent.class)
 public class CallbackQueryEvent extends Event<CallbackQueryEvent.Data> {
     public long getQueryId() {
         return this.getPayload().queryId;

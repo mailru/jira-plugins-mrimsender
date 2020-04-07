@@ -2,7 +2,7 @@ package ru.mail.jira.plugins.mrimsender.icq;
 
 
 public class Consts {
-    public static enum EventType {
+    public enum EventType {
         NEW_MESSAGE_TYPE("newMessage"),
         CALLBACK_QUERY_TYPE("callbackQuery");
 
@@ -18,7 +18,7 @@ public class Consts {
 
     }
 
-    public static enum PartType {
+    public enum PartType {
         MENTION_TYPE("mention"),
         FILE_TYPE("file");
 

@@ -1,17 +1,15 @@
 package ru.mail.jira.plugins.mrimsender.icq.dto.events;
 
 
-import org.codehaus.jackson.map.annotate.JsonDeserialize;
 import ru.mail.jira.plugins.mrimsender.icq.dto.Chat;
 import ru.mail.jira.plugins.mrimsender.icq.dto.User;
 import ru.mail.jira.plugins.mrimsender.icq.dto.parts.Part;
 
 import java.util.List;
 
-@JsonDeserialize(as = NewMessageEvent.class)
 public class NewMessageEvent extends Event<NewMessageEvent.Data> {
     public long getMsgId() {
-        return  this.getPayload().msgId;
+        return this.getPayload().msgId;
     }
 
     public long getTimestamp() {

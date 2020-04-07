@@ -16,6 +16,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 public class IcqEventsFetcherTest {
@@ -64,7 +65,7 @@ public class IcqEventsFetcherTest {
         String example = "{\"ok\":true,\"events\":[{\"eventId\":1,\"payload\":{\"chat\":{\"chatId\":\"example@example.ru\",\"type\":\"private\"},\"msgId\":\"6811058128403038841\",\"from\":{\"firstName\":\"Данил\",\"userId\":\"example@example.ru\"},\"text\":\"meh\",\"timestamp\":1585823048},\"type\":\"newMessage\"}]}\n";
         org.codehaus.jackson.map.ObjectMapper objectMapper = new org.codehaus.jackson.map.ObjectMapper();
         FetchResponseDto fetchResponseDto = objectMapper.readValue(example, FetchResponseDto.class);
-        assertEquals(fetchResponseDto.isOk(), true);
+        assertTrue(fetchResponseDto.isOk());
         assertEquals(fetchResponseDto.getEvents().size(), 1);
     }
 
@@ -75,8 +76,8 @@ public class IcqEventsFetcherTest {
         Event<?> e = objectMapper.readValue(example, Event.class);
         System.out.println(e);
         assertEquals(e.getEventId(), 1);
-        assertEquals(e.getType(), "newMessage");
-        NewMessageEvent newMessageEvent = (NewMessageEvent)e;
+        assertEquals(e.getClass(), NewMessageEvent.class);
+        NewMessageEvent newMessageEvent = (NewMessageEvent) e;
         assertEquals(newMessageEvent.getMsgId(), 6811058128403038841L);
         assertEquals(newMessageEvent.getTimestamp(), 1585823048);
         assertEquals(newMessageEvent.getText(), "meh");

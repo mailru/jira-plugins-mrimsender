@@ -4,11 +4,12 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
+import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.Event;
+import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -58,15 +59,18 @@ public class IcqEventsFetcher {
     }
 
     public void handle(HttpResponse<FetchResponseDto> httpResponse) {
-        if (httpResponse.getStatus() != 200) return;
-        httpResponse.getBody().getEvents().forEach(event -> {
-            if (event.getType().equals(Consts.EventType.NEW_MESSAGE_TYPE.getTypeStrValue())) {
-                handlersMap.get(Consts.EventType.NEW_MESSAGE_TYPE).accept(event);
-            }
-            if (event.getType().equals(Consts.EventType.CALLBACK_QUERY_TYPE.getTypeStrValue())) {
-                handlersMap.get(Consts.EventType.CALLBACK_QUERY_TYPE).accept(event);
-            }
-        });
+        if (httpResponse.getStatus() != 200)
+            return;
+        httpResponse.getBody()
+                    .getEvents()
+                    .forEach(event -> {
+                        if (event.getPayload() instanceof NewMessageEvent) {
+                            handlersMap.get(Consts.EventType.NEW_MESSAGE_TYPE).accept(event);
+                        }
+                        if (event.getPayload() instanceof CallbackQueryEvent) {
+                            handlersMap.get(Consts.EventType.CALLBACK_QUERY_TYPE).accept(event);
+                        }
+                    });
         int eventsNum = httpResponse.getBody().getEvents().size();
         this.lastEventId = httpResponse.getBody().getEvents().get(eventsNum - 1).getEventId();
     }
