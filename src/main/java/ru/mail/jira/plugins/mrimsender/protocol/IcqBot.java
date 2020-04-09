@@ -10,32 +10,24 @@ import ru.mail.jira.plugins.mrimsender.icq.IcqEventsFetcher;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
-public class IcqBot implements InitializingBean, DisposableBean {
+public class IcqBot implements DisposableBean {
     private final IcqApiClient icqApiClient;
     private final IcqEventsFetcher icqEventsFetcher;
     private final ReentrantLock startLock = new ReentrantLock();
-    private final ClusterManager clusterManager;
 
     private volatile boolean isRespondingBot = false;
 
-    public IcqBot(ClusterManager clusterManager, IcqApiClient icqApiClient, IcqEventsFetcher icqEventsFetcher) {
-        this.clusterManager = clusterManager;
+    public IcqBot(IcqApiClient icqApiClient, IcqEventsFetcher icqEventsFetcher) {
         this.icqApiClient = icqApiClient;
         this.icqEventsFetcher = icqEventsFetcher;
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        if (!clusterManager.isClustered())
-            this.startRespondingBot();
-    }
 
     @Override
     public void destroy() throws Exception {
         if (icqEventsFetcher.getIsRunning().get())
             icqEventsFetcher.stop();
     }
-
 
 
     public void startRespondingBot() {

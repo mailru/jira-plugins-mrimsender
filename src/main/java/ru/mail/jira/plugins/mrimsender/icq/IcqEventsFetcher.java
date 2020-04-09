@@ -51,6 +51,7 @@ public class IcqEventsFetcher {
         if (isRunning.get())
             currentFetchJobFuture = CompletableFuture.supplyAsync(this::fetchIcqEvents, fetcherExecutorService)
                                                      .thenAcceptAsync((FetchResponseDto fetchResponseDto) -> this.executeFetch(lastEventId), fetcherExecutorService);
+        log.debug("IcqEventsFetcher execute fetch finished ...");
     }
 
     public FetchResponseDto fetchIcqEvents() {
@@ -61,6 +62,7 @@ public class IcqEventsFetcher {
             log.debug("IcqEventsFetcher fetchIcqEvents finished.... ");
             return httpResponse.getBody();
         } catch (UnirestException e) {
+            log.debug("unirest exception occurred", e);
             // exception occurred during events fetching, for example http connection timeout
             return this.fetchIcqEvents();
         }
