@@ -41,9 +41,9 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     private final ProjectRoleManager projectRoleManager;
     private final UserData userData = new UserData();
     private final MessageFormatter messageFormatter;
-    private final IcqBot icqBot;
+    private final JiraMessageHandler jiraMessageHandler;
 
-    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, ProjectRoleManager projectRoleManager, MessageFormatter messageFormatter, IcqBot icqBot) {
+    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, ProjectRoleManager projectRoleManager, MessageFormatter messageFormatter, JiraMessageHandler jiraMessageHandler) {
         this.eventPublisher = eventPublisher;
         this.groupManager = groupManager;
         this.notificationFilterManager = notificationFilterManager;
@@ -51,7 +51,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
         this.permissionManager = permissionManager;
         this.projectRoleManager = projectRoleManager;
         this.messageFormatter = messageFormatter;
-        this.icqBot = icqBot;
+        this.jiraMessageHandler = jiraMessageHandler;
     }
 
     @Override
@@ -140,7 +140,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                         message = messageFormatter.formatEvent((MentionIssueEvent) event);
 
                     if (message != null)
-                        icqBot.sendMessage(mrimLogin, message);
+                        jiraMessageHandler.sendMessage(mrimLogin, message);
                 }
             }
         }

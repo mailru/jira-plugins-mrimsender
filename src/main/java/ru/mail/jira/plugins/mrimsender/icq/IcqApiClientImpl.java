@@ -14,40 +14,50 @@ import java.io.IOException;
 import java.util.List;
 
 public class IcqApiClientImpl implements IcqApiClient {
-    private final PluginData pluginData;
+    private String apiToken;
     private final ObjectMapper objectMapper;
+    private final PluginData pluginData;
+    // TODO наверное тоже стоит засунуть в pluginData
     public final String BASE_API_URL = "https://api.icq.net/bot/v1";
 
     public IcqApiClientImpl(PluginData pluginData) {
-        this.pluginData = pluginData;
         this.objectMapper = new ObjectMapper();
+        this.pluginData = pluginData;
+        this.apiToken = pluginData.getToken();
     }
 
+    @Override
+    public void updateToken() {
+        this.apiToken = pluginData.getToken();
+    }
+
+    @Override
     public HttpResponse<MessageResponse> sendMessageText(String chatId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup) throws UnirestException, IOException {
         if (inlineKeyboardMarkup == null)
             return Unirest.get(BASE_API_URL + "/messages/sendText")
-                          .queryString("token", pluginData.getToken())
+                          .queryString("token", apiToken)
                           .queryString("chatId", chatId)
                           .queryString("text", text)
                           .asObject(MessageResponse.class);
         return Unirest.get(BASE_API_URL + "/messages/sendText")
-                      .queryString("token", pluginData.getToken())
+                      .queryString("token", apiToken)
                       .queryString("chatId", chatId)
                       .queryString("text", text)
                       .queryString("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
                       .asObject(MessageResponse.class);
     }
 
-
+    @Override
     public HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime) throws UnirestException {
         return Unirest.get(BASE_API_URL + "/events/get")
-                      .queryString("token", pluginData.getToken())
+                      .queryString("token", apiToken)
                       .queryString("lastEventId", lastEventId)
                       .queryString("pollTime", pollTime)
                       .asObject(FetchResponseDto.class);
     }
 
-    public HttpResponse<JsonNode> getAnswerCallbackQuery(String queryId, String text, boolean showAlert, String url) throws UnirestException {
+    @Override
+    public HttpResponse<JsonNode> answerCallbackQuery(String queryId, String text, boolean showAlert, String url) throws UnirestException {
         return Unirest.get(BASE_API_URL + "/messages/answerCallbackQuery")
                       .queryString("queryId", queryId)
                       .queryString("text", text)

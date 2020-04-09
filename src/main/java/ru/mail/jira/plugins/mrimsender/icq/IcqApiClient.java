@@ -15,5 +15,7 @@ public interface IcqApiClient {
 
     public HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime) throws UnirestException;
 
-    public HttpResponse<JsonNode> getAnswerCallbackQuery(String queryId, String text, boolean showAlert, String url) throws UnirestException;
+    public HttpResponse<JsonNode> answerCallbackQuery(String queryId, String text, boolean showAlert, String url) throws UnirestException;
+
+    public void updateToken();
 }

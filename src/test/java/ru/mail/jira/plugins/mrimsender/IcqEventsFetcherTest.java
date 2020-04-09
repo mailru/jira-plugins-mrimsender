@@ -5,11 +5,14 @@ import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
 import ru.mail.jira.plugins.mrimsender.icq.IcqApiClientImpl;
+import ru.mail.jira.plugins.mrimsender.icq.IcqEventsFetcher;
+import ru.mail.jira.plugins.mrimsender.icq.IcqEventsHandler;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.Event;
@@ -118,4 +121,23 @@ public class IcqEventsFetcherTest {
         assertEquals(callbackQueryEvent.getMessage().getFrom().getNick(), "OnlyMineAgentBot");
     }
 
+    @Ignore
+    public void fetcherTest() throws InterruptedException {
+        IcqEventsFetcher icqEventsFetcher = new IcqEventsFetcher(this.icqApiClient, new IcqEventsHandler() {
+            @Override
+            public void handleEvent(NewMessageEvent newMessageEvent) {
+                System.out.println("new message event fetched");
+                System.out.println(newMessageEvent);
+            }
+
+            @Override
+            public void handleEvent(CallbackQueryEvent callbackQueryEvent) {
+                System.out.println("new callback query event fetched");
+                System.out.println(callbackQueryEvent);
+            }
+        });
+        icqEventsFetcher.start();
+        Thread.sleep(50000);
+        icqEventsFetcher.stop();
+    }
 }

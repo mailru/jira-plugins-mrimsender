@@ -6,10 +6,10 @@ import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 
 public class MrimServiceImpl implements MrimService {
     private final UserData userData = new UserData();
-    private final IcqBot icqBot;
+    private final JiraMessageHandler jiraMessageHandler;
 
-    public MrimServiceImpl(IcqBot icqBot) {
-        this.icqBot = icqBot;
+    public MrimServiceImpl(JiraMessageHandler jiraMessageHandler) {
+        this.jiraMessageHandler = jiraMessageHandler;
     }
 
     @Override
@@ -27,6 +27,6 @@ public class MrimServiceImpl implements MrimService {
 
     @Override
     public void sendMessage(String chatId, String message) {
-        icqBot.sendMessage(chatId, message);
+        jiraMessageHandler.sendMessage(chatId, message);
     }
 }
