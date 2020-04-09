@@ -25,7 +25,7 @@ public class IcqEventsFetcher {
     private AtomicBoolean isRunning;
     private ScheduledExecutorService fetcherExecutorService;
     private ScheduledFuture<?> currentFetchJobFuture;
-    private volatile long lastEventId = 0;
+    private long lastEventId = 0;
     private final IcqApiClient icqApiClient;
     private final JiraMessageQueueProcessor jiraMessageQueueProcessor;
 
@@ -40,12 +40,12 @@ public class IcqEventsFetcher {
         log.debug("IcqEventsFetcher starting ...");
         if (isRunning.compareAndSet(false, true)) {
             fetcherExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX_FORMAT).build());
-            currentFetchJobFuture = fetcherExecutorService.scheduleWithFixedDelay(() -> this.fetchIcqEvents(lastEventId), 0 , 60, TimeUnit.SECONDS);
+            currentFetchJobFuture = fetcherExecutorService.scheduleWithFixedDelay(this::fetchIcqEvents, 0 , 60, TimeUnit.SECONDS);
             log.debug("IcqEventsFetcher started");
         }
     }
 
-    public Long fetchIcqEvents(long lastEventId) {
+    public void fetchIcqEvents() {
         try {
             log.debug(String.format("IcqEventsFetcher fetch icq events started  lastEventId=%d...", lastEventId));
             HttpResponse<FetchResponseDto> httpResponse = icqApiClient.getEvents(lastEventId, 60);
@@ -65,14 +65,11 @@ public class IcqEventsFetcher {
             FetchResponseDto fetchResponseDto = httpResponse.getBody();
             if (fetchResponseDto.getEvents() != null) {
                 int eventsNum = fetchResponseDto.getEvents().size();
-                return fetchResponseDto.getEvents().get(eventsNum - 1).getEventId();
-            } else {
-                return null;
+                this.lastEventId = fetchResponseDto.getEvents().get(eventsNum - 1).getEventId();
             }
         } catch (UnirestException e) {
             log.debug("unirest exception occurred", e);
             // exception occurred during events fetching, for example http connection timeout
-            return null;
         }
 
     }
