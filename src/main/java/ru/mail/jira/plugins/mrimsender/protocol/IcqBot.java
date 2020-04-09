@@ -1,9 +1,7 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
-import com.atlassian.jira.cluster.ClusterManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
 import ru.mail.jira.plugins.mrimsender.icq.IcqEventsFetcher;
 
@@ -17,7 +15,7 @@ public class IcqBot implements DisposableBean {
 
     private volatile boolean isRespondingBot = false;
 
-    public IcqBot(IcqApiClient icqApiClient, IcqEventsFetcher icqEventsFetcher) {
+    public IcqBot(IcqApiClient icqApiClient, IcqEventsFetcher icqEventsFetcher, JiraMessageQueueProcessor jiraMessageQueueProcessor) {
         this.icqApiClient = icqApiClient;
         this.icqEventsFetcher = icqEventsFetcher;
     }

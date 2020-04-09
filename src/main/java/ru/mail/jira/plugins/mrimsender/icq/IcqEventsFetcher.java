@@ -3,57 +3,46 @@ package ru.mail.jira.plugins.mrimsender.icq;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.BotFaultToleranceProvider;
+import ru.mail.jira.plugins.mrimsender.protocol.JiraMessageQueueProcessor;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class IcqEventsFetcher {
     private static final Logger log = LoggerFactory.getLogger(BotFaultToleranceProvider.class);
     private static final String THREAD_NAME_PREFIX_FORMAT = "icq-events-fetcher-thread-pool-%d";
-    private final IcqEventsHandler icqEventsHandler;
 
     private AtomicBoolean isRunning;
-    private ExecutorService fetcherExecutorService;
-    private volatile Future<?> currentFetchJobFuture;
-    private IcqApiClient icqApiClient;
+    private ScheduledExecutorService fetcherExecutorService;
+    private ScheduledFuture<?> currentFetchJobFuture;
+    private volatile long lastEventId = 0;
+    private final IcqApiClient icqApiClient;
+    private final JiraMessageQueueProcessor jiraMessageQueueProcessor;
 
 
-    public IcqEventsFetcher(IcqApiClient icqApiClient, IcqEventsHandler icqEventsHandler) {
+    public IcqEventsFetcher(IcqApiClient icqApiClient, JiraMessageQueueProcessor jiraMessageQueueProcessor) {
         isRunning = new AtomicBoolean(false);
-        this.icqEventsHandler = icqEventsHandler;
         this.icqApiClient = icqApiClient;
+        this.jiraMessageQueueProcessor = jiraMessageQueueProcessor;
     }
 
     public void start() {
         log.debug("IcqEventsFetcher starting ...");
         if (isRunning.compareAndSet(false, true)) {
-            fetcherExecutorService = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX_FORMAT).build());
-            currentFetchJobFuture = fetcherExecutorService.submit(() -> this.executeFetch(0));
+            fetcherExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX_FORMAT).build());
+            currentFetchJobFuture = fetcherExecutorService.scheduleWithFixedDelay(() -> this.fetchIcqEvents(lastEventId), 0 , 60, TimeUnit.SECONDS);
             log.debug("IcqEventsFetcher started");
         }
-    }
-
-    public void executeFetch(long lastEventId) {
-        log.debug("IcqEventsFetcher execute fetch started ...");
-        if (isRunning.get())
-            currentFetchJobFuture = CompletableFuture.supplyAsync(() -> this.fetchIcqEvents(lastEventId), fetcherExecutorService)
-                                                     .thenAcceptAsync((Long newLastEventId) -> {
-                                                         if (newLastEventId == null) {
-                                                             this.executeFetch(lastEventId);
-                                                         } else {
-                                                             this.executeFetch(newLastEventId);
-                                                         }
-                                                     }, fetcherExecutorService);
-        log.debug("IcqEventsFetcher execute fetch finished ...");
     }
 
     public Long fetchIcqEvents(long lastEventId) {
@@ -66,9 +55,9 @@ public class IcqEventsFetcher {
                             .getEvents()
                             .forEach(event -> {
                                 if (event instanceof NewMessageEvent) {
-                                    icqEventsHandler.handleEvent((NewMessageEvent) event);
+                                    jiraMessageQueueProcessor.sendMessage(((NewMessageEvent)event).getChat().getChatId(), "New user message event handled");
                                 } else if (event instanceof CallbackQueryEvent) {
-                                    icqEventsHandler.handleEvent((CallbackQueryEvent) event);
+                                    jiraMessageQueueProcessor.answerButtonClick(((CallbackQueryEvent)event).getQueryId(), "Button clicked event handled");
                                 }
                             });
             }
@@ -85,6 +74,7 @@ public class IcqEventsFetcher {
             // exception occurred during events fetching, for example http connection timeout
             return null;
         }
+
     }
 
     public void stop() {

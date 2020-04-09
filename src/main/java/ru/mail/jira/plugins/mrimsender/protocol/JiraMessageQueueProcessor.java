@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
-public class JiraMessageHandler implements InitializingBean, DisposableBean {
+public class JiraMessageQueueProcessor implements InitializingBean, DisposableBean {
     private static final String THREAD_NAME_PREFIX = "icq-bot-thread-pool";
 
     private final ConcurrentLinkedQueue<Pair<JiraMessageType, JiraMessage>> queue = new ConcurrentLinkedQueue<>();
@@ -35,7 +35,7 @@ public class JiraMessageHandler implements InitializingBean, DisposableBean {
     });
     private final IcqApiClient icqApiClient;
 
-    public JiraMessageHandler(IcqApiClient icqApiClient) {
+    public JiraMessageQueueProcessor(IcqApiClient icqApiClient) {
         this.icqApiClient = icqApiClient;
     }
 

@@ -41,9 +41,9 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     private final ProjectRoleManager projectRoleManager;
     private final UserData userData = new UserData();
     private final MessageFormatter messageFormatter;
-    private final JiraMessageHandler jiraMessageHandler;
+    private final JiraMessageQueueProcessor jiraMessageQueueProcessor;
 
-    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, ProjectRoleManager projectRoleManager, MessageFormatter messageFormatter, JiraMessageHandler jiraMessageHandler) {
+    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, ProjectRoleManager projectRoleManager, MessageFormatter messageFormatter, JiraMessageQueueProcessor jiraMessageQueueProcessor) {
         this.eventPublisher = eventPublisher;
         this.groupManager = groupManager;
         this.notificationFilterManager = notificationFilterManager;
@@ -51,7 +51,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
         this.permissionManager = permissionManager;
         this.projectRoleManager = projectRoleManager;
         this.messageFormatter = messageFormatter;
-        this.jiraMessageHandler = jiraMessageHandler;
+        this.jiraMessageQueueProcessor = jiraMessageQueueProcessor;
     }
 
     @Override
@@ -140,7 +140,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                         message = messageFormatter.formatEvent((MentionIssueEvent) event);
 
                     if (message != null)
-                        jiraMessageHandler.sendMessage(mrimLogin, message);
+                        jiraMessageQueueProcessor.sendMessage(mrimLogin, message);
                 }
             }
         }
