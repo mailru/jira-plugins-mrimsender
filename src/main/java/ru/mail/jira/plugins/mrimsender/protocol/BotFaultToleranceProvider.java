@@ -115,7 +115,7 @@ public class BotFaultToleranceProvider implements LifecycleAware {
             @Nullable
             @Override
             public JobRunnerResponse runJob(JobRunnerRequest jobRunnerRequest) {
-                if (!clusterManager.isClustered() && !icqBot.isFetcherRunning()) {
+                if (!clusterManager.isClustered() && !icqBot.isFetcherRunning() && pluginData.getToken() != null) {
                     // this is server instance, restart bot if it was turned off
                     log.debug("Found out that current bot session isn't running, so the session was restarted");
                     icqBot.startRespondingBot();
