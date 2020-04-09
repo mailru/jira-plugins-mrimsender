@@ -1,7 +1,6 @@
 package ru.mail.jira.plugins.mrimsender;
 
 import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -12,18 +11,11 @@ import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
 import ru.mail.jira.plugins.mrimsender.icq.IcqApiClientImpl;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
-import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.Event;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
-import ru.mail.jira.plugins.mrimsender.icq.dto.parts.File;
-import ru.mail.jira.plugins.mrimsender.icq.dto.parts.InlineKeyboardMarkup;
-import ru.mail.jira.plugins.mrimsender.icq.dto.parts.Part;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -124,18 +116,6 @@ public class IcqEventsFetcherTest {
         assertEquals(callbackQueryEvent.getMessage().getFrom().getUserId(), "751619011");
         assertEquals(callbackQueryEvent.getMessage().getFrom().getFirstName(), "OnlyMineAgentBot");
         assertEquals(callbackQueryEvent.getMessage().getFrom().getNick(), "OnlyMineAgentBot");
-        assertEquals(callbackQueryEvent.getMessage().getParts().stream().map(part -> {
-            if (part instanceof InlineKeyboardMarkup) {
-                InlineKeyboardMarkup inlineKeyboardMarkup = (InlineKeyboardMarkup) part;
-                return inlineKeyboardMarkup.getPayload()
-                                           .stream()
-                                           .map(buttonsRow -> buttonsRow.stream()
-                                                                        .map(InlineKeyboardMarkupButton::getText)
-                                                                        .collect(Collectors.toList()))
-                                           .collect(Collectors.toList());
-            }
-            return "";
-        }).collect(Collectors.toList()).toString(), "[[asdad1, asdad2], [asdad3, asdad4]]" );
     }
 
 }
