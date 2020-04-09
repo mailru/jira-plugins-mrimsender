@@ -23,8 +23,6 @@ public class IcqEventsFetcher {
     private static final String THREAD_NAME_PREFIX_FORMAT = "icq-events-fetcher-thread-pool-%d";
     private final IcqEventsHandler icqEventsHandler;
 
-    // default api value
-    private long lastEventId = 0;
     private AtomicBoolean isRunning;
     private ExecutorService fetcherExecutorService;
     private volatile Future<?> currentFetchJobFuture;
@@ -41,7 +39,7 @@ public class IcqEventsFetcher {
         log.debug("IcqEventsFetcher starting ...");
         if (isRunning.compareAndSet(false, true)) {
             fetcherExecutorService = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX_FORMAT).build());
-            currentFetchJobFuture = fetcherExecutorService.submit(() -> this.executeFetch(lastEventId));
+            currentFetchJobFuture = fetcherExecutorService.submit(() -> this.executeFetch(0));
             log.debug("IcqEventsFetcher started");
         }
     }
@@ -49,14 +47,20 @@ public class IcqEventsFetcher {
     public void executeFetch(long lastEventId) {
         log.debug("IcqEventsFetcher execute fetch started ...");
         if (isRunning.get())
-            currentFetchJobFuture = CompletableFuture.supplyAsync(this::fetchIcqEvents, fetcherExecutorService)
-                                                     .thenAcceptAsync((FetchResponseDto fetchResponseDto) -> this.executeFetch(lastEventId), fetcherExecutorService);
+            currentFetchJobFuture = CompletableFuture.supplyAsync(() -> this.fetchIcqEvents(lastEventId), fetcherExecutorService)
+                                                     .thenAcceptAsync((FetchResponseDto fetchResponseDto) ->  {
+                                                         if (fetchResponseDto == null || fetchResponseDto.getEvents() == null)
+                                                             this.executeFetch(lastEventId);
+                                                         int eventsNum = fetchResponseDto.getEvents().size();
+                                                         long newLastEventId = fetchResponseDto.getEvents().get(eventsNum - 1).getEventId();
+                                                         this.executeFetch(newLastEventId);
+                                                     }, fetcherExecutorService);
         log.debug("IcqEventsFetcher execute fetch finished ...");
     }
 
-    public FetchResponseDto fetchIcqEvents() {
+    public FetchResponseDto fetchIcqEvents(long lastEventId) {
         try {
-            log.debug("IcqEventsFetcher fetch icq events started ...");
+            log.debug(String.format("IcqEventsFetcher fetch icq events started  lastEventId=%d...", lastEventId));
             HttpResponse<FetchResponseDto> httpResponse = icqApiClient.getEvents(lastEventId, 60);
             this.handle(httpResponse);
             log.debug("IcqEventsFetcher fetchIcqEvents finished.... ");
@@ -64,7 +68,7 @@ public class IcqEventsFetcher {
         } catch (UnirestException e) {
             log.debug("unirest exception occurred", e);
             // exception occurred during events fetching, for example http connection timeout
-            return this.fetchIcqEvents();
+            return null;
         }
     }
 
@@ -82,8 +86,6 @@ public class IcqEventsFetcher {
                         }
                     });
         log.debug("IcqEventsFetcher handling icq events finished ...");
-        int eventsNum = httpResponse.getBody().getEvents().size();
-        this.lastEventId = httpResponse.getBody().getEvents().get(eventsNum - 1).getEventId();
     }
 
     public void stop() {
