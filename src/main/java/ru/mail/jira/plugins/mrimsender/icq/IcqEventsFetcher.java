@@ -3,8 +3,6 @@ package ru.mail.jira.plugins.mrimsender.icq;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import lombok.extern.slf4j.Slf4j;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
@@ -48,44 +46,45 @@ public class IcqEventsFetcher {
         log.debug("IcqEventsFetcher execute fetch started ...");
         if (isRunning.get())
             currentFetchJobFuture = CompletableFuture.supplyAsync(() -> this.fetchIcqEvents(lastEventId), fetcherExecutorService)
-                                                     .thenAcceptAsync((FetchResponseDto fetchResponseDto) ->  {
-                                                         if (fetchResponseDto == null || fetchResponseDto.getEvents() == null)
+                                                     .thenAcceptAsync((Long newLastEventId) -> {
+                                                         if (newLastEventId == null) {
                                                              this.executeFetch(lastEventId);
-                                                         int eventsNum = fetchResponseDto.getEvents().size();
-                                                         long newLastEventId = fetchResponseDto.getEvents().get(eventsNum - 1).getEventId();
-                                                         this.executeFetch(newLastEventId);
+                                                         } else {
+                                                             this.executeFetch(newLastEventId);
+                                                         }
                                                      }, fetcherExecutorService);
         log.debug("IcqEventsFetcher execute fetch finished ...");
     }
 
-    public FetchResponseDto fetchIcqEvents(long lastEventId) {
+    public Long fetchIcqEvents(long lastEventId) {
         try {
             log.debug(String.format("IcqEventsFetcher fetch icq events started  lastEventId=%d...", lastEventId));
             HttpResponse<FetchResponseDto> httpResponse = icqApiClient.getEvents(lastEventId, 60);
-            this.handle(httpResponse);
+            if (httpResponse.getStatus() == 200) {
+                log.debug("IcqEventsFetcher handle icq events started ...");
+                httpResponse.getBody()
+                            .getEvents()
+                            .forEach(event -> {
+                                if (event instanceof NewMessageEvent) {
+                                    icqEventsHandler.handleEvent((NewMessageEvent) event);
+                                } else if (event instanceof CallbackQueryEvent) {
+                                    icqEventsHandler.handleEvent((CallbackQueryEvent) event);
+                                }
+                            });
+            }
             log.debug("IcqEventsFetcher fetchIcqEvents finished.... ");
-            return httpResponse.getBody();
+            FetchResponseDto fetchResponseDto = httpResponse.getBody();
+            if (fetchResponseDto.getEvents() != null) {
+                int eventsNum = fetchResponseDto.getEvents().size();
+                return fetchResponseDto.getEvents().get(eventsNum - 1).getEventId();
+            } else {
+                return null;
+            }
         } catch (UnirestException e) {
             log.debug("unirest exception occurred", e);
             // exception occurred during events fetching, for example http connection timeout
             return null;
         }
-    }
-
-    public void handle(HttpResponse<FetchResponseDto> httpResponse) {
-        if (httpResponse.getStatus() != 200)
-            return;
-        log.debug("IcqEventsFetcher handle icq events started ...");
-        httpResponse.getBody()
-                    .getEvents()
-                    .forEach(event -> {
-                        if (event instanceof NewMessageEvent) {
-                            icqEventsHandler.handleEvent((NewMessageEvent) event);
-                        } else if (event instanceof CallbackQueryEvent) {
-                            icqEventsHandler.handleEvent((CallbackQueryEvent) event);
-                        }
-                    });
-        log.debug("IcqEventsFetcher handling icq events finished ...");
     }
 
     public void stop() {
