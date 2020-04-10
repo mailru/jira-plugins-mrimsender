@@ -11,4 +11,7 @@ public interface PluginData {
 
     List<String> getNotifiedUserKeys();
     void setNotifiedUserKeys(List<String> notifiedUserKeys);
+
+    String getMainNodeId();
+    void setMainNodeId(String mainNodeId);
 }

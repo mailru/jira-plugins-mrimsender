@@ -18,6 +18,7 @@
         <interface>ru.mail.jira.plugins.mrimsender.configuration.PluginData</interface>
     </component>
 
+
     <web-item key="configuration-link" section="admin_plugins_menu/top_plugins_section">
         <label key="ru.mail.jira.plugins.mrimsender.title" />
         <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
@@ -65,5 +66,29 @@
     <component key="thirdparty-service-initializer" class="ru.mail.jira.plugins.mrimsender.configuration.ThirdPartyServiceInitializer" public="true">
         <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
     </component>
+
+    <component key="bot-orchestration-service" class="ru.mail.jira.plugins.mrimsender.protocol.BotsOrchestrationService">
+            <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
+    </component>
+
+    <component key="jira-message-queue-processor" class="ru.mail.jira.plugins.mrimsender.protocol.JiraMessageQueueProcessor"/>
+
+    <component-import key="cluster-manager" interface="com.atlassian.jira.cluster.ClusterManager"/>
+    <component-import key="scheduler-service" interface="com.atlassian.scheduler.SchedulerService"/>
+    <component-import key="time-zone-manager" interface="com.atlassian.jira.timezone.TimeZoneManager"/>
+    <component-import key="cluster-lock-service" interface="com.atlassian.beehive.ClusterLockService"/>
+    <component-import key="cluster-messaging-service" interface="com.atlassian.jira.cluster.ClusterMessagingService"/>
+
+    <component key="bot-fault-tolerance-provider" class="ru.mail.jira.plugins.mrimsender.protocol.BotFaultToleranceProvider" public="true">
+        <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
+    </component>
+
+    <!-- Icq -->
+    <component key="icq-api-client-impl" class="ru.mail.jira.plugins.mrimsender.icq.IcqApiClientImpl" public="true">
+        <interface>ru.mail.jira.plugins.mrimsender.icq.IcqApiClient</interface>
+    </component>
+    <component key="icq-events-fetcher" class="ru.mail.jira.plugins.mrimsender.icq.IcqEventsFetcher"/>
+
+
 
 </atlassian-plugin>
