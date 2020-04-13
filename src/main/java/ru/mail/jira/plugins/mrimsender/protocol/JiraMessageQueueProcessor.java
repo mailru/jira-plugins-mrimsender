@@ -7,7 +7,6 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
@@ -32,7 +31,7 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
     private static final String THREAD_NAME_PREFIX = "icq-bot-thread-pool";
 
     private final ConcurrentHashMap<String, String> chatsStateMap = new ConcurrentHashMap<>();
-    private final ConcurrentLinkedQueue<Pair<JiraMessageType, JiraMessage>> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<JiraMessage> queue = new ConcurrentLinkedQueue<>();
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2, new ThreadFactory() {
         private final AtomicInteger threadNumber = new AtomicInteger(1);
 
@@ -58,7 +57,7 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
 
     public void sendMessage(String chatId, String message, List<List<InlineKeyboardMarkupButton>> buttons) {
         log.debug("JiraMessageQueueProcessor sendMessage  queue offer started...");
-        queue.offer(Pair.of(JiraMessageType.MESSAGE, new JiraMessage(chatId, message, buttons)));
+        queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId, message, buttons));
         log.debug("JiraMessageQueueProcessor sendMessage  queue offer finished...");
     }
 
@@ -70,7 +69,7 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
         if (commentedUser != null) {
             commentManager.create(issueManager.getIssueByCurrentKey(issueKey), commentedUser , commentMessage,false);
             log.debug("JiraMessageQueueProcessor sendMessage queue offer started...");
-            queue.offer(Pair.of(JiraMessageType.MESSAGE, new JiraMessage(chatId, "Comment successfully created", null)));
+            queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId,"Comment successfully created", null));
             log.debug("JiraMessageQueueProcessor sendMessage queue offer finished...");
         }
     }
@@ -78,16 +77,16 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
     public void answerCommentButtonClick(String issueKey, String queryId, String toggleMessage, String chatId, String message) {
         log.debug("ANSWER COMMENT BUTTON CLICK chatId = " + chatId);
         log.debug("JiraMessageHandler answerCommentButtonClick queue offer started...");
-        queue.offer(Pair.of(JiraMessageType.CALLBACK_MESSAGE, new JiraMessage(queryId, toggleMessage)));
-        queue.offer(Pair.of(JiraMessageType.MESSAGE, new JiraMessage(chatId, message, null)));
+        queue.offer(new JiraMessage(JiraMessageType.CALLBACK_MESSAGE, queryId, toggleMessage));
+        queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId, message, null));
         chatsStateMap.put(chatId, issueKey);
         log.debug("JiraMessageQueueProcessor answerCommentButtonClick queue offer finished...");
     }
 
     public void answerButtonClick(String queryId, String toggleMessage, String chatId, String message) {
         log.debug("JiraMessageHandler answerButtonClick queue offer started...");
-        queue.offer(Pair.of(JiraMessageType.CALLBACK_MESSAGE, new JiraMessage(queryId, toggleMessage)));
-        queue.offer(Pair.of(JiraMessageType.MESSAGE, new JiraMessage(chatId, message, null)));
+        queue.offer(new JiraMessage(JiraMessageType.CALLBACK_MESSAGE, queryId, toggleMessage));
+        queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId, message, null));
         log.debug("JiraMessageQueueProcessor answerButtonClick queue offer finished...");
     }
 
@@ -122,15 +121,15 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
     }
 
     private void processMessages() {
-        Pair<JiraMessageType, JiraMessage> msg;
+       JiraMessage msg;
         while ((msg = queue.poll()) != null) {
             try {
-                switch (msg.getKey()) {
+                switch (msg.getMessageType()) {
                     case MESSAGE:
-                        icqApiClient.sendMessageText(msg.getValue().getChatId(), msg.getValue().getText(), msg.getValue().getButtons());
+                        icqApiClient.sendMessageText(msg.getChatId(), msg.getText(), msg.getButtons());
                         break;
                     case CALLBACK_MESSAGE:
-                        icqApiClient.answerCallbackQuery(msg.getValue().getQueryId(), msg.getValue().getText(), false, null);
+                        icqApiClient.answerCallbackQuery(msg.getQueryId(), msg.getText(), false, null);
                         break;
                     default:
                         break;
@@ -144,17 +143,20 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
     @Setter
     @Getter
     public class JiraMessage {
+        private JiraMessageType messageType;
         private String text;
         private String chatId;
         private String queryId;
         private List<List<InlineKeyboardMarkupButton>> buttons;
 
-        public JiraMessage(String queryId, String text) {
+        public JiraMessage(JiraMessageType messageType, String queryId, String text) {
+            this.messageType = messageType;
             this.queryId = queryId;
             this.text = text;
         }
 
-        public JiraMessage(String login, String text, List<List<InlineKeyboardMarkupButton>> buttons) {
+        public JiraMessage(JiraMessageType jiraMessageType, String login, String text, List<List<InlineKeyboardMarkupButton>> buttons) {
+            this.messageType = jiraMessageType;
             this.chatId = login;
             this.text = text;
             this.buttons = buttons;

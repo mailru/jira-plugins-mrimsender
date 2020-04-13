@@ -142,14 +142,15 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                         message = messageFormatter.formatEvent((MentionIssueEvent) event);
 
                     if (message != null) {
-                        List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+                        /*List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
                         List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
                         InlineKeyboardMarkupButton button = new InlineKeyboardMarkupButton();
                         button.setText("Comment issue");
                         button.setCallbackData(String.join("-","comment", issueKey));
                         buttonsRow.add(button);
                         buttons.add(buttonsRow);
-                        jiraMessageQueueProcessor.sendMessage(mrimLogin, message, buttons);
+                        jiraMessageQueueProcessor.sendMessage(mrimLogin, message, buttons);*/
+                        jiraMessageQueueProcessor.sendMessage(mrimLogin, message, null);
                     }
                 }
             }
