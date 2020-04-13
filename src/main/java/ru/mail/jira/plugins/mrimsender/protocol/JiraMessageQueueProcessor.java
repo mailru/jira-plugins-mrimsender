@@ -47,12 +47,14 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
     private final CommentManager commentManager;
     private final UserData userData;
     private final IssueManager issueManager;
+    private final MessageFormatter messageFormatter;
 
-    public JiraMessageQueueProcessor(IcqApiClient icqApiClient, CommentManager commentManager, UserData userData, IssueManager issueManager) {
+    public JiraMessageQueueProcessor(IcqApiClient icqApiClient, CommentManager commentManager, UserData userData, IssueManager issueManager, MessageFormatter messageFormatter) {
         this.commentManager = commentManager;
         this.userData = userData;
         this.issueManager = issueManager;
         this.icqApiClient = icqApiClient;
+        this.messageFormatter = messageFormatter;
     }
 
     public void sendMessage(String chatId, String message, List<List<InlineKeyboardMarkupButton>> buttons) {
@@ -90,6 +92,13 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
         log.debug("JiraMessageQueueProcessor answerButtonClick queue offer finished...");
     }
 
+    public void answerQuickViewButtonClick(String issueKey, String queryId, String toggleMessage, String chatId, String mrimLogin) {
+        log.debug("JiraMessageHandler answerQuickViewButtonClick queue offer started...");
+        queue.offer(new JiraMessage(JiraMessageType.CALLBACK_MESSAGE, queryId, toggleMessage));
+        queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId, messageFormatter.createIssueSummary(issueManager.getIssueByCurrentKey(issueKey), userData.getUserByMrimLogin(mrimLogin)), null));
+        log.debug("JiraMessageQueueProcessor answerQuickViewButtonClick queue offer finished...");
+    }
+
     public void handleNewMessageEvent(NewMessageEvent newMessageEvent) {
         String chatId = newMessageEvent.getChat().getChatId();
         if (chatsStateMap.containsKey(chatId)) {
@@ -102,7 +111,11 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
 
     public void handleCallbackQueryEvent(CallbackQueryEvent callbackQueryEvent) {
         String callbackData = callbackQueryEvent.getCallbackData();
-        if (callbackData.startsWith("comment")) {
+        if (callbackData.startsWith("view")) {
+            String issueKey = callbackData.substring(callbackData.indexOf('-') + 1);
+            answerQuickViewButtonClick(issueKey, callbackQueryEvent.getQueryId(), "Quick View button clicked", callbackQueryEvent.getMessage().getChat().getChatId(), callbackQueryEvent.getFrom().getUserId());
+        }
+        else if (callbackData.startsWith("comment")) {
             String issueKey = callbackData.substring(callbackData.indexOf('-') + 1);
             answerCommentButtonClick(issueKey, callbackQueryEvent.getQueryId(), "Comment issue button was clicked", callbackQueryEvent.getMessage().getChat().getChatId(), "Type comment text below in next message");
         } else {
@@ -155,9 +168,9 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
             this.text = text;
         }
 
-        public JiraMessage(JiraMessageType jiraMessageType, String login, String text, List<List<InlineKeyboardMarkupButton>> buttons) {
+        public JiraMessage(JiraMessageType jiraMessageType, String chatId, String text, List<List<InlineKeyboardMarkupButton>> buttons) {
             this.messageType = jiraMessageType;
-            this.chatId = login;
+            this.chatId = chatId;
             this.text = text;
             this.buttons = buttons;
         }

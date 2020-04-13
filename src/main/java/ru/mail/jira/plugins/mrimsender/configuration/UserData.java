@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class UserData {
     private static final String MRIM_LOGIN_USER_PROPERTY = "USER_MRIM_LOGIN";
@@ -48,11 +49,9 @@ public class UserData {
     @Nullable
     public ApplicationUser getUserByMrimLogin(String mrimLogin) {
         // mrimLogin in most cases equals to user email
-        List<ApplicationUser> users = new ArrayList<>();
-        userSearchService.findUsersByEmail(mrimLogin).forEach(users::add);
-        if (users.size() == 0)
-            return null;
-        users = users.stream().filter(ApplicationUser::isActive).collect(Collectors.toList());
-        return users.size() > 0 ? users.get(0) : null;
+        return StreamSupport.stream(userSearchService.findUsersByEmail(mrimLogin).spliterator(), false)
+                            .filter(ApplicationUser::isActive)
+                            .findFirst()
+                            .orElse(null);
     }
 }

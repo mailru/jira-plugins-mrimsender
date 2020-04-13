@@ -9,10 +9,21 @@ import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.event.type.EventType;
 import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.IssueConstant;
 import com.atlassian.jira.issue.attachment.Attachment;
+import com.atlassian.jira.issue.fields.CustomField;
+import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
+import com.atlassian.jira.issue.fields.LabelsSystemField;
 import com.atlassian.jira.issue.fields.NavigableField;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
+import com.atlassian.jira.issue.fields.screen.FieldScreen;
+import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
+import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
+import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager;
 import com.atlassian.jira.issue.label.Label;
+import com.atlassian.jira.issue.operation.IssueOperations;
 import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.jira.issue.resolution.Resolution;
 import com.atlassian.jira.issue.security.IssueSecurityLevel;
@@ -26,6 +37,10 @@ import org.ofbiz.core.entity.GenericValue;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class MessageFormatter {
     private final ApplicationProperties applicationProperties;
@@ -34,14 +49,29 @@ public class MessageFormatter {
     private final FieldManager fieldManager;
     private final IssueSecurityLevelManager issueSecurityLevelManager;
     private final I18nHelper i18nHelper;
+    private final IssueTypeScreenSchemeManager issueTypeScreenSchemeManager;
+    private final FieldScreenManager fieldScreenManager;
+    private final FieldLayoutManager fieldLayoutManager;
 
-    public MessageFormatter(ApplicationProperties applicationProperties, ConstantsManager constantsManager, DateTimeFormatter dateTimeFormatter, FieldManager fieldManager, IssueSecurityLevelManager issueSecurityLevelManager, I18nHelper i18nHelper) {
+
+    public MessageFormatter(ApplicationProperties applicationProperties,
+                            ConstantsManager constantsManager,
+                            DateTimeFormatter dateTimeFormatter,
+                            FieldManager fieldManager,
+                            IssueSecurityLevelManager issueSecurityLevelManager,
+                            I18nHelper i18nHelper,
+                            IssueTypeScreenSchemeManager issueTypeScreenSchemeManager,
+                            FieldScreenManager fieldScreenManager,
+                            FieldLayoutManager fieldLayoutManager) {
         this.applicationProperties = applicationProperties;
         this.constantsManager = constantsManager;
         this.dateTimeFormatter = dateTimeFormatter;
         this.fieldManager = fieldManager;
         this.issueSecurityLevelManager = issueSecurityLevelManager;
         this.i18nHelper = i18nHelper;
+        this.issueTypeScreenSchemeManager = issueTypeScreenSchemeManager;
+        this.fieldScreenManager = fieldScreenManager;
+        this.fieldLayoutManager = fieldLayoutManager;
     }
 
     private String formatUser(ApplicationUser user, String messageKey) {
@@ -237,6 +267,35 @@ public class MessageFormatter {
         if (!StringUtils.isBlank(mentionIssueEvent.getMentionText()))
             sb.append("\n\n").append(mentionIssueEvent.getMentionText());
 
+        return sb.toString();
+    }
+
+    public String createIssueSummary(Issue issue, ApplicationUser user) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(issue.getSummary()).append(" / ").append(issue.getKey()).append("\n");
+        sb.append(formatSystemFields(user, issue));
+        FieldScreenScheme fieldScreenScheme = issueTypeScreenSchemeManager.getFieldScreenScheme(issue);
+        FieldScreen fieldScreen = fieldScreenScheme.getFieldScreen(IssueOperations.VIEW_ISSUE_OPERATION);
+        List<String> customFieldsStrValues = fieldScreenManager
+                .getFieldScreenTabs(fieldScreen)
+                .stream()
+                .map(tab -> fieldScreenManager
+                        .getFieldScreenLayoutItems(tab)
+                        .stream()
+                        .map(fieldScreenLayoutItem -> {
+                            Field field = fieldManager.getField(fieldScreenLayoutItem.getFieldId());
+                            if (fieldManager.isCustomField(field)) {
+                                // serialize custom field value to String by StringBuffer
+                                CustomField customField = (CustomField) field;
+                                return customField.getFieldName() + ":" + customField.getValueFromIssue(issue) + "\n";
+                            }
+                            return null;
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        customFieldsStrValues.forEach(sb::append);
         return sb.toString();
     }
 }
