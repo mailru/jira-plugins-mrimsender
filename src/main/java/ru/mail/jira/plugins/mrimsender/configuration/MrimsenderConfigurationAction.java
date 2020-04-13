@@ -4,14 +4,13 @@ import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.commons.CommonUtils;
-import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
-import ru.mail.jira.plugins.mrimsender.protocol.IcqBot;
+import ru.mail.jira.plugins.mrimsender.protocol.BotsOrchestrationService;
 
 import java.util.List;
 
 public class MrimsenderConfigurationAction extends JiraWebActionSupport {
     private final PluginData pluginData;
-    private final IcqApiClient icqApiClient;
+    private final BotsOrchestrationService botsOrchestrationService;
 
     private boolean saved;
     private String token;
@@ -20,8 +19,8 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
 
     private List<String> notifiedUserKeys;
 
-    public MrimsenderConfigurationAction(PluginData pluginData, IcqApiClient icqApiClient) {
-        this.icqApiClient = icqApiClient;
+    public MrimsenderConfigurationAction(PluginData pluginData, BotsOrchestrationService botsOrchestrationService) {
+        this.botsOrchestrationService = botsOrchestrationService;
         this.pluginData = pluginData;
     }
 
@@ -43,7 +42,7 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
         saved = true;
         notifiedUsers = CommonUtils.convertUserKeysToJoinedString(notifiedUserKeys);
 
-        // icqApiClient.updateToken();
+        botsOrchestrationService.restartAll();
         return INPUT;
     }
 
