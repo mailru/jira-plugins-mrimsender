@@ -11,4 +11,5 @@ import lombok.ToString;
 public class MessageResponse {
     private long msgId;
     private boolean ok;
+    private String description;
 }

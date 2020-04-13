@@ -1,4 +1,4 @@
-package ru.mail.jira.plugins.mrimsender;
+package ru.mail.jira.plugins.mrimsender.icq;
 
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.ObjectMapper;
@@ -61,7 +61,7 @@ public class IcqEventsFetcherTest {
 
     @Ignore
     public void fetchIcqEvents() throws UnirestException {
-        HttpResponse<FetchResponseDto> eventHttpResponse = this.icqApiClient.getEvents(0, 60);
+        HttpResponse<FetchResponseDto> eventHttpResponse = this.icqApiClient.getEvents(40, 60);
         System.out.println(eventHttpResponse.getBody());
         System.out.println(eventHttpResponse.getBody().getEvents());
     }

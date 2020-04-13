@@ -28,7 +28,7 @@ public class NewMessageEvent extends Event<NewMessageEvent.Data> {
         return this.getPayload().from;
     }
 
-    public List<Part<?>> getParts() {
+    public List<Part> getParts() {
         return this.getPayload().parts;
     }
 
@@ -39,7 +39,7 @@ public class NewMessageEvent extends Event<NewMessageEvent.Data> {
         public String text;
         public Chat chat;
         public User from;
-        public List<Part<?>> parts;
+        public List<Part> parts;
 
         @Override
         public String toString() {

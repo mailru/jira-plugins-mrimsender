@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
+import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,17 +40,18 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     private final NotificationSchemeManager notificationSchemeManager;
     private final PermissionManager permissionManager;
     private final ProjectRoleManager projectRoleManager;
-    private final UserData userData = new UserData();
+    private final UserData userData;
     private final MessageFormatter messageFormatter;
     private final JiraMessageQueueProcessor jiraMessageQueueProcessor;
 
-    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, ProjectRoleManager projectRoleManager, MessageFormatter messageFormatter, JiraMessageQueueProcessor jiraMessageQueueProcessor) {
+    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, ProjectRoleManager projectRoleManager, UserData userData, MessageFormatter messageFormatter, JiraMessageQueueProcessor jiraMessageQueueProcessor) {
         this.eventPublisher = eventPublisher;
         this.groupManager = groupManager;
         this.notificationFilterManager = notificationFilterManager;
         this.notificationSchemeManager = notificationSchemeManager;
         this.permissionManager = permissionManager;
         this.projectRoleManager = projectRoleManager;
+        this.userData = userData;
         this.messageFormatter = messageFormatter;
         this.jiraMessageQueueProcessor = jiraMessageQueueProcessor;
     }
@@ -85,7 +87,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                         recipients.add(notificationRecipient.getUser());
                 }
 
-                sendMessage(recipients, issueEvent);
+                sendMessage(recipients, issueEvent, issueEvent.getIssue().getKey());
             }
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -100,7 +102,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
             for (ApplicationUser user : mentionIssueEvent.getToUsers())
                 if (!mentionIssueEvent.getCurrentRecipients().contains(new NotificationRecipient(user)))
                     recipients.add(user);
-            sendMessage(recipients, mentionIssueEvent);
+            sendMessage(recipients, mentionIssueEvent, mentionIssueEvent.getIssue().getKey());
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
@@ -128,7 +130,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
         return true;
     }
 
-    private void sendMessage(Collection<ApplicationUser> recipients, Object event) {
+    private void sendMessage(Collection<ApplicationUser> recipients, Object event, String issueKey) {
         for (ApplicationUser recipient : recipients) {
             if (recipient.isActive() && userData.isEnabled(recipient)) {
                 String mrimLogin = userData.getMrimLogin(recipient);
@@ -139,8 +141,16 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                     if (event instanceof MentionIssueEvent)
                         message = messageFormatter.formatEvent((MentionIssueEvent) event);
 
-                    if (message != null)
-                        jiraMessageQueueProcessor.sendMessage(mrimLogin, message);
+                    if (message != null) {
+                        List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+                        List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+                        InlineKeyboardMarkupButton button = new InlineKeyboardMarkupButton();
+                        button.setText("Comment issue");
+                        button.setCallbackData(String.join("-","comment", issueKey));
+                        buttonsRow.add(button);
+                        buttons.add(buttonsRow);
+                        jiraMessageQueueProcessor.sendMessage(mrimLogin, message, buttons);
+                    }
                 }
             }
         }

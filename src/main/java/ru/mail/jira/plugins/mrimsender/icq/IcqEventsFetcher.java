@@ -40,7 +40,13 @@ public class IcqEventsFetcher {
         log.debug("IcqEventsFetcher starting ...");
         if (isRunning.compareAndSet(false, true)) {
             fetcherExecutorService = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX_FORMAT).build());
-            currentFetchJobFuture = fetcherExecutorService.scheduleWithFixedDelay(this::fetchIcqEvents, 0 , 60, TimeUnit.SECONDS);
+            currentFetchJobFuture = fetcherExecutorService.scheduleWithFixedDelay(() -> {
+                try {
+                    this.fetchIcqEvents();
+                } catch (Exception e) {
+                    log.error("An exception occurred inside fetcher executor service job", e);
+                }
+            }, 0 , 5, TimeUnit.SECONDS);
             log.debug("IcqEventsFetcher started");
         }
     }
@@ -48,22 +54,22 @@ public class IcqEventsFetcher {
     public void fetchIcqEvents() {
         try {
             log.debug(String.format("IcqEventsFetcher fetch icq events started  lastEventId=%d...", lastEventId));
-            HttpResponse<FetchResponseDto> httpResponse = icqApiClient.getEvents(lastEventId, 60);
+            HttpResponse<FetchResponseDto> httpResponse = icqApiClient.getEvents(lastEventId, 5);
             if (httpResponse.getStatus() == 200) {
                 log.debug("IcqEventsFetcher handle icq events started ...");
                 httpResponse.getBody()
                             .getEvents()
                             .forEach(event -> {
                                 if (event instanceof NewMessageEvent) {
-                                    jiraMessageQueueProcessor.sendMessage(((NewMessageEvent)event).getChat().getChatId(), "New user message event handled");
+                                    jiraMessageQueueProcessor.handleNewMessageEvent((NewMessageEvent)event);
                                 } else if (event instanceof CallbackQueryEvent) {
-                                    jiraMessageQueueProcessor.answerButtonClick(((CallbackQueryEvent)event).getQueryId(), "Button clicked event handled");
+                                    jiraMessageQueueProcessor.handleCallbackQueryEvent((CallbackQueryEvent)event);
                                 }
                             });
             }
             log.debug("IcqEventsFetcher fetchIcqEvents finished.... ");
             FetchResponseDto fetchResponseDto = httpResponse.getBody();
-            if (fetchResponseDto.getEvents() != null) {
+            if (fetchResponseDto.getEvents() != null && fetchResponseDto.getEvents().size() > 0) {
                 int eventsNum = fetchResponseDto.getEvents().size();
                 this.lastEventId = fetchResponseDto.getEvents().get(eventsNum - 1).getEventId();
             }

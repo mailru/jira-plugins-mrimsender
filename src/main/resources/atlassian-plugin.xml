@@ -18,6 +18,9 @@
         <interface>ru.mail.jira.plugins.mrimsender.configuration.PluginData</interface>
     </component>
 
+    <component-import key="user-property-manager" interface="com.atlassian.jira.user.UserPropertyManager"/>
+    <component-import key="user-search-service" interface="com.atlassian.jira.bc.user.search.UserSearchService"/>
+    <component key="user-data" class="ru.mail.jira.plugins.mrimsender.configuration.UserData" />
 
     <web-item key="configuration-link" section="admin_plugins_menu/top_plugins_section">
         <label key="ru.mail.jira.plugins.mrimsender.title" />
@@ -59,9 +62,7 @@
 
     <component key="icq-bot-service" class="ru.mail.jira.plugins.mrimsender.protocol.IcqBot" />
 
-    <component key="mrim-service-module" class="ru.mail.jira.plugins.mrimsender.protocol.MrimServiceImpl" public="true">
-        <interface>ru.mail.jira.plugins.mrimsender.protocol.MrimService</interface>
-    </component>
+
 
     <component key="thirdparty-service-initializer" class="ru.mail.jira.plugins.mrimsender.configuration.ThirdPartyServiceInitializer" public="true">
         <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>

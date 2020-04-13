@@ -21,10 +21,11 @@ import java.util.Map;
 @Path("/preferences")
 public class ProfilePanel implements ContextProvider {
     private final JiraAuthenticationContext jiraAuthenticationContext;
-    private final UserData userData = new UserData();
+    private final UserData userData;
 
-    public ProfilePanel(JiraAuthenticationContext jiraAuthenticationContext) {
+    public ProfilePanel(JiraAuthenticationContext jiraAuthenticationContext, UserData userData) {
         this.jiraAuthenticationContext = jiraAuthenticationContext;
+        this.userData = userData;
     }
 
     @Override

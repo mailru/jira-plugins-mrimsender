@@ -11,6 +11,6 @@ import java.util.List;
 @Setter
 @ToString
 public class FetchResponseDto {
-    private List<Event<?>> events;
+    private List<Event> events;
     private boolean ok;
 }
