@@ -1,0 +1,28 @@
+version: 2
+plan:
+  project-key: JP
+  name: Mrim
+  key: MRIM
+
+stages:
+  - Build:
+      jobs:
+        - Build jar
+  - Cleanup:
+      final: true
+      jobs:
+        - Cleanup
+Build jar:
+  tasks:
+    - script:
+        - atlas-package
+  artifacts:
+    - name: mrimsender
+      location: target
+      pattern: '*.jar'
+      required: true
+      shared: true
+
+Cleanup:
+  tasks:
+    - clean
