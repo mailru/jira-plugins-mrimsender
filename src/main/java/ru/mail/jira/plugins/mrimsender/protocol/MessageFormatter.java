@@ -261,7 +261,9 @@ public class MessageFormatter {
 
     public String createIssueSummary(Issue issue, ApplicationUser user) {
         StringBuilder sb = new StringBuilder();
-        sb.append(issue.getSummary()).append(" / ").append(issue.getKey());
+        sb.append(issue.getKey()).append("   ").append(issue.getSummary()).append("\n");
+        String issueLink = String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
+        sb.append(issueLink);
         sb.append(formatSystemFields(user, issue));
         FieldScreenScheme fieldScreenScheme = issueTypeScreenSchemeManager.getFieldScreenScheme(issue);
         FieldScreen fieldScreen = fieldScreenScheme.getFieldScreen(IssueOperations.VIEW_ISSUE_OPERATION);

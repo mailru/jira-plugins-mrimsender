@@ -2,6 +2,7 @@ package ru.mail.jira.plugins.mrimsender.protocol;
 
 import com.atlassian.event.api.EventListener;
 import com.atlassian.event.api.EventPublisher;
+import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.issue.Issue;
@@ -17,6 +18,7 @@ import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -43,8 +45,20 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     private final UserData userData;
     private final MessageFormatter messageFormatter;
     private final JiraMessageQueueProcessor jiraMessageQueueProcessor;
+    private final I18nResolver i18nResolver;
+    private final LocaleManager localeManager;
 
-    public MrimsenderEventListener(EventPublisher eventPublisher, GroupManager groupManager, NotificationFilterManager notificationFilterManager, NotificationSchemeManager notificationSchemeManager, PermissionManager permissionManager, ProjectRoleManager projectRoleManager, UserData userData, MessageFormatter messageFormatter, JiraMessageQueueProcessor jiraMessageQueueProcessor) {
+    public MrimsenderEventListener(EventPublisher eventPublisher,
+                                   GroupManager groupManager,
+                                   NotificationFilterManager notificationFilterManager,
+                                   NotificationSchemeManager notificationSchemeManager,
+                                   PermissionManager permissionManager,
+                                   ProjectRoleManager projectRoleManager,
+                                   UserData userData,
+                                   MessageFormatter messageFormatter,
+                                   JiraMessageQueueProcessor jiraMessageQueueProcessor,
+                                   I18nResolver i18nResolver,
+                                   LocaleManager localeManager) {
         this.eventPublisher = eventPublisher;
         this.groupManager = groupManager;
         this.notificationFilterManager = notificationFilterManager;
@@ -54,6 +68,8 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
         this.userData = userData;
         this.messageFormatter = messageFormatter;
         this.jiraMessageQueueProcessor = jiraMessageQueueProcessor;
+        this.i18nResolver = i18nResolver;
+        this.localeManager = localeManager;
     }
 
     @Override
@@ -154,7 +170,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                             List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
                             List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
                             InlineKeyboardMarkupButton button = new InlineKeyboardMarkupButton();
-                            button.setText("Quick View");
+                            button.setText(i18nResolver.getRawText(localeManager.getLocaleFor(recipient), "ru.mail.jira.plugins.mrimsender.mrimsenderEventListener.quickViewButton.text"));
                             button.setCallbackData(String.join("-","view", issueKey));
                             buttonsRow.add(button);
                             buttons.add(buttonsRow);
