@@ -9,15 +9,11 @@ import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.event.type.EventType;
 import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.issue.IssueConstant;
 import com.atlassian.jira.issue.attachment.Attachment;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
-import com.atlassian.jira.issue.fields.LabelsSystemField;
 import com.atlassian.jira.issue.fields.NavigableField;
-import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
-import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreen;
 import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
@@ -37,10 +33,6 @@ import org.ofbiz.core.entity.GenericValue;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class MessageFormatter {
     private final ApplicationProperties applicationProperties;
@@ -51,7 +43,6 @@ public class MessageFormatter {
     private final I18nHelper i18nHelper;
     private final IssueTypeScreenSchemeManager issueTypeScreenSchemeManager;
     private final FieldScreenManager fieldScreenManager;
-    private final FieldLayoutManager fieldLayoutManager;
 
 
     public MessageFormatter(ApplicationProperties applicationProperties,
@@ -61,8 +52,7 @@ public class MessageFormatter {
                             IssueSecurityLevelManager issueSecurityLevelManager,
                             I18nHelper i18nHelper,
                             IssueTypeScreenSchemeManager issueTypeScreenSchemeManager,
-                            FieldScreenManager fieldScreenManager,
-                            FieldLayoutManager fieldLayoutManager) {
+                            FieldScreenManager fieldScreenManager) {
         this.applicationProperties = applicationProperties;
         this.constantsManager = constantsManager;
         this.dateTimeFormatter = dateTimeFormatter;
@@ -71,7 +61,6 @@ public class MessageFormatter {
         this.i18nHelper = i18nHelper;
         this.issueTypeScreenSchemeManager = issueTypeScreenSchemeManager;
         this.fieldScreenManager = fieldScreenManager;
-        this.fieldLayoutManager = fieldLayoutManager;
     }
 
     private String formatUser(ApplicationUser user, String messageKey) {
@@ -272,30 +261,24 @@ public class MessageFormatter {
 
     public String createIssueSummary(Issue issue, ApplicationUser user) {
         StringBuilder sb = new StringBuilder();
-        sb.append(issue.getSummary()).append(" / ").append(issue.getKey()).append("\n");
+        sb.append(issue.getSummary()).append(" / ").append(issue.getKey());
         sb.append(formatSystemFields(user, issue));
         FieldScreenScheme fieldScreenScheme = issueTypeScreenSchemeManager.getFieldScreenScheme(issue);
         FieldScreen fieldScreen = fieldScreenScheme.getFieldScreen(IssueOperations.VIEW_ISSUE_OPERATION);
-        List<String> customFieldsStrValues = fieldScreenManager
+
+        fieldScreenManager
                 .getFieldScreenTabs(fieldScreen)
-                .stream()
-                .map(tab -> fieldScreenManager
+                .forEach(tab -> fieldScreenManager
                         .getFieldScreenLayoutItems(tab)
-                        .stream()
-                        .map(fieldScreenLayoutItem -> {
+                        .forEach(fieldScreenLayoutItem -> {
                             Field field = fieldManager.getField(fieldScreenLayoutItem.getFieldId());
                             if (fieldManager.isCustomField(field)) {
-                                // serialize custom field value to String by StringBuffer
                                 CustomField customField = (CustomField) field;
-                                return customField.getFieldName() + ":" + customField.getValueFromIssue(issue) + "\n";
+                                appendField(sb, customField.getFieldName(), customField.getValueFromIssue(issue), false);
                             }
-                            return null;
                         })
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList()))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-        customFieldsStrValues.forEach(sb::append);
+                );
+
         return sb.toString();
     }
 }
