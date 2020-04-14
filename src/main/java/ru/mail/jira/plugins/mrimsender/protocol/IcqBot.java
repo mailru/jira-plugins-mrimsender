@@ -1,77 +1,73 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
-import com.mashape.unirest.http.Unirest;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
+import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
+import ru.mail.jira.plugins.mrimsender.icq.IcqEventsFetcher;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class IcqBot implements InitializingBean, DisposableBean {
-    private static final Logger log = Logger.getLogger(IcqBot.class);
-    private static final String BOT_SEND_URL = "https://api.icq.net/bot/v1";
-    private static final String THREAD_NAME_PREFIX = "icq-bot-thread-pool";
+@Slf4j
+public class IcqBot implements DisposableBean {
+    private final IcqApiClient icqApiClient;
+    private final IcqEventsFetcher icqEventsFetcher;
+    private final ReentrantLock startLock = new ReentrantLock();
 
-    private final PluginData pluginData;
-    private final ConcurrentLinkedQueue<Pair<String, String>> queue = new ConcurrentLinkedQueue<>();
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2, new ThreadFactory() {
-        private final AtomicInteger threadNumber = new AtomicInteger(1);
+    private volatile boolean isRespondingBot = false;
 
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, THREAD_NAME_PREFIX + threadNumber.getAndIncrement());
-            if (t.isDaemon())
-                t.setDaemon(false);
-            return t;
-        }
-    });
-
-    private volatile String botToken;
-
-    public IcqBot(PluginData pluginData) {
-        this.pluginData = pluginData;
+    public IcqBot(IcqApiClient icqApiClient, IcqEventsFetcher icqEventsFetcher, JiraMessageQueueProcessor jiraMessageQueueProcessor) {
+        this.icqApiClient = icqApiClient;
+        this.icqEventsFetcher = icqEventsFetcher;
     }
 
-    public void sendMessage(String mrimLogin, String message) {
-        queue.offer(Pair.of(mrimLogin, message));
-    }
-
-    public void initToken() {
-        this.botToken = pluginData.getToken();
-    }
 
     @Override
-    public void destroy() {
-        executorService.shutdown();
+    public void destroy() throws Exception {
+        if (icqEventsFetcher.getIsRunning().get())
+            icqEventsFetcher.stop();
     }
 
-    @Override
-    public void afterPropertiesSet() {
-        initToken();
-        executorService.scheduleWithFixedDelay(this::processMessages, 1, 500, TimeUnit.MILLISECONDS);
-    }
 
-    private void processMessages() {
-        Pair<String, String> msg;
-        while ((msg = queue.poll()) != null) {
-            Unirest.get(BOT_SEND_URL + "/messages/sendText")
-                   .queryString("token", botToken)
-                   .queryString("chatId", msg.getKey())
-                   .queryString("text", msg.getValue())
-                   .asJsonAsync();
+    public void startRespondingBot() {
+        if (startLock.tryLock()) {
+            try {
+                icqEventsFetcher.start();
+                isRespondingBot = true;
+            } finally {
+                startLock.unlock();
+            }
+        } else {
+            log.debug("Icq bot fetcher didn't started, because it was locked on start");
         }
     }
 
-    private String encodeFormParam(String key, String value) throws UnsupportedEncodingException {
-        return URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(value, "UTF-8");
+    public void stopBot() {
+        if (isRespondingBot && icqEventsFetcher.getIsRunning().get()) {
+            startLock.lock();
+            try {
+                icqEventsFetcher.stop();
+            } finally {
+                startLock.unlock();
+            }
+        } else {
+            log.debug("Icq bot didn't stopped, because fetcher wasn't started");
+        }
+    }
+
+    public void restartBot() {
+        startLock.lock();
+        try {
+            this.icqApiClient.updateToken();
+            if (isRespondingBot) {
+                this.icqEventsFetcher.stop();
+                this.icqEventsFetcher.start();
+            }
+        }  finally {
+            startLock.unlock();
+        }
+    }
+
+    public boolean isFetcherRunning() {
+        return this.icqEventsFetcher.getIsRunning().get();
     }
 }

@@ -9,6 +9,7 @@ public class PluginDataImpl implements PluginData {
     private static final String TOKEN = PLUGIN_PREFIX + "token";
     private static final String ENABLED_BY_DEFAULT = PLUGIN_PREFIX + "enabledByDefault";
     private static final String NOTIFIED_USER_KEYS = PLUGIN_PREFIX + "notifiedUserKeys";
+    private static final String MAIN_NODE_ID = PLUGIN_PREFIX + "mainNodeId";
 
     private final PluginSettingsFactory pluginSettingsFactory;
 
@@ -45,5 +46,15 @@ public class PluginDataImpl implements PluginData {
     @Override
     public void setNotifiedUserKeys(List<String> notifiedUserKeys) {
         pluginSettingsFactory.createGlobalSettings().put(NOTIFIED_USER_KEYS, notifiedUserKeys);
+    }
+
+    @Override
+    public String getMainNodeId() {
+        return (String)pluginSettingsFactory.createGlobalSettings().get(MAIN_NODE_ID);
+    }
+
+    @Override
+    public void setMainNodeId(String mainNodeId) {
+        pluginSettingsFactory.createGlobalSettings().put(MAIN_NODE_ID, mainNodeId);
     }
 }

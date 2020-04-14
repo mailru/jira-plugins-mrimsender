@@ -4,13 +4,13 @@ import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.commons.CommonUtils;
-import ru.mail.jira.plugins.mrimsender.protocol.IcqBot;
+import ru.mail.jira.plugins.mrimsender.protocol.BotsOrchestrationService;
 
 import java.util.List;
 
 public class MrimsenderConfigurationAction extends JiraWebActionSupport {
     private final PluginData pluginData;
-    private final IcqBot icqBot;
+    private final BotsOrchestrationService botsOrchestrationService;
 
     private boolean saved;
     private String token;
@@ -19,9 +19,9 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
 
     private List<String> notifiedUserKeys;
 
-    public MrimsenderConfigurationAction(PluginData pluginData, IcqBot icqBot) {
+    public MrimsenderConfigurationAction(PluginData pluginData, BotsOrchestrationService botsOrchestrationService) {
+        this.botsOrchestrationService = botsOrchestrationService;
         this.pluginData = pluginData;
-        this.icqBot = icqBot;
     }
 
     @Override
@@ -42,7 +42,7 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
         saved = true;
         notifiedUsers = CommonUtils.convertUserKeysToJoinedString(notifiedUserKeys);
 
-        icqBot.initToken();
+        botsOrchestrationService.restartAll();
         return INPUT;
     }
 

@@ -10,9 +10,16 @@ import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.event.type.EventType;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.attachment.Attachment;
+import com.atlassian.jira.issue.fields.CustomField;
+import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.NavigableField;
+import com.atlassian.jira.issue.fields.screen.FieldScreen;
+import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
+import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
+import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager;
 import com.atlassian.jira.issue.label.Label;
+import com.atlassian.jira.issue.operation.IssueOperations;
 import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.jira.issue.resolution.Resolution;
 import com.atlassian.jira.issue.security.IssueSecurityLevel;
@@ -34,14 +41,26 @@ public class MessageFormatter {
     private final FieldManager fieldManager;
     private final IssueSecurityLevelManager issueSecurityLevelManager;
     private final I18nHelper i18nHelper;
+    private final IssueTypeScreenSchemeManager issueTypeScreenSchemeManager;
+    private final FieldScreenManager fieldScreenManager;
 
-    public MessageFormatter(ApplicationProperties applicationProperties, ConstantsManager constantsManager, DateTimeFormatter dateTimeFormatter, FieldManager fieldManager, IssueSecurityLevelManager issueSecurityLevelManager, I18nHelper i18nHelper) {
+
+    public MessageFormatter(ApplicationProperties applicationProperties,
+                            ConstantsManager constantsManager,
+                            DateTimeFormatter dateTimeFormatter,
+                            FieldManager fieldManager,
+                            IssueSecurityLevelManager issueSecurityLevelManager,
+                            I18nHelper i18nHelper,
+                            IssueTypeScreenSchemeManager issueTypeScreenSchemeManager,
+                            FieldScreenManager fieldScreenManager) {
         this.applicationProperties = applicationProperties;
         this.constantsManager = constantsManager;
         this.dateTimeFormatter = dateTimeFormatter;
         this.fieldManager = fieldManager;
         this.issueSecurityLevelManager = issueSecurityLevelManager;
         this.i18nHelper = i18nHelper;
+        this.issueTypeScreenSchemeManager = issueTypeScreenSchemeManager;
+        this.fieldScreenManager = fieldScreenManager;
     }
 
     private String formatUser(ApplicationUser user, String messageKey) {
@@ -236,6 +255,29 @@ public class MessageFormatter {
 
         if (!StringUtils.isBlank(mentionIssueEvent.getMentionText()))
             sb.append("\n\n").append(mentionIssueEvent.getMentionText());
+
+        return sb.toString();
+    }
+
+    public String createIssueSummary(Issue issue, ApplicationUser user) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(issue.getSummary()).append(" / ").append(issue.getKey());
+        sb.append(formatSystemFields(user, issue));
+        FieldScreenScheme fieldScreenScheme = issueTypeScreenSchemeManager.getFieldScreenScheme(issue);
+        FieldScreen fieldScreen = fieldScreenScheme.getFieldScreen(IssueOperations.VIEW_ISSUE_OPERATION);
+
+        fieldScreenManager
+                .getFieldScreenTabs(fieldScreen)
+                .forEach(tab -> fieldScreenManager
+                        .getFieldScreenLayoutItems(tab)
+                        .forEach(fieldScreenLayoutItem -> {
+                            Field field = fieldManager.getField(fieldScreenLayoutItem.getFieldId());
+                            if (fieldManager.isCustomField(field)) {
+                                CustomField customField = (CustomField) field;
+                                appendField(sb, customField.getFieldName(), customField.getValueFromIssue(issue), false);
+                            }
+                        })
+                );
 
         return sb.toString();
     }
