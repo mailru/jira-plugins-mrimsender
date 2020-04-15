@@ -8,23 +8,23 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import javax.annotation.Nullable;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
 
 public class UserData {
     private final static String MRIM_LOGIN_USER_PROPERTY = "USER_MRIM_LOGIN";
-    private final static  String IS_ENABLED_USER_PROPERTY = "USER_MRIM_STATUS";
+    private final static String IS_ENABLED_USER_PROPERTY = "USER_MRIM_STATUS";
 
     private final PluginData pluginData = ComponentAccessor.getOSGiComponentInstanceOfType(PluginData.class);
     private final UserPropertyManager userPropertyManager;
     private final UserSearchService userSearchService;
-    private final Cache<String, ApplicationUser> userByMrimLoginCache;
+    private final Cache<String, ApplicationUser> userByMrimLoginCache = Caffeine.newBuilder()
+                                                                                .expireAfterWrite(8, TimeUnit.HOURS)
+                                                                                .build();
 
     public UserData(UserPropertyManager userPropertyManager, UserSearchService userSearchService) {
         this.userPropertyManager = userPropertyManager;
         this.userSearchService = userSearchService;
-        userByMrimLoginCache = Caffeine.newBuilder().expireAfterWrite(8, TimeUnit.HOURS).build();
     }
 
     public String getMrimLogin(ApplicationUser user) {
@@ -50,15 +50,13 @@ public class UserData {
     }
 
     @Nullable
+    /**
+     * mrimLogin in most cases equals to user email
+     */
     public ApplicationUser getUserByMrimLogin(String mrimLogin) {
-        Optional<ApplicationUser> cachedUser = Optional.ofNullable(userByMrimLoginCache.getIfPresent(mrimLogin));
-        return cachedUser.orElseGet(() -> {
-            // mrimLogin in most cases equals to user email
-            Optional<ApplicationUser> userMaybe = StreamSupport.stream(userSearchService.findUsersByEmail(mrimLogin).spliterator(), false)
-                         .filter(ApplicationUser::isActive)
-                         .findFirst();
-            userMaybe.ifPresent(applicationUser -> userByMrimLoginCache.put(mrimLogin, applicationUser));
-            return userMaybe.orElse(null);
-        });
+        return userByMrimLoginCache.get(mrimLogin, (login) -> StreamSupport.stream(userSearchService.findUsersByEmail(login).spliterator(), false)
+                                                                           .filter(ApplicationUser::isActive)
+                                                                           .findFirst()
+                                                                           .orElse(null));
     }
 }
