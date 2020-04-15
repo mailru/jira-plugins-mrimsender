@@ -36,6 +36,7 @@ Deploy jar:
   tasks:
     - script:
         - ./deployPlugin.sh
+        - rm -f *.jar
 
 Cleanup:
   tasks:
