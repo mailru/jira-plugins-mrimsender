@@ -83,13 +83,12 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
 
     public void handleNewJiraCommentCreated(String chatId, String mrimLogin, String commentMessage) {
         log.debug("JiraMessageQueueProcessor handleNewJiraCommentCreated started...");
-        String issueKey = chatsStateMap.get(chatId);
-        chatsStateMap.remove(chatId);
+        String issueKey = chatsStateMap.remove(chatId);
         ApplicationUser commentedUser = userData.getUserByMrimLogin(mrimLogin);
         Issue commentedIssue = issueManager.getIssueByCurrentKey(issueKey);
         if (commentedUser != null && commentedIssue != null) {
             if (permissionManager.hasPermission(ProjectPermissions.ADD_COMMENTS, commentedIssue, commentedUser)) {
-                commentManager.create(commentedIssue, commentedUser , commentMessage,false);
+                commentManager.create(commentedIssue, commentedUser, commentMessage, false);
                 log.debug("JiraMessageQueueProcessor handleNewJiraCommentCreated comment created...");
                 queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId, i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.commentCreated"), null));
                 log.debug("JiraMessageQueueProcessor handleNewJiraCommentCreated new comment created message queued...");
@@ -105,8 +104,7 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
     public void answerCommentButtonClick(String issueKey, String queryId, String chatId, String message) {
         log.debug("ANSWER COMMENT BUTTON CLICK chatId = " + chatId);
         log.debug("JiraMessageHandler answerCommentButtonClick queue offer started...");
-        queue.offer(new JiraMessage(JiraMessageType.CALLBACK_MESSAGE, queryId, null));
-        queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId, message, null));
+        queue.offer(new JiraMessage(JiraMessageType.CALLBACK_MESSAGE, queryId, message));
         chatsStateMap.put(chatId, issueKey);
         log.debug("JiraMessageQueueProcessor answerCommentButtonClick queue offer finished...");
     }
@@ -118,10 +116,16 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
         ApplicationUser currentUser = userData.getUserByMrimLogin(mrimLogin);
         if (currentUser != null && currentIssue != null) {
             if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, currentIssue, currentUser)) {
-                queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId, messageFormatter.createIssueSummary( currentIssue, currentUser), null));
+                queue.offer(new JiraMessage(JiraMessageType.MESSAGE,
+                                            chatId,
+                                            messageFormatter.createIssueSummary(currentIssue, currentUser),
+                                            messageFormatter.getIssueButtons(issueKey)));
                 log.debug("JiraMessageQueueProcessor answerQuickViewButtonClick show issue quick view message queued...");
             } else {
-                queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId, i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"), null));
+                queue.offer(new JiraMessage(JiraMessageType.MESSAGE,
+                                            chatId,
+                                            i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"),
+                                            null));
                 log.debug("JiraMessageQueueProcessor answerQuickViewButtonClick no permissions message queued...");
             }
         }
@@ -132,6 +136,8 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
         if (chatsStateMap.containsKey(chatId)) {
             // here we come if current new message is our new jira comment
             handleNewJiraCommentCreated(chatId, newMessageEvent.getFrom().getUserId(), newMessageEvent.getText());
+        } else {
+            //todo показать кнопки с выбором таски
         }
     }
 
@@ -139,12 +145,18 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
         String callbackData = callbackQueryEvent.getCallbackData();
         if (callbackData.startsWith("view")) {
             String issueKey = StringUtils.substringAfter(callbackData, "-");
-            answerQuickViewButtonClick(issueKey, callbackQueryEvent.getQueryId(), callbackQueryEvent.getMessage().getChat().getChatId(), callbackQueryEvent.getFrom().getUserId());
+            answerQuickViewButtonClick(issueKey,
+                                       callbackQueryEvent.getQueryId(),
+                                       callbackQueryEvent.getMessage().getChat().getChatId(),
+                                       callbackQueryEvent.getFrom().getUserId());
         }
         if (callbackData.startsWith("comment")) {
             Locale locale = localeManager.getLocaleFor(userData.getUserByMrimLogin(callbackQueryEvent.getFrom().getUserId()));
             String issueKey = StringUtils.substringAfter(callbackData, "-");
-            answerCommentButtonClick(issueKey, callbackQueryEvent.getQueryId(), callbackQueryEvent.getMessage().getChat().getChatId(), i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.insertComment.message"));
+            answerCommentButtonClick(issueKey,
+                                     callbackQueryEvent.getQueryId(),
+                                     callbackQueryEvent.getMessage().getChat().getChatId(),
+                                     i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.insertComment.message", issueKey));
         }
     }
 
@@ -159,7 +171,7 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
     }
 
     private void processMessages() {
-       JiraMessage msg;
+        JiraMessage msg;
         while ((msg = queue.poll()) != null) {
             try {
                 switch (msg.getMessageType()) {
@@ -176,6 +188,10 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
                 log.error("An error occurred during icq api message sending", e);
             }
         }
+    }
+
+    public enum JiraMessageType {
+        MESSAGE, CALLBACK_MESSAGE;
     }
 
     @Setter
@@ -199,9 +215,5 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
             this.text = text;
             this.buttons = buttons;
         }
-    }
-
-    public enum JiraMessageType {
-        MESSAGE, CALLBACK_MESSAGE;
     }
 }

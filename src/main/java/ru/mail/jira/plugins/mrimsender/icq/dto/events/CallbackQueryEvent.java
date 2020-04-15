@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.mrimsender.icq.dto.events;
 
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import ru.mail.jira.plugins.mrimsender.icq.dto.Message;
 import ru.mail.jira.plugins.mrimsender.icq.dto.User;
 
@@ -21,6 +22,7 @@ public class CallbackQueryEvent extends Event<CallbackQueryEvent.Data> {
         return this.getPayload().message;
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     static class Data {
         public String queryId;
         public User from;

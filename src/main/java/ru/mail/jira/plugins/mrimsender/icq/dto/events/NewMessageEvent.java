@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.mrimsender.icq.dto.events;
 
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import ru.mail.jira.plugins.mrimsender.icq.dto.Chat;
 import ru.mail.jira.plugins.mrimsender.icq.dto.User;
 import ru.mail.jira.plugins.mrimsender.icq.dto.parts.Part;
@@ -33,6 +34,7 @@ public class NewMessageEvent extends Event<NewMessageEvent.Data> {
     }
 
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     static class Data {
         public long msgId;
         public long timestamp;

@@ -23,7 +23,6 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
-import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -142,23 +141,8 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                         message = messageFormatter.formatEvent((MentionIssueEvent) event);
 
                     if (message != null) {
-                        /*List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-                        List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-                        InlineKeyboardMarkupButton button = new InlineKeyboardMarkupButton();
-                        button.setText("Comment issue");
-                        button.setCallbackData(String.join("-","comment", issueKey));
-                        buttonsRow.add(button);
-                        buttons.add(buttonsRow);
-                        jiraMessageQueueProcessor.sendMessage(mrimLogin, message, buttons);*/
-                        if (event instanceof IssueEvent) {
-                            List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-                            List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-                            InlineKeyboardMarkupButton button = new InlineKeyboardMarkupButton();
-                            button.setText("Quick View");
-                            button.setCallbackData(String.join("-","view", issueKey));
-                            buttonsRow.add(button);
-                            buttons.add(buttonsRow);
-                            jiraMessageQueueProcessor.sendMessage(mrimLogin, message, buttons);
+                        if (issueKey != null) {
+                            jiraMessageQueueProcessor.sendMessage(mrimLogin, message, messageFormatter.getAllIssueButtons(issueKey));
                         } else {
                             jiraMessageQueueProcessor.sendMessage(mrimLogin, message, null);
                         }

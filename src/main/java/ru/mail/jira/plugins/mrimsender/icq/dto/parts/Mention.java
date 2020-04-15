@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.mrimsender.icq.dto.parts;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 public class Mention extends Part<Mention.Data> {
 
@@ -21,6 +22,7 @@ public class Mention extends Part<Mention.Data> {
     @Getter
     @Setter
     @ToString
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Data {
         private String userId;
         private String firstName;

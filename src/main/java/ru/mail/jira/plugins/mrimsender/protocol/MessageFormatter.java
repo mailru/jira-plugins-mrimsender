@@ -30,9 +30,12 @@ import com.atlassian.jira.util.I18nHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
+import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 public class MessageFormatter {
     private final ApplicationProperties applicationProperties;
@@ -280,5 +283,36 @@ public class MessageFormatter {
                 );
 
         return sb.toString();
+    }
+
+    public List<List<InlineKeyboardMarkupButton>> getAllIssueButtons(String issueKey) {
+        List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+        List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+        buttons.add(buttonsRow);
+
+        InlineKeyboardMarkupButton issueInfo = new InlineKeyboardMarkupButton();
+        issueInfo.setText("Issue Info");
+        issueInfo.setCallbackData(String.join("-", "view", issueKey));
+        buttonsRow.add(issueInfo);
+
+        InlineKeyboardMarkupButton comment = new InlineKeyboardMarkupButton();
+        comment.setText("Comment issue");
+        comment.setCallbackData(String.join("-", "comment", issueKey));
+        buttonsRow.add(comment);
+
+        return buttons;
+    }
+
+    public List<List<InlineKeyboardMarkupButton>> getIssueButtons(String issueKey) {
+        List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+        List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+        buttons.add(buttonsRow);
+
+        InlineKeyboardMarkupButton comment = new InlineKeyboardMarkupButton();
+        comment.setText("Comment issue");
+        comment.setCallbackData(String.join("-", "comment", issueKey));
+        buttonsRow.add(comment);
+
+        return buttons;
     }
 }

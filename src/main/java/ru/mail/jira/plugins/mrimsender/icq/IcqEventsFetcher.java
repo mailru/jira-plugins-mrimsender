@@ -46,7 +46,7 @@ public class IcqEventsFetcher {
                 } catch (Exception e) {
                     log.error("An exception occurred inside fetcher executor service job", e);
                 }
-            }, 0 , 5, TimeUnit.SECONDS);
+            }, 0 , 1, TimeUnit.SECONDS);
             log.debug("IcqEventsFetcher started");
         }
     }
@@ -54,7 +54,7 @@ public class IcqEventsFetcher {
     public void fetchIcqEvents() {
         try {
             log.debug(String.format("IcqEventsFetcher fetch icq events started  lastEventId=%d...", lastEventId));
-            HttpResponse<FetchResponseDto> httpResponse = icqApiClient.getEvents(lastEventId, 5);
+            HttpResponse<FetchResponseDto> httpResponse = icqApiClient.getEvents(lastEventId, 30);
             if (httpResponse.getStatus() == 200) {
                 log.debug("IcqEventsFetcher handle icq events started ...");
                 httpResponse.getBody()
