@@ -4,11 +4,22 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>mrimsender</artifactId>
-    <version>5.1.1</version>
+    <version>5.1.2</version>
     <organization>
-        <name>Andrey Molchanov | Mail.Ru Group</name>
+        <name>Mail.Ru Group</name>
         <url>http://corp.mail.ru/en</url>
     </organization>
+    <contributors>
+        <contributor>
+            <name>Ivan Mashintsev</name>
+        </contributor>
+        <contributor>
+            <name>Danil Udovichenko</name>
+        </contributor>
+        <contributor>
+            <name>Daria Rostshina</name>
+        </contributor>
+    </contributors>
     <name>Mail.Ru Agent Notifications</name>
     <description>Send notifications on issue changes and work with issues using Mail.Ru Agent instant messenger</description>
     <packaging>atlassian-plugin</packaging>
