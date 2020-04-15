@@ -119,7 +119,7 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
                 queue.offer(new JiraMessage(JiraMessageType.MESSAGE,
                                             chatId,
                                             messageFormatter.createIssueSummary(currentIssue, currentUser),
-                                            messageFormatter.getIssueButtons(issueKey)));
+                                            messageFormatter.getIssueButtons(issueKey, currentUser)));
                 log.debug("JiraMessageQueueProcessor answerQuickViewButtonClick show issue quick view message queued...");
             } else {
                 queue.offer(new JiraMessage(JiraMessageType.MESSAGE,

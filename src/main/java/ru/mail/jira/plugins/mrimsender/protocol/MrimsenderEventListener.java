@@ -153,10 +153,9 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                         message = messageFormatter.formatEvent((MentionIssueEvent) event);
 
                     if (message != null) {
-                            jiraMessageQueueProcessor.sendMessage(mrimLogin, message, messageFormatter.getAllIssueButtons(issueKey));
-                        } else {
-                            jiraMessageQueueProcessor.sendMessage(mrimLogin, message, null);
-                        }
+                        jiraMessageQueueProcessor.sendMessage(mrimLogin, message, messageFormatter.getAllIssueButtons(issueKey, recipient));
+                    } else {
+                        jiraMessageQueueProcessor.sendMessage(mrimLogin, message, null);
                     }
                 }
             }
