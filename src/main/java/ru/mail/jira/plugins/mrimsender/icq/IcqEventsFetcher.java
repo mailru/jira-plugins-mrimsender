@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class IcqEventsFetcher {
-    private static final Logger log = LoggerFactory.getLogger(BotFaultToleranceProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(IcqEventsFetcher.class);
     private static final String THREAD_NAME_PREFIX_FORMAT = "icq-events-fetcher-thread-pool-%d";
     private final IcqApiClient icqApiClient;
     private final JiraMessageQueueProcessor jiraMessageQueueProcessor;
@@ -60,12 +60,16 @@ public class IcqEventsFetcher {
                 httpResponse.getBody()
                             .getEvents()
                             .forEach(event -> {
-                                if (event instanceof NewMessageEvent) {
-                                    eventId.set(((NewMessageEvent) event).getEventId());
-                                    jiraMessageQueueProcessor.handleNewMessageEvent((NewMessageEvent) event);
-                                } else if (event instanceof CallbackQueryEvent) {
-                                    eventId.set(((CallbackQueryEvent) event).getEventId());
-                                    jiraMessageQueueProcessor.handleCallbackQueryEvent((CallbackQueryEvent) event);
+                                try {
+                                    if (event instanceof NewMessageEvent) {
+                                        eventId.set(((NewMessageEvent) event).getEventId());
+                                        jiraMessageQueueProcessor.handleNewMessageEvent((NewMessageEvent) event);
+                                    } else if (event instanceof CallbackQueryEvent) {
+                                        eventId.set(((CallbackQueryEvent) event).getEventId());
+                                        jiraMessageQueueProcessor.handleCallbackQueryEvent((CallbackQueryEvent) event);
+                                    }
+                                } catch (Exception e) {
+                                    log.error("Exception on handle event={}", event, e);
                                 }
                             });
 
@@ -73,7 +77,7 @@ public class IcqEventsFetcher {
             }
             log.debug("IcqEventsFetcher fetchIcqEvents finished.... ");
         } catch (UnirestException e) {
-            log.debug("unirest exception occurred", e);
+            log.error("unirest exception occurred", e);
             // exception occurred during events fetching, for example http connection timeout
         }
 
