@@ -88,25 +88,37 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
         Issue commentedIssue = issueManager.getIssueByCurrentKey(issueKey);
         if (commentedUser != null && commentedIssue != null) {
             if (permissionManager.hasPermission(ProjectPermissions.ADD_COMMENTS, commentedIssue, commentedUser)) {
-                commentManager.create(commentedIssue, commentedUser, commentMessage, false);
+                commentManager.create(commentedIssue, commentedUser, commentMessage, true);
                 log.debug("JiraMessageQueueProcessor handleNewJiraCommentCreated comment created...");
                 queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId, i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.commentCreated"), null));
                 log.debug("JiraMessageQueueProcessor handleNewJiraCommentCreated new comment created message queued...");
             } else {
                 log.debug("JiraMessageQueueProcessor handleNewJiraCommentCreated permissions violation occurred...");
-                queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId, i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.noPermissions"), null));
+                queue.offer(new JiraMessage(JiraMessageType.MESSAGE,
+                                            chatId,
+                                            i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.noPermissions"),
+                                            null));
                 log.debug("JiraMessageQueueProcessor handleNewJiraCommentCreated not enough permissions message queued...");
             }
         }
         log.debug("JiraMessageQueueProcessor handleNewJiraCommentCreated finished...");
     }
 
-    public void answerCommentButtonClick(String issueKey, String queryId, String chatId, String message) {
+    public void answerCommentButtonClick(String issueKey, String queryId, String chatId, String mrimLogin, String message) {
         log.debug("ANSWER COMMENT BUTTON CLICK chatId = " + chatId);
         log.debug("JiraMessageHandler answerCommentButtonClick queue offer started...");
-        queue.offer(new JiraMessage(JiraMessageType.CALLBACK_MESSAGE, queryId, message));
+        queue.offer(new JiraMessage(JiraMessageType.CALLBACK_MESSAGE, queryId, null));
+        queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId, message, messageFormatter.getCancelButton(userData.getUserByMrimLogin(mrimLogin))));
         chatsStateMap.put(chatId, issueKey);
         log.debug("JiraMessageQueueProcessor answerCommentButtonClick queue offer finished...");
+    }
+
+    public void answerCancelButtonClick(String queryId, String chatId, String message) {
+        log.debug("ANSWER CANCEL BUTTON CLICK chatId = " + chatId);
+        log.debug("JiraMessageHandler answerCancelButtonClick queue offer started...");
+        queue.offer(new JiraMessage(JiraMessageType.CALLBACK_MESSAGE, queryId, message));
+        chatsStateMap.remove(chatId);
+        log.debug("JiraMessageQueueProcessor answerCancelButtonClick queue offer finished...");
     }
 
     public void answerQuickViewButtonClick(String issueKey, String queryId, String chatId, String mrimLogin) {
@@ -149,14 +161,19 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
                                        callbackQueryEvent.getQueryId(),
                                        callbackQueryEvent.getMessage().getChat().getChatId(),
                                        callbackQueryEvent.getFrom().getUserId());
-        }
-        if (callbackData.startsWith("comment")) {
+        } else if (callbackData.startsWith("comment")) {
             Locale locale = localeManager.getLocaleFor(userData.getUserByMrimLogin(callbackQueryEvent.getFrom().getUserId()));
             String issueKey = StringUtils.substringAfter(callbackData, "-");
             answerCommentButtonClick(issueKey,
                                      callbackQueryEvent.getQueryId(),
                                      callbackQueryEvent.getMessage().getChat().getChatId(),
+                                     callbackQueryEvent.getFrom().getUserId(),
                                      i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.insertComment.message", issueKey));
+        } else if (callbackData.startsWith("cancel")) {
+            Locale locale = localeManager.getLocaleFor(userData.getUserByMrimLogin(callbackQueryEvent.getFrom().getUserId()));
+            answerCancelButtonClick(callbackQueryEvent.getQueryId(),
+                                    callbackQueryEvent.getMessage().getChat().getChatId(),
+                                    i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.cancelComment.message"));
         }
     }
 

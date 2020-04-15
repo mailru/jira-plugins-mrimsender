@@ -319,9 +319,22 @@ public class MessageFormatter {
         buttons.add(buttonsRow);
 
         InlineKeyboardMarkupButton comment = new InlineKeyboardMarkupButton();
-        comment.setText(i18nResolver.getRawText(localeManager.getLocaleFor(recipient), "ru.mail.jira.plugins.mrimsender.mrimsenderEventListener.quickViewButton.text"));
+        comment.setText(i18nResolver.getRawText(localeManager.getLocaleFor(recipient), "ru.mail.jira.plugins.mrimsender.mrimsenderEventListener.commentButton.text"));
         comment.setCallbackData(String.join("-", "comment", issueKey));
         buttonsRow.add(comment);
+
+        return buttons;
+    }
+
+    public List<List<InlineKeyboardMarkupButton>> getCancelButton(ApplicationUser recipient) {
+        List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+        List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+        buttons.add(buttonsRow);
+
+        InlineKeyboardMarkupButton cancel = new InlineKeyboardMarkupButton();
+        cancel.setText(i18nResolver.getRawText(localeManager.getLocaleFor(recipient), "ru.mail.jira.plugins.mrimsender.mrimsenderEventListener.cancelButton.text"));
+        cancel.setCallbackData("cancel");
+        buttonsRow.add(cancel);
 
         return buttons;
     }

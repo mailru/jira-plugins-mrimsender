@@ -15,7 +15,7 @@ stages:
 Build jar:
   tasks:
     - script:
-        - atlas-package
+        - atlas-clean & atlas-package
   artifacts:
     - name: mrimsender
       location: target
