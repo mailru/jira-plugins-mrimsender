@@ -7,6 +7,7 @@ plan:
 variables:
   deployUsername: admin
   deployPassword: BAMSCRT@0@0@8AmEg368NEmtiY1OBzXgxA==
+  jiraBaseUrl: localhost:2990/jira
 
 stages:
   - Build:
