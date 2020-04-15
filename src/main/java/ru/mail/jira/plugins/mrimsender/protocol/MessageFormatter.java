@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
 import com.atlassian.jira.config.ConstantsManager;
+import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.datetime.DateTimeFormatter;
@@ -27,6 +28,7 @@ import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
 import com.atlassian.jira.project.ProjectConstant;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.I18nHelper;
+import com.atlassian.sal.api.message.I18nResolver;
 import org.apache.commons.lang3.StringUtils;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
@@ -46,6 +48,8 @@ public class MessageFormatter {
     private final I18nHelper i18nHelper;
     private final IssueTypeScreenSchemeManager issueTypeScreenSchemeManager;
     private final FieldScreenManager fieldScreenManager;
+    private final I18nResolver i18nResolver;
+    private final LocaleManager localeManager;
 
 
     public MessageFormatter(ApplicationProperties applicationProperties,
@@ -55,7 +59,9 @@ public class MessageFormatter {
                             IssueSecurityLevelManager issueSecurityLevelManager,
                             I18nHelper i18nHelper,
                             IssueTypeScreenSchemeManager issueTypeScreenSchemeManager,
-                            FieldScreenManager fieldScreenManager) {
+                            FieldScreenManager fieldScreenManager,
+                            I18nResolver i18nResolver,
+                            LocaleManager localeManager) {
         this.applicationProperties = applicationProperties;
         this.constantsManager = constantsManager;
         this.dateTimeFormatter = dateTimeFormatter;
@@ -64,6 +70,8 @@ public class MessageFormatter {
         this.i18nHelper = i18nHelper;
         this.issueTypeScreenSchemeManager = issueTypeScreenSchemeManager;
         this.fieldScreenManager = fieldScreenManager;
+        this.i18nResolver = i18nResolver;
+        this.localeManager = localeManager;
     }
 
     private String formatUser(ApplicationUser user, String messageKey) {
@@ -264,7 +272,9 @@ public class MessageFormatter {
 
     public String createIssueSummary(Issue issue, ApplicationUser user) {
         StringBuilder sb = new StringBuilder();
-        sb.append(issue.getSummary()).append(" / ").append(issue.getKey());
+        sb.append(issue.getKey()).append("   ").append(issue.getSummary()).append("\n");
+        String issueLink = String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
+        sb.append(issueLink);
         sb.append(formatSystemFields(user, issue));
         FieldScreenScheme fieldScreenScheme = issueTypeScreenSchemeManager.getFieldScreenScheme(issue);
         FieldScreen fieldScreen = fieldScreenScheme.getFieldScreen(IssueOperations.VIEW_ISSUE_OPERATION);
@@ -285,13 +295,13 @@ public class MessageFormatter {
         return sb.toString();
     }
 
-    public List<List<InlineKeyboardMarkupButton>> getAllIssueButtons(String issueKey) {
+    public List<List<InlineKeyboardMarkupButton>> getAllIssueButtons(String issueKey, ApplicationUser recipient) {
         List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
         List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
         buttons.add(buttonsRow);
 
         InlineKeyboardMarkupButton issueInfo = new InlineKeyboardMarkupButton();
-        issueInfo.setText("Issue Info");
+        issueInfo.setText(i18nResolver.getRawText(localeManager.getLocaleFor(recipient), "ru.mail.jira.plugins.mrimsender.mrimsenderEventListener.quickViewButton.text"));
         issueInfo.setCallbackData(String.join("-", "view", issueKey));
         buttonsRow.add(issueInfo);
 
@@ -303,13 +313,13 @@ public class MessageFormatter {
         return buttons;
     }
 
-    public List<List<InlineKeyboardMarkupButton>> getIssueButtons(String issueKey) {
+    public List<List<InlineKeyboardMarkupButton>> getIssueButtons(String issueKey, ApplicationUser recipient) {
         List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
         List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
         buttons.add(buttonsRow);
 
         InlineKeyboardMarkupButton comment = new InlineKeyboardMarkupButton();
-        comment.setText("Comment issue");
+        comment.setText(i18nResolver.getRawText(localeManager.getLocaleFor(recipient), "ru.mail.jira.plugins.mrimsender.mrimsenderEventListener.quickViewButton.text"));
         comment.setCallbackData(String.join("-", "comment", issueKey));
         buttonsRow.add(comment);
 
