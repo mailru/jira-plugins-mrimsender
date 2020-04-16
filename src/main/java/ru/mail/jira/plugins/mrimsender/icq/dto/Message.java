@@ -18,5 +18,9 @@ public class Message {
     private String text;
     private long timestamp;
     private Chat chat;
-    private List<Part<?>> parts;
+    private List<Part> parts;
+
+    public List<Part> getParts() {
+        return parts;
+    }
 }

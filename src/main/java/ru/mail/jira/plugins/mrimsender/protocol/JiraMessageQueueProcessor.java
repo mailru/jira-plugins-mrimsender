@@ -17,7 +17,9 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
+import ru.mail.jira.plugins.mrimsender.icq.dto.Chat;
 import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.mrimsender.icq.dto.User;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 
@@ -104,6 +106,18 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
         log.debug("JiraMessageQueueProcessor handleNewJiraCommentCreated finished...");
     }
 
+    public void showDefaultMenu(Chat chat, User from) {
+        log.debug("JiraMessageQueueProcessor showDefaultMenu started...");
+        String chatId = chat.getChatId();
+        ApplicationUser currentUser = userData.getUserByMrimLogin(from.getUserId());
+        if (currentUser != null) {
+            Locale locale = localeManager.getLocaleFor(currentUser);
+            List<List<InlineKeyboardMarkupButton>> buttons =  messageFormatter.getMenuButtons(locale);
+            queue.offer(new JiraMessage(JiraMessageType.MESSAGE, chatId, i18nResolver.getRawText(locale, ""), buttons));
+        }
+        log.debug("JiraMessageQueueProcessor showDefaultMenu finished...");
+    }
+
     public void answerCommentButtonClick(String issueKey, String queryId, String chatId, String mrimLogin, String message) {
         log.debug("ANSWER COMMENT BUTTON CLICK chatId = " + chatId);
         log.debug("JiraMessageHandler answerCommentButtonClick queue offer started...");
@@ -150,6 +164,7 @@ public class JiraMessageQueueProcessor implements InitializingBean, DisposableBe
             handleNewJiraCommentCreated(chatId, newMessageEvent.getFrom().getUserId(), newMessageEvent.getText());
         } else {
             //todo показать кнопки с выбором таски
+            //showDefaultMenu(newMessageEvent.getChat(), newMessageEvent.getFrom());
         }
     }
 

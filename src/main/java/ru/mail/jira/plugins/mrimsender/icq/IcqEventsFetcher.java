@@ -62,11 +62,13 @@ public class IcqEventsFetcher {
                             .forEach(event -> {
                                 try {
                                     if (event instanceof NewMessageEvent) {
-                                        eventId.set(((NewMessageEvent) event).getEventId());
+                                        eventId.set(event.getEventId());
                                         jiraMessageQueueProcessor.handleNewMessageEvent((NewMessageEvent) event);
                                     } else if (event instanceof CallbackQueryEvent) {
-                                        eventId.set(((CallbackQueryEvent) event).getEventId());
+                                        eventId.set(event.getEventId());
                                         jiraMessageQueueProcessor.handleCallbackQueryEvent((CallbackQueryEvent) event);
+                                    } else {
+                                        eventId.set(event.getEventId());
                                     }
                                 } catch (Exception e) {
                                     log.error("Exception on handle event={}", event, e);

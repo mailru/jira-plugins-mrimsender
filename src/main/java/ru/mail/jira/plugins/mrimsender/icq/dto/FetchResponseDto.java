@@ -16,7 +16,7 @@ public class FetchResponseDto {
     private List<Event> events;
     private boolean ok;
 
-    public List<?> getEvents() {
+    public List<Event> getEvents() {
         return events;
     }
 }
