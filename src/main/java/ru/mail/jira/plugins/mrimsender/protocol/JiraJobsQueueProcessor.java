@@ -6,11 +6,13 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.Event;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -76,6 +78,16 @@ public class JiraJobsQueueProcessor implements InitializingBean, DisposableBean 
                 log.error("An error occurred during jira job execution", e);
             }
         }, callbackQueryEvent));
+    }
+
+    public void offerJiraNotificationMessageSend(String mrimLogin, String message, List<List<InlineKeyboardMarkupButton>> buttons) {
+        jobsQueue.offer(new JiraJob((event) -> {
+            try {
+                icqBotChatHandlers.sendJiraNotificationMessage(mrimLogin, message, buttons);
+            } catch (IOException | UnirestException e) {
+                log.error("An error occured during jira notification sending", e);
+            }
+        }, new Event<Void>()));
     }
 
     @Getter

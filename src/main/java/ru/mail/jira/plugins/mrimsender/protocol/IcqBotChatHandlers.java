@@ -53,6 +53,12 @@ public class IcqBotChatHandlers {
         this.permissionManager = permissionManager;
     }
 
+    public void sendJiraNotificationMessage(String chatId, String message, List<List<InlineKeyboardMarkupButton>> buttons) throws IOException, UnirestException {
+        log.debug("JiraMessageQueueProcessor sendMessage started...");
+        icqApiClient.sendMessageText(chatId, message, buttons);
+        log.debug("JiraMessageQueueProcessor sendMessage finished...");
+    }
+
     public void handleNewJiraCommentCreated(String chatId, String mrimLogin, String commentMessage) throws IOException, UnirestException {
         log.debug("JiraMessageQueueProcessor handleNewJiraCommentCreated started...");
         String issueKey = chatsStateMap.remove(chatId);
