@@ -4,10 +4,19 @@ plan:
   name: Mrim
   key: MRIM
 
+variables:
+  deployUsername: username
+  deployPassword: password
+  jiraBaseUrl: localhost:2990/jira
+
 stages:
   - Build:
       jobs:
         - Build jar
+  - Deploy to jira:
+      manual: true
+      jobs:
+        - Deploy jar
   - Cleanup:
       final: true
       jobs:
@@ -23,6 +32,14 @@ Build jar:
       required: true
       shared: true
 
+Deploy jar:
+  tasks:
+    - script:
+        - ./deployPlugin.sh
+        - rm -f *.jar
+
 Cleanup:
   tasks:
     - clean
+    - script:
+        - atlas-clean

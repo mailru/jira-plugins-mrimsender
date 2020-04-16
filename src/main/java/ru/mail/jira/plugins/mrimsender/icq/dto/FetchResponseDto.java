@@ -15,4 +15,8 @@ import java.util.List;
 public class FetchResponseDto {
     private List<Event> events;
     private boolean ok;
+
+    public List<?> getEvents() {
+        return events;
+    }
 }

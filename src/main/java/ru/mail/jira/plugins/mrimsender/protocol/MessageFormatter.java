@@ -306,7 +306,7 @@ public class MessageFormatter {
         buttonsRow.add(issueInfo);
 
         InlineKeyboardMarkupButton comment = new InlineKeyboardMarkupButton();
-        comment.setText("Comment issue");
+        comment.setText(i18nResolver.getRawText(localeManager.getLocaleFor(recipient), "ru.mail.jira.plugins.mrimsender.mrimsenderEventListener.commentButton.text"));
         comment.setCallbackData(String.join("-", "comment", issueKey));
         buttonsRow.add(comment);
 

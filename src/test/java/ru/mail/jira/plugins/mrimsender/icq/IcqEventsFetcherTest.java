@@ -4,6 +4,7 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -19,6 +20,7 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.JiraMessageQueueProcessor;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -61,18 +63,21 @@ public class IcqEventsFetcherTest {
 
     @Ignore
     public void fetchIcqEvents() throws UnirestException {
-        HttpResponse<FetchResponseDto> eventHttpResponse = this.icqApiClient.getEvents(40, 60);
+        HttpResponse<FetchResponseDto> eventHttpResponse = this.icqApiClient.getEvents(40, 5);
         System.out.println(eventHttpResponse.getBody());
         System.out.println(eventHttpResponse.getBody().getEvents());
     }
 
     @Test
     public void deserializationFetchResponseTest() throws IOException {
-        String example = "{\"ok\":true,\"events\":[{\"eventId\":1,\"payload\":{\"chat\":{\"chatId\":\"example@example.ru\",\"type\":\"private\"},\"msgId\":\"6811058128403038841\",\"from\":{\"firstName\":\"Данил\",\"userId\":\"example@example.ru\"},\"text\":\"meh\",\"timestamp\":1585823048},\"type\":\"newMessage\"}]}\n";
+        String example = "{\"ok\":true,\"events\":[{\"eventId\":1,\"payload\":{\"chat\":{\"chatId\":\"example@example.ru\",\"type\":\"private\"},\"msgId\":\"6811058128403038841\",\"from\":{\"firstName\":\"Данил\",\"userId\":\"example@example.ru\"},\"text\":\"meh\",\"timestamp\":1585823048},\"type\":\"newMessage\"},{\"eventId\":1,\"payload\":{\"chat\":{\"chatId\":\"example@example.ru\",\"type\":\"private\"},\"msgId\":\"6811058128403038841\",\"from\":{\"firstName\":\"Данил\",\"userId\":\"example@example.ru\"},\"text\":\"meh\",\"timestamp\":1585823048},\"type\":\"faksdmfl\"}, {\"eventId\":5,\"payload\":{\"callbackData\":\"next-page1\",\"from\":{\"firstName\":\"Данил\",\"userId\":\"example@example.ru\"},\"message\":{\"chat\":{\"chatId\":\"example@example.ru\",\"type\":\"private\"},\"parts\":[{\"payload\":[[{\"callbackData\":\"next-page1\",\"text\":\"asdad1\"},{\"callbackData\":\"next-page2\",\"text\":\"asdad2\"}],[{\"callbackData\":\"next-page3\",\"text\":\"asdad3\"},{\"callbackData\":\"next-page4\",\"text\":\"asdad4\"}]],\"type\":\"inlineKeyboardMarkup\"}],\"msgId\":\"6812931455698600506\",\"from\":{\"nick\":\"OnlyMineAgentBot\",\"firstName\":\"OnlyMineAgentBot\",\"userId\":\"751619011\"},\"text\":\"kek\",\"timestamp\":1586259216},\"queryId\":\"SVR:example@example.ru:751619011:1586266646713388:333-1586266647\"},\"type\":\"callbackQuery\"}]}\n";
         org.codehaus.jackson.map.ObjectMapper objectMapper = new org.codehaus.jackson.map.ObjectMapper();
         FetchResponseDto fetchResponseDto = objectMapper.readValue(example, FetchResponseDto.class);
         assertTrue(fetchResponseDto.isOk());
-        assertEquals(fetchResponseDto.getEvents().size(), 1);
+        assertEquals(fetchResponseDto.getEvents().size(), 3);
+        assertEquals(NewMessageEvent.class, fetchResponseDto.getEvents().get(0).getClass());
+        assertEquals(ObjectNode.class, fetchResponseDto.getEvents().get(1).getClass());
+        assertEquals(CallbackQueryEvent.class, fetchResponseDto.getEvents().get(2).getClass());
     }
 
     @Test
