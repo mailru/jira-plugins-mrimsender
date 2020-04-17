@@ -75,8 +75,6 @@
             <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
     </component>
 
-    <component key="jira-message-queue-processor" class="ru.mail.jira.plugins.mrimsender.protocol.JiraMessageQueueProcessor"/>
-
     <component-import key="cluster-manager" interface="com.atlassian.jira.cluster.ClusterManager"/>
     <component-import key="scheduler-service" interface="com.atlassian.scheduler.SchedulerService"/>
     <component-import key="time-zone-manager" interface="com.atlassian.jira.timezone.TimeZoneManager"/>
@@ -88,7 +86,7 @@
         <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
     </component>
 
-    <component key="jira-jobs-queue-processor" class="ru.mail.jira.plugins.mrimsender.protocol.JiraJobsQueueProcessor"/>
+
 
     <!-- Icq -->
     <component key="icq-api-client-impl" class="ru.mail.jira.plugins.mrimsender.icq.IcqApiClientImpl" public="true">

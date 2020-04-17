@@ -15,7 +15,7 @@ public class IcqBot implements DisposableBean {
 
     private volatile boolean isRespondingBot = false;
 
-    public IcqBot(IcqApiClient icqApiClient, IcqEventsFetcher icqEventsFetcher, JiraMessageQueueProcessor jiraMessageQueueProcessor) {
+    public IcqBot(IcqApiClient icqApiClient, IcqEventsFetcher icqEventsFetcher) {
         this.icqApiClient = icqApiClient;
         this.icqEventsFetcher = icqEventsFetcher;
     }

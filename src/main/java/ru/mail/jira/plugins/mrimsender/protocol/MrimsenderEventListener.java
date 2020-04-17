@@ -41,8 +41,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     private final ProjectRoleManager projectRoleManager;
     private final UserData userData;
     private final MessageFormatter messageFormatter;
-    //private final JiraMessageQueueProcessor jiraMessageQueueProcessor;
-    private final JiraJobsQueueProcessor jiraJobsQueueProcessor;
+    private final IcqEventsPublisher icqEventsPublisher;
 
     public MrimsenderEventListener(EventPublisher eventPublisher,
                                    GroupManager groupManager,
@@ -52,7 +51,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                                    ProjectRoleManager projectRoleManager,
                                    UserData userData,
                                    MessageFormatter messageFormatter,
-                                   JiraJobsQueueProcessor jiraJobsQueueProcessor) {
+                                   IcqEventsPublisher icqEventsPublisher) {
         this.eventPublisher = eventPublisher;
         this.groupManager = groupManager;
         this.notificationFilterManager = notificationFilterManager;
@@ -61,8 +60,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
         this.projectRoleManager = projectRoleManager;
         this.userData = userData;
         this.messageFormatter = messageFormatter;
-        this.jiraJobsQueueProcessor = jiraJobsQueueProcessor;
-        //this.jiraMessageQueueProcessor = jiraMessageQueueProcessor;
+        this.icqEventsPublisher = icqEventsPublisher;
     }
 
     @Override
@@ -151,9 +149,9 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                         message = messageFormatter.formatEvent((MentionIssueEvent) event);
 
                     if (message != null) {
-                        jiraJobsQueueProcessor.offerJiraNotificationMessageSend(mrimLogin, message, messageFormatter.getAllIssueButtons(issueKey, recipient));
+                        icqEventsPublisher.publishJiraNotifyEvent(new IcqEventsPublisher.JiraNotifyEvent(mrimLogin, message, messageFormatter.getAllIssueButtons(issueKey, recipient)));
                     } else {
-                        jiraJobsQueueProcessor.offerJiraNotificationMessageSend(mrimLogin, message, null);
+                        icqEventsPublisher.publishJiraNotifyEvent(new IcqEventsPublisher.JiraNotifyEvent(mrimLogin, message, null));
                     }
                 }
             }

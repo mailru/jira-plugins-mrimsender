@@ -8,9 +8,7 @@ import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.BotFaultToleranceProvider;
-import ru.mail.jira.plugins.mrimsender.protocol.JiraJobsQueueProcessor;
-import ru.mail.jira.plugins.mrimsender.protocol.JiraMessageQueueProcessor;
+import ru.mail.jira.plugins.mrimsender.protocol.IcqEventsPublisher;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,19 +21,17 @@ public class IcqEventsFetcher {
     private static final Logger log = LoggerFactory.getLogger(IcqEventsFetcher.class);
     private static final String THREAD_NAME_PREFIX_FORMAT = "icq-events-fetcher-thread-pool-%d";
     private final IcqApiClient icqApiClient;
-    //private final JiraMessageQueueProcessor jiraMessageQueueProcessor;
-    private final JiraJobsQueueProcessor jiraJobsQueueProcessor;
+    private final IcqEventsPublisher icqEventsPublisher;
     private AtomicBoolean isRunning;
     private ScheduledExecutorService fetcherExecutorService;
     private ScheduledFuture<?> currentFetchJobFuture;
     private long lastEventId = 0;
 
 
-    public IcqEventsFetcher(IcqApiClient icqApiClient, JiraMessageQueueProcessor jiraMessageQueueProcessor, JiraJobsQueueProcessor jiraJobsQueueProcessor) {
+    public IcqEventsFetcher(IcqApiClient icqApiClient, IcqEventsPublisher icqEventsPublisher) {
         isRunning = new AtomicBoolean(false);
         this.icqApiClient = icqApiClient;
-        //this.jiraMessageQueueProcessor = jiraMessageQueueProcessor;
-        this.jiraJobsQueueProcessor = jiraJobsQueueProcessor;
+        this.icqEventsPublisher = icqEventsPublisher;
     }
 
     public void start() {
@@ -63,20 +59,14 @@ public class IcqEventsFetcher {
                 httpResponse.getBody()
                             .getEvents()
                             .forEach(event -> {
-                                try {
-                                    if (event instanceof NewMessageEvent) {
-                                        eventId.set(event.getEventId());
-                                        jiraJobsQueueProcessor.offerNewMessageEvent((NewMessageEvent)event);
-                                        //jiraMessageQueueProcessor.handleNewMessageEvent((NewMessageEvent) event);
-                                    } else if (event instanceof CallbackQueryEvent) {
-                                        eventId.set(event.getEventId());
-                                        jiraJobsQueueProcessor.offerCallbackQueryEvent((CallbackQueryEvent)event);
-                                        //jiraMessageQueueProcessor.handleCallbackQueryEvent((CallbackQueryEvent) event);
-                                    } else {
-                                        eventId.set(event.getEventId());
-                                    }
-                                } catch (Exception e) {
-                                    log.error("Exception on handle event={}", event, e);
+                                if (event instanceof NewMessageEvent) {
+                                    eventId.set(event.getEventId());
+                                    icqEventsPublisher.publishEvent(event);
+                                } else if (event instanceof CallbackQueryEvent) {
+                                    eventId.set(event.getEventId());
+                                    icqEventsPublisher.publishEvent(event);
+                                } else {
+                                    eventId.set(event.getEventId());
                                 }
                             });
 
