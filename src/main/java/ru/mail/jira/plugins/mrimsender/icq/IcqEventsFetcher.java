@@ -3,12 +3,16 @@ package ru.mail.jira.plugins.mrimsender.icq;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.IcqEventsListener;
+import ru.mail.jira.plugins.mrimsender.protocol.events.CancelClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.CommentIssueClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.ViewIssueClickEvent;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -61,10 +65,19 @@ public class IcqEventsFetcher {
                             .forEach(event -> {
                                 if (event instanceof NewMessageEvent) {
                                     eventId.set(event.getEventId());
-                                    icqEventsListener.publishIcqEvent(event);
+                                    icqEventsListener.publishIcqNewMessageEvent((NewMessageEvent)event);
                                 } else if (event instanceof CallbackQueryEvent) {
                                     eventId.set(event.getEventId());
-                                    icqEventsListener.publishIcqEvent(event);
+                                    CallbackQueryEvent callbackQueryEvent = (CallbackQueryEvent)event;
+                                    String callbackData = callbackQueryEvent.getCallbackData();
+                                    String buttonPrefix = StringUtils.substringBefore(callbackData, "-");
+                                    if (buttonPrefix.equals("view")) {
+                                        icqEventsListener.postIcqButtonClickEvent(new ViewIssueClickEvent(callbackQueryEvent));
+                                    } else if (buttonPrefix.equals("comment")) {
+                                        icqEventsListener.postIcqButtonClickEvent(new CommentIssueClickEvent(callbackQueryEvent));
+                                    } else if (buttonPrefix.equals("cancel")) {
+                                        icqEventsListener.postIcqButtonClickEvent(new CancelClickEvent(callbackQueryEvent));
+                                    }
                                 } else {
                                     eventId.set(event.getEventId());
                                 }

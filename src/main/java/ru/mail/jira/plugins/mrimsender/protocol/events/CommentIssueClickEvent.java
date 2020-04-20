@@ -6,7 +6,7 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 
 @Getter
 @Setter
-public class CommentIssueClickEvent {
+public class CommentIssueClickEvent implements IcqButtonClickEvent {
     private final CallbackQueryEvent callbackQueryEvent;
     public CommentIssueClickEvent(CallbackQueryEvent callbackQueryEvent) { this.callbackQueryEvent = callbackQueryEvent; }
 }

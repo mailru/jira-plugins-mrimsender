@@ -18,10 +18,10 @@ import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
 import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
-import ru.mail.jira.plugins.mrimsender.icq.dto.events.Event;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CancelClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CommentIssueClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.IcqButtonClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.NewCommentMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.ShowMenuEvent;
@@ -71,11 +71,13 @@ public class IcqEventsListener {
         this.commentManager = commentManager;
     }
 
-    public void publishIcqEvent(Event event) { asyncEventBus.post(event); }
+    public void publishIcqNewMessageEvent(NewMessageEvent event) { asyncEventBus.post(event); }
 
     public void publishJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) {
         asyncEventBus.post(jiraNotifyEvent);
     }
+
+    public void postIcqButtonClickEvent(IcqButtonClickEvent icqButtonClickEvent) { asyncEventBus.post(icqButtonClickEvent); }
 
     @Subscribe
     public void handleNewMessageEvent(NewMessageEvent newMessageEvent) throws Exception {
@@ -84,19 +86,6 @@ public class IcqEventsListener {
             asyncEventBus.post(new NewCommentMessageEvent(newMessageEvent));
         } else {
             asyncEventBus.post(new ShowMenuEvent(newMessageEvent));
-        }
-    }
-
-    @Subscribe
-    public void handleCallbackQueryEvent(CallbackQueryEvent callbackQueryEvent) throws Exception {
-        String callbackData = callbackQueryEvent.getCallbackData();
-        String buttonPrefix = StringUtils.substringBefore(callbackData, "-");
-        if (buttonPrefix.equals("view")) {
-            asyncEventBus.post(new ViewIssueClickEvent(callbackQueryEvent));
-        } else if (buttonPrefix.equals("comment")) {
-            asyncEventBus.post(new CommentIssueClickEvent(callbackQueryEvent));
-        } else if (buttonPrefix.equals("cancel")) {
-            asyncEventBus.post(new CancelClickEvent(callbackQueryEvent));
         }
     }
 
