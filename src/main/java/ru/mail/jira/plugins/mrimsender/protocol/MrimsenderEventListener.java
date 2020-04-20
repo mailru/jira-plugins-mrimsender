@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
+import ru.mail.jira.plugins.mrimsender.protocol.events.JiraNotifyEvent;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,7 +42,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
     private final ProjectRoleManager projectRoleManager;
     private final UserData userData;
     private final MessageFormatter messageFormatter;
-    private final IcqEventsPublisher icqEventsPublisher;
+    private final IcqEventsListener icqEventsListener;
 
     public MrimsenderEventListener(EventPublisher eventPublisher,
                                    GroupManager groupManager,
@@ -51,7 +52,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                                    ProjectRoleManager projectRoleManager,
                                    UserData userData,
                                    MessageFormatter messageFormatter,
-                                   IcqEventsPublisher icqEventsPublisher) {
+                                   IcqEventsListener icqEventsListener) {
         this.eventPublisher = eventPublisher;
         this.groupManager = groupManager;
         this.notificationFilterManager = notificationFilterManager;
@@ -60,7 +61,7 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
         this.projectRoleManager = projectRoleManager;
         this.userData = userData;
         this.messageFormatter = messageFormatter;
-        this.icqEventsPublisher = icqEventsPublisher;
+        this.icqEventsListener = icqEventsListener;
     }
 
     @Override
@@ -149,9 +150,9 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                         message = messageFormatter.formatEvent((MentionIssueEvent) event);
 
                     if (message != null) {
-                        icqEventsPublisher.publishJiraNotifyEvent(new IcqEventsPublisher.JiraNotifyEvent(mrimLogin, message, messageFormatter.getAllIssueButtons(issueKey, recipient)));
+                        icqEventsListener.publishJiraNotifyEvent(new JiraNotifyEvent(mrimLogin, message, messageFormatter.getAllIssueButtons(issueKey, recipient)));
                     } else {
-                        icqEventsPublisher.publishJiraNotifyEvent(new IcqEventsPublisher.JiraNotifyEvent(mrimLogin, message, null));
+                        icqEventsListener.publishJiraNotifyEvent(new JiraNotifyEvent(mrimLogin, message, null));
                     }
                 }
             }

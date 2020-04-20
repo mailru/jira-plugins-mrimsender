@@ -65,7 +65,7 @@
 
     <component key="icq-bot-service" class="ru.mail.jira.plugins.mrimsender.protocol.IcqBot" />
 
-
+    <component key="icq-events-listener" class="ru.mail.jira.plugins.mrimsender.protocol.IcqEventsListener"/>
 
     <component key="thirdparty-service-initializer" class="ru.mail.jira.plugins.mrimsender.configuration.ThirdPartyServiceInitializer" public="true">
         <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>

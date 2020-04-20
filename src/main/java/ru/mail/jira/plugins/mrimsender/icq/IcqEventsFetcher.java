@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.IcqEventsPublisher;
+import ru.mail.jira.plugins.mrimsender.protocol.IcqEventsListener;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -21,17 +21,17 @@ public class IcqEventsFetcher {
     private static final Logger log = LoggerFactory.getLogger(IcqEventsFetcher.class);
     private static final String THREAD_NAME_PREFIX_FORMAT = "icq-events-fetcher-thread-pool-%d";
     private final IcqApiClient icqApiClient;
-    private final IcqEventsPublisher icqEventsPublisher;
+    private final IcqEventsListener icqEventsListener;
     private AtomicBoolean isRunning;
     private ScheduledExecutorService fetcherExecutorService;
     private ScheduledFuture<?> currentFetchJobFuture;
     private long lastEventId = 0;
 
 
-    public IcqEventsFetcher(IcqApiClient icqApiClient, IcqEventsPublisher icqEventsPublisher) {
+    public IcqEventsFetcher(IcqApiClient icqApiClient, IcqEventsListener icqEventsListener) {
         isRunning = new AtomicBoolean(false);
         this.icqApiClient = icqApiClient;
-        this.icqEventsPublisher = icqEventsPublisher;
+        this.icqEventsListener = icqEventsListener;
     }
 
     public void start() {
@@ -61,10 +61,10 @@ public class IcqEventsFetcher {
                             .forEach(event -> {
                                 if (event instanceof NewMessageEvent) {
                                     eventId.set(event.getEventId());
-                                    icqEventsPublisher.publishEvent(event);
+                                    icqEventsListener.publishIcqEvent(event);
                                 } else if (event instanceof CallbackQueryEvent) {
                                     eventId.set(event.getEventId());
-                                    icqEventsPublisher.publishEvent(event);
+                                    icqEventsListener.publishIcqEvent(event);
                                 } else {
                                     eventId.set(event.getEventId());
                                 }
