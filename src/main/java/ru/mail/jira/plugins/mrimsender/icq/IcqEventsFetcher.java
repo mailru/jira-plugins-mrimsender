@@ -3,13 +3,16 @@ package ru.mail.jira.plugins.mrimsender.icq;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.BotFaultToleranceProvider;
-import ru.mail.jira.plugins.mrimsender.protocol.JiraMessageQueueProcessor;
+import ru.mail.jira.plugins.mrimsender.protocol.IcqEventsListener;
+import ru.mail.jira.plugins.mrimsender.protocol.events.CancelClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.CommentIssueClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.ViewIssueClickEvent;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -22,17 +25,17 @@ public class IcqEventsFetcher {
     private static final Logger log = LoggerFactory.getLogger(IcqEventsFetcher.class);
     private static final String THREAD_NAME_PREFIX_FORMAT = "icq-events-fetcher-thread-pool-%d";
     private final IcqApiClient icqApiClient;
-    private final JiraMessageQueueProcessor jiraMessageQueueProcessor;
+    private final IcqEventsListener icqEventsListener;
     private AtomicBoolean isRunning;
     private ScheduledExecutorService fetcherExecutorService;
     private ScheduledFuture<?> currentFetchJobFuture;
     private long lastEventId = 0;
 
 
-    public IcqEventsFetcher(IcqApiClient icqApiClient, JiraMessageQueueProcessor jiraMessageQueueProcessor) {
+    public IcqEventsFetcher(IcqApiClient icqApiClient, IcqEventsListener icqEventsListener) {
         isRunning = new AtomicBoolean(false);
         this.icqApiClient = icqApiClient;
-        this.jiraMessageQueueProcessor = jiraMessageQueueProcessor;
+        this.icqEventsListener = icqEventsListener;
     }
 
     public void start() {
@@ -60,16 +63,23 @@ public class IcqEventsFetcher {
                 httpResponse.getBody()
                             .getEvents()
                             .forEach(event -> {
-                                try {
-                                    if (event instanceof NewMessageEvent) {
-                                        eventId.set(((NewMessageEvent) event).getEventId());
-                                        jiraMessageQueueProcessor.handleNewMessageEvent((NewMessageEvent) event);
-                                    } else if (event instanceof CallbackQueryEvent) {
-                                        eventId.set(((CallbackQueryEvent) event).getEventId());
-                                        jiraMessageQueueProcessor.handleCallbackQueryEvent((CallbackQueryEvent) event);
+                                if (event instanceof NewMessageEvent) {
+                                    eventId.set(event.getEventId());
+                                    icqEventsListener.publishIcqNewMessageEvent((NewMessageEvent)event);
+                                } else if (event instanceof CallbackQueryEvent) {
+                                    eventId.set(event.getEventId());
+                                    CallbackQueryEvent callbackQueryEvent = (CallbackQueryEvent)event;
+                                    String callbackData = callbackQueryEvent.getCallbackData();
+                                    String buttonPrefix = StringUtils.substringBefore(callbackData, "-");
+                                    if (buttonPrefix.equals("view")) {
+                                        icqEventsListener.postIcqButtonClickEvent(new ViewIssueClickEvent(callbackQueryEvent));
+                                    } else if (buttonPrefix.equals("comment")) {
+                                        icqEventsListener.postIcqButtonClickEvent(new CommentIssueClickEvent(callbackQueryEvent));
+                                    } else if (buttonPrefix.equals("cancel")) {
+                                        icqEventsListener.postIcqButtonClickEvent(new CancelClickEvent(callbackQueryEvent));
                                     }
-                                } catch (Exception e) {
-                                    log.error("Exception on handle event={}", event, e);
+                                } else {
+                                    eventId.set(event.getEventId());
                                 }
                             });
 

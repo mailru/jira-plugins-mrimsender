@@ -3,14 +3,15 @@ package ru.mail.jira.plugins.mrimsender.protocol;
 import com.atlassian.jira.user.ApplicationUser;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
+import ru.mail.jira.plugins.mrimsender.protocol.events.JiraNotifyEvent;
 
 public class MrimServiceImpl implements MrimService {
     private final UserData userData;
-    private final JiraMessageQueueProcessor jiraMessageQueueProcessor;
+    private final IcqEventsListener icqEventsListener;
 
-    public MrimServiceImpl(JiraMessageQueueProcessor jiraMessageQueueProcessor, UserData userData) {
-        this.jiraMessageQueueProcessor = jiraMessageQueueProcessor;
+    public MrimServiceImpl(IcqEventsListener icqEventsListener, UserData userData) {
         this.userData = userData;
+        this.icqEventsListener = icqEventsListener;
     }
 
     @Override
@@ -28,6 +29,6 @@ public class MrimServiceImpl implements MrimService {
 
     @Override
     public void sendMessage(String chatId, String message) {
-        jiraMessageQueueProcessor.sendMessage(chatId, message, null);
+        icqEventsListener.publishJiraNotifyEvent(new JiraNotifyEvent(chatId, message, null));
     }
 }

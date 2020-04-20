@@ -11,7 +11,7 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        defaultImpl = JsonNode.class,
+        defaultImpl = Part.class,
         include= JsonTypeInfo.As.PROPERTY,
         property = "type")
 @JsonSubTypes({
@@ -22,6 +22,6 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
 @Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class Part<T> {
+public class Part<T> {
     private T payload;
 }

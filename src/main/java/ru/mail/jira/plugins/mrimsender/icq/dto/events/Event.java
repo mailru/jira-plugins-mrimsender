@@ -10,7 +10,7 @@ import org.codehaus.jackson.annotate.JsonSubTypes;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 
 @JsonTypeInfo(
-        defaultImpl = JsonNode.class,
+        defaultImpl = Event.class,
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
         property = "type")
@@ -22,7 +22,7 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
 @Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class Event<T> {
+public class Event<T> {
     private long eventId;
     private T payload;
 }

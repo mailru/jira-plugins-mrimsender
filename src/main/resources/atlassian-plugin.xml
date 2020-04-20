@@ -65,7 +65,7 @@
 
     <component key="icq-bot-service" class="ru.mail.jira.plugins.mrimsender.protocol.IcqBot" />
 
-
+    <component key="icq-events-listener" class="ru.mail.jira.plugins.mrimsender.protocol.IcqEventsListener"/>
 
     <component key="thirdparty-service-initializer" class="ru.mail.jira.plugins.mrimsender.configuration.ThirdPartyServiceInitializer" public="true">
         <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
@@ -74,8 +74,6 @@
     <component key="bot-orchestration-service" class="ru.mail.jira.plugins.mrimsender.protocol.BotsOrchestrationService">
             <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
     </component>
-
-    <component key="jira-message-queue-processor" class="ru.mail.jira.plugins.mrimsender.protocol.JiraMessageQueueProcessor"/>
 
     <component-import key="cluster-manager" interface="com.atlassian.jira.cluster.ClusterManager"/>
     <component-import key="scheduler-service" interface="com.atlassian.scheduler.SchedulerService"/>
@@ -87,6 +85,8 @@
     <component key="bot-fault-tolerance-provider" class="ru.mail.jira.plugins.mrimsender.protocol.BotFaultToleranceProvider" public="true">
         <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>
     </component>
+
+
 
     <!-- Icq -->
     <component key="icq-api-client-impl" class="ru.mail.jira.plugins.mrimsender.icq.IcqApiClientImpl" public="true">

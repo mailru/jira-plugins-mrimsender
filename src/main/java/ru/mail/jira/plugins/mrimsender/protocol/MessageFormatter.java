@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 public class MessageFormatter {
     private final ApplicationProperties applicationProperties;
@@ -337,5 +338,26 @@ public class MessageFormatter {
         buttonsRow.add(cancel);
 
         return buttons;
+    }
+
+    public List<List<InlineKeyboardMarkupButton>> getMenuButtons(Locale locale) {
+        List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+        List<InlineKeyboardMarkupButton> buttonsRow1 = new ArrayList<>();
+        List<InlineKeyboardMarkupButton> buttonsRow2 = new ArrayList<>();
+        buttons.add(buttonsRow1);
+        buttons.add(buttonsRow2);
+
+        // create 'search issue' button
+        InlineKeyboardMarkupButton searchIssueButton = new InlineKeyboardMarkupButton();
+        searchIssueButton.setText(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.mainMenu.searchIssueButton.text"));
+        searchIssueButton.setCallbackData("search");
+        buttonsRow1.add(searchIssueButton);
+
+        // create 'create issue' button
+        InlineKeyboardMarkupButton createIssueButton = new InlineKeyboardMarkupButton();
+        createIssueButton.setText(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.mainMenu.createIssueButton.text"));
+        createIssueButton.setCallbackData("create");
+        buttonsRow2.add(createIssueButton);
+        return null;
     }
 }
