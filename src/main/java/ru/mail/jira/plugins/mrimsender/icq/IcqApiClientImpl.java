@@ -67,4 +67,12 @@ public class IcqApiClientImpl implements IcqApiClient {
                       .asJson();
     }
 
+    @Override
+    public HttpResponse<JsonNode> answerCallbackQuery(String queryId) throws UnirestException {
+        return Unirest.get(BASE_API_URL + "/messages/answerCallbackQuery")
+                      .queryString("token", apiToken)
+                      .queryString("queryId", queryId)
+                      .asJson();
+    }
+
 }

@@ -12,6 +12,7 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.IcqEventsListener;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CancelClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CommentIssueClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.SearchIssueClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.ViewIssueClickEvent;
 
 import java.util.concurrent.Executors;
@@ -77,6 +78,8 @@ public class IcqEventsFetcher {
                                         icqEventsListener.postIcqButtonClickEvent(new CommentIssueClickEvent(callbackQueryEvent));
                                     } else if (buttonPrefix.equals("cancel")) {
                                         icqEventsListener.postIcqButtonClickEvent(new CancelClickEvent(callbackQueryEvent));
+                                    } else if (buttonPrefix.equals("search")) {
+                                        icqEventsListener.postIcqButtonClickEvent(new SearchIssueClickEvent(callbackQueryEvent));
                                     }
                                 } else {
                                     eventId.set(event.getEventId());
