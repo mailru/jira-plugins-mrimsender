@@ -5,11 +5,10 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.permission.ProjectPermissions;
-import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.PermissionManager;
-import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -18,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
-import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CancelClickEvent;
@@ -28,15 +26,15 @@ import ru.mail.jira.plugins.mrimsender.protocol.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.NewCommentMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.NewIssueKeyMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.SearchIssueClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.ShowHelpEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.ShowMenuEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.ViewIssueClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.state.ChatState;
-import ru.mail.jira.plugins.mrimsender.protocol.state.WaitForCommentState;
-import ru.mail.jira.plugins.mrimsender.protocol.state.WaitForSearchIssueState;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,10 +42,11 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class IcqEventsListener {
     private static final String THREAD_NAME_PREFIX = "icq-events-listener-thread-pool";
+    private static final String CHAT_COMMAND_PREFIX = "/";
 
     private final ConcurrentHashMap<String, ChatState> chatsStateMap = new ConcurrentHashMap<>();
     private final ExecutorService executorService = Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX).build());
-
+    private final Map<String, BotChatCommand> botChatCommandsMap;
     private final AsyncEventBus asyncEventBus;
     private final IcqApiClient icqApiClient;
     private final UserData userData;
@@ -76,6 +75,11 @@ public class IcqEventsListener {
         this.issueManager = issueManager;
         this.permissionManager = permissionManager;
         this.commentManager = commentManager;
+        this.botChatCommandsMap =
+                ImmutableMap.of(
+                        "menu", (newMessageEvent) -> asyncEventBus.post(new ShowMenuEvent(newMessageEvent)),
+                        "help", (newMessageEvent) -> {asyncEventBus.post(new ShowHelpEvent(newMessageEvent));}
+                        );
     }
 
     public void publishIcqNewMessageEvent(NewMessageEvent event) { asyncEventBus.post(event); }
@@ -91,15 +95,18 @@ public class IcqEventsListener {
         String chatId = newMessageEvent.getChat().getChatId();
         if (chatsStateMap.containsKey(chatId)) {
             ChatState chatState = chatsStateMap.get(chatId);
-            if (chatState instanceof WaitForCommentState) {
+            if (chatState.isWaitingForComment()) {
                 asyncEventBus.post(new NewCommentMessageEvent(newMessageEvent));
             }
-            if (chatState instanceof WaitForSearchIssueState) {
+            if (chatState.isWaitingIssueKey()) {
                 asyncEventBus.post(new NewIssueKeyMessageEvent(newMessageEvent));
             }
-
         } else {
-            asyncEventBus.post(new ShowMenuEvent(newMessageEvent));
+            String currentChatCommand = newMessageEvent.getText();
+            if (currentChatCommand.contains(CHAT_COMMAND_PREFIX)) {
+                Optional.ofNullable(botChatCommandsMap.get(StringUtils.substringAfter(currentChatCommand, CHAT_COMMAND_PREFIX)))
+                        .ifPresent(command -> command.execute(newMessageEvent));
+            }
         }
     }
 
@@ -115,7 +122,7 @@ public class IcqEventsListener {
         String chatId = callbackQueryEvent.getMessage().getChat().getChatId();
         String queryId = callbackQueryEvent.getQueryId();
         String mrimLogin = callbackQueryEvent.getFrom().getUserId();
-        icqApiClient.answerCallbackQuery(queryId, null, false, null);
+        icqApiClient.answerCallbackQuery(queryId);
         Issue currentIssue = issueManager.getIssueByCurrentKey(issueKey);
         ApplicationUser currentUser = userData.getUserByMrimLogin(mrimLogin);
         if (currentUser != null && currentIssue != null) {
@@ -141,9 +148,9 @@ public class IcqEventsListener {
         ApplicationUser commentedUser = userData.getUserByMrimLogin(mrimLogin);
         Locale locale = localeManager.getLocaleFor(commentedUser);
         String message = i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.insertComment.message", issueKey);
-        icqApiClient.answerCallbackQuery(queryId, null, false, null);
+        icqApiClient.answerCallbackQuery(queryId);
         icqApiClient.sendMessageText(chatId, message, messageFormatter.getCancelButton(commentedUser));
-        chatsStateMap.put(chatId, new WaitForCommentState(issueKey));
+        chatsStateMap.put(chatId, ChatState.buildCommentWaitingState(issueKey));
         log.debug("JiraMessageQueueProcessor answerCommentButtonClick queue offer finished...");
     }
 
@@ -152,7 +159,7 @@ public class IcqEventsListener {
         NewMessageEvent newMessageEvent = newCommentMessageEvent.getNewMessageEvent();
         log.debug("CreateCommentCommand execution started...");
         String chatId = newMessageEvent.getChat().getChatId();
-        String issueKey = ((WaitForCommentState)chatsStateMap.remove(chatId)).getIssueKey();
+        String issueKey = (String)chatsStateMap.remove(chatId).getStateData();
         String mrimLogin = newMessageEvent.getFrom().getUserId();
         String commentMessage = newMessageEvent.getText();
         ApplicationUser commentedUser = userData.getUserByMrimLogin(mrimLogin);
@@ -186,13 +193,27 @@ public class IcqEventsListener {
     @Subscribe
     public void onShowMenuEvent(ShowMenuEvent showMenuEvent) throws IOException, UnirestException {
         log.debug("ShowDefaultMenuEvent handling started...");
-        String chatId = showMenuEvent.getNewMessageEvent().getChat().getChatId();
-        ApplicationUser currentUser = userData.getUserByMrimLogin(showMenuEvent.getNewMessageEvent().getFrom().getUserId());
+        NewMessageEvent newMessageEvent = showMenuEvent.getNewMessageEvent();
+        String chatId = newMessageEvent.getChat().getChatId();
+        ApplicationUser currentUser = userData.getUserByMrimLogin(newMessageEvent.getFrom().getUserId());
         if (currentUser != null) {
             Locale locale = localeManager.getLocaleFor(currentUser);
             icqApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.mainMenu.text"), messageFormatter.getMenuButtons(locale));
         }
         log.debug("JiraMessageQueueProcessor showDefaultMenu finished...");
+    }
+
+    @Subscribe
+    public void onShowHelpEvent(ShowHelpEvent showHelpEvent) throws IOException, UnirestException {
+        log.debug("ShowHelpEvent handling started");
+        NewMessageEvent newMessageEvent = showHelpEvent.getNewMessageEvent();
+        String chatId = newMessageEvent.getChat().getChatId();
+        ApplicationUser currentUser = userData.getUserByMrimLogin(newMessageEvent.getFrom().getUserId());
+        if (currentUser != null) {
+            Locale locale = localeManager.getLocaleFor(currentUser);
+            icqApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.helpMessage.text"), null);
+        }
+        log.debug("ShowHelpEvent handling finished");
     }
 
     @Subscribe
@@ -206,7 +227,7 @@ public class IcqEventsListener {
             icqApiClient.answerCallbackQuery(callbackQueryEvent.getQueryId());
             icqApiClient.sendMessageText(chatId, message, messageFormatter.getCancelButton(currentUser));
         }
-        chatsStateMap.put(chatId, new WaitForSearchIssueState());
+        chatsStateMap.put(chatId, ChatState.buildIssueKeyWaitingState());
         log.debug("OnSearchIssueButtonClick event handling finished");
     }
 
@@ -227,8 +248,9 @@ public class IcqEventsListener {
                 icqApiClient.sendMessageText(chatId, i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"), null);
                 log.debug("ViewIssueCommand no permissions message sent...");
             }
+        } else if (currentIssue == null && currentUser != null) {
+            icqApiClient.sendMessageText(chatId, i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.icqEventsListener.newIssueKeyMessage.error.issueNotFound"), null);
         }
         log.debug("NewIssueKeyMessageEvent handling finished");
     }
-
 }
