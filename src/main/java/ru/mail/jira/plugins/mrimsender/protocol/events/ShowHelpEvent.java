@@ -7,6 +7,11 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 @Getter
 @Setter
 public class ShowHelpEvent {
-    private NewMessageEvent newMessageEvent;
-    public ShowHelpEvent(NewMessageEvent newMessageEvent) { this.newMessageEvent = newMessageEvent; }
+    private final String chatId;
+    private final String userId;
+
+    public ShowHelpEvent(NewMessageEvent newMessageEvent) {
+        this.chatId = newMessageEvent.getChat().getChatId();
+        this.userId = newMessageEvent.getFrom().getUserId();
+    }
 }

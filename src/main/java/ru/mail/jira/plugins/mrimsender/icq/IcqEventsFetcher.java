@@ -70,8 +70,7 @@ public class IcqEventsFetcher {
                                 } else if (event instanceof CallbackQueryEvent) {
                                     eventId.set(event.getEventId());
                                     CallbackQueryEvent callbackQueryEvent = (CallbackQueryEvent)event;
-                                    String callbackData = callbackQueryEvent.getCallbackData();
-                                    String buttonPrefix = StringUtils.substringBefore(callbackData, "-");
+                                    String buttonPrefix = StringUtils.substringBefore(callbackQueryEvent.getCallbackData(), "-");
                                     if (buttonPrefix.equals("view")) {
                                         icqEventsListener.postIcqButtonClickEvent(new ViewIssueClickEvent(callbackQueryEvent));
                                     } else if (buttonPrefix.equals("comment")) {
