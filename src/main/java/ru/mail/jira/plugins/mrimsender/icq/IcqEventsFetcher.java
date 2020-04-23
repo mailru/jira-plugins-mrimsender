@@ -11,7 +11,9 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.IcqEventsListener;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CancelClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CommentIssueClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.SearchIssueClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.ViewIssueClickEvent;
 
 import java.util.concurrent.Executors;
@@ -65,18 +67,19 @@ public class IcqEventsFetcher {
                             .forEach(event -> {
                                 if (event instanceof NewMessageEvent) {
                                     eventId.set(event.getEventId());
-                                    icqEventsListener.publishIcqNewMessageEvent((NewMessageEvent)event);
+                                    icqEventsListener.publishEvent(new ChatMessageEvent((NewMessageEvent)event));
                                 } else if (event instanceof CallbackQueryEvent) {
                                     eventId.set(event.getEventId());
                                     CallbackQueryEvent callbackQueryEvent = (CallbackQueryEvent)event;
-                                    String callbackData = callbackQueryEvent.getCallbackData();
-                                    String buttonPrefix = StringUtils.substringBefore(callbackData, "-");
+                                    String buttonPrefix = StringUtils.substringBefore(callbackQueryEvent.getCallbackData(), "-");
                                     if (buttonPrefix.equals("view")) {
-                                        icqEventsListener.postIcqButtonClickEvent(new ViewIssueClickEvent(callbackQueryEvent));
+                                        icqEventsListener.publishEvent(new ViewIssueClickEvent(callbackQueryEvent));
                                     } else if (buttonPrefix.equals("comment")) {
-                                        icqEventsListener.postIcqButtonClickEvent(new CommentIssueClickEvent(callbackQueryEvent));
+                                        icqEventsListener.publishEvent(new CommentIssueClickEvent(callbackQueryEvent));
                                     } else if (buttonPrefix.equals("cancel")) {
-                                        icqEventsListener.postIcqButtonClickEvent(new CancelClickEvent(callbackQueryEvent));
+                                        icqEventsListener.publishEvent(new CancelClickEvent(callbackQueryEvent));
+                                    } else if (buttonPrefix.equals("search")) {
+                                        icqEventsListener.publishEvent(new SearchIssueClickEvent(callbackQueryEvent));
                                     }
                                 } else {
                                     eventId.set(event.getEventId());

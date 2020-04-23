@@ -6,18 +6,14 @@ import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
 import ru.mail.jira.plugins.mrimsender.icq.dto.MessageResponse;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
-import ru.mail.jira.plugins.mrimsender.icq.dto.events.Event;
-import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -81,21 +77,8 @@ public class IcqApiClientImplTest {
                                                                       .collect(Collectors.toList());
         if (callbackQueryEventList.size() > 0) {
             CallbackQueryEvent callbackQueryEvent = callbackQueryEventList.get(0);
-            System.out.println(callbackQueryEvent.getQueryId());
-            //System.out.println(callbackQueryEvent.getPayload() instanceof LinkedHashMap);
-            //System.out.println(callbackQueryEvent.getPayload().getClass());
-            //System.out.println(callbackQueryEvent.getFrom().getFirstName());
-            //HttpResponse<JsonNode> jsonNodeHttpResponse = icqApiClient.answerCallbackQuery(callbackQueryEvent.getQueryId(), "text here", true, null);
-            //assertEquals(200, jsonNodeHttpResponse.getStatus());
+            HttpResponse<JsonNode> jsonNodeHttpResponse = icqApiClient.answerCallbackQuery(callbackQueryEvent.getQueryId(), "text here", true, null);
+            assertEquals(200, jsonNodeHttpResponse.getStatus());
         }
-    }
-
-
-    @Test
-    public void answerCallbackQuery2() throws UnirestException {
-        HttpResponse<JsonNode> jsonNodeHttpResponse = icqApiClient.answerCallbackQuery("SVR:d.udovichenko@corp.mail.ru:751619011:1586516546668562:2152-1586516546", "text here", true, null);
-        //assertEquals(200, jsonNodeHttpResponse.getStatus());
-        System.out.println(jsonNodeHttpResponse.getBody());
-
     }
 }

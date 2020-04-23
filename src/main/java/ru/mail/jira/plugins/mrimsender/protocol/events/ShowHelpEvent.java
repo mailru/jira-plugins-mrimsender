@@ -6,12 +6,12 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 
 @Getter
 @Setter
-public class ShowMenuEvent implements Event {
-    private final String userId;
+public class ShowHelpEvent implements Event {
     private final String chatId;
+    private final String userId;
 
-    public ShowMenuEvent(ChatMessageEvent chatMessageEvent) {
-        this.userId = chatMessageEvent.getUerId();
+    public ShowHelpEvent(ChatMessageEvent chatMessageEvent) {
         this.chatId = chatMessageEvent.getChatId();
+        this.userId = chatMessageEvent.getUerId();
     }
 }

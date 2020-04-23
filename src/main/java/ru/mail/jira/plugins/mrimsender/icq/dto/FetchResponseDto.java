@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import ru.mail.jira.plugins.mrimsender.icq.dto.events.Event;
+import ru.mail.jira.plugins.mrimsender.icq.dto.events.IcqEvent;
 
 import java.util.List;
 
@@ -13,10 +13,10 @@ import java.util.List;
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FetchResponseDto {
-    private List<Event> events;
+    private List<IcqEvent> events;
     private boolean ok;
 
-    public List<Event> getEvents() {
+    public List<IcqEvent> getEvents() {
         return events;
     }
 }

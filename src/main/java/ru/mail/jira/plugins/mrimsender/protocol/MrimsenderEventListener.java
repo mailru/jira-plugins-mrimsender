@@ -150,9 +150,9 @@ public class MrimsenderEventListener implements InitializingBean, DisposableBean
                         message = messageFormatter.formatEvent((MentionIssueEvent) event);
 
                     if (message != null) {
-                        icqEventsListener.publishJiraNotifyEvent(new JiraNotifyEvent(mrimLogin, message, messageFormatter.getAllIssueButtons(issueKey, recipient)));
+                        icqEventsListener.publishEvent(new JiraNotifyEvent(mrimLogin, message, messageFormatter.getAllIssueButtons(issueKey, recipient)));
                     } else {
-                        icqEventsListener.publishJiraNotifyEvent(new JiraNotifyEvent(mrimLogin, message, null));
+                        icqEventsListener.publishEvent(new JiraNotifyEvent(mrimLogin, message, null));
                     }
                 }
             }

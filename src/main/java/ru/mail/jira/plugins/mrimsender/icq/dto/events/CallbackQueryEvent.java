@@ -5,7 +5,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import ru.mail.jira.plugins.mrimsender.icq.dto.Message;
 import ru.mail.jira.plugins.mrimsender.icq.dto.User;
 
-public class CallbackQueryEvent extends Event<CallbackQueryEvent.Data> {
+public class CallbackQueryEvent extends IcqEvent<CallbackQueryEvent.Data> {
     public String getQueryId() {
         return this.getPayload().queryId;
     }

@@ -4,13 +4,13 @@ package ru.mail.jira.plugins.mrimsender.icq.dto.events;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonSubTypes;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
+import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
 
 @JsonTypeInfo(
-        defaultImpl = Event.class,
+        defaultImpl = IcqEvent.class,
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
         property = "type")
@@ -22,7 +22,7 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
 @Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Event<T> {
+public class IcqEvent<T> {
     private long eventId;
     private T payload;
 }

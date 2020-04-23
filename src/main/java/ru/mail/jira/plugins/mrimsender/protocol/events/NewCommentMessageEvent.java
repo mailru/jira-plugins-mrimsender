@@ -6,7 +6,16 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 
 @Getter
 @Setter
-public class NewCommentMessageEvent {
-    private final NewMessageEvent newMessageEvent;
-    public NewCommentMessageEvent(NewMessageEvent newMessageEvent) { this.newMessageEvent = newMessageEvent; }
+public class NewCommentMessageEvent implements Event {
+    private final String userId;
+    private final String chatId;
+    private final String message;
+    private final String commentingIssueKey;
+
+    public NewCommentMessageEvent(ChatMessageEvent chatMessageEvent, String commentingIssueKey) {
+        this.userId = chatMessageEvent.getUerId();
+        this.chatId = chatMessageEvent.getChatId();
+        this.message = chatMessageEvent.getMessage();
+        this.commentingIssueKey = commentingIssueKey;
+    }
 }

@@ -347,9 +347,9 @@ public class MessageFormatter {
     public List<List<InlineKeyboardMarkupButton>> getMenuButtons(Locale locale) {
         List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
         List<InlineKeyboardMarkupButton> buttonsRow1 = new ArrayList<>();
-        List<InlineKeyboardMarkupButton> buttonsRow2 = new ArrayList<>();
+        //List<InlineKeyboardMarkupButton> buttonsRow2 = new ArrayList<>();
         buttons.add(buttonsRow1);
-        buttons.add(buttonsRow2);
+        //buttons.add(buttonsRow2);
 
         // create 'search issue' button
         InlineKeyboardMarkupButton searchIssueButton = new InlineKeyboardMarkupButton();
@@ -358,10 +358,10 @@ public class MessageFormatter {
         buttonsRow1.add(searchIssueButton);
 
         // create 'create issue' button
-        InlineKeyboardMarkupButton createIssueButton = new InlineKeyboardMarkupButton();
+        /*InlineKeyboardMarkupButton createIssueButton = new InlineKeyboardMarkupButton();
         createIssueButton.setText(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.mainMenu.createIssueButton.text"));
         createIssueButton.setCallbackData("create");
-        buttonsRow2.add(createIssueButton);
-        return null;
+        buttonsRow2.add(createIssueButton);*/
+        return buttons;
     }
 }

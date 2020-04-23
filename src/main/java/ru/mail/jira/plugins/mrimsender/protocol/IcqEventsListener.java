@@ -16,19 +16,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
-import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CancelClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CommentIssueClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.IcqButtonClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
+import ru.mail.jira.plugins.mrimsender.protocol.events.IssueKeyMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.NewCommentMessageEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.SearchIssueClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.ShowHelpEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.ShowMenuEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.ViewIssueClickEvent;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -37,10 +38,10 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class IcqEventsListener {
     private static final String THREAD_NAME_PREFIX = "icq-events-listener-thread-pool";
+    private static final String CHAT_COMMAND_PREFIX = "/";
 
-    private final ConcurrentHashMap<String, String> chatsStateMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ChatState> chatsStateMap = new ConcurrentHashMap<>();
     private final ExecutorService executorService = Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX).build());
-
     private final AsyncEventBus asyncEventBus;
     private final IcqApiClient icqApiClient;
     private final UserData userData;
@@ -71,45 +72,52 @@ public class IcqEventsListener {
         this.commentManager = commentManager;
     }
 
-    public void publishIcqNewMessageEvent(NewMessageEvent event) { asyncEventBus.post(event); }
-
-    public void publishJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) {
-        asyncEventBus.post(jiraNotifyEvent);
+    public void publishEvent(Event event) {
+        asyncEventBus.post(event);
     }
 
-    public void postIcqButtonClickEvent(IcqButtonClickEvent icqButtonClickEvent) { asyncEventBus.post(icqButtonClickEvent); }
-
     @Subscribe
-    public void handleNewMessageEvent(NewMessageEvent newMessageEvent) throws Exception {
-        String chatId = newMessageEvent.getChat().getChatId();
+    public void handleNewMessageEvent(ChatMessageEvent chatMessageEvent) throws Exception {
+        String chatId = chatMessageEvent.getChatId();
         if (chatsStateMap.containsKey(chatId)) {
-            asyncEventBus.post(new NewCommentMessageEvent(newMessageEvent));
+            ChatState chatState = chatsStateMap.remove(chatId);
+            if (chatState.isWaitingForComment()) {
+                asyncEventBus.post(new NewCommentMessageEvent(chatMessageEvent, chatState.getIssueKey()));
+            }
+            if (chatState.isWaitingIssueKey()) {
+                asyncEventBus.post(new IssueKeyMessageEvent(chatMessageEvent));
+            }
         } else {
-            asyncEventBus.post(new ShowMenuEvent(newMessageEvent));
+            String currentChatCommand = chatMessageEvent.getMessage();
+            if (currentChatCommand.startsWith(CHAT_COMMAND_PREFIX)) {
+                String command = StringUtils.substringAfter(currentChatCommand, CHAT_COMMAND_PREFIX);
+                if (command.equals("help")) {
+                    asyncEventBus.post(new ShowHelpEvent(chatMessageEvent));
+                }
+                if (command.equals("menu")) {
+                    asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
+                }
+
+            }
         }
     }
 
     @Subscribe
-    public void handleJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) throws Exception{
+    public void handleJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) throws Exception {
         icqApiClient.sendMessageText(jiraNotifyEvent.getChatId(), jiraNotifyEvent.getMessage(), jiraNotifyEvent.getButtons());
     }
 
     @Subscribe
     public void onViewIssueButtonClick(ViewIssueClickEvent viewIssueClickEvent) throws UnirestException, IOException {
-        CallbackQueryEvent callbackQueryEvent = viewIssueClickEvent.getCallbackQueryEvent();
-        String issueKey = StringUtils.substringAfter(callbackQueryEvent.getCallbackData(), "-");
-        String chatId = callbackQueryEvent.getMessage().getChat().getChatId();
-        String queryId = callbackQueryEvent.getQueryId();
-        String mrimLogin = callbackQueryEvent.getFrom().getUserId();
-        icqApiClient.answerCallbackQuery(queryId, null, false, null);
-        Issue currentIssue = issueManager.getIssueByCurrentKey(issueKey);
-        ApplicationUser currentUser = userData.getUserByMrimLogin(mrimLogin);
+        icqApiClient.answerCallbackQuery(viewIssueClickEvent.getQueryId());
+        Issue currentIssue = issueManager.getIssueByCurrentKey(viewIssueClickEvent.getIssueKey());
+        ApplicationUser currentUser = userData.getUserByMrimLogin(viewIssueClickEvent.getUserId());
         if (currentUser != null && currentIssue != null) {
             if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, currentIssue, currentUser)) {
-                icqApiClient.sendMessageText(chatId, messageFormatter.createIssueSummary(currentIssue, currentUser), messageFormatter.getIssueButtons(issueKey, currentUser));
+                icqApiClient.sendMessageText(viewIssueClickEvent.getChatId(), messageFormatter.createIssueSummary(currentIssue, currentUser), messageFormatter.getIssueButtons(viewIssueClickEvent.getIssueKey(), currentUser));
                 log.debug("ViewIssueCommand message sent...");
             } else {
-                icqApiClient.sendMessageText(chatId, i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"), null);
+                icqApiClient.sendMessageText(viewIssueClickEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"), null);
                 log.debug("ViewIssueCommand no permissions message sent...");
             }
         }
@@ -119,39 +127,30 @@ public class IcqEventsListener {
     @Subscribe
     public void onCommentIssueButtonClick(CommentIssueClickEvent commentIssueClickEvent) throws UnirestException, IOException {
         log.debug("CreateCommentCommand execution started...");
-        CallbackQueryEvent callbackQueryEvent = commentIssueClickEvent.getCallbackQueryEvent();
-        String queryId = callbackQueryEvent.getQueryId();
-        String chatId = callbackQueryEvent.getMessage().getChat().getChatId();
-        String issueKey = StringUtils.substringAfter(callbackQueryEvent.getCallbackData(), "-");
-        String mrimLogin = callbackQueryEvent.getFrom().getUserId();
-        ApplicationUser commentedUser = userData.getUserByMrimLogin(mrimLogin);
-        Locale locale = localeManager.getLocaleFor(commentedUser);
-        String message = i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.insertComment.message", issueKey);
-        icqApiClient.answerCallbackQuery(queryId, null, false, null);
-        icqApiClient.sendMessageText(chatId, message, messageFormatter.getCancelButton(commentedUser));
-        chatsStateMap.put(chatId, issueKey);
+        ApplicationUser commentedUser = userData.getUserByMrimLogin(commentIssueClickEvent.getUserId());
+        if (commentedUser != null) {
+            String message = i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.insertComment.message", commentIssueClickEvent.getIssueKey());
+            icqApiClient.answerCallbackQuery(commentIssueClickEvent.getQueryId());
+            icqApiClient.sendMessageText(commentIssueClickEvent.getChatId(), message, messageFormatter.getCancelButton(commentedUser));
+            chatsStateMap.put(commentIssueClickEvent.getChatId(), ChatState.buildCommentWaitingState(commentIssueClickEvent.getIssueKey()));
+        }
         log.debug("JiraMessageQueueProcessor answerCommentButtonClick queue offer finished...");
     }
 
     @Subscribe
-    public void newCommentMessageEvent(NewCommentMessageEvent newCommentMessageEvent) throws IOException, UnirestException {
-        NewMessageEvent newMessageEvent = newCommentMessageEvent.getNewMessageEvent();
+    public void handleNewCommentMessageEvent(NewCommentMessageEvent newCommentMessageEvent) throws IOException, UnirestException {
         log.debug("CreateCommentCommand execution started...");
-        String chatId = newMessageEvent.getChat().getChatId();
-        String issueKey = chatsStateMap.remove(chatId);
-        String mrimLogin = newMessageEvent.getFrom().getUserId();
-        String commentMessage = newMessageEvent.getText();
-        ApplicationUser commentedUser = userData.getUserByMrimLogin(mrimLogin);
-        Issue commentedIssue = issueManager.getIssueByCurrentKey(issueKey);
+        ApplicationUser commentedUser = userData.getUserByMrimLogin(newCommentMessageEvent.getUserId());
+        Issue commentedIssue = issueManager.getIssueByCurrentKey(newCommentMessageEvent.getCommentingIssueKey());
         if (commentedUser != null && commentedIssue != null) {
             if (permissionManager.hasPermission(ProjectPermissions.ADD_COMMENTS, commentedIssue, commentedUser)) {
-                commentManager.create(commentedIssue, commentedUser, commentMessage, true);
+                commentManager.create(commentedIssue, commentedUser, newCommentMessageEvent.getMessage(), true);
                 log.debug("CreateCommentCommand comment created...");
-                icqApiClient.sendMessageText(chatId, i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.commentCreated"), null);
+                icqApiClient.sendMessageText(newCommentMessageEvent.getChatId(), i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.commentCreated"), null);
                 log.debug("CreateCommentCommand new comment created message sent...");
             } else {
                 log.debug("CreateCommentCommand permissions violation occurred...");
-                icqApiClient.sendMessageText(chatId,i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.noPermissions"), null);
+                icqApiClient.sendMessageText(newCommentMessageEvent.getChatId(), i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.noPermissions"), null);
                 log.debug("CreateCommentCommand not enough permissions message sent...");
             }
         }
@@ -161,25 +160,63 @@ public class IcqEventsListener {
     @Subscribe
     public void onCancelButtonClick(CancelClickEvent cancelClickEvent) throws UnirestException {
         log.debug("CancelCommand execution started...");
-        String queryId = cancelClickEvent.getCallbackQueryEvent().getQueryId();
-        String userId = cancelClickEvent.getCallbackQueryEvent().getFrom().getUserId();
-        String message = i18nResolver.getRawText(localeManager.getLocaleFor(userData.getUserByMrimLogin(userId)), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.cancelComment.message");
-        icqApiClient.answerCallbackQuery(queryId, message, false, null);
-        chatsStateMap.remove(cancelClickEvent.getCallbackQueryEvent().getMessage().getChat().getChatId());
+        String message = i18nResolver.getRawText(localeManager.getLocaleFor(userData.getUserByMrimLogin(cancelClickEvent.getUserId())), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.cancelComment.message");
+        icqApiClient.answerCallbackQuery(cancelClickEvent.getQueryId(), message, false, null);
+        chatsStateMap.remove(cancelClickEvent.getChatId());
         log.debug("CancelCommand execution finished...");
     }
 
     @Subscribe
     public void onShowMenuEvent(ShowMenuEvent showMenuEvent) throws IOException, UnirestException {
         log.debug("ShowDefaultMenuEvent handling started...");
-        String chatId = showMenuEvent.getNewMessageEvent().getChat().getChatId();
-        ApplicationUser currentUser = userData.getUserByMrimLogin(showMenuEvent.getNewMessageEvent().getFrom().getUserId());
+        ApplicationUser currentUser = userData.getUserByMrimLogin(showMenuEvent.getUserId());
         if (currentUser != null) {
             Locale locale = localeManager.getLocaleFor(currentUser);
-            List<List<InlineKeyboardMarkupButton>> buttons =  messageFormatter.getMenuButtons(locale);
-            icqApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.mainMenu.text"), buttons);
+            icqApiClient.sendMessageText(showMenuEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.mainMenu.text"), messageFormatter.getMenuButtons(locale));
         }
         log.debug("JiraMessageQueueProcessor showDefaultMenu finished...");
     }
 
+    @Subscribe
+    public void onShowHelpEvent(ShowHelpEvent showHelpEvent) throws IOException, UnirestException {
+        log.debug("ShowHelpEvent handling started");
+        ApplicationUser currentUser = userData.getUserByMrimLogin(showHelpEvent.getUserId());
+        if (currentUser != null) {
+            Locale locale = localeManager.getLocaleFor(currentUser);
+            icqApiClient.sendMessageText(showHelpEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.helpMessage.text"), null);
+        }
+        log.debug("ShowHelpEvent handling finished");
+    }
+
+    @Subscribe
+    public void onSearchIssueButtonClick(SearchIssueClickEvent searchIssueClickEvent) throws IOException, UnirestException {
+        log.debug("OnSearchIssueButtonClick event handling started");
+        ApplicationUser currentUser = userData.getUserByMrimLogin(searchIssueClickEvent.getUserId());
+        if (currentUser != null) {
+            String message = i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.searchButton.insertIssueKey.message");
+            icqApiClient.answerCallbackQuery(searchIssueClickEvent.getQueryId());
+            icqApiClient.sendMessageText(searchIssueClickEvent.getChatId(), message, messageFormatter.getCancelButton(currentUser));
+            chatsStateMap.put(searchIssueClickEvent.getChatId(), ChatState.issueKeyWaitingState());
+        }
+        log.debug("OnSearchIssueButtonClick event handling finished");
+    }
+
+    @Subscribe
+    public void handleNewIssueKeyMessageEvent(IssueKeyMessageEvent issueKeyMessageEvent) throws IOException, UnirestException {
+        log.debug("NewIssueKeyMessageEvent handling started");
+        ApplicationUser currentUser = userData.getUserByMrimLogin(issueKeyMessageEvent.getUserId());
+        Issue currentIssue = issueManager.getIssueByCurrentKey(issueKeyMessageEvent.getMessage());
+        if (currentUser != null && currentIssue != null) {
+            if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, currentIssue, currentUser)) {
+                icqApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), messageFormatter.createIssueSummary(currentIssue, currentUser), messageFormatter.getIssueButtons(currentIssue.getKey(), currentUser));
+                log.debug("ViewIssueCommand message sent...");
+            } else {
+                icqApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"), null);
+                log.debug("ViewIssueCommand no permissions message sent...");
+            }
+        } else if (currentIssue == null && currentUser != null) {
+            icqApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.icqEventsListener.newIssueKeyMessage.error.issueNotFound"), null);
+        }
+        log.debug("NewIssueKeyMessageEvent handling finished");
+    }
 }

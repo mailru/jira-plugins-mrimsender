@@ -17,5 +17,7 @@ public interface IcqApiClient {
 
     public HttpResponse<JsonNode> answerCallbackQuery(String queryId, String text, boolean showAlert, String url) throws UnirestException;
 
+    public HttpResponse<JsonNode> answerCallbackQuery(String queryId) throws UnirestException;
+
     public void updateToken();
 }

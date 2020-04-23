@@ -11,7 +11,7 @@ import org.mockito.Mockito;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
-import ru.mail.jira.plugins.mrimsender.icq.dto.events.Event;
+import ru.mail.jira.plugins.mrimsender.icq.dto.events.IcqEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.parts.File;
 import ru.mail.jira.plugins.mrimsender.icq.dto.parts.Mention;
@@ -75,7 +75,7 @@ public class IcqEventsFetcherTest {
         assertTrue(fetchResponseDto.isOk());
         assertEquals(fetchResponseDto.getEvents().size(), 3);
         assertEquals(NewMessageEvent.class, fetchResponseDto.getEvents().get(0).getClass());
-        assertEquals(Event.class, fetchResponseDto.getEvents().get(1).getClass());
+        assertEquals(IcqEvent.class, fetchResponseDto.getEvents().get(1).getClass());
         assertEquals(CallbackQueryEvent.class, fetchResponseDto.getEvents().get(2).getClass());
     }
 
@@ -97,8 +97,7 @@ public class IcqEventsFetcherTest {
     public void deserializationNewMessageEventTest() throws IOException {
         String example = "{\"eventId\":1,\"payload\":{\"chat\":{\"chatId\":\"example@example.ru\",\"type\":\"private\"},\"msgId\":\"6811058128403038841\",\"from\":{\"firstName\":\"Данил\",\"userId\":\"example@example.ru\"},\"text\":\"meh\",\"timestamp\":1585823048},\"type\":\"newMessage\"}";
 
-        Event<?> e = jacksonObjectMapper.readValue(example, Event.class);
-        System.out.println(e);
+        IcqEvent<?> e = jacksonObjectMapper.readValue(example, IcqEvent.class);
         assertEquals(e.getEventId(), 1);
         assertEquals(e.getClass(), NewMessageEvent.class);
         NewMessageEvent newMessageEvent = (NewMessageEvent) e;
@@ -117,8 +116,7 @@ public class IcqEventsFetcherTest {
     @Test
     public void deserializationCallbackQueryEventWithManyButtonsTest() throws IOException {
         String example = "{\"eventId\":5,\"payload\":{\"callbackData\":\"next-page1\",\"from\":{\"firstName\":\"Данил\",\"userId\":\"example@example.ru\"},\"message\":{\"chat\":{\"chatId\":\"example@example.ru\",\"type\":\"private\"},\"parts\":[{\"payload\":[[{\"callbackData\":\"next-page1\",\"text\":\"asdad1\"},{\"callbackData\":\"next-page2\",\"text\":\"asdad2\"}],[{\"callbackData\":\"next-page3\",\"text\":\"asdad3\"},{\"callbackData\":\"next-page4\",\"text\":\"asdad4\"}]],\"type\":\"inlineKeyboardMarkup\"}],\"msgId\":\"6812931455698600506\",\"from\":{\"nick\":\"OnlyMineAgentBot\",\"firstName\":\"OnlyMineAgentBot\",\"userId\":\"751619011\"},\"text\":\"kek\",\"timestamp\":1586259216},\"queryId\":\"SVR:example@example.ru:751619011:1586266646713388:333-1586266647\"},\"type\":\"callbackQuery\"}";
-        Event<?> e = jacksonObjectMapper.readValue(example, Event.class);
-        System.out.println(e);
+        IcqEvent<?> e = jacksonObjectMapper.readValue(example, IcqEvent.class);
         assertEquals(5, e.getEventId());
         assertEquals(CallbackQueryEvent.class, e.getClass());
         CallbackQueryEvent callbackQueryEvent = (CallbackQueryEvent)e;
