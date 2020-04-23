@@ -11,9 +11,9 @@ public class IssueKeyMessageEvent implements Event {
     private final String message;
     private final String userId;
 
-    public IssueKeyMessageEvent(NewMessageEvent newMessageEvent) {
-        this.chatId = newMessageEvent.getChat().getChatId();
-        this.message = newMessageEvent.getText().trim();
-        this.userId = newMessageEvent.getFrom().getUserId();
+    public IssueKeyMessageEvent(ChatMessageEvent chatMessageEvent) {
+        this.chatId = chatMessageEvent.getChatId();
+        this.message = chatMessageEvent.getMessage().trim();
+        this.userId = chatMessageEvent.getUerId();
     }
 }

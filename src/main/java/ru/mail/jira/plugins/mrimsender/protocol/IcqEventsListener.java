@@ -18,6 +18,7 @@ import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CancelClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CommentIssueClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
 import ru.mail.jira.plugins.mrimsender.protocol.events.IssueKeyMessageEvent;
@@ -76,25 +77,25 @@ public class IcqEventsListener {
     }
 
     @Subscribe
-    public void handleNewMessageEvent(NewMessageEvent newMessageEvent) throws Exception {
-        String chatId = newMessageEvent.getChat().getChatId();
+    public void handleNewMessageEvent(ChatMessageEvent chatMessageEvent) throws Exception {
+        String chatId = chatMessageEvent.getChatId();
         if (chatsStateMap.containsKey(chatId)) {
             ChatState chatState = chatsStateMap.remove(chatId);
             if (chatState.isWaitingForComment()) {
-                asyncEventBus.post(new NewCommentMessageEvent(newMessageEvent, chatState.getIssueKey()));
+                asyncEventBus.post(new NewCommentMessageEvent(chatMessageEvent, chatState.getIssueKey()));
             }
             if (chatState.isWaitingIssueKey()) {
-                asyncEventBus.post(new IssueKeyMessageEvent(newMessageEvent));
+                asyncEventBus.post(new IssueKeyMessageEvent(chatMessageEvent));
             }
         } else {
-            String currentChatCommand = newMessageEvent.getText();
+            String currentChatCommand = chatMessageEvent.getMessage();
             if (currentChatCommand.startsWith(CHAT_COMMAND_PREFIX)) {
                 String command = StringUtils.substringAfter(currentChatCommand, CHAT_COMMAND_PREFIX);
                 if (command.equals("help")) {
-                    asyncEventBus.post(new ShowHelpEvent(newMessageEvent));
+                    asyncEventBus.post(new ShowHelpEvent(chatMessageEvent));
                 }
                 if (command.equals("menu")) {
-                    asyncEventBus.post(new ShowMenuEvent(newMessageEvent));
+                    asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
                 }
 
             }

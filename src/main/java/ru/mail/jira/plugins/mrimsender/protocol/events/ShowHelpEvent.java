@@ -10,8 +10,8 @@ public class ShowHelpEvent implements Event {
     private final String chatId;
     private final String userId;
 
-    public ShowHelpEvent(NewMessageEvent newMessageEvent) {
-        this.chatId = newMessageEvent.getChat().getChatId();
-        this.userId = newMessageEvent.getFrom().getUserId();
+    public ShowHelpEvent(ChatMessageEvent chatMessageEvent) {
+        this.chatId = chatMessageEvent.getChatId();
+        this.userId = chatMessageEvent.getUerId();
     }
 }

@@ -11,6 +11,7 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.IcqEventsListener;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CancelClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CommentIssueClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.SearchIssueClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.ViewIssueClickEvent;
@@ -66,7 +67,7 @@ public class IcqEventsFetcher {
                             .forEach(event -> {
                                 if (event instanceof NewMessageEvent) {
                                     eventId.set(event.getEventId());
-                                    icqEventsListener.publishEvent((NewMessageEvent)event);
+                                    icqEventsListener.publishEvent(new ChatMessageEvent((NewMessageEvent)event));
                                 } else if (event instanceof CallbackQueryEvent) {
                                     eventId.set(event.getEventId());
                                     CallbackQueryEvent callbackQueryEvent = (CallbackQueryEvent)event;

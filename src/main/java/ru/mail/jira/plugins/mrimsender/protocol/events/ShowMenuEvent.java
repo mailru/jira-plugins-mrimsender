@@ -10,8 +10,8 @@ public class ShowMenuEvent implements Event {
     private final String userId;
     private final String chatId;
 
-    public ShowMenuEvent(NewMessageEvent newMessageEvent) {
-        this.userId = newMessageEvent.getFrom().getUserId();
-        this.chatId = newMessageEvent.getChat().getChatId();
+    public ShowMenuEvent(ChatMessageEvent chatMessageEvent) {
+        this.userId = chatMessageEvent.getUerId();
+        this.chatId = chatMessageEvent.getChatId();
     }
 }

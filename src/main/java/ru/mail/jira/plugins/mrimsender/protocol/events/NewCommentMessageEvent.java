@@ -12,10 +12,10 @@ public class NewCommentMessageEvent implements Event {
     private final String message;
     private final String commentingIssueKey;
 
-    public NewCommentMessageEvent(NewMessageEvent newMessageEvent, String commentingIssueKey) {
-        this.userId = newMessageEvent.getFrom().getUserId();
-        this.chatId = newMessageEvent.getChat().getChatId();
-        this.message = newMessageEvent.getText();
+    public NewCommentMessageEvent(ChatMessageEvent chatMessageEvent, String commentingIssueKey) {
+        this.userId = chatMessageEvent.getUerId();
+        this.chatId = chatMessageEvent.getChatId();
+        this.message = chatMessageEvent.getMessage();
         this.commentingIssueKey = commentingIssueKey;
     }
 }

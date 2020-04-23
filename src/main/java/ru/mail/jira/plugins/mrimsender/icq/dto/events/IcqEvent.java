@@ -22,7 +22,7 @@ import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
 @Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class IcqEvent<T> implements Event {
+public class IcqEvent<T> {
     private long eventId;
     private T payload;
 }
