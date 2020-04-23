@@ -66,19 +66,19 @@ public class IcqEventsFetcher {
                             .forEach(event -> {
                                 if (event instanceof NewMessageEvent) {
                                     eventId.set(event.getEventId());
-                                    icqEventsListener.publishIcqNewMessageEvent((NewMessageEvent)event);
+                                    icqEventsListener.publishEvent((NewMessageEvent)event);
                                 } else if (event instanceof CallbackQueryEvent) {
                                     eventId.set(event.getEventId());
                                     CallbackQueryEvent callbackQueryEvent = (CallbackQueryEvent)event;
                                     String buttonPrefix = StringUtils.substringBefore(callbackQueryEvent.getCallbackData(), "-");
                                     if (buttonPrefix.equals("view")) {
-                                        icqEventsListener.postIcqButtonClickEvent(new ViewIssueClickEvent(callbackQueryEvent));
+                                        icqEventsListener.publishEvent(new ViewIssueClickEvent(callbackQueryEvent));
                                     } else if (buttonPrefix.equals("comment")) {
-                                        icqEventsListener.postIcqButtonClickEvent(new CommentIssueClickEvent(callbackQueryEvent));
+                                        icqEventsListener.publishEvent(new CommentIssueClickEvent(callbackQueryEvent));
                                     } else if (buttonPrefix.equals("cancel")) {
-                                        icqEventsListener.postIcqButtonClickEvent(new CancelClickEvent(callbackQueryEvent));
+                                        icqEventsListener.publishEvent(new CancelClickEvent(callbackQueryEvent));
                                     } else if (buttonPrefix.equals("search")) {
-                                        icqEventsListener.postIcqButtonClickEvent(new SearchIssueClickEvent(callbackQueryEvent));
+                                        icqEventsListener.publishEvent(new SearchIssueClickEvent(callbackQueryEvent));
                                     }
                                 } else {
                                     eventId.set(event.getEventId());

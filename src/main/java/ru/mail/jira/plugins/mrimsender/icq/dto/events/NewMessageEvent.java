@@ -8,7 +8,7 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.parts.Part;
 
 import java.util.List;
 
-public class NewMessageEvent extends Event<NewMessageEvent.Data> {
+public class NewMessageEvent extends IcqEvent<NewMessageEvent.Data> {
     public long getMsgId() {
         return this.getPayload().msgId;
     }

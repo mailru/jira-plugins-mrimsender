@@ -6,7 +6,7 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 
 @Getter
 @Setter
-public class SearchIssueClickEvent implements IcqButtonClickEvent {
+public class SearchIssueClickEvent implements Event {
     private final String queryId;
     private final String chatId;
     private final String userId;

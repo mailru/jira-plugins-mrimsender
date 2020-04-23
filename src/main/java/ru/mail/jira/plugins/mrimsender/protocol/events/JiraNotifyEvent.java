@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class JiraNotifyEvent {
+public class JiraNotifyEvent implements Event {
     private final String chatId;
     private final String message;
     private final List<List<InlineKeyboardMarkupButton>> buttons;

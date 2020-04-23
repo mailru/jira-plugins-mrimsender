@@ -19,7 +19,7 @@ import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CancelClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.CommentIssueClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.IcqButtonClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
 import ru.mail.jira.plugins.mrimsender.protocol.events.IssueKeyMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.NewCommentMessageEvent;
@@ -71,16 +71,8 @@ public class IcqEventsListener {
         this.commentManager = commentManager;
     }
 
-    public void publishIcqNewMessageEvent(NewMessageEvent event) {
+    public void publishEvent(Event event) {
         asyncEventBus.post(event);
-    }
-
-    public void publishJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) {
-        asyncEventBus.post(jiraNotifyEvent);
-    }
-
-    public void postIcqButtonClickEvent(IcqButtonClickEvent icqButtonClickEvent) {
-        asyncEventBus.post(icqButtonClickEvent);
     }
 
     @Subscribe

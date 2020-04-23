@@ -29,6 +29,6 @@ public class MrimServiceImpl implements MrimService {
 
     @Override
     public void sendMessage(String chatId, String message) {
-        icqEventsListener.publishJiraNotifyEvent(new JiraNotifyEvent(chatId, message, null));
+        icqEventsListener.publishEvent(new JiraNotifyEvent(chatId, message, null));
     }
 }
