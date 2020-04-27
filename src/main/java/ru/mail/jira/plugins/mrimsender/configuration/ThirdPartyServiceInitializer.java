@@ -29,6 +29,7 @@ public class ThirdPartyServiceInitializer implements LifecycleAware, DisposableB
                 try {
                     return jacksonObjectMapper.readValue(value, valueType);
                 } catch (IOException e) {
+                    log.error(String.format("Unirest JacksonObjectMapper exception during reading value = %s as type = %s", value, valueType.toString()), e);
                     throw new RuntimeException(e);
                 }
             }
@@ -38,6 +39,7 @@ public class ThirdPartyServiceInitializer implements LifecycleAware, DisposableB
                 try {
                     return jacksonObjectMapper.writeValueAsString(value);
                 } catch (IOException e) {
+                    log.error(String.format("Unirest JacksonObjectMapper exception during writing  value = %s ", value), e);
                     throw new RuntimeException(e);
                 }
             }

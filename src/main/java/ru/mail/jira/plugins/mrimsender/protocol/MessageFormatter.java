@@ -206,7 +206,7 @@ public class MessageFormatter {
 
         StringBuilder sb = new StringBuilder();
 
-        boolean useMentionFormat = !user.equals(recipient);
+        boolean useMentionFormat = !recipient.equals(user);
         Long eventTypeId = issueEvent.getEventTypeId();
         if (EventType.ISSUE_CREATED_ID.equals(eventTypeId)) {
             sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.created", formatUser(user, "common.words.anonymous", useMentionFormat), issueLink));
@@ -250,7 +250,7 @@ public class MessageFormatter {
             sb.append("\n\n").append(issueEvent.getWorklog().getComment());
 
         if (EventType.ISSUE_CREATED_ID.equals(eventTypeId))
-            sb.append(formatSystemFields(recipient, issue, user.equals(recipient)));
+            sb.append(formatSystemFields(recipient, issue, useMentionFormat));
 
         sb.append(formatChangeLog(issueEvent.getChangeLog(), EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId)));
 
