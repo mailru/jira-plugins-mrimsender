@@ -213,7 +213,7 @@ public class IcqEventsListener {
     public void handleNewIssueKeyMessageEvent(IssueKeyMessageEvent issueKeyMessageEvent) throws IOException, UnirestException {
         log.debug("NewIssueKeyMessageEvent handling started");
         ApplicationUser currentUser = userData.getUserByMrimLogin(issueKeyMessageEvent.getUserId());
-        Issue currentIssue = issueManager.getIssueByCurrentKey(issueKeyMessageEvent.getMessage());
+        Issue currentIssue = issueManager.getIssueByCurrentKey(issueKeyMessageEvent.getIssueKey());
         if (currentUser != null && currentIssue != null) {
             if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, currentIssue, currentUser)) {
                 icqApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), messageFormatter.createIssueSummary(currentIssue, currentUser), messageFormatter.getIssueButtons(currentIssue.getKey(), currentUser));

@@ -14,6 +14,8 @@ public class ShowIssueEvent {
     public ShowIssueEvent(ChatMessageEvent chatMessageEvent) {
         this.chatId = chatMessageEvent.getChatId();
         this.userId = chatMessageEvent.getUerId();
-        this.issueKey = StringUtils.substringAfter(chatMessageEvent.getMessage().trim(),"/issue").trim();
+        this.issueKey = StringUtils.substringAfter(chatMessageEvent.getMessage().trim(),"/issue")
+                                   .trim()
+                                   .toUpperCase();
     }
 }
