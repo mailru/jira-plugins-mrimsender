@@ -25,6 +25,7 @@ import ru.mail.jira.plugins.mrimsender.protocol.events.IssueKeyMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.NewCommentMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.SearchIssueClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.ShowDefaultMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.ShowHelpEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.ShowIssueEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.ShowMenuEvent;
@@ -89,17 +90,21 @@ public class IcqEventsListener {
                 asyncEventBus.post(new IssueKeyMessageEvent(chatMessageEvent));
             }
         } else {
-            String currentChatCommand = chatMessageEvent.getMessage();
-            if (currentChatCommand != null && currentChatCommand.startsWith(CHAT_COMMAND_PREFIX)) {
-                String command = StringUtils.substringAfter(currentChatCommand, CHAT_COMMAND_PREFIX);
-                if (command.startsWith("help")) {
-                    asyncEventBus.post(new ShowHelpEvent(chatMessageEvent));
-                }
-                if (command.startsWith("menu")) {
-                    asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
-                }
-                if (command.startsWith("issue")) {
-                    asyncEventBus.post(new ShowIssueEvent(chatMessageEvent));
+            String message = chatMessageEvent.getMessage();
+            if (message != null ) {
+                if(message.startsWith(CHAT_COMMAND_PREFIX)) {
+                    String command = StringUtils.substringAfter(message, CHAT_COMMAND_PREFIX);
+                    if (command.startsWith("help")) {
+                        asyncEventBus.post(new ShowHelpEvent(chatMessageEvent));
+                    }
+                    if (command.startsWith("menu")) {
+                        asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
+                    }
+                    if (command.startsWith("issue")) {
+                        asyncEventBus.post(new ShowIssueEvent(chatMessageEvent));
+                    }
+                } else {
+                    asyncEventBus.post(new ShowDefaultMessageEvent(chatMessageEvent));
                 }
             }
         }
@@ -242,5 +247,16 @@ public class IcqEventsListener {
         } else if (currentUser != null) {
             icqApiClient.sendMessageText(showIssueEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.icqEventsListener.newIssueKeyMessage.error.issueNotFound"), null);        }
         log.debug("ShowIssueEvent handling finished");
+    }
+
+    @Subscribe
+    public void onShowDefaultMessageEvent(ShowDefaultMessageEvent showDefaultMessageEvent) throws IOException, UnirestException {
+        log.debug("ShowDefaultMessageEvent handling started");
+        ApplicationUser currentUser = userData.getUserByMrimLogin(showDefaultMessageEvent.getUserId());
+        if (currentUser != null) {
+            Locale locale = localeManager.getLocaleFor(currentUser);
+            icqApiClient.sendMessageText(showDefaultMessageEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.mainMenu.text"), messageFormatter.getMenuButtons(locale));
+        }
+        log.debug("ShowDefaultMessageEvent handling finished");
     }
 }
