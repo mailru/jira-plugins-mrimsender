@@ -61,7 +61,7 @@ public class IcqEventsFetcherTest {
 
     }
 
-    @Test
+    @Ignore
     public void fetchIcqEvents() throws UnirestException {
         HttpResponse<FetchResponseDto> eventHttpResponse = this.icqApiClient.getEvents(0, 5);
         System.out.println(eventHttpResponse.getBody());

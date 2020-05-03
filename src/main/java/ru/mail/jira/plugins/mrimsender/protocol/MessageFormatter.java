@@ -35,7 +35,6 @@ import org.ofbiz.core.entity.GenericValue;
 import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
 public class MessageFormatter {
     private final ApplicationProperties applicationProperties;

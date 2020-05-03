@@ -5,8 +5,8 @@ import lombok.Getter;
 
 
 /**
- * As a result of this event handled user message on which "next" button was clicked should be edited
- * and next page of content should shown to user
+ * As a result of this event handled user message on which "prev" button was clicked should be edited
+ * and previous page of content should shown to user
  */
 @Getter
 public class PrevPageClickEvent implements Event {
