@@ -5,7 +5,6 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 @Getter
-@Setter
 public class ShowIssueEvent {
     private final String chatId;
     private final String issueKey;

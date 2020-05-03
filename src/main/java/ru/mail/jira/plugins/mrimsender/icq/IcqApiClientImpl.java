@@ -48,6 +48,11 @@ public class IcqApiClientImpl implements IcqApiClient {
     }
 
     @Override
+    public HttpResponse<MessageResponse> sendMessageText(String chatId, String text) throws IOException, UnirestException {
+        return sendMessageText(chatId, text, null);
+    }
+
+    @Override
     public HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime) throws UnirestException {
         return Unirest.get(BASE_API_URL + "/events/get")
                       .queryString("token", apiToken)
@@ -70,6 +75,24 @@ public class IcqApiClientImpl implements IcqApiClient {
     @Override
     public HttpResponse<JsonNode> answerCallbackQuery(String queryId) throws UnirestException {
         return answerCallbackQuery(queryId, null, false, null);
+    }
+
+    @Override
+    public HttpResponse<MessageResponse> editMessageText(String chatId, long messageId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup) throws UnirestException, IOException {
+        if (inlineKeyboardMarkup == null)
+            return Unirest.get(BASE_API_URL + "/messages/editText")
+                          .queryString("token", apiToken)
+                          .queryString("chatId", chatId)
+                          .queryString("msgId", messageId)
+                          .queryString("text", text)
+                          .asObject(MessageResponse.class);
+        return Unirest.get(BASE_API_URL + "/messages/editText")
+                      .queryString("token", apiToken)
+                      .queryString("chatId", chatId)
+                      .queryString("msgId", messageId)
+                      .queryString("text", text)
+                      .queryString("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
+                      .asObject(MessageResponse.class);
     }
 
 }

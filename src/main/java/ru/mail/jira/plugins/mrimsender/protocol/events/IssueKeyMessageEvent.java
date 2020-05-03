@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 
-@Setter
 @Getter
 public class IssueKeyMessageEvent implements Event {
     private final String chatId;

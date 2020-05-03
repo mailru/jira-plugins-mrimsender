@@ -5,7 +5,6 @@ import lombok.Setter;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 
 @Getter
-@Setter
 public class ShowMenuEvent implements Event {
     private final String userId;
     private final String chatId;

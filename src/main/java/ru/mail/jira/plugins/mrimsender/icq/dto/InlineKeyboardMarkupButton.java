@@ -16,6 +16,13 @@ public class InlineKeyboardMarkupButton {
     private String text;
     private String url;
     private String callbackData;
+
+    public static InlineKeyboardMarkupButton buildButtonWithoutUrl(String text, String callbackData) {
+        InlineKeyboardMarkupButton inlineKeyboardMarkupButton = new InlineKeyboardMarkupButton();
+        inlineKeyboardMarkupButton.setCallbackData(callbackData);
+        inlineKeyboardMarkupButton.setText(text);
+        return inlineKeyboardMarkupButton;
+    }
 }
 
 
