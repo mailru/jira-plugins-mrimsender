@@ -34,11 +34,7 @@ import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 public class MessageFormatter {
     private final ApplicationProperties applicationProperties;
@@ -206,7 +202,7 @@ public class MessageFormatter {
 
         StringBuilder sb = new StringBuilder();
 
-        boolean useMentionFormat = !user.equals(recipient);
+        boolean useMentionFormat = !recipient.equals(user);
         Long eventTypeId = issueEvent.getEventTypeId();
         if (EventType.ISSUE_CREATED_ID.equals(eventTypeId)) {
             sb.append(i18nHelper.getText("ru.mail.jira.plugins.mrimsender.notification.created", formatUser(user, "common.words.anonymous", useMentionFormat), issueLink));
@@ -250,7 +246,7 @@ public class MessageFormatter {
             sb.append("\n\n").append(issueEvent.getWorklog().getComment());
 
         if (EventType.ISSUE_CREATED_ID.equals(eventTypeId))
-            sb.append(formatSystemFields(recipient, issue, user.equals(recipient)));
+            sb.append(formatSystemFields(recipient, issue, useMentionFormat));
 
         sb.append(formatChangeLog(issueEvent.getChangeLog(), EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId)));
 
@@ -344,24 +340,75 @@ public class MessageFormatter {
         return buttons;
     }
 
+    private void addRowWithButton(List<List<InlineKeyboardMarkupButton>> buttons, InlineKeyboardMarkupButton button) {
+        List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
+        newButtonsRow.add(button);
+        buttons.add(newButtonsRow);
+    }
+
     public List<List<InlineKeyboardMarkupButton>> getMenuButtons(Locale locale) {
         List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-        List<InlineKeyboardMarkupButton> buttonsRow1 = new ArrayList<>();
-        //List<InlineKeyboardMarkupButton> buttonsRow2 = new ArrayList<>();
-        buttons.add(buttonsRow1);
-        //buttons.add(buttonsRow2);
 
         // create 'search issue' button
-        InlineKeyboardMarkupButton searchIssueButton = new InlineKeyboardMarkupButton();
-        searchIssueButton.setText(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.mainMenu.searchIssueButton.text"));
-        searchIssueButton.setCallbackData("search");
-        buttonsRow1.add(searchIssueButton);
+        InlineKeyboardMarkupButton showIssueButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.mainMenu.showIssueButton.text"), "showIssue");
+        addRowWithButton(buttons, showIssueButton);
+
+        // create 'Active issues assigned to me' button
+        InlineKeyboardMarkupButton activeAssignedIssuesButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale,  "ru.mail.jira.plugins.mrimsender.messageFormatter.mainMenu.activeIssuesAssignedToMeButton.text"), "activeIssuesAssigned");
+        addRowWithButton(buttons, activeAssignedIssuesButton);
+
+        // create 'Active issues i watching' button
+        InlineKeyboardMarkupButton activeWatchingIssuesButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.mainMenu.activeIssuesWatchingByMeButton.text"), "activeIssuesWatching");
+        addRowWithButton(buttons, activeWatchingIssuesButton);
+
+        // create 'Active issues crated by me' button
+        InlineKeyboardMarkupButton activeCreatedIssuesButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.mainMenu.activeIssuesCreatedByMeButton.text"), "activeIssuesCreated");
+        addRowWithButton(buttons, activeCreatedIssuesButton);
+
+        //create 'Search issue by JQL' button
+        InlineKeyboardMarkupButton searchIssueByJqlButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.mainMenu.searchIssueByJqlButton.text"), "searchByJql");
+        addRowWithButton(buttons, searchIssueByJqlButton);
 
         // create 'create issue' button
         /*InlineKeyboardMarkupButton createIssueButton = new InlineKeyboardMarkupButton();
-        createIssueButton.setText(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.mainMenu.createIssueButton.text"));
+        createIssueButton.setText(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.mainMenu.createIssueButton.text"));
         createIssueButton.setCallbackData("create");
         buttonsRow2.add(createIssueButton);*/
         return buttons;
+    }
+
+    public List<List<InlineKeyboardMarkupButton>> getListButtons(Locale locale) {
+        return getListButtons(locale, true, true);
+    }
+
+    public List<List<InlineKeyboardMarkupButton>> getListButtons(Locale locale, boolean withPrev, boolean withNext) {
+        if (!withPrev && !withNext)
+            return null;
+        List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
+        List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>();
+        if (withPrev) {
+            newButtonsRow.add(InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.listButtons.prevPageButton.text"), "prevListPage"));
+        }
+        if (withNext) {
+            newButtonsRow.add(InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.listButtons.nextPageButton.text"), "nextListPage"));
+        }
+        buttons.add(newButtonsRow);
+        return buttons;
+    }
+
+    public String stringifyIssueList(List<Issue> issueList, int pageNumber, int pageSize) {
+        StringBuilder sb = new StringBuilder();
+        // example for pageSize = 15 : 1, 16, 31...
+        int strIndex = pageNumber * pageSize + 1;
+        for (Issue issue: issueList) {
+            sb.append(strIndex);
+            sb.append(". ");
+            sb.append(issue.getKey());
+            sb.append(" ");
+            sb.append(issue.getSummary());
+            sb.append("\n");
+            strIndex++;
+        }
+        return sb.toString();
     }
 }

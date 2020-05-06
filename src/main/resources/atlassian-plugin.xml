@@ -81,6 +81,7 @@
     <component-import key="cluster-lock-service" interface="com.atlassian.beehive.ClusterLockService"/>
     <component-import key="cluster-messaging-service" interface="com.atlassian.jira.cluster.ClusterMessagingService"/>
     <component-import key="i18nResolver" interface="com.atlassian.sal.api.message.I18nResolver"/>
+    <component-import key="search-service" interface="com.atlassian.jira.bc.issue.search.SearchService"/>
 
     <component key="bot-fault-tolerance-provider" class="ru.mail.jira.plugins.mrimsender.protocol.BotFaultToleranceProvider" public="true">
         <interface>com.atlassian.sal.api.lifecycle.LifecycleAware</interface>

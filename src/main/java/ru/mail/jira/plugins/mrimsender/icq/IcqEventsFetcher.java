@@ -10,11 +10,7 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.IcqEventsListener;
-import ru.mail.jira.plugins.mrimsender.protocol.events.CancelClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.ChatMessageEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.CommentIssueClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.SearchIssueClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.ViewIssueClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.*;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -70,17 +66,8 @@ public class IcqEventsFetcher {
                                     icqEventsListener.publishEvent(new ChatMessageEvent((NewMessageEvent)event));
                                 } else if (event instanceof CallbackQueryEvent) {
                                     eventId.set(event.getEventId());
-                                    CallbackQueryEvent callbackQueryEvent = (CallbackQueryEvent)event;
-                                    String buttonPrefix = StringUtils.substringBefore(callbackQueryEvent.getCallbackData(), "-");
-                                    if (buttonPrefix.equals("view")) {
-                                        icqEventsListener.publishEvent(new ViewIssueClickEvent(callbackQueryEvent));
-                                    } else if (buttonPrefix.equals("comment")) {
-                                        icqEventsListener.publishEvent(new CommentIssueClickEvent(callbackQueryEvent));
-                                    } else if (buttonPrefix.equals("cancel")) {
-                                        icqEventsListener.publishEvent(new CancelClickEvent(callbackQueryEvent));
-                                    } else if (buttonPrefix.equals("search")) {
-                                        icqEventsListener.publishEvent(new SearchIssueClickEvent(callbackQueryEvent));
-                                    }
+                                    icqEventsListener.publishEvent(new ChatButtonClickEvent((CallbackQueryEvent)event));
+
                                 } else {
                                     eventId.set(event.getEventId());
                                 }
