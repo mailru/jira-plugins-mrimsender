@@ -10,7 +10,7 @@ public class CommentIssueClickEvent implements Event {
     private final String queryId;
     private final String issueKey;
 
-    public CommentIssueClickEvent(ChatButtonClickEvent chatButtonClickEvent) {
+    public CommentIssueClickEvent(ButtonClickEvent chatButtonClickEvent) {
         this.userId = chatButtonClickEvent.getUserId();
         this.chatId = chatButtonClickEvent.getChatId();
         this.queryId = chatButtonClickEvent.getQueryId();
