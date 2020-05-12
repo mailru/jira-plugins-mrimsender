@@ -82,10 +82,4 @@ public class IcqApiClientImplTest {
             assertEquals(200, jsonNodeHttpResponse.getStatus());
         }
     }
-
-    @Test
-    public void sendMessage() throws IOException, UnirestException {
-        String text = "Вложение: attachment_numba1.PNG - http://localhost:2990/jira/secure/attachment/10003/attachment_numba1.PNG ,";
-        icqApiClient.sendMessageText("d.udovichenko@corp.mail.ru", text);
-    }
 }
