@@ -6,6 +6,7 @@ import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
@@ -80,5 +81,11 @@ public class IcqApiClientImplTest {
             HttpResponse<JsonNode> jsonNodeHttpResponse = icqApiClient.answerCallbackQuery(callbackQueryEvent.getQueryId(), "text here", true, null);
             assertEquals(200, jsonNodeHttpResponse.getStatus());
         }
+    }
+
+    @Test
+    public void sendMessage() throws IOException, UnirestException {
+        String text = "Вложение: attachment_numba1.PNG - http://localhost:2990/jira/secure/attachment/10003/attachment_numba1.PNG ,";
+        icqApiClient.sendMessageText("d.udovichenko@corp.mail.ru", text);
     }
 }

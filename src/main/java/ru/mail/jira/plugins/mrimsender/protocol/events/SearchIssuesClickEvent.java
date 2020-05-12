@@ -22,7 +22,7 @@ public class SearchIssuesClickEvent implements Event {
     private final String userId;
     private final String queryId;
 
-    public SearchIssuesClickEvent(ChatButtonClickEvent chatButtonClickEvent, String jqlClause) {
+    public SearchIssuesClickEvent(ButtonClickEvent chatButtonClickEvent, String jqlClause) {
         this.chatId = chatButtonClickEvent.getChatId();
         this.userId = chatButtonClickEvent.getUserId();
         this.queryId = chatButtonClickEvent.getQueryId();

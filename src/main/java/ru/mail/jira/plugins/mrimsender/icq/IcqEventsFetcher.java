@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.mrimsender.icq;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
@@ -66,7 +65,7 @@ public class IcqEventsFetcher {
                                     icqEventsListener.publishEvent(new ChatMessageEvent((NewMessageEvent)event));
                                 } else if (event instanceof CallbackQueryEvent) {
                                     eventId.set(event.getEventId());
-                                    icqEventsListener.publishEvent(new ChatButtonClickEvent((CallbackQueryEvent)event));
+                                    icqEventsListener.publishEvent(new ButtonClickEvent((CallbackQueryEvent)event));
 
                                 } else {
                                     eventId.set(event.getEventId());

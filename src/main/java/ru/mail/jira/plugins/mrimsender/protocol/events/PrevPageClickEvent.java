@@ -17,7 +17,7 @@ public class PrevPageClickEvent implements Event {
     private final Query currentJqlQueryClause;
     private final String queryId;
 
-    public PrevPageClickEvent(ChatButtonClickEvent chatButtonClickEvent, int currentPage, Query currentJqlQueryClause) {
+    public PrevPageClickEvent(ButtonClickEvent chatButtonClickEvent, int currentPage, Query currentJqlQueryClause) {
         this.currentJqlQueryClause = currentJqlQueryClause;
         this.currentPage = currentPage;
         this.chatId = chatButtonClickEvent.getChatId();

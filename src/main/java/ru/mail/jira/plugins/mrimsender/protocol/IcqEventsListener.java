@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
+import ru.mail.jira.plugins.mrimsender.icq.dto.ChatType;
 import ru.mail.jira.plugins.mrimsender.protocol.events.*;
 
 import java.io.IOException;
@@ -78,9 +79,10 @@ public class IcqEventsListener {
     @Subscribe
     public void handleNewMessageEvent(ChatMessageEvent chatMessageEvent) {
         String chatId = chatMessageEvent.getChatId();
+        boolean isGroupChatEvent = chatMessageEvent.getChatType() == ChatType.GROUP;
 
         // if chat is in some state then use our state processing logic
-        if (chatsStateMap.containsKey(chatId)) {
+        if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
             ChatState chatState = chatsStateMap.remove(chatId);
             if (chatState.isWaitingForComment()) {
                 asyncEventBus.post(new NewCommentMessageEvent(chatMessageEvent, chatState.getIssueKey()));
@@ -104,13 +106,13 @@ public class IcqEventsListener {
                 if (command.startsWith("help")) {
                     asyncEventBus.post(new ShowHelpEvent(chatMessageEvent));
                 }
-                if (command.startsWith("menu")) {
+                if (command.startsWith("menu") && !isGroupChatEvent) {
                     asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
                 }
                 if (command.startsWith("issue")) {
                     asyncEventBus.post(new ShowIssueEvent(chatMessageEvent));
                 }
-            } else {
+            } else if (!isGroupChatEvent) {
                 asyncEventBus.post(new ShowDefaultMessageEvent(chatMessageEvent));
             }
         }
@@ -118,19 +120,20 @@ public class IcqEventsListener {
     }
 
     @Subscribe
-    public void handleChatButtonClickEvent(ChatButtonClickEvent chatButtonClickEvent) {
-        String buttonPrefix = StringUtils.substringBefore(chatButtonClickEvent.getCallbackData(), "-");
-        String chatId = chatButtonClickEvent.getChatId();
+    public void handleButtonClickEvent(ButtonClickEvent buttonClickEvent) {
+        String buttonPrefix = StringUtils.substringBefore(buttonClickEvent.getCallbackData(), "-");
+        String chatId = buttonClickEvent.getChatId();
+        boolean isGroupChatEvent = buttonClickEvent.getChatType() == ChatType.GROUP;
 
         // if chat is in some state then use our state processing logic
-        if (chatsStateMap.containsKey(chatId)) {
+        if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
             ChatState chatState = chatsStateMap.remove(chatId);
             if (chatState.isSearchResultsShowing() && buttonPrefix.equals("nextListPage")) {
-                asyncEventBus.post(new NextPageClickEvent(chatButtonClickEvent, chatState.getCurrentSearchResultsPage(), chatState.getCurrentSearchJqlClause()));
+                asyncEventBus.post(new NextPageClickEvent(buttonClickEvent, chatState.getCurrentSearchResultsPage(), chatState.getCurrentSearchJqlClause()));
                 return;
             }
             if (chatState.isSearchResultsShowing() && buttonPrefix.equals("prevListPage")) {
-                asyncEventBus.post(new PrevPageClickEvent(chatButtonClickEvent, chatState.getCurrentSearchResultsPage(), chatState.getCurrentSearchJqlClause()));
+                asyncEventBus.post(new PrevPageClickEvent(buttonClickEvent, chatState.getCurrentSearchResultsPage(), chatState.getCurrentSearchJqlClause()));
                 return;
             }
         }
@@ -138,28 +141,28 @@ public class IcqEventsListener {
         // if chat isn't in some state then just process new command
         switch (buttonPrefix) {
             case "view":
-                asyncEventBus.post(new ViewIssueClickEvent(chatButtonClickEvent));
+                asyncEventBus.post(new ViewIssueClickEvent(buttonClickEvent));
                 break;
             case "comment":
-                asyncEventBus.post(new CommentIssueClickEvent(chatButtonClickEvent));
+                asyncEventBus.post(new CommentIssueClickEvent(buttonClickEvent));
                 break;
             case "cancel":
-                asyncEventBus.post(new CancelClickEvent(chatButtonClickEvent));
+                asyncEventBus.post(new CancelClickEvent(buttonClickEvent));
                 break;
             case "showIssue":
-                asyncEventBus.post(new ShowIssueClickEvent(chatButtonClickEvent));
+                asyncEventBus.post(new ShowIssueClickEvent(buttonClickEvent));
                 break;
             case "activeIssuesAssigned":
-                asyncEventBus.post(new SearchIssuesClickEvent(chatButtonClickEvent, "assignee = currentUser() AND resolution = Unresolved ORDER BY updated"));
+                asyncEventBus.post(new SearchIssuesClickEvent(buttonClickEvent, "assignee = currentUser() AND resolution = Unresolved ORDER BY updated"));
                 break;
             case "activeIssuesWatching":
-                asyncEventBus.post(new SearchIssuesClickEvent(chatButtonClickEvent, "watcher = currentUser() AND resolution = Unresolved ORDER BY updated"));
+                asyncEventBus.post(new SearchIssuesClickEvent(buttonClickEvent, "watcher = currentUser() AND resolution = Unresolved ORDER BY updated"));
                 break;
             case "activeIssuesCreated":
-                asyncEventBus.post(new SearchIssuesClickEvent(chatButtonClickEvent, "reporter = currentUser() AND resolution = Unresolved ORDER BY updated"));
+                asyncEventBus.post(new SearchIssuesClickEvent(buttonClickEvent, "reporter = currentUser() AND resolution = Unresolved ORDER BY updated"));
                 break;
             case "searchByJql":
-                asyncEventBus.post(new SearchByJqlClickEvent(chatButtonClickEvent));
+                asyncEventBus.post(new SearchByJqlClickEvent(buttonClickEvent));
                 break;
             default:
                 break;
@@ -252,7 +255,10 @@ public class IcqEventsListener {
         ApplicationUser currentUser = userData.getUserByMrimLogin(showHelpEvent.getUserId());
         if (currentUser != null) {
             Locale locale = localeManager.getLocaleFor(currentUser);
-            icqApiClient.sendMessageText(showHelpEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.helpMessage.text"));
+            if (showHelpEvent.getChatType() == ChatType.GROUP)
+                icqApiClient.sendMessageText(showHelpEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.groupChat.helpMessage.text"));
+            else
+                icqApiClient.sendMessageText(showHelpEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.helpMessage.text"));
         }
         log.debug("ShowHelpEvent handling finished");
     }

@@ -47,7 +47,7 @@ public class MessageFormatter {
     private final FieldScreenManager fieldScreenManager;
     private final I18nResolver i18nResolver;
     private final LocaleManager localeManager;
-
+    private final String jiraBaseUrl;
 
     public MessageFormatter(ApplicationProperties applicationProperties,
                             ConstantsManager constantsManager,
@@ -69,6 +69,7 @@ public class MessageFormatter {
         this.fieldScreenManager = fieldScreenManager;
         this.i18nResolver = i18nResolver;
         this.localeManager = localeManager;
+        this.jiraBaseUrl = applicationProperties.getString(APKeys.JIRA_BASEURL);
     }
 
     private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
@@ -104,8 +105,13 @@ public class MessageFormatter {
                 Object object = iterator.next();
                 if (object instanceof ProjectConstant)
                     value.append(((ProjectConstant) object).getName());
-                if (object instanceof Attachment)
-                    value.append(((Attachment) object).getFilename());
+                if (object instanceof Attachment) {
+                    Attachment attachment = (Attachment) object;
+                    String attachmentUrl = String.format("%s/secure/attachment/%d/%s", jiraBaseUrl, attachment.getId(), attachment.getFilename());
+                    value.append(attachment.getFilename());
+                    value.append(" - ");
+                    value.append(attachmentUrl);
+                }
                 if (object instanceof Label)
                     value.append(((Label) object).getLabel());
                 if (iterator.hasNext())
@@ -123,7 +129,7 @@ public class MessageFormatter {
 
         appendField(sb, i18nHelper.getText("issue.field.affectsversions"), issue.getAffectedVersions());
         appendField(sb, i18nHelper.getText("issue.field.assignee"), formatUser(issue.getAssignee(), "common.concepts.unassigned", useMentionFormat), false);
-        appendField(sb, i18nHelper.getText("issue.field.attachment"), issue.getAttachments());
+
         appendField(sb, i18nHelper.getText("issue.field.components"), issue.getComponents());
 
         if (issue.getCreated() != null)
@@ -145,6 +151,7 @@ public class MessageFormatter {
                 value += " " + issueSecurityLevel.getDescription();
             appendField(sb, i18nHelper.getText("issue.field.securitylevel"), value, false);
         }
+        appendField(sb, i18nHelper.getText("issue.field.attachment"), issue.getAttachments());
 
         if (!StringUtils.isBlank(issue.getDescription()))
             sb.append("\n\n").append(issue.getDescription());
@@ -398,7 +405,6 @@ public class MessageFormatter {
 
     public String stringifyIssueList(List<Issue> issueList, int pageNumber, int pageSize) {
         StringBuilder sb = new StringBuilder();
-        // example for pageSize = 15 : 1, 16, 31...
         int strIndex = pageNumber * pageSize + 1;
         for (Issue issue: issueList) {
             sb.append(strIndex);
