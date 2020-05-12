@@ -8,7 +8,7 @@ public class SearchByJqlClickEvent {
     private final String userId;
     private final String queryId;
 
-    public SearchByJqlClickEvent(ChatButtonClickEvent chatButtonClickEvent) {
+    public SearchByJqlClickEvent(ButtonClickEvent chatButtonClickEvent) {
         this.queryId = chatButtonClickEvent.getQueryId();
         this.userId = chatButtonClickEvent.getUserId();
         this.chatId = chatButtonClickEvent.getChatId();
