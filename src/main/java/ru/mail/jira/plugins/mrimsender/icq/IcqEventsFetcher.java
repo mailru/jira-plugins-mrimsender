@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.IcqEventsListener;
+import ru.mail.jira.plugins.mrimsender.protocol.listeners.IcqEventsListener;
 import ru.mail.jira.plugins.mrimsender.protocol.events.*;
 
 import java.util.concurrent.Executors;

@@ -4,6 +4,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 import ru.mail.jira.plugins.mrimsender.protocol.events.JiraNotifyEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.listeners.IcqEventsListener;
 
 public class MrimServiceImpl implements MrimService {
     private final UserData userData;

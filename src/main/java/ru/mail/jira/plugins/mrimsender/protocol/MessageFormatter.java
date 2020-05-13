@@ -37,6 +37,8 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
 import java.util.*;
 
 public class MessageFormatter {
+    public static final int LIST_PAGE_SIZE = 15;
+
     private final ApplicationProperties applicationProperties;
     private final ConstantsManager constantsManager;
     private final DateTimeFormatter dateTimeFormatter;

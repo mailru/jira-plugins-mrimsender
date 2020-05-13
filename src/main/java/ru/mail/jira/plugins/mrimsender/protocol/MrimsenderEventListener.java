@@ -24,6 +24,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 import ru.mail.jira.plugins.mrimsender.protocol.events.JiraNotifyEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.listeners.IcqEventsListener;
 
 import java.util.ArrayList;
 import java.util.Collection;
