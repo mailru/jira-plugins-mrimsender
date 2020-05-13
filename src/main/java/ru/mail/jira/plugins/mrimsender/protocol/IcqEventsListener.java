@@ -171,28 +171,28 @@ public class IcqEventsListener {
         // if chat isn't in some state then just process new command
         switch (buttonPrefix) {
             case "view":
-                asyncEventBus.post(new ViewIssueClickEvent(chatButtonClickEvent));
+                asyncEventBus.post(new ViewIssueClickEvent(buttonClickEvent));
                 break;
             case "comment":
-                asyncEventBus.post(new CommentIssueClickEvent(chatButtonClickEvent));
+                asyncEventBus.post(new CommentIssueClickEvent(buttonClickEvent));
                 break;
             case "cancel":
-                asyncEventBus.post(new CancelClickEvent(chatButtonClickEvent));
+                asyncEventBus.post(new CancelClickEvent(buttonClickEvent));
                 break;
             case "showIssue":
-                asyncEventBus.post(new ShowIssueClickEvent(chatButtonClickEvent));
+                asyncEventBus.post(new ShowIssueClickEvent(buttonClickEvent));
                 break;
             case "activeIssuesAssigned":
-                asyncEventBus.post(new SearchIssuesClickEvent(chatButtonClickEvent, "assignee = currentUser() AND resolution = Unresolved ORDER BY updated"));
+                asyncEventBus.post(new SearchIssuesClickEvent(buttonClickEvent, "assignee = currentUser() AND resolution = Unresolved ORDER BY updated"));
                 break;
             case "activeIssuesWatching":
-                asyncEventBus.post(new SearchIssuesClickEvent(chatButtonClickEvent, "watcher = currentUser() AND resolution = Unresolved ORDER BY updated"));
+                asyncEventBus.post(new SearchIssuesClickEvent(buttonClickEvent, "watcher = currentUser() AND resolution = Unresolved ORDER BY updated"));
                 break;
             case "activeIssuesCreated":
-                asyncEventBus.post(new SearchIssuesClickEvent(chatButtonClickEvent, "reporter = currentUser() AND resolution = Unresolved ORDER BY updated"));
+                asyncEventBus.post(new SearchIssuesClickEvent(buttonClickEvent, "reporter = currentUser() AND resolution = Unresolved ORDER BY updated"));
                 break;
             case "searchByJql":
-                asyncEventBus.post(new SearchByJqlClickEvent(chatButtonClickEvent));
+                asyncEventBus.post(new SearchByJqlClickEvent(buttonClickEvent));
                 break;
             default:
                 break;
