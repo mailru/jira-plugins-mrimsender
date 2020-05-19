@@ -1,6 +1,7 @@
-package ru.mail.jira.plugins.mrimsender.protocol.events;
+package ru.mail.jira.plugins.mrimsender.protocol.events.buttons;
 
 import lombok.Getter;
+import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ButtonClickEvent;
 
 @Getter
 public class SearchByJqlClickEvent {

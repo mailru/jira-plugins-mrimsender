@@ -1,8 +1,8 @@
-package ru.mail.jira.plugins.mrimsender.protocol.events;
+package ru.mail.jira.plugins.mrimsender.protocol.events.buttons;
 
-import com.atlassian.query.Query;
 import lombok.Getter;
-
+import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
+import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ButtonClickEvent;
 
 /**
  * As a result of this event handled user message on which "prev" button was clicked should be edited
@@ -14,11 +14,9 @@ public class PrevPageClickEvent implements Event {
     private final long msgId;
     private final String userId;
     private final int currentPage;
-    private final Query currentJqlQueryClause;
     private final String queryId;
 
-    public PrevPageClickEvent(ButtonClickEvent chatButtonClickEvent, int currentPage, Query currentJqlQueryClause) {
-        this.currentJqlQueryClause = currentJqlQueryClause;
+    public PrevPageClickEvent(ButtonClickEvent chatButtonClickEvent, int currentPage) {
         this.currentPage = currentPage;
         this.chatId = chatButtonClickEvent.getChatId();
         this.msgId = chatButtonClickEvent.getMsgId();

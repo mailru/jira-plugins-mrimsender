@@ -1,7 +1,8 @@
-package ru.mail.jira.plugins.mrimsender.protocol.events;
+package ru.mail.jira.plugins.mrimsender.protocol.events.buttons;
 
-import com.atlassian.query.Query;
 import lombok.Getter;
+import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
+import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ButtonClickEvent;
 
 /**
  * As a result of this event handled user message on which "next" button was clicked should be edited
@@ -12,12 +13,10 @@ public class NextPageClickEvent implements Event {
     private final String chatId;
     private final long msgId;
     private final String userId;
-    private final int currentPage;
-    private final Query currentJqlQueryClause;
     private final String queryId;
+    private final int currentPage;
 
-    public NextPageClickEvent(ButtonClickEvent chatButtonClickEvent, int currentPage, Query currentJqlQueryClause) {
-        this.currentJqlQueryClause = currentJqlQueryClause;
+    public NextPageClickEvent(ButtonClickEvent chatButtonClickEvent, int currentPage) {
         this.currentPage = currentPage;
         this.chatId = chatButtonClickEvent.getChatId();
         this.msgId = chatButtonClickEvent.getMsgId();

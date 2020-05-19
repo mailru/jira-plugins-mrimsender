@@ -19,15 +19,19 @@ import com.atlassian.jira.issue.fields.screen.FieldScreen;
 import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager;
+import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.label.Label;
 import com.atlassian.jira.issue.operation.IssueOperations;
 import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.jira.issue.resolution.Resolution;
 import com.atlassian.jira.issue.security.IssueSecurityLevel;
 import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
+import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectConstant;
+import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.I18nHelper;
+import com.atlassian.jira.util.MessageSet;
 import com.atlassian.sal.api.message.I18nResolver;
 import org.apache.commons.lang3.StringUtils;
 import org.ofbiz.core.entity.GenericEntityException;
@@ -35,9 +39,10 @@ import org.ofbiz.core.entity.GenericValue;
 import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MessageFormatter {
-    public static final int LIST_PAGE_SIZE = 15;
+    public static final int LIST_PAGE_SIZE = 1;
 
     private final ApplicationProperties applicationProperties;
     private final ConstantsManager constantsManager;
@@ -50,6 +55,7 @@ public class MessageFormatter {
     private final I18nResolver i18nResolver;
     private final LocaleManager localeManager;
     private final String jiraBaseUrl;
+    private final ProjectManager projectManager;
 
     public MessageFormatter(ApplicationProperties applicationProperties,
                             ConstantsManager constantsManager,
@@ -60,7 +66,8 @@ public class MessageFormatter {
                             IssueTypeScreenSchemeManager issueTypeScreenSchemeManager,
                             FieldScreenManager fieldScreenManager,
                             I18nResolver i18nResolver,
-                            LocaleManager localeManager) {
+                            LocaleManager localeManager,
+                            ProjectManager projectManager) {
         this.applicationProperties = applicationProperties;
         this.constantsManager = constantsManager;
         this.dateTimeFormatter = dateTimeFormatter;
@@ -72,6 +79,7 @@ public class MessageFormatter {
         this.i18nResolver = i18nResolver;
         this.localeManager = localeManager;
         this.jiraBaseUrl = applicationProperties.getString(APKeys.JIRA_BASEURL);
+        this.projectManager = projectManager;
     }
 
     private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
@@ -285,7 +293,7 @@ public class MessageFormatter {
         sb.append(issue.getKey()).append("   ").append(issue.getSummary()).append("\n");
         String issueLink = String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
         sb.append(issueLink);
-        sb.append(formatSystemFields(user, issue, false));
+        sb.append(formatSystemFields(user, issue, true));
         FieldScreenScheme fieldScreenScheme = issueTypeScreenSchemeManager.getFieldScreenScheme(issue);
         FieldScreen fieldScreen = fieldScreenScheme.getFieldScreen(IssueOperations.VIEW_ISSUE_OPERATION);
 
@@ -379,44 +387,90 @@ public class MessageFormatter {
         addRowWithButton(buttons, searchIssueByJqlButton);
 
         // create 'create issue' button
-        /*InlineKeyboardMarkupButton createIssueButton = new InlineKeyboardMarkupButton();
-        createIssueButton.setText(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.mainMenu.createIssueButton.text"));
-        createIssueButton.setCallbackData("create");
-        buttonsRow2.add(createIssueButton);*/
+        InlineKeyboardMarkupButton createIssueButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.mainMenu.createIssueButton.text"), "createIssue");
+        addRowWithButton(buttons, createIssueButton);
         return buttons;
     }
 
-    public List<List<InlineKeyboardMarkupButton>> getListButtons(Locale locale) {
-        return getListButtons(locale, true, true);
-    }
-
-    public List<List<InlineKeyboardMarkupButton>> getListButtons(Locale locale, boolean withPrev, boolean withNext) {
+    private List<List<InlineKeyboardMarkupButton>> getListButtons(Locale locale, boolean withPrev, boolean withNext, String prevButtonData, String nextButtonData) {
         if (!withPrev && !withNext)
             return null;
         List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
         List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>();
         if (withPrev) {
-            newButtonsRow.add(InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.listButtons.prevPageButton.text"), "prevListPage"));
+            newButtonsRow.add(InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.listButtons.prevPageButton.text"), prevButtonData));
         }
         if (withNext) {
-            newButtonsRow.add(InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.listButtons.nextPageButton.text"), "nextListPage"));
+            newButtonsRow.add(InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.listButtons.nextPageButton.text"), nextButtonData));
         }
         buttons.add(newButtonsRow);
         return buttons;
     }
 
-    public String stringifyIssueList(List<Issue> issueList, int pageNumber, int pageSize) {
+    public List<List<InlineKeyboardMarkupButton>> getIssueListButtons(Locale locale, boolean withPrev, boolean withNext) {
+        return getListButtons(locale, withPrev, withNext, "prevIssueListPage", "nextIssueListPage");
+    }
+
+    private String stringifyCollection(Locale locale, Collection<?> collection, int pageNumber, int total) {
         StringBuilder sb = new StringBuilder();
-        int strIndex = pageNumber * pageSize + 1;
-        for (Issue issue: issueList) {
-            sb.append(strIndex);
-            sb.append(". ");
-            sb.append(issue.getKey());
-            sb.append(" ");
-            sb.append(issue.getSummary());
+        collection.forEach(obj -> {
+            sb.append(obj.toString());
             sb.append("\n");
-            strIndex++;
-        }
+        });
+
+        int firstResultPageIndex = pageNumber * LIST_PAGE_SIZE + 1;
+        int lastResultPageIndex = firstResultPageIndex + collection.size() - 1;
+        sb.append("----------\n");
+        sb.append(i18nResolver.getText(locale,
+                                       "pager.results.displayissues.short",
+                                       String.join(" - ", Integer.toString(firstResultPageIndex), Integer.toString(lastResultPageIndex)),
+                                       Integer.toString(total)));
         return sb.toString();
+    }
+
+    public String stringifyIssueList(Locale locale, List<Issue> issueList, int pageNumber, int total) {
+        return stringifyCollection(locale,
+                               issueList.stream().map(issue -> String.join("" , "[", issue.getKey() , "] ", issue.getSummary())).collect(Collectors.toList()),
+                               pageNumber,
+                               total);
+    }
+
+    public String stringifyJqlClauseErrorsMap(MessageSet messageSet, Locale locale) {
+        StringJoiner joiner = new StringJoiner("\n");
+        String errorsTitle = i18nResolver.getRawText(locale, "common.words.errors") + ":";
+        joiner.add(errorsTitle);
+        messageSet.getErrorMessages().forEach(joiner::add);
+        return joiner.toString();
+    }
+
+    public String createSelectProjectMessage(Locale locale, List<Project> visibleProjects, int pageNumber, int totalProjectsNum) {
+        StringJoiner sj = new StringJoiner("\n");
+        sj.add(i18nResolver.getRawText(locale, "selectProjectPls"));
+        List<String> formattedProjectList = visibleProjects.stream()
+                                                           .map(proj -> String.join("", "[", proj.getKey(), "] ", proj.getName()))
+                                                           .collect(Collectors.toList());
+        sj.add(stringifyCollection(locale, formattedProjectList, pageNumber, totalProjectsNum));
+        return sj.toString();
+    }
+
+    public List<List<InlineKeyboardMarkupButton>> getSelectProjectMessageButtons(Locale locale, boolean withPrev, boolean withNext) {
+        return getListButtons(locale, withPrev, withNext, "prevProjectListPage", "nextProjectListPage");
+    }
+
+    public String createSelectIssueTypeMessage(Locale locale, List<IssueType> visibleIssueTypes, int pageNumber, int totalIssueTypesNum) {
+        int pageStartIndex = pageNumber * LIST_PAGE_SIZE;
+        StringJoiner sj = new StringJoiner("\n");
+        sj.add(i18nResolver.getRawText(locale, "selectIssueTypePls"));
+        List<String> formattedIssueTypeList = new ArrayList<>();
+        for (int index = 0; index < visibleIssueTypes.size(); index++) {
+            String strFormattedIssueType = String.join(". ", Integer.toString(pageStartIndex + index + 1), visibleIssueTypes.get(index).getName());
+            formattedIssueTypeList.add(strFormattedIssueType);
+        }
+        sj.add(stringifyCollection(locale, formattedIssueTypeList, pageNumber, totalIssueTypesNum));
+        return sj.toString();
+    }
+
+    public List<List<InlineKeyboardMarkupButton>> getSelectIssueTypeMessageButtons(Locale locale, boolean withPrev, boolean withNext) {
+        return getListButtons(locale, withPrev, withNext, "prevIssueTypeListPage", "nextIssueTypeListPage");
     }
 }

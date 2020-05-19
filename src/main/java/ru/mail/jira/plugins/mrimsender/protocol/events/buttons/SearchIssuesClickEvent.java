@@ -1,6 +1,8 @@
-package ru.mail.jira.plugins.mrimsender.protocol.events;
+package ru.mail.jira.plugins.mrimsender.protocol.events.buttons;
 
 import lombok.Getter;
+import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
+import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ButtonClickEvent;
 
 /**
  * As a result of this event handled user should get next formatted message
