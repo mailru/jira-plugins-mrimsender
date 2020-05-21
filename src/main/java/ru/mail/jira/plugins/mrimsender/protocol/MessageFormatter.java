@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
 import com.atlassian.jira.config.ConstantsManager;
+import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
@@ -15,6 +16,7 @@ import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.NavigableField;
+import com.atlassian.jira.issue.fields.OrderableField;
 import com.atlassian.jira.issue.fields.screen.FieldScreen;
 import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
@@ -43,6 +45,7 @@ import java.util.stream.Collectors;
 
 public class MessageFormatter {
     public static final int LIST_PAGE_SIZE = 1;
+    public static final String DELIMITER_STR = "----------";
 
     private final ApplicationProperties applicationProperties;
     private final ConstantsManager constantsManager;
@@ -56,6 +59,7 @@ public class MessageFormatter {
     private final LocaleManager localeManager;
     private final String jiraBaseUrl;
     private final ProjectManager projectManager;
+    private final IssueTypeManager issueTypeManager;
 
     public MessageFormatter(ApplicationProperties applicationProperties,
                             ConstantsManager constantsManager,
@@ -67,7 +71,8 @@ public class MessageFormatter {
                             FieldScreenManager fieldScreenManager,
                             I18nResolver i18nResolver,
                             LocaleManager localeManager,
-                            ProjectManager projectManager) {
+                            ProjectManager projectManager,
+                            IssueTypeManager issueTypeManager) {
         this.applicationProperties = applicationProperties;
         this.constantsManager = constantsManager;
         this.dateTimeFormatter = dateTimeFormatter;
@@ -80,6 +85,7 @@ public class MessageFormatter {
         this.localeManager = localeManager;
         this.jiraBaseUrl = applicationProperties.getString(APKeys.JIRA_BASEURL);
         this.projectManager = projectManager;
+        this.issueTypeManager = issueTypeManager;
     }
 
     private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
@@ -412,20 +418,20 @@ public class MessageFormatter {
     }
 
     private String stringifyCollection(Locale locale, Collection<?> collection, int pageNumber, int total) {
-        StringBuilder sb = new StringBuilder();
-        collection.forEach(obj -> {
-            sb.append(obj.toString());
-            sb.append("\n");
-        });
+        StringJoiner sj = new StringJoiner("\n");
 
+        //stringify collection
+        collection.forEach(obj -> sj.add(obj.toString()));
+
+        // append string with current (and total) page number info
         int firstResultPageIndex = pageNumber * LIST_PAGE_SIZE + 1;
         int lastResultPageIndex = firstResultPageIndex + collection.size() - 1;
-        sb.append("----------\n");
-        sb.append(i18nResolver.getText(locale,
+        sj.add(DELIMITER_STR);
+        sj.add(i18nResolver.getText(locale,
                                        "pager.results.displayissues.short",
                                        String.join(" - ", Integer.toString(firstResultPageIndex), Integer.toString(lastResultPageIndex)),
                                        Integer.toString(total)));
-        return sb.toString();
+        return sj.toString();
     }
 
     public String stringifyIssueList(Locale locale, List<Issue> issueList, int pageNumber, int total) {
@@ -445,7 +451,7 @@ public class MessageFormatter {
 
     public String createSelectProjectMessage(Locale locale, List<Project> visibleProjects, int pageNumber, int totalProjectsNum) {
         StringJoiner sj = new StringJoiner("\n");
-        sj.add(i18nResolver.getRawText(locale, "selectProjectPls"));
+        sj.add(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectProject.message"));
         List<String> formattedProjectList = visibleProjects.stream()
                                                            .map(proj -> String.join("", "[", proj.getKey(), "] ", proj.getName()))
                                                            .collect(Collectors.toList());
@@ -460,7 +466,7 @@ public class MessageFormatter {
     public String createSelectIssueTypeMessage(Locale locale, List<IssueType> visibleIssueTypes, int pageNumber, int totalIssueTypesNum) {
         int pageStartIndex = pageNumber * LIST_PAGE_SIZE;
         StringJoiner sj = new StringJoiner("\n");
-        sj.add(i18nResolver.getRawText(locale, "selectIssueTypePls"));
+        sj.add(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectIssueType.message"));
         List<String> formattedIssueTypeList = new ArrayList<>();
         for (int index = 0; index < visibleIssueTypes.size(); index++) {
             String strFormattedIssueType = String.join(". ", Integer.toString(pageStartIndex + index + 1), visibleIssueTypes.get(index).getName());
@@ -472,5 +478,23 @@ public class MessageFormatter {
 
     public List<List<InlineKeyboardMarkupButton>> getSelectIssueTypeMessageButtons(Locale locale, boolean withPrev, boolean withNext) {
         return getListButtons(locale, withPrev, withNext, "prevIssueTypeListPage", "nextIssueTypeListPage");
+    }
+
+    public String formatIssueCreationDto(Locale locale, IssueCreationDto issueCreationDto) {
+        StringJoiner sj = new StringJoiner("\n");
+
+        sj.add(DELIMITER_STR);
+        sj.add(i18nResolver.getRawText(locale, "Current issue creation state:\n"));
+        sj.add(String.join(" ", i18nResolver.getRawText(locale, "Project:"), projectManager.getProjectByCurrentKey(issueCreationDto.getProjectKey()).getName()));
+        sj.add(String.join(" ", i18nResolver.getRawText(locale, "IssueType:"), issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()).getNameTranslation(locale.toString())));
+        issueCreationDto.getRequiredIssueCreationFields()
+                        .forEach((field, value) -> sj.add(String.join(" : ", i18nResolver.getRawText(locale, field.getNameKey()), value.orElse("-"))));
+        return sj.toString();
+    }
+
+    public String createInsertFieldMessage(Locale locale, OrderableField field, IssueCreationDto issueCreationDto) {
+        return String.join("\n",
+                           i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.insertIssueField.message", i18nResolver.getRawText(locale, field.getNameKey())),
+                           this.formatIssueCreationDto(locale, issueCreationDto));
     }
 }

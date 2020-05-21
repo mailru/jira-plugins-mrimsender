@@ -10,30 +10,39 @@ public class ChatState {
     private final boolean isWaitingForIssueKey;
     private final boolean isIssueSearchResultsShowing;
     private final boolean isWaitingForJqlClause;
-    private final boolean isIssueCreationState;
+    private final boolean isWaitingForProjectSelect;
+    private final boolean isWaitingForIssueTypeSelect;
+    private final boolean isNewIssueFieldsFillingState;
     private final String issueKey;
     private final Query currentSearchJqlClause;
     private final Integer currentSelectListPage;
-    private final IssueCreationState issueCreationState;
+    private final Integer currentFillingFieldNum;
+    private final IssueCreationDto issueCreationDto;
 
     private ChatState(boolean isWaitingForComment,
                       boolean isWaitingForIssueKey,
                       boolean isIssueSearchResultsShowing,
                       boolean isWaitingForJqlClause,
-                      boolean isIssueCreationState,
+                      boolean isWaitingForProjectSelect,
+                      boolean isWaitingForIssueTypeSelect,
+                      boolean isNewIssueFieldsFillingState,
                       String issueKey,
                       Query currentSearchJqlClause,
                       Integer currentSelectListPage,
-                      IssueCreationState issueCreationState) {
+                      Integer currentFillingFieldNum,
+                      IssueCreationDto issueCreationDto) {
         this.isWaitingForComment = isWaitingForComment;
         this.isWaitingForIssueKey = isWaitingForIssueKey;
         this.isIssueSearchResultsShowing = isIssueSearchResultsShowing;
         this.isWaitingForJqlClause = isWaitingForJqlClause;
-        this.isIssueCreationState = isIssueCreationState;
+        this.isWaitingForProjectSelect = isWaitingForProjectSelect;
+        this.isWaitingForIssueTypeSelect = isWaitingForIssueTypeSelect;
+        this.isNewIssueFieldsFillingState = isNewIssueFieldsFillingState;
         this.issueKey = issueKey;
         this.currentSearchJqlClause = currentSearchJqlClause;
         this.currentSelectListPage = currentSelectListPage;
-        this.issueCreationState = issueCreationState;
+        this.currentFillingFieldNum = currentFillingFieldNum;
+        this.issueCreationDto = issueCreationDto;
     }
 
     private final static ChatState issueKeyWaitingState = new ChatState(false,
@@ -41,6 +50,9 @@ public class ChatState {
                                                                         false,
                                                                         false,
                                                                         false,
+                                                                        false,
+                                                                        false,
+                                                                        null,
                                                                         null,
                                                                         null,
                                                                         null,
@@ -50,6 +62,9 @@ public class ChatState {
                                                                          false,
                                                                          true,
                                                                          false,
+                                                                         false,
+                                                                         false,
+                                                                         null,
                                                                          null,
                                                                          null,
                                                                          null,
@@ -69,7 +84,10 @@ public class ChatState {
                              false,
                              false,
                              false,
+                             false,
+                             false,
                              commentedIssueKey,
+                             null,
                              null,
                              null,
                              null);
@@ -81,74 +99,58 @@ public class ChatState {
                              true,
                              false,
                              false,
+                             false,
+                             false,
                              null,
                              currentSearchClause,
                              currentIssuesListPage,
+                             null,
                              null);
     }
 
-    public static ChatState buildProjectSelectWaitingState(Integer currentProjectsListPage) {
+    public static ChatState buildProjectSelectWaitingState(Integer currentProjectsListPage, IssueCreationDto issueCreationDto) {
         return new ChatState(false,
                              false,
                              false,
                              false,
                              true,
+                             false,
+                             false,
                              null,
                              null,
                              currentProjectsListPage,
-                             IssueCreationState.projectSelectWaitingState);
+                             null,
+                             issueCreationDto);
     }
 
-    public static ChatState buildIssueTypeSelectWaitingState(String selectedProjectKey, Integer currentIssueTypesListPage) {
+    public static ChatState buildIssueTypeSelectWaitingState(Integer currentIssueTypesListPage, IssueCreationDto issueCreationDto) {
         return new ChatState(false,
+                             false,
+                             false,
+                             false,
+                             false,
+                             true,
+                             false,
+                             null,
+                             null,
+                             currentIssueTypesListPage,
+                             null,
+                             issueCreationDto);
+    }
+
+    public static ChatState buildNewIssueFieldsFillingState(Integer currentFillingFieldNum, IssueCreationDto issueCreationDto) {
+        return new ChatState(false,
+                             false,
+                             false,
                              false,
                              false,
                              false,
                              true,
                              null,
                              null,
-                             currentIssueTypesListPage,
-                             IssueCreationState.buildIssueTypeSelectWaitingState(selectedProjectKey));
+                             null,
+                             currentFillingFieldNum,
+                             issueCreationDto);
     }
 
-    public boolean isWaitingForProjectSelect() {
-        return (issueCreationState != null) ? issueCreationState.isWaitingForProjectSelect : false;
-    }
-
-    public boolean isWaitingForIssueTypeSelect() {
-        return (issueCreationState != null) ? issueCreationState.isWaitingForIssueTypeSelect : false;
-    }
-
-    public String getSelectedProjectKey() {
-        return issueCreationState.getIssueCreationDto().getProjectKey();
-    }
-
-    public IssueCreationDto getIssueCreationDto() {
-        return issueCreationState.getIssueCreationDto();
-    }
-
-    @Getter
-    private static class IssueCreationState {
-        private final boolean isWaitingForProjectSelect;
-        private final boolean isWaitingForIssueTypeSelect;
-        private final IssueCreationDto issueCreationDto;
-
-        public static IssueCreationState projectSelectWaitingState = new IssueCreationState(true, false);
-
-        public static IssueCreationState buildIssueTypeSelectWaitingState(String selectedProjectKey) {
-            return new IssueCreationState(false, true, selectedProjectKey);
-        }
-
-        private IssueCreationState(boolean isWaitingForProjectSelect, boolean isWaitingForIssueTypeSelect) {
-            this.isWaitingForProjectSelect = isWaitingForProjectSelect;
-            this.isWaitingForIssueTypeSelect = isWaitingForIssueTypeSelect;
-            this.issueCreationDto = null;
-        }
-
-        private IssueCreationState(boolean isWaitingForProjectSelect, boolean isWaitingForIssueTypeSelect, String selectedProjectKey) {
-            this.isWaitingForProjectSelect = isWaitingForProjectSelect;
-            this.isWaitingForIssueTypeSelect = isWaitingForIssueTypeSelect;
-            issueCreationDto = new IssueCreationDto(selectedProjectKey);
-        }
-    }
 }

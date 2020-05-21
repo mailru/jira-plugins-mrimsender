@@ -8,7 +8,7 @@ import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ButtonClickEvent;
  * statefull ViewIssueClickEvent -> waits for issue key from user input
  */
 @Getter
-public class ShowIssueClickEvent implements Event {
+public class ShowIssueClickEvent {
     private final String queryId;
     private final String chatId;
     private final String userId;

@@ -5,13 +5,9 @@ import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.comments.CommentManager;
-import com.atlassian.jira.issue.fields.config.manager.IssueTypeSchemeManager;
-import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.permission.ProjectPermissions;
-import com.atlassian.jira.project.Project;
-import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.MessageSet;
@@ -30,7 +26,6 @@ import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
 import ru.mail.jira.plugins.mrimsender.icq.dto.ChatType;
 import ru.mail.jira.plugins.mrimsender.protocol.ChatState;
 import ru.mail.jira.plugins.mrimsender.protocol.ChatStateMapping;
-import ru.mail.jira.plugins.mrimsender.protocol.IssueCreationDto;
 import ru.mail.jira.plugins.mrimsender.protocol.MessageFormatter;
 import ru.mail.jira.plugins.mrimsender.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
@@ -60,13 +55,10 @@ import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ShowIssueClickEve
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ViewIssueClickEvent;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 import static ru.mail.jira.plugins.mrimsender.protocol.MessageFormatter.LIST_PAGE_SIZE;
 
@@ -87,8 +79,6 @@ public class IcqEventsListener {
     private final PermissionManager permissionManager;
     private final CommentManager commentManager;
     private final SearchService searchService;
-    private final ProjectManager projectManager;
-    private final IssueTypeSchemeManager issueTypeSchemeManager;
 
     public IcqEventsListener(ChatStateMapping chatStateMapping,
                              IcqApiClient icqApiClient,
@@ -100,15 +90,15 @@ public class IcqEventsListener {
                              PermissionManager permissionManager,
                              CommentManager commentManager,
                              SearchService searchService,
-                             ProjectManager projectManager,
                              ChatCommandListener chatCommandListener,
                              ButtonClickListener buttonClickListener,
-                             IssueTypeSchemeManager issueTypeSchemeManager) {
+                             CreateIssueEventsListener createIssueEventsListener) {
         this.chatsStateMap = chatStateMapping.getChatsStateMap();
         this.asyncEventBus = new AsyncEventBus(executorService, (exception, context) -> log.error(String.format("Exception occurred in subscriber = %s", context.getSubscriber().toString()), exception));
         this.asyncEventBus.register(this);
         this.asyncEventBus.register(chatCommandListener);
         this.asyncEventBus.register(buttonClickListener);
+        this.asyncEventBus.register(createIssueEventsListener);
         this.icqApiClient = icqApiClient;
         this.userData = userData;
         this.messageFormatter = messageFormatter;
@@ -118,8 +108,6 @@ public class IcqEventsListener {
         this.permissionManager = permissionManager;
         this.commentManager = commentManager;
         this.searchService = searchService;
-        this.projectManager = projectManager;
-        this.issueTypeSchemeManager = issueTypeSchemeManager;
     }
 
     public void publishEvent(Event event) {
@@ -147,11 +135,15 @@ public class IcqEventsListener {
                 return;
             }
             if (chatState.isWaitingForProjectSelect()) {
-                asyncEventBus.post(new SelectedProjectMessageEvent(chatMessageEvent));
+                asyncEventBus.post(new SelectedProjectMessageEvent(chatMessageEvent, chatState.getIssueCreationDto()));
                 return;
             }
             if (chatState.isWaitingForIssueTypeSelect()) {
                 asyncEventBus.post(new SelectedIssueTypeMessageEvent(chatMessageEvent, chatState.getIssueCreationDto()));
+                return;
+            }
+            if (chatState.isNewIssueFieldsFillingState()) {
+                //asyncEventBus.post(new )
                 return;
             }
         }
@@ -198,21 +190,21 @@ public class IcqEventsListener {
             }
             if (chatState.isWaitingForProjectSelect()) {
                 if (buttonPrefix.equals("nextProjectListPage")) {
-                    asyncEventBus.post(new NextProjectsPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage()));
+                    asyncEventBus.post(new NextProjectsPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getIssueCreationDto()));
                     return;
                 }
                 if (buttonPrefix.equals("prevProjectListPage")) {
-                    asyncEventBus.post(new PrevProjectsPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage()));
+                    asyncEventBus.post(new PrevProjectsPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getIssueCreationDto()));
                     return;
                 }
             }
             if (chatState.isWaitingForIssueTypeSelect()) {
                 if (buttonPrefix.equals("nextIssueTypeListPage")) {
-                    asyncEventBus.post(new NextIssueTypesPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getSelectedProjectKey()));
+                    asyncEventBus.post(new NextIssueTypesPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getIssueCreationDto()));
                     return;
                 }
                 if (buttonPrefix.equals("prevIssueTypeListPage")) {
-                    asyncEventBus.post(new PrevIssueTypesPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getSelectedProjectKey()));
+                    asyncEventBus.post(new PrevIssueTypesPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getIssueCreationDto()));
                     return;
                 }
             }
@@ -337,59 +329,4 @@ public class IcqEventsListener {
             JiraThreadLocalUtils.postCall();
         }
     }
-
-    @Subscribe
-    public void onSelectedProjectMessageEvent(SelectedProjectMessageEvent selectedProjectMessageEvent) throws IOException, UnirestException {
-        ApplicationUser currentUser = userData.getUserByMrimLogin(selectedProjectMessageEvent.getUserId());
-        if (currentUser != null) {
-            String chatId = selectedProjectMessageEvent.getChatId();
-            Locale locale = localeManager.getLocaleFor(currentUser);
-            String selectedProjectKey = selectedProjectMessageEvent.getSelectedProjectKey();
-            Project selectedProject = projectManager.getProjectByCurrentKey(selectedProjectKey);
-            if (selectedProject != null) {
-                // Project selected, sending user select IssueType message
-                Collection<IssueType> projectIssueTypes = issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(selectedProject);
-                icqApiClient.sendMessageText(chatId,
-                                             messageFormatter.createSelectIssueTypeMessage(locale,
-                                                                                           projectIssueTypes.stream().limit(LIST_PAGE_SIZE).collect(Collectors.toList()),
-                                                                                           0,
-                                                                                           projectIssueTypes.size()),
-                                             messageFormatter.getSelectIssueTypeMessageButtons(locale, false, projectIssueTypes.size() > LIST_PAGE_SIZE));
-                chatsStateMap.put(chatId, ChatState.buildIssueTypeSelectWaitingState( selectedProjectKey, 0));
-            } else {
-                // TODO project key is not valid ... maybe suggest enter project key again ???
-            }
-        }
-    }
-
-    @Subscribe void onSelectedIssueTypeMessageEvent(SelectedIssueTypeMessageEvent selectedIssueTypeMessageEvent) throws IOException, UnirestException {
-        ApplicationUser currentUser = userData.getUserByMrimLogin(selectedIssueTypeMessageEvent.getUserId());
-        if (currentUser != null) {
-            IssueCreationDto currentIssueCreationDto = selectedIssueTypeMessageEvent.getIssueCreationDto();
-            Project selectedProject = projectManager.getProjectByCurrentKey(currentIssueCreationDto.getProjectKey());
-            String selectedIssueTypePosition = selectedIssueTypeMessageEvent.getSelectedIssueTypePosition();
-            String chatId = selectedIssueTypeMessageEvent.getChatId();
-            Locale locale = localeManager.getLocaleFor(currentUser);
-
-
-            if (selectedProject != null && StringUtils.isNumeric(selectedIssueTypePosition)) {
-                List<IssueType> selectedIssueTypeBoxed = issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(selectedProject)
-                                                                   .stream()
-                                                                   .sorted()
-                                                                   .skip(Integer.parseInt(selectedIssueTypePosition) - 1)
-                                                                   .limit(1)
-                                                                   .collect(Collectors.toList());
-                if (selectedIssueTypeBoxed.size() > 0) {
-                    IssueType selectedIssueType = selectedIssueTypeBoxed.get(0);
-                    currentIssueCreationDto.setIssueTypeId(selectedIssueType.getId());
-
-                } else {
-                    // TODO issueType number is not valid... maybe
-                }
-            } else {
-                // TODO issueType number is not valid ... maybe suggest enter issue type again ???
-            }
-        }
-    }
-
 }

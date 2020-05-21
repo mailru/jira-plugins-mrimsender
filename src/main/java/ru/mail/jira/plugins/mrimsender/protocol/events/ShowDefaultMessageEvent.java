@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter
-public class ShowDefaultMessageEvent implements Event{
+public class ShowDefaultMessageEvent {
     private final String chatId;
     private final String userId;
 

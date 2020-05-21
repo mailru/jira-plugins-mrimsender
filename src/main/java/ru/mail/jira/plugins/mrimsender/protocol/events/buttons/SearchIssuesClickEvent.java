@@ -17,8 +17,7 @@ import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ButtonClickEvent;
  *  ----------------------------------------------------
  */
 @Getter
-public class SearchIssuesClickEvent implements Event {
-    // TODO когда будет поиск по jql, переделать на одно поле String jqlClause
+public class SearchIssuesClickEvent {
     private final String jqlClause;
     private final String chatId;
     private final String userId;

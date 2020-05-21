@@ -5,7 +5,7 @@ import lombok.Setter;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 
 @Getter
-public class NewCommentMessageEvent implements Event {
+public class NewCommentMessageEvent {
     private final String userId;
     private final String chatId;
     private final String message;

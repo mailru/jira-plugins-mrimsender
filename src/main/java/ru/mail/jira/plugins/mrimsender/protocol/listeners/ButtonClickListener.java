@@ -5,11 +5,9 @@ import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.fields.config.manager.IssueTypeSchemeManager;
-import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.permission.ProjectPermissions;
-import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
@@ -27,24 +25,16 @@ import ru.mail.jira.plugins.mrimsender.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.mrimsender.protocol.MessageFormatter;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.CancelClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.CommentIssueClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.CreateIssueClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.NextIssueTypesPageClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.NextIssuesPageClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.NextProjectsPageClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.PrevIssueTypesPageClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.PrevIssuesPageClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.PrevProjectsPageClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.SearchByJqlClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.SearchIssuesClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ShowIssueClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ViewIssueClickEvent;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import static ru.mail.jira.plugins.mrimsender.protocol.MessageFormatter.LIST_PAGE_SIZE;
 
@@ -59,8 +49,6 @@ public class ButtonClickListener {
     private final IssueManager issueManager;
     private final PermissionManager permissionManager;
     private final SearchService searchService;
-    private final ProjectManager projectManager;
-    private final IssueTypeSchemeManager issueTypeSchemeManager;
 
     public ButtonClickListener(ChatStateMapping chatStateMapping,
                                IcqApiClient icqApiClient,
@@ -70,9 +58,7 @@ public class ButtonClickListener {
                                LocaleManager localeManager,
                                IssueManager issueManager,
                                PermissionManager permissionManager,
-                               SearchService searchService,
-                               ProjectManager projectManager,
-                               IssueTypeSchemeManager issueTypeSchemeManager) {
+                               SearchService searchService) {
         this.chatsStateMap = chatStateMapping.getChatsStateMap();
         this.icqApiClient = icqApiClient;
         this.userData = userData;
@@ -82,8 +68,6 @@ public class ButtonClickListener {
         this.issueManager = issueManager;
         this.permissionManager = permissionManager;
         this.searchService = searchService;
-        this.projectManager = projectManager;
-        this.issueTypeSchemeManager = issueTypeSchemeManager;
     }
 
     @Subscribe
@@ -231,126 +215,5 @@ public class ButtonClickListener {
             chatsStateMap.put(chatId, ChatState.jqlClauseWaitingState());
         }
         log.debug("SearchByJqlClickEvent handling finished");
-    }
-
-    @Subscribe
-    public void onCreateIssueClickEvent(CreateIssueClickEvent createIssueClickEvent) throws UnirestException, IOException {
-        log.debug("CreateIssueClickEvent handling started");
-        ApplicationUser currentUser = userData.getUserByMrimLogin(createIssueClickEvent.getUserId());
-        String chatId = createIssueClickEvent.getChatId();
-        if (currentUser != null) {
-            Locale locale = localeManager.getLocaleFor(currentUser);
-            icqApiClient.answerCallbackQuery(createIssueClickEvent.getQueryId());
-            List<Project> projectList = projectManager.getProjects();
-            List<Project> firstPageProjectsInterval = projectList.stream().limit(LIST_PAGE_SIZE).collect(Collectors.toList());
-            icqApiClient.sendMessageText(chatId,
-                                         messageFormatter.createSelectProjectMessage(locale, firstPageProjectsInterval, 0, projectList.size()),
-                                         messageFormatter.getSelectProjectMessageButtons(locale, false, projectList.size() > LIST_PAGE_SIZE));
-            chatsStateMap.put(chatId, ChatState.buildProjectSelectWaitingState(0));
-        }
-        log.debug("CreateIssueClickEvent handling finished");
-    }
-
-    @Subscribe
-    public void onNextProjectPageClickEvent(NextProjectsPageClickEvent nextProjectsPageClickEvent) throws UnirestException, IOException {
-        log.debug("NextProjectsPageClickEvent handling started");
-        ApplicationUser currentUser = userData.getUserByMrimLogin(nextProjectsPageClickEvent.getUserId());
-        if (currentUser != null) {
-            int nextPageNumber = nextProjectsPageClickEvent.getCurrentPage() + 1;
-            int nextPageStartIndex = nextPageNumber * LIST_PAGE_SIZE;
-            Locale locale = localeManager.getLocaleFor(currentUser);
-            String chatId = nextProjectsPageClickEvent.getChatId();
-
-            List<Project> projectsList = projectManager.getProjects();
-            List<Project> nextProjectsInterval = projectsList.stream()
-                                                             .skip(nextPageStartIndex)
-                                                             .limit(LIST_PAGE_SIZE)
-                                                             .collect(Collectors.toList());
-
-            icqApiClient.answerCallbackQuery(nextProjectsPageClickEvent.getQueryId());
-            icqApiClient.editMessageText(chatId,
-                                         nextProjectsPageClickEvent.getMsgId(),
-                                         messageFormatter.createSelectProjectMessage(locale, nextProjectsInterval, nextPageNumber, projectsList.size()),
-                                         messageFormatter.getSelectProjectMessageButtons(locale, true, projectsList.size() > LIST_PAGE_SIZE + nextPageStartIndex));
-            chatsStateMap.put(chatId, ChatState.buildProjectSelectWaitingState(nextPageNumber));
-        }
-        log.debug("NextProjectsPageClickEvent handling finished");
-    }
-
-    @Subscribe
-    public void onPrevProjectPageClickEvent(PrevProjectsPageClickEvent prevProjectsPageClickEvent) throws UnirestException, IOException {
-        log.debug("PrevProjectsPageClickEvent handling started");
-        ApplicationUser currentUser = userData.getUserByMrimLogin(prevProjectsPageClickEvent.getUserId());
-        if (currentUser != null) {
-            int prevPageNumber = prevProjectsPageClickEvent.getCurrentPage() - 1;
-            int prevPageStartIndex = prevPageNumber * LIST_PAGE_SIZE;
-            Locale locale = localeManager.getLocaleFor(currentUser);
-            String chatId = prevProjectsPageClickEvent.getChatId();
-
-            List<Project> projectsList = projectManager.getProjects();
-            List<Project> prevProjectsInterval = projectsList.stream()
-                                                             .skip(prevPageStartIndex)
-                                                             .limit(LIST_PAGE_SIZE)
-                                                             .collect(Collectors.toList());
-            icqApiClient.answerCallbackQuery(prevProjectsPageClickEvent.getQueryId());
-            icqApiClient.editMessageText(chatId,
-                                         prevProjectsPageClickEvent.getMsgId(),
-                                         messageFormatter.createSelectProjectMessage(locale, prevProjectsInterval, prevPageNumber,  projectsList.size()),
-                                         messageFormatter.getSelectProjectMessageButtons(locale, prevPageStartIndex >= LIST_PAGE_SIZE, true));
-            chatsStateMap.put(chatId, ChatState.buildProjectSelectWaitingState(prevPageNumber));
-        }
-        log.debug("PrevProjectsPageClickEvent handling finished");
-    }
-
-    @Subscribe
-    public void onNextIssueTypesPageClickEvent(NextIssueTypesPageClickEvent nextIssueTypesPageClickEvent) throws UnirestException, IOException {
-        log.debug("NextIssueTypesPageClickEvent handling started");
-        ApplicationUser currentUser = userData.getUserByMrimLogin(nextIssueTypesPageClickEvent.getUserId());
-        if (currentUser != null) {
-            int nextPageNumber = nextIssueTypesPageClickEvent.getCurrentPage() + 1;
-            int nextPageStartIndex = nextPageNumber  * LIST_PAGE_SIZE;
-            Locale locale = localeManager.getLocaleFor(currentUser);
-            String chatId = nextIssueTypesPageClickEvent.getChatId();
-            String selectedProjectKey = nextIssueTypesPageClickEvent.getSelectedProjectKey();
-
-            Collection<IssueType> issueTypeList = issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(projectManager.getProjectByCurrentKey(selectedProjectKey));
-            List<IssueType> issueTypeListInterval = issueTypeList.stream()
-                                                                       .skip(nextPageStartIndex)
-                                                                       .limit(LIST_PAGE_SIZE)
-                                                                       .collect(Collectors.toList());
-            icqApiClient.answerCallbackQuery(nextIssueTypesPageClickEvent.getQueryId());
-            icqApiClient.editMessageText(chatId,
-                                         nextIssueTypesPageClickEvent.getMsgId(),
-                                         messageFormatter.createSelectIssueTypeMessage(locale, issueTypeListInterval, nextPageNumber,issueTypeList.size()),
-                                         messageFormatter.getSelectIssueTypeMessageButtons(locale, true, issueTypeList.size() > LIST_PAGE_SIZE + nextPageStartIndex));
-            chatsStateMap.put(chatId, ChatState.buildIssueTypeSelectWaitingState(selectedProjectKey, nextPageNumber));
-        }
-        log.debug("NextIssueTypesPageClickEvent handling finished");
-    }
-
-    @Subscribe
-    public void onPrevIssueTypesPageClickEvent(PrevIssueTypesPageClickEvent prevIssueTypesPageClickEvent) throws UnirestException, IOException {
-        log.debug("PrevIssueTypesPageClickEvent handling started");
-        ApplicationUser currentUser = userData.getUserByMrimLogin(prevIssueTypesPageClickEvent.getUserId());
-        if (currentUser != null) {
-            int prevPageNumber = prevIssueTypesPageClickEvent.getCurrentPage() - 1;
-            int prevPageStartIndex = prevPageNumber  * LIST_PAGE_SIZE;
-            Locale locale = localeManager.getLocaleFor(currentUser);
-            String chatId = prevIssueTypesPageClickEvent.getChatId();
-            String selectedProjectKey = prevIssueTypesPageClickEvent.getSelectedProjectKey();
-
-            Collection<IssueType> issueTypeList = issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(projectManager.getProjectByCurrentKey(selectedProjectKey));
-            List<IssueType> issueTypeListInterval = issueTypeList.stream()
-                                                                 .skip(prevPageStartIndex)
-                                                                 .limit(LIST_PAGE_SIZE)
-                                                                 .collect(Collectors.toList());
-            icqApiClient.answerCallbackQuery(prevIssueTypesPageClickEvent.getQueryId());
-            icqApiClient.editMessageText(chatId,
-                                         prevIssueTypesPageClickEvent.getMsgId(),
-                                         messageFormatter.createSelectIssueTypeMessage(locale, issueTypeListInterval, prevPageNumber, issueTypeList.size()),
-                                         messageFormatter.getSelectIssueTypeMessageButtons(locale, prevPageStartIndex >= LIST_PAGE_SIZE, true));
-            chatsStateMap.put(chatId, ChatState.buildIssueTypeSelectWaitingState(selectedProjectKey, prevPageNumber));
-        }
-        log.debug("PrevIssueTypesPageClickEvent handling finished");
     }
 }

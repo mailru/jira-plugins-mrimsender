@@ -67,7 +67,6 @@ public class IcqEventsFetcher {
                                 } else if (event instanceof CallbackQueryEvent) {
                                     eventId.set(event.getEventId());
                                     icqEventsListener.publishEvent(new ButtonClickEvent((CallbackQueryEvent)event));
-
                                 } else {
                                     eventId.set(event.getEventId());
                                 }

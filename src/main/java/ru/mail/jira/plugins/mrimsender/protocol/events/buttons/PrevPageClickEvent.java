@@ -9,7 +9,7 @@ import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ButtonClickEvent;
  * and previous page of content should shown to user
  */
 @Getter
-public class PrevPageClickEvent implements Event {
+public class PrevPageClickEvent {
     private final String chatId;
     private final long msgId;
     private final String userId;

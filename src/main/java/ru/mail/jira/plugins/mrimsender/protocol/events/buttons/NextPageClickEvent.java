@@ -9,7 +9,7 @@ import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ButtonClickEvent;
  * and next page of content should shown to user
  */
 @Getter
-public class NextPageClickEvent implements Event {
+public class NextPageClickEvent {
     private final String chatId;
     private final long msgId;
     private final String userId;

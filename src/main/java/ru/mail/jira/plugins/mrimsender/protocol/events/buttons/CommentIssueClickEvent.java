@@ -6,7 +6,7 @@ import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ButtonClickEvent;
 
 @Getter
-public class CommentIssueClickEvent implements Event {
+public class CommentIssueClickEvent {
     private final String userId;
     private final String chatId;
     private final String queryId;

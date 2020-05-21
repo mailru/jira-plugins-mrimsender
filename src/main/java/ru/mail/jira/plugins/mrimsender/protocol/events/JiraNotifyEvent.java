@@ -7,7 +7,7 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.InlineKeyboardMarkupButton;
 import java.util.List;
 
 @Getter
-public class JiraNotifyEvent implements Event {
+public class JiraNotifyEvent implements Event{
     private final String chatId;
     private final String message;
     private final List<List<InlineKeyboardMarkupButton>> buttons;
