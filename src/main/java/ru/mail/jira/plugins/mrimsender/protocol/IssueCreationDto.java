@@ -10,7 +10,7 @@ import java.util.Optional;
 @Getter
 @Setter
 public class IssueCreationDto {
-    private String projectKey;
+    private Long projectId;
     private String issueTypeId;
-    private Map<OrderableField, Optional<String>> requiredIssueCreationFields;
+    private Map<OrderableField, Optional<String>> requiredIssueCreationFieldValues;
 }

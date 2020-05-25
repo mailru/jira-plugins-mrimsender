@@ -417,7 +417,24 @@ public class MessageFormatter {
         return getListButtons(locale, withPrev, withNext, "prevIssueListPage", "nextIssueListPage");
     }
 
-    private String stringifyCollection(Locale locale, Collection<?> collection, int pageNumber, int total) {
+    public String stringifyMap(Map<?, ?> map) {
+        if (map == null)
+            return "";
+        return map.entrySet()
+                  .stream()
+                  .map(((entry) -> String.join(" : ", entry.getKey().toString(), entry.getValue().toString())))
+                  .collect(Collectors.joining("\n"));
+    }
+
+    public String stringifyCollection(Locale locale, Collection<?> collection) {
+        StringJoiner sj = new StringJoiner("\n");
+
+        //stringify collection
+        collection.forEach(obj -> sj.add(obj.toString()));
+        return sj.toString();
+    }
+
+    public String stringifyPagedCollection(Locale locale, Collection<?> collection, int pageNumber, int total) {
         StringJoiner sj = new StringJoiner("\n");
 
         //stringify collection
@@ -435,10 +452,10 @@ public class MessageFormatter {
     }
 
     public String stringifyIssueList(Locale locale, List<Issue> issueList, int pageNumber, int total) {
-        return stringifyCollection(locale,
-                               issueList.stream().map(issue -> String.join("" , "[", issue.getKey() , "] ", issue.getSummary())).collect(Collectors.toList()),
-                               pageNumber,
-                               total);
+        return stringifyPagedCollection(locale,
+                                        issueList.stream().map(issue -> String.join("" , "[", issue.getKey() , "] ", issue.getSummary())).collect(Collectors.toList()),
+                                        pageNumber,
+                                        total);
     }
 
     public String stringifyJqlClauseErrorsMap(MessageSet messageSet, Locale locale) {
@@ -455,7 +472,7 @@ public class MessageFormatter {
         List<String> formattedProjectList = visibleProjects.stream()
                                                            .map(proj -> String.join("", "[", proj.getKey(), "] ", proj.getName()))
                                                            .collect(Collectors.toList());
-        sj.add(stringifyCollection(locale, formattedProjectList, pageNumber, totalProjectsNum));
+        sj.add(stringifyPagedCollection(locale, formattedProjectList, pageNumber, totalProjectsNum));
         return sj.toString();
     }
 
@@ -472,7 +489,7 @@ public class MessageFormatter {
             String strFormattedIssueType = String.join(". ", Integer.toString(pageStartIndex + index + 1), visibleIssueTypes.get(index).getName());
             formattedIssueTypeList.add(strFormattedIssueType);
         }
-        sj.add(stringifyCollection(locale, formattedIssueTypeList, pageNumber, totalIssueTypesNum));
+        sj.add(stringifyPagedCollection(locale, formattedIssueTypeList, pageNumber, totalIssueTypesNum));
         return sj.toString();
     }
 
@@ -484,10 +501,10 @@ public class MessageFormatter {
         StringJoiner sj = new StringJoiner("\n");
 
         sj.add(DELIMITER_STR);
-        sj.add(i18nResolver.getRawText(locale, "Current issue creation state:\n"));
-        sj.add(String.join(" ", i18nResolver.getRawText(locale, "Project:"), projectManager.getProjectByCurrentKey(issueCreationDto.getProjectKey()).getName()));
+        sj.add(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.currentIssueCreationDtoState"));
+        sj.add(String.join(" ", i18nResolver.getRawText(locale, "Project:"), projectManager.getProjectObj(issueCreationDto.getProjectId()).getName()));
         sj.add(String.join(" ", i18nResolver.getRawText(locale, "IssueType:"), issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()).getNameTranslation(locale.toString())));
-        issueCreationDto.getRequiredIssueCreationFields()
+        issueCreationDto.getRequiredIssueCreationFieldValues()
                         .forEach((field, value) -> sj.add(String.join(" : ", i18nResolver.getRawText(locale, field.getNameKey()), value.orElse("-"))));
         return sj.toString();
     }

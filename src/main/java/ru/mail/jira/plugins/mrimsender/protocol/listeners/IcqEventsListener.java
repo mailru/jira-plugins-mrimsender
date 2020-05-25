@@ -32,6 +32,7 @@ import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
 import ru.mail.jira.plugins.mrimsender.protocol.events.IssueKeyMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.NewCommentMessageEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.NewIssueFieldValueMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.SearchIssuesEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.SelectedIssueTypeMessageEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.SelectedProjectMessageEvent;
@@ -143,7 +144,7 @@ public class IcqEventsListener {
                 return;
             }
             if (chatState.isNewIssueFieldsFillingState()) {
-                //asyncEventBus.post(new )
+                asyncEventBus.post(new NewIssueFieldValueMessageEvent(chatMessageEvent, chatState.getIssueCreationDto(), chatState.getCurrentFillingFieldNum()));
                 return;
             }
         }
