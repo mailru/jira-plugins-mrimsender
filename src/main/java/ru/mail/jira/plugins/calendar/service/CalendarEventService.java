@@ -548,10 +548,16 @@ public class CalendarEventService {
         event.setColor(calendar.getColor());
         event.setAllDay(isAllDay);
         event.setIssueTypeImgUrl(issue.getIssueType().getIconUrl());
+
+        if (issue.getPriority() != null) {
+            event.setPriorityImgUrl(issue.getPriority().getIconUrl());
+        }
+
         if (calendar.isShowIssueStatus()) {
             event.setStatus(issue.getStatus().getName());
             event.setStatusColor(issue.getStatus().getStatusCategory().getColorName());
         }
+
         event.setType(EventDto.Type.ISSUE);
         event.setOriginalEstimate(originalEstimate != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(originalEstimate) : null);
         event.setTimeSpent(timeSpent != null ? ComponentAccessor.getJiraDurationUtils().getFormattedDuration(timeSpent) : null);
