@@ -68,7 +68,7 @@ public class ChatCommandListener {
         ApplicationUser currentUser = userData.getUserByMrimLogin(showMenuEvent.getUserId());
         if (currentUser != null) {
             Locale locale = localeManager.getLocaleFor(currentUser);
-            icqApiClient.sendMessageText(showMenuEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.mainMenu.text"), messageFormatter.getMenuButtons(locale));
+            icqApiClient.sendMessageText(showMenuEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.mainMenu.text"), messageFormatter.getMenuButtons(currentUser));
         }
         log.debug("JiraMessageQueueProcessor showDefaultMenu finished...");
     }
@@ -97,7 +97,7 @@ public class ChatCommandListener {
         ApplicationUser currentUser = userData.getUserByMrimLogin(showDefaultMessageEvent.getUserId());
         if (currentUser != null) {
             Locale locale = localeManager.getLocaleFor(currentUser);
-            icqApiClient.sendMessageText(showDefaultMessageEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.defaultMessage.text"), messageFormatter.getMenuButtons(locale));
+            icqApiClient.sendMessageText(showDefaultMessageEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.defaultMessage.text"), messageFormatter.getMenuButtons(currentUser));
         }
         log.debug("ShowDefaultMessageEvent handling finished");
     }

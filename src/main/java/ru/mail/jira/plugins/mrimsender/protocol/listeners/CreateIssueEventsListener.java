@@ -2,12 +2,13 @@ package ru.mail.jira.plugins.mrimsender.protocol.listeners;
 
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.config.LocaleManager;
+import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.IssueInputParameters;
-import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.OrderableField;
 import com.atlassian.jira.issue.fields.config.manager.IssueTypeSchemeManager;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayout;
+import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenLayoutItem;
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager;
@@ -20,6 +21,7 @@ import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.eventbus.Subscribe;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -70,6 +72,7 @@ public class CreateIssueEventsListener {
     private final FieldLayoutManager fieldLayoutManager;
     private final FieldManager fieldManager;
     private final IssueService issueService;
+    private final JiraAuthenticationContext jiraAuthenticationContext;
 
     public CreateIssueEventsListener(ChatStateMapping chatStateMapping,
                                      IcqApiClient icqApiClient,
@@ -83,7 +86,8 @@ public class CreateIssueEventsListener {
                                      IssueTypeScreenSchemeManager issueTypeScreenSchemeManager,
                                      FieldLayoutManager fieldLayoutManager,
                                      FieldManager fieldManager,
-                                     IssueService issueService) {
+                                     IssueService issueService,
+                                     JiraAuthenticationContext jiraAuthenticationContext) {
         this.chatsStateMap = chatStateMapping.getChatsStateMap();
         this.icqApiClient = icqApiClient;
         this.userData = userData;
@@ -97,6 +101,7 @@ public class CreateIssueEventsListener {
         this.fieldLayoutManager = fieldLayoutManager;
         this.fieldManager = fieldManager;
         this.issueService = issueService;
+        this.jiraAuthenticationContext = jiraAuthenticationContext;
     }
 
 
@@ -173,29 +178,38 @@ public class CreateIssueEventsListener {
     public void onSelectedProjectMessageEvent(SelectedProjectMessageEvent selectedProjectMessageEvent) throws IOException, UnirestException {
         IssueCreationDto currentIssueCreationDto = selectedProjectMessageEvent.getIssueCreationDto();
         ApplicationUser currentUser = userData.getUserByMrimLogin(selectedProjectMessageEvent.getUserId());
-        if (currentUser != null) {
-            String chatId = selectedProjectMessageEvent.getChatId();
-            Locale locale = localeManager.getLocaleFor(currentUser);
-            String selectedProjectKey = selectedProjectMessageEvent.getSelectedProjectKey();
-            Project selectedProject = projectManager.getProjectByCurrentKey(selectedProjectKey);
-            if (selectedProject != null && permissionManager.hasPermission(ProjectPermissions.CREATE_ISSUES, selectedProject, currentUser)) {
-                // Project selected, sending user select IssueType message
-                currentIssueCreationDto.setProjectId(selectedProject.getId());
-                List<IssueType> projectIssueTypes = issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(selectedProject)
-                                                                          .stream()
-                                                                          .sorted()
-                                                                          .collect(Collectors.toList());
-                icqApiClient.sendMessageText(chatId,
-                                             messageFormatter.createSelectIssueTypeMessage(locale,
-                                                                                           projectIssueTypes.stream().limit(LIST_PAGE_SIZE).collect(Collectors.toList()),
-                                                                                           0,
-                                                                                           projectIssueTypes.size()),
-                                             messageFormatter.getSelectIssueTypeMessageButtons(locale, false, projectIssueTypes.size() > LIST_PAGE_SIZE));
-                chatsStateMap.put(chatId, ChatState.buildIssueTypeSelectWaitingState(0, currentIssueCreationDto));
-            } else {
-                // TODO project key is not valid or user don't have permissions ... maybe suggest enter project key again ???
-            }
+        if (currentUser == null) {
+            // TODO unauthorized
         }
+
+        String chatId = selectedProjectMessageEvent.getChatId();
+        Locale locale = localeManager.getLocaleFor(currentUser);
+        String selectedProjectKey = selectedProjectMessageEvent.getSelectedProjectKey();
+        Project selectedProject = projectManager.getProjectByCurrentKeyIgnoreCase(selectedProjectKey);
+        if (selectedProject == null) {
+            // inserted project key is not valid
+            icqApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectedProjectNotValid"));
+            return;
+        }
+        if (!permissionManager.hasPermission(ProjectPermissions.CREATE_ISSUES, selectedProject, currentUser)) {
+            // user don't have enough permissions to create issues in selected project
+            icqApiClient.sendMessageText(chatId, i18nResolver.getRawText("ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.notEnoughPermissions"));
+            return;
+        }
+
+        // Project selected, sending user select IssueType message
+        currentIssueCreationDto.setProjectId(selectedProject.getId());
+        List<IssueType> projectIssueTypes = issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(selectedProject)
+                                                                  .stream()
+                                                                  .sorted()
+                                                                  .collect(Collectors.toList());
+        icqApiClient.sendMessageText(chatId,
+                                     messageFormatter.createSelectIssueTypeMessage(locale,
+                                                                                   projectIssueTypes.stream().limit(LIST_PAGE_SIZE).collect(Collectors.toList()),
+                                                                                   0,
+                                                                                   projectIssueTypes.size()),
+                                     messageFormatter.getSelectIssueTypeMessageButtons(locale, false, projectIssueTypes.size() > LIST_PAGE_SIZE));
+        chatsStateMap.put(chatId, ChatState.buildIssueTypeSelectWaitingState(0, currentIssueCreationDto));
     }
 
     @Subscribe
@@ -260,56 +274,77 @@ public class CreateIssueEventsListener {
     void onSelectedIssueTypeMessageEvent(SelectedIssueTypeMessageEvent selectedIssueTypeMessageEvent) throws IOException, UnirestException {
         IssueCreationDto currentIssueCreationDto = selectedIssueTypeMessageEvent.getIssueCreationDto();
         ApplicationUser currentUser = userData.getUserByMrimLogin(selectedIssueTypeMessageEvent.getUserId());
-        if (currentUser != null) {
-            Project selectedProject = projectManager.getProjectObj(currentIssueCreationDto.getProjectId());
-            String selectedIssueTypePosition = selectedIssueTypeMessageEvent.getSelectedIssueTypePosition();
-            String chatId = selectedIssueTypeMessageEvent.getChatId();
-            Locale locale = localeManager.getLocaleFor(currentUser);
+        if (currentUser == null) {
+            // TODO unauthorized
+        }
+        Project selectedProject = projectManager.getProjectObj(currentIssueCreationDto.getProjectId());
+        String selectedIssueTypePosition = selectedIssueTypeMessageEvent.getSelectedIssueTypePosition();
+        String chatId = selectedIssueTypeMessageEvent.getChatId();
+        Locale locale = localeManager.getLocaleFor(currentUser);
 
-            if (selectedProject == null) {
-                // TODO selectedProject is not valid
-                return;
-            }
+        if (!StringUtils.isNumeric(selectedIssueTypePosition) || Integer.parseInt(selectedIssueTypePosition) <= 0) {
+            // issueType number is not valid...
+            icqApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectedIssueTypeNotValid"));
+            return;
+        }
 
-            if (!StringUtils.isNumeric(selectedIssueTypePosition)) {
-                // TODO issueType number is not valid...
-                return;
-            }
+        Optional<IssueType> maybeCorrectIssueType = issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(selectedProject)
+                                                                          .stream()
+                                                                          .sorted()
+                                                                          .skip(Integer.parseInt(selectedIssueTypePosition) - 1)
+                                                                          .findFirst();
+        if (!maybeCorrectIssueType.isPresent()) {
+            // inserted issue type position isn't correct
+            icqApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectedIssueTypeNotValid"));
+            return;
+        }
+        IssueType selectedIssueType = maybeCorrectIssueType.get();
 
-            Optional<IssueType> maybeSelectedIssueType = issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(selectedProject)
-                                                                               .stream()
-                                                                               .sorted()
-                                                                               .skip(Integer.parseInt(selectedIssueTypePosition) - 1)
-                                                                               .findFirst();
-            if (maybeSelectedIssueType.isPresent()) {
-                IssueType selectedIssueType = maybeSelectedIssueType.get();
+        // project and issueType fields should be excluded from needs to be filled fields
+        Set<String> excludedFieldIds = Stream.of(fieldManager.getProjectField().getId(), fieldManager.getIssueTypeField().getId()).collect(Collectors.toSet());
+        LinkedHashMap<OrderableField, Optional<String>> issueCreationRequiredFieldsValues = getIssueCreationRequiredFieldsValues(selectedProject, selectedIssueType, excludedFieldIds);
 
-                // project and issueType fields should be excluded from needs to be filled fields
-                Set<String> excludedFieldIds = Stream.of(fieldManager.getProjectField(), fieldManager.getIssueTypeField()).map(Field::getId).collect(Collectors.toSet());
-                LinkedHashMap<OrderableField, Optional<String>> issueCreationRequiredFieldsValues = getIssueCreationRequiredFields(selectedProject, selectedIssueType, excludedFieldIds);
+        // We don't need allow user to fill reporter field
+        issueCreationRequiredFieldsValues.remove(fieldManager.getOrderableField(SystemSearchConstants.forReporter().getFieldId()));
 
-                // We don't need allow user to fill reporter field
-                issueCreationRequiredFieldsValues.remove(fieldManager.getOrderableField(SystemSearchConstants.forReporter().getFieldId()));
+        // setting selected IssueType and mapped requiredIssueCreationFields
+        currentIssueCreationDto.setIssueTypeId(selectedIssueType.getId());
+        currentIssueCreationDto.setRequiredIssueCreationFieldValues(issueCreationRequiredFieldsValues);
 
+        // order saved here because LinkedHashMap keySet() method  in reality returns LinkedHashSet
+        List<OrderableField> requiredFields = new ArrayList<>(issueCreationRequiredFieldsValues.keySet());
+        List<OrderableField> requiredCustomFields = requiredFields.stream().filter(field -> fieldManager.isCustomFieldId(field.getId())).collect(Collectors.toList());
 
-                // setting selected IssueType and mapped requiredIssueCreationFields
-                currentIssueCreationDto.setIssueTypeId(selectedIssueType.getId());
-                icqApiClient.sendMessageText(chatId, "selected issue type id = " + selectedIssueType.getId());
+        if (!requiredCustomFields.isEmpty()) {
+            // send user message that we can't create issue with required customFields
+            icqApiClient.sendMessageText(chatId,
+                                         String.join("\n", i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.requiredCFError"), messageFormatter.stringifyFieldsCollection(locale, requiredCustomFields)));
+            return;
+        }
 
-                currentIssueCreationDto.setRequiredIssueCreationFieldValues(issueCreationRequiredFieldsValues);
+        if (!requiredFields.isEmpty()) {
+            // here sending new issue filling fields messsage to user
+            OrderableField currentField = requiredFields.get(0);
+            icqApiClient.sendMessageText(chatId, messageFormatter.createInsertFieldMessage(locale, currentField, currentIssueCreationDto));
+            chatsStateMap.put(chatId, ChatState.buildNewIssueFieldsFillingState(0, currentIssueCreationDto));
+        } else {
+            // well, all required issue fields are filled, then just create issue
 
-                // order saved here because LinkedHashMap keySet() method  in reality returns LinkedHashSet
-                List<OrderableField> requiredFields = new ArrayList<>(issueCreationRequiredFieldsValues.keySet());
-                if (!requiredFields.isEmpty()) {
-                    // here sending new issue filling fields messsage to user
-                    OrderableField currentField = requiredFields.get(0);
-                    icqApiClient.sendMessageText(chatId, messageFormatter.createInsertFieldMessage(locale, currentField, currentIssueCreationDto));
-                    chatsStateMap.put(chatId, ChatState.buildNewIssueFieldsFillingState(0, currentIssueCreationDto));
-                } else {
-                    // TODO there is no more required fields in this project issue type
+            IssueService.CreateValidationResult issueValidationResult = validateIssueWithGivenFields(currentUser, currentIssueCreationDto);
+            if (issueValidationResult.isValid()) {
+                JiraThreadLocalUtils.preCall();
+                try {
+                    issueService.create(currentUser, issueValidationResult);
+                    icqApiClient.sendMessageText(chatId, "Congratulations, issue was created =)");
+                } finally {
+                    JiraThreadLocalUtils.postCall();
                 }
+            } else {
+                icqApiClient.sendMessageText(chatId, String.join("\n",
+                                                                 i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.validationError"),
+                                                                 messageFormatter.stringifyMap(issueValidationResult.getErrorCollection().getErrors()),
+                                                                 messageFormatter.stringifyCollection(locale, issueValidationResult.getErrorCollection().getErrorMessages())));
             }
-
         }
     }
 
@@ -327,9 +362,10 @@ public class CreateIssueEventsListener {
         Integer nextFieldNum = currentFieldNum + 1;
         String currentFieldValueStr = newIssueFieldValueMessageEvent.getFieldValue();
         List<OrderableField> requiredFields = new ArrayList<>(currentIssueCreationDto.getRequiredIssueCreationFieldValues().keySet());
-        currentIssueCreationDto.getRequiredIssueCreationFieldValues().put(requiredFields.get(currentFieldNum), Optional.ofNullable(currentFieldValueStr));
 
-        icqApiClient.sendMessageText(chatId, "CurrentUser = " + currentUser.getDisplayName());
+        // setting new field string value
+        currentIssueCreationDto.getRequiredIssueCreationFieldValues()
+                               .put(requiredFields.get(currentFieldNum), Optional.ofNullable(currentFieldValueStr));
 
 
         if (requiredFields.size() > nextFieldNum) {
@@ -337,19 +373,28 @@ public class CreateIssueEventsListener {
             icqApiClient.sendMessageText(chatId, messageFormatter.createInsertFieldMessage(locale, nextField, currentIssueCreationDto));
             chatsStateMap.put(chatId, ChatState.buildNewIssueFieldsFillingState(nextFieldNum, currentIssueCreationDto));
         } else {
-            // then user filled all new issue fields which are required
-            IssueService.CreateValidationResult issueValidationResult = validateIssueWithGivenFields(currentUser, currentIssueCreationDto);
-            if (issueValidationResult.isValid()) {
-                issueService.create(currentUser, issueValidationResult);
-                icqApiClient.sendMessageText(chatId, "Congratulations, issue was created =)");
-            } else {
-                icqApiClient.sendMessageText(chatId, messageFormatter.stringifyMap(issueValidationResult.getErrorCollection().getErrors()));
-                icqApiClient.sendMessageText(chatId, String.join("\n", "Sorry sth went wrong: ", messageFormatter.stringifyCollection(locale, issueValidationResult.getErrorCollection().getErrorMessages())));
+            JiraThreadLocalUtils.preCall();
+            try {
+                // then user filled all new issue fields which are required
+
+                IssueService.CreateValidationResult issueValidationResult = validateIssueWithGivenFields(currentUser, currentIssueCreationDto);
+                if (issueValidationResult.isValid()) {
+                    issueService.create(currentUser, issueValidationResult);
+                    icqApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.issueCreated"));
+                } else {
+                    icqApiClient.sendMessageText(chatId, String.join("\n",
+                                                                     i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.validationError"),
+                                                                     messageFormatter.stringifyMap(issueValidationResult.getErrorCollection().getErrors()),
+                                                                     messageFormatter.stringifyCollection(locale, issueValidationResult.getErrorCollection().getErrorMessages())));
+                }
+            } finally {
+                JiraThreadLocalUtils.postCall();
             }
+
         }
     }
 
-    private LinkedHashMap<OrderableField, Optional<String>> getIssueCreationRequiredFields(Project project, IssueType issueType, Set<String> excludedFieldIds) {
+    private LinkedHashMap<OrderableField, Optional<String>> getIssueCreationRequiredFieldsValues(Project project, IssueType issueType, Set<String> excludedFieldIds) {
         // getting (selectedProject, selectedIssueType) fields configuration
         FieldLayout fieldLayout = fieldLayoutManager.getFieldLayout(project, issueType.getId());
         // getting (selectedProject, selectedIssueType, selectedIssueOperation) fields screen
@@ -360,7 +405,11 @@ public class CreateIssueEventsListener {
                                            .stream()
                                            .flatMap(tab -> tab.getFieldScreenLayoutItems()
                                                               .stream()
-                                                              .filter(fieldScreenLayoutItem -> fieldLayout.getFieldLayoutItem(fieldScreenLayoutItem.getFieldId()).isRequired())
+                                                              .filter(fieldScreenLayoutItem -> {
+                                                                  String fieldId = fieldScreenLayoutItem.getFieldId();
+                                                                  FieldLayoutItem fieldLayoutItem = fieldLayout.getFieldLayoutItem(fieldId);
+                                                                  return fieldLayoutItem != null && fieldLayoutItem.isRequired() || fieldId.equals(IssueFieldConstants.DESCRIPTION);
+                                                              })
                                                               .filter(layoutItem -> !excludedFieldIds.contains(layoutItem.getFieldId()))
                                                               .map(FieldScreenLayoutItem::getOrderableField))
                                            .collect(Collectors.toMap(Function.identity(),
@@ -371,43 +420,25 @@ public class CreateIssueEventsListener {
 
 
     private IssueService.CreateValidationResult validateIssueWithGivenFields(ApplicationUser currentUser, IssueCreationDto issueCreationDto) {
-        IssueInputParameters issueInputParameters = issueService.newIssueInputParameters(issueCreationDto.getRequiredIssueCreationFieldValues()
-                                                                                                         .entrySet()
-                                                                                                         .stream()
-                                                                                                         .collect(Collectors.toMap((e) -> e.getKey().getId(),
-                                                                                                                                   (e) -> new String[]{e.getValue().orElse("")})));
+        ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+        Long projectId = issueCreationDto.getProjectId();
+        try {
+            jiraAuthenticationContext.setLoggedInUser(currentUser);
+            IssueInputParameters issueInputParameters = issueService.newIssueInputParameters(issueCreationDto.getRequiredIssueCreationFieldValues()
+                                                                                                             .entrySet()
+                                                                                                             .stream()
+                                                                                                             .collect(Collectors.toMap((e) -> e.getKey().getId(),
+                                                                                                                                       (e) -> messageFormatter.mapUserInputStringToFieldValue(projectId, e.getKey(), e.getValue()))));
+            issueInputParameters.setRetainExistingValuesWhenParameterNotProvided(true, true);
 
-        issueInputParameters.setRetainExistingValuesWhenParameterNotProvided(true, true);
+            // manually setting current user as issue reporter and selected ProjectId and IssueTypeId
+            issueInputParameters.setProjectId(issueCreationDto.getProjectId());
+            issueInputParameters.setIssueTypeId(issueCreationDto.getIssueTypeId());
+            issueInputParameters.setReporterId(currentUser.getName());
 
-        // manually setting current user as issue reporter and selected ProjectId and IssueTypeId
-        issueInputParameters.setProjectId(issueCreationDto.getProjectId())
-                            .setIssueTypeId(issueCreationDto.getIssueTypeId())
-                            .setReporterId(currentUser.getId().toString());
-
-           /* switch (field.getId()) {
-                case IssueFieldConstants.PRIORITY:
-
-                    issueInputParameters.setPriorityId(value.orElse(""));
-                    issueInputParameters.setTimeSpent();
-                    issueInputParameters.setSummary();
-                    issueInputParameters.setStatusId();
-                    issueInputParameters.setSecurityLevelId();
-                    issueInputParameters.setResolutionId();
-                    issueInputParameters.setResolutionDate();
-                    issueInputParameters.setOriginalAndRemainingEstimate();
-                    issueInputParameters.setEnvironment();
-                    issueInputParameters.setFixVersionIds();
-                    issueInputParameters.setComment();
-                    issueInputParameters.setAssigneeId();
-                    issueInputParameters.setDueDate();
-                    issueInputParameters.setComponentIds();
-                    issueInputParameters.setHistoryMetadata();
-                    issueInputParameters.setDescription();
-                    issueInputParameters.setFieldValuesHolder();
-
-            }*/
-
-
-        return issueService.validateCreate(currentUser, issueInputParameters);
+            return issueService.validateCreate(currentUser, issueInputParameters);
+        } finally {
+            jiraAuthenticationContext.setLoggedInUser(user);
+        }
     }
 }
