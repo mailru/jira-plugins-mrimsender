@@ -12,5 +12,5 @@ import java.util.Optional;
 public class IssueCreationDto {
     private Long projectId;
     private String issueTypeId;
-    private Map<OrderableField, Optional<String>> requiredIssueCreationFieldValues;
+    private Map<OrderableField, String> requiredIssueCreationFieldValues;
 }

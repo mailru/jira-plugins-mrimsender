@@ -1,10 +1,12 @@
 package ru.mail.jira.plugins.mrimsender.protocol;
 
 import com.atlassian.query.Query;
+import lombok.Builder;
 import lombok.Getter;
 
 
 @Getter
+@Builder
 public class ChatState {
     private final boolean isWaitingForComment;
     private final boolean isWaitingForIssueKey;
@@ -19,138 +21,45 @@ public class ChatState {
     private final Integer currentFillingFieldNum;
     private final IssueCreationDto issueCreationDto;
 
-    private ChatState(boolean isWaitingForComment,
-                      boolean isWaitingForIssueKey,
-                      boolean isIssueSearchResultsShowing,
-                      boolean isWaitingForJqlClause,
-                      boolean isWaitingForProjectSelect,
-                      boolean isWaitingForIssueTypeSelect,
-                      boolean isNewIssueFieldsFillingState,
-                      String issueKey,
-                      Query currentSearchJqlClause,
-                      Integer currentSelectListPage,
-                      Integer currentFillingFieldNum,
-                      IssueCreationDto issueCreationDto) {
-        this.isWaitingForComment = isWaitingForComment;
-        this.isWaitingForIssueKey = isWaitingForIssueKey;
-        this.isIssueSearchResultsShowing = isIssueSearchResultsShowing;
-        this.isWaitingForJqlClause = isWaitingForJqlClause;
-        this.isWaitingForProjectSelect = isWaitingForProjectSelect;
-        this.isWaitingForIssueTypeSelect = isWaitingForIssueTypeSelect;
-        this.isNewIssueFieldsFillingState = isNewIssueFieldsFillingState;
-        this.issueKey = issueKey;
-        this.currentSearchJqlClause = currentSearchJqlClause;
-        this.currentSelectListPage = currentSelectListPage;
-        this.currentFillingFieldNum = currentFillingFieldNum;
-        this.issueCreationDto = issueCreationDto;
-    }
-
-    private final static ChatState issueKeyWaitingState = new ChatState(false,
-                                                                        true,
-                                                                        false,
-                                                                        false,
-                                                                        false,
-                                                                        false,
-                                                                        false,
-                                                                        null,
-                                                                        null,
-                                                                        null,
-                                                                        null,
-                                                                        null);
-    private final static ChatState jqlClauseWaitingState = new ChatState(false,
-                                                                         false,
-                                                                         false,
-                                                                         true,
-                                                                         false,
-                                                                         false,
-                                                                         false,
-                                                                         null,
-                                                                         null,
-                                                                         null,
-                                                                         null,
-                                                                         null);
-
-    public static ChatState jqlClauseWaitingState() {
-        return jqlClauseWaitingState;
-    }
-
-    public static ChatState issueKeyWaitingState() {
-        return issueKeyWaitingState;
-    }
+    public static final ChatState issueKeyWaitingState = builder().isWaitingForIssueKey(true).build();
+    public static final ChatState jqlClauseWaitingState = builder().isWaitingForJqlClause(true).build();
 
     public static ChatState buildCommentWaitingState(String commentedIssueKey) {
-        return new ChatState(true,
-                             false,
-                             false,
-                             false,
-                             false,
-                             false,
-                             false,
-                             commentedIssueKey,
-                             null,
-                             null,
-                             null,
-                             null);
+        return builder()
+                .isWaitingForComment(true)
+                .issueKey(commentedIssueKey)
+                .build();
     }
 
     public static ChatState buildIssueSearchResultsWatchingState(Query currentSearchClause, Integer currentIssuesListPage) {
-        return new ChatState(false,
-                             false,
-                             true,
-                             false,
-                             false,
-                             false,
-                             false,
-                             null,
-                             currentSearchClause,
-                             currentIssuesListPage,
-                             null,
-                             null);
+        return builder()
+                .isIssueSearchResultsShowing(true)
+                .currentSearchJqlClause(currentSearchClause)
+                .currentSelectListPage(currentIssuesListPage)
+                .build();
     }
 
     public static ChatState buildProjectSelectWaitingState(Integer currentProjectsListPage, IssueCreationDto issueCreationDto) {
-        return new ChatState(false,
-                             false,
-                             false,
-                             false,
-                             true,
-                             false,
-                             false,
-                             null,
-                             null,
-                             currentProjectsListPage,
-                             null,
-                             issueCreationDto);
+        return builder()
+                .isWaitingForProjectSelect(true)
+                .currentSelectListPage(currentProjectsListPage)
+                .issueCreationDto(issueCreationDto)
+                .build();
     }
 
-    public static ChatState buildIssueTypeSelectWaitingState(Integer currentIssueTypesListPage, IssueCreationDto issueCreationDto) {
-        return new ChatState(false,
-                             false,
-                             false,
-                             false,
-                             false,
-                             true,
-                             false,
-                             null,
-                             null,
-                             currentIssueTypesListPage,
-                             null,
-                             issueCreationDto);
+    public static ChatState  buildIssueTypeSelectWaitingState(Integer currentIssueTypesListPage, IssueCreationDto issueCreationDto) {
+        return builder()
+                .isWaitingForIssueTypeSelect(true)
+                .currentSelectListPage(currentIssueTypesListPage)
+                .issueCreationDto(issueCreationDto)
+                .build();
     }
 
     public static ChatState buildNewIssueFieldsFillingState(Integer currentFillingFieldNum, IssueCreationDto issueCreationDto) {
-        return new ChatState(false,
-                             false,
-                             false,
-                             false,
-                             false,
-                             false,
-                             true,
-                             null,
-                             null,
-                             null,
-                             currentFillingFieldNum,
-                             issueCreationDto);
+        return builder()
+                .isNewIssueFieldsFillingState(true)
+                .currentFillingFieldNum(currentFillingFieldNum)
+                .issueCreationDto(issueCreationDto)
+                .build();
     }
-
 }

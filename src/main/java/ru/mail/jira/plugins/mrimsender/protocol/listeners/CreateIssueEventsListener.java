@@ -302,7 +302,7 @@ public class CreateIssueEventsListener {
 
         // project and issueType fields should be excluded from needs to be filled fields
         Set<String> excludedFieldIds = Stream.of(fieldManager.getProjectField().getId(), fieldManager.getIssueTypeField().getId()).collect(Collectors.toSet());
-        LinkedHashMap<OrderableField, Optional<String>> issueCreationRequiredFieldsValues = getIssueCreationRequiredFieldsValues(selectedProject, selectedIssueType, excludedFieldIds);
+        LinkedHashMap<OrderableField, String> issueCreationRequiredFieldsValues = getIssueCreationRequiredFieldsValues(selectedProject, selectedIssueType, excludedFieldIds);
 
         // We don't need allow user to fill reporter field
         issueCreationRequiredFieldsValues.remove(fieldManager.getOrderableField(SystemSearchConstants.forReporter().getFieldId()));
@@ -365,7 +365,7 @@ public class CreateIssueEventsListener {
 
         // setting new field string value
         currentIssueCreationDto.getRequiredIssueCreationFieldValues()
-                               .put(requiredFields.get(currentFieldNum), Optional.ofNullable(currentFieldValueStr));
+                               .put(requiredFields.get(currentFieldNum), currentFieldValueStr);
 
 
         if (requiredFields.size() > nextFieldNum) {
@@ -394,7 +394,7 @@ public class CreateIssueEventsListener {
         }
     }
 
-    private LinkedHashMap<OrderableField, Optional<String>> getIssueCreationRequiredFieldsValues(Project project, IssueType issueType, Set<String> excludedFieldIds) {
+    private LinkedHashMap<OrderableField, String> getIssueCreationRequiredFieldsValues(Project project, IssueType issueType, Set<String> excludedFieldIds) {
         // getting (selectedProject, selectedIssueType) fields configuration
         FieldLayout fieldLayout = fieldLayoutManager.getFieldLayout(project, issueType.getId());
         // getting (selectedProject, selectedIssueType, selectedIssueOperation) fields screen
@@ -413,7 +413,7 @@ public class CreateIssueEventsListener {
                                                               .filter(layoutItem -> !excludedFieldIds.contains(layoutItem.getFieldId()))
                                                               .map(FieldScreenLayoutItem::getOrderableField))
                                            .collect(Collectors.toMap(Function.identity(),
-                                                                     field -> Optional.empty(),
+                                                                     (field) -> "",
                                                                      (v1, v2) -> v1,
                                                                      LinkedHashMap::new));
     }

@@ -117,7 +117,7 @@ public class ButtonClickListener {
             String message = i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.searchButton.insertIssueKey.message");
             icqApiClient.answerCallbackQuery(showIssueClickEvent.getQueryId());
             icqApiClient.sendMessageText(showIssueClickEvent.getChatId(), message, messageFormatter.getCancelButton(currentUser));
-            chatsStateMap.put(showIssueClickEvent.getChatId(), ChatState.issueKeyWaitingState());
+            chatsStateMap.put(showIssueClickEvent.getChatId(), ChatState.issueKeyWaitingState);
         }
         log.debug("OnSearchIssueButtonClick event handling finished");
     }
@@ -212,7 +212,7 @@ public class ButtonClickListener {
             Locale locale = localeManager.getLocaleFor(currentUser);
             icqApiClient.answerCallbackQuery(searchByJqlClickEvent.getQueryId());
             icqApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.searchByJqlClauseButton.insertJqlClause.message"));
-            chatsStateMap.put(chatId, ChatState.jqlClauseWaitingState());
+            chatsStateMap.put(chatId, ChatState.jqlClauseWaitingState);
         }
         log.debug("SearchByJqlClickEvent handling finished");
     }

@@ -537,7 +537,7 @@ public class MessageFormatter {
         sj.add(String.join(" ", i18nResolver.getRawText(locale, "Project:"), projectManager.getProjectObj(issueCreationDto.getProjectId()).getName()));
         sj.add(String.join(" ", i18nResolver.getRawText(locale, "IssueType:"), issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()).getNameTranslation(locale.toString())));
         issueCreationDto.getRequiredIssueCreationFieldValues()
-                        .forEach((field, value) -> sj.add(String.join(" : ", i18nResolver.getRawText(locale, field.getNameKey()), value.orElse("-"))));
+                        .forEach((field, value) -> sj.add(String.join(" : ", i18nResolver.getRawText(locale, field.getNameKey()), value.isEmpty() ? "-" : value)));
         return sj.toString();
     }
 
@@ -571,8 +571,8 @@ public class MessageFormatter {
         return false;
     }
 
-    private String[] mapStringToArrayFieldValue(Long projectId, OrderableField field, Optional<String> fieldValue) {
-        List<String> fieldValues = Arrays.stream(fieldValue.orElse("").split(","))
+    private String[] mapStringToArrayFieldValue(Long projectId, OrderableField field, String fieldValue) {
+        List<String> fieldValues = Arrays.stream(fieldValue.split(","))
                                          .map(String::trim)
                                          .collect(Collectors.toList());
 
@@ -608,12 +608,12 @@ public class MessageFormatter {
         return fieldValues.toArray(new String[0]);
     }
 
-    private String[] mapStringToSingleFieldValue(Long projectId, OrderableField field, Optional<String> fieldValue) {
+    private String[] mapStringToSingleFieldValue(Long projectId, OrderableField field, String fieldValue) {
         // no preprocessing for description field needed
         if (field.getId().equals(IssueFieldConstants.DESCRIPTION))
-            return new String[]{fieldValue.orElse("")};
+            return new String[]{fieldValue};
 
-        List<String> fieldValues = Arrays.stream(fieldValue.orElse("").split(","))
+        List<String> fieldValues = Arrays.stream(fieldValue.split(","))
                                          .map(String::trim)
                                          .collect(Collectors.toList());
 
@@ -681,7 +681,7 @@ public class MessageFormatter {
         return fieldValues.toArray(new String[0]);
     }
 
-    public String[] mapUserInputStringToFieldValue(Long projectId, OrderableField field, Optional<String> fieldValue) {
+    public String[] mapUserInputStringToFieldValue(Long projectId, OrderableField field, String fieldValue) {
         if (isArrayLikeField(field)) {
             return mapStringToArrayFieldValue(projectId, field, fieldValue);
         }
