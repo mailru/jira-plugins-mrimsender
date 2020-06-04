@@ -6,7 +6,7 @@ import ru.mail.jira.plugins.mrimsender.icq.dto.ChatType;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
 
 @Getter
-public class ShowHelpEvent implements Event {
+public class ShowHelpEvent {
     private final String chatId;
     private final String userId;
     private final ChatType chatType;

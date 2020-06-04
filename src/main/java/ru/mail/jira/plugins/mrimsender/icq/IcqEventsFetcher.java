@@ -8,7 +8,8 @@ import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.mrimsender.icq.dto.FetchResponseDto;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.mrimsender.icq.dto.events.NewMessageEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.IcqEventsListener;
+import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ButtonClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.listeners.IcqEventsListener;
 import ru.mail.jira.plugins.mrimsender.protocol.events.*;
 
 import java.util.concurrent.Executors;
@@ -66,7 +67,6 @@ public class IcqEventsFetcher {
                                 } else if (event instanceof CallbackQueryEvent) {
                                     eventId.set(event.getEventId());
                                     icqEventsListener.publishEvent(new ButtonClickEvent((CallbackQueryEvent)event));
-
                                 } else {
                                     eventId.set(event.getEventId());
                                 }

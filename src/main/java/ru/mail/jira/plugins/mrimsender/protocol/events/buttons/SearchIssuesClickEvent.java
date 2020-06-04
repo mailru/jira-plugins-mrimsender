@@ -1,6 +1,8 @@
-package ru.mail.jira.plugins.mrimsender.protocol.events;
+package ru.mail.jira.plugins.mrimsender.protocol.events.buttons;
 
 import lombok.Getter;
+import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
+import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ButtonClickEvent;
 
 /**
  * As a result of this event handled user should get next formatted message
@@ -15,8 +17,7 @@ import lombok.Getter;
  *  ----------------------------------------------------
  */
 @Getter
-public class SearchIssuesClickEvent implements Event {
-    // TODO когда будет поиск по jql, переделать на одно поле String jqlClause
+public class SearchIssuesClickEvent {
     private final String jqlClause;
     private final String chatId;
     private final String userId;

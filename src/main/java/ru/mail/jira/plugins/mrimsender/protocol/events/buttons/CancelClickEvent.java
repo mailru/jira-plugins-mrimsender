@@ -1,9 +1,10 @@
-package ru.mail.jira.plugins.mrimsender.protocol.events;
+package ru.mail.jira.plugins.mrimsender.protocol.events.buttons;
 
 import lombok.Getter;
+import ru.mail.jira.plugins.mrimsender.protocol.events.Event;
 
 @Getter
-public class CancelClickEvent implements Event {
+public class CancelClickEvent {
     private final String queryId;
     private final String userId;
     private final String chatId;
