@@ -57,6 +57,7 @@ public class IcqEventsFetcher {
             HttpResponse<FetchResponseDto> httpResponse = icqApiClient.getEvents(lastEventId, 15);
             if (httpResponse.getStatus() == 200) {
                 log.debug("IcqEventsFetcher handle icq events started ...");
+                // TODO зачем тут атомик ? forEach же не параллельный ...
                 AtomicLong eventId = new AtomicLong(lastEventId);
                 httpResponse.getBody()
                             .getEvents()
@@ -91,5 +92,9 @@ public class IcqEventsFetcher {
 
     public AtomicBoolean getIsRunning() {
         return this.isRunning;
+    }
+
+    public void resetLastEventId() {
+        this.lastEventId = 0;
     }
 }
