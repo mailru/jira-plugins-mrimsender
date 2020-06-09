@@ -8,6 +8,7 @@ import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.permission.ProjectPermissions;
+import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.MessageSet;
@@ -44,10 +45,9 @@ import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.CancelClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.CommentIssueClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.CreateIssueClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.NextIssueTypesPageClickEvent;
+import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.IssueTypeButtonClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.NextIssuesPageClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.NextProjectsPageClickEvent;
-import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.PrevIssueTypesPageClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.PrevIssuesPageClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.PrevProjectsPageClickEvent;
 import ru.mail.jira.plugins.mrimsender.protocol.events.buttons.SearchByJqlClickEvent;
@@ -80,6 +80,7 @@ public class IcqEventsListener {
     private final PermissionManager permissionManager;
     private final CommentManager commentManager;
     private final SearchService searchService;
+    private final JiraAuthenticationContext jiraAuthenticationContext;
 
     public IcqEventsListener(ChatStateMapping chatStateMapping,
                              IcqApiClient icqApiClient,
@@ -93,7 +94,8 @@ public class IcqEventsListener {
                              SearchService searchService,
                              ChatCommandListener chatCommandListener,
                              ButtonClickListener buttonClickListener,
-                             CreateIssueEventsListener createIssueEventsListener) {
+                             CreateIssueEventsListener createIssueEventsListener,
+                             JiraAuthenticationContext jiraAuthenticationContext) {
         this.chatsStateMap = chatStateMapping.getChatsStateMap();
         this.asyncEventBus = new AsyncEventBus(executorService, (exception, context) -> log.error(String.format("Exception occurred in subscriber = %s", context.getSubscriber().toString()), exception));
         this.asyncEventBus.register(this);
@@ -109,6 +111,7 @@ public class IcqEventsListener {
         this.permissionManager = permissionManager;
         this.commentManager = commentManager;
         this.searchService = searchService;
+        this.jiraAuthenticationContext = jiraAuthenticationContext;
     }
 
     public void publishEvent(Event event) {
@@ -200,12 +203,8 @@ public class IcqEventsListener {
                 }
             }
             if (chatState.isWaitingForIssueTypeSelect()) {
-                if (buttonPrefix.equals("nextIssueTypeListPage")) {
-                    asyncEventBus.post(new NextIssueTypesPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getIssueCreationDto()));
-                    return;
-                }
-                if (buttonPrefix.equals("prevIssueTypeListPage")) {
-                    asyncEventBus.post(new PrevIssueTypesPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getIssueCreationDto()));
+                if (buttonPrefix.equals("selectIssueType")) {
+                    asyncEventBus.post(new IssueTypeButtonClickEvent(buttonClickEvent, chatState.getIssueCreationDto()));
                     return;
                 }
             }
@@ -281,17 +280,23 @@ public class IcqEventsListener {
     public void handleNewIssueKeyMessageEvent(IssueKeyMessageEvent issueKeyMessageEvent) throws IOException, UnirestException {
         log.debug("NewIssueKeyMessageEvent handling started");
         ApplicationUser currentUser = userData.getUserByMrimLogin(issueKeyMessageEvent.getUserId());
-        Issue currentIssue = issueManager.getIssueByCurrentKey(issueKeyMessageEvent.getIssueKey());
-        if (currentUser != null && currentIssue != null) {
-            if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, currentIssue, currentUser)) {
-                icqApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), messageFormatter.createIssueSummary(currentIssue, currentUser), messageFormatter.getIssueButtons(currentIssue.getKey(), currentUser));
-                log.debug("ViewIssueCommand message sent...");
-            } else {
-                icqApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"));
-                log.debug("ViewIssueCommand no permissions message sent...");
+        ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
+        try {
+            jiraAuthenticationContext.setLoggedInUser(currentUser);
+            Issue currentIssue = issueManager.getIssueByCurrentKey(issueKeyMessageEvent.getIssueKey());
+            if (currentUser != null && currentIssue != null) {
+                if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, currentIssue, currentUser)) {
+                    icqApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), messageFormatter.createIssueSummary(currentIssue, currentUser), messageFormatter.getIssueButtons(currentIssue.getKey(), currentUser));
+                    log.debug("ViewIssueCommand message sent...");
+                } else {
+                    icqApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"));
+                    log.debug("ViewIssueCommand no permissions message sent...");
+                }
+            } else if (currentUser != null) {
+                icqApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.icqEventsListener.newIssueKeyMessage.error.issueNotFound"));
             }
-        } else if (currentUser != null) {
-            icqApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.icqEventsListener.newIssueKeyMessage.error.issueNotFound"));
+        } finally {
+            jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
         }
         log.debug("NewIssueKeyMessageEvent handling finished");
     }

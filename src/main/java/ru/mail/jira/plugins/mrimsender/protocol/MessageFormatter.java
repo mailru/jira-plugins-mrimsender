@@ -21,6 +21,7 @@ import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.IssueLinksSystemField;
 import com.atlassian.jira.issue.fields.NavigableField;
 import com.atlassian.jira.issue.fields.OrderableField;
+import com.atlassian.jira.issue.fields.StatusSystemField;
 import com.atlassian.jira.issue.fields.screen.FieldScreen;
 import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
@@ -325,6 +326,10 @@ public class MessageFormatter {
         sb.append(issue.getKey()).append("   ").append(issue.getSummary()).append("\n");
         String issueLink = String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
         sb.append(issueLink);
+
+        // append status field because it doesn't exist in formatSystemFields string
+        appendField(sb,i18nHelper.getText(fieldManager.getField(IssueFieldConstants.STATUS).getNameKey()), issue.getStatus().getNameTranslation(i18nHelper), false);
+
         sb.append(formatSystemFields(user, issue, true));
         FieldScreenScheme fieldScreenScheme = issueTypeScreenSchemeManager.getFieldScreenScheme(issue);
         FieldScreen fieldScreen = fieldScreenScheme.getFieldScreen(IssueOperations.VIEW_ISSUE_OPERATION);
@@ -511,22 +516,17 @@ public class MessageFormatter {
         return getListButtons(locale, withPrev, withNext, "prevProjectListPage", "nextProjectListPage");
     }
 
-    public String createSelectIssueTypeMessage(Locale locale, List<IssueType> visibleIssueTypes, int pageNumber, int totalIssueTypesNum) {
-        int pageStartIndex = pageNumber * LIST_PAGE_SIZE;
-        StringJoiner sj = new StringJoiner("\n");
-        sj.add(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectIssueType.message"));
-        sj.add(DELIMITER_STR);
-        List<String> formattedIssueTypeList = new ArrayList<>();
-        for (int index = 0; index < visibleIssueTypes.size(); index++) {
-            String strFormattedIssueType = String.join(". ", Integer.toString(pageStartIndex + index + 1), visibleIssueTypes.get(index).getName());
-            formattedIssueTypeList.add(strFormattedIssueType);
-        }
-        sj.add(stringifyPagedCollection(locale, formattedIssueTypeList, pageNumber, totalIssueTypesNum));
-        return sj.toString();
+    public String getSelectIssueTypeMessage(Locale locale) {
+        return i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectIssueType.message");
     }
 
-    public List<List<InlineKeyboardMarkupButton>> getSelectIssueTypeMessageButtons(Locale locale, boolean withPrev, boolean withNext) {
-        return getListButtons(locale, withPrev, withNext, "prevIssueTypeListPage", "nextIssueTypeListPage");
+    public List<List<InlineKeyboardMarkupButton>> getSelectIssueTypeMessageButtons(Collection<IssueType> issueTypes) {
+        List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+        issueTypes.forEach(issueType -> {
+            InlineKeyboardMarkupButton issueTypeButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(issueType.getNameTranslation(i18nHelper), String.join("-", "selectIssueType", issueType.getId()));
+            addRowWithButton(buttons, issueTypeButton);
+        });
+        return buttons;
     }
 
     public String formatIssueCreationDto(Locale locale, IssueCreationDto issueCreationDto) {

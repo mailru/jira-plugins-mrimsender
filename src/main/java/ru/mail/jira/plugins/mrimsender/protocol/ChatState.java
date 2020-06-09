@@ -47,10 +47,9 @@ public class ChatState {
                 .build();
     }
 
-    public static ChatState  buildIssueTypeSelectWaitingState(Integer currentIssueTypesListPage, IssueCreationDto issueCreationDto) {
+    public static ChatState  buildIssueTypeSelectWaitingState(IssueCreationDto issueCreationDto) {
         return builder()
                 .isWaitingForIssueTypeSelect(true)
-                .currentSelectListPage(currentIssueTypesListPage)
                 .issueCreationDto(issueCreationDto)
                 .build();
     }
