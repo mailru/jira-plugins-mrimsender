@@ -317,11 +317,16 @@ public class IcqEventsListener {
                     if (!messageSet.hasAnyErrors()) {
                         PagerFilter<Issue> pagerFilter = new PagerFilter<>(0, LIST_PAGE_SIZE);
                         SearchResults<Issue> searchResults = searchService.search(currentUser, sanitizedJql, pagerFilter);
-                        icqApiClient.sendMessageText(searchIssuesEvent.getChatId(),
-                                                     messageFormatter.stringifyIssueList(locale, searchResults.getResults(), 0, searchResults.getTotal()),
-                                                     messageFormatter.getIssueListButtons(locale, false, searchResults.getTotal() > LIST_PAGE_SIZE));
+                        int totalResultsSize = searchResults.getTotal();
+                        if (totalResultsSize == 0)
+                            icqApiClient.sendMessageText(searchIssuesEvent.getChatId(), i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.searchIssues.emptyResult"));
+                        else {
+                            icqApiClient.sendMessageText(searchIssuesEvent.getChatId(),
+                                                         messageFormatter.stringifyIssueList(locale, searchResults.getResults(), 0, totalResultsSize),
+                                                         messageFormatter.getIssueListButtons(locale, false, totalResultsSize > LIST_PAGE_SIZE));
 
-                        chatsStateMap.put(searchIssuesEvent.getChatId(), ChatState.buildIssueSearchResultsWatchingState(sanitizedJql, 0));
+                            chatsStateMap.put(searchIssuesEvent.getChatId(), ChatState.buildIssueSearchResultsWatchingState(sanitizedJql, 0));
+                        }
                     } else {
                         icqApiClient.sendMessageText(searchIssuesEvent.getChatId(),
                                                      String.join("\n", i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.searchIssues.jqlParseError.text"), messageFormatter.stringifyJqlClauseErrorsMap(messageSet, locale)));
