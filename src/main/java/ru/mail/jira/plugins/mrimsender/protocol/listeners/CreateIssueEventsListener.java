@@ -6,9 +6,9 @@ import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.IssueInputParameters;
 import com.atlassian.jira.issue.fields.CustomField;
+import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.OrderableField;
-import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
 import com.atlassian.jira.issue.fields.config.manager.FieldConfigSchemeManager;
 import com.atlassian.jira.issue.fields.config.manager.IssueTypeSchemeManager;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayout;
@@ -204,13 +204,23 @@ public class CreateIssueEventsListener {
             return;
         }
 
-        // Project selected, sending user select IssueType message
-        currentIssueCreationDto.setProjectId(selectedProject.getId());
-        Collection<IssueType> projectIssueTypes = issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(selectedProject);
-        icqApiClient.sendMessageText(chatId,
-                                     messageFormatter.getSelectIssueTypeMessage(locale),
-                                     messageFormatter.getSelectIssueTypeMessageButtons(projectIssueTypes));
-        chatsStateMap.put(chatId, ChatState.buildIssueTypeSelectWaitingState(currentIssueCreationDto));
+        // need here because messageFormatter.getSelectIssueTypeMessageButtons use authenticationContext for i18nHelper to translate issue types
+        ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
+        try {
+            jiraAuthenticationContext.setLoggedInUser(currentUser);
+            // Project selected, sending user select IssueType message
+            currentIssueCreationDto.setProjectId(selectedProject.getId());
+            Collection<IssueType> projectIssueTypes = issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(selectedProject);
+            icqApiClient.sendMessageText(chatId,
+                                         messageFormatter.getSelectIssueTypeMessage(locale),
+                                         messageFormatter.getSelectIssueTypeMessageButtons(projectIssueTypes));
+            chatsStateMap.put(chatId, ChatState.buildIssueTypeSelectWaitingState(currentIssueCreationDto));
+        }
+        finally {
+            jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
+        }
+
+
     }
 
     @Subscribe
@@ -238,7 +248,7 @@ public class CreateIssueEventsListener {
         Set<String> includedFieldIds = Stream.of(fieldManager.getField(IssueFieldConstants.DESCRIPTION).getId()).collect(Collectors.toSet());
         // project and issueType fields should be excluded no matter required them or not
         Set<String> excludedFieldIds = Stream.of(fieldManager.getProjectField().getId(), fieldManager.getIssueTypeField().getId()).collect(Collectors.toSet());
-        LinkedHashMap<OrderableField, String> issueCreationRequiredFieldsValues = getIssueCreationRequiredFieldsValues(selectedProject, selectedIssueType, includedFieldIds, excludedFieldIds);
+        LinkedHashMap<Field, String> issueCreationRequiredFieldsValues = getIssueCreationRequiredFieldsValues(selectedProject, selectedIssueType, includedFieldIds, excludedFieldIds);
 
         // We don't need allow user to fill reporter field
         issueCreationRequiredFieldsValues.remove(fieldManager.getOrderableField(SystemSearchConstants.forReporter().getFieldId()));
@@ -248,11 +258,11 @@ public class CreateIssueEventsListener {
         currentIssueCreationDto.setRequiredIssueCreationFieldValues(issueCreationRequiredFieldsValues);
 
         // order saved here because LinkedHashMap keySet() method  in reality returns LinkedHashSet
-        List<OrderableField> requiredFields = new ArrayList<>(issueCreationRequiredFieldsValues.keySet());
+        List<Field> requiredFields = new ArrayList<>(issueCreationRequiredFieldsValues.keySet());
 
-        List<OrderableField> requiredCustomFieldsInScope = requiredFields.stream()
-                                                                         .filter(field -> fieldManager.isCustomFieldId(field.getId()))
-                                                                         .collect(Collectors.toList());
+        List<Field> requiredCustomFieldsInScope = requiredFields.stream()
+                                                                .filter(field -> fieldManager.isCustomFieldId(field.getId()))
+                                                                .collect(Collectors.toList());
 
 
         if (!requiredCustomFieldsInScope.isEmpty()) {
@@ -265,7 +275,7 @@ public class CreateIssueEventsListener {
 
         if (!requiredFields.isEmpty()) {
             // here sending new issue filling fields message to user
-            OrderableField currentField = requiredFields.get(0);
+            Field currentField = requiredFields.get(0);
             icqApiClient.answerCallbackQuery(queryId);
             icqApiClient.sendMessageText(chatId, messageFormatter.createInsertFieldMessage(locale, currentField, currentIssueCreationDto));
             chatsStateMap.put(chatId, ChatState.buildNewIssueFieldsFillingState(0, currentIssueCreationDto));
@@ -302,9 +312,9 @@ public class CreateIssueEventsListener {
         Locale locale = localeManager.getLocaleFor(currentUser);
         IssueCreationDto currentIssueCreationDto = newIssueFieldValueMessageEvent.getIssueCreationDto();
         Integer currentFieldNum = newIssueFieldValueMessageEvent.getCurrentFieldNum();
-        Integer nextFieldNum = currentFieldNum + 1;
+        int nextFieldNum = currentFieldNum + 1;
         String currentFieldValueStr = newIssueFieldValueMessageEvent.getFieldValue();
-        List<OrderableField> requiredFields = new ArrayList<>(currentIssueCreationDto.getRequiredIssueCreationFieldValues().keySet());
+        List<Field> requiredFields = new ArrayList<>(currentIssueCreationDto.getRequiredIssueCreationFieldValues().keySet());
 
         // setting new field string value
         currentIssueCreationDto.getRequiredIssueCreationFieldValues()
@@ -312,7 +322,7 @@ public class CreateIssueEventsListener {
 
 
         if (requiredFields.size() > nextFieldNum) {
-            OrderableField nextField = requiredFields.get(nextFieldNum);
+            Field nextField = requiredFields.get(nextFieldNum);
             icqApiClient.sendMessageText(chatId, messageFormatter.createInsertFieldMessage(locale, nextField, currentIssueCreationDto));
             chatsStateMap.put(chatId, ChatState.buildNewIssueFieldsFillingState(nextFieldNum, currentIssueCreationDto));
         } else {
@@ -349,7 +359,7 @@ public class CreateIssueEventsListener {
      * @param excludedFieldIds - fields which must be excluded from result map no matter required them or not
      * @return LinkedHashMap of field and empty string value
      */
-    private LinkedHashMap<OrderableField, String> getIssueCreationRequiredFieldsValues(Project project, IssueType issueType, Set<String> includedFieldIds, Set<String> excludedFieldIds) {
+    private LinkedHashMap<Field, String> getIssueCreationRequiredFieldsValues(Project project, IssueType issueType, Set<String> includedFieldIds, Set<String> excludedFieldIds) {
         // getting (selectedProject, selectedIssueType) fields configuration
         FieldLayout fieldLayout = fieldLayoutManager.getFieldLayout(project, issueType.getId());
         // getting (selectedProject, selectedIssueType, selectedIssueOperation) fields screen
