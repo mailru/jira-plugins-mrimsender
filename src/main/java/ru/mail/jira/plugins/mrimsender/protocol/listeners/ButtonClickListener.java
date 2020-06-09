@@ -136,13 +136,17 @@ public class ButtonClickListener {
                     Query sanitizedJql = searchService.sanitiseSearchQuery(currentUser, jqlQuery);
                     PagerFilter<Issue> pagerFilter = new PagerFilter<>(0, LIST_PAGE_SIZE);
                     SearchResults<Issue> searchResults = searchService.search(currentUser, sanitizedJql, pagerFilter);
-
+                    int totalResultsSize = searchResults.getTotal();
                     icqApiClient.answerCallbackQuery(searchIssuesClickEvent.getQueryId());
-                    icqApiClient.sendMessageText(searchIssuesClickEvent.getChatId(),
-                                                 messageFormatter.stringifyIssueList(locale, searchResults.getResults(), 0, searchResults.getTotal()),
-                                                 messageFormatter.getIssueListButtons(locale, false, searchResults.getTotal() > LIST_PAGE_SIZE));
+                    if (totalResultsSize == 0) {
+                        icqApiClient.sendMessageText(searchIssuesClickEvent.getChatId(), i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.searchIssues.emptyResult"));
+                    } else {
+                        icqApiClient.sendMessageText(searchIssuesClickEvent.getChatId(),
+                                                     messageFormatter.stringifyIssueList(locale, searchResults.getResults(), 0, totalResultsSize),
+                                                     messageFormatter.getIssueListButtons(locale, false, totalResultsSize > LIST_PAGE_SIZE));
 
-                    chatsStateMap.put(searchIssuesClickEvent.getChatId(), ChatState.buildIssueSearchResultsWatchingState(sanitizedJql, 0));
+                        chatsStateMap.put(searchIssuesClickEvent.getChatId(), ChatState.buildIssueSearchResultsWatchingState(sanitizedJql, 0));
+                    }
                 } else {
                     icqApiClient.answerCallbackQuery(searchIssuesClickEvent.getQueryId());
                     icqApiClient.sendMessageText(searchIssuesClickEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.searchIssues.jqlParseError.text"));

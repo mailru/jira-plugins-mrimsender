@@ -20,14 +20,12 @@ import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.IssueLinksSystemField;
 import com.atlassian.jira.issue.fields.NavigableField;
-import com.atlassian.jira.issue.fields.OrderableField;
 import com.atlassian.jira.issue.fields.screen.FieldScreen;
 import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.label.Label;
-import com.atlassian.jira.issue.label.LabelManager;
 import com.atlassian.jira.issue.operation.IssueOperations;
 import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.jira.issue.resolution.Resolution;
@@ -325,6 +323,10 @@ public class MessageFormatter {
         sb.append(issue.getKey()).append("   ").append(issue.getSummary()).append("\n");
         String issueLink = String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
         sb.append(issueLink);
+
+        // append status field because it doesn't exist in formatSystemFields string
+        appendField(sb, i18nHelper.getText(fieldManager.getField(IssueFieldConstants.STATUS).getNameKey()), issue.getStatus().getNameTranslation(i18nHelper), false);
+
         sb.append(formatSystemFields(user, issue, true));
         FieldScreenScheme fieldScreenScheme = issueTypeScreenSchemeManager.getFieldScreenScheme(issue);
         FieldScreen fieldScreen = fieldScreenScheme.getFieldScreen(IssueOperations.VIEW_ISSUE_OPERATION);
@@ -465,6 +467,9 @@ public class MessageFormatter {
     }
 
     public String stringifyPagedCollection(Locale locale, Collection<?> collection, int pageNumber, int total) {
+        if (collection.size() == 0)
+            return "";
+
         StringJoiner sj = new StringJoiner("\n");
 
         //stringify collection
@@ -511,22 +516,17 @@ public class MessageFormatter {
         return getListButtons(locale, withPrev, withNext, "prevProjectListPage", "nextProjectListPage");
     }
 
-    public String createSelectIssueTypeMessage(Locale locale, List<IssueType> visibleIssueTypes, int pageNumber, int totalIssueTypesNum) {
-        int pageStartIndex = pageNumber * LIST_PAGE_SIZE;
-        StringJoiner sj = new StringJoiner("\n");
-        sj.add(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectIssueType.message"));
-        sj.add(DELIMITER_STR);
-        List<String> formattedIssueTypeList = new ArrayList<>();
-        for (int index = 0; index < visibleIssueTypes.size(); index++) {
-            String strFormattedIssueType = String.join(". ", Integer.toString(pageStartIndex + index + 1), visibleIssueTypes.get(index).getName());
-            formattedIssueTypeList.add(strFormattedIssueType);
-        }
-        sj.add(stringifyPagedCollection(locale, formattedIssueTypeList, pageNumber, totalIssueTypesNum));
-        return sj.toString();
+    public String getSelectIssueTypeMessage(Locale locale) {
+        return i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectIssueType.message");
     }
 
-    public List<List<InlineKeyboardMarkupButton>> getSelectIssueTypeMessageButtons(Locale locale, boolean withPrev, boolean withNext) {
-        return getListButtons(locale, withPrev, withNext, "prevIssueTypeListPage", "nextIssueTypeListPage");
+    public List<List<InlineKeyboardMarkupButton>> getSelectIssueTypeMessageButtons(Collection<IssueType> issueTypes) {
+        List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+        issueTypes.forEach(issueType -> {
+            InlineKeyboardMarkupButton issueTypeButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(issueType.getNameTranslation(i18nHelper), String.join("-", "selectIssueType", issueType.getId()));
+            addRowWithButton(buttons, issueTypeButton);
+        });
+        return buttons;
     }
 
     public String formatIssueCreationDto(Locale locale, IssueCreationDto issueCreationDto) {
@@ -545,7 +545,7 @@ public class MessageFormatter {
         return String.join("\n", fields.stream().map(field -> i18nResolver.getRawText(locale, field.getNameKey())).collect(Collectors.toList()));
     }
 
-    public String createInsertFieldMessage(Locale locale, OrderableField field, IssueCreationDto issueCreationDto) {
+    public String createInsertFieldMessage(Locale locale, Field field, IssueCreationDto issueCreationDto) {
         if (isArrayLikeField(field)) {
             return String.join("\n",
                                i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.insertIssueField.arrayMessage", i18nResolver.getRawText(locale, field.getNameKey()).toLowerCase(locale)),
@@ -556,7 +556,7 @@ public class MessageFormatter {
                            this.formatIssueCreationDto(locale, issueCreationDto));
     }
 
-    private boolean isArrayLikeField(OrderableField field) {
+    private boolean isArrayLikeField(Field field) {
         switch (field.getId()) {
             case IssueFieldConstants.FIX_FOR_VERSIONS:
             case IssueFieldConstants.COMPONENTS:
@@ -571,7 +571,7 @@ public class MessageFormatter {
         return false;
     }
 
-    private String[] mapStringToArrayFieldValue(Long projectId, OrderableField field, String fieldValue) {
+    private String[] mapStringToArrayFieldValue(Long projectId, Field field, String fieldValue) {
         List<String> fieldValues = Arrays.stream(fieldValue.split(","))
                                          .map(String::trim)
                                          .collect(Collectors.toList());
@@ -608,7 +608,7 @@ public class MessageFormatter {
         return fieldValues.toArray(new String[0]);
     }
 
-    private String[] mapStringToSingleFieldValue(Long projectId, OrderableField field, String fieldValue) {
+    private String[] mapStringToSingleFieldValue(Long projectId, Field field, String fieldValue) {
         // no preprocessing for description field needed
         if (field.getId().equals(IssueFieldConstants.DESCRIPTION))
             return new String[]{fieldValue};
@@ -681,7 +681,7 @@ public class MessageFormatter {
         return fieldValues.toArray(new String[0]);
     }
 
-    public String[] mapUserInputStringToFieldValue(Long projectId, OrderableField field, String fieldValue) {
+    public String[] mapUserInputStringToFieldValue(Long projectId, Field field, String fieldValue) {
         if (isArrayLikeField(field)) {
             return mapStringToArrayFieldValue(projectId, field, fieldValue);
         }

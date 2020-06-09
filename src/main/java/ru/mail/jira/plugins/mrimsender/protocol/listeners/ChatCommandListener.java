@@ -4,6 +4,7 @@ import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.permission.ProjectPermissions;
+import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
@@ -31,6 +32,7 @@ public class ChatCommandListener {
     private final LocaleManager localeManager;
     private final IssueManager issueManager;
     private final PermissionManager permissionManager;
+    private final JiraAuthenticationContext jiraAuthenticationContext;
 
     public ChatCommandListener(IcqApiClient icqApiClient,
                                UserData userData,
@@ -38,7 +40,8 @@ public class ChatCommandListener {
                                I18nResolver i18nResolver,
                                LocaleManager localeManager,
                                IssueManager issueManager,
-                               PermissionManager permissionManager) {
+                               PermissionManager permissionManager,
+                               JiraAuthenticationContext jiraAuthenticationContext) {
         this.icqApiClient = icqApiClient;
         this.userData = userData;
         this.messageFormatter = messageFormatter;
@@ -46,6 +49,7 @@ public class ChatCommandListener {
         this.localeManager = localeManager;
         this.issueManager = issueManager;
         this.permissionManager = permissionManager;
+        this.jiraAuthenticationContext = jiraAuthenticationContext;
     }
 
     @Subscribe
@@ -77,17 +81,23 @@ public class ChatCommandListener {
     public void onShowIssueEvent(ShowIssueEvent showIssueEvent) throws IOException, UnirestException {
         log.debug("ShowIssueEvent handling started");
         ApplicationUser currentUser = userData.getUserByMrimLogin(showIssueEvent.getUserId());
-        Issue issueToShow = issueManager.getIssueByCurrentKey(showIssueEvent.getIssueKey());
-        if (currentUser != null && issueToShow != null) {
-            if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issueToShow, currentUser)) {
-                icqApiClient.sendMessageText(showIssueEvent.getChatId(), messageFormatter.createIssueSummary(issueToShow, currentUser), messageFormatter.getIssueButtons(issueToShow.getKey(), currentUser));
-            } else {
-                icqApiClient.sendMessageText(showIssueEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"));
+        ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
+        try {
+            jiraAuthenticationContext.setLoggedInUser(currentUser);
+            Issue issueToShow = issueManager.getIssueByCurrentKey(showIssueEvent.getIssueKey());
+            if (currentUser != null && issueToShow != null) {
+                if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issueToShow, currentUser)) {
+                    icqApiClient.sendMessageText(showIssueEvent.getChatId(), messageFormatter.createIssueSummary(issueToShow, currentUser), messageFormatter.getIssueButtons(issueToShow.getKey(), currentUser));
+                } else {
+                    icqApiClient.sendMessageText(showIssueEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"));
+                }
+            } else if (currentUser != null) {
+                icqApiClient.sendMessageText(showIssueEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.icqEventsListener.newIssueKeyMessage.error.issueNotFound"));
             }
-        } else if (currentUser != null) {
-            icqApiClient.sendMessageText(showIssueEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.icqEventsListener.newIssueKeyMessage.error.issueNotFound"));
+            log.debug("ShowIssueEvent handling finished");
+        } finally {
+            jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
         }
-        log.debug("ShowIssueEvent handling finished");
     }
 
 
