@@ -57,7 +57,7 @@ public class IcqBot implements DisposableBean {
     public void restartBot() {
         startLock.lock();
         try {
-            this.icqApiClient.updateToken();
+            this.icqApiClient.updateSettings();
             if (isRespondingBot) {
                 this.icqEventsFetcher.stop();
                 this.icqEventsFetcher.start();

@@ -35,6 +35,11 @@
         #fieldError( "token" )
     </div>
     <div class="field-group">
+        <label for="botApiUrl">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.botApiUrl" )<span class="aui-icon icon-required"></span></label>
+        <input type="text" class="text" id="botApiUrl" name="botApiUrl" value="$!botApiUrl" />
+        #fieldError( "botApiUrl" )
+    </div>
+    <div class="field-group">
         <label for="enabledByDefault">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.enabledByDefault" )</label>
         <select class="select" id="enabledByDefault" name="enabledByDefault">
             <option value="true"#if( $enabledByDefault ) selected="selected"#end>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.enabled" )</option>

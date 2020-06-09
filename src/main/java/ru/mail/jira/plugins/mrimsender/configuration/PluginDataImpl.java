@@ -10,6 +10,7 @@ public class PluginDataImpl implements PluginData {
     private static final String ENABLED_BY_DEFAULT = PLUGIN_PREFIX + "enabledByDefault";
     private static final String NOTIFIED_USER_KEYS = PLUGIN_PREFIX + "notifiedUserKeys";
     private static final String MAIN_NODE_ID = PLUGIN_PREFIX + "mainNodeId";
+    private static final String BOT_API_URL = PLUGIN_PREFIX + "botApiUrl";
 
     private final PluginSettingsFactory pluginSettingsFactory;
 
@@ -56,5 +57,15 @@ public class PluginDataImpl implements PluginData {
     @Override
     public void setMainNodeId(String mainNodeId) {
         pluginSettingsFactory.createGlobalSettings().put(MAIN_NODE_ID, mainNodeId);
+    }
+
+    @Override
+    public String getBotApiUrl() {
+        return (String) pluginSettingsFactory.createGlobalSettings().get(BOT_API_URL);
+    }
+
+    @Override
+    public void setBotApiUrl(String botApiUrl) {
+        pluginSettingsFactory.createGlobalSettings().put(BOT_API_URL, botApiUrl);
     }
 }

@@ -14,4 +14,7 @@ public interface PluginData {
 
     String getMainNodeId();
     void setMainNodeId(String mainNodeId);
+
+    String getBotApiUrl();
+    void setBotApiUrl(String botApiUrl);
 }
