@@ -23,6 +23,7 @@ public class IcqApiClientImpl implements IcqApiClient {
         this.objectMapper = new ObjectMapper();
         this.pluginData = pluginData;
         this.apiToken = pluginData.getToken();
+        this.botApiUrl = pluginData.getBotApiUrl();
     }
 
     @Override
