@@ -47,7 +47,7 @@ public class BotsOrchestrationService implements LifecycleAware {
         clusterMessagingService.sendRemote(BOT_LIFECYCLE_CHANNEL, BOT_RESTART_MESSAGE);
         //TODO возможно это не очень верно и стоит отображать ошибку подключения пользователю прямо на страницу после тайм аута
         //TODO можно также запускать это в отдельном потоке, чтобы у пользователя на время операции не подвисала страница настройки
-        icqBot.restartBot();
+        icqBot.restartBot(true);
     }
 
     public void stopAll() {
@@ -61,7 +61,7 @@ public class BotsOrchestrationService implements LifecycleAware {
         public void receive(String channel, String message, String senderId) {
             if (BOT_LIFECYCLE_CHANNEL.equals(channel)) {
                 if (BOT_RESTART_MESSAGE.equals(message)) {
-                    executorService.submit(icqBot::restartBot);
+                    executorService.submit(() -> icqBot.restartBot(true));
                 }
                 if (BOT_STOP_MESSAGE.equals(message)) {
                     executorService.submit(icqBot::stopBot);

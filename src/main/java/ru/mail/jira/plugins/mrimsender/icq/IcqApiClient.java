@@ -21,7 +21,7 @@ public interface IcqApiClient {
 
     public HttpResponse<JsonNode> answerCallbackQuery(String queryId) throws UnirestException;
 
-    public void updateToken();
+    public void updateSettings();
 
     public HttpResponse<MessageResponse> editMessageText(String chatId, long messageId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup) throws  UnirestException, IOException;
 }

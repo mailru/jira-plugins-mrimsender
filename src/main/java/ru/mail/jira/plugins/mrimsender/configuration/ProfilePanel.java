@@ -22,10 +22,12 @@ import java.util.Map;
 public class ProfilePanel implements ContextProvider {
     private final JiraAuthenticationContext jiraAuthenticationContext;
     private final UserData userData;
+    private final PluginData pluginData;
 
-    public ProfilePanel(JiraAuthenticationContext jiraAuthenticationContext, UserData userData) {
+    public ProfilePanel(JiraAuthenticationContext jiraAuthenticationContext, UserData userData, PluginData pluginData) {
         this.jiraAuthenticationContext = jiraAuthenticationContext;
         this.userData = userData;
+        this.pluginData = pluginData;
     }
 
     @Override
@@ -38,6 +40,8 @@ public class ProfilePanel implements ContextProvider {
         Map<String, Object> result = new HashMap<String, Object>();
         result.put("mrimLogin", userData.getMrimLogin(user));
         result.put("enabled", userData.isEnabled(user));
+        result.put("botName", pluginData.getBotName());
+        result.put("botLink", pluginData.getBotLink());
         return result;
     }
 

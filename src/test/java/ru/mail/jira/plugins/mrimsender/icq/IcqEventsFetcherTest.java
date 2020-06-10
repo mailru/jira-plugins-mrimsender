@@ -57,6 +57,7 @@ public class IcqEventsFetcherTest {
         });
         this.pluginData = Mockito.mock(PluginData.class);
         when(pluginData.getToken()).thenReturn("001.0352397737.0323867025:751619011");
+        when(pluginData.getBotApiUrl()).thenReturn("https://api.icq.net/bot/v1");
         this.icqApiClient = new IcqApiClientImpl(this.pluginData);
 
     }

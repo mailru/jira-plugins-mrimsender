@@ -15,31 +15,32 @@ import java.util.List;
 
 public class IcqApiClientImpl implements IcqApiClient {
     private String apiToken;
+    private String botApiUrl;
     private final ObjectMapper objectMapper;
     private final PluginData pluginData;
-    // TODO наверное тоже стоит засунуть в pluginData
-    public final String BASE_API_URL = "https://api.icq.net/bot/v1";
 
     public IcqApiClientImpl(PluginData pluginData) {
         this.objectMapper = new ObjectMapper();
         this.pluginData = pluginData;
         this.apiToken = pluginData.getToken();
+        this.botApiUrl = pluginData.getBotApiUrl();
     }
 
     @Override
-    public void updateToken() {
+    public void updateSettings() {
         this.apiToken = pluginData.getToken();
+        this.botApiUrl = pluginData.getBotApiUrl();
     }
 
     @Override
     public HttpResponse<MessageResponse> sendMessageText(String chatId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup) throws UnirestException, IOException {
         if (inlineKeyboardMarkup == null)
-            return Unirest.get(BASE_API_URL + "/messages/sendText")
+            return Unirest.get(botApiUrl + "/messages/sendText")
                           .queryString("token", apiToken)
                           .queryString("chatId", chatId)
                           .queryString("text", text)
                           .asObject(MessageResponse.class);
-        return Unirest.get(BASE_API_URL + "/messages/sendText")
+        return Unirest.get(botApiUrl + "/messages/sendText")
                       .queryString("token", apiToken)
                       .queryString("chatId", chatId)
                       .queryString("text", text)
@@ -54,7 +55,7 @@ public class IcqApiClientImpl implements IcqApiClient {
 
     @Override
     public HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime) throws UnirestException {
-        return Unirest.get(BASE_API_URL + "/events/get")
+        return Unirest.get(botApiUrl + "/events/get")
                       .queryString("token", apiToken)
                       .queryString("lastEventId", lastEventId)
                       .queryString("pollTime", pollTime)
@@ -63,7 +64,7 @@ public class IcqApiClientImpl implements IcqApiClient {
 
     @Override
     public HttpResponse<JsonNode> answerCallbackQuery(String queryId, String text, boolean showAlert, String url) throws UnirestException {
-        return Unirest.get(BASE_API_URL + "/messages/answerCallbackQuery")
+        return Unirest.get(botApiUrl + "/messages/answerCallbackQuery")
                       .queryString("token", apiToken)
                       .queryString("queryId", queryId)
                       .queryString("text", text)
@@ -80,13 +81,13 @@ public class IcqApiClientImpl implements IcqApiClient {
     @Override
     public HttpResponse<MessageResponse> editMessageText(String chatId, long messageId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup) throws UnirestException, IOException {
         if (inlineKeyboardMarkup == null)
-            return Unirest.get(BASE_API_URL + "/messages/editText")
+            return Unirest.get(botApiUrl + "/messages/editText")
                           .queryString("token", apiToken)
                           .queryString("chatId", chatId)
                           .queryString("msgId", messageId)
                           .queryString("text", text)
                           .asObject(MessageResponse.class);
-        return Unirest.get(BASE_API_URL + "/messages/editText")
+        return Unirest.get(botApiUrl + "/messages/editText")
                       .queryString("token", apiToken)
                       .queryString("chatId", chatId)
                       .queryString("msgId", messageId)

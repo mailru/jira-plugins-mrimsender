@@ -20,13 +20,11 @@ public class IcqBot implements DisposableBean {
         this.icqEventsFetcher = icqEventsFetcher;
     }
 
-
     @Override
     public void destroy() throws Exception {
         if (icqEventsFetcher.getIsRunning().get())
             icqEventsFetcher.stop();
     }
-
 
     public void startRespondingBot() {
         if (startLock.tryLock()) {
@@ -54,15 +52,21 @@ public class IcqBot implements DisposableBean {
         }
     }
 
-    public void restartBot() {
+    public void restartBot(boolean didSettingsChanged) {
         startLock.lock();
         try {
-            this.icqApiClient.updateToken();
             if (isRespondingBot) {
                 this.icqEventsFetcher.stop();
+                if (didSettingsChanged) {
+                    this.icqApiClient.updateSettings();
+                    this.icqEventsFetcher.resetLastEventId();
+                }
                 this.icqEventsFetcher.start();
+            } else {
+                if (didSettingsChanged)
+                    this.icqApiClient.updateSettings();
             }
-        }  finally {
+        } finally {
             startLock.unlock();
         }
     }
