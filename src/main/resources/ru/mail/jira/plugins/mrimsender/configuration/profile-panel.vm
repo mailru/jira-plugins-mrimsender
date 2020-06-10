@@ -33,7 +33,7 @@
                     </dd>
                 </dl>
                 #if ($enabled)
-                    #if ($botName)
+                    #if ($botName && !$botName.isEmpty())
                         <dl>
                             <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNick" ):</dt>
                             <dd>
@@ -47,7 +47,7 @@
                                 <div>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNickDescription" )</div>
                             </dd>
                         </dl>
-                    #elseif($botLink)
+                    #elseif($botLink && !$botLink.isEmpty())
                         <dl>
                             <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botLink" ):</dt>
                             <dd>
@@ -58,7 +58,6 @@
                             </dd>
                         </dl>
                     #end
-
                 #end
             </li>
         </ul>
