@@ -15,6 +15,8 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
     private boolean saved;
     private String token;
     private String botApiUrl;
+    private String botName;
+    private String botLink;
     private boolean enabledByDefault;
     private String notifiedUsers;
 
@@ -30,6 +32,8 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
         token = pluginData.getToken();
         enabledByDefault = pluginData.isEnabledByDefault();
         botApiUrl = pluginData.getBotApiUrl();
+        botName = pluginData.getBotName();
+        botLink = pluginData.getBotLink();
         notifiedUsers = CommonUtils.convertUserKeysToJoinedString(pluginData.getNotifiedUserKeys());
         return INPUT;
     }
@@ -39,6 +43,8 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
     protected String doExecute() {
         pluginData.setToken(token);
         pluginData.setBotApiUrl(botApiUrl);
+        pluginData.setBotName(botName);
+        pluginData.setBotLink(botLink);
         pluginData.setEnabledByDefault(enabledByDefault);
         pluginData.setNotifiedUserKeys(notifiedUserKeys);
 
@@ -55,7 +61,6 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
             addError("token", getText("ru.mail.jira.plugins.mrimsender.configuration.specifyToken"));
         if (StringUtils.isEmpty(botApiUrl))
             addError("botApiUrl", getText("ru.mail.jira.plugins.mrimsender.configuration.specifyBotApiUrl"));
-
         try {
             notifiedUserKeys = CommonUtils.convertJoinedStringToUserKeys(notifiedUsers);
         } catch (IllegalArgumentException e) {
@@ -83,6 +88,18 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
 
     @SuppressWarnings("UnusedDeclaration")
     public void setBotApiUrl(String botApiUrl) { this.botApiUrl = botApiUrl; }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public String getBotName() { return botName; }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public void setBotName(String botName) { this.botName = botName; }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public String getBotLink() { return botLink; }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public void setBotLink(String botLink) { this.botLink = botLink; }
 
     @SuppressWarnings("UnusedDeclaration")
     public boolean isEnabledByDefault() {

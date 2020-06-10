@@ -33,13 +33,32 @@
                     </dd>
                 </dl>
                 #if ($enabled)
-                    <dl>
-                        <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNick" ):</dt>
-                        <dd>
-                            <div><a href="https://icq.com/745485158" target="_blank">MRGJiraBot</a></div>
-                            <div>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNickDescription" )</div>
-                        </dd>
-                    </dl>
+                    #if ($botName)
+                        <dl>
+                            <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNick" ):</dt>
+                            <dd>
+                                <div>
+                                    #if ($botLink)
+                                        <a href="$botLink" target="_blank">$botName</a>
+                                    #else
+                                        <p>$botName</p>
+                                    #end
+                                </div>
+                                <div>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNickDescription" )</div>
+                            </dd>
+                        </dl>
+                    #elseif($botLink)
+                        <dl>
+                            <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botLink" ):</dt>
+                            <dd>
+                                <div>
+                                    <a href="$botLink" target="_blank">$botLink</a>
+                                </div>
+                                <div>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNickDescription" )</div>
+                            </dd>
+                        </dl>
+                    #end
+
                 #end
             </li>
         </ul>

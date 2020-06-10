@@ -40,6 +40,14 @@
         #fieldError( "botApiUrl" )
     </div>
     <div class="field-group">
+        <label for="botName">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.botName" )</label>
+        <input type="text" class="text" id="botName" name="botName" value="$!botName" />
+    </div>
+    <div class="field-group">
+        <label for="botLink">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.botLink" )</label>
+        <input type="text" class="text" id="botLink" name="botLink" value="$!botLink" />
+    </div>
+    <div class="field-group">
         <label for="enabledByDefault">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.enabledByDefault" )</label>
         <select class="select" id="enabledByDefault" name="enabledByDefault">
             <option value="true"#if( $enabledByDefault ) selected="selected"#end>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.enabled" )</option>
