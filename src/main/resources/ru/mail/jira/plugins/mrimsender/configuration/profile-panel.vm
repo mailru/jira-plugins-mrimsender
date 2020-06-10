@@ -38,7 +38,7 @@
                             <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNick" ):</dt>
                             <dd>
                                 <div>
-                                    #if ($botLink)
+                                    #if ($botLink && !$botLink.isEmpty())
                                         <a href="$botLink" target="_blank">$botName</a>
                                     #else
                                         <p>$botName</p>
