@@ -41,7 +41,7 @@ public class ProfilePanel implements ContextProvider {
         result.put("mrimLogin", userData.getMrimLogin(user));
         result.put("enabled", userData.isEnabled(user));
         result.put("botName", pluginData.getBotName());
-        result.put("botLink", pluginData.getBotName());
+        result.put("botLink", pluginData.getBotLink());
         return result;
     }
 
