@@ -4,10 +4,13 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.mrimsender.protocol.BotsOrchestrationService;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -43,6 +46,7 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
         botApiUrl = pluginData.getBotApiUrl();
         botName = pluginData.getBotName();
         botLink = pluginData.getBotLink();
+        excludingProjectIds = pluginData.getExcludingProjectIds();
         notifiedUsers = CommonUtils.convertUserKeysToJoinedString(pluginData.getNotifiedUserKeys());
         return INPUT;
     }
@@ -55,6 +59,7 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
         pluginData.setBotName(botName);
         pluginData.setBotLink(botLink);
         pluginData.setEnabledByDefault(enabledByDefault);
+        pluginData.setExcludingProjectIds(excludingProjectIds);
         pluginData.setNotifiedUserKeys(notifiedUserKeys);
 
         saved = true;
@@ -121,13 +126,18 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public Set<Long> getExcludingProjectIds() {
-        return this.excludingProjectIds;
+    public String getExcludingProjectIds() {
+        return CommonUtils.join(this.excludingProjectIds.stream().map(String::valueOf).collect(Collectors.toList()));
     }
 
     @SuppressWarnings("UnusedDeclaration")
     public void setExcludingProjectIds(String excludingProjectIds) {
         this.excludingProjectIds = StringUtils.isBlank(excludingProjectIds) ? Collections.emptySet() : CommonUtils.split(excludingProjectIds).stream().map(Long::valueOf).collect(Collectors.toSet());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public List<Project> getExcludingProjects() {
+        return excludingProjectIds.stream().map(projectManager::getProjectObj).collect(Collectors.toList());
     }
 
     @SuppressWarnings("UnusedDeclaration")

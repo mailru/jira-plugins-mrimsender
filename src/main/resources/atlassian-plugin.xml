@@ -30,6 +30,15 @@
         <link>/secure/MrimsenderConfiguration!default.jspa</link>
     </web-item>
 
+    <web-resource key="configuration-page-resource" name="Addon configuration page resources">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <dependency>com.atlassian.auiplugin:aui-select2</dependency>
+        <resource type="download" name="configuration-page.js" location="ru/mail/jira/plugins/mrimsender/configuration/configuration-page.js" />
+    </web-resource>
+
     <webwork1 key="configuration-action" class="java.lang.Object" roles-required="admin">
         <actions>
             <action name="ru.mail.jira.plugins.mrimsender.configuration.MrimsenderConfigurationAction" alias="MrimsenderConfiguration">
@@ -47,6 +56,7 @@
         <resource type="download" name="contragent-table-page.js" location="ru/mail/jira/plugins/mrimsender/configuration/profile-panel.js" />
         <context>atl.userprofile</context>
     </web-resource>
+
 
     <web-panel key="profile-panel" location="webpanels.user.profile.summary.custom" weight="10">
         <condition class="ru.mail.jira.plugins.mrimsender.configuration.ProfilePanelCondition" />

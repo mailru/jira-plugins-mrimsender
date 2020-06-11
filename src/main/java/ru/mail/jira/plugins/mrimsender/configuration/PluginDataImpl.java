@@ -108,6 +108,6 @@ public class PluginDataImpl implements PluginData {
 
     @Override
     public void setExcludingProjectIds(Set<Long> excludingProjectIds) {
-        pluginSettingsFactory.createGlobalSettings().put(EXCLUDING_PROJECT_IDS, CommonUtils.join(excludingProjectIds.stream().map(String::valueOf).collect(Collectors.toList())));
+        pluginSettingsFactory.createGlobalSettings().put(EXCLUDING_PROJECT_IDS, CommonUtils.join(excludingProjectIds.stream().map(String::valueOf).collect(Collectors.toList())));;
     }
 }
