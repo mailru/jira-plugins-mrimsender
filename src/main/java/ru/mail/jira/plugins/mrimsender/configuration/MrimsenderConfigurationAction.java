@@ -1,16 +1,23 @@
 package ru.mail.jira.plugins.mrimsender.configuration;
 
+import com.atlassian.jira.project.Project;
+import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.mrimsender.protocol.BotsOrchestrationService;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class MrimsenderConfigurationAction extends JiraWebActionSupport {
     private final PluginData pluginData;
     private final BotsOrchestrationService botsOrchestrationService;
+    private final ProjectManager projectManager;
 
     private boolean saved;
     private String token;
@@ -21,10 +28,12 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
     private String notifiedUsers;
 
     private List<String> notifiedUserKeys;
+    private Set<Long> excludingProjectIds;
 
-    public MrimsenderConfigurationAction(PluginData pluginData, BotsOrchestrationService botsOrchestrationService) {
+    public MrimsenderConfigurationAction(PluginData pluginData, BotsOrchestrationService botsOrchestrationService, ProjectManager projectManager) {
         this.botsOrchestrationService = botsOrchestrationService;
         this.pluginData = pluginData;
+        this.projectManager = projectManager;
     }
 
     @Override
@@ -109,6 +118,21 @@ public class MrimsenderConfigurationAction extends JiraWebActionSupport {
     @SuppressWarnings("UnusedDeclaration")
     public void setEnabledByDefault(boolean enabledByDefault) {
         this.enabledByDefault = enabledByDefault;
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public Set<Long> getExcludingProjectIds() {
+        return this.excludingProjectIds;
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public void setExcludingProjectIds(String excludingProjectIds) {
+        this.excludingProjectIds = StringUtils.isBlank(excludingProjectIds) ? Collections.emptySet() : CommonUtils.split(excludingProjectIds).stream().map(Long::valueOf).collect(Collectors.toSet());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public Collection<Project> getProjects() {
+        return projectManager.getProjects();
     }
 
     @SuppressWarnings("UnusedDeclaration")

@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.mrimsender.configuration;
 
 import java.util.List;
+import java.util.Set;
 
 public interface PluginData {
     String getToken();
@@ -23,4 +24,7 @@ public interface PluginData {
 
     String getBotLink();
     void setBotLink(String botLink);
+
+    Set<Long> getExcludingProjectIds();
+    void setExcludingProjectIds(Set<Long> excludingProjectIds);
 }

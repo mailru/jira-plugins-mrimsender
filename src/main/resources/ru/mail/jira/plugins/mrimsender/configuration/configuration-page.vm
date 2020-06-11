@@ -56,6 +56,17 @@
         <div class="description">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.enabledByDefaultDescription" )</div>
         #fieldError( "enabledByDefault" )
     </div>
+    <input id="mrimsender-create-issue-excluding-projects-ids" class="hidden" name="excludingProjectIds" value="$action.excludingProjectIds">
+    <div class="field-group">
+        <label for="mrimsender-create-issue-excluding-projects">$action.getText( "excludingProjects" )</label>
+        <select class="select long-field mrimsender-create-issue-excluding-projects" type="text" name="mrimsender-create-issue-excluding-projects" multiple="true">
+            #foreach( $project in $action.getProjects() )
+                <option value="$project.id" #select( $action.getExcludingProjects() $project.id )>$project.name ($project.key)</option>
+            #end
+        </select>
+        <div class="description">$action.getText( "excludingProjects.description" )</div>
+        #fieldError( "excluding-projects" )
+    </div>
     <div class="field-group">
         <label for="notifiedUsers">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.notifiedUsers" )</label>
         #userPicker( $action, "notifiedUsers", "$!notifiedUsers", true, false, false, true, false )

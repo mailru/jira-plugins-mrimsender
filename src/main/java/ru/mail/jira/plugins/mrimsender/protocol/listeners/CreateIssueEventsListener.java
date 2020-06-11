@@ -30,6 +30,7 @@ import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.eventbus.Subscribe;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import lombok.extern.slf4j.Slf4j;
+import ru.mail.jira.plugins.mrimsender.configuration.PluginData;
 import ru.mail.jira.plugins.mrimsender.configuration.UserData;
 import ru.mail.jira.plugins.mrimsender.icq.IcqApiClient;
 import ru.mail.jira.plugins.mrimsender.protocol.ChatState;
@@ -63,6 +64,7 @@ public class CreateIssueEventsListener {
     private final ConcurrentHashMap<String, ChatState> chatsStateMap;
     private final IcqApiClient icqApiClient;
     private final UserData userData;
+    private final PluginData pluginData;
     private final MessageFormatter messageFormatter;
     private final I18nResolver i18nResolver;
     private final LocaleManager localeManager;
@@ -73,13 +75,13 @@ public class CreateIssueEventsListener {
     private final IssueTypeManager issueTypeManager;
     private final FieldLayoutManager fieldLayoutManager;
     private final FieldManager fieldManager;
-    private final FieldConfigSchemeManager fieldConfigSchemeManager;
     private final IssueService issueService;
     private final JiraAuthenticationContext jiraAuthenticationContext;
 
     public CreateIssueEventsListener(ChatStateMapping chatStateMapping,
                                      IcqApiClient icqApiClient,
                                      UserData userData,
+                                     PluginData pluginData,
                                      MessageFormatter messageFormatter,
                                      I18nResolver i18nResolver,
                                      LocaleManager localeManager,
@@ -90,12 +92,12 @@ public class CreateIssueEventsListener {
                                      IssueTypeManager issueTypeManager,
                                      FieldLayoutManager fieldLayoutManager,
                                      FieldManager fieldManager,
-                                     FieldConfigSchemeManager fieldConfigSchemeManager,
                                      IssueService issueService,
                                      JiraAuthenticationContext jiraAuthenticationContext) {
         this.chatsStateMap = chatStateMapping.getChatsStateMap();
         this.icqApiClient = icqApiClient;
         this.userData = userData;
+        this.pluginData = pluginData;
         this.messageFormatter = messageFormatter;
         this.i18nResolver = i18nResolver;
         this.localeManager = localeManager;
@@ -106,11 +108,13 @@ public class CreateIssueEventsListener {
         this.issueTypeManager = issueTypeManager;
         this.fieldLayoutManager = fieldLayoutManager;
         this.fieldManager = fieldManager;
-        this.fieldConfigSchemeManager = fieldConfigSchemeManager;
         this.issueService = issueService;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
     }
 
+    private boolean isProjectExcluded(Long projectId) {
+        return pluginData.getExcludingProjectIds().contains(projectId);
+    }
 
     @Subscribe
     public void onCreateIssueClickEvent(CreateIssueClickEvent createIssueClickEvent) throws UnirestException, IOException {
@@ -120,11 +124,11 @@ public class CreateIssueEventsListener {
         if (currentUser != null) {
             Locale locale = localeManager.getLocaleFor(currentUser);
             icqApiClient.answerCallbackQuery(createIssueClickEvent.getQueryId());
-            List<Project> projectList = projectManager.getProjects();
-            List<Project> firstPageProjectsInterval = projectList.stream().limit(LIST_PAGE_SIZE).collect(Collectors.toList());
+            List<Project> allowedProjectList = projectManager.getProjects().stream().filter(proj -> !isProjectExcluded(proj.getId())).collect(Collectors.toList());
+            List<Project> firstPageProjectsInterval = allowedProjectList.stream().limit(LIST_PAGE_SIZE).collect(Collectors.toList());
             icqApiClient.sendMessageText(chatId,
-                                         messageFormatter.createSelectProjectMessage(locale, firstPageProjectsInterval, 0, projectList.size()),
-                                         messageFormatter.getSelectProjectMessageButtons(locale, false, projectList.size() > LIST_PAGE_SIZE));
+                                         messageFormatter.createSelectProjectMessage(locale, firstPageProjectsInterval, 0, allowedProjectList.size()),
+                                         messageFormatter.getSelectProjectMessageButtons(locale, false, allowedProjectList.size() > LIST_PAGE_SIZE));
             chatsStateMap.put(chatId, ChatState.buildProjectSelectWaitingState(0, new IssueCreationDto()));
         }
         log.debug("CreateIssueClickEvent handling finished");
@@ -140,17 +144,20 @@ public class CreateIssueEventsListener {
             Locale locale = localeManager.getLocaleFor(currentUser);
             String chatId = nextProjectsPageClickEvent.getChatId();
 
-            List<Project> projectsList = projectManager.getProjects();
-            List<Project> nextProjectsInterval = projectsList.stream()
-                                                             .skip(nextPageStartIndex)
-                                                             .limit(LIST_PAGE_SIZE)
+            List<Project> allowedProjectList = projectManager.getProjects()
+                                                             .stream()
+                                                             .filter(proj -> isProjectExcluded(proj.getId()))
                                                              .collect(Collectors.toList());
+            List<Project> nextProjectsInterval = allowedProjectList.stream()
+                                                                   .skip(nextPageStartIndex)
+                                                                   .limit(LIST_PAGE_SIZE)
+                                                                   .collect(Collectors.toList());
 
             icqApiClient.answerCallbackQuery(nextProjectsPageClickEvent.getQueryId());
             icqApiClient.editMessageText(chatId,
                                          nextProjectsPageClickEvent.getMsgId(),
-                                         messageFormatter.createSelectProjectMessage(locale, nextProjectsInterval, nextPageNumber, projectsList.size()),
-                                         messageFormatter.getSelectProjectMessageButtons(locale, true, projectsList.size() > LIST_PAGE_SIZE + nextPageStartIndex));
+                                         messageFormatter.createSelectProjectMessage(locale, nextProjectsInterval, nextPageNumber, allowedProjectList.size()),
+                                         messageFormatter.getSelectProjectMessageButtons(locale, true, allowedProjectList.size() > LIST_PAGE_SIZE + nextPageStartIndex));
             chatsStateMap.put(chatId, ChatState.buildProjectSelectWaitingState(nextPageNumber, nextProjectsPageClickEvent.getIssueCreationDto()));
         }
         log.debug("NextProjectsPageClickEvent handling finished");
@@ -166,15 +173,18 @@ public class CreateIssueEventsListener {
             Locale locale = localeManager.getLocaleFor(currentUser);
             String chatId = prevProjectsPageClickEvent.getChatId();
 
-            List<Project> projectsList = projectManager.getProjects();
-            List<Project> prevProjectsInterval = projectsList.stream()
+            List<Project> allowedProjectList = projectManager.getProjects()
+                                                             .stream()
+                                                             .filter(proj -> !isProjectExcluded(proj.getId()))
+                                                             .collect(Collectors.toList());
+            List<Project> prevProjectsInterval = allowedProjectList.stream()
                                                              .skip(prevPageStartIndex)
                                                              .limit(LIST_PAGE_SIZE)
                                                              .collect(Collectors.toList());
             icqApiClient.answerCallbackQuery(prevProjectsPageClickEvent.getQueryId());
             icqApiClient.editMessageText(chatId,
                                          prevProjectsPageClickEvent.getMsgId(),
-                                         messageFormatter.createSelectProjectMessage(locale, prevProjectsInterval, prevPageNumber, projectsList.size()),
+                                         messageFormatter.createSelectProjectMessage(locale, prevProjectsInterval, prevPageNumber, allowedProjectList.size()),
                                          messageFormatter.getSelectProjectMessageButtons(locale, prevPageStartIndex >= LIST_PAGE_SIZE, true));
             chatsStateMap.put(chatId, ChatState.buildProjectSelectWaitingState(prevPageNumber, prevProjectsPageClickEvent.getIssueCreationDto()));
         }
@@ -198,6 +208,11 @@ public class CreateIssueEventsListener {
             icqApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectedProjectNotValid"));
             return;
         }
+        if (isProjectExcluded(selectedProject.getId())) {
+            icqApiClient.sendMessageText(chatId, i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectedProjectIsBanned"));
+            return;
+        }
+
         if (!permissionManager.hasPermission(ProjectPermissions.CREATE_ISSUES, selectedProject, currentUser)) {
             // user don't have enough permissions to create issues in selected project
             icqApiClient.sendMessageText(chatId, i18nResolver.getRawText("ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.notEnoughPermissions"));
