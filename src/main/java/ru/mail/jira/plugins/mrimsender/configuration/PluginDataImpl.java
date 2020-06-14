@@ -1,8 +1,13 @@
 package ru.mail.jira.plugins.mrimsender.configuration;
 
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+import ru.mail.jira.plugins.commons.CommonUtils;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class PluginDataImpl implements PluginData {
     private static final String PLUGIN_PREFIX = "ru.mail.jira.plugins.mrimsender:";
@@ -13,6 +18,7 @@ public class PluginDataImpl implements PluginData {
     private static final String BOT_API_URL = PLUGIN_PREFIX + "botApiUrl";
     private static final String BOT_NAME = PLUGIN_PREFIX + "botName";
     private static final String BOT_LINK = PLUGIN_PREFIX + "botLink";
+    private static final String EXCLUDING_PROJECT_IDS = PLUGIN_PREFIX + "excludingProjectIds";
 
     private final PluginSettingsFactory pluginSettingsFactory;
 
@@ -89,5 +95,19 @@ public class PluginDataImpl implements PluginData {
     @Override
     public void setBotLink(String botLink) {
         pluginSettingsFactory.createGlobalSettings().put(BOT_LINK, botLink);
+    }
+
+    @Override
+    public Set<Long> getExcludingProjectIds() {
+        String excludingProjectIds = (String) pluginSettingsFactory.createGlobalSettings().get(EXCLUDING_PROJECT_IDS);
+        if (excludingProjectIds == null) {
+            return Collections.emptySet();
+        }
+        return CommonUtils.split(excludingProjectIds).stream().map(Long::valueOf).collect(Collectors.toSet());
+    }
+
+    @Override
+    public void setExcludingProjectIds(Set<Long> excludingProjectIds) {
+        pluginSettingsFactory.createGlobalSettings().put(EXCLUDING_PROJECT_IDS, CommonUtils.join(excludingProjectIds.stream().map(String::valueOf).collect(Collectors.toList())));;
     }
 }

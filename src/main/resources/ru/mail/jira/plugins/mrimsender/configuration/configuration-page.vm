@@ -5,6 +5,8 @@
     <meta name="admin.active.section" content="admin_plugins_menu/top_plugins_section" />
     <meta name="admin.active.tab" content="ru.mail.jira.plugins.mrimsender:configuration-link" />
     $webResourceManager.requireResource( "jira.webresources:autocomplete" ) ## User picker
+    $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+    $webResourceManager.requireResource( "ru.mail.jira.plugins.mrimsender:configuration-page-resource" )
 </head>
 <body>
 <h2>$i18n.getText( "ru.mail.jira.plugins.mrimsender.title" )</h2>
@@ -26,6 +28,13 @@
     #macro( fieldError $name )
         #if( $action.hasErrors && $action.errors.get( $name ) )
             <div class="error">$action.errors.get( $name )</div>
+        #end
+    #end
+    #macro( select $array $value )
+        #foreach( $item in $array )
+            #if ( $item.id == $value )
+                selected
+            #end
         #end
     #end
     <input type="hidden" name="atl_token" value="$atl_token" />
@@ -56,6 +65,18 @@
         <div class="description">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.enabledByDefaultDescription" )</div>
         #fieldError( "enabledByDefault" )
     </div>
+    <input id="mrimsender-create-issue-excluding-projects-ids" class="hidden" name="excludingProjectIds" value="$action.excludingProjectIds">
+    <div class="field-group">
+        <label for="mrimsender-create-issue-excluding-projects">$i18n.getText("ru.mail.jira.plugins.mrimsender.configuration.excludedProjects")</label>
+        <select class="select long-field mrimsender-create-issue-excluding-projects" type="text" name="mrimsender-create-issue-excluding-projects" multiple="true">
+            #foreach( $project in $action.getProjects() )
+                <option value="$project.id" #select( $action.getExcludingProjects() $project.id )>$project.name ($project.key)</option>
+            #end
+        </select>
+        <div class="description">$i18n.getText("ru.mail.jira.plugins.mrimsender.configuration.excludedProjects.description")</div>
+        #fieldError( "excludingProjectIds" )
+    </div>
+
     <div class="field-group">
         <label for="notifiedUsers">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.notifiedUsers" )</label>
         #userPicker( $action, "notifiedUsers", "$!notifiedUsers", true, false, false, true, false )
