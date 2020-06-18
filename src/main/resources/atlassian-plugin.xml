@@ -42,7 +42,7 @@
     <webwork1 key="myteam-configuration-action" class="java.lang.Object" roles-required="admin">
         <actions>
             <action name="ru.mail.jira.plugins.myteam.configuration.MyteamConfigurationAction" alias="MyteamConfiguration">
-                <view name="input">/ru/mail/jira/plugins/myteam/configuration/configuration-page.vm</view>
+                <view name="input">/ru/mail/jira/plugins/myteam/configuration/myteam-configuration-page.vm</view>
             </action>
         </actions>
     </webwork1>

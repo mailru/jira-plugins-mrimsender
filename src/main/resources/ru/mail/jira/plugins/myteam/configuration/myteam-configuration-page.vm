@@ -1,15 +1,15 @@
 <html>
 <head>
-    <title>$i18n.getText("ru.mail.jira.plugins.mrimsender.title")</title>
+    <title>$i18n.getText("ru.mail.jira.plugins.myteam.title")</title>
     <meta name="decorator" content="admin" />
     <meta name="admin.active.section" content="admin_plugins_menu/top_plugins_section" />
-    <meta name="admin.active.tab" content="ru.mail.jira.plugins.mrimsender:configuration-link" />
+    <meta name="admin.active.tab" content="ru.mail.jira.plugins.myteam:myteam-configuration-link" />
     $webResourceManager.requireResource( "jira.webresources:autocomplete" ) ## User picker
     $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
     $webResourceManager.requireResource( "ru.mail.jira.plugins.myteam:configuration-page-resource" )
 </head>
 <body>
-<h2>$i18n.getText( "ru.mail.jira.plugins.mrimsender.title" )</h2>
+<h2>$i18n.getText( "ru.mail.jira.plugins.myteam.title" )</h2>
 
 #if( $saved )
     <div class="aui-message aui-message-success">

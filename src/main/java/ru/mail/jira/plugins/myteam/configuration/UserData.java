@@ -14,7 +14,6 @@ public class UserData {
     private final static String MRIM_LOGIN_USER_PROPERTY = "USER_MYTEAM_LOGIN";
     private final static String IS_ENABLED_USER_PROPERTY = "USER_MYTEAM_STATUS";
 
-    //private final PluginData pluginData = ComponentAccessor.getOSGiComponentInstanceOfType(PluginData.class);
     private final PluginData pluginData;
     private final UserPropertyManager userPropertyManager;
     private final UserSearchService userSearchService;
