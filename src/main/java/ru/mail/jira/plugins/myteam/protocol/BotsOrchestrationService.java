@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
  * Service which allow to stop or restart all bots which are running on a cluster
  */
 public class BotsOrchestrationService implements LifecycleAware {
-    private static final String BOT_LIFECYCLE_CHANNEL = "ru.mail.jira.mrimbot";
+    private static final String BOT_LIFECYCLE_CHANNEL = "ru.mail.jira.myteam";
     private static final String BOT_RESTART_MESSAGE = "restart";
     private static final String BOT_STOP_MESSAGE = "stop";
     private static final String ORCHESTRATION_SERVICE_THREAD_PREFIX = "orchestration-service-thread-%d";
