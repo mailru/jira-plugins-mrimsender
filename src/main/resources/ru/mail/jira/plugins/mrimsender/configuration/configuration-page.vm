@@ -6,7 +6,7 @@
     <meta name="admin.active.tab" content="ru.mail.jira.plugins.mrimsender:configuration-link" />
     $webResourceManager.requireResource( "jira.webresources:autocomplete" ) ## User picker
     $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
-    $webResourceManager.requireResource( "ru.mail.jira.plugins.mrimsender:configuration-page-resource" )
+    $webResourceManager.requireResource( "ru.mail.jira.plugins.myteam:configuration-page-resource" )
 </head>
 <body>
 <h2>$i18n.getText( "ru.mail.jira.plugins.mrimsender.title" )</h2>
@@ -24,7 +24,7 @@
     </div>
 #end
 
-<form class="aui" action="MrimsenderConfiguration.jspa" method="post">
+<form class="aui" action="MyteamConfiguration.jspa" method="post">
     #macro( fieldError $name )
         #if( $action.hasErrors && $action.errors.get( $name ) )
             <div class="error">$action.errors.get( $name )</div>

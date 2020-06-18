@@ -22,7 +22,7 @@
     <component-import key="user-search-service" interface="com.atlassian.jira.bc.user.search.UserSearchService"/>
     <component key="user-data" class="ru.mail.jira.plugins.mrimsender.configuration.UserData" />
 
-    <web-item key="configuration-link" section="admin_plugins_menu/top_plugins_section">
+    <web-item key="myteam-configuration-link" section="admin_plugins_menu/top_plugins_section">
         <label key="ru.mail.jira.plugins.mrimsender.title" />
         <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
             <param name="permission">admin</param>
@@ -39,7 +39,7 @@
         <resource type="download" name="configuration-page.js" location="ru/mail/jira/plugins/mrimsender/configuration/configuration-page.js" />
     </web-resource>
 
-    <webwork1 key="configuration-action" class="java.lang.Object" roles-required="admin">
+    <webwork1 key="${project.artifactId}-configuration-action" class="java.lang.Object" roles-required="admin">
         <actions>
             <action name="ru.mail.jira.plugins.mrimsender.configuration.MrimsenderConfigurationAction" alias="MyteamConfiguration">
                 <view name="input">/ru/mail/jira/plugins/mrimsender/configuration/configuration-page.vm</view>

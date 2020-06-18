@@ -20,8 +20,8 @@
             <name>Daria Rostshina</name>
         </contributor>
     </contributors>
-    <name>Mail.Ru Agent Notifications</name>
-    <description>Send notifications on issue changes and work with issues using Mail.Ru Agent instant messenger</description>
+    <name>Myteam bot Notifications</name>
+    <description>Send notifications on issue changes and work with issues using Myteam instant messenger</description>
     <packaging>atlassian-plugin</packaging>
     <dependencies>
         <dependency>

@@ -15,16 +15,18 @@ public class UserData {
     private final static String MRIM_LOGIN_USER_PROPERTY = "USER_MYTEAM_LOGIN";
     private final static String IS_ENABLED_USER_PROPERTY = "USER_MYTEAM_STATUS";
 
-    private final PluginData pluginData = ComponentAccessor.getOSGiComponentInstanceOfType(PluginData.class);
+    //private final PluginData pluginData = ComponentAccessor.getOSGiComponentInstanceOfType(PluginData.class);
+    private final PluginData pluginData;
     private final UserPropertyManager userPropertyManager;
     private final UserSearchService userSearchService;
     private final Cache<String, ApplicationUser> userByMrimLoginCache = Caffeine.newBuilder()
                                                                                 .expireAfterWrite(8, TimeUnit.HOURS)
                                                                                 .build();
 
-    public UserData(UserPropertyManager userPropertyManager, UserSearchService userSearchService) {
+    public UserData(UserPropertyManager userPropertyManager, UserSearchService userSearchService, PluginData pluginData) {
         this.userPropertyManager = userPropertyManager;
         this.userSearchService = userSearchService;
+        this.pluginData = pluginData;
     }
 
     public String getMrimLogin(ApplicationUser user) {
