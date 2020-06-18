@@ -12,8 +12,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
 
 public class UserData {
-    private final static String MRIM_LOGIN_USER_PROPERTY = "USER_MRIM_LOGIN";
-    private final static String IS_ENABLED_USER_PROPERTY = "USER_MRIM_STATUS";
+    private final static String MRIM_LOGIN_USER_PROPERTY = "USER_MYTEAM_LOGIN";
+    private final static String IS_ENABLED_USER_PROPERTY = "USER_MYTEAM_STATUS";
 
     private final PluginData pluginData = ComponentAccessor.getOSGiComponentInstanceOfType(PluginData.class);
     private final UserPropertyManager userPropertyManager;

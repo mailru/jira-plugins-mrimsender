@@ -27,7 +27,7 @@
         <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
             <param name="permission">admin</param>
         </condition>
-        <link>/secure/MrimsenderConfiguration!default.jspa</link>
+        <link>/secure/MyteamConfiguration!default.jspa</link>
     </web-item>
 
     <web-resource key="configuration-page-resource" name="Addon configuration page resources">
@@ -41,7 +41,7 @@
 
     <webwork1 key="configuration-action" class="java.lang.Object" roles-required="admin">
         <actions>
-            <action name="ru.mail.jira.plugins.mrimsender.configuration.MrimsenderConfigurationAction" alias="MrimsenderConfiguration">
+            <action name="ru.mail.jira.plugins.mrimsender.configuration.MrimsenderConfigurationAction" alias="MyteamConfiguration">
                 <view name="input">/ru/mail/jira/plugins/mrimsender/configuration/configuration-page.vm</view>
             </action>
         </actions>
