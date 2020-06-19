@@ -146,7 +146,7 @@ public class CreateIssueEventsListener {
 
             List<Project> allowedProjectList = projectManager.getProjects()
                                                              .stream()
-                                                             .filter(proj -> isProjectExcluded(proj.getId()))
+                                                             .filter(proj -> !isProjectExcluded(proj.getId()))
                                                              .collect(Collectors.toList());
             List<Project> nextProjectsInterval = allowedProjectList.stream()
                                                                    .skip(nextPageStartIndex)
