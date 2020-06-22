@@ -6,6 +6,7 @@ import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.myteam.configuration.PluginData;
@@ -54,20 +55,20 @@ public class MyteamApiClientImplTest {
         this.myteamApiClient = new MyteamApiClientImpl(this.pluginData);
     }
 
-    @Test
+    @Ignore
     public void sendMessageText() throws IOException, UnirestException {
         HttpResponse<MessageResponse> httpResponse = myteamApiClient.sendMessageText("d.udovichenko@corp.mail.ru", "test text", null);
         System.out.println(httpResponse.getBody());
         assertTrue(httpResponse.getBody().isOk());
     }
 
-    @Test
+    @Ignore
     public void getEvents() throws UnirestException {
         HttpResponse<FetchResponseDto> httpResponse = myteamApiClient.getEvents(0, 5);
         assertEquals(200, httpResponse.getStatus());
     }
 
-    @Test
+    @Ignore
     public void answerCallbackQuery() throws UnirestException {
         HttpResponse<FetchResponseDto> httpResponse = myteamApiClient.getEvents(0, 5);
         List<CallbackQueryEvent> callbackQueryEventList = httpResponse.getBody()

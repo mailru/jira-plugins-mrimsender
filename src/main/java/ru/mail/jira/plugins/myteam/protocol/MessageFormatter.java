@@ -60,7 +60,6 @@ import java.util.stream.Collectors;
 public class MessageFormatter {
     public static final int LIST_PAGE_SIZE = 15;
     public static final String DELIMITER_STR = "----------";
-    private static final String ICQ_BOT_TESTERS_GROUP_NAME = "icq-bot-beta";
 
     private final ApplicationProperties applicationProperties;
     private final ConstantsManager constantsManager;
@@ -422,11 +421,8 @@ public class MessageFormatter {
         addRowWithButton(buttons, searchIssueByJqlButton);
 
         // create 'create issue' button
-
-        if (groupManager.isUserInGroup(currentUser, ICQ_BOT_TESTERS_GROUP_NAME)) {
-            InlineKeyboardMarkupButton createIssueButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.mainMenu.createIssueButton.text"), "createIssue");
-            addRowWithButton(buttons, createIssueButton);
-        }
+        InlineKeyboardMarkupButton createIssueButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.mainMenu.createIssueButton.text"), "createIssue");
+        addRowWithButton(buttons, createIssueButton);
         return buttons;
     }
 
