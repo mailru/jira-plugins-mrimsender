@@ -14,7 +14,7 @@
 #if( $saved )
     <div class="aui-message aui-message-success">
         <span class="aui-icon icon-success"></span>
-        <p>$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.saved" )</p>
+        <p>$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.saved" )</p>
     </div>
 #end
 #if( $action.hasErrorMessages )
@@ -39,46 +39,46 @@
     #end
     <input type="hidden" name="atl_token" value="$atl_token" />
     <div class="field-group">
-        <label for="token">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.token" )<span class="aui-icon icon-required"></span></label>
+        <label for="token">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.token" )<span class="aui-icon icon-required"></span></label>
         <input type="password" class="password" id="token" name="token" value="$!token" />
         #fieldError( "token" )
     </div>
     <div class="field-group">
-        <label for="botApiUrl">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.botApiUrl" )<span class="aui-icon icon-required"></span></label>
+        <label for="botApiUrl">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.botApiUrl" )<span class="aui-icon icon-required"></span></label>
         <input type="text" class="text" id="botApiUrl" name="botApiUrl" value="$!botApiUrl" />
         #fieldError( "botApiUrl" )
     </div>
     <div class="field-group">
-        <label for="botName">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.botName" )</label>
+        <label for="botName">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.botName" )</label>
         <input type="text" class="text" id="botName" name="botName" value="$!botName" />
     </div>
     <div class="field-group">
-        <label for="botLink">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.botLink" )</label>
+        <label for="botLink">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.botLink" )</label>
         <input type="text" class="text" id="botLink" name="botLink" value="$!botLink" />
     </div>
     <div class="field-group">
-        <label for="enabledByDefault">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.enabledByDefault" )</label>
+        <label for="enabledByDefault">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.enabledByDefault" )</label>
         <select class="select" id="enabledByDefault" name="enabledByDefault">
-            <option value="true"#if( $enabledByDefault ) selected="selected"#end>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.enabled" )</option>
-            <option value="false"#if( !$enabledByDefault ) selected="selected"#end>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.disabled" )</option>
+            <option value="true"#if( $enabledByDefault ) selected="selected"#end>$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.notifications.enabled" )</option>
+            <option value="false"#if( !$enabledByDefault ) selected="selected"#end>$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.notifications.disabled" )</option>
         </select>
-        <div class="description">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.enabledByDefaultDescription" )</div>
+        <div class="description">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.enabledByDefaultDescription" )</div>
         #fieldError( "enabledByDefault" )
     </div>
     <input id="mrimsender-create-issue-excluding-projects-ids" class="hidden" name="excludingProjectIds" value="$action.excludingProjectIds">
     <div class="field-group">
-        <label for="mrimsender-create-issue-excluding-projects">$i18n.getText("ru.mail.jira.plugins.mrimsender.configuration.excludedProjects")</label>
+        <label for="mrimsender-create-issue-excluding-projects">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.excludedProjects")</label>
         <select class="select long-field mrimsender-create-issue-excluding-projects" type="text" name="mrimsender-create-issue-excluding-projects" multiple="true">
             #foreach( $project in $action.getProjects() )
                 <option value="$project.id" #select( $action.getExcludingProjects() $project.id )>$project.name ($project.key)</option>
             #end
         </select>
-        <div class="description">$i18n.getText("ru.mail.jira.plugins.mrimsender.configuration.excludedProjects.description")</div>
+        <div class="description">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.excludedProjects.description")</div>
         #fieldError( "excludingProjectIds" )
     </div>
 
     <div class="field-group">
-        <label for="notifiedUsers">$i18n.getText( "ru.mail.jira.plugins.mrimsender.configuration.notifiedUsers" )</label>
+        <label for="notifiedUsers">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.notifiedUsers" )</label>
         #userPicker( $action, "notifiedUsers", "$!notifiedUsers", true, false, false, true, false )
         #fieldError( "notifiedUsers" )
     </div>

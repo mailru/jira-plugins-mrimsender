@@ -1,7 +1,7 @@
 require(['jquery'], function($) {
     AJS.toInit(function () {
         $(".mrimsender-create-issue-excluding-projects").auiSelect2({
-            placeholder:AJS.I18n.getText('ru.mail.jira.plugins.mrimsender.configuration.excludedProjects.placeholder'),
+            placeholder:AJS.I18n.getText('ru.mail.jira.plugins.myteam.configuration.excludedProjects.placeholder'),
             allowClear: true
         });
     });

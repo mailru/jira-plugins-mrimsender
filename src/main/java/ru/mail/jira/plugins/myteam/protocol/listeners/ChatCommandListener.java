@@ -59,9 +59,9 @@ public class ChatCommandListener {
         if (currentUser != null) {
             Locale locale = localeManager.getLocaleFor(currentUser);
             if (showHelpEvent.getChatType() == ChatType.GROUP)
-                myteamApiClient.sendMessageText(showHelpEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.groupChat.helpMessage.text"));
+                myteamApiClient.sendMessageText(showHelpEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.groupChat.helpMessage.text"));
             else
-                myteamApiClient.sendMessageText(showHelpEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.helpMessage.text"));
+                myteamApiClient.sendMessageText(showHelpEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.helpMessage.text"));
         }
         log.debug("ShowHelpEvent handling finished");
     }
@@ -72,7 +72,7 @@ public class ChatCommandListener {
         ApplicationUser currentUser = userData.getUserByMrimLogin(showMenuEvent.getUserId());
         if (currentUser != null) {
             Locale locale = localeManager.getLocaleFor(currentUser);
-            myteamApiClient.sendMessageText(showMenuEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.mainMenu.text"), messageFormatter.getMenuButtons(currentUser));
+            myteamApiClient.sendMessageText(showMenuEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"), messageFormatter.getMenuButtons(currentUser));
         }
         log.debug("JiraMessageQueueProcessor showDefaultMenu finished...");
     }
@@ -89,10 +89,10 @@ public class ChatCommandListener {
                 if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issueToShow, currentUser)) {
                     myteamApiClient.sendMessageText(showIssueEvent.getChatId(), messageFormatter.createIssueSummary(issueToShow, currentUser), messageFormatter.getIssueButtons(issueToShow.getKey(), currentUser));
                 } else {
-                    myteamApiClient.sendMessageText(showIssueEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"));
+                    myteamApiClient.sendMessageText(showIssueEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
                 }
             } else if (currentUser != null) {
-                myteamApiClient.sendMessageText(showIssueEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.icqEventsListener.newIssueKeyMessage.error.issueNotFound"));
+                myteamApiClient.sendMessageText(showIssueEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
             }
             log.debug("ShowIssueEvent handling finished");
         } finally {
@@ -107,7 +107,7 @@ public class ChatCommandListener {
         ApplicationUser currentUser = userData.getUserByMrimLogin(showDefaultMessageEvent.getUserId());
         if (currentUser != null) {
             Locale locale = localeManager.getLocaleFor(currentUser);
-            myteamApiClient.sendMessageText(showDefaultMessageEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.defaultMessage.text"), messageFormatter.getMenuButtons(currentUser));
+            myteamApiClient.sendMessageText(showDefaultMessageEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.defaultMessage.text"), messageFormatter.getMenuButtons(currentUser));
         }
         log.debug("ShowDefaultMessageEvent handling finished");
     }

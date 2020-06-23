@@ -69,9 +69,9 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     @Override
     protected void doValidation() {
         if (StringUtils.isEmpty(token))
-            addError("token", getText("ru.mail.jira.plugins.mrimsender.configuration.specifyToken"));
+            addError("token", getText("ru.mail.jira.plugins.myteam.configuration.specifyToken"));
         if (StringUtils.isEmpty(botApiUrl))
-            addError("botApiUrl", getText("ru.mail.jira.plugins.mrimsender.configuration.specifyBotApiUrl"));
+            addError("botApiUrl", getText("ru.mail.jira.plugins.myteam.configuration.specifyBotApiUrl"));
         try {
             notifiedUserKeys = CommonUtils.convertJoinedStringToUserKeys(notifiedUsers);
         } catch (IllegalArgumentException e) {

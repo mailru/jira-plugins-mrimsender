@@ -5,6 +5,7 @@ import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.IssueInputParameters;
+import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
@@ -203,17 +204,17 @@ public class CreateIssueEventsListener {
         Project selectedProject = projectManager.getProjectByCurrentKeyIgnoreCase(selectedProjectKey);
         if (selectedProject == null) {
             // inserted project key is not valid
-            myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectedProjectNotValid"));
+            myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedProjectNotValid"));
             return;
         }
         if (isProjectExcluded(selectedProject.getId())) {
-            myteamApiClient.sendMessageText(chatId, i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectedProjectIsBanned"));
+            myteamApiClient.sendMessageText(chatId, i18nResolver.getText(locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedProjectIsBanned"));
             return;
         }
 
         if (!permissionManager.hasPermission(ProjectPermissions.CREATE_ISSUES, selectedProject, currentUser)) {
             // user don't have enough permissions to create issues in selected project
-            myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText("ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.notEnoughPermissions"));
+            myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText("ru.mail.jira.plugins.myteam.messageFormatter.createIssue.notEnoughPermissions"));
             return;
         }
 
@@ -252,7 +253,7 @@ public class CreateIssueEventsListener {
         if (!maybeCorrectIssueType.isPresent()) {
             // inserted issue type position isn't correct
             myteamApiClient.answerCallbackQuery(queryId);
-            myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.selectedIssueTypeNotValid"));
+            myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedIssueTypeNotValid"));
             return;
         }
         IssueType selectedIssueType = maybeCorrectIssueType.get();
@@ -282,7 +283,7 @@ public class CreateIssueEventsListener {
             // send user message that we can't create issue with required customFields
             myteamApiClient.answerCallbackQuery(queryId);
             myteamApiClient.sendMessageText(chatId,
-                                            String.join("\n", i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.requiredCFError"), messageFormatter.stringifyFieldsCollection(locale, requiredCustomFieldsInScope)));
+                                            String.join("\n", i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.requiredCFError"), messageFormatter.stringifyFieldsCollection(locale, requiredCustomFieldsInScope)));
             return;
         }
 
@@ -307,7 +308,7 @@ public class CreateIssueEventsListener {
             } else {
                 myteamApiClient.answerCallbackQuery(queryId);
                 myteamApiClient.sendMessageText(chatId, String.join("\n",
-                                                                    i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.validationError"),
+                                                                    i18nResolver.getText(locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.validationError"),
                                                                     messageFormatter.stringifyMap(issueValidationResult.getErrorCollection().getErrors()),
                                                                     messageFormatter.stringifyCollection(locale, issueValidationResult.getErrorCollection().getErrorMessages())));
             }
@@ -345,11 +346,12 @@ public class CreateIssueEventsListener {
 
                 IssueService.CreateValidationResult issueValidationResult = validateIssueWithGivenFields(currentUser, currentIssueCreationDto);
                 if (issueValidationResult.isValid()) {
-                    issueService.create(currentUser, issueValidationResult);
-                    myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.issueCreated"));
+                    MutableIssue createdIssue = issueService.create(currentUser, issueValidationResult).getIssue();
+                    String createdIssueLink = messageFormatter.createIssueLink(createdIssue);
+                    myteamApiClient.sendMessageText(chatId, i18nResolver.getText(locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreated", createdIssueLink));
                 } else {
                     myteamApiClient.sendMessageText(chatId, String.join("\n",
-                                                                        i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.validationError"),
+                                                                        i18nResolver.getText(locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.validationError"),
                                                                         messageFormatter.stringifyMap(issueValidationResult.getErrorCollection().getErrors()),
                                                                         messageFormatter.stringifyCollection(locale, issueValidationResult.getErrorCollection().getErrorMessages())));
                 }

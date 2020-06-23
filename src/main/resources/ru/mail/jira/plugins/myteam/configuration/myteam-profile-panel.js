@@ -4,7 +4,7 @@ require(['jquery', 'wrm/context-path'], function($, contextPath) {
             width: 540,
             id: 'myteam-dialog'
         });
-        dialog.addHeader(AJS.I18n.getText('ru.mail.jira.plugins.mrimsender.title'));
+        dialog.addHeader(AJS.I18n.getText('ru.mail.jira.plugins.myteam.title'));
         dialog.addPanel(null, $('#myteam-dialog-form').removeClass('hidden').submit(function (e) {
             e.preventDefault();
             dialog.get('button:0')[0].item.click();
@@ -28,7 +28,7 @@ require(['jquery', 'wrm/context-path'], function($, contextPath) {
                 success: function (data) {
                     $('#myteam-notification').removeClass('hidden');
                     $('#myteam-mrim-login').text(mrimLogin);
-                    $('#myteam-enabled').data('enabled', enabled).text(enabled == 'true' ? AJS.I18n.getText('ru.mail.jira.plugins.mrimsender.profilePanel.notifications.enabled') : AJS.I18n.getText('ru.mail.jira.plugins.mrimsender.profilePanel.notifications.disabled'));
+                    $('#myteam-enabled').data('enabled', enabled).text(enabled == 'true' ? AJS.I18n.getText('ru.mail.jira.plugins.myteam.profilePanel.notifications.enabled') : AJS.I18n.getText('ru.mail.jira.plugins.myteam.profilePanel.notifications.disabled'));
                     dialog.hide();
                 },
                 error: function showErrorMsg(request, status, error) {
