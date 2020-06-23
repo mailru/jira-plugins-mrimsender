@@ -12,7 +12,7 @@
     <div class="mod-content">
         <div id="myteam-notification" class="aui-message aui-message-success hidden">
             <span class="aui-icon icon-success"></span>
-            <p>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.updated" )</p>
+            <p>$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.updated" )</p>
         </div>
         <ul class="item-details">
             <li>
@@ -23,19 +23,19 @@
                     </dd>
                 </dl>
                 <dl>
-                    <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications" ):</dt>
+                    <dt>$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.notifications" ):</dt>
                     <dd id="myteam-enabled" data-enabled="$enabled">
                         #if( $enabled )
-                            $i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.enabled" )
+                            $i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.notifications.enabled" )
                         #else
-                            $i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.disabled" )
+                            $i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.notifications.disabled" )
                         #end
                     </dd>
                 </dl>
                 #if ($enabled)
                     #if ($botName && !$botName.isEmpty())
                         <dl>
-                            <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNick" ):</dt>
+                            <dt>$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.botNick" ):</dt>
                             <dd>
                                 <div>
                                     #if ($botLink && !$botLink.isEmpty())
@@ -44,17 +44,17 @@
                                         <p>$botName</p>
                                     #end
                                 </div>
-                                <div>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNickDescription" )</div>
+                                <div>$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.botNickDescription" )</div>
                             </dd>
                         </dl>
                     #elseif($botLink && !$botLink.isEmpty())
                         <dl>
-                            <dt>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botLink" ):</dt>
+                            <dt>$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.botLink" ):</dt>
                             <dd>
                                 <div>
                                     <a href="$botLink" target="_blank">$botLink</a>
                                 </div>
-                                <div>$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.botNickDescription" )</div>
+                                <div>$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.botNickDescription" )</div>
                             </dd>
                         </dl>
                     #end
@@ -72,12 +72,12 @@
             <input type="text" id="myteam-dialog-mrim-login" class="text" maxlength="254" />
         </div>
         <div class="field-group">
-            <label for="myteam-dialog-enabled">$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications" )</label>
+            <label for="myteam-dialog-enabled">$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.notifications" )</label>
             <select id="myteam-dialog-enabled" class="select">
-                <option value="true">$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.enabled" )</option>
-                <option value="false">$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.disabled" )</option>
+                <option value="true">$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.notifications.enabled" )</option>
+                <option value="false">$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.notifications.disabled" )</option>
             </select>
-            <div class="description">$i18n.getText( "ru.mail.jira.plugins.mrimsender.profilePanel.notifications.description" )</div>
+            <div class="description">$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.notifications.description" )</div>
         </div>
         <input type="submit" class="hidden" />
     </form>

@@ -78,7 +78,7 @@ public class ButtonClickListener {
                 myteamApiClient.sendMessageText(viewIssueClickEvent.getChatId(), messageFormatter.createIssueSummary(currentIssue, currentUser), messageFormatter.getIssueButtons(viewIssueClickEvent.getIssueKey(), currentUser));
                 log.debug("ViewIssueCommand message sent...");
             } else {
-                myteamApiClient.sendMessageText(viewIssueClickEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"));
+                myteamApiClient.sendMessageText(viewIssueClickEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
                 log.debug("ViewIssueCommand no permissions message sent...");
             }
         }
@@ -90,7 +90,7 @@ public class ButtonClickListener {
         log.debug("CreateCommentCommand execution started...");
         ApplicationUser commentedUser = userData.getUserByMrimLogin(commentIssueClickEvent.getUserId());
         if (commentedUser != null) {
-            String message = i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.insertComment.message", commentIssueClickEvent.getIssueKey());
+            String message = i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.insertComment.message", commentIssueClickEvent.getIssueKey());
             myteamApiClient.answerCallbackQuery(commentIssueClickEvent.getQueryId());
             myteamApiClient.sendMessageText(commentIssueClickEvent.getChatId(), message, messageFormatter.getCancelButton(commentedUser));
             chatsStateMap.put(commentIssueClickEvent.getChatId(), ChatState.buildCommentWaitingState(commentIssueClickEvent.getIssueKey()));
@@ -101,7 +101,7 @@ public class ButtonClickListener {
     @Subscribe
     public void onCancelButtonClick(CancelClickEvent cancelClickEvent) throws UnirestException {
         log.debug("CancelCommand execution started...");
-        String message = i18nResolver.getRawText(localeManager.getLocaleFor(userData.getUserByMrimLogin(cancelClickEvent.getUserId())), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.cancelComment.message");
+        String message = i18nResolver.getRawText(localeManager.getLocaleFor(userData.getUserByMrimLogin(cancelClickEvent.getUserId())), "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.cancelComment.message");
         myteamApiClient.answerCallbackQuery(cancelClickEvent.getQueryId(), message, false, null);
         chatsStateMap.remove(cancelClickEvent.getChatId());
         log.debug("CancelCommand execution finished...");
@@ -112,7 +112,7 @@ public class ButtonClickListener {
         log.debug("OnSearchIssueButtonClick event handling started");
         ApplicationUser currentUser = userData.getUserByMrimLogin(showIssueClickEvent.getUserId());
         if (currentUser != null) {
-            String message = i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.searchButton.insertIssueKey.message");
+            String message = i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.myteam.messageQueueProcessor.searchButton.insertIssueKey.message");
             myteamApiClient.answerCallbackQuery(showIssueClickEvent.getQueryId());
             myteamApiClient.sendMessageText(showIssueClickEvent.getChatId(), message, messageFormatter.getCancelButton(currentUser));
             chatsStateMap.put(showIssueClickEvent.getChatId(), ChatState.issueKeyWaitingState);
@@ -137,7 +137,7 @@ public class ButtonClickListener {
                     int totalResultsSize = searchResults.getTotal();
                     myteamApiClient.answerCallbackQuery(searchIssuesClickEvent.getQueryId());
                     if (totalResultsSize == 0) {
-                        myteamApiClient.sendMessageText(searchIssuesClickEvent.getChatId(), i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.searchIssues.emptyResult"));
+                        myteamApiClient.sendMessageText(searchIssuesClickEvent.getChatId(), i18nResolver.getText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.emptyResult"));
                     } else {
                         myteamApiClient.sendMessageText(searchIssuesClickEvent.getChatId(),
                                                         messageFormatter.stringifyIssueList(locale, searchResults.getResults(), 0, totalResultsSize),
@@ -147,7 +147,7 @@ public class ButtonClickListener {
                     }
                 } else {
                     myteamApiClient.answerCallbackQuery(searchIssuesClickEvent.getQueryId());
-                    myteamApiClient.sendMessageText(searchIssuesClickEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.searchIssues.jqlParseError.text"));
+                    myteamApiClient.sendMessageText(searchIssuesClickEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.jqlParseError.text"));
                 }
 
             }
@@ -213,7 +213,7 @@ public class ButtonClickListener {
         if (currentUser != null) {
             Locale locale = localeManager.getLocaleFor(currentUser);
             myteamApiClient.answerCallbackQuery(searchByJqlClickEvent.getQueryId());
-            myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.searchByJqlClauseButton.insertJqlClause.message"));
+            myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.searchByJqlClauseButton.insertJqlClause.message"));
             chatsStateMap.put(chatId, ChatState.jqlClauseWaitingState);
         }
         log.debug("SearchByJqlClickEvent handling finished");

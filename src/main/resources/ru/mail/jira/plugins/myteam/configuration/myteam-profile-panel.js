@@ -28,7 +28,7 @@ require(['jquery', 'wrm/context-path'], function($, contextPath) {
                 success: function (data) {
                     $('#myteam-notification').removeClass('hidden');
                     $('#myteam-mrim-login').text(mrimLogin);
-                    $('#myteam-enabled').data('enabled', enabled).text(enabled == 'true' ? AJS.I18n.getText('ru.mail.jira.plugins.mrimsender.profilePanel.notifications.enabled') : AJS.I18n.getText('ru.mail.jira.plugins.mrimsender.profilePanel.notifications.disabled'));
+                    $('#myteam-enabled').data('enabled', enabled).text(enabled == 'true' ? AJS.I18n.getText('ru.mail.jira.plugins.myteam.profilePanel.notifications.enabled') : AJS.I18n.getText('ru.mail.jira.plugins.myteam.profilePanel.notifications.disabled'));
                     dialog.hide();
                 },
                 error: function showErrorMsg(request, status, error) {

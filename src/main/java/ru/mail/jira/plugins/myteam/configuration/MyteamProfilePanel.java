@@ -51,7 +51,7 @@ public class MyteamProfilePanel implements ContextProvider {
                                       @FormParam("enabled") final boolean enabled) {
 
         if (enabled && StringUtils.isBlank(mrimLogin))
-            throw new IllegalArgumentException(jiraAuthenticationContext.getI18nHelper().getText("ru.mail.jira.plugins.mrimsender.profilePanel.mrimLoginMustBeSpecified"));
+            throw new IllegalArgumentException(jiraAuthenticationContext.getI18nHelper().getText("ru.mail.jira.plugins.myteam.profilePanel.mrimLoginMustBeSpecified"));
 
         ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
         userData.setMrimLogin(user, StringUtils.defaultString(mrimLogin).trim());

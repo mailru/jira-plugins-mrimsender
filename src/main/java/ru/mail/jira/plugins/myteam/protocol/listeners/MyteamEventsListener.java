@@ -238,6 +238,12 @@ public class MyteamEventsListener {
                 break;
             case "createIssue":
                 asyncEventBus.post(new CreateIssueClickEvent(buttonClickEvent));
+                break;
+            case "showMenu":
+                // answer button click here in case of not creating another button clicked event
+                myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
+                asyncEventBus.post(new ShowDefaultMessageEvent(buttonClickEvent));
+                break;
             default:
                 // fix infinite spinners situations for not recognized button clicks
                 // for example next or prev button click when chat state was cleared
@@ -262,11 +268,11 @@ public class MyteamEventsListener {
                 if (permissionManager.hasPermission(ProjectPermissions.ADD_COMMENTS, commentedIssue, commentedUser)) {
                     commentManager.create(commentedIssue, commentedUser, newCommentMessageEvent.getMessage(), true);
                     log.debug("CreateCommentCommand comment created...");
-                    myteamApiClient.sendMessageText(newCommentMessageEvent.getChatId(), i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.commentCreated"));
+                    myteamApiClient.sendMessageText(newCommentMessageEvent.getChatId(), i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.commentCreated"));
                     log.debug("CreateCommentCommand new comment created message sent...");
                 } else {
                     log.debug("CreateCommentCommand permissions violation occurred...");
-                    myteamApiClient.sendMessageText(newCommentMessageEvent.getChatId(), i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.commentButton.noPermissions"));
+                    myteamApiClient.sendMessageText(newCommentMessageEvent.getChatId(), i18nResolver.getText(localeManager.getLocaleFor(commentedUser), "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.noPermissions"));
                     log.debug("CreateCommentCommand not enough permissions message sent...");
                 }
             }
@@ -289,11 +295,11 @@ public class MyteamEventsListener {
                     myteamApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), messageFormatter.createIssueSummary(currentIssue, currentUser), messageFormatter.getIssueButtons(currentIssue.getKey(), currentUser));
                     log.debug("ViewIssueCommand message sent...");
                 } else {
-                    myteamApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.messageQueueProcessor.quickViewButton.noPermissions"));
+                    myteamApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
                     log.debug("ViewIssueCommand no permissions message sent...");
                 }
             } else if (currentUser != null) {
-                myteamApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.mrimsender.icqEventsListener.newIssueKeyMessage.error.issueNotFound"));
+                myteamApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
             }
         } finally {
             jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
@@ -319,7 +325,7 @@ public class MyteamEventsListener {
                         SearchResults<Issue> searchResults = searchService.search(currentUser, sanitizedJql, pagerFilter);
                         int totalResultsSize = searchResults.getTotal();
                         if (totalResultsSize == 0)
-                            myteamApiClient.sendMessageText(searchIssuesEvent.getChatId(), i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.searchIssues.emptyResult"));
+                            myteamApiClient.sendMessageText(searchIssuesEvent.getChatId(), i18nResolver.getText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.emptyResult"));
                         else {
                             myteamApiClient.sendMessageText(searchIssuesEvent.getChatId(),
                                                             messageFormatter.stringifyIssueList(locale, searchResults.getResults(), 0, totalResultsSize),
@@ -329,10 +335,10 @@ public class MyteamEventsListener {
                         }
                     } else {
                         myteamApiClient.sendMessageText(searchIssuesEvent.getChatId(),
-                                                        String.join("\n", i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.searchIssues.jqlParseError.text"), messageFormatter.stringifyJqlClauseErrorsMap(messageSet, locale)));
+                                                        String.join("\n", i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.jqlParseError.text"), messageFormatter.stringifyJqlClauseErrorsMap(messageSet, locale)));
                     }
                 } else {
-                    myteamApiClient.sendMessageText(searchIssuesEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.icqEventsListener.searchIssues.jqlParseError.text"));
+                    myteamApiClient.sendMessageText(searchIssuesEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.jqlParseError.text"));
                 }
             }
             log.debug("ShowIssuesFilterResultsEvent handling finished");
