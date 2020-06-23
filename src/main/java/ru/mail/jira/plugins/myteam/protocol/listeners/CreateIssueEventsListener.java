@@ -5,6 +5,7 @@ import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.IssueInputParameters;
+import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
@@ -345,8 +346,9 @@ public class CreateIssueEventsListener {
 
                 IssueService.CreateValidationResult issueValidationResult = validateIssueWithGivenFields(currentUser, currentIssueCreationDto);
                 if (issueValidationResult.isValid()) {
-                    issueService.create(currentUser, issueValidationResult);
-                    myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.issueCreated"));
+                    MutableIssue createdIssue = issueService.create(currentUser, issueValidationResult).getIssue();
+                    String createdIssueLink = messageFormatter.createIssueLink(createdIssue);
+                    myteamApiClient.sendMessageText(chatId, i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.issueCreated", createdIssueLink));
                 } else {
                     myteamApiClient.sendMessageText(chatId, String.join("\n",
                                                                         i18nResolver.getText(locale, "ru.mail.jira.plugins.mrimsender.messageFormatter.createIssue.validationError"),

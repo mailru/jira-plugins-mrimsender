@@ -4,7 +4,7 @@ require(['jquery', 'wrm/context-path'], function($, contextPath) {
             width: 540,
             id: 'myteam-dialog'
         });
-        dialog.addHeader(AJS.I18n.getText('ru.mail.jira.plugins.mrimsender.title'));
+        dialog.addHeader(AJS.I18n.getText('ru.mail.jira.plugins.myteam.title'));
         dialog.addPanel(null, $('#myteam-dialog-form').removeClass('hidden').submit(function (e) {
             e.preventDefault();
             dialog.get('button:0')[0].item.click();

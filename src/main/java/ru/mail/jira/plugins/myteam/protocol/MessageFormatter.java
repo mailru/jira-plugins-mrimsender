@@ -241,10 +241,14 @@ public class MessageFormatter {
         return sb.toString();
     }
 
+    public String createIssueLink(Issue issue) {
+        return String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
+    }
+
     public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
         Issue issue = issueEvent.getIssue();
         ApplicationUser user = issueEvent.getUser();
-        String issueLink = String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
+        String issueLink = createIssueLink(issue);
 
         StringBuilder sb = new StringBuilder();
 
@@ -336,9 +340,10 @@ public class MessageFormatter {
                         .getFieldScreenLayoutItems(tab)
                         .forEach(fieldScreenLayoutItem -> {
                             Field field = fieldManager.getField(fieldScreenLayoutItem.getFieldId());
-                            if (fieldManager.isCustomField(field)) {
+                            if (fieldManager.isCustomField(field) && !fieldManager.isFieldHidden(user, field)) {
                                 CustomField customField = (CustomField) field;
-                                appendField(sb, customField.getFieldName(), customField.getValueFromIssue(issue), false);
+                                if (customField.isShown(issue))
+                                    appendField(sb, customField.getFieldName(), customField.getValueFromIssue(issue), false);
                             }
                         })
                 );
