@@ -275,6 +275,28 @@
         </actions>
     </webwork1>
 
+    <web-item key="calendar-remind-event-configuration-web-item" section="admin_plugins_menu/calendar-configuration-section">
+        <label key="ru.mail.jira.plugins.calendar.configuration.remind-event.title" />
+        <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
+            <param name="permission">admin</param>
+        </condition>
+        <link linkId="remind-event-configuration-link">/secure/MailRuCalendarRemindEventConfiguration.jspa</link>
+    </web-item>
+
+    <webwork1 key="remind-event-configuration-action" class="java.lang.Object" roles-required="admin">
+        <actions>
+            <action name="ru.mail.jira.plugins.calendar.configuration.MailRuCalendarRemindEventConfigurationAction" alias="MailRuCalendarRemindEventConfiguration">
+                <view name="success">/ru/mail/jira/plugins/calendar/configuration/remind-event-configuration.vm</view>
+            </action>
+        </actions>
+    </webwork1>
+    <web-resource key="remind-event-configuration-resource">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <resource type="download" name="remind-event-configuration.js" location="/ru/mail/jira/plugins/calendar/configuration/remind-event-configuration.js" />
+    </web-resource>
     <web-resource key="working-days-configuration-soy-templates">
         <dependency>com.atlassian.soy.soy-template-plugin:soy-deps</dependency>
         <transformation extension="soy">

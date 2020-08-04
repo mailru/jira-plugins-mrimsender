@@ -1,11 +1,13 @@
 package ru.mail.jira.plugins.calendar.service.reminder;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
+import com.atlassian.event.api.EventPublisher;
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
+import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.mail.Email;
 import com.atlassian.jira.mail.builder.EmailBuilder;
@@ -30,6 +32,7 @@ import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.CustomEventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDto;
 import ru.mail.jira.plugins.calendar.service.CalendarService;
+import ru.mail.jira.plugins.calendar.service.PluginData;
 import ru.mail.jira.plugins.calendar.service.UserCalendarService;
 
 import java.sql.Timestamp;
@@ -50,20 +53,23 @@ public class ReminderServiceImpl implements ReminderService {
     private final DateTimeFormatter dateTimeFormatter;
     private final UserCalendarService userCalendarService;
     private final CalendarService calendarService;
+    private final PluginData pluginData;
+    private final EventPublisher eventPublisher;
 
     @Autowired
     public ReminderServiceImpl(
-        @ComponentImport UserManager userManager,
-        @ComponentImport MailQueue mailQueue,
-        @ComponentImport AvatarService avatarService,
-        @ComponentImport I18nResolver i18nResolver,
-        @ComponentImport LocaleManager localeManager,
-        @ComponentImport TimeZoneManager timeZoneManager,
-        @ComponentImport ActiveObjects ao,
-        @ComponentImport DateTimeFormatter dateTimeFormatter,
-        UserCalendarService userCalendarService,
-        CalendarService calendarService
-    ) {
+            @ComponentImport UserManager userManager,
+            @ComponentImport MailQueue mailQueue,
+            @ComponentImport AvatarService avatarService,
+            @ComponentImport I18nResolver i18nResolver,
+            @ComponentImport LocaleManager localeManager,
+            @ComponentImport TimeZoneManager timeZoneManager,
+            @ComponentImport ActiveObjects ao,
+            @ComponentImport DateTimeFormatter dateTimeFormatter,
+            UserCalendarService userCalendarService,
+            CalendarService calendarService,
+            PluginData pluginData,
+            @ComponentImport EventPublisher eventPublisher) {
         this.ao = ao;
         this.userManager = userManager;
         this.mailQueue = mailQueue;
@@ -74,6 +80,8 @@ public class ReminderServiceImpl implements ReminderService {
         this.dateTimeFormatter = dateTimeFormatter;
         this.userCalendarService = userCalendarService;
         this.calendarService = calendarService;
+        this.pluginData = pluginData;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -194,6 +202,9 @@ public class ReminderServiceImpl implements ReminderService {
                 .renderLater();
 
             mailQueue.addItem(email);
+            if(pluginData.getEventIdForRemind() != 0){
+                eventPublisher.publish(new IssueEvent(null, params, recipient, pluginData.getEventIdForRemind(), false));
+            }
         }
     }
 
