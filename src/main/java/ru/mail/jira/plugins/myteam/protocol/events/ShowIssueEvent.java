@@ -3,6 +3,8 @@ package ru.mail.jira.plugins.myteam.protocol.events;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 
+import java.net.URL;
+
 @Getter
 public class ShowIssueEvent {
     private final String chatId;

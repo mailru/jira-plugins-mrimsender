@@ -240,9 +240,9 @@ public class MyteamEventsListener {
                 asyncEventBus.post(new CreateIssueClickEvent(buttonClickEvent));
                 break;
             case "showMenu":
-                // answer button click here in case of not creating another button clicked event
+                // answer button click here because ShowMenuEvent is originally MessageEvent =/
                 myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
-                asyncEventBus.post(new ShowDefaultMessageEvent(buttonClickEvent));
+                asyncEventBus.post(new ShowMenuEvent(buttonClickEvent));
                 break;
             default:
                 // fix infinite spinners situations for not recognized button clicks
