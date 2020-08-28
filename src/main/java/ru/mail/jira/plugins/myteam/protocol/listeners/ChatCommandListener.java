@@ -1,6 +1,8 @@
 package ru.mail.jira.plugins.myteam.protocol.listeners;
 
 import com.atlassian.jira.config.LocaleManager;
+import com.atlassian.jira.config.properties.APKeys;
+import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.permission.ProjectPermissions;
@@ -11,9 +13,12 @@ import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.eventbus.Subscribe;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import ru.mail.jira.plugins.myteam.Utils;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.ShowDefaultMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.ShowHelpEvent;
@@ -21,6 +26,7 @@ import ru.mail.jira.plugins.myteam.protocol.events.ShowIssueEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.ShowMenuEvent;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Locale;
 
 @Slf4j
@@ -33,6 +39,7 @@ public class ChatCommandListener {
     private final IssueManager issueManager;
     private final PermissionManager permissionManager;
     private final JiraAuthenticationContext jiraAuthenticationContext;
+    private final String JIRA_BASE_URL;
 
     public ChatCommandListener(MyteamApiClient myteamApiClient,
                                UserData userData,
@@ -41,7 +48,8 @@ public class ChatCommandListener {
                                LocaleManager localeManager,
                                IssueManager issueManager,
                                PermissionManager permissionManager,
-                               JiraAuthenticationContext jiraAuthenticationContext) {
+                               JiraAuthenticationContext jiraAuthenticationContext,
+                               ApplicationProperties applicationProperties) {
         this.myteamApiClient = myteamApiClient;
         this.userData = userData;
         this.messageFormatter = messageFormatter;
@@ -50,6 +58,7 @@ public class ChatCommandListener {
         this.issueManager = issueManager;
         this.permissionManager = permissionManager;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
+        this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
     }
 
     @Subscribe
@@ -107,6 +116,54 @@ public class ChatCommandListener {
         ApplicationUser currentUser = userData.getUserByMrimLogin(showDefaultMessageEvent.getUserId());
         if (currentUser != null) {
             Locale locale = localeManager.getLocaleFor(currentUser);
+            if (showDefaultMessageEvent.isHasForwards()) {
+                Forward forward = showDefaultMessageEvent.getForwardList().get(0);
+                String forwardMessageText = forward.getMessage().getText();
+                URL issueUrl = Utils.tryFindUrlByPrefixInStr(forwardMessageText, JIRA_BASE_URL);
+                if (issueUrl != null) {
+                    String issueKey = StringUtils.substringAfterLast(issueUrl.getPath(), "/");
+                    ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
+                    try {
+                        jiraAuthenticationContext.setLoggedInUser(currentUser);
+                        Issue issueToShow = issueManager.getIssueByKeyIgnoreCase(issueKey);
+                        if (issueToShow != null) {
+                            if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issueToShow, currentUser)) {
+                                myteamApiClient.sendMessageText(showDefaultMessageEvent.getChatId(), messageFormatter.createIssueSummary(issueToShow, currentUser), messageFormatter.getIssueButtons(issueToShow.getKey(), currentUser));
+                            } else {
+                                myteamApiClient.sendMessageText(showDefaultMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
+                            }
+                        } else {
+                            myteamApiClient.sendMessageText(showDefaultMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
+                        }
+                        log.debug("ShowDefaultMessageEvent handling finished");
+                    } finally {
+                        jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
+                    }
+                    return;
+                }
+            }
+            URL issueUrl = Utils.tryFindUrlByPrefixInStr(showDefaultMessageEvent.getMessage(), JIRA_BASE_URL);
+            if (issueUrl != null) {
+                String issueKey = StringUtils.substringAfterLast(issueUrl.getPath(), "/");
+                ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
+                try {
+                    jiraAuthenticationContext.setLoggedInUser(currentUser);
+                    Issue issueToShow = issueManager.getIssueByKeyIgnoreCase(issueKey);
+                    if (issueToShow != null) {
+                        if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issueToShow, currentUser)) {
+                            myteamApiClient.sendMessageText(showDefaultMessageEvent.getChatId(), messageFormatter.createIssueSummary(issueToShow, currentUser), messageFormatter.getIssueButtons(issueToShow.getKey(), currentUser));
+                        } else {
+                            myteamApiClient.sendMessageText(showDefaultMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
+                        }
+                    } else {
+                        myteamApiClient.sendMessageText(showDefaultMessageEvent.getChatId(), i18nResolver.getRawText(localeManager.getLocaleFor(currentUser), "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
+                    }
+                    log.debug("ShowDefaultMessageEvent handling finished");
+                } finally {
+                    jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
+                }
+                return;
+            }
             myteamApiClient.sendMessageText(showDefaultMessageEvent.getChatId(), i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.defaultMessage.text"), messageFormatter.getMenuButtons(currentUser));
         }
         log.debug("ShowDefaultMessageEvent handling finished");
