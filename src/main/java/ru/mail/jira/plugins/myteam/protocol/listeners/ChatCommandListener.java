@@ -84,7 +84,7 @@ public class ChatCommandListener {
         ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
         try {
             jiraAuthenticationContext.setLoggedInUser(currentUser);
-            Issue issueToShow = issueManager.getIssueByCurrentKey(showIssueEvent.getIssueKey());
+            Issue issueToShow = issueManager.getIssueByKeyIgnoreCase(showIssueEvent.getIssueKey());
             if (currentUser != null && issueToShow != null) {
                 if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issueToShow, currentUser)) {
                     myteamApiClient.sendMessageText(showIssueEvent.getChatId(), messageFormatter.createIssueSummary(issueToShow, currentUser), messageFormatter.getIssueButtons(issueToShow.getKey(), currentUser));

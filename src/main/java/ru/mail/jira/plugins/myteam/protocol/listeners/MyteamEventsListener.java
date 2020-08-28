@@ -2,6 +2,7 @@ package ru.mail.jira.plugins.myteam.protocol.listeners;
 
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.config.LocaleManager;
+import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.comments.CommentManager;
@@ -81,6 +82,7 @@ public class MyteamEventsListener {
     private final CommentManager commentManager;
     private final SearchService searchService;
     private final JiraAuthenticationContext jiraAuthenticationContext;
+    private final ApplicationProperties applicationProperties;
 
     public MyteamEventsListener(ChatStateMapping chatStateMapping,
                                 MyteamApiClient myteamApiClient,
@@ -95,7 +97,8 @@ public class MyteamEventsListener {
                                 ChatCommandListener chatCommandListener,
                                 ButtonClickListener buttonClickListener,
                                 CreateIssueEventsListener createIssueEventsListener,
-                                JiraAuthenticationContext jiraAuthenticationContext) {
+                                JiraAuthenticationContext jiraAuthenticationContext,
+                                ApplicationProperties applicationProperties) {
         this.chatsStateMap = chatStateMapping.getChatsStateMap();
         this.asyncEventBus = new AsyncEventBus(executorService, (exception, context) -> log.error(String.format("Exception occurred in subscriber = %s", context.getSubscriber().toString()), exception));
         this.asyncEventBus.register(this);
@@ -112,6 +115,7 @@ public class MyteamEventsListener {
         this.commentManager = commentManager;
         this.searchService = searchService;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
+        this.applicationProperties = applicationProperties;
     }
 
     public void publishEvent(Event event) {
@@ -164,7 +168,7 @@ public class MyteamEventsListener {
                     asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
                 }
                 if (command.startsWith("issue")) {
-                    asyncEventBus.post(new ShowIssueEvent(chatMessageEvent));
+                    asyncEventBus.post(new ShowIssueEvent(chatMessageEvent, applicationProperties));
                 }
             } else if (!isGroupChatEvent) {
                 asyncEventBus.post(new ShowDefaultMessageEvent(chatMessageEvent));
