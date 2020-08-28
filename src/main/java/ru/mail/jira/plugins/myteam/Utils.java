@@ -21,11 +21,14 @@ public class Utils {
         int endIndex = startIndex;
         while (endIndex < strLen && !Character.isWhitespace(str.charAt(endIndex)))
             endIndex++;
-        String urlStr = str.substring(startIndex, endIndex + 1);
+
+        String urlStr = str.substring(startIndex, endIndex);
 
         try {
             return new URL(urlStr);
         } catch (MalformedURLException e) {
+            // this is not very cool because of performance reasons,
+            // throwing and catching exceptions is much slower than just check nulls =(
             return null;
         }
     }
