@@ -7,6 +7,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.myteam.configuration.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
@@ -14,11 +15,14 @@ import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.IcqEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.File;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -31,8 +35,26 @@ public class MyteamEventsFetcherTest {
     private MyteamApiClient myteamApiClient;
     private org.codehaus.jackson.map.ObjectMapper jacksonObjectMapper;
 
+
     @Before
     public void init() {
+        // Mocking MyteamApiClient object
+        try (InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("env.properties")) {
+            Properties properties = new Properties();
+            if (resourceAsStream == null) {
+                System.out.println("env.properties file not found !");
+                return;
+            }
+            properties.load(resourceAsStream);
+            this.pluginData = Mockito.mock(PluginData.class);
+            when(pluginData.getToken()).thenReturn(properties.getProperty("myteam.test.bot.token"));
+            when(pluginData.getBotApiUrl()).thenReturn("https://api.internal.myteam.mail.ru/bot/v1");
+            this.myteamApiClient = new MyteamApiClientImpl(this.pluginData);
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+
+        //unirest initialization
         jacksonObjectMapper = new org.codehaus.jackson.map.ObjectMapper();
         Unirest.setTimeouts(10_000, 300_000);
         Unirest.setObjectMapper(new ObjectMapper() {
@@ -55,14 +77,9 @@ public class MyteamEventsFetcherTest {
                 }
             }
         });
-        this.pluginData = Mockito.mock(PluginData.class);
-        when(pluginData.getToken()).thenReturn("001.0533637662.3485284314:1000000272");
-        when(pluginData.getBotApiUrl()).thenReturn("https://api.internal.myteam.mail.ru/bot/v1");
-        this.myteamApiClient = new MyteamApiClientImpl(this.pluginData);
-
     }
 
-    @Ignore
+    @Test
     public void fetchIcqEvents() throws UnirestException {
         HttpResponse<FetchResponseDto> eventHttpResponse = this.myteamApiClient.getEvents(0, 5);
         System.out.println(eventHttpResponse.getBody());
@@ -82,16 +99,18 @@ public class MyteamEventsFetcherTest {
 
     @Test
     public void deserializationFetchResponseTestForParts() throws IOException {
-        String example = "{\"events\": [{\"eventId\": 183, \"payload\": {\"chat\": {\"chatId\": \"example@example.ru\", \"type\": \"private\"}, \"from\": {\"firstName\": \"Данил\", \"userId\": \"example@example.ru\"}, \"msgId\": \"6816094467183870357\", \"text\": \"yuio\", \"timestamp\": 1586995662}, \"type\": \"newMessage\"}, {\"eventId\": 184, \"payload\": {\"chat\": {\"chatId\": \"example@example.ru\", \"type\": \"private\"}, \"from\": {\"firstName\": \"Данил\", \"userId\": \"example@example.ru\"}, \"msgId\": \"6816094643277529285\", \"parts\": [{\"payload\": {\"fileId\": \"28484BzdUKPEEwmHDf4DmI5af94aff1ac\"}, \"type\": \"sticker\"}], \"text\": \"https://files.icq.net/get/28484BzdUKPEEwmHDf4DmI5af94aff1ac\", \"timestamp\": 1586995703}, \"type\": \"newMessage\"}, {\"eventId\": 185, \"payload\": {\"chat\": {\"chatId\": \"example@example.ru\", \"type\": \"private\"}, \"from\": {\"firstName\": \"Данил\", \"userId\": \"example@example.ru\"}, \"msgId\": \"6816094939630273234\", \"parts\": [{\"payload\": {\"fileId\": \"0DSdI000zoo7OPpedKDs0a5e97a23c1ab\", \"type\": \"image\"}, \"type\": \"file\"}], \"text\": \"https://files.icq.net/get/0DSdI000zoo7OPpedKDs0a5e97a23c1ab\", \"timestamp\": 1586995772}, \"type\": \"newMessage\"}, {\"eventId\": 186, \"payload\": {\"chat\": {\"chatId\": \"example@example.ru\", \"type\": \"private\"}, \"from\": {\"firstName\": \"Данил\", \"userId\": \"example@example.ru\"}, \"msgId\": \"6816095248867917825\", \"parts\": [{\"payload\": {\"firstName\": \"OnlyMineAgentBot\", \"nick\": \"OnlyMineAgentBot\", \"userId\": \"751619011\"}, \"type\": \"mention\"}], \"text\": \"@[751619011]  here i am\", \"timestamp\": 1586995844}, \"type\": \"newMessage\"}], \"ok\": true}";
+        String example = "{\"events\": [{\"eventId\": 183, \"payload\": {\"chat\": {\"chatId\": \"example@example.ru\", \"type\": \"private\"}, \"from\": {\"firstName\": \"Данил\", \"userId\": \"example@example.ru\"}, \"msgId\": \"6816094467183870357\", \"text\": \"yuio\", \"timestamp\": 1586995662}, \"type\": \"newMessage\"}, {\"eventId\": 184, \"payload\": {\"chat\": {\"chatId\": \"example@example.ru\", \"type\": \"private\"}, \"from\": {\"firstName\": \"Данил\", \"userId\": \"example@example.ru\"}, \"msgId\": \"6816094643277529285\", \"parts\": [{\"payload\": {\"fileId\": \"28484BzdUKPEEwmHDf4DmI5af94aff1ac\"}, \"type\": \"sticker\"}], \"text\": \"https://files.icq.net/get/28484BzdUKPEEwmHDf4DmI5af94aff1ac\", \"timestamp\": 1586995703}, \"type\": \"newMessage\"}, {\"eventId\": 185, \"payload\": {\"chat\": {\"chatId\": \"example@example.ru\", \"type\": \"private\"}, \"from\": {\"firstName\": \"Данил\", \"userId\": \"example@example.ru\"}, \"msgId\": \"6816094939630273234\", \"parts\": [{\"payload\": {\"fileId\": \"0DSdI000zoo7OPpedKDs0a5e97a23c1ab\", \"type\": \"image\"}, \"type\": \"file\"}], \"text\": \"https://files.icq.net/get/0DSdI000zoo7OPpedKDs0a5e97a23c1ab\", \"timestamp\": 1586995772}, \"type\": \"newMessage\"}, {\"eventId\": 186, \"payload\": {\"chat\": {\"chatId\": \"example@example.ru\", \"type\": \"private\"}, \"from\": {\"firstName\": \"Данил\", \"userId\": \"example@example.ru\"}, \"msgId\": \"6816095248867917825\", \"parts\": [{\"payload\": {\"firstName\": \"OnlyMineAgentBot\", \"nick\": \"OnlyMineAgentBot\", \"userId\": \"751619011\"}, \"type\": \"mention\"}], \"text\": \"@[751619011]  here i am\", \"timestamp\": 1586995844}, \"type\": \"newMessage\"}, {\"eventId\": 81, \"payload\": {\"chat\": {\"chatId\": \"d.udovichenko@corp.mail.ru\", \"type\": \"private\"}, \"from\": {\"firstName\": \"Данил\", \"lastName\": \"Удовиченко\", \"userId\": \"d.udovichenko@corp.mail.ru\"}, \"msgId\": \"6865294137898304021\", \"parts\": [{\"payload\": {\"message\": {\"from\": {\"firstName\": \"Metabot\", \"nick\": \"metabot\", \"userId\": \"70001\"}, \"msgId\": \"6865292565940273485\", \"text\": \"Please enter botId or nick.\", \"timestamp\": 1598450487}}, \"type\": \"forward\"}], \"timestamp\": 1598450853}, \"type\": \"newMessage\"}], \"ok\": true}";
         FetchResponseDto fetchResponseDto = jacksonObjectMapper.readValue(example, FetchResponseDto.class);
         assertTrue(fetchResponseDto.isOk());
-        assertEquals(fetchResponseDto.getEvents().size(), 4);
+        assertEquals(fetchResponseDto.getEvents().size(), 5);
         fetchResponseDto.getEvents().forEach(event -> assertEquals(NewMessageEvent.class, event.getClass()));
         List<NewMessageEvent> newMessageEvents = fetchResponseDto.getEvents().stream().map(event -> (NewMessageEvent) event).collect(Collectors.toList());
         assertNull(newMessageEvents.get(0).getParts());
         assertEquals(Part.class, newMessageEvents.get(1).getParts().get(0).getClass());
         assertEquals(File.class, newMessageEvents.get(2).getParts().get(0).getClass());
         assertEquals(Mention.class, newMessageEvents.get(3).getParts().get(0).getClass());
+        assertEquals(Forward.class, newMessageEvents.get(4).getParts().get(0).getClass());
+        System.out.println(newMessageEvents.get(4).getParts().get(0).toString());
     }
 
     @Test

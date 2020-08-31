@@ -2,6 +2,8 @@ package ru.mail.jira.plugins.myteam.protocol.listeners;
 
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.config.LocaleManager;
+import com.atlassian.jira.config.properties.APKeys;
+import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.comments.CommentManager;
@@ -81,6 +83,7 @@ public class MyteamEventsListener {
     private final CommentManager commentManager;
     private final SearchService searchService;
     private final JiraAuthenticationContext jiraAuthenticationContext;
+    private final String JIRA_BASE_URL;
 
     public MyteamEventsListener(ChatStateMapping chatStateMapping,
                                 MyteamApiClient myteamApiClient,
@@ -95,7 +98,8 @@ public class MyteamEventsListener {
                                 ChatCommandListener chatCommandListener,
                                 ButtonClickListener buttonClickListener,
                                 CreateIssueEventsListener createIssueEventsListener,
-                                JiraAuthenticationContext jiraAuthenticationContext) {
+                                JiraAuthenticationContext jiraAuthenticationContext,
+                                ApplicationProperties applicationProperties) {
         this.chatsStateMap = chatStateMapping.getChatsStateMap();
         this.asyncEventBus = new AsyncEventBus(executorService, (exception, context) -> log.error(String.format("Exception occurred in subscriber = %s", context.getSubscriber().toString()), exception));
         this.asyncEventBus.register(this);
@@ -112,6 +116,7 @@ public class MyteamEventsListener {
         this.commentManager = commentManager;
         this.searchService = searchService;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
+        this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
     }
 
     public void publishEvent(Event event) {
@@ -131,7 +136,7 @@ public class MyteamEventsListener {
                 return;
             }
             if (chatState.isWaitingForIssueKey()) {
-                asyncEventBus.post(new IssueKeyMessageEvent(chatMessageEvent));
+                asyncEventBus.post(new IssueKeyMessageEvent(chatMessageEvent, JIRA_BASE_URL));
                 return;
             }
             if (chatState.isWaitingForJqlClause()) {
@@ -154,22 +159,22 @@ public class MyteamEventsListener {
 
         // if chat isn't in some state then just process new message
         String message = chatMessageEvent.getMessage();
-        if (message != null) {
-            if (message.startsWith(CHAT_COMMAND_PREFIX)) {
-                String command = StringUtils.substringAfter(message, CHAT_COMMAND_PREFIX).toLowerCase();
-                if (command.startsWith("help")) {
-                    asyncEventBus.post(new ShowHelpEvent(chatMessageEvent));
-                }
-                if (command.startsWith("menu") && !isGroupChatEvent) {
-                    asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
-                }
-                if (command.startsWith("issue")) {
-                    asyncEventBus.post(new ShowIssueEvent(chatMessageEvent));
-                }
-            } else if (!isGroupChatEvent) {
-                asyncEventBus.post(new ShowDefaultMessageEvent(chatMessageEvent));
+
+        if (message != null && message.startsWith(CHAT_COMMAND_PREFIX)) {
+            String command = StringUtils.substringAfter(message, CHAT_COMMAND_PREFIX).toLowerCase();
+            if (command.startsWith("help")) {
+                asyncEventBus.post(new ShowHelpEvent(chatMessageEvent));
             }
+            if (command.startsWith("menu") && !isGroupChatEvent) {
+                asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
+            }
+            if (command.startsWith("issue")) {
+                asyncEventBus.post(new ShowIssueEvent(chatMessageEvent, JIRA_BASE_URL));
+            }
+        } else if (!isGroupChatEvent && (message != null || chatMessageEvent.isHasForwards())) {
+            asyncEventBus.post(new ShowDefaultMessageEvent(chatMessageEvent));
         }
+
 
     }
 
@@ -240,9 +245,9 @@ public class MyteamEventsListener {
                 asyncEventBus.post(new CreateIssueClickEvent(buttonClickEvent));
                 break;
             case "showMenu":
-                // answer button click here in case of not creating another button clicked event
+                // answer button click here because ShowMenuEvent is originally MessageEvent =/
                 myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
-                asyncEventBus.post(new ShowDefaultMessageEvent(buttonClickEvent));
+                asyncEventBus.post(new ShowMenuEvent(buttonClickEvent));
                 break;
             default:
                 // fix infinite spinners situations for not recognized button clicks
@@ -289,7 +294,7 @@ public class MyteamEventsListener {
         ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
         try {
             jiraAuthenticationContext.setLoggedInUser(currentUser);
-            Issue currentIssue = issueManager.getIssueByCurrentKey(issueKeyMessageEvent.getIssueKey());
+            Issue currentIssue = issueManager.getIssueByKeyIgnoreCase(issueKeyMessageEvent.getIssueKey());
             if (currentUser != null && currentIssue != null) {
                 if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, currentIssue, currentUser)) {
                     myteamApiClient.sendMessageText(issueKeyMessageEvent.getChatId(), messageFormatter.createIssueSummary(currentIssue, currentUser), messageFormatter.getIssueButtons(currentIssue.getKey(), currentUser));

@@ -1,6 +1,7 @@
 package ru.mail.jira.plugins.myteam.protocol.events;
 
 import lombok.Getter;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 
 @Getter
 public class ShowMenuEvent {
@@ -10,5 +11,10 @@ public class ShowMenuEvent {
     public ShowMenuEvent(ChatMessageEvent chatMessageEvent) {
         this.userId = chatMessageEvent.getUerId();
         this.chatId = chatMessageEvent.getChatId();
+    }
+
+    public ShowMenuEvent(ButtonClickEvent buttonClickEvent) {
+        this.userId = buttonClickEvent.getUserId();
+        this.chatId = buttonClickEvent.getChatId();
     }
 }

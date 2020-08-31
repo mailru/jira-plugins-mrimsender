@@ -15,7 +15,9 @@ import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -25,8 +27,26 @@ public class MyteamApiClientImplTest {
 
     private PluginData pluginData;
     private MyteamApiClient myteamApiClient;
+
     @Before
     public void setUp() throws Exception {
+        // Mocking MyteamApiClient object
+        try (InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("env.properties")) {
+            Properties properties = new Properties();
+            if (resourceAsStream == null) {
+                System.out.println("env.properties file not found !");
+                return;
+            }
+            properties.load(resourceAsStream);
+            this.pluginData = Mockito.mock(PluginData.class);
+            when(pluginData.getToken()).thenReturn(properties.getProperty("myteam.test.bot.token"));
+            when(pluginData.getBotApiUrl()).thenReturn("https://api.internal.myteam.mail.ru/bot/v1");
+            this.myteamApiClient = new MyteamApiClientImpl(this.pluginData);
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+
+        // unirest initialization
         Unirest.setTimeouts(10_000, 300_000);
         Unirest.setObjectMapper(new ObjectMapper() {
             private org.codehaus.jackson.map.ObjectMapper jacksonObjectMapper = new org.codehaus.jackson.map.ObjectMapper();
@@ -49,10 +69,6 @@ public class MyteamApiClientImplTest {
                 }
             }
         });
-        this.pluginData = Mockito.mock(PluginData.class);
-        when(pluginData.getToken()).thenReturn("001.0533637662.3485284314:1000000272");
-        when(pluginData.getBotApiUrl()).thenReturn("https://api.internal.myteam.mail.ru/bot/v1");
-        this.myteamApiClient = new MyteamApiClientImpl(this.pluginData);
     }
 
     @Ignore
