@@ -1,5 +1,7 @@
 package ru.mail.jira.plugins.myteam;
 
+import org.apache.commons.lang.StringUtils;
+
 import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -13,6 +15,9 @@ public class Utils {
      */
     @Nullable
     public static URL tryFindUrlByPrefixInStr(String str, String urlPrefix) {
+        if (StringUtils.isEmpty(str))
+            return null;
+
         int startIndex = str.indexOf(urlPrefix);
         int strLen = str.length();
         if ( startIndex == -1)
