@@ -62,17 +62,19 @@ public class MyteamEventsFetcher {
                 httpResponse.getBody()
                             .getEvents()
                             .forEach(event -> {
-                                if (event instanceof NewMessageEvent) {
-                                    eventId.set(event.getEventId());
-                                    myteamEventsListener.publishEvent(new ChatMessageEvent((NewMessageEvent)event));
-                                } else if (event instanceof CallbackQueryEvent) {
-                                    eventId.set(event.getEventId());
-                                    myteamEventsListener.publishEvent(new ButtonClickEvent((CallbackQueryEvent)event));
-                                } else {
+                                try {
+                                    if (event instanceof NewMessageEvent) {
+                                        myteamEventsListener.publishEvent(new ChatMessageEvent((NewMessageEvent)event));
+                                    }
+                                    if (event instanceof CallbackQueryEvent) {
+                                        myteamEventsListener.publishEvent(new ButtonClickEvent((CallbackQueryEvent)event));
+                                    }
+                                } catch (Exception e) {
+                                    log.error(String.format("Exception inside fetchIcqEvents occurred with event = %s", event.toString()), e);
+                                } finally {
                                     eventId.set(event.getEventId());
                                 }
                             });
-
                 this.lastEventId = eventId.get();
             }
             log.debug("IcqEventsFetcher fetchIcqEvents finished.... ");
