@@ -70,7 +70,7 @@ public class MyteamEventsFetcher {
                                         myteamEventsListener.publishEvent(new ButtonClickEvent((CallbackQueryEvent)event));
                                     }
                                 } catch (Exception e) {
-                                    log.error(String.format("Exception inside fetchIcqEvents occurred with event = %s", event.toString()), e);
+                                    log.error( "Exception inside fetchIcqEvents occurred with event = {}", event.toString(), e);
                                 } finally {
                                     eventId.set(event.getEventId());
                                 }
