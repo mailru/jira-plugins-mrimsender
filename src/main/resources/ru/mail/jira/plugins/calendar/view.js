@@ -440,11 +440,7 @@ require(['jquery',
                     userData: this.model,
                     calendars: this.collection.toJSON(),
                     successHandler: $.proxy(function(createdEvent) {
-                        if (createdEvent.recurrenceType) {
-                            this.calendarView.reload();
-                        } else {
-                            this.calendarView.addEvent(createdEvent);
-                        }
+                        this.calendarView.reload();
                     }, this)
                 });
                 customEventDialogView.show();
