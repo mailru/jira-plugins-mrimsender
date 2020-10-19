@@ -55,50 +55,50 @@
         <resource type="download" name="quick-filter-dialog.soy.js" location="ru/mail/jira/plugins/calendar/dialog/quick-filter-dialog.soy"/>
     </web-resource>
 
-    <web-resource key="calendar-gadget-resources">
-        <transformation extension="js">
-            <transformer key="jsI18n"/>
-        </transformation>
-        <dependency>jira.webresources:almond</dependency>
-        <dependency>jira.webresources:util-lite</dependency>
-        <dependency>jira.webresources:jquery</dependency>
-        <dependency>jira.webresources:momentjs</dependency>
-        <dependency>jira.webresources:jira-formatter</dependency>
-        <dependency>jira.webresources:autocomplete</dependency>
+<!--    <web-resource key="calendar-gadget-resources">-->
+<!--        <transformation extension="js">-->
+<!--            <transformer key="jsI18n"/>-->
+<!--        </transformation>-->
+<!--        <dependency>jira.webresources:almond</dependency>-->
+<!--        <dependency>jira.webresources:util-lite</dependency>-->
+<!--        <dependency>jira.webresources:jquery</dependency>-->
+<!--        <dependency>jira.webresources:momentjs</dependency>-->
+<!--        <dependency>jira.webresources:jira-formatter</dependency>-->
+<!--        <dependency>jira.webresources:autocomplete</dependency>-->
 
-        <dependency>com.atlassian.auiplugin:ajs</dependency>
-        <dependency>com.atlassian.auiplugin:aui-select2</dependency>
-        <dependency>com.atlassian.auiplugin:dialog2</dependency>
-        <dependency>jira.webresources:jquery-livestamp</dependency>
-        <dependency>ru.mail.jira.plugins.mailrucal:mailru-calendar-soy-templates</dependency>
+<!--        <dependency>com.atlassian.auiplugin:ajs</dependency>-->
+<!--        <dependency>com.atlassian.auiplugin:aui-select2</dependency>-->
+<!--        <dependency>com.atlassian.auiplugin:dialog2</dependency>-->
+<!--        <dependency>jira.webresources:jquery-livestamp</dependency>-->
+<!--        <dependency>ru.mail.jira.plugins.mailrucal:mailru-calendar-soy-templates</dependency>-->
 
-        <resource type="download" name="calendar-img/" location="ru/mail/jira/plugins/calendar/img"/>
+<!--        <resource type="download" name="calendar-img/" location="ru/mail/jira/plugins/calendar/img"/>-->
 
-        <resource type="download" name="intro-screenshot.png" location="ru/mail/jira/plugins/calendar/gadget/intro-screenshot.png"/>
-        <resource type="download" name="intro-thumb.png" location="ru/mail/jira/plugins/calendar/gadget/intro-thumb.png"/>
+<!--        <resource type="download" name="intro-screenshot.png" location="ru/mail/jira/plugins/calendar/gadget/intro-screenshot.png"/>-->
+<!--        <resource type="download" name="intro-thumb.png" location="ru/mail/jira/plugins/calendar/gadget/intro-thumb.png"/>-->
 
-        <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>
-        <resource type="download" name="moment-timezone-with-data.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment-timezone-with-data.js"/>
-        <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/libs/clipboard-min.js"/>
+<!--        <resource type="download" name="moment.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment.js"/>-->
+<!--        <resource type="download" name="moment-timezone-with-data.js" location="ru/mail/jira/plugins/calendar/fullcalendar/moment-timezone-with-data.js"/>-->
+<!--        <resource type="download" name="clipboard.js" location="ru/mail/jira/plugins/calendar/libs/clipboard-min.js"/>-->
 
-        <resource type="download" name="vis.css" location="ru/mail/jira/plugins/calendar/timeline/vis.css"/>
-        <resource type="download" name="vis-timeline.js" location="ru/mail/jira/plugins/calendar/timeline/vis-timeline.js"/>
-        <resource type="download" name="img/" location="ru/mail/jira/plugins/calendar/timeline/img"/>
+<!--        <resource type="download" name="vis.css" location="ru/mail/jira/plugins/calendar/timeline/vis.css"/>-->
+<!--        <resource type="download" name="vis-timeline.js" location="ru/mail/jira/plugins/calendar/timeline/vis-timeline.js"/>-->
+<!--        <resource type="download" name="img/" location="ru/mail/jira/plugins/calendar/timeline/img"/>-->
 
-        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
-        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
-        <resource type="download" name="fullcalendar-lang-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar-lang-all.js"/>
+<!--        <resource type="download" name="main.css" location="ru/mail/jira/plugins/calendar/fullcalendar/main.css"/>-->
+<!--        <resource type="download" name="main.js" location="ru/mail/jira/plugins/calendar/fullcalendar/main.js"/>-->
+<!--        <resource type="download" name="locales-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/locales-all.js"/>-->
 
-        <resource type="download" name="preferences.js" location="ru/mail/jira/plugins/calendar/preferences.js"/>
-        <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
-        <resource type="download" name="recurrence.js" location="ru/mail/jira/plugins/calendar/recurrence.js"/>
-        <resource type="download" name="edit-type-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/edit-type-dialog.js"/>
-        <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>
-        <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
-        <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
-        <resource type="download" name="calendar-gadget.css" location="ru/mail/jira/plugins/calendar/gadget/calendar-gadget.css"/>
-        <resource type="download" name="calendar-gadget.js" location="ru/mail/jira/plugins/calendar/gadget/calendar-gadget.js"/>
-    </web-resource>
+<!--        <resource type="download" name="preferences.js" location="ru/mail/jira/plugins/calendar/preferences.js"/>-->
+<!--        <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>-->
+<!--        <resource type="download" name="recurrence.js" location="ru/mail/jira/plugins/calendar/recurrence.js"/>-->
+<!--        <resource type="download" name="edit-type-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/edit-type-dialog.js"/>-->
+<!--&lt;!&ndash;        <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>&ndash;&gt;-->
+<!--        <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>-->
+<!--        <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>-->
+<!--        <resource type="download" name="calendar-gadget.css" location="ru/mail/jira/plugins/calendar/gadget/calendar-gadget.css"/>-->
+<!--        <resource type="download" name="calendar-gadget.js" location="ru/mail/jira/plugins/calendar/gadget/calendar-gadget.js"/>-->
+<!--    </web-resource>-->
 
     <web-resource key="calendar-resources">
         <transformation extension="js">
@@ -128,9 +128,10 @@
         <resource type="download" name="vis-timeline.js" location="ru/mail/jira/plugins/calendar/timeline/vis-timeline.js"/>
         <resource type="download" name="img/" location="ru/mail/jira/plugins/calendar/timeline/img"/>
 
-        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
-        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
-        <resource type="download" name="fullcalendar-lang-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar-lang-all.js"/>
+        <resource type="download" name="main.css" location="ru/mail/jira/plugins/calendar/fullcalendar/main.css"/>
+        <resource type="download" name="main.js" location="ru/mail/jira/plugins/calendar/fullcalendar/main.js"/>
+        <resource type="download" name="locales-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/locales-all.js"/>
+        <resource type="download" name="main.global.min.js" location="ru/mail/jira/plugins/calendar/fullcalendar/main.global.min.js"/>
 
         <resource type="download" name="preferences.js" location="ru/mail/jira/plugins/calendar/preferences.js"/>
         <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
@@ -144,7 +145,7 @@
         <resource type="download" name="quick-filter-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/quick-filter-dialog.js"/>
         <resource type="download" name="feedback-flag.js" location="ru/mail/jira/plugins/calendar/feedback-flag.js"/>
 
-        <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>
+<!--        <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>-->
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
         <resource type="download" name="view.js" location="ru/mail/jira/plugins/calendar/view.js"/>

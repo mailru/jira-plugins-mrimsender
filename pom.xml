@@ -231,6 +231,9 @@
                         <exclude>**/*.xml</exclude>
                         <exclude>**/*-min*</exclude>
                         <exclude>**/vis-timeline.js</exclude>
+                        <exclude>**/main.js</exclude>
+                        <exclude>**/moment.js</exclude>
+                        <exclude>**/main.global.min.js</exclude>
                     </excludes>
                 </configuration>
             </plugin>

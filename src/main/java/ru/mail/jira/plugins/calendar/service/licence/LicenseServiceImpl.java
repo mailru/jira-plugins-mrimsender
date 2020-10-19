@@ -39,22 +39,23 @@ public class LicenseServiceImpl implements LicenseService {
 
     @Override
     public LicenseStatus getLicenseStatus() {
-        Option<PluginLicense> licenseOption = pluginLicenseManager.getLicense();
-        if (licenseOption.isDefined()) {
-            PluginLicense license = licenseOption.get();
-            if (license.isValid()) {
-                return LicenseStatus.ok();
-            } else {
-                Option<LicenseError> licenseErrorOption = license.getError();
-                if (licenseErrorOption.isDefined()) {
-                    LicenseError licenseError = licenseErrorOption.get();
-                    return LicenseStatus.invalid(i18nResolver.getText("ru.mail.jira.plugins.license.error." + licenseError.name()));
-                } else {
-                    return LicenseStatus.invalid(i18nResolver.getText("ru.mail.jira.plugins.license.error.INVALID"));
-                }
-            }
-        } else {
-            return LicenseStatus.invalid(i18nResolver.getText("ru.mail.jira.plugins.license.error.REQUIRED"));
-        }
+        return LicenseStatus.ok();
+//        Option<PluginLicense> licenseOption = pluginLicenseManager.getLicense();
+//        if (licenseOption.isDefined()) {
+//            PluginLicense license = licenseOption.get();
+//            if (license.isValid()) {
+//                return LicenseStatus.ok();
+//            } else {
+//                Option<LicenseError> licenseErrorOption = license.getError();
+//                if (licenseErrorOption.isDefined()) {
+//                    LicenseError licenseError = licenseErrorOption.get();
+//                    return LicenseStatus.invalid(i18nResolver.getText("ru.mail.jira.plugins.license.error." + licenseError.name()));
+//                } else {
+//                    return LicenseStatus.invalid(i18nResolver.getText("ru.mail.jira.plugins.license.error.INVALID"));
+//                }
+//            }
+//        } else {
+//            return LicenseStatus.invalid(i18nResolver.getText("ru.mail.jira.plugins.license.error.REQUIRED"));
+//        }
     }
 }

@@ -49,9 +49,9 @@
         <div id="calendar-period-dropdown" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
             <ul class="aui-list-truncate">
                 <li><a href="#" data-view-type="quarter" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.quarter" )</a></li>
-                <li><a href="#" data-view-type="month" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.month" )</a></li>
-                <li><a href="#" data-view-type="agendaWeek" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.week" )</a></li>
-                <li><a href="#" data-view-type="agendaDay" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.day" )</a></li>
+                <li><a href="#" data-view-type="dayGridMonth" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.month" )</a></li>
+                <li><a href="#" data-view-type="timeGridWeek" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.week" )</a></li>
+                <li><a href="#" data-view-type="timeGridDay" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.day" )</a></li>
                 <li><a href="#" data-view-type="timeline" class="aui-dropdown2-radio">$i18n.getText( "ru.mail.jira.plugins.calendar.timeline" )</a></li>
             </ul>
         </div>
