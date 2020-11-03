@@ -56,6 +56,7 @@ import ru.mail.jira.plugins.myteam.protocol.events.buttons.SearchByJqlClickEvent
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.SearchIssuesClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ShowIssueClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ViewIssueClickEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.NewIssueFieldValueButtonClickEvent;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -210,6 +211,12 @@ public class MyteamEventsListener {
             if (chatState.isWaitingForIssueTypeSelect()) {
                 if (buttonPrefix.equals("selectIssueType")) {
                     asyncEventBus.post(new IssueTypeButtonClickEvent(buttonClickEvent, chatState.getIssueCreationDto()));
+                    return;
+                }
+            }
+            if (chatState.isWaitingForNewIssueButtonFillingState()) {
+                if (buttonPrefix.equals("selectIssueButtonValue")) {
+                    asyncEventBus.post(new NewIssueFieldValueButtonClickEvent(buttonClickEvent, chatState.getIssueCreationDto(), chatState.getCurrentFillingFieldNum()));
                     return;
                 }
             }

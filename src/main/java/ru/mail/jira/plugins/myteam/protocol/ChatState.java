@@ -15,6 +15,7 @@ public class ChatState {
     private final boolean isWaitingForProjectSelect;
     private final boolean isWaitingForIssueTypeSelect;
     private final boolean isNewIssueFieldsFillingState;
+    private final boolean isWaitingForNewIssueButtonFillingState;
     private final String issueKey;
     private final Query currentSearchJqlClause;
     private final Integer currentSelectListPage;
@@ -47,9 +48,17 @@ public class ChatState {
                 .build();
     }
 
-    public static ChatState  buildIssueTypeSelectWaitingState(IssueCreationDto issueCreationDto) {
+    public static ChatState buildIssueTypeSelectWaitingState(IssueCreationDto issueCreationDto) {
         return builder()
                 .isWaitingForIssueTypeSelect(true)
+                .issueCreationDto(issueCreationDto)
+                .build();
+    }
+
+    public static ChatState buildNewIssueButtonFieldsWaitingState(Integer currentFillingFieldNum, IssueCreationDto issueCreationDto) {
+        return builder()
+                .isWaitingForNewIssueButtonFillingState(true)
+                .currentFillingFieldNum(currentFillingFieldNum)
                 .issueCreationDto(issueCreationDto)
                 .build();
     }

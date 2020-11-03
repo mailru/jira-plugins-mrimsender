@@ -535,6 +535,15 @@ public class MessageFormatter {
         return buttons;
     }
 
+    public List<List<InlineKeyboardMarkupButton>> getSelectIssueNewIssuePrioritiesButtons(Collection<Priority> priorities) {
+        List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+        priorities.forEach(priority -> {
+            InlineKeyboardMarkupButton issueTypeButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(priority.getNameTranslation(i18nHelper), String.join("-", "selectIssueButtonValue", priority.getName()));
+            addRowWithButton(buttons, issueTypeButton);
+        });
+        return buttons;
+    }
+
     public String formatIssueCreationDto(Locale locale, IssueCreationDto issueCreationDto) {
         StringJoiner sj = new StringJoiner("\n");
 
