@@ -233,7 +233,7 @@ public class CreateIssueEventsListener {
             Collection<IssueType> projectIssueTypes = issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(selectedProject);
             myteamApiClient.sendMessageText(chatId,
                                             messageFormatter.getSelectIssueTypeMessage(locale),
-                                            messageFormatter.getSelectIssueTypeMessageButtons(projectIssueTypes));
+                                            messageFormatter.buildIssueTypesButtons(projectIssueTypes));
             chatsStateMap.put(chatId, ChatState.buildIssueTypeSelectWaitingState(currentIssueCreationDto));
         }
         finally {
@@ -356,7 +356,7 @@ public class CreateIssueEventsListener {
             if (nextField.getId().equals("priority")) { // select value with buttons
                 myteamApiClient.sendMessageText(chatId,
                         messageFormatter.createInsertFieldMessage(locale, nextField, currentIssueCreationDto),
-                        messageFormatter.getSelectIssueNewIssuePrioritiesButtons(constantsManager.getPriorities()));
+                        messageFormatter.buildPrioritiesButtons(constantsManager.getPriorities()));
                 chatsStateMap.put(chatId, ChatState.buildNewIssueButtonFieldsWaitingState(nextFieldNum, currentIssueCreationDto));
             } else { // select value by message
                 myteamApiClient.sendMessageText(chatId, messageFormatter.createInsertFieldMessage(locale, nextField, currentIssueCreationDto));

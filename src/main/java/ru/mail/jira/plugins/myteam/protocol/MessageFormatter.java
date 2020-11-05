@@ -526,7 +526,7 @@ public class MessageFormatter {
         return i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectIssueType.message");
     }
 
-    public List<List<InlineKeyboardMarkupButton>> getSelectIssueTypeMessageButtons(Collection<IssueType> issueTypes) {
+    public List<List<InlineKeyboardMarkupButton>> buildIssueTypesButtons(Collection<IssueType> issueTypes) {
         List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
         issueTypes.forEach(issueType -> {
             InlineKeyboardMarkupButton issueTypeButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(issueType.getNameTranslation(i18nHelper), String.join("-", "selectIssueType", issueType.getId()));
@@ -535,7 +535,7 @@ public class MessageFormatter {
         return buttons;
     }
 
-    public List<List<InlineKeyboardMarkupButton>> getSelectIssueNewIssuePrioritiesButtons(Collection<Priority> priorities) {
+    public List<List<InlineKeyboardMarkupButton>> buildPrioritiesButtons(Collection<Priority> priorities) {
         List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
         priorities.forEach(priority -> {
             InlineKeyboardMarkupButton issueTypeButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(priority.getNameTranslation(i18nHelper), String.join("-", "selectIssueButtonValue", priority.getName()));
