@@ -233,6 +233,10 @@ public class MyteamEventsListener {
                     return;
                 }
             }
+            if (chatState.isWaiting() && buttonPrefix.equals("cancel")) {
+                asyncEventBus.post(new CancelClickEvent(buttonClickEvent));
+                return;
+            }
         }
 
         // if chat isn't in some state then just process new command
@@ -245,9 +249,6 @@ public class MyteamEventsListener {
                 break;
             case "showComments":
                 asyncEventBus.post(new ViewIssueCommentsClickEvent(buttonClickEvent));
-                break;
-            case "cancel":
-                asyncEventBus.post(new CancelClickEvent(buttonClickEvent));
                 break;
             case "showIssue":
                 asyncEventBus.post(new ShowIssueClickEvent(buttonClickEvent));

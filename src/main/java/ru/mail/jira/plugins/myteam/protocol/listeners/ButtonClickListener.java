@@ -223,7 +223,9 @@ public class ButtonClickListener {
         if (currentUser != null) {
             Locale locale = localeManager.getLocaleFor(currentUser);
             myteamApiClient.answerCallbackQuery(searchByJqlClickEvent.getQueryId());
-            myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.searchByJqlClauseButton.insertJqlClause.message"));
+            myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText(locale,
+                    "ru.mail.jira.plugins.myteam.myteamEventsListener.searchByJqlClauseButton.insertJqlClause.message"),
+                    messageFormatter.buildButtonsWithCancel(null, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text")));
             chatsStateMap.put(chatId, ChatState.jqlClauseWaitingState);
         }
         log.debug("SearchByJqlClickEvent handling finished");

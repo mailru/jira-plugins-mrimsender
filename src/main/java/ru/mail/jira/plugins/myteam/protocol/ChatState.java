@@ -23,6 +23,13 @@ public class ChatState {
     private final Integer currentFillingFieldNum;
     private final IssueCreationDto issueCreationDto;
 
+    public boolean isWaiting() { // if bot is waiting for user action "Cancel" button works
+        return isWaitingForComment || isWaitingForIssueKey
+                || isWaitingForIssueTypeSelect || isWaitingForJqlClause
+                || isWaitingForProjectSelect || isWaitingForNewIssueButtonFillingState
+                || isNewIssueFieldsFillingState;
+    }
+
     public static final ChatState issueKeyWaitingState = builder().isWaitingForIssueKey(true).build();
     public static final ChatState jqlClauseWaitingState = builder().isWaitingForJqlClause(true).build();
 

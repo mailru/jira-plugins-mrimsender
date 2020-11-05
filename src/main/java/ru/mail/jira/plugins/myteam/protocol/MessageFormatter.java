@@ -398,13 +398,8 @@ public class MessageFormatter {
 
     public List<List<InlineKeyboardMarkupButton>> getCancelButton(ApplicationUser recipient) {
         List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-        List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-        buttons.add(buttonsRow);
 
-        InlineKeyboardMarkupButton cancel = new InlineKeyboardMarkupButton();
-        cancel.setText(i18nResolver.getRawText(localeManager.getLocaleFor(recipient), "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text"));
-        cancel.setCallbackData("cancel");
-        buttonsRow.add(cancel);
+        buttons.add(getCancelButtonRow(i18nResolver.getRawText(localeManager.getLocaleFor(recipient), "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text")));
 
         return buttons;
     }
@@ -572,6 +567,16 @@ public class MessageFormatter {
         return buttons;
     }
 
+    public List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
+        if (buttons == null) {
+            List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
+            newButtons.add(getCancelButtonRow(cancelButtonText));
+            return newButtons;
+        }
+        buttons.add(getCancelButtonRow(cancelButtonText));
+        return buttons;
+    }
+
     public String formatIssueCreationDto(Locale locale, IssueCreationDto issueCreationDto) {
         StringJoiner sj = new StringJoiner("\n");
 
@@ -597,6 +602,15 @@ public class MessageFormatter {
         return String.join("\n",
                            i18nResolver.getText(locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.message", i18nResolver.getRawText(locale, field.getNameKey()).toLowerCase(locale)),
                            this.formatIssueCreationDto(locale, issueCreationDto));
+    }
+
+    private List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
+        List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+        InlineKeyboardMarkupButton cancel = new InlineKeyboardMarkupButton();
+        cancel.setText(title);
+        cancel.setCallbackData("cancel");
+        buttonsRow.add(cancel);
+        return buttonsRow;
     }
 
     private boolean isArrayLikeField(Field field) {
