@@ -57,6 +57,9 @@ import ru.mail.jira.plugins.myteam.protocol.events.buttons.SearchIssuesClickEven
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ShowIssueClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ViewIssueClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.NewIssueFieldValueButtonClickEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.ViewIssueCommentsClickEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.NextIssueCommentsPageClickEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.PrevIssueCommentsPageClickEvent;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -198,6 +201,16 @@ public class MyteamEventsListener {
                     return;
                 }
             }
+            if (chatState.isIssueCommentsShowing()) {
+                if (buttonPrefix.equals("nextIssueCommentsListPage")) {
+                    asyncEventBus.post(new NextIssueCommentsPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getIssueKey()));
+                    return;
+                }
+                if (buttonPrefix.equals("prevIssueCommentsListPage")) {
+                    asyncEventBus.post(new PrevIssueCommentsPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getIssueKey()));
+                    return;
+                }
+            }
             if (chatState.isWaitingForProjectSelect()) {
                 if (buttonPrefix.equals("nextProjectListPage")) {
                     asyncEventBus.post(new NextProjectsPageClickEvent(buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getIssueCreationDto()));
@@ -229,6 +242,9 @@ public class MyteamEventsListener {
                 break;
             case "comment":
                 asyncEventBus.post(new CommentIssueClickEvent(buttonClickEvent));
+                break;
+            case "showComments":
+                asyncEventBus.post(new ViewIssueCommentsClickEvent(buttonClickEvent));
                 break;
             case "cancel":
                 asyncEventBus.post(new CancelClickEvent(buttonClickEvent));

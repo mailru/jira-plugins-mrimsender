@@ -11,6 +11,7 @@ public class ChatState {
     private final boolean isWaitingForComment;
     private final boolean isWaitingForIssueKey;
     private final boolean isIssueSearchResultsShowing;
+    private final boolean isIssueCommentsShowing;
     private final boolean isWaitingForJqlClause;
     private final boolean isWaitingForProjectSelect;
     private final boolean isWaitingForIssueTypeSelect;
@@ -37,6 +38,14 @@ public class ChatState {
                 .isIssueSearchResultsShowing(true)
                 .currentSearchJqlClause(currentSearchClause)
                 .currentSelectListPage(currentIssuesListPage)
+                .build();
+    }
+
+    public static ChatState buildIssueCommentsWatchingState(String issueKey, Integer currentCommentsListPage) {
+        return builder()
+                .isIssueCommentsShowing(true)
+                .issueKey(issueKey)
+                .currentSelectListPage(currentCommentsListPage)
                 .build();
     }
 
