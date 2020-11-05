@@ -4,7 +4,7 @@ import lombok.Getter;
 import ru.mail.jira.plugins.myteam.protocol.IssueCreationDto;
 
 @Getter
-public class NewIssueFieldValueMessageEvent {
+public class NewIssueFieldValueMessageEvent implements NewIssueValueEvent {
     private final String userId;
     private final String chatId;
     private final String fieldValue;
