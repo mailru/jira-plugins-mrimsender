@@ -491,13 +491,16 @@ public class MessageFormatter {
         collection.forEach(obj -> sj.add(obj.toString()));
 
         // append string with current (and total) page number info
-        int firstResultPageIndex = pageNumber * pageSize + 1;
-        int lastResultPageIndex = firstResultPageIndex + collection.size() - 1;
-        sj.add(DELIMITER_STR);
-        sj.add(i18nResolver.getText(locale,
-                                    "pager.results.displayissues.short",
-                                    String.join(" - ", Integer.toString(firstResultPageIndex), Integer.toString(lastResultPageIndex)),
-                                    Integer.toString(total)));
+        if ((pageNumber + 1) * pageSize < total) {
+            int firstResultPageIndex = pageNumber * pageSize + 1;
+            int lastResultPageIndex = firstResultPageIndex + collection.size() - 1;
+            sj.add(DELIMITER_STR);
+            sj.add(i18nResolver.getText(locale,
+                    "pager.results.displayissues.short",
+                    String.join(" - ", Integer.toString(firstResultPageIndex), Integer.toString(lastResultPageIndex)),
+                    Integer.toString(total)));
+        }
+
         return sj.toString();
     }
 
