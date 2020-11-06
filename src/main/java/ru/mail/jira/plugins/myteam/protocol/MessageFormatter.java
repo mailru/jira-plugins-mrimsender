@@ -46,7 +46,6 @@ import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -508,9 +507,10 @@ public class MessageFormatter {
     }
 
     public String stringifyIssueCommentsList(Locale locale, List<Comment> commentList, int pageNumber, int total) {
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         return stringifyPagedCollection(locale,
                                         commentList.stream().map(comment -> String.join("",
-                                                "[", new SimpleDateFormat("yyyy-MM-dd HH:mm").format(comment.getCreated()), "] ",
+                                                "[", dateFormatter.format(comment.getCreated()), "] ",
                                                 "[", comment.getAuthorFullName(), "] ",
                                                 comment.getBody())).collect(Collectors.toList()),
                                         pageNumber,
