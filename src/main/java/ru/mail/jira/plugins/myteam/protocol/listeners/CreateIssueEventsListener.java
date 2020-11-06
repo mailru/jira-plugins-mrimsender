@@ -133,7 +133,9 @@ public class CreateIssueEventsListener {
             List<Project> firstPageProjectsInterval = allowedProjectList.stream().limit(LIST_PAGE_SIZE).collect(Collectors.toList());
             myteamApiClient.sendMessageText(chatId,
                                             messageFormatter.createSelectProjectMessage(locale, firstPageProjectsInterval, 0, allowedProjectList.size()),
-                                            messageFormatter.getSelectProjectMessageButtons(locale, false, allowedProjectList.size() > LIST_PAGE_SIZE));
+                                            messageFormatter.buildButtonsWithCancel(messageFormatter.getSelectProjectMessageButtons(locale, false, allowedProjectList.size() > LIST_PAGE_SIZE),
+                                                    i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text"))
+                                            );
             chatsStateMap.put(chatId, ChatState.buildProjectSelectWaitingState(0, new IssueCreationDto()));
         }
         log.debug("CreateIssueClickEvent handling finished");
@@ -162,7 +164,9 @@ public class CreateIssueEventsListener {
             myteamApiClient.editMessageText(chatId,
                                             nextProjectsPageClickEvent.getMsgId(),
                                             messageFormatter.createSelectProjectMessage(locale, nextProjectsInterval, nextPageNumber, allowedProjectList.size()),
-                                            messageFormatter.getSelectProjectMessageButtons(locale, true, allowedProjectList.size() > LIST_PAGE_SIZE + nextPageStartIndex));
+                                            messageFormatter.buildButtonsWithCancel(
+                                                    messageFormatter.getSelectProjectMessageButtons(locale, true, allowedProjectList.size() > LIST_PAGE_SIZE + nextPageStartIndex),
+                                                    i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
             chatsStateMap.put(chatId, ChatState.buildProjectSelectWaitingState(nextPageNumber, nextProjectsPageClickEvent.getIssueCreationDto()));
         }
         log.debug("NextProjectsPageClickEvent handling finished");
@@ -190,7 +194,9 @@ public class CreateIssueEventsListener {
             myteamApiClient.editMessageText(chatId,
                                             prevProjectsPageClickEvent.getMsgId(),
                                             messageFormatter.createSelectProjectMessage(locale, prevProjectsInterval, prevPageNumber, allowedProjectList.size()),
-                                            messageFormatter.getSelectProjectMessageButtons(locale, prevPageStartIndex >= LIST_PAGE_SIZE, true));
+                                            messageFormatter.buildButtonsWithCancel(
+                                            messageFormatter.getSelectProjectMessageButtons(locale, prevPageStartIndex >= LIST_PAGE_SIZE, true),
+                                            i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
             chatsStateMap.put(chatId, ChatState.buildProjectSelectWaitingState(prevPageNumber, prevProjectsPageClickEvent.getIssueCreationDto()));
         }
         log.debug("PrevProjectsPageClickEvent handling finished");
@@ -233,7 +239,9 @@ public class CreateIssueEventsListener {
             Collection<IssueType> projectIssueTypes = issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(selectedProject);
             myteamApiClient.sendMessageText(chatId,
                                             messageFormatter.getSelectIssueTypeMessage(locale),
-                                            messageFormatter.buildIssueTypesButtons(projectIssueTypes));
+                                            messageFormatter.buildButtonsWithCancel(
+                                            messageFormatter.buildIssueTypesButtons(projectIssueTypes),
+                                            i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
             chatsStateMap.put(chatId, ChatState.buildIssueTypeSelectWaitingState(currentIssueCreationDto));
         }
         finally {
@@ -297,7 +305,8 @@ public class CreateIssueEventsListener {
             // here sending new issue filling fields message to user
             Field currentField = requiredFields.get(0);
             myteamApiClient.answerCallbackQuery(queryId);
-            myteamApiClient.sendMessageText(chatId, messageFormatter.createInsertFieldMessage(locale, currentField, currentIssueCreationDto));
+            myteamApiClient.sendMessageText(chatId, messageFormatter.createInsertFieldMessage(locale, currentField, currentIssueCreationDto),
+                    messageFormatter.buildButtonsWithCancel(null, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
             chatsStateMap.put(chatId, ChatState.buildNewIssueFieldsFillingState(0, currentIssueCreationDto));
         } else {
             // well, all required issue fields are filled, then just create issue
@@ -356,10 +365,13 @@ public class CreateIssueEventsListener {
             if (nextField.getId().equals("priority")) { // select value with buttons
                 myteamApiClient.sendMessageText(chatId,
                         messageFormatter.createInsertFieldMessage(locale, nextField, currentIssueCreationDto),
-                        messageFormatter.buildPrioritiesButtons(constantsManager.getPriorities()));
+                        messageFormatter.buildButtonsWithCancel(
+                        messageFormatter.buildPrioritiesButtons(constantsManager.getPriorities()),
+                                i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
                 chatsStateMap.put(chatId, ChatState.buildNewIssueButtonFieldsWaitingState(nextFieldNum, currentIssueCreationDto));
             } else { // select value by message
-                myteamApiClient.sendMessageText(chatId, messageFormatter.createInsertFieldMessage(locale, nextField, currentIssueCreationDto));
+                myteamApiClient.sendMessageText(chatId, messageFormatter.createInsertFieldMessage(locale, nextField, currentIssueCreationDto),
+                        messageFormatter.buildButtonsWithCancel(null, i18nResolver.getRawText(locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
                 chatsStateMap.put(chatId, ChatState.buildNewIssueFieldsFillingState(nextFieldNum, currentIssueCreationDto));
             }
         } else {

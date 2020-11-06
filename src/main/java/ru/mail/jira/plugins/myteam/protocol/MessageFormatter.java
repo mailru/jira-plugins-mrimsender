@@ -15,6 +15,7 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueConstant;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.attachment.Attachment;
+import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
@@ -45,6 +46,7 @@ import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -59,6 +61,7 @@ import java.util.stream.Collectors;
 
 public class MessageFormatter {
     public static final int LIST_PAGE_SIZE = 15;
+    public static final int COMMENT_LIST_PAGE_SIZE = 10;
     public static final String DELIMITER_STR = "----------";
 
     private final ApplicationProperties applicationProperties;
@@ -384,18 +387,18 @@ public class MessageFormatter {
         comment.setCallbackData(String.join("-", "comment", issueKey));
         buttonsRow.add(comment);
 
+        InlineKeyboardMarkupButton viewComments = new InlineKeyboardMarkupButton();
+        viewComments.setText(i18nResolver.getRawText(localeManager.getLocaleFor(recipient), "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"));
+        viewComments.setCallbackData(String.join("-", "showComments", issueKey));
+        buttonsRow.add(viewComments);
+
         return buttons;
     }
 
     public List<List<InlineKeyboardMarkupButton>> getCancelButton(ApplicationUser recipient) {
         List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-        List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-        buttons.add(buttonsRow);
 
-        InlineKeyboardMarkupButton cancel = new InlineKeyboardMarkupButton();
-        cancel.setText(i18nResolver.getRawText(localeManager.getLocaleFor(recipient), "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text"));
-        cancel.setCallbackData("cancel");
-        buttonsRow.add(cancel);
+        buttons.add(getCancelButtonRow(i18nResolver.getRawText(localeManager.getLocaleFor(recipient), "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text")));
 
         return buttons;
     }
@@ -472,7 +475,7 @@ public class MessageFormatter {
         return sj.toString();
     }
 
-    public String stringifyPagedCollection(Locale locale, Collection<?> collection, int pageNumber, int total) {
+    public String stringifyPagedCollection(Locale locale, Collection<?> collection, int pageNumber, int total, int pageSize) {
         if (collection.size() == 0)
             return "";
 
@@ -482,13 +485,16 @@ public class MessageFormatter {
         collection.forEach(obj -> sj.add(obj.toString()));
 
         // append string with current (and total) page number info
-        int firstResultPageIndex = pageNumber * LIST_PAGE_SIZE + 1;
-        int lastResultPageIndex = firstResultPageIndex + collection.size() - 1;
-        sj.add(DELIMITER_STR);
-        sj.add(i18nResolver.getText(locale,
-                                    "pager.results.displayissues.short",
-                                    String.join(" - ", Integer.toString(firstResultPageIndex), Integer.toString(lastResultPageIndex)),
-                                    Integer.toString(total)));
+        if ((pageNumber + 1) * pageSize < total) {
+            int firstResultPageIndex = pageNumber * pageSize + 1;
+            int lastResultPageIndex = firstResultPageIndex + collection.size() - 1;
+            sj.add(DELIMITER_STR);
+            sj.add(i18nResolver.getText(locale,
+                    "pager.results.displayissues.short",
+                    String.join(" - ", Integer.toString(firstResultPageIndex), Integer.toString(lastResultPageIndex)),
+                    Integer.toString(total)));
+        }
+
         return sj.toString();
     }
 
@@ -496,7 +502,20 @@ public class MessageFormatter {
         return stringifyPagedCollection(locale,
                                         issueList.stream().map(issue -> String.join("", "[", issue.getKey(), "] ", issue.getSummary())).collect(Collectors.toList()),
                                         pageNumber,
-                                        total);
+                                        total,
+                                        LIST_PAGE_SIZE);
+    }
+
+    public String stringifyIssueCommentsList(Locale locale, List<Comment> commentList, int pageNumber, int total) {
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        return stringifyPagedCollection(locale,
+                                        commentList.stream().map(comment -> String.join("",
+                                                "[", dateFormatter.format(comment.getCreated()), "] ",
+                                                "[", comment.getAuthorFullName(), "] ",
+                                                comment.getBody())).collect(Collectors.toList()),
+                                        pageNumber,
+                                        total,
+                                        COMMENT_LIST_PAGE_SIZE);
     }
 
     public String stringifyJqlClauseErrorsMap(MessageSet messageSet, Locale locale) {
@@ -514,12 +533,16 @@ public class MessageFormatter {
         List<String> formattedProjectList = visibleProjects.stream()
                                                            .map(proj -> String.join("", "[", proj.getKey(), "] ", proj.getName()))
                                                            .collect(Collectors.toList());
-        sj.add(stringifyPagedCollection(locale, formattedProjectList, pageNumber, totalProjectsNum));
+        sj.add(stringifyPagedCollection(locale, formattedProjectList, pageNumber, totalProjectsNum, LIST_PAGE_SIZE));
         return sj.toString();
     }
 
     public List<List<InlineKeyboardMarkupButton>> getSelectProjectMessageButtons(Locale locale, boolean withPrev, boolean withNext) {
         return getListButtons(locale, withPrev, withNext, "prevProjectListPage", "nextProjectListPage");
+    }
+
+    public List<List<InlineKeyboardMarkupButton>> getViewCommentsButtons(Locale locale, boolean withPrev, boolean withNext) {
+        return getListButtons(locale, withPrev, withNext, "prevIssueCommentsListPage", "nextIssueCommentsListPage");
     }
 
     public String getSelectIssueTypeMessage(Locale locale) {
@@ -541,6 +564,16 @@ public class MessageFormatter {
             InlineKeyboardMarkupButton issueTypeButton = InlineKeyboardMarkupButton.buildButtonWithoutUrl(priority.getNameTranslation(i18nHelper), String.join("-", "selectIssueButtonValue", priority.getName()));
             addRowWithButton(buttons, issueTypeButton);
         });
+        return buttons;
+    }
+
+    public List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
+        if (buttons == null) {
+            List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
+            newButtons.add(getCancelButtonRow(cancelButtonText));
+            return newButtons;
+        }
+        buttons.add(getCancelButtonRow(cancelButtonText));
         return buttons;
     }
 
@@ -569,6 +602,15 @@ public class MessageFormatter {
         return String.join("\n",
                            i18nResolver.getText(locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.message", i18nResolver.getRawText(locale, field.getNameKey()).toLowerCase(locale)),
                            this.formatIssueCreationDto(locale, issueCreationDto));
+    }
+
+    private List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
+        List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+        InlineKeyboardMarkupButton cancel = new InlineKeyboardMarkupButton();
+        cancel.setText(title);
+        cancel.setCallbackData("cancel");
+        buttonsRow.add(cancel);
+        return buttonsRow;
     }
 
     private boolean isArrayLikeField(Field field) {
