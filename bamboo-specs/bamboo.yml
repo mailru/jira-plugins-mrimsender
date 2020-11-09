@@ -4,39 +4,31 @@ plan:
   name: Mrim
   key: MRIM
 
-variables:
-  deployUsername: username
-  deployPassword: password
-  jiraBaseUrl: localhost:2990/jira
-
 stages:
   - Build:
       jobs:
         - Build jar
-  - Deploy to jira:
-      manual: true
-      jobs:
-        - Deploy jar
   - Cleanup:
       final: true
       jobs:
         - Cleanup
+
 Build jar:
   tasks:
     - script:
-        - atlas-clean & atlas-package
+        - atlas-clean
+        - atlas-package
+  final-tasks:
+    - test-parser:
+        type: junit
+        test-results:
+          - target/surefire-reports/*.xml
   artifacts:
-    - name: mrimsender
+    - name: myteam
       location: target
       pattern: '*.jar'
       required: true
       shared: true
-
-Deploy jar:
-  tasks:
-    - script:
-        - ./deployPlugin.sh
-        - rm -f *.jar
 
 Cleanup:
   tasks:
