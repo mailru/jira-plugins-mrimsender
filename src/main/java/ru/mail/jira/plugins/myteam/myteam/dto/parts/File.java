@@ -1,3 +1,4 @@
+/* (C)2020 */
 package ru.mail.jira.plugins.myteam.myteam.dto.parts;
 
 import lombok.Getter;
@@ -6,15 +7,15 @@ import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 public class File extends Part<File.Data> {
-    public String getFileId() {
-        return this.getPayload().fileId;
-    }
+  public String getFileId() {
+    return this.getPayload().fileId;
+  }
 
-    @Getter
-    @Setter
-    @ToString
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public static class Data {
-        private String fileId;
-    }
+  @Getter
+  @Setter
+  @ToString
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class Data {
+    private String fileId;
+  }
 }

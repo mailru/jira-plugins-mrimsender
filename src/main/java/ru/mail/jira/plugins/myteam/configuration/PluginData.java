@@ -1,30 +1,39 @@
+/* (C)2020 */
 package ru.mail.jira.plugins.myteam.configuration;
 
 import java.util.List;
 import java.util.Set;
 
 public interface PluginData {
-    String getToken();
-    void setToken(String token);
+  String getToken();
 
-    boolean isEnabledByDefault();
-    void setEnabledByDefault(boolean enabledByDefault);
+  void setToken(String token);
 
-    List<String> getNotifiedUserKeys();
-    void setNotifiedUserKeys(List<String> notifiedUserKeys);
+  boolean isEnabledByDefault();
 
-    String getMainNodeId();
-    void setMainNodeId(String mainNodeId);
+  void setEnabledByDefault(boolean enabledByDefault);
 
-    String getBotApiUrl();
-    void setBotApiUrl(String botApiUrl);
+  List<String> getNotifiedUserKeys();
 
-    String getBotName();
-    void setBotName(String botName);
+  void setNotifiedUserKeys(List<String> notifiedUserKeys);
 
-    String getBotLink();
-    void setBotLink(String botLink);
+  String getMainNodeId();
 
-    Set<Long> getExcludingProjectIds();
-    void setExcludingProjectIds(Set<Long> excludingProjectIds);
+  void setMainNodeId(String mainNodeId);
+
+  String getBotApiUrl();
+
+  void setBotApiUrl(String botApiUrl);
+
+  String getBotName();
+
+  void setBotName(String botName);
+
+  String getBotLink();
+
+  void setBotLink(String botLink);
+
+  Set<Long> getExcludingProjectIds();
+
+  void setExcludingProjectIds(Set<Long> excludingProjectIds);
 }

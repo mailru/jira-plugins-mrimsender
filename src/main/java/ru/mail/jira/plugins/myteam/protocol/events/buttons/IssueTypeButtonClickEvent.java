@@ -1,3 +1,4 @@
+/* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol.events.buttons;
 
 import lombok.Getter;
@@ -6,17 +7,18 @@ import ru.mail.jira.plugins.myteam.protocol.IssueCreationDto;
 
 @Getter
 public class IssueTypeButtonClickEvent {
-    private final String queryId;
-    private final String chatId;
-    private final String userId;
-    private final IssueCreationDto issueCreationDto;
-    private final String selectedIssueTypeId;
+  private final String queryId;
+  private final String chatId;
+  private final String userId;
+  private final IssueCreationDto issueCreationDto;
+  private final String selectedIssueTypeId;
 
-    public IssueTypeButtonClickEvent(ButtonClickEvent buttonClickEvent,IssueCreationDto issueCreationDto) {
-        this.queryId = buttonClickEvent.getQueryId();
-        this.chatId = buttonClickEvent.getChatId();
-        this.userId = buttonClickEvent.getUserId();
-        this.selectedIssueTypeId =  StringUtils.substringAfter(buttonClickEvent.getCallbackData(), "-");
-        this.issueCreationDto = issueCreationDto;
-    }
+  public IssueTypeButtonClickEvent(
+      ButtonClickEvent buttonClickEvent, IssueCreationDto issueCreationDto) {
+    this.queryId = buttonClickEvent.getQueryId();
+    this.chatId = buttonClickEvent.getChatId();
+    this.userId = buttonClickEvent.getUserId();
+    this.selectedIssueTypeId = StringUtils.substringAfter(buttonClickEvent.getCallbackData(), "-");
+    this.issueCreationDto = issueCreationDto;
+  }
 }

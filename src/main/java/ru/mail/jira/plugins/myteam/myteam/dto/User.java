@@ -1,5 +1,5 @@
+/* (C)2020 */
 package ru.mail.jira.plugins.myteam.myteam.dto;
-
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,8 +11,8 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class User {
-    private String firstName;
-    private String lastName;
-    private String nick;
-    private String userId;
+  private String firstName;
+  private String lastName;
+  private String nick;
+  private String userId;
 }
