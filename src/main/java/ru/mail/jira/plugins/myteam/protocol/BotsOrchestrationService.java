@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.protocol;
 
 import com.atlassian.jira.cluster.ClusterMessageConsumer;
 import com.atlassian.jira.cluster.ClusterMessagingService;
+import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 /** Service which allow to stop or restart all bots which are running on a cluster */
 @Service
 @Slf4j
+@ExportAsService(LifecycleAware.class)
 public class BotsOrchestrationService implements LifecycleAware {
   private static final String BOT_LIFECYCLE_CHANNEL = "ru.mail.jira.myteam";
   private static final String BOT_RESTART_MESSAGE = "restart";

@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.configuration;
 
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
+import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
@@ -12,16 +13,23 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.myteam.protocol.BotsOrchestrationService;
 
-@Component
 public class MyteamConfigurationAction extends JiraWebActionSupport {
   private final PluginData pluginData;
   private final BotsOrchestrationService botsOrchestrationService;
   private final ProjectManager projectManager;
+
+  public MyteamConfigurationAction(
+      PluginData pluginData,
+      BotsOrchestrationService botsOrchestrationService,
+      @ComponentImport ProjectManager projectManager,
+      @ComponentImport GlobalPermissionManager globalPermissionManager) {
+    this.botsOrchestrationService = botsOrchestrationService;
+    this.pluginData = pluginData;
+    this.projectManager = projectManager;
+  }
 
   private boolean saved;
   private String token;
@@ -33,16 +41,6 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
 
   private List<String> notifiedUserKeys;
   private Set<Long> excludingProjectIds;
-
-  @Autowired
-  public MyteamConfigurationAction(
-      PluginData pluginData,
-      BotsOrchestrationService botsOrchestrationService,
-      @ComponentImport ProjectManager projectManager) {
-    this.botsOrchestrationService = botsOrchestrationService;
-    this.pluginData = pluginData;
-    this.projectManager = projectManager;
-  }
 
   @Override
   public String doDefault() {

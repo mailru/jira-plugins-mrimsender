@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>ru.mail.jira.plugins</groupId>
         <artifactId>parent</artifactId>
@@ -27,6 +26,7 @@
     <name>Mail.ru Plugin: Myteam bot Notifications</name>
     <description>Send notifications on issue changes and work with issues using Myteam instant messenger</description>
     <packaging>atlassian-plugin</packaging>
+    <modelVersion>4.0.0</modelVersion>
     <dependencies>
         <dependency>
             <groupId>com.mashape.unirest</groupId>

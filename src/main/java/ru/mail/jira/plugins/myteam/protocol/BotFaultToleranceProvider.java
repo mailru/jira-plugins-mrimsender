@@ -7,6 +7,7 @@ import com.atlassian.beehive.ClusterLockService;
 import com.atlassian.jira.cluster.ClusterManager;
 import com.atlassian.jira.cluster.Node;
 import com.atlassian.jira.timezone.TimeZoneManager;
+import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import com.atlassian.scheduler.JobRunner;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.configuration.PluginData;
 
 @Component
+@ExportAsService(LifecycleAware.class)
 public class BotFaultToleranceProvider implements LifecycleAware {
   private static final JobRunnerKey CHOOSE_MAIN_NODE_JOB =
       JobRunnerKey.of(BotFaultToleranceProvider.class + "- random node job");

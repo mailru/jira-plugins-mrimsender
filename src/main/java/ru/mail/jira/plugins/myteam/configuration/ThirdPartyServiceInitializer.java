@@ -1,19 +1,25 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.configuration;
 
+import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import java.io.IOException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.DisposableBean;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 
-public class ThirdPartyServiceInitializer implements LifecycleAware, DisposableBean {
-  private static final Logger log = LoggerFactory.getLogger(ThirdPartyServiceInitializer.class);
+@Component
+@Slf4j
+@ExportAsService(LifecycleAware.class)
+public class ThirdPartyServiceInitializer implements LifecycleAware {
   private static final String DSN =
       "http://488a7fa73b2343afb523a7139a7226fa:08f1454a8d514306a3cd2837cfc080a3@sentry.intdev.devmail.ru/19";
+
+  @Autowired
+  public ThirdPartyServiceInitializer() {}
 
   @Override
   public void onStart() {
@@ -67,7 +73,4 @@ public class ThirdPartyServiceInitializer implements LifecycleAware, DisposableB
     } catch (IOException e) {
     }
   }
-
-  @Override
-  public void destroy() throws Exception {}
 }
