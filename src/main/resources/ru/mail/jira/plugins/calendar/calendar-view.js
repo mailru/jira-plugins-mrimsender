@@ -29,7 +29,7 @@ define('calendar/calendar-view', [
         initialize: function(options) {
             this.eventSources = {};
             this.contextPath = options && _.has(options, 'contextPath') ? options.contextPath : AJS.contextPath();
-            this.customsButtonOptions = options && _.has(options, 'contextPath') ? options.customsButtonOptions : {};
+            this.customsButtonOptions = options && _.has(options, 'customsButtonOptions') ? options.customsButtonOptions : {};
             this.timeFormat = options && _.has(options, 'timeFormat') ? options.timeFormat : AJS.Meta.get('date-time');
             this.dateTimeFormat = JIRA.translateSimpleDateFormat(options.dateTimeFormat || AJS.Meta.get('date-complete'));
             this.dateFormat = JIRA.translateSimpleDateFormat(options.dateFormat || AJS.Meta.get('date-dmy'));
@@ -516,7 +516,6 @@ define('calendar/calendar-view', [
                 this.getTimelineHelper()._doInitGroupPicker(data.SOFTWARE);
                 var $groupByField = $('#calendar-group-by-field');
                 $groupByField.change($.proxy(function() {
-                    console.log('group changed');
                     var value = $groupByField.val();
                     if (value === 'none') {
                         $groupByField.auiSelect2('val', null);
@@ -529,7 +528,6 @@ define('calendar/calendar-view', [
         },
         init: function(view, hideWeekends, workingDays, start, end) {
             var viewRenderFirstTime = true;
-            var contextPath = this.contextPath;
             var self = this;
             this.calendar = new FullCalendar.Calendar(this.$el[0], {
                 contentHeight: 'auto',

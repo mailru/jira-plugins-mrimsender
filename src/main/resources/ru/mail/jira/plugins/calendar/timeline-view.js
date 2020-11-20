@@ -71,7 +71,6 @@
                     TimelineHelper.timeline.setWindow(start, end);
                     var events = FullCalendar.sliceEvents(props);
                     if (events.length > 0) {
-                        console.log(events);
                         TimelineHelper.renderEvents(events);
                     }
                 }
