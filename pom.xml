@@ -234,6 +234,7 @@
                         <exclude>**/main.js</exclude>
                         <exclude>**/moment.js</exclude>
                         <exclude>**/main.global.min.js</exclude>
+                        <exclude>**/timeline-helper.js</exclude>
                     </excludes>
                 </configuration>
             </plugin>

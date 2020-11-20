@@ -11,7 +11,6 @@ require(['jquery',
     'calendar/quick-filter-dialog',
     'calendar/custom-event-dialog',
     'calendar/preferences',
-    // 'calendar/timeline-view',
 ], function($, _, moment, Backbone, LikeFlag, CalendarView, CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog, QuickFilterDialog, CustomEventDialog, Preferences) {
     // Override default texts for auiSelect2 messages
     $.fn.select2.defaults = $.extend($.fn.select2.defaults, {
@@ -339,12 +338,11 @@ require(['jquery',
             updateViewInterval: function() {
                 var view = this.calendarView.getView();
                 var todayRange;
-                // if (view.type === 'timeline') {
-                //     todayRange = view.computeRange(this.calendarView.getNow());
-                // } else {
-                //     todayRange = this.calendarView.computeRange(this.calendarView.getNow());
-                // }
-                todayRange = this.calendarView.computeRange(this.calendarView.getNow());
+                if (view.type === 'timeline') {
+                    todayRange = view.getCurrentData().viewSpec.optionDefaults.getTimelineHelper().computeRange(moment(this.calendarView.getNow()));
+                } else {
+                    todayRange = this.calendarView.computeRange(this.calendarView.getNow());
+                }
                 Preferences.setItem('mailrucalendar.start', !moment(todayRange.start).isSame(moment(view.activeStart)) ? moment(view.activeStart).format() : '');
                 Preferences.setItem('mailrucalendar.end', !moment(todayRange.end).isSame(moment(view.activeEnd)) ? moment(view.activeEnd).format() : '');
             },

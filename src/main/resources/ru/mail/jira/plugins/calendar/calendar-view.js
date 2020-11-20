@@ -12,8 +12,10 @@ define('calendar/calendar-view', [
     'calendar/edit-type-dialog',
     'calendar/recurrence',
     'calendar/preferences',
-    'mailrucal/moment'
-], function($, _, Backbone, Reminder, EditTypeDialog, Recurring, Preferences, moment) {
+    'mailrucal/moment',
+    'calendar/timeline-view-plugin'
+
+], function($, _, Backbone, Reminder, EditTypeDialog, Recurring, Preferences, moment, TimelineViewPlugin) {
     function getContextPath() {
         if (AJS.gadget) {
             return AJS.gadget.getBaseUrl();
@@ -74,7 +76,7 @@ define('calendar/calendar-view', [
                 $('.aui-page-panel-nav').animate({width: 'toggle', 'padding': 'toggle'}, 400, $.proxy(function() {
                     this.calendar.updateSize();
                     if (this.getViewType() === 'timeline') {
-                        var timeline = this.calendar.view.timeline;
+                        var timeline = this.getTimelineHelper().timeline;
                         timeline.setOptions({height: $(window).height() - 134 + 'px'});
                         timeline.redraw();
                     }
@@ -83,7 +85,7 @@ define('calendar/calendar-view', [
                 $('#header,#timezoneDiffBanner,#announcement-banner,.aui-page-header,#studio-header,#footer,.aui-page-panel-nav').fadeIn(400);
                 this.calendar.updateSize();
                 if (this.getViewType() === 'timeline') {
-                    var timeline = this.calendar.view.timeline;
+                    var timeline = this.getTimelineHelper().timeline;
                     timeline.setOptions({height: '450px'});
                     timeline.redraw();
                 }
@@ -189,7 +191,7 @@ define('calendar/calendar-view', [
                                     eventId = event.extendedProps.parentId;
                                 }
                             }
-                            this._moveCustomEvent(eventId, event, data, revertFunc);
+                            this._moveCustomEvent(eventId, data, revertFunc);
                         }, this),
                         cancelHandler: function() {
                             revertFunc();
@@ -198,11 +200,11 @@ define('calendar/calendar-view', [
 
                     typeDialog.show();
                 } else {
-                    this._moveCustomEvent(eventId, event, data, revertFunc);
+                    this._moveCustomEvent(eventId, data, revertFunc);
                 }
             }
         },
-        _moveCustomEvent: function(eventId, event, data, revertFunc) {
+        _moveCustomEvent: function(eventId, data, revertFunc) {
             $.ajax({
                 type: 'PUT',
                 url: this.contextPath + '/rest/mailrucalendar/1.0/customEvent/' + eventId + '/move',
@@ -213,6 +215,9 @@ define('calendar/calendar-view', [
                         var event = this.calendar.getEventById(updatedEvent.id);
                         event.setStart(updatedEvent.start);
                         event.setEnd(updatedEvent.end);
+                        if (this.getViewType() === 'timeline') {
+                            revertFunc(this.getTimelineHelper()._transformEvent(event, true));
+                        }
                     } else {
                         this.reload();
                     }
@@ -222,7 +227,7 @@ define('calendar/calendar-view', [
                     if (xhr.responseText)
                         msg += xhr.responseText;
                     alert(msg);
-                    revertFunc();
+                    revertFunc(null);
                 }
             });
         },
@@ -241,16 +246,14 @@ define('calendar/calendar-view', [
                 this._getCalendarHeaderButton('weekend').hide();
         },
         zoomOutTimeline: function() {
-            var view = this.calendar.view;
-            var canZoomOut = view.zoomOut();
-            !canZoomOut && view.calendar.header.disableButton('zoom-out');
-            view.calendar.header.enableButton('zoom-in');
+            var canZoomOut = this.getTimelineHelper().zoomOut();
+            !canZoomOut && $('.fc-zoom-out-button').prop('disabled', true);
+            $('.fc-zoom-in-button').prop('disabled', false);
         },
         zoomInTimeline: function() {
-            var view = this.calendar.view;
-            var canZoomIn = view.zoomIn();
-            !canZoomIn && view.calendar.header.disableButton('zoom-in');
-            view.calendar.header.enableButton('zoom-out');
+            var canZoomIn = this.getTimelineHelper().zoomIn();
+            !canZoomIn && $('.fc-zoom-in-button').prop('disabled', true);
+            $('.fc-zoom-out-button').prop('disabled', false);
         },
         _initEventDialog: function() {
             var contextPath = this.contextPath;
@@ -259,17 +262,19 @@ define('calendar/calendar-view', [
             this.eventDialog = AJS.InlineDialog('.calendar-event-object:not(.holiday-item-content),.vis-item', 'eventDialog', function(content, trigger, showPopup) {
                 var event;
                 if (self.getViewType() === 'timeline') {
-                    var timeline = self.getView().timeline;
+                    var timeline = self.getTimelineHelper().timeline;
                     var timelineEvent = timeline.itemsData.get(timeline.getEventProperties({target: trigger}).item);
                     if (timelineEvent.id) {
                         event = {
-                            type: timelineEvent.eventType,
+                            extendedProps: {
+                                type: timelineEvent.eventType,
+                                calendarId: timelineEvent.calendarId,
+                                recurring: timelineEvent.recurring,
+                                recurrenceNumber: timelineEvent.recurrenceNumber,
+                                originalId: timelineEvent.originalId,
+                            },
                             id: timelineEvent.eventId,
                             eventId: timelineEvent.eventId,
-                            calendarId: timelineEvent.calendarId,
-                            recurring: timelineEvent.recurring,
-                            recurrenceNumber: timelineEvent.recurrenceNumber,
-                            originalId: timelineEvent.originalId,
                             allDay: timelineEvent.allDay,
                             start: timelineEvent.start,
                             end: timelineEvent.end
@@ -289,7 +294,7 @@ define('calendar/calendar-view', [
                 if (!event) {
                     content.html('');
                     showPopup();
-                    self.eventDialog.hide();
+                    self._hideEventDialog();
                     return;
                 }
 
@@ -363,13 +368,13 @@ define('calendar/calendar-view', [
                             content.find('.edit-button').click(function(e) {
                                 e.preventDefault();
                                 self.trigger('eventEditTriggered', model, jsonEvent);
-                                self.eventDialog.hide();
+                                self._hideEventDialog();
                             });
 
                             content.find('.delete-button').click(function(e) {
                                 e.preventDefault();
                                 self.trigger('eventDeleteTriggered', model);
-                                self.eventDialog.hide();
+                                self._hideEventDialog();
                             })
                         },
                         error: function(request) {
@@ -387,6 +392,141 @@ define('calendar/calendar-view', [
                 useLiveEvents: true
             });
         },
+        _hideEventDialog: function() {
+            this.eventDialog && this.eventDialog.hide();
+        },
+        _onMoving: function(item, callback) {
+            this._hideEventDialog();
+            var originalEvent = this.getTimelineHelper().timeline.itemsData.get(item.id);
+            if (!originalEvent.startEditable && originalEvent.start.getTime() !== item.start.getTime())
+                callback(null);
+            else {
+                if (!originalEvent.durationEditable && originalEvent.end)
+                    item.end = originalEvent.end.getTime();
+                callback(item);
+            }
+        },
+        _onMove: function(item, callback) {
+            this._hideEventDialog();
+
+            var end = item.end;
+            var start = item.start;
+
+            var timelineHelper = this.getTimelineHelper();
+
+            if (item.allDay) {
+                start = moment.utc(moment(start).format('YYYY-MM-DD'));
+                if (end) {
+                    end = moment.utc(moment(end).format('YYYY-MM-DD'));
+                }
+            }
+
+            if (item.eventType === 'ISSUE') {
+                $.ajax({
+                    type: 'PUT',
+                    url: this.options.calendarView.contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + item.calendarId + '/event/' + item.eventId + '/move',
+                    data: {
+                        start: moment(start).format(),
+                        end: end ? moment(end).format() : ''
+                    },
+                    error: function (xhr) {
+                        var msg = 'Error while trying to drag event. Issue key => ' + item.eventId;
+                        if (xhr.responseText)
+                            msg += xhr.responseText;
+                        alert(msg);
+                        callback(null);
+                    },
+                    success: $.proxy(function (event) {
+                        if (event.groups && event.groups.length) {
+                            this.reload();
+                        } else {
+                            callback(timelineHelper._transformEvent(event, true));
+                        }
+                    }, this)
+                });
+            } else if (item.eventType === 'CUSTOM') {
+                var eventId = item.originalId;
+
+                var data = {
+                    allDay: item.allDay,
+                    start: !item.allDay ? moment(start).format('x') : moment.utc(start).format('x'),
+                    end: end ? !item.allDay ? moment(end).format('x') : moment.utc(end).subtract(1, 'days').format('x') : null,
+                    editMode: 'SINGLE_EVENT',
+                    parentId: null,
+                    recurrenceNumber: null
+                };
+
+                if (item.recurring) {
+                    var typeDialog = new EditTypeDialog({
+                        header: "Edit type",
+                        okHandler: $.proxy(function(editMode) {
+                            data.editMode = editMode;
+
+                            if (editMode === 'SINGLE_EVENT' && !item.parentId) {
+                                data.parentId = item.originalId;
+                                data.recurrenceNumber = item.recurrenceNumber;
+                            }
+
+                            if (editMode === 'ALL_EVENTS') {
+                                var originalItem = timelineHelper.timeline.itemsData.get(item.id);
+
+                                var startDiff = moment(item.start).diff(moment(originalItem.start), 'ms');
+                                var start = moment(item.originalStart).add(startDiff, 'ms');
+
+                                if (item.allDay) {
+                                    data.start = moment.utc(start.format('YYYY-MM-DD')).format('x')
+                                } else {
+                                    data.start = start.format('x');
+                                }
+
+                                if (data.end) {
+                                    var endDiff = moment(item.end).diff(moment(originalItem.end), 'ms');
+                                    var end = moment(item.originalEnd).add(endDiff, 'ms');
+                                    if (item.allDay) {
+                                        data.end = moment.utc(end.format('YYYY-MM-DD')).format('x')
+                                    } else {
+                                        data.end = end.format('x');
+                                    }
+                                }
+
+                                if (item.parentId) {
+                                    eventId = item.parentId;
+                                }
+                            }
+
+                            this._moveCustomEvent(eventId, data, callback);
+                        }, this),
+                        cancelHandler: function() {
+                            callback(null);
+                        }
+                    });
+
+                    _.defer($.proxy(function() {
+                        this._hideEventDialog();
+                        typeDialog.show();
+                    }, this));
+                } else {
+                    this._moveCustomEvent(eventId, data, callback);
+                }
+            }
+        },
+        _initTimelineGroupPicker: function(){
+            var contextPath = this.contextPath;
+            $.getJSON(contextPath + '/rest/mailrucalendar/1.0/calendar/config/applicationStatus', $.proxy(function(data) {
+                this.getTimelineHelper()._doInitGroupPicker(data.SOFTWARE);
+                var $groupByField = $('#calendar-group-by-field');
+                $groupByField.change($.proxy(function() {
+                    console.log('group changed');
+                    var value = $groupByField.val();
+                    if (value === 'none') {
+                        $groupByField.auiSelect2('val', null);
+                        value = null;
+                    }
+                    Preferences.setItem('groupBy', $groupByField.val());
+                    this.reload();
+                }, this));
+            }, this));
+        },
         init: function(view, hideWeekends, workingDays, start, end) {
             var viewRenderFirstTime = true;
             var contextPath = this.contextPath;
@@ -400,11 +540,16 @@ define('calendar/calendar-view', [
                     center: 'title',
                     right: 'weekend zoom-out,zoom-in' + (this.enableFullscreen ? ' fullscreen' : '')
                 },
+                plugins: [ TimelineViewPlugin],
                 views: {
                     quarter: {
                         type: 'dayGrid',
                         duration: {months: 3}
                     },
+                    timeline: {
+                        type: 'timeline',
+                        duration: { days: 14 },
+                    }
                 },
                 customButtons: this._getCustomButtons(hideWeekends),
                 businessHours: {
@@ -430,6 +575,27 @@ define('calendar/calendar-view', [
                 fixedWeekCount: false,
                 slotMinWidth: 100,
                 slotDuration: '01:00',
+                viewDidMount: $.proxy(function(options) {
+                    var view = options.view;
+                    if (view.type === 'timeline') {
+                        var timeline = this.getTimelineHelper().timeline;
+                        timeline.setOptions({
+                            onMove: $.proxy(this._onMove, this),
+                            onMoving: $.proxy(this._onMoving, this),
+                            orientation: 'top'
+                        });
+                        timeline.on('select', $.proxy(function(properties) {
+                            var $calendar = $("#calendar-full-calendar, #mailru-calendar-gadget-full-calendar");
+                            if (properties.items && properties.items.length) {
+                                $calendar.addClass('no-tooltips');
+                            } else {
+                                $calendar.removeClass('no-tooltips');
+                            }
+                        }, this));
+
+                        this._initTimelineGroupPicker();
+                    }
+                }, this),
                 eventSources: [{url: this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/holidays'}],
                 eventDidMount: function(options) {
                     var $element = $(options.el);
@@ -497,7 +663,7 @@ define('calendar/calendar-view', [
                     viewRenderFirstTime = false;
                     if (!isLoading) {
                         this.trigger('renderComplete');
-                        var view = this.calendar.view;
+                        var view = this.getView();
                         var start = moment(view.activeStart).clone().startOf('month');
                         var end = moment(view.activeEnd).clone();
                         for (; start.isBefore(end); start.add(1, 'M')) {
@@ -513,7 +679,7 @@ define('calendar/calendar-view', [
                     $('.calendar-visible').find('a.calendar-name').addClass('not-active');
                 }, this),
                 eventDragStart: function(params) {
-                    self.eventDialog && self.eventDialog.hide();
+                    self._hideEventDialog();
                 },
                 eventDrop: $.proxy(this._eventDrop, this),
                 eventResize: $.proxy(this._eventResize, this)
@@ -530,7 +696,7 @@ define('calendar/calendar-view', [
                 success: $.proxy(function() {
                     !silent && this.trigger('addSourceSuccess', calendarId, true);
                 }, this),
-                data: $.proxy(function() {
+                extraParams: $.proxy(function() {
                     return {
                         groupBy: Preferences.getItem('groupBy')
                     };
@@ -563,6 +729,9 @@ define('calendar/calendar-view', [
         },
         getViewType: function() {
             return this.getView().type;
+        },
+        getTimelineHelper: function() {
+            return this.getView().getCurrentData().viewSpec.optionDefaults.getTimelineHelper();
         },
         getNow: function() {
             return this.calendar.currentData.dateProfileGenerator.nowDate;
