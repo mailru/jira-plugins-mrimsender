@@ -4,10 +4,10 @@
     <parent>
         <groupId>ru.mail.jira.plugins</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.4_8.5.1</version>
+        <version>1.1.0</version>
     </parent>
     <artifactId>myteam</artifactId>
-    <version>6.0.0</version>
+    <version>6.1.0</version>
     <organization>
         <name>Mail.Ru Group</name>
         <url>http://corp.mail.ru/en</url>
