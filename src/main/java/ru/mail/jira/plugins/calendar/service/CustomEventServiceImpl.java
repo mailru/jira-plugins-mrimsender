@@ -503,7 +503,7 @@ public class CustomEventServiceImpl implements CustomEventService {
             }
         } else if (editMode == EditMode.FOLLOWING_EVENTS) {
             Event e = parent != null ? parent : event;
-            if (!e.getStartDate().before(eventDto.getStartDate())) {
+            if (e.getStartDate().after(eventDto.getStartDate())) {
                 throw new RestFieldException("ru.mail.jira.plugins.calendar.customEvents.recurring.error.startDateBeforeOldStart", "startDate");
             }
         }
