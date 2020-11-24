@@ -38,10 +38,12 @@ public interface Event extends Entity {
     boolean isAllDay();
 
     @NotNull
+    @Indexed
     void setStartDate(Timestamp startDate);
 
     Timestamp getStartDate();
 
+    @Indexed
     void setEndDate(Timestamp endDate);
 
     Timestamp getEndDate();
