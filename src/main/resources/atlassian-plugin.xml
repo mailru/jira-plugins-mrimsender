@@ -85,14 +85,16 @@
         <resource type="download" name="vis-timeline.js" location="ru/mail/jira/plugins/calendar/timeline/vis-timeline.js"/>
         <resource type="download" name="img/" location="ru/mail/jira/plugins/calendar/timeline/img"/>
 
-        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
-        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
-        <resource type="download" name="fullcalendar-lang-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar-lang-all.js"/>
+        <resource type="download" name="main.css" location="ru/mail/jira/plugins/calendar/fullcalendar/main.css"/>
+        <resource type="download" name="main.js" location="ru/mail/jira/plugins/calendar/fullcalendar/main.js"/>
+        <resource type="download" name="locales-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/locales-all.js"/>
+        <resource type="download" name="main.global.min.js" location="ru/mail/jira/plugins/calendar/fullcalendar/main.global.min.js"/>
 
         <resource type="download" name="preferences.js" location="ru/mail/jira/plugins/calendar/preferences.js"/>
         <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
         <resource type="download" name="recurrence.js" location="ru/mail/jira/plugins/calendar/recurrence.js"/>
         <resource type="download" name="edit-type-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/edit-type-dialog.js"/>
+        <resource type="download" name="timeline-helper.js" location="ru/mail/jira/plugins/calendar/timeline-helper.js"/>
         <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
@@ -128,9 +130,10 @@
         <resource type="download" name="vis-timeline.js" location="ru/mail/jira/plugins/calendar/timeline/vis-timeline.js"/>
         <resource type="download" name="img/" location="ru/mail/jira/plugins/calendar/timeline/img"/>
 
-        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
-        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
-        <resource type="download" name="fullcalendar-lang-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar-lang-all.js"/>
+        <resource type="download" name="main.css" location="ru/mail/jira/plugins/calendar/fullcalendar/main.css"/>
+        <resource type="download" name="main.js" location="ru/mail/jira/plugins/calendar/fullcalendar/main.js"/>
+        <resource type="download" name="locales-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/locales-all.js"/>
+        <resource type="download" name="main.global.min.js" location="ru/mail/jira/plugins/calendar/fullcalendar/main.global.min.js"/>
 
         <resource type="download" name="preferences.js" location="ru/mail/jira/plugins/calendar/preferences.js"/>
         <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
@@ -144,6 +147,7 @@
         <resource type="download" name="quick-filter-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/quick-filter-dialog.js"/>
         <resource type="download" name="feedback-flag.js" location="ru/mail/jira/plugins/calendar/feedback-flag.js"/>
 
+        <resource type="download" name="timeline-helper.js" location="ru/mail/jira/plugins/calendar/timeline-helper.js"/>
         <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
