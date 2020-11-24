@@ -3000,6 +3000,16 @@ var FullCalendar = (function (exports) {
         };
         // Current Date
         // -----------------------------------------------------------------------------------------------------------------
+
+        // !!! Added by Mail.Ru for Vis Timeline !!!
+        CalendarApi.prototype.setRange = function (range) {
+            this.unselect();
+            this.dispatch({
+                type: 'SET_RANGE',
+                range: range
+            })
+        };
+
         CalendarApi.prototype.prev = function () {
             this.unselect();
             this.dispatch({ type: 'PREV' });
@@ -5972,6 +5982,37 @@ var FullCalendar = (function (exports) {
             currentDateProfile.dateIncrement);
             return this.build(nextDate, 1, forceToValid);
         };
+        // !!! Added by Mail.Ru for Vis Timeline !!!
+        DateProfileGenerator.prototype.setRange = function (currentDateProfile, range) {
+            var props = this.props;
+            var renderRange = parseRange(range, props.dateEnv);
+            renderRange = this.trimHiddenDays(renderRange);
+            return {
+                // constraint for where prev/next operations can go and where events can be dragged/resized to.
+                // an object with optional start and end properties.
+                validRange: currentDateProfile.validRange,
+                // range the view is formally responsible for.
+                // for example, a month view might have 1st-31st, excluding padded dates
+                currentRange: currentDateProfile.currentRange,
+                // name of largest unit being displayed, like "month" or "week"
+                currentRangeUnit: currentDateProfile.currentRangeUnit,
+                isRangeAllDay: currentDateProfile.isRangeAllDay,
+                // dates that display events and accept drag-n-drop
+                // will be `null` if no dates accept events
+                activeRange: renderRange,
+                // date range with a rendered skeleton
+                // includes not-active days that need some sort of DOM
+                renderRange: renderRange,
+                // Duration object that denotes the first visible time of any given day
+                slotMinTime: props.slotMinTime,
+                // Duration object that denotes the exclusive visible end time of any given day
+                slotMaxTime: props.slotMaxTime,
+                isValid: currentDateProfile.isValid,
+                // how far the current date will move for a prev/next operation
+                dateIncrement: currentDateProfile.dateIncrement
+                // pass a fallback (might be null) ^
+            };
+        };
         // Builds a structure holding dates/ranges for rendering around the given date.
         // Optional direction param indicates whether the date is being incremented/decremented
         // from its previous value. decremented = -1, incremented = 1 (default).
@@ -6302,6 +6343,13 @@ var FullCalendar = (function (exports) {
                 break;
             case 'NEXT':
                 dp = dateProfileGenerator.buildNext(currentDateProfile, currentDate);
+                if (dp.isValid) {
+                    return dp;
+                }
+                break;
+            // !!! Added by Mail.Ru for Vis Timeline !!!
+            case 'SET_RANGE':
+                dp = dateProfileGenerator.setRange(currentDateProfile, action.range);
                 if (dp.isValid) {
                     return dp;
                 }

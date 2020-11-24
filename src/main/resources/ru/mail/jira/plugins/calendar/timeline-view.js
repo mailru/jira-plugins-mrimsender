@@ -54,8 +54,10 @@
                 return this.buildRangeFromDayCount(start, 1, 7);
             };
 
-            TimelineDateProfileGenerator.prototype.updateRenderRange = function(start, end) {
-
+            TimelineDateProfileGenerator.prototype.setRange = function(currentDateProfile, range) {
+                return $.extend(_super.prototype.setRange.call(this, currentDateProfile, range), {
+                    changedTimelineRange: true,
+                });
             }
 
             return TimelineDateProfileGenerator;
@@ -66,9 +68,11 @@
             dateProfileGeneratorClass: TimelineDateProfileGenerator,
             content: function(props) {
                 if (TimelineHelper.timeline) {
-                    var start = moment(props.dateProfile.renderRange.start.toISOString(), 'YYYY-MM-DDTHH:mm:ss');
-                    var end = moment(props.dateProfile.renderRange.end.toISOString(), 'YYYY-MM-DDTHH:mm:ss');
-                    TimelineHelper.timeline.setWindow(start, end);
+                    if (!props.dateProfile.hasOwnProperty('changedTimelineRange')) {
+                        var start = moment(props.dateProfile.renderRange.start.toISOString(), 'YYYY-MM-DDTHH:mm:ss');
+                        var end = moment(props.dateProfile.renderRange.end.toISOString(), 'YYYY-MM-DDTHH:mm:ss');
+                        TimelineHelper.timeline.setWindow(start, end);
+                    }
                     var events = FullCalendar.sliceEvents(props);
                     if (events.length > 0) {
                         TimelineHelper.renderEvents(events);

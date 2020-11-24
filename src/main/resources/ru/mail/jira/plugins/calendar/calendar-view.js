@@ -510,6 +510,10 @@ define('calendar/calendar-view', [
                 }
             }
         },
+        _onRangeChanged: function() {
+            this.calendar.setRange(this.getTimelineHelper().getVisibleRange());
+            this.reload();
+        },
         _initTimelineGroupPicker: function(){
             var contextPath = this.contextPath;
             $.getJSON(contextPath + '/rest/mailrucalendar/1.0/calendar/config/applicationStatus', $.proxy(function(data) {
@@ -590,6 +594,8 @@ define('calendar/calendar-view', [
                                 $calendar.removeClass('no-tooltips');
                             }
                         }, this));
+                        timeline.on('rangechanged', $.proxy(this._onRangeChanged, this));
+                        timeline.on('rangechange', $.proxy(this._hideEventDialog, this));
 
                         this._initTimelineGroupPicker();
                     }
