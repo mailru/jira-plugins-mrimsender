@@ -537,9 +537,8 @@ public class MyteamEventsListener {
 
             } catch (UnirestException | IOException e) {
               log.error(
-                  String.format(
-                      "Unable to create attachment for comment on Issue %s",
-                      commentedIssue.getKey()),
+                  "Unable to create attachment for comment on Issue {}",
+                  commentedIssue.getKey(),
                   e);
             }
           }
