@@ -10,7 +10,8 @@ import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
-import com.atlassian.jira.issue.attachment.CreateAttachmentParamsBean;
+import com.atlassian.jira.issue.attachment.ConvertTemporaryAttachmentParams;
+import com.atlassian.jira.issue.attachment.TemporaryAttachmentId;
 import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
@@ -21,7 +22,6 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.MessageSet;
 import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
 import com.atlassian.jira.web.bean.PagerFilter;
-import com.atlassian.jira.web.util.AttachmentException;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
 import com.atlassian.sal.api.message.I18nResolver;
@@ -32,15 +32,14 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.Utils;
@@ -512,33 +511,36 @@ public class MyteamEventsListener {
             try {
               HttpResponse<FileResponse> response = myteamApiClient.getFile(file.getFileId());
               FileResponse fileInfo = response.getBody();
-              InputStream attachment = Utils.loadUrlFile(fileInfo.getUrl());
-              java.io.File tmpFile = java.io.File.createTempFile("tmp", "");
-              FileUtils.copyToFile(attachment, tmpFile);
-
-              attachmentManager.createAttachment(
-                  new CreateAttachmentParamsBean(
-                      tmpFile,
-                      fileInfo.getFilename(),
-                      fileInfo.getType(),
-                      commentedUser,
-                      commentedIssue,
-                      fileInfo.getFilename().endsWith("zip"),
-                      fileInfo.getType().equals("image"),
-                      null,
-                      new Date(),
-                      false));
-              if (fileInfo.getType().equals("image")) {
-                attachmentsStrings.append(String.format("!%s!\n", fileInfo.getFilename()));
-              } else {
-                attachmentsStrings.append(String.format("[%s]\n", fileInfo.getFilename()));
+              try (InputStream attachment = Utils.loadUrlFile(fileInfo.getUrl())) {
+                TemporaryAttachmentId tmpAttachmentId =
+                    attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
+                ConvertTemporaryAttachmentParams params =
+                    ConvertTemporaryAttachmentParams.builder()
+                        .setTemporaryAttachmentId(tmpAttachmentId)
+                        .setAuthor(commentedUser)
+                        .setIssue(commentedIssue)
+                        .setFilename(fileInfo.getFilename())
+                        .setContentType(fileInfo.getType())
+                        .setCreatedTime(DateTime.now())
+                        .setFileSize(fileInfo.getSize())
+                        .build();
+                attachmentManager.convertTemporaryAttachment(params);
+                if (fileInfo.getType().equals("image")) {
+                  attachmentsStrings.append(String.format("!%s!\n", fileInfo.getFilename()));
+                } else {
+                  attachmentsStrings.append(String.format("[%s]\n", fileInfo.getFilename()));
+                }
+                if (file.getCaption() != null) {
+                  attachmentsStrings.append(String.format("%s\n", file.getCaption()));
+                }
               }
-              if (file.getCaption() != null) {
-                attachmentsStrings.append(String.format("%s\n", file.getCaption()));
-              }
 
-            } catch (UnirestException | IOException | AttachmentException e) {
-              e.printStackTrace();
+            } catch (UnirestException | IOException e) {
+              log.error(
+                  String.format(
+                      "Unable to create attachment for comment on Issue %s",
+                      commentedIssue.getKey()),
+                  e);
             }
           }
         });
