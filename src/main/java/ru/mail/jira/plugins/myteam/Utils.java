@@ -1,6 +1,9 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam;
 
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import javax.annotation.Nullable;
@@ -33,5 +36,9 @@ public class Utils {
       // throwing and catching exceptions is much slower than just check nulls =(
       return null;
     }
+  }
+
+  public static InputStream loadUrlFile(String url) throws UnirestException {
+    return Unirest.get(url).asBinary().getBody();
   }
 }

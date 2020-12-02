@@ -7,8 +7,11 @@ import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
+import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
+import com.atlassian.jira.issue.attachment.ConvertTemporaryAttachmentParams;
+import com.atlassian.jira.issue.attachment.TemporaryAttachmentId;
 import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
@@ -25,19 +28,27 @@ import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.myteam.Utils;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
+import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.File;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
@@ -91,6 +102,7 @@ public class MyteamEventsListener {
   private final IssueManager issueManager;
   private final PermissionManager permissionManager;
   private final CommentManager commentManager;
+  private final AttachmentManager attachmentManager;
   private final SearchService searchService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final String JIRA_BASE_URL;
@@ -109,10 +121,12 @@ public class MyteamEventsListener {
       @ComponentImport IssueManager issueManager,
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport CommentManager commentManager,
+      @ComponentImport AttachmentManager attachmentManager,
       @ComponentImport SearchService searchService,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport ApplicationProperties applicationProperties) {
     this.chatsStateMap = chatStateMapping.getChatsStateMap();
+    this.attachmentManager = attachmentManager;
     this.asyncEventBus =
         new AsyncEventBus(
             executorService,
@@ -355,8 +369,15 @@ public class MyteamEventsListener {
       if (commentedUser != null && commentedIssue != null) {
         if (permissionManager.hasPermission(
             ProjectPermissions.ADD_COMMENTS, commentedIssue, commentedUser)) {
+          List<Part> parts = newCommentMessageEvent.getMessageParts();
           commentManager.create(
-              commentedIssue, commentedUser, newCommentMessageEvent.getMessage(), true);
+              commentedIssue,
+              commentedUser,
+              parts != null && parts.size() > 0
+                  ? insertAttachments(
+                      commentedUser, commentedIssue, newCommentMessageEvent.getMessageParts())
+                  : newCommentMessageEvent.getMessage(),
+              true);
           log.debug("CreateCommentCommand comment created...");
           myteamApiClient.sendMessageText(
               newCommentMessageEvent.getChatId(),
@@ -478,5 +499,50 @@ public class MyteamEventsListener {
     } finally {
       JiraThreadLocalUtils.postCall();
     }
+  }
+
+  private String insertAttachments(
+      ApplicationUser commentedUser, Issue commentedIssue, List<Part> parts) {
+    StringBuilder attachmentsStrings = new StringBuilder();
+    parts.forEach(
+        part -> {
+          if (part instanceof File) {
+            File file = (File) part;
+            try {
+              HttpResponse<FileResponse> response = myteamApiClient.getFile(file.getFileId());
+              FileResponse fileInfo = response.getBody();
+              try (InputStream attachment = Utils.loadUrlFile(fileInfo.getUrl())) {
+                TemporaryAttachmentId tmpAttachmentId =
+                    attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
+                ConvertTemporaryAttachmentParams params =
+                    ConvertTemporaryAttachmentParams.builder()
+                        .setTemporaryAttachmentId(tmpAttachmentId)
+                        .setAuthor(commentedUser)
+                        .setIssue(commentedIssue)
+                        .setFilename(fileInfo.getFilename())
+                        .setContentType(fileInfo.getType())
+                        .setCreatedTime(DateTime.now())
+                        .setFileSize(fileInfo.getSize())
+                        .build();
+                attachmentManager.convertTemporaryAttachment(params);
+                if (fileInfo.getType().equals("image")) {
+                  attachmentsStrings.append(String.format("!%s!\n", fileInfo.getFilename()));
+                } else {
+                  attachmentsStrings.append(String.format("[%s]\n", fileInfo.getFilename()));
+                }
+                if (file.getCaption() != null) {
+                  attachmentsStrings.append(String.format("%s\n", file.getCaption()));
+                }
+              }
+
+            } catch (UnirestException | IOException e) {
+              log.error(
+                  "Unable to create attachment for comment on Issue {}",
+                  commentedIssue.getKey(),
+                  e);
+            }
+          }
+        });
+    return attachmentsStrings.toString();
   }
 }

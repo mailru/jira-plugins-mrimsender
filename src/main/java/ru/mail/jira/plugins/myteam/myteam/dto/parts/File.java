@@ -11,11 +11,21 @@ public class File extends Part<File.Data> {
     return this.getPayload().fileId;
   }
 
+  public String getCaption() {
+    return this.getPayload().caption;
+  }
+
+  public String getType() {
+    return this.getPayload().type;
+  }
+
   @Getter
   @Setter
   @ToString
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class Data {
     private String fileId;
+    private String caption;
+    private String type;
   }
 }

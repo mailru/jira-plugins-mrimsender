@@ -7,6 +7,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.util.List;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
+import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 
@@ -27,6 +28,8 @@ public interface MyteamApiClient {
   public HttpResponse<JsonNode> answerCallbackQuery(String queryId) throws UnirestException;
 
   public void updateSettings();
+
+  HttpResponse<FileResponse> getFile(String fileId) throws UnirestException;
 
   public HttpResponse<MessageResponse> editMessageText(
       String chatId,
