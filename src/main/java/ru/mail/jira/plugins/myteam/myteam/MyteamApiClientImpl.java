@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.configuration.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
+import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 
@@ -85,6 +86,14 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   @Override
   public HttpResponse<JsonNode> answerCallbackQuery(String queryId) throws UnirestException {
     return answerCallbackQuery(queryId, null, false, null);
+  }
+
+  @Override
+  public HttpResponse<FileResponse> getFile(String fileId) throws UnirestException {
+    return Unirest.get(botApiUrl + "/files/getInfo")
+        .queryString("token", apiToken)
+        .queryString("fileId", fileId)
+        .asObject(FileResponse.class);
   }
 
   @Override
