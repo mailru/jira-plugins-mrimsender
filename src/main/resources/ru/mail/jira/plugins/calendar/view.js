@@ -240,6 +240,7 @@ require(['jquery',
 
                 var calendarId = $calendarNameLink.closest('div.calendar-list-item-block').data('id');
                 var calendar = this.collection.get(calendarId);
+                this.calendarView.reload();
                 if (!calendar || !calendar.get('favorite')) {
                     this.model.save({calendars: [calendarId]}, {
                         success: function() {
