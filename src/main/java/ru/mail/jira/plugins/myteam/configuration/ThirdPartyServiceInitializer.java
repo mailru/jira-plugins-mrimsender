@@ -3,11 +3,13 @@ package ru.mail.jira.plugins.myteam.configuration;
 
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.commons.SentryClient;
 
 @Component
 @Slf4j
@@ -27,11 +29,19 @@ public class ThirdPartyServiceInitializer implements LifecycleAware {
           public <T> T readValue(String value, Class<T> valueType) {
             try {
               return jacksonObjectMapper.readValue(value, valueType);
+            } catch (JsonParseException jsonParseException) {
+              log.error(
+                  "Error while read value: {} with value type = {}",
+                  value,
+                  valueType.getName(),
+                  jsonParseException);
+              SentryClient.capture(jsonParseException);
+              throw new RuntimeException(jsonParseException);
             } catch (IOException e) {
               log.error(
-                  String.format(
-                      "Unirest JacksonObjectMapper exception during reading value = %s as type = %s",
-                      value, valueType.toString()),
+                  "Unirest JacksonObjectMapper exception during reading value = {} as type = {}",
+                  value,
+                  valueType.toString(),
                   e);
               throw new RuntimeException(e);
             }
