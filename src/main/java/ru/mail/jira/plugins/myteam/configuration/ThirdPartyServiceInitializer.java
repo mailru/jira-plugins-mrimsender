@@ -3,7 +3,7 @@ package ru.mail.jira.plugins.myteam.configuration;
 
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
-import com.fasterxml.jackson.core.JsonParseException;
+import org.codehaus.jackson.JsonParseException;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import java.io.IOException;
