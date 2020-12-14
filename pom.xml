@@ -7,7 +7,7 @@
         <version>1.1.0</version>
     </parent>
     <artifactId>myteam</artifactId>
-    <version>6.1.0</version>
+    <version>6.1.1</version>
     <organization>
         <name>Mail.Ru Group</name>
         <url>http://corp.mail.ru/en</url>
