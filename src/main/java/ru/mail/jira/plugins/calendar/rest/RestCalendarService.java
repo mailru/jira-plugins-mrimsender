@@ -14,10 +14,22 @@ import com.atlassian.sal.api.message.I18nResolver;
 import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.extensions.property.RefreshInterval;
 import net.fortuna.ical4j.extensions.property.WrCalName;
-import net.fortuna.ical4j.model.*;
+import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.DateTime;
+import net.fortuna.ical4j.model.Dur;
+import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.parameter.Value;
-import net.fortuna.ical4j.model.property.*;
+import net.fortuna.ical4j.model.property.CalScale;
+import net.fortuna.ical4j.model.property.Description;
+import net.fortuna.ical4j.model.property.Duration;
+import net.fortuna.ical4j.model.property.Method;
+import net.fortuna.ical4j.model.property.Name;
+import net.fortuna.ical4j.model.property.ProdId;
+import net.fortuna.ical4j.model.property.Uid;
+import net.fortuna.ical4j.model.property.Url;
+import net.fortuna.ical4j.model.property.Version;
+import net.fortuna.ical4j.model.property.XProperty;
 import net.fortuna.ical4j.util.Uris;
 import net.fortuna.ical4j.validate.ValidationException;
 import org.apache.commons.lang3.StringUtils;
@@ -25,15 +37,17 @@ import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.mail.jira.plugins.calendar.common.Consts;
-import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
+import ru.mail.jira.plugins.calendar.model.ExportedCalendarsData;
 import ru.mail.jira.plugins.calendar.model.UserData;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarDto;
 import ru.mail.jira.plugins.calendar.rest.dto.CalendarSettingDto;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.service.CalendarEventService;
 import ru.mail.jira.plugins.calendar.service.CalendarService;
+import ru.mail.jira.plugins.calendar.service.CalendarsExportService;
 import ru.mail.jira.plugins.calendar.service.JiraDeprecatedService;
 import ru.mail.jira.plugins.calendar.service.UserDataService;
+import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
 import javax.ws.rs.DELETE;
@@ -49,6 +63,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -67,16 +82,18 @@ public class RestCalendarService {
     private final UserDataService userDataService;
     private final UserManager userManager;
     private final LicenseService licenseService;
+    private final CalendarsExportService calendarsExportService;
 
     public RestCalendarService(
-        @ComponentImport I18nResolver i18nResolver,
-        @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-        @ComponentImport UserManager userManager,
-        CalendarService calendarService,
-        CalendarEventService calendarEventService,
-        JiraDeprecatedService jiraDeprecatedService,
-        UserDataService userDataService,
-        LicenseService licenseService
+            @ComponentImport I18nResolver i18nResolver,
+            @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+            @ComponentImport UserManager userManager,
+            CalendarService calendarService,
+            CalendarEventService calendarEventService,
+            JiraDeprecatedService jiraDeprecatedService,
+            UserDataService userDataService,
+            LicenseService licenseService,
+            CalendarsExportService calendarsExportService
     ) {
         this.calendarService = calendarService;
         this.calendarEventService = calendarEventService;
@@ -86,6 +103,7 @@ public class RestCalendarService {
         this.userDataService = userDataService;
         this.userManager = userManager;
         this.licenseService = licenseService;
+        this.calendarsExportService = calendarsExportService;
     }
 
     @POST
@@ -215,10 +233,10 @@ public class RestCalendarService {
     @Path("{icalUid}/{calendars}.ics")
     @AnonymousAllowed
     public Response getIcsCalendar(
-        @PathParam("icalUid") final String icalUid,
-        @PathParam("calendars") final String calendars,
-        @QueryParam("issueKeys") boolean withIssueKeys,
-        @QueryParam("period") String period
+            @PathParam("icalUid") final String icalUid,
+            @PathParam("calendars") final String calendars,
+            @QueryParam("issueKeys") boolean withIssueKeys,
+            @QueryParam("period") String period
     ) {
         return new RestExecutor<StreamingOutput>() {
             @Override
@@ -233,6 +251,10 @@ public class RestCalendarService {
                     if (user == null || !user.isActive())
                         return null;
 
+                    ExportedCalendarsData exportedCalendarsByIcalUid = calendarsExportService.findExportedCalendarsByIcalUid(icalUid);
+                    if (exportedCalendarsByIcalUid == null || !Arrays.asList(exportedCalendarsByIcalUid.getCalendarIds().split(",")).containsAll(Arrays.asList(calendarIds))) {
+                        throw new SecurityException("Sorry, but you don't have enough permissions to export all of requested calendars");
+                    }
                     //todo: check windows outlook & google calendar
                     DateTimeFormatter userDateFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withZone(Consts.UTC_TZ).withStyle(DateTimeStyle.ISO_8601_DATE);
                     DateTimeFormatter userDateTimeFormat = jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
@@ -271,10 +293,10 @@ public class RestCalendarService {
 
                     for (String calendarId : calendarIds) {
                         List<EventDto> events = calendarEventService.findEvents(Integer.parseInt(calendarId), null,
-                                                                             startSearch.toString("yyyy-MM-dd"),
-                                                                             endSearch.toString("yyyy-MM-dd"),
-                                                                             userManager.getUserByKey(userData.getUserKey()),
-                                                                             true);
+                                                                                startSearch.toString("yyyy-MM-dd"),
+                                                                                endSearch.toString("yyyy-MM-dd"),
+                                                                                userManager.getUserByKey(userData.getUserKey()),
+                                                                                true);
 
                         for (EventDto event : events) {
                             Date start;
@@ -331,5 +353,16 @@ public class RestCalendarService {
                 }
             }
         }.getResponse();
+    }
+
+    @PUT
+    @Path("/export/{icalUid}/{calendars}.ics")
+    public Response updateExportedCalendarData(
+            @PathParam("icalUid") final String icalUid,
+            @PathParam("calendars") final String calendars
+    ) {
+        String[] calendarIds = StringUtils.split(calendars, "-");
+        calendarsExportService.exportCalendars(icalUid, Arrays.asList(calendarIds));
+        return Response.ok().build();
     }
 }

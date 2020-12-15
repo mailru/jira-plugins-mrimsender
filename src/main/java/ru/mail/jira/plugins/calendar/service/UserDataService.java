@@ -91,7 +91,7 @@ public class UserDataService {
                     userData = userDatas[0];
 
                 if (userData.getIcalUid() == null) {
-                    userData.setICalUid(UUID.randomUUID().toString().substring(0, 8));
+                    userData.setICalUid(UUID.randomUUID().toString());
                     userData.save();
                 }
                 return userData;
@@ -136,7 +136,7 @@ public class UserDataService {
             @Override
             public UserDataDto doInTransaction() {
                 UserData userData = getUserData(user);
-                userData.setICalUid(UUID.randomUUID().toString().substring(0, 8));
+                userData.setICalUid(UUID.randomUUID().toString());
                 userData.save();
                 return getUserDataDto(user, userData);
             }
