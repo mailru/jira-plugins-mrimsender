@@ -94,6 +94,13 @@ public class UserDataService {
                     userData.setICalUid(UUID.randomUUID().toString());
                     userData.save();
                 }
+
+                // JD-1242
+                // If an old-formed short hash was stored, then generate a new one which is longer
+                if (userData.getIcalUid().length() == 8) {
+                    userData.setICalUid(UUID.randomUUID().toString());
+                    userData.save();
+                }
                 return userData;
             }
         });
