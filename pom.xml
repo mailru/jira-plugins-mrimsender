@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>mailrucal</artifactId>
-    <version>3.4.21</version>
+    <version>4.0.4</version>
     <organization>
         <name>Mail.Ru Group</name>
         <url>http://mail.ru</url>
@@ -139,13 +139,7 @@
             <groupId>com.atlassian.plugin</groupId>
             <artifactId>atlassian-spring-scanner-annotation</artifactId>
             <version>${atlassian.spring.scanner.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.atlassian.plugin</groupId>
-            <artifactId>atlassian-spring-scanner-runtime</artifactId>
-            <version>${atlassian.spring.scanner.version}</version>
-            <scope>runtime</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -194,7 +188,6 @@
 
                     <compressJs>false</compressJs>
                     <compressCss>false</compressCss>
-                    <enableFastdev>false</enableFastdev>
                     <enableDevToolbox>false</enableDevToolbox>
                     <enablePde>false</enablePde>
                     <skipRestDocGeneration>true</skipRestDocGeneration>
@@ -238,6 +231,10 @@
                         <exclude>**/*.xml</exclude>
                         <exclude>**/*-min*</exclude>
                         <exclude>**/vis-timeline.js</exclude>
+                        <exclude>**/main.js</exclude>
+                        <exclude>**/moment.js</exclude>
+                        <exclude>**/main.global.min.js</exclude>
+                        <exclude>**/timeline-helper.js</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -260,11 +257,11 @@
         </plugins>
     </build>
     <properties>
-        <jira.version>7.10.2</jira.version>
-        <amps.version>8.0.0</amps.version>
+        <jira.version>8.13.1</jira.version>
+        <amps.version>8.0.2</amps.version>
         <ao.version>1.2.0</ao.version>
-        <quick.reload.version>2.0.0</quick.reload.version>
-        <atlassian.spring.scanner.version>1.2.13</atlassian.spring.scanner.version>
+        <quick.reload.version>3.0.0</quick.reload.version>
+        <atlassian.spring.scanner.version>2.1.7</atlassian.spring.scanner.version>
         <!--<fastdev.mvn.command>/usr/share/atlassian-plugin-sdk-5.0.13/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>-->
         <fastdev.mvn.command>/Applications/Atlassian/atlassian-plugin-sdk-6.2.14/apache-maven-3.2.1/bin/mvn</fastdev.mvn.command>
         <useFastdevCli>false</useFastdevCli>
@@ -284,4 +281,10 @@
             <url>https://is-artifactory.corp.mail.ru/artifactory/jira-plugins</url>
         </repository>
     </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>atlassian</id>
+            <url>https://maven.atlassian.com/repository/public</url>
+        </pluginRepository>
+    </pluginRepositories>
 </project>

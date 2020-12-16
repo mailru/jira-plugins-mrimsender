@@ -68,6 +68,7 @@
 
         <dependency>com.atlassian.auiplugin:ajs</dependency>
         <dependency>com.atlassian.auiplugin:aui-select2</dependency>
+        <dependency>com.atlassian.auiplugin:dialog2</dependency>
         <dependency>jira.webresources:jquery-livestamp</dependency>
         <dependency>ru.mail.jira.plugins.mailrucal:mailru-calendar-soy-templates</dependency>
 
@@ -84,14 +85,16 @@
         <resource type="download" name="vis-timeline.js" location="ru/mail/jira/plugins/calendar/timeline/vis-timeline.js"/>
         <resource type="download" name="img/" location="ru/mail/jira/plugins/calendar/timeline/img"/>
 
-        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
-        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
-        <resource type="download" name="fullcalendar-lang-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar-lang-all.js"/>
+        <resource type="download" name="main.css" location="ru/mail/jira/plugins/calendar/fullcalendar/main.css"/>
+        <resource type="download" name="main.js" location="ru/mail/jira/plugins/calendar/fullcalendar/main.js"/>
+        <resource type="download" name="locales-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/locales-all.js"/>
+        <resource type="download" name="main.global.min.js" location="ru/mail/jira/plugins/calendar/fullcalendar/main.global.min.js"/>
 
         <resource type="download" name="preferences.js" location="ru/mail/jira/plugins/calendar/preferences.js"/>
         <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
         <resource type="download" name="recurrence.js" location="ru/mail/jira/plugins/calendar/recurrence.js"/>
         <resource type="download" name="edit-type-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/edit-type-dialog.js"/>
+        <resource type="download" name="timeline-helper.js" location="ru/mail/jira/plugins/calendar/timeline-helper.js"/>
         <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
@@ -127,9 +130,10 @@
         <resource type="download" name="vis-timeline.js" location="ru/mail/jira/plugins/calendar/timeline/vis-timeline.js"/>
         <resource type="download" name="img/" location="ru/mail/jira/plugins/calendar/timeline/img"/>
 
-        <resource type="download" name="fullcalendar.css" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.css"/>
-        <resource type="download" name="fullcalendar.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar.js"/>
-        <resource type="download" name="fullcalendar-lang-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/fullcalendar-lang-all.js"/>
+        <resource type="download" name="main.css" location="ru/mail/jira/plugins/calendar/fullcalendar/main.css"/>
+        <resource type="download" name="main.js" location="ru/mail/jira/plugins/calendar/fullcalendar/main.js"/>
+        <resource type="download" name="locales-all.js" location="ru/mail/jira/plugins/calendar/fullcalendar/locales-all.js"/>
+        <resource type="download" name="main.global.min.js" location="ru/mail/jira/plugins/calendar/fullcalendar/main.global.min.js"/>
 
         <resource type="download" name="preferences.js" location="ru/mail/jira/plugins/calendar/preferences.js"/>
         <resource type="download" name="reminder.js" location="ru/mail/jira/plugins/calendar/reminder.js"/>
@@ -143,6 +147,7 @@
         <resource type="download" name="quick-filter-dialog.js" location="ru/mail/jira/plugins/calendar/dialog/quick-filter-dialog.js"/>
         <resource type="download" name="feedback-flag.js" location="ru/mail/jira/plugins/calendar/feedback-flag.js"/>
 
+        <resource type="download" name="timeline-helper.js" location="ru/mail/jira/plugins/calendar/timeline-helper.js"/>
         <resource type="download" name="timeline-view.js" location="ru/mail/jira/plugins/calendar/timeline-view.js"/>
         <resource type="download" name="calendar-view.js" location="ru/mail/jira/plugins/calendar/calendar-view.js"/>
         <resource type="download" name="view.css" location="ru/mail/jira/plugins/calendar/view.css"/>
@@ -274,6 +279,28 @@
         </actions>
     </webwork1>
 
+    <web-item key="calendar-remind-event-configuration-web-item" section="admin_plugins_menu/calendar-configuration-section">
+        <label key="ru.mail.jira.plugins.calendar.configuration.remind-event.title" />
+        <condition class="com.atlassian.jira.plugin.webfragment.conditions.JiraGlobalPermissionCondition">
+            <param name="permission">admin</param>
+        </condition>
+        <link linkId="remind-event-configuration-link">/secure/MailRuCalendarRemindEventConfiguration.jspa</link>
+    </web-item>
+
+    <webwork1 key="remind-event-configuration-action" class="java.lang.Object" roles-required="admin">
+        <actions>
+            <action name="ru.mail.jira.plugins.calendar.configuration.MailRuCalendarRemindEventConfigurationAction" alias="MailRuCalendarRemindEventConfiguration">
+                <view name="success">/ru/mail/jira/plugins/calendar/configuration/remind-event-configuration.vm</view>
+            </action>
+        </actions>
+    </webwork1>
+    <web-resource key="remind-event-configuration-resource">
+        <transformation extension="js">
+            <transformer key="jsI18n"/>
+        </transformation>
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <resource type="download" name="remind-event-configuration.js" location="/ru/mail/jira/plugins/calendar/configuration/remind-event-configuration.js" />
+    </web-resource>
     <web-resource key="working-days-configuration-soy-templates">
         <dependency>com.atlassian.soy.soy-template-plugin:soy-deps</dependency>
         <transformation extension="soy">
@@ -287,6 +314,7 @@
             <transformer key="jsI18n"/>
         </transformation>
         <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <dependency>com.atlassian.auiplugin:dialog2</dependency>
         <dependency>jira.webresources:calendar</dependency>
         <dependency>jira.webresources:calendar-en</dependency>
         <dependency>jira.webresources:calendar-localisation-moment</dependency>

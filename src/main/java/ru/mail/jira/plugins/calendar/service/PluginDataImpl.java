@@ -23,7 +23,7 @@ public class PluginDataImpl implements PluginData {
     }
 
     @Override
-    public synchronized Long getReminderLastRun() {
+    public Long getReminderLastRun() {
         String stringVal = (String) this.pluginSettings.get("reminderLastRun");
         if (stringVal != null) {
             return Long.parseLong(stringVal);
@@ -32,7 +32,7 @@ public class PluginDataImpl implements PluginData {
     }
 
     @Override
-    public synchronized void setReminderLastRun(long timestamp) {
+    public void setReminderLastRun(long timestamp) {
         this.pluginSettings.put("reminderLastRun", String.valueOf(timestamp));
     }
 
@@ -52,5 +52,18 @@ public class PluginDataImpl implements PluginData {
     @Override
     public synchronized void setWorkingDays(String workingDays) {
         this.pluginSettings.put("workingDays", workingDays);
+    }
+
+    @Override
+    public long getEventIdForRemind() {
+        String eventIdForRemind = (String) this.pluginSettings.get("eventIdForRemind");
+        if(eventIdForRemind != null){
+            return Long.parseLong(eventIdForRemind);
+        }
+        return 0;
+    }
+    @Override
+    public void setEventIdForRemind(Long eventId) {
+        this.pluginSettings.put("eventIdForRemind", String.valueOf(eventId));
     }
 }

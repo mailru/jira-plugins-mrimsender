@@ -9,4 +9,6 @@ public interface PluginData {
 
     List<Integer> getWorkingDays();
     void setWorkingDays(String workingDays);
+    long getEventIdForRemind();
+    void setEventIdForRemind(Long eventId);
 }

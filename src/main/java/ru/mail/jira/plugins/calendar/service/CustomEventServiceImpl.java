@@ -52,12 +52,12 @@ public class CustomEventServiceImpl implements CustomEventService {
     private final CaesiumCronExpressionValidator caesiumCronExpressionValidator = new CaesiumCronExpressionValidator();
     private final ActiveObjects ao;
     private final I18nResolver i18nResolver;
-    private final JiraDeprecatedService jiraDeprecatedService;
     private final UserManager userManager;
     private final AvatarService avatarService;
     private final CalendarService calendarService;
     private final PermissionService permissionService;
     private final TimeZoneManager timeZoneManager;
+    private final DateTimeFormatter dateTimeFormatter;
 
     @Autowired
     public CustomEventServiceImpl(
@@ -66,18 +66,18 @@ public class CustomEventServiceImpl implements CustomEventService {
         @ComponentImport AvatarService avatarService,
         @ComponentImport ActiveObjects ao,
         @ComponentImport TimeZoneManager timeZoneManager,
-        JiraDeprecatedService jiraDeprecatedService,
+        @ComponentImport DateTimeFormatter dateTimeFormatter,
         CalendarService calendarService,
         PermissionService permissionService
     ) {
         this.ao = ao;
         this.i18nResolver = i18nResolver;
-        this.jiraDeprecatedService = jiraDeprecatedService;
         this.userManager = userManager;
         this.avatarService = avatarService;
         this.calendarService = calendarService;
         this.permissionService = permissionService;
         this.timeZoneManager = timeZoneManager;
+        this.dateTimeFormatter = dateTimeFormatter;
     }
 
     @Override
@@ -503,7 +503,7 @@ public class CustomEventServiceImpl implements CustomEventService {
             }
         } else if (editMode == EditMode.FOLLOWING_EVENTS) {
             Event e = parent != null ? parent : event;
-            if (!e.getStartDate().before(eventDto.getStartDate())) {
+            if (e.getStartDate().after(eventDto.getStartDate())) {
                 throw new RestFieldException("ru.mail.jira.plugins.calendar.customEvents.recurring.error.startDateBeforeOldStart", "startDate");
             }
         }
@@ -1203,9 +1203,9 @@ public class CustomEventServiceImpl implements CustomEventService {
 
     private DateTimeFormatter getDateFormatter(ApplicationUser user, boolean allDay) {
         if (allDay) {
-            return jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE).withZone(Consts.UTC_TZ);
+            return dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
         } else {
-            return jiraDeprecatedService.dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+            return dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
         }
     }
 

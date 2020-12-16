@@ -1,0 +1,42 @@
+<html>
+    <head>
+        <title>$i18n.getText( "ru.mail.jira.plugins.calendar.configuration.workingDays.title" )</title>
+        <meta name="decorator" content="admin" />
+        <meta name="admin.active.section" content="admin_plugins_menu/calendar-configuration-section" />
+        <meta name="admin.active.tab" content="remind-event-configuration-link" />
+        $webResourceManager.requireResource( "ru.mail.jira.plugins.mailrucal:remind-event-configuration-resource" )
+    </head>
+    <body>
+        <header class="aui-page-header">
+            <div class="aui-page-header-inner">
+                <div class="aui-page-header-main">
+                    <h1>$i18n.getText( "ru.mail.jira.plugins.calendar.configuration.workingDays.title" )</h1>
+                    <p>$i18n.getText( "ru.mail.jira.plugins.calendar.configuration.workingDays.description" )</p>
+                </div>
+            </div>
+        </header>
+        <div class="module">
+            <div class="mod-content">
+                <h2>Standard Working Days</h2>
+                <form class="aui">
+
+                    <div class="field-group">
+                        <label for="eventId">Event</label>
+                        <select id="eventId" class="select aui-ss-select">
+                            <option value="0">Empty</option>
+                            #foreach($event in $action.getAllEvents())
+                                <option value="$event.id">$event.name</option>
+                            #end
+                        </select>
+                    </div>
+                    <div class="buttons-container">
+                        <div class="buttons">
+                            <a id="save" class="aui-button aui-button-primary">$action.getText("common.words.save")</a>
+                            <a href="$returnUrl" class="aui-button aui-button-link">$action.getText("common.words.cancel")</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

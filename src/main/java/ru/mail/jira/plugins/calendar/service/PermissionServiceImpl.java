@@ -39,7 +39,6 @@ public class PermissionServiceImpl implements PermissionService {
     private final AvatarService avatarService;
     private final GlobalPermissionManager globalPermissionManager;
     private final GroupManager groupManager;
-    private final JiraDeprecatedService jiraDeprecatedService;
     private final PermissionManager permissionManager;
     private final ProjectManager projectManager;
     private final ProjectRoleManager projectRoleManager;
@@ -54,14 +53,12 @@ public class PermissionServiceImpl implements PermissionService {
         @ComponentImport ProjectRoleManager projectRoleManager,
         @ComponentImport UserManager userManager,
         @ComponentImport GroupManager groupManager,
-        @ComponentImport ActiveObjects ao,
-        JiraDeprecatedService jiraDeprecatedService
+        @ComponentImport ActiveObjects ao
     ) {
         this.ao = ao;
         this.avatarService = avatarService;
         this.globalPermissionManager = globalPermissionManager;
         this.groupManager = groupManager;
-        this.jiraDeprecatedService = jiraDeprecatedService;
         this.permissionManager = permissionManager;
         this.projectManager = projectManager;
         this.projectRoleManager = projectRoleManager;
@@ -103,7 +100,7 @@ public class PermissionServiceImpl implements PermissionService {
                             break;
                         case GROUP:
                             Group group = groupManager.getGroup(subject);
-                            if (group != null && jiraDeprecatedService.groupManager.isUserInGroup(user, group))
+                            if (group != null && groupManager.isUserInGroup(user, group))
                                 return true;
                             break;
                         case PROJECT_ROLE:
@@ -146,7 +143,7 @@ public class PermissionServiceImpl implements PermissionService {
                     break;
                 case GROUP:
                     Group group = groupManager.getGroup(subject);
-                    if (group != null && jiraDeprecatedService.groupManager.isUserInGroup(user, group))
+                    if (group != null && groupManager.isUserInGroup(user, group))
                         return true;
                     break;
                 case PROJECT_ROLE:

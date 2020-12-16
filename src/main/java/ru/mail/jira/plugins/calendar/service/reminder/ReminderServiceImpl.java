@@ -1,11 +1,13 @@
 package ru.mail.jira.plugins.calendar.service.reminder;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
+import com.atlassian.event.api.EventPublisher;
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
+import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.exception.GetException;
 import com.atlassian.jira.mail.Email;
 import com.atlassian.jira.mail.builder.EmailBuilder;
@@ -30,7 +32,7 @@ import ru.mail.jira.plugins.calendar.model.Calendar;
 import ru.mail.jira.plugins.calendar.rest.dto.CustomEventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.UserDto;
 import ru.mail.jira.plugins.calendar.service.CalendarService;
-import ru.mail.jira.plugins.calendar.service.JiraDeprecatedService;
+import ru.mail.jira.plugins.calendar.service.PluginData;
 import ru.mail.jira.plugins.calendar.service.UserCalendarService;
 
 import java.sql.Timestamp;
@@ -41,40 +43,45 @@ import java.util.stream.Collectors;
 public class ReminderServiceImpl implements ReminderService {
     private final Logger logger = LoggerFactory.getLogger(ReminderServiceImpl.class);
 
-    private final JiraDeprecatedService jiraDeprecatedService;
     private final ActiveObjects ao;
-    private final UserCalendarService userCalendarService;
-    private final CalendarService calendarService;
     private final UserManager userManager;
     private final MailQueue mailQueue;
     private final AvatarService avatarService;
     private final I18nResolver i18nResolver;
     private final LocaleManager localeManager;
     private final TimeZoneManager timeZoneManager;
+    private final DateTimeFormatter dateTimeFormatter;
+    private final UserCalendarService userCalendarService;
+    private final CalendarService calendarService;
+    private final PluginData pluginData;
+    private final EventPublisher eventPublisher;
 
     @Autowired
     public ReminderServiceImpl(
-        @ComponentImport UserManager userManager,
-        @ComponentImport MailQueue mailQueue,
-        @ComponentImport AvatarService avatarService,
-        @ComponentImport I18nResolver i18nResolver,
-        @ComponentImport LocaleManager localeManager,
-        @ComponentImport TimeZoneManager timeZoneManager,
-        @ComponentImport ActiveObjects ao,
-        JiraDeprecatedService jiraDeprecatedService,
-        UserCalendarService userCalendarService,
-        CalendarService calendarService
-    ) {
-        this.jiraDeprecatedService = jiraDeprecatedService;
+            @ComponentImport UserManager userManager,
+            @ComponentImport MailQueue mailQueue,
+            @ComponentImport AvatarService avatarService,
+            @ComponentImport I18nResolver i18nResolver,
+            @ComponentImport LocaleManager localeManager,
+            @ComponentImport TimeZoneManager timeZoneManager,
+            @ComponentImport ActiveObjects ao,
+            @ComponentImport DateTimeFormatter dateTimeFormatter,
+            UserCalendarService userCalendarService,
+            CalendarService calendarService,
+            PluginData pluginData,
+            @ComponentImport EventPublisher eventPublisher) {
         this.ao = ao;
-        this.userCalendarService = userCalendarService;
-        this.calendarService = calendarService;
         this.userManager = userManager;
         this.mailQueue = mailQueue;
         this.avatarService = avatarService;
         this.localeManager = localeManager;
         this.i18nResolver = i18nResolver;
         this.timeZoneManager = timeZoneManager;
+        this.dateTimeFormatter = dateTimeFormatter;
+        this.userCalendarService = userCalendarService;
+        this.calendarService = calendarService;
+        this.pluginData = pluginData;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -175,9 +182,9 @@ public class ReminderServiceImpl implements ReminderService {
 
             DateTimeFormatter dateFormatter;
             if (event.isAllDay()) {
-                dateFormatter = jiraDeprecatedService.dateTimeFormatter.forUser(recipient).withStyle(DateTimeStyle.DATE_PICKER).withZone(Consts.UTC_TZ);
+                dateFormatter = dateTimeFormatter.forUser(recipient).withStyle(DateTimeStyle.DATE_PICKER).withZone(Consts.UTC_TZ);
             } else {
-                dateFormatter = jiraDeprecatedService.dateTimeFormatter.forUser(recipient).withStyle(DateTimeStyle.DATE_TIME_PICKER);
+                dateFormatter = dateTimeFormatter.forUser(recipient).withStyle(DateTimeStyle.DATE_TIME_PICKER);
             }
 
             Locale userLocale = localeManager.getLocaleFor(recipient);
@@ -195,6 +202,9 @@ public class ReminderServiceImpl implements ReminderService {
                 .renderLater();
 
             mailQueue.addItem(email);
+            if(pluginData.getEventIdForRemind() != 0){
+                eventPublisher.publish(new IssueEvent(null, params, recipient, pluginData.getEventIdForRemind(), false));
+            }
         }
     }
 

@@ -5,12 +5,10 @@ import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
-import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseStatus;
 
-@Scanned
 public class MailRuCalendarAction extends JiraWebActionSupport {
     private final ApplicationProperties applicationProperties;
     private final GlobalPermissionManager globalPermissionManager;
