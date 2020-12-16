@@ -109,7 +109,7 @@ define(
                     );
                     this._exportCalendars(calUrl);
                 }
-            }
+            },
             _exportCalendars: function(calendarsUrl) {
                 $.ajax({
                     type: 'PUT',

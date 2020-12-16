@@ -4,6 +4,8 @@ import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.datetime.DateTimeStyle;
+import com.atlassian.jira.exception.GetException;
+import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
@@ -61,6 +63,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -82,15 +86,15 @@ public class RestCalendarService {
     private final CalendarsExportService calendarsExportService;
 
     public RestCalendarService(
-        @ComponentImport I18nResolver i18nResolver,
-        @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-        @ComponentImport UserManager userManager,
-        @ComponentImport DateTimeFormatter dateTimeFormatter,
-        CalendarService calendarService,
-        CalendarEventService calendarEventService,
-        UserDataService userDataService,
-        LicenseService licenseService,
-        CalendarsExportService calendarsExportService
+            @ComponentImport I18nResolver i18nResolver,
+            @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+            @ComponentImport UserManager userManager,
+            @ComponentImport DateTimeFormatter dateTimeFormatter,
+            CalendarService calendarService,
+            CalendarEventService calendarEventService,
+            UserDataService userDataService,
+            LicenseService licenseService,
+            CalendarsExportService calendarsExportService
     ) {
         this.calendarService = calendarService;
         this.calendarEventService = calendarEventService;
@@ -237,117 +241,112 @@ public class RestCalendarService {
     ) {
         return new RestExecutor<StreamingOutput>() {
             @Override
-            protected StreamingOutput doAction() {
-                try {
-                    String[] calendarIds = StringUtils.split(calendars, "-");
+            protected StreamingOutput doAction() throws URISyntaxException, ParseException, SearchException, GetException {
+                String[] calendarIds = StringUtils.split(calendars, "-");
 
-                    UserData userData = userDataService.getUserDataByIcalUid(icalUid);
-                    if (userData == null)
-                        return null;
-                    ApplicationUser user = userManager.getUserByKey(userData.getUserKey());
-                    if (user == null || !user.isActive())
-                        return null;
-
-                    ExportedCalendarsData exportedCalendarsByIcalUid = calendarsExportService.findExportedCalendarsByIcalUid(icalUid);
-                    if (exportedCalendarsByIcalUid == null || !Arrays.asList(exportedCalendarsByIcalUid.getCalendarIds().split(",")).containsAll(Arrays.asList(calendarIds))) {
-                        throw new SecurityException("Sorry, but you don't have enough permissions to export all of requested calendars");
-                    }
-                    //todo: check windows outlook & google calendar
-                    DateTimeFormatter userDateFormat = dateTimeFormatter.forUser(user).withZone(Consts.UTC_TZ).withStyle(DateTimeStyle.ISO_8601_DATE);
-                    DateTimeFormatter userDateTimeFormat = dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
-                    final net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
-                    calendar.getProperties().add(new ProdId("-//MailRu Calendar/" + icalUid + "/iCal4j 1.0//EN"));
-                    calendar.getProperties().add(Version.VERSION_2_0);
-                    calendar.getProperties().add(CalScale.GREGORIAN);
-                    calendar.getProperties().add(Method.PUBLISH);
-                    ParameterList refreshParams = new ParameterList();
-                    refreshParams.add(Value.DURATION);
-                    calendar.getProperties().add(new RefreshInterval(refreshParams, "PT30M"));
-                    calendar.getProperties().add(new XProperty("X-PUBLISHED-TTL", "PT30M"));
-                    calendar.getProperties().add(new WrCalName(null, "Jira Calendar"));
-                    calendar.getProperties().add(new Name(null, "Jira Calendar"));
-
-                    LocalDate today = LocalDate.now();
-                    LocalDate startSearch = today.minusMonths(3);
-                    LocalDate endSearch = today.plusMonths(1);
-
-                    if (period != null) {
-                        switch (period) {
-                            case "3m":
-                                endSearch = today.plusMonths(3);
-                                break;
-                            case "6m":
-                                endSearch = today.plusMonths(6);
-                                break;
-                            case "1y":
-                                endSearch = today.plusYears(1);
-                                break;
-                            case "2y":
-                                endSearch = today.plusYears(2);
-                                break;
-                        }
-                    }
-
-                    for (String calendarId : calendarIds) {
-                        List<EventDto> events = calendarEventService.findEvents(Integer.parseInt(calendarId), null,
-                                                                                startSearch.toString("yyyy-MM-dd"),
-                                                                                endSearch.toString("yyyy-MM-dd"),
-                                                                                userManager.getUserByKey(userData.getUserKey()),
-                                                                                true);
-
-                        for (EventDto event : events) {
-                            Date start;
-                            try {
-                                start = new DateTime(true);
-                                start.setTime(userDateTimeFormat.parse(event.getStart()).getTime());
-                            } catch (Exception e) {
-                                start = new Date();
-                                start.setTime(userDateFormat.parse(event.getStart()).getTime());
-                            }
-                            Date end = null;
-                            if (event.getEnd() != null) {
-                                try {
-                                    end = new DateTime(true);
-                                    end.setTime(userDateTimeFormat.parse(event.getEnd()).getTime());
-                                } catch (Exception e) {
-                                    end = new Date();
-                                    end.setTime(userDateFormat.parse(event.getEnd()).getTime());
-                                }
-                            }
-
-                            String title = event.getTitle();
-
-                            if (withIssueKeys && event.getId() != null && event.getType() == EventDto.Type.ISSUE) {
-                                title = event.getId() + " " + title;
-                            }
-
-                            VEvent vEvent = end != null ? new VEvent(start, end, title) : new VEvent(start, title);
-                            vEvent.getProperties().add(new Uid(calendarId + "_" + event.getId()));
-                            if (event.getType() == EventDto.Type.ISSUE) {
-                                vEvent.getProperties().add(new Url(Uris.create(ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/" + event.getId())));
-                                if (event.getIssueInfo() != null)
-                                    vEvent.getProperties().add(new Description(event.getIssueInfo().toFormatString(i18nResolver)));
-                            }
-
-                            if (event.getEnd() == null) {
-                                vEvent.getProperties().add(new Duration(new Dur(1, 0, 0, 0)));
-                            }
-
-                            calendar.getComponents().add(vEvent);
-                        }
-                    }
-
-                    return output -> {
-                        try {
-                            new CalendarOutputter(false).output(calendar, output);
-                        } catch (ValidationException e) {
-                            throw new IOException(e);
-                        }
-                    };
-                } catch (Throwable t) {
-                    log.error("Export ics calendar", t);
+                UserData userData = userDataService.getUserDataByIcalUid(icalUid);
+                if (userData == null)
                     return null;
+                ApplicationUser user = userManager.getUserByKey(userData.getUserKey());
+                if (user == null || !user.isActive())
+                    return null;
+
+                ExportedCalendarsData exportedCalendarsByIcalUid = calendarsExportService.findExportedCalendarsByIcalUid(icalUid);
+                if (exportedCalendarsByIcalUid == null || !Arrays.asList(exportedCalendarsByIcalUid.getCalendarIds().split(",")).containsAll(Arrays.asList(calendarIds))) {
+                    throw new SecurityException("Sorry, but you don't have enough permissions to export all of requested calendars");
                 }
+                //todo: check windows outlook & google calendar
+                DateTimeFormatter userDateFormat = dateTimeFormatter.forUser(user).withZone(Consts.UTC_TZ).withStyle(DateTimeStyle.ISO_8601_DATE);
+                DateTimeFormatter userDateTimeFormat = dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
+                final net.fortuna.ical4j.model.Calendar calendar = new net.fortuna.ical4j.model.Calendar();
+                calendar.getProperties().add(new ProdId("-//MailRu Calendar/" + icalUid + "/iCal4j 1.0//EN"));
+                calendar.getProperties().add(Version.VERSION_2_0);
+                calendar.getProperties().add(CalScale.GREGORIAN);
+                calendar.getProperties().add(Method.PUBLISH);
+                ParameterList refreshParams = new ParameterList();
+                refreshParams.add(Value.DURATION);
+                calendar.getProperties().add(new RefreshInterval(refreshParams, "PT30M"));
+                calendar.getProperties().add(new XProperty("X-PUBLISHED-TTL", "PT30M"));
+                calendar.getProperties().add(new WrCalName(null, "Jira Calendar"));
+                calendar.getProperties().add(new Name(null, "Jira Calendar"));
+
+                LocalDate today = LocalDate.now();
+                LocalDate startSearch = today.minusMonths(3);
+                LocalDate endSearch = today.plusMonths(1);
+
+                if (period != null) {
+                    switch (period) {
+                        case "3m":
+                            endSearch = today.plusMonths(3);
+                            break;
+                        case "6m":
+                            endSearch = today.plusMonths(6);
+                            break;
+                        case "1y":
+                            endSearch = today.plusYears(1);
+                            break;
+                        case "2y":
+                            endSearch = today.plusYears(2);
+                            break;
+                    }
+                }
+
+                for (String calendarId : calendarIds) {
+                    List<EventDto> events = calendarEventService.findEvents(Integer.parseInt(calendarId), null,
+                                                                            startSearch.toString("yyyy-MM-dd"),
+                                                                            endSearch.toString("yyyy-MM-dd"),
+                                                                            userManager.getUserByKey(userData.getUserKey()),
+                                                                            true);
+
+                    for (EventDto event : events) {
+                        Date start;
+                        try {
+                            start = new DateTime(true);
+                            start.setTime(userDateTimeFormat.parse(event.getStart()).getTime());
+                        } catch (Exception e) {
+                            start = new Date();
+                            start.setTime(userDateFormat.parse(event.getStart()).getTime());
+                        }
+                        Date end = null;
+                        if (event.getEnd() != null) {
+                            try {
+                                end = new DateTime(true);
+                                end.setTime(userDateTimeFormat.parse(event.getEnd()).getTime());
+                            } catch (Exception e) {
+                                end = new Date();
+                                end.setTime(userDateFormat.parse(event.getEnd()).getTime());
+                            }
+                        }
+
+                        String title = event.getTitle();
+
+                        if (withIssueKeys && event.getId() != null && event.getType() == EventDto.Type.ISSUE) {
+                            title = event.getId() + " " + title;
+                        }
+
+                        VEvent vEvent = end != null ? new VEvent(start, end, title) : new VEvent(start, title);
+                        vEvent.getProperties().add(new Uid(calendarId + "_" + event.getId()));
+                        if (event.getType() == EventDto.Type.ISSUE) {
+                            vEvent.getProperties().add(new Url(Uris.create(ComponentAccessor.getApplicationProperties().getString(APKeys.JIRA_BASEURL) + "/browse/" + event.getId())));
+                            if (event.getIssueInfo() != null)
+                                vEvent.getProperties().add(new Description(event.getIssueInfo().toFormatString(i18nResolver)));
+                        }
+
+                        if (event.getEnd() == null) {
+                            vEvent.getProperties().add(new Duration(new Dur(1, 0, 0, 0)));
+                        }
+
+                        calendar.getComponents().add(vEvent);
+                    }
+                }
+
+                return output -> {
+                    try {
+                        new CalendarOutputter(false).output(calendar, output);
+                    } catch (ValidationException e) {
+                        throw new IOException(e);
+                    }
+                };
             }
         }.getResponse();
     }
