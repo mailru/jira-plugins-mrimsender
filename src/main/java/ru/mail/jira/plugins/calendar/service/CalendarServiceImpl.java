@@ -105,7 +105,6 @@ public class CalendarServiceImpl implements CalendarService {
     private final CustomFieldManager customFieldManager;
     private final I18nResolver i18nResolver;
     private final GroupManager groupManager;
-    private final JiraDeprecatedService jiraDeprecatedService;
     private final PermissionManager permissionManager;
     private final PermissionService permissionService;
     private final ProjectManager projectManager;
@@ -115,6 +114,7 @@ public class CalendarServiceImpl implements CalendarService {
     private final SearchRequestManager searchRequestManager;
     private final UserCalendarService userCalendarService;
     private final UserManager userManager;
+    private final SearchService searchService;
 
     @Autowired
     public CalendarServiceImpl(
@@ -128,16 +128,15 @@ public class CalendarServiceImpl implements CalendarService {
         @ComponentImport SearchRequestManager searchRequestManager,
         @ComponentImport UserManager userManager,
         @ComponentImport ActiveObjects ao,
-        JiraDeprecatedService jiraDeprecatedService,
         PermissionService permissionService,
         QuickFilterService quickFilterService,
-        UserCalendarService userCalendarService
+        UserCalendarService userCalendarService,
+        @ComponentImport SearchService searchService
     ) {
         this.ao = ao;
         this.customFieldManager = customFieldManager;
         this.i18nResolver = i18nResolver;
         this.groupManager = groupManager;
-        this.jiraDeprecatedService = jiraDeprecatedService;
         this.permissionManager = permissionManager;
         this.permissionService = permissionService;
         this.projectManager = projectManager;
@@ -147,6 +146,7 @@ public class CalendarServiceImpl implements CalendarService {
         this.searchRequestManager = searchRequestManager;
         this.userCalendarService = userCalendarService;
         this.userManager = userManager;
+        this.searchService = searchService;
     }
 
 
@@ -487,10 +487,10 @@ public class CalendarServiceImpl implements CalendarService {
                         throw new RestFieldException(serviceContext.getErrorCollection().getErrorMessages().toString(), "source");
                 }
             } else if (selectedSourceType.equals("jql")) {
-                SearchService.ParseResult parseResult = jiraDeprecatedService.searchService.parseQuery(user, calendarSettingDto.getSelectedSourceValue());
+                SearchService.ParseResult parseResult = searchService.parseQuery(user, calendarSettingDto.getSelectedSourceValue());
                 if (!parseResult.isValid())
                     throw new RestFieldException(StringUtils.join(parseResult.getErrors().getErrorMessages(), "\n"), "source");
-                MessageSet validateMessages = jiraDeprecatedService.searchService.validateQuery(user, parseResult.getQuery());
+                MessageSet validateMessages = searchService.validateQuery(user, parseResult.getQuery());
                 if (validateMessages.hasAnyErrors())
                     throw new RestFieldException(StringUtils.join(validateMessages.getErrorMessages(), "\n"), "source");
             }

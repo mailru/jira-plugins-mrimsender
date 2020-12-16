@@ -4,10 +4,11 @@ define('calendar/custom-event-dialog', [
     'underscore',
     'mailrucal/moment',
     'backbone',
+    'aui/dialog2',
     'jira/ajs/select/multi-select',
     'calendar/reminder',
     'calendar/recurrence'
-], function(require, $, _, moment, Backbone, MultiSelect, Reminder, Recurrence) {
+], function(require, $, _, moment, Backbone, dialog2, MultiSelect, Reminder, Recurrence) {
     var UserPickerUtil = JIRA ? JIRA.UserPickerUtil : null; //workaround for jira 7.0
     require(['jira/field/user-picker-util'], function(object) {
         UserPickerUtil = object;
@@ -60,7 +61,7 @@ define('calendar/custom-event-dialog', [
             this.render();
             this.$okButton = this.$('#calendar-custom-event-dialog-ok');
             this.$cancelButton = this.$('#calendar-custom-event-dialog-cancel');
-            this.dialog = AJS.dialog2('#calendar-custom-event-dialog');
+            this.dialog = dialog2('#calendar-custom-event-dialog');
 
             if (this.calendars.length > 0) {
                 this._initDateFields();

@@ -149,11 +149,13 @@
 .fc-icon-mailrucalendar-icon-fullscreen {
     background: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjwhRE9DVFlQRSBzdmcgIFBVQkxJQyAnLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4nICAnaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkJz48c3ZnIGhlaWdodD0iMzJweCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMzIgMzI7IiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAzMiAzMiIgd2lkdGg9IjMycHgiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxnIGlkPSJMYXllcl8xIi8+PGcgaWQ9ImZ1bGxzY3JlZW4iPjxnPjxwb2x5Z29uIHBvaW50cz0iMjcuNDE0LDI0LjU4NiAyMi44MjgsMjAgMjAsMjIuODI4IDI0LjU4NiwyNy40MTQgMjAsMzIgMzIsMzIgMzIsMjAgICAiIHN0eWxlPSJmaWxsOiM0RTRFNTA7Ii8+PHBvbHlnb24gcG9pbnRzPSIxMiwwIDAsMCAwLDEyIDQuNTg2LDcuNDE0IDkuMTI5LDExLjk1MyAxMS45NTcsOS4xMjUgNy40MTQsNC41ODYgICAiIHN0eWxlPSJmaWxsOiM0RTRFNTA7Ii8+PHBvbHlnb24gcG9pbnRzPSIxMiwyMi44MjggOS4xNzIsMjAgNC41ODYsMjQuNTg2IDAsMjAgMCwzMiAxMiwzMiA3LjQxNCwyNy40MTQgICAiIHN0eWxlPSJmaWxsOiM0RTRFNTA7Ii8+PHBvbHlnb24gcG9pbnRzPSIzMiwwIDIwLDAgMjQuNTg2LDQuNTg2IDIwLjA0Myw5LjEyNSAyMi44NzEsMTEuOTUzIDI3LjQxNCw3LjQxNCAzMiwxMiAgICIgc3R5bGU9ImZpbGw6IzRFNEU1MDsiLz48L2c+PC9nPjwvc3ZnPg==");
     background-size: 14px 14px;
+    vertical-align: middle;
 }
 
 .fc-icon-mailrucalendar-icon-exit-fullscreen {
     background: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjwhRE9DVFlQRSBzdmcgIFBVQkxJQyAnLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4nICAnaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkJz48c3ZnIGhlaWdodD0iMzJweCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgMzIgMzI7IiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAzMiAzMiIgd2lkdGg9IjMycHgiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxnIGlkPSJMYXllcl8xIi8+PGcgaWQ9ImZ1bGxzY3JlZW5feDVGX2V4aXQiPjxnPjxwb2x5Z29uIHBvaW50cz0iMjQuNTg2LDI3LjQxNCAyOS4xNzIsMzIgMzIsMjkuMTcyIDI3LjQxNCwyNC41ODYgMzIsMjAgMjAsMjAgMjAsMzIgICAiIHN0eWxlPSJmaWxsOiM0RTRFNTA7Ii8+PHBvbHlnb24gcG9pbnRzPSIwLDEyIDEyLDEyIDEyLDAgNy40MTQsNC41ODYgMi44NzUsMC4wNDMgMC4wNDcsMi44NzEgNC41ODYsNy40MTQgICAiIHN0eWxlPSJmaWxsOiM0RTRFNTA7Ii8+PHBvbHlnb24gcG9pbnRzPSIwLDI5LjE3MiAyLjgyOCwzMiA3LjQxNCwyNy40MTQgMTIsMzIgMTIsMjAgMCwyMCA0LjU4NiwyNC41ODYgICAiIHN0eWxlPSJmaWxsOiM0RTRFNTA7Ii8+PHBvbHlnb24gcG9pbnRzPSIyMCwxMiAzMiwxMiAyNy40MTQsNy40MTQgMzEuOTYxLDIuODcxIDI5LjEzMywwLjA0MyAyNC41ODYsNC41ODYgMjAsMCAgICIgc3R5bGU9ImZpbGw6IzRFNEU1MDsiLz48L2c+PC9nPjwvc3ZnPg==");
     background-size: 14px 14px;
+    vertical-align: middle;
 }
 
 .select2-container.select2-container-disabled .select2-choice,
@@ -180,7 +182,6 @@
 
 /* Header */
 #calendar-period-btn {
-    width: 110px;
     text-align: left;
 }
 
@@ -192,13 +193,11 @@
 .fc-icon-zoom-out:after {
     content: "\02212";
     font-weight: bold;
-    font-size: 150%;
 }
 
 .fc-icon-zoom-in:after {
     content: "\002b";
     font-weight: bold;
-    font-size: 150%;
 }
 
 .fc-ltr .fc-axis {
@@ -606,7 +605,7 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 .calendar-event-object {
     cursor: pointer;
     text-decoration: none !important;
-    color: #fff !important;
+    /*color: #fff !important;*/
 }
 
 .calendar-event-issue-type {
@@ -631,8 +630,29 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 
 }
 
-.fc-day-grid-event .fc-content {
+.fc-daygrid-event {
     white-space: normal !important;
+    display: block !important;
+}
+
+.fc-daygrid-dot-event .fc-daygrid-event-dot,
+.fc-daygrid-dot-event .fc-event-time{
+    display: inline-block !important;
+    font-weight: normal !important;
+}
+
+.fc-daygrid-dot-event .fc-event-title {
+    display: block !important;
+    font-weight: normal !important;
+}
+
+/*.fc-daygrid-event.fc-daygrid-dot-event .fc-daygrid-event-dot,*/
+/*.fc-daygrid-event.fc-daygrid-dot-event .fc-event-time {*/
+/*    display: inline-block !important;*/
+/*}*/
+
+.fc-daygrid-event .fc-event-main .fc-event-title {
+    display: inline !important;
 }
 
 .calendar-dialog-owner {
@@ -644,7 +664,8 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
     font-family: inherit;
 }
 
-.fc-content .jira-issue-status-lozenge {
+.fc-daygrid-event .jira-issue-status-lozenge,
+.fc-timegrid-event .jira-issue-status-lozenge {
     margin: 0 2px;
     font-size: .85em;
 }
@@ -1005,9 +1026,22 @@ only screen and (min-resolution: 1.25dppx) {
     border: 2px solid black;
 }
 
+.fc-direction-ltr .fc-toolbar > * > :not(:first-child) {
+    float: none !important;
+}
+
+.fc-header-toolbar .fc-toolbar-chunk {
+    display: flex;
+    align-items: center;
+}
+
 .fc .aui-buttons > button.aui-button {
     font-size: 14px;
     margin: 0;
+}
+
+.fc .aui-buttons > button .fc-icon {
+    font-size: 20px;
 }
 
 /* Quick filters */
@@ -1204,6 +1238,10 @@ only screen and (min-resolution: 1.25dppx) {
     display: flex;
     justify-content: center;
     flex-direction: column;
+}
+
+.vis-inner:not(.vis-hidden) {
+    width: 150px !important;
 }
 
 #s2id_calendar-group-by-field {

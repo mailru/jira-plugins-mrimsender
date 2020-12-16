@@ -11,7 +11,6 @@ require(['jquery',
     'calendar/quick-filter-dialog',
     'calendar/custom-event-dialog',
     'calendar/preferences',
-    'calendar/timeline-view',
 ], function($, _, moment, Backbone, LikeFlag, CalendarView, CalendarDialog, ConfirmDialog, CalendarFeedDialog, CalendarImportDialog, QuickFilterDialog, CustomEventDialog, Preferences) {
     // Override default texts for auiSelect2 messages
     $.fn.select2.defaults = $.extend($.fn.select2.defaults, {
@@ -80,7 +79,7 @@ require(['jquery',
                 this.calendarView = new CalendarView({enableFullscreen: true});
                 this.initializeTooltips();
 
-                this.calendarView.on('addSource render', this.startLoadingCalendarsCallback, this);
+                this.calendarView.on('addSource', this.startLoadingCalendarsCallback, this);
                 this.calendarView.on('renderComplete', this.finishLoadingCalendarsCallback, this);
                 this.calendarView.on('render', this.updatePeriodButton, this);
                 this.calendarView.on('render', this.updateViewInterval, this);
@@ -100,7 +99,7 @@ require(['jquery',
                 this.$('.calendar-quick-filters-label').tooltip({gravity: 'w'});
             },
             _onUserDataViewChange: function(model) {
-                var view = model.get('calendarView') || 'month';
+                var view = model.get('calendarView') || 'dayGridMonth';
                 this.setCalendarView(view);
             },
             fillCalendarsInUrl: function() {
@@ -156,7 +155,7 @@ require(['jquery',
                 var end = Preferences.getItem('mailrucalendar.end');
                 this.calendarView.init(view, hideWeekends, workingDays, start, end);
                 var $calendarEl = $("#calendar-full-calendar");
-                $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-state-default fc-button').addClass('aui-button');
+                $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-button-primary fc-button').addClass('aui-button');
                 $calendarEl.find('.fc-button-group').addClass('aui-buttons');
             },
             showCalendarFeedView: function(e) {
@@ -339,9 +338,14 @@ require(['jquery',
             },
             updateViewInterval: function() {
                 var view = this.calendarView.getView();
-                var todayRange = view.computeRange(this.calendarView.getNow());
-                Preferences.setItem('mailrucalendar.start', !todayRange.start.isSame(view.start) ? view.start.format() : '');
-                Preferences.setItem('mailrucalendar.end', !todayRange.end.isSame(view.end) ? view.end.format() : '');
+                var todayRange;
+                if (view.type === 'timeline') {
+                    todayRange = view.getCurrentData().viewSpec.optionDefaults.getTimelineHelper().computeRange(moment(this.calendarView.getNow()));
+                } else {
+                    todayRange = this.calendarView.computeRange(this.calendarView.getNow());
+                }
+                Preferences.setItem('mailrucalendar.start', !moment(todayRange.start).isSame(moment(view.activeStart)) ? moment(view.activeStart).format() : '');
+                Preferences.setItem('mailrucalendar.end', !moment(todayRange.end).isSame(moment(view.activeEnd)) ? moment(view.activeEnd).format() : '');
             },
             configureQuickFilters: function(e) {
                 e.preventDefault();
@@ -440,12 +444,8 @@ require(['jquery',
                     jsonModel: model,
                     userData: this.model,
                     calendars: this.collection.toJSON(),
-                    successHandler: $.proxy(function(createdEvent) {
-                        if (createdEvent.recurrenceType) {
-                            this.calendarView.reload();
-                        } else {
-                            this.calendarView.addEvent(createdEvent);
-                        }
+                    successHandler: $.proxy(function() {
+                        this.calendarView.reload();
                     }, this)
                 });
                 customEventDialogView.show();
@@ -456,12 +456,8 @@ require(['jquery',
                     jsonModel: jsonModel,
                     calendar: null,
                     calendars: this.collection.toJSON(),
-                    successHandler: $.proxy(function(updatedEvent) {
-                        if (updatedEvent.recurrenceType) {
-                            this.calendarView.reload();
-                        } else {
-                            this.calendarView.updateEvent(updatedEvent);
-                        }
+                    successHandler: $.proxy(function() {
+                        this.calendarView.reload();
                     }, this)
                 });
                 customEventDialogView.show();
@@ -581,16 +577,21 @@ require(['jquery',
 
         /* Fetch data */
         mainView.model.fetch({
+            silent: true,
+            async: false,
             success: function(model) {
-                model.set({
-                    hideWeekends: Preferences.getItem('mailrucalendar.hideWeekends') === 'true',
-                    calendarView: Preferences.getItem('mailrucalendar.calendarView') || 'month'
-                });
-                var view = model.get('calendarView') || 'month';
-                if (view == 'basicWeek')
-                    view = 'agendaWeek';
+                var hideWeekends = Preferences.getItem('mailrucalendar.hideWeekends') === 'true';
+                var calendarView = Preferences.getItem('mailrucalendar.calendarView') || 'dayGridMonth';
+                var view = calendarView || 'dayGridMonth';
+                if (view === 'dayGridWeek')
+                    view = 'timeGridWeek';
                 moment.tz.setDefault(model.get('timezone'));
-                mainView.loadFullCalendar(view, model.get('hideWeekends'), model.get('timezone'), model.get('workingDays'));
+                mainView.loadFullCalendar(view, hideWeekends, model.get('timezone'), model.get('workingDays'));
+
+                model.set({
+                    hideWeekends: hideWeekends,
+                    calendarView: calendarView
+                });
 
                 Backbone.history.start();
 
@@ -608,7 +609,7 @@ require(['jquery',
                 if (response.responseText)
                     msg += response.responseText;
                 alert(msg);
-                mainView.loadFullCalendar('month', false, 'local', [1, 2, 3, 4, 5]);
+                mainView.loadFullCalendar('dayGridMonth', false, 'local', [1, 2, 3, 4, 5]);
 
                 Backbone.history.start();
             }

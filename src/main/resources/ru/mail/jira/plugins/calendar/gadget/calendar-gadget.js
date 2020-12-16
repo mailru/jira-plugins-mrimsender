@@ -1,4 +1,4 @@
-define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/timeline-view', 'underscore', 'mailrucal/moment'], function(CalendarView, TimeLineView, _, moment) {
+define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'underscore', 'mailrucal/moment'], function(CalendarView, _, moment) {
     function genArray(size, object) {
         return _.map(_.range(size), function(i) {
             return object;
@@ -10,6 +10,23 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
             return AJS.gadget.getBaseUrl();
         } else {
             return AJS.contextPath();
+        }
+    }
+
+    function getView(oldName) {
+        if (oldName === undefined) {
+            return 'dayGridMonth';
+        } else {
+            var views = {
+                month: 'dayGridMonth',
+                agendaWeek: 'timeGridWeek',
+                agendaDay: 'timeGridDay'
+            }
+            if (views.hasOwnProperty(oldName)) {
+                return views[oldName]
+            } else {
+                return oldName;
+            }
         }
     }
 
@@ -84,7 +101,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                             userpref: 'calendarView',
                             label: gadget.getMsg('ru.mail.jira.plugins.calendar.gadget.config.view'),
                             type: 'select',
-                            selected: gadget.getPref('calendarView') || gadget.getPref('view') || 'month',
+                            selected: getView(gadget.getPref('calendarView') || gadget.getPref('view')),
                             options: [
                                 {
                                     label: gadget.getMsg('ru.mail.jira.plugins.calendar.quarter'),
@@ -92,15 +109,15 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                                 },
                                 {
                                     label: gadget.getMsg('ru.mail.jira.plugins.calendar.month'),
-                                    value: 'month'
+                                    value: 'dayGridMonth'
                                 },
                                 {
                                     label: gadget.getMsg('ru.mail.jira.plugins.calendar.week'),
-                                    value: 'agendaWeek'
+                                    value: 'timeGridWeek'
                                 },
                                 {
                                     label: gadget.getMsg('ru.mail.jira.plugins.calendar.day'),
-                                    value: 'agendaDay'
+                                    value: 'timeGridDay'
                                 },
                                 {
                                     label: gadget.getMsg('ru.mail.jira.plugins.calendar.timeline'),
@@ -187,8 +204,8 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                     return calendar.hasError ? '' : calendar.name;
                 });
 
-                var view = gadget.getPref('calendarView') || gadget.getPref('view') || 'month';
-                var hideWeekends = gadget.getPref('hideWeekends') == 'hideWeekends';
+                var view = getView(gadget.getPref('calendarView') || gadget.getPref('view'));
+                var hideWeekends = gadget.getPref('hideWeekends') === 'hideWeekends';
                 gadget.showView();
                 if (!AJS.$('#mailru-calendar-gadget-full-calendar').length) {
                     gadget.getView().empty().html('' +
@@ -219,7 +236,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'calendar/t
                     gadget.calendarView.setTimezone(args.props.timezone);
                     gadget.calendarView.init(view, hideWeekends, args.props.workingDays, null, null);
                     var $calendarEl = AJS.$("#mailru-calendar-gadget-full-calendar");
-                    $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-state-default fc-button').addClass('aui-button');
+                    $calendarEl.find('.fc-toolbar .fc-button').removeClass('fc-button-primary fc-button').addClass('aui-button');
                     $calendarEl.find('.fc-button-group').addClass('aui-buttons');
                 } else {
                     gadget.calendarView.removeAllEventSource();

@@ -25,6 +25,8 @@ public class EventDto {
     @XmlElement
     private String issueTypeImgUrl;
     @XmlElement
+    private String priorityImgUrl;
+    @XmlElement
     private String status;
     @XmlElement
     private String statusColor;

@@ -2,12 +2,13 @@ define('calendar/calendar-dialog', [
     'jquery',
     'underscore',
     'backbone',
+    'aui/dialog2',
     'jira/util/forms',
     'jira/jql/jql-parser',
     'jira/autocomplete/jql-autocomplete',
     'calendar/confirm-dialog',
     'calendar/reminder'
-], function($, _, Backbone, Forms, JQLParser, JQLAutoComplete, ConfirmDialog, Reminder) {
+], function($, _, Backbone, dialog2, Forms, JQLParser, JQLAutoComplete, ConfirmDialog, Reminder) {
     var AVATARS = ['event', 'travel', 'leave', 'birthday'];
 
     var displayedFieldsData, dateFieldsData, autoCompleteData;
@@ -90,7 +91,7 @@ define('calendar/calendar-dialog', [
             this.render();
             this.$okButton = this.$('#calendar-dialog-ok');
             this.$cancelButton = this.$('#calendar-dialog-cancel');
-            this.dialog = AJS.dialog2('#calendar-dialog');
+            this.dialog = dialog2('#calendar-dialog');
 
             this.permissionIds = {};
             this.userData = options.userData;
