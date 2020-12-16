@@ -107,7 +107,14 @@ define(
                             issueKeys: withIssueKeys
                         })
                     );
+                    this._exportCalendars(calUrl);
                 }
+            },
+            _exportCalendars: function(calendarsUrl) {
+                $.ajax({
+                    type: 'PUT',
+                    url: window.location.origin + AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/export/' + this.model.get('icalUid') + '/' + calendarsUrl+ '.ics',
+                });
             }
         });
     }

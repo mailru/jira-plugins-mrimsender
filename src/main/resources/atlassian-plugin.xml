@@ -26,6 +26,7 @@
         <entity>ru.mail.jira.plugins.calendar.model.FavouriteQuickFilter</entity>
         <entity>ru.mail.jira.plugins.calendar.schedule.model.Schedule</entity>
         <entity>ru.mail.jira.plugins.calendar.configuration.NonWorkingDay</entity>
+        <entity>ru.mail.jira.plugins.calendar.model.ExportedCalendarsData</entity>
 
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v3.Version3UpgradeTask</upgradeTask>
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v4.Version4UpgradeTask</upgradeTask>

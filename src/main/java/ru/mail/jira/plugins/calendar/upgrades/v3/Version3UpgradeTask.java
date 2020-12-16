@@ -226,7 +226,7 @@ public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
                             userData.setShowTime(false);
                             userData.setShowedCalendars(String.valueOf(calendar.getID()));
                             userData.setUserKey(user.getKey());
-                            userData.setICalUid(UUID.randomUUID().toString().substring(0, 8));
+                            userData.setICalUid(UUID.randomUUID().toString());
                         }
                         userData.save();
                         return calendar;
@@ -565,7 +565,7 @@ public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
                             userData = userDatas[0];
 
                         if (userData.getIcalUid() == null)
-                            userData.setICalUid(UUID.randomUUID().toString().substring(0, 8));
+                            userData.setICalUid(UUID.randomUUID().toString());
                         if (oldUserPreferences.defaultView != null)
                             userData.setDefaultView(oldUserPreferences.defaultView);
                         userData.setHideWeekends(oldUserPreferences.hideWeekend);
