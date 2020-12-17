@@ -3,11 +3,11 @@ package ru.mail.jira.plugins.myteam.configuration;
 
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
-import org.codehaus.jackson.JsonParseException;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
+import org.codehaus.jackson.JsonParseException;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 

@@ -7,6 +7,7 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.util.List;
+import org.apache.http.entity.ContentType;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -42,16 +43,18 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       String chatId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException {
     if (inlineKeyboardMarkup == null)
-      return Unirest.get(botApiUrl + "/messages/sendText")
-          .queryString("token", apiToken)
-          .queryString("chatId", chatId)
-          .queryString("text", text)
+      return Unirest.post(botApiUrl + "/messages/sendText")
+          .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
+          .field("token", apiToken)
+          .field("chatId", chatId)
+          .field("text", text)
           .asObject(MessageResponse.class);
-    return Unirest.get(botApiUrl + "/messages/sendText")
-        .queryString("token", apiToken)
-        .queryString("chatId", chatId)
-        .queryString("text", text)
-        .queryString("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
+    return Unirest.post(botApiUrl + "/messages/sendText")
+        .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
+        .field("token", apiToken)
+        .field("chatId", chatId)
+        .field("text", text)
+        .field("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
         .asObject(MessageResponse.class);
   }
 
@@ -104,18 +107,20 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException {
     if (inlineKeyboardMarkup == null)
-      return Unirest.get(botApiUrl + "/messages/editText")
-          .queryString("token", apiToken)
-          .queryString("chatId", chatId)
-          .queryString("msgId", messageId)
-          .queryString("text", text)
+      return Unirest.post(botApiUrl + "/messages/editText")
+          .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
+          .field("token", apiToken)
+          .field("chatId", chatId)
+          .field("msgId", messageId)
+          .field("text", text)
           .asObject(MessageResponse.class);
-    return Unirest.get(botApiUrl + "/messages/editText")
-        .queryString("token", apiToken)
-        .queryString("chatId", chatId)
-        .queryString("msgId", messageId)
-        .queryString("text", text)
-        .queryString("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
+    return Unirest.post(botApiUrl + "/messages/editText")
+        .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
+        .field("token", apiToken)
+        .field("chatId", chatId)
+        .field("msgId", messageId)
+        .field("text", text)
+        .field("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
         .asObject(MessageResponse.class);
   }
 }
