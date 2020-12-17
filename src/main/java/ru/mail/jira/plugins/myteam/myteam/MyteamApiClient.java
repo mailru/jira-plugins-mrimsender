@@ -12,26 +12,25 @@ import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 
 public interface MyteamApiClient {
-  public HttpResponse<MessageResponse> sendMessageText(
+  HttpResponse<MessageResponse> sendMessageText(
       String chatId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException;
 
-  public HttpResponse<MessageResponse> sendMessageText(String chatId, String text)
+  HttpResponse<MessageResponse> sendMessageText(String chatId, String text)
       throws UnirestException, IOException;
 
-  public HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime)
-      throws UnirestException;
+  HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime) throws UnirestException;
 
-  public HttpResponse<JsonNode> answerCallbackQuery(
+  HttpResponse<JsonNode> answerCallbackQuery(
       String queryId, String text, boolean showAlert, String url) throws UnirestException;
 
-  public HttpResponse<JsonNode> answerCallbackQuery(String queryId) throws UnirestException;
+  HttpResponse<JsonNode> answerCallbackQuery(String queryId) throws UnirestException;
 
-  public void updateSettings();
+  void updateSettings();
 
   HttpResponse<FileResponse> getFile(String fileId) throws UnirestException;
 
-  public HttpResponse<MessageResponse> editMessageText(
+  HttpResponse<MessageResponse> editMessageText(
       String chatId,
       long messageId,
       String text,
