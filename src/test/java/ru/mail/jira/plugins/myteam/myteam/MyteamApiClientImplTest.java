@@ -17,7 +17,6 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Test;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.myteam.configuration.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
@@ -76,7 +75,7 @@ public class MyteamApiClientImplTest {
         });
   }
 
-  @Test
+  @Ignore
   public void sendMessageText() throws IOException, UnirestException {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
     buttons.add(new ArrayList<>(2));
@@ -93,7 +92,7 @@ public class MyteamApiClientImplTest {
     assertTrue(httpResponse.getBody().isOk());
   }
 
-  @Test
+  @Ignore
   public void editMessageText() throws IOException, UnirestException {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
     buttons.add(new ArrayList<>(2));
