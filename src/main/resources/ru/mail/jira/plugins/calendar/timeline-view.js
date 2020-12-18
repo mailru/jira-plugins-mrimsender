@@ -74,9 +74,7 @@
                         TimelineHelper.timeline.setWindow(start, end);
                     }
                     var events = FullCalendar.sliceEvents(props);
-                    if (events.length > 0) {
-                        TimelineHelper.renderEvents(events);
-                    }
+                    TimelineHelper.renderEvents(events);
                 }
             },
             didMount: function(props) {
