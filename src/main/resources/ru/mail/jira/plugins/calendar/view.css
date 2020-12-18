@@ -1154,6 +1154,7 @@ only screen and (min-resolution: 1.25dppx) {
 
 .recurring-icon:before, .recurring-edited-icon:before  {
     font-size: 10px;
+    margin: 0;
 }
 
 .recurring-icon-bg {
