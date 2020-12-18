@@ -629,7 +629,7 @@ define('calendar/calendar-view', [
                                     return e.displayName.split(/\s+/)[0];
                                 }).join(', ');
                             }
-                            $element.find('.fc-event-title-container').prepend(AJS.escapeHTML(formattedParticipants) + ': ');
+                            $element.find('.fc-event-title').prepend(AJS.escapeHTML(formattedParticipants) + ': ');
                         }
 
                         var iconContent = '<span class="calendar-event-issue-type custom-type-icon custom-type-icon-' + event.extendedProps.issueTypeImgUrl + '-cal" />';
