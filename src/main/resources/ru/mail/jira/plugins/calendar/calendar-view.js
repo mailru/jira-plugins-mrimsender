@@ -568,7 +568,7 @@ define('calendar/calendar-view', [
                 lazyFetching: true,
                 editable: true,
                 draggable: true,
-                firstDay: AJS.Meta.get('mailrucal-use-iso8601') ? 1 : 0,
+                firstDay: moment().startOf('isoWeek').isoWeekday(),
                 allDayContent: AJS.I18n.getText('ru.mail.jira.plugins.calendar.allDay'),
                 buttonText: {
                     today: AJS.I18n.getText('ru.mail.jira.plugins.calendar.today')
