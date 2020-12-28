@@ -561,14 +561,13 @@ define('calendar/calendar-view', [
                 },
                 weekText: '',
                 weekNumbers: true,
-                weekNumberCalculation: 'local',
+                weekNumberCalculation: AJS.Meta.get('mailrucal-use-iso8601') ? 'ISO' : 'local',
                 locale: this._formatLocale(AJS.Meta.get('user-locale')),
                 timezone: self.timezone,
                 eventTimeFormat: this.timeFormat,
                 lazyFetching: true,
                 editable: true,
                 draggable: true,
-                firstDay: AJS.Meta.get('mailrucal-use-iso8601') ? 1 : 0,
                 allDayContent: AJS.I18n.getText('ru.mail.jira.plugins.calendar.allDay'),
                 buttonText: {
                     today: AJS.I18n.getText('ru.mail.jira.plugins.calendar.today')
