@@ -142,7 +142,7 @@ require(['jquery',
             startLoadingCalendarsCallback: function() {
                 var calendarHideDiv = $("#calendarHideDiv");
                 if(calendarHideDiv.length === 0) {
-                    $("#calendar-full-calendar").find(".fc-view-harness").append('<div id="calendarHideDiv"><p>Loading results...</p><aui-spinner size="large"></aui-spinner><div class="calendarHideDivBackground"></div></div>');
+                    $("#calendar-full-calendar").find(".fc-view-harness").append('<div id="calendarHideDiv"><p>'+AJS.I18n.getText('ru.mail.jira.plugins.calendar.loading')+'</p><aui-spinner size="large"></aui-spinner><div class="calendarHideDivBackground"></div></div>');
                 } else {
                     calendarHideDiv.show();
                 }
