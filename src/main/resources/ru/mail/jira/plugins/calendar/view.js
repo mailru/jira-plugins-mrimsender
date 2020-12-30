@@ -80,6 +80,7 @@ require(['jquery',
                 this.initializeTooltips();
 
                 this.calendarView.on('addSource', this.startLoadingCalendarsCallback, this);
+                this.calendarView.on('addSource render', this.startLoadingCalendarsCallback, this);
                 this.calendarView.on('renderComplete', this.finishLoadingCalendarsCallback, this);
                 this.calendarView.on('render', this.updatePeriodButton, this);
                 this.calendarView.on('render', this.updateViewInterval, this);
@@ -139,12 +140,16 @@ require(['jquery',
                 $('div.calendar-list-item-block[data-id=' + calendarId + ']').toggleClass('calendar-list-item-selected', false);
             },
             startLoadingCalendarsCallback: function() {
-                AJS.dim();
-                JIRA.Loading.showLoadingIndicator();
+                var calendarHideDiv = $("#calendarHideDiv");
+                if(calendarHideDiv.length === 0) {
+                    $("#calendar-full-calendar").find(".fc-view-harness").append('<div id="calendarHideDiv"><p>Loading results...</p><aui-spinner size="large"></aui-spinner><div class="calendarHideDivBackground"></div></div>');
+                } else {
+                    calendarHideDiv.show();
+                }
             },
             finishLoadingCalendarsCallback: function() {
                 this.$('.calendar-name').removeClass('not-active');
-                JIRA.Loading.hideLoadingIndicator();
+                $("#calendarHideDiv").hide();
                 if (!$('.aui-dialog2[aria-hidden=false]').length)
                     AJS.undim();
             },
