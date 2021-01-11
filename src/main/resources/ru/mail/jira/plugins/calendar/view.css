@@ -1266,7 +1266,7 @@ only screen and (min-resolution: 1.25dppx) {
     text-overflow: ellipsis;
 }
 
-#calendarHideDiv {
+#calendar-hide-div {
     position: absolute;
     top:0;
     color: #333;
@@ -1279,11 +1279,11 @@ only screen and (min-resolution: 1.25dppx) {
     justify-content: center;
 }
 
-#calendarHideDiv aui-spinner {
+#calendar-hide-div aui-spinner {
     margin: 1em;
 }
 
-.calendarHideDivBackground{
+.calendar-hide-div-background{
     position: absolute;
     opacity: 0.115;
     background: #1a252f;

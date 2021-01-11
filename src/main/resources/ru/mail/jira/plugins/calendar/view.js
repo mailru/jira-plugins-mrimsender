@@ -80,7 +80,6 @@ require(['jquery',
                 this.initializeTooltips();
 
                 this.calendarView.on('addSource', this.startLoadingCalendarsCallback, this);
-                this.calendarView.on('addSource render', this.startLoadingCalendarsCallback, this);
                 this.calendarView.on('renderComplete', this.finishLoadingCalendarsCallback, this);
                 this.calendarView.on('render', this.updatePeriodButton, this);
                 this.calendarView.on('render', this.updateViewInterval, this);
@@ -140,16 +139,12 @@ require(['jquery',
                 $('div.calendar-list-item-block[data-id=' + calendarId + ']').toggleClass('calendar-list-item-selected', false);
             },
             startLoadingCalendarsCallback: function() {
-                var calendarHideDiv = $("#calendarHideDiv");
-                if(calendarHideDiv.length === 0) {
-                    $("#calendar-full-calendar").find(".fc-view-harness").append('<div id="calendarHideDiv"><p>'+AJS.I18n.getText('ru.mail.jira.plugins.calendar.loading')+'</p><aui-spinner size="large"></aui-spinner><div class="calendarHideDivBackground"></div></div>');
-                } else {
-                    calendarHideDiv.show();
-                }
+                AJS.dim();
+                JIRA.Loading.showLoadingIndicator();
             },
             finishLoadingCalendarsCallback: function() {
                 this.$('.calendar-name').removeClass('not-active');
-                $("#calendarHideDiv").hide();
+                JIRA.Loading.hideLoadingIndicator();
                 if (!$('.aui-dialog2[aria-hidden=false]').length)
                     AJS.undim();
             },

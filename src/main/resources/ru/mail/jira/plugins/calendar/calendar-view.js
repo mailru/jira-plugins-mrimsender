@@ -567,6 +567,7 @@ define('calendar/calendar-view', [
                 eventTimeFormat: this.timeFormat,
                 lazyFetching: true,
                 editable: true,
+                spinnerDelayDeferred: this.loadingIndicatorDelay(500),
                 draggable: true,
                 allDayContent: AJS.I18n.getText('ru.mail.jira.plugins.calendar.allDay'),
                 buttonText: {
@@ -663,6 +664,7 @@ define('calendar/calendar-view', [
                     });
                 }, this),
                 loading: $.proxy(function(isLoading) {
+                    var calendarHideDiv = $("#calendar-hide-div");
                     viewRenderFirstTime = false;
                     if (!isLoading) {
                         this.trigger('renderComplete');
@@ -672,6 +674,19 @@ define('calendar/calendar-view', [
                         for (; start.isBefore(end); start.add(1, 'M')) {
                             this.$('.fc-day.fc-daygrid-day[data-date=' + start.format('YYYY-MM-DD') + ']').addClass('fc-first-day-of-month');
                         }
+                        calendarHideDiv.hide();
+                        this.spinnerDelayDeferred.reject();
+                    } else {
+                        this.spinnerDelayDeferred = this.loadingIndicatorDelay(500);
+                        this.spinnerDelayDeferred.then(function() {
+                            if(calendarHideDiv.length === 0) {
+                                $("#calendar-full-calendar").find(".fc-view-harness").append('<div id="calendar-hide-div"><p>'+AJS.I18n.getText('ru.mail.jira.plugins.calendar.loading')+'</p><aui-spinner size="large"></aui-spinner><div class="calendar-hide-div-background"></div></div>');
+                            } else {
+                                calendarHideDiv.show();
+                            }
+                        }, function() {
+                            calendarHideDiv.hide();
+                        });
                     }
                 }, this),
                 datesSet: $.proxy(function(params) {
@@ -690,6 +705,11 @@ define('calendar/calendar-view', [
             this.calendar.render();
 
             this._initEventDialog();
+        },
+        loadingIndicatorDelay: function (ms) {
+            return $.Deferred(function(dfrd) {
+                setTimeout(dfrd.resolve, ms);
+            });
         },
         addEventSource: function(calendarId, silent) {
             !silent && this.trigger('addSource', calendarId);
