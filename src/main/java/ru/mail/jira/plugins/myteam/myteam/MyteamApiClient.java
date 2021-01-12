@@ -6,10 +6,8 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.util.List;
-import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
-import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
+import javax.annotation.Nonnull;
+import ru.mail.jira.plugins.myteam.myteam.dto.*;
 
 public interface MyteamApiClient {
   HttpResponse<MessageResponse> sendMessageText(
@@ -36,4 +34,12 @@ public interface MyteamApiClient {
       String text,
       List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException;
+
+  HttpResponse<ChatResponse> createChat(
+      @Nonnull String creatorBotToken,
+      @Nonnull String name,
+      String description,
+      @Nonnull List<ChatMemberId> members,
+      boolean isPublic)
+      throws IOException, UnirestException;
 }

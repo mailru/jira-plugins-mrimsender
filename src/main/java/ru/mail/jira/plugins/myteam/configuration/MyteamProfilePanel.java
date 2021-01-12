@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ru.mail.jira.plugins.commons.RestUtils;
+import ru.mail.jira.plugins.myteam.model.PluginData;
 
 @Controller
 @Produces({MediaType.APPLICATION_JSON})

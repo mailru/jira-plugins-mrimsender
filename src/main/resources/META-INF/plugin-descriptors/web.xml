@@ -41,4 +41,10 @@
         <context-provider class="ru.mail.jira.plugins.myteam.configuration.MyteamProfilePanel" />
         <resource type="velocity" name="view" location="ru/mail/jira/plugins/myteam/configuration/myteam-profile-panel.vm" />
     </web-panel>
+
+    <web-panel key="myteam-chat-creation-panel" location="atl.jira.view.issue.right.context" weight="200">
+        <condition class="ru.mail.jira.plugins.myteam.configuration.MyteamCreateChatPanelCondition"/>
+        <label key="ru.mail.jira.plugins.myteam.createChat.panel"/>
+        <resource name="view" type="static"><![CDATA[<div id="myteam-chat-creation-panel-container">MyTeam chat creation panel container here</div>]]></resource>-->
+    </web-panel>
 </web>

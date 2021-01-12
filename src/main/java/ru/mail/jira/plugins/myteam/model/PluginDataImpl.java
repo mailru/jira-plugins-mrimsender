@@ -1,5 +1,5 @@
 /* (C)2020 */
-package ru.mail.jira.plugins.myteam.configuration;
+package ru.mail.jira.plugins.myteam.model;
 
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;

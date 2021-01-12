@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.mockito.Mockito;
-import ru.mail.jira.plugins.myteam.configuration.PluginData;
+import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;

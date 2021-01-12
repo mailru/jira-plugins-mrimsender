@@ -19,7 +19,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
-import ru.mail.jira.plugins.myteam.configuration.PluginData;
+import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.IcqEvent;

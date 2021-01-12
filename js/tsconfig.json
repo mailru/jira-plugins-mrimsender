@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "allowJs": false,
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "declaration": false,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "downlevelIteration": true,
+    "importHelpers": true,
+    "jsx": "react",
+    "moduleResolution": "node",
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": false,
+    "useDefineForClassFields": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "target": "es5",
+    "module": "es6",
+    "lib": [
+      "dom",
+      "es5",
+      "es6",
+      "scripthost",
+      "es2015.core",
+      "es2015.collection",
+      "es2015.symbol",
+      "es2015.iterable",
+      "es2015.promise",
+      "es2016.array.include"
+    ],
+    "noImplicitAny": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": "./"
+  },
+  "compileOnSave": true,
+  "include": [
+    "./typings/*.d.ts",
+    "./node_modules/@atlaskit/theme/**/*.d.ts",
+    "./src/**/*.ts",
+    "./src/**/*.tsx"
+  ],
+  "exclude": ["node_modules"]
+}

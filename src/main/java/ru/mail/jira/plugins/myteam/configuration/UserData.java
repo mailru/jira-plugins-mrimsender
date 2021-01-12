@@ -12,6 +12,7 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.myteam.model.PluginData;
 
 @Component
 public class UserData {
