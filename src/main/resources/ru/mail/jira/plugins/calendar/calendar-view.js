@@ -1,5 +1,11 @@
 var mailrucalMoment = window.moment;
 
+var loadingIndicatorDelay = function (ms) {
+    return $.Deferred(function(dfrd) {
+        setTimeout(dfrd.resolve, ms);
+    });
+}
+
 define('mailrucal/moment', [], function() {
     return mailrucalMoment;
 });
@@ -567,7 +573,6 @@ define('calendar/calendar-view', [
                 eventTimeFormat: this.timeFormat,
                 lazyFetching: true,
                 editable: true,
-                spinnerDelayDeferred: this.loadingIndicatorDelay(500),
                 draggable: true,
                 allDayContent: AJS.I18n.getText('ru.mail.jira.plugins.calendar.allDay'),
                 buttonText: {
@@ -677,7 +682,7 @@ define('calendar/calendar-view', [
                         calendarHideDiv.hide();
                         this.spinnerDelayDeferred.reject();
                     } else {
-                        this.spinnerDelayDeferred = this.loadingIndicatorDelay(500);
+                        this.spinnerDelayDeferred = loadingIndicatorDelay(300);
                         this.spinnerDelayDeferred.then(function() {
                             if(calendarHideDiv.length === 0) {
                                 $("#calendar-full-calendar").find(".fc-view-harness").append('<div id="calendar-hide-div"><p>'+AJS.I18n.getText('ru.mail.jira.plugins.calendar.loading')+'</p><aui-spinner size="large"></aui-spinner><div class="calendar-hide-div-background"></div></div>');
@@ -705,11 +710,6 @@ define('calendar/calendar-view', [
             this.calendar.render();
 
             this._initEventDialog();
-        },
-        loadingIndicatorDelay: function (ms) {
-            return $.Deferred(function(dfrd) {
-                setTimeout(dfrd.resolve, ms);
-            });
         },
         addEventSource: function(calendarId, silent) {
             !silent && this.trigger('addSource', calendarId);
