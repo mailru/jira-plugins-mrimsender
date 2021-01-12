@@ -8,13 +8,20 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.body.MultipartBody;
 import java.io.IOException;
 import java.util.List;
+import javax.annotation.Nonnull;
 import org.apache.http.entity.ContentType;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.model.PluginData;
-import ru.mail.jira.plugins.myteam.myteam.dto.*;
+import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
+import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
 
 @Component
 public class MyteamApiClientImpl implements MyteamApiClient {
@@ -124,7 +131,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   }
 
   @Override
-  public HttpResponse<ChatResponse> createChat(
+  public HttpResponse<CreateChatResponse> createChat(
       @NotNull String creatorBotToken,
       @NotNull String name,
       String description,
@@ -139,10 +146,20 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .field("name", name)
               .field("members", objectMapper.writeValueAsString(members));
       if (description != null) postBody.field("description", description);
-      return postBody.asObject(ChatResponse.class);
+      return postBody.asObject(CreateChatResponse.class);
     } else {
       throw new IOException(
           "Error occurred in createChat method: attempt to create chat without eny members");
     }
+  }
+
+  @Override
+  public HttpResponse<ChatInfoResponse> getChatInfo(
+      @Nonnull String botToken, @Nonnull String chatId) throws UnirestException {
+    return Unirest.post(botApiUrl + "/chats/getInfo")
+        .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
+        .field("token", apiToken)
+        .field("chatId", chatId)
+        .asObject(ChatInfoResponse.class);
   }
 }

@@ -49,7 +49,7 @@ public class MyteamEventsFetcherTest {
       properties.load(resourceAsStream);
       this.pluginData = Mockito.mock(PluginData.class);
       when(pluginData.getToken()).thenReturn(properties.getProperty("myteam.test.bot.token"));
-      when(pluginData.getBotApiUrl()).thenReturn("https://api.internal.myteam.mail.ru/bot/v1");
+      when(pluginData.getBotApiUrl()).thenReturn(properties.getProperty("myteam.test.bot.api"));
       this.myteamApiClient = new MyteamApiClientImpl(this.pluginData);
     } catch (IOException ioException) {
       ioException.printStackTrace();

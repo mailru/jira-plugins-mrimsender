@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.myteam.dto;
+package ru.mail.jira.plugins.myteam.myteam.dto.chats;
 
 import lombok.Getter;
 import lombok.Setter;

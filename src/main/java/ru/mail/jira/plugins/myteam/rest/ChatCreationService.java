@@ -13,6 +13,7 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -28,14 +29,16 @@ import ru.mail.jira.plugins.myteam.model.MyteamChatMetaEntity;
 import ru.mail.jira.plugins.myteam.model.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.myteam.dto.ChatMemberId;
-import ru.mail.jira.plugins.myteam.myteam.dto.ChatResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.GroupChatInfo;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatCreationDataDto;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatMemberDto;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatMetaDto;
 
 @Controller
-@Path(("/chats"))
+@Path("/chats")
 public class ChatCreationService {
   private static final Logger log = Logger.getLogger(ChatCreationService.class);
 
@@ -81,9 +84,7 @@ public class ChatCreationService {
     MyteamChatMetaEntity chatMeta = myteamChatRepository.findChatByIssueKey(issueKey);
     if (chatMeta == null) return Response.ok().build();
 
-    // TODO create chat link somehow here !!!
-    String chatLink = "http://" + chatMeta.getChatId();
-    return Response.ok(new ChatMetaDto(chatLink)).build();
+    return Response.ok(new ChatMetaDto(chatMeta.getChatLink())).build();
   }
 
   @GET
@@ -125,7 +126,7 @@ public class ChatCreationService {
   public Response createChat(
       @PathParam("issueKey") String issueKey,
       @FormParam("name") String chatName,
-      @FormParam("members") List<Long> memberIds) {
+      @FormParam("memberIds") List<Long> memberIds) {
     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
     if (loggedInUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
 
@@ -143,25 +144,27 @@ public class ChatCreationService {
             .map(user -> new ChatMemberId(userData.getMrimLogin(user)))
             .collect(Collectors.toList());
 
-    boolean test = true;
-    if (test == true) {
-      myteamChatRepository.persistChat("some_random_chat_id", issueKey);
-      return Response.ok(new ChatMetaDto("CHAT/LINK/HERE")).build();
-    }
-
     try {
-      HttpResponse<ChatResponse> chatMethodResponse =
+      HttpResponse<CreateChatResponse> createChatResponse =
           this.myteamApiClient.createChat(pluginData.getToken(), chatName, null, chatMembers, true);
-      if (chatMethodResponse.getStatus() == 200
-          && chatMethodResponse.getBody() != null
-          && chatMethodResponse.getBody().getSn() != null) {
-        String chatId = chatMethodResponse.getBody().getSn();
-        myteamChatRepository.persistChat(chatId, issueKey);
-        return Response.ok(new ChatMetaDto(chatId)).build();
-      } else {
-        log.error("Exception during chat creation chat sn not found");
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+      if (createChatResponse.getStatus() == 200
+          && createChatResponse.getBody() != null
+          && createChatResponse.getBody().getSn() != null) {
+        String chatId = createChatResponse.getBody().getSn();
+
+        HttpResponse<ChatInfoResponse> chatInfoResponse =
+            myteamApiClient.getChatInfo(pluginData.getToken(), chatId);
+        if (chatInfoResponse.getStatus() == 200 && chatInfoResponse.getBody() != null) {
+          ChatInfoResponse chatInfo = chatInfoResponse.getBody();
+          if (chatInfo instanceof GroupChatInfo) {
+            URL chatLink = new URL(((GroupChatInfo) chatInfo).getInviteLink());
+            myteamChatRepository.persistChat(chatId, issueKey, chatLink);
+            return Response.ok(new ChatMetaDto(chatLink.toString())).build();
+          }
+        }
       }
+      log.error("Exception during chat creation chat sn not found");
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     } catch (IOException | UnirestException e) {
       log.error("Exception during chat creation", e);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();

@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.model;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import java.net.URL;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.java.ao.Query;
@@ -17,11 +18,13 @@ public class MyteamChatRepository {
     this.ao = ao;
   }
 
-  public MyteamChatMetaEntity persistChat(@Nonnull String chatId, @Nonnull String issueKey) {
+  public MyteamChatMetaEntity persistChat(
+      @Nonnull String chatId, @Nonnull String issueKey, @Nonnull URL chatLink) {
     // persist new one
     MyteamChatMetaEntity myteamChatMetaEntity = ao.create(MyteamChatMetaEntity.class);
     myteamChatMetaEntity.setChatId(chatId);
     myteamChatMetaEntity.setIssueKey(issueKey.toUpperCase());
+    myteamChatMetaEntity.setChatLink(chatLink.toString());
     myteamChatMetaEntity.save();
     return myteamChatMetaEntity;
   }
