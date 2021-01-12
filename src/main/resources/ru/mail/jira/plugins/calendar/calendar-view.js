@@ -680,7 +680,8 @@ define('calendar/calendar-view', [
                             this.$('.fc-day.fc-daygrid-day[data-date=' + start.format('YYYY-MM-DD') + ']').addClass('fc-first-day-of-month');
                         }
                         calendarHideDiv.hide();
-                        this.spinnerDelayDeferred.reject();
+                        if(this.spinnerDelayDeferred !== undefined)
+                            this.spinnerDelayDeferred.reject();
                     } else {
                         this.spinnerDelayDeferred = loadingIndicatorDelay(300);
                         this.spinnerDelayDeferred.then(function() {
