@@ -1265,3 +1265,30 @@ only screen and (min-resolution: 1.25dppx) {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+#calendar-hide-div {
+    position: absolute;
+    top:0;
+    color: #333;
+    width: 100%;
+    text-align:center;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#calendar-hide-div aui-spinner {
+    margin: 1em;
+}
+
+.calendar-hide-div-background{
+    position: absolute;
+    opacity: 0.115;
+    background: #1a252f;
+    width: 100%;
+    height: 100%;
+}
+
+
