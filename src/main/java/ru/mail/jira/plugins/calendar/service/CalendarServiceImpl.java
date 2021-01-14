@@ -162,6 +162,7 @@ public class CalendarServiceImpl implements CalendarService {
         Calendar calendar = getCalendar(id);
         result.setSelectedName(calendar.getName());
         result.setSelectedColor(calendar.getColor());
+        result.setEditableSetting(calendar.getEditableSetting());
         result.setSelectedEventStartId(calendar.getEventStart());
         result.setSelectedEventEndId(calendar.getEventEnd());
 
@@ -233,6 +234,7 @@ public class CalendarServiceImpl implements CalendarService {
         validateCalendar(user, calendarSettingDto, true);
         Calendar calendar = ao.create(Calendar.class);
         calendar.setAuthorKey(user.getKey());
+        calendar.setEditableSetting(true);
         calendar.setShowIssueStatus(calendarSettingDto.isShowIssueStatus());
         setCalendarFields(calendar, calendarSettingDto);
 
@@ -324,6 +326,7 @@ public class CalendarServiceImpl implements CalendarService {
             calendar.setSource(calendarSettingDto.getSelectedSourceType());
         }
         calendar.setColor(calendarSettingDto.getSelectedColor());
+        calendar.setEditableSetting(calendarSettingDto.isEditableSetting());
         calendar.setEventStart(StringUtils.trimToNull(calendarSettingDto.getSelectedEventStartId()));
         calendar.setEventEnd(StringUtils.trimToNull(calendarSettingDto.getSelectedEventEndId()));
         calendar.setDisplayedFields(StringUtils.join(calendarSettingDto.getSelectedDisplayedFields(), ","));

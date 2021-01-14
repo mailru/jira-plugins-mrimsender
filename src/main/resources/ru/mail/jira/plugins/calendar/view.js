@@ -439,16 +439,22 @@ require(['jquery',
                 this._createCustomEvent({allDay: true, calendarId: calendarId, startDate: moment().format('YYYY-MM-DD')});
             },
             _createCustomEvent: function(model) {
-                var customEventDialogView = new CustomEventDialog({
-                    model: new CustomEvent(model),
-                    jsonModel: model,
-                    userData: this.model,
-                    calendars: this.collection.toJSON(),
-                    successHandler: $.proxy(function() {
-                        this.calendarView.reload();
-                    }, this)
-                });
-                customEventDialogView.show();
+                var calendars = this.collection.toJSON();
+                if(calendars.some(function(el) {
+                    return el.editableSetting === true && el.visible === true;
+                })) {
+                    var customEventDialogView = new CustomEventDialog({
+                        model: new CustomEvent(model),
+                        jsonModel: model,
+                        userData: this.model,
+                        calendars: calendars,
+                        successHandler: $.proxy(function () {
+                            this.calendarView.reload();
+                        }, this)
+                    });
+
+                    customEventDialogView.show();
+                }
             },
             _editCustomEvent: function(model, jsonModel) {
                 var customEventDialogView = new CustomEventDialog({

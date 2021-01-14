@@ -50,6 +50,7 @@ public class Version4UpgradeTask implements ActiveObjectsUpgradeTask {
                                 UserCalendar userCalendar = ao.create(UserCalendar.class);
                                 userCalendar.setName(calendar.getName());
                                 userCalendar.setColor(calendar.getColor());
+                                userCalendar.setEditableSetting(calendar.getEditableSetting());
                                 userCalendar.setEnabled(showedSet.contains(calendarId));
                                 userCalendar.setCalendarId(calendar.getID());
                                 userCalendar.setUserKey(userData.getUserKey());

@@ -40,6 +40,8 @@ public class CalendarDto {
     private List<QuickFilterDto> favouriteQuickFilters;
     @XmlElement
     private List<QuickFilterDto> selectedQuickFilters;
+    @XmlElement
+    private boolean editableSetting;
 
     public CalendarDto() {
     }
@@ -49,11 +51,13 @@ public class CalendarDto {
             this.id = userCalendar.getCalendarId();
             this.name = userCalendar.getName();
             this.color = userCalendar.getColor();
+            this.editableSetting = userCalendar.getEditableSetting();
         } else if (calendar != null) {
             this.id = calendar.getID();
             this.name = calendar.getName();
             this.color = calendar.getColor();
             this.source = calendar.getSource();
+            this.editableSetting = calendar.getEditableSetting();
         }
     }
 

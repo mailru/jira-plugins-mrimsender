@@ -113,6 +113,7 @@ public class UserCalendarServiceImpl implements UserCalendarService {
             UserCalendar userCalendar = ao.create(UserCalendar.class);
             userCalendar.setCalendarId(calendar.getID());
             userCalendar.setColor(calendar.getColor());
+            userCalendar.setEditableSetting(calendar.getEditableSetting());
             userCalendar.setName(calendar.getName());
             userCalendar.setUserKey(userKey);
             userCalendar.save();
