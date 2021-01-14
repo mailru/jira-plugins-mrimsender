@@ -32,7 +32,7 @@
                         </label>
                         <select class="select" id="custom-event-dialog-calendar" {if $model.id}disabled{/if}>
                             {foreach $cal in $calendars}
-                                {if $cal.eventsEditable and $cal.editableSetting}
+                                {if $cal.eventsEditable and $cal.canCreateEvents}
                                     <option value="{$cal.id}" {if $cal.id == $calendarId}selected{/if}>{$cal.name}</option>
                                 {/if}
                             {/foreach}

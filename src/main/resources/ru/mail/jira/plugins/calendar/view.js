@@ -441,7 +441,7 @@ require(['jquery',
             _createCustomEvent: function(model) {
                 var calendars = this.collection.toJSON();
                 if(calendars.some(function(el) {
-                    return el.editableSetting === true && el.visible === true;
+                    return el.canCreateEvents === true && el.visible === true;
                 })) {
                     var customEventDialogView = new CustomEventDialog({
                         model: new CustomEvent(model),

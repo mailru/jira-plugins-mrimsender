@@ -19,9 +19,6 @@ public interface UserCalendar extends Entity {
     String getColor();
     void setColor(String color);
 
-    boolean getEditableSetting();
-    void setEditableSetting(boolean editableSetting);
-
     boolean isEnabled();
     void setEnabled(boolean isEnabled);
 

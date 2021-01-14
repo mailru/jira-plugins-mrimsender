@@ -38,7 +38,7 @@ public class CalendarSettingDto {
     @XmlElement
     private String selectedEventEndName;
     @XmlElement
-    private boolean editableSetting;
+    private boolean canCreateEvents;
 
     @XmlElement
     private Map<String, String> displayedFields;
