@@ -333,8 +333,8 @@ define('calendar/calendar-dialog', [
             var changed = this._serialize();
             orig.selectedEventEndId = orig.selectedEventEndId || undefined;
             changed.selectedEventEndId = changed.selectedEventEndId || undefined;
-
-            return orig.selectedName != changed.selectedName || orig.selectedColor != changed.selectedColor
+            return orig.selectedName != changed.selectedName || orig.canCreateEvents != changed.canCreateEvents
+                || orig.selectedColor != changed.selectedColor
                 || orig.selectedSourceType != changed.selectedSourceType || orig.selectedSourceValue != changed.selectedSourceValue
                 || orig.selectedEventStartId != changed.selectedEventStartId || orig.selectedEventEndId != changed.selectedEventEndId
                 || !_.isEqual(orig.selectedDisplayedFields, changed.selectedDisplayedFields)
@@ -401,6 +401,7 @@ define('calendar/calendar-dialog', [
                 this.$('#calendar-dialog-event-start').auiSelect2('val', this.model.get('selectedEventStartId'));
                 this.$('#calendar-dialog-event-end').auiSelect2('val', this.model.get('selectedEventEndId'));
                 this.$('#calendar-dialog-timelineGroup').val(this.model.get('timelineGroup'));
+                this.$('#calendar-dialog-editable-setting').prop('checked', this.model.get('canCreateEvents'));
 
                 this._showSourceField(this.model.get('selectedSourceType'));
                 if (this.sourceType == 'project' || this.sourceType == 'filter') {
@@ -489,6 +490,7 @@ define('calendar/calendar-dialog', [
                 return !!obj;
             });
             var timelineGroup = this.$("#calendar-dialog-timelineGroup").val();
+            var canCreateEvents = this.$('#calendar-dialog-editable-setting').is(":checked");
 
             return {
                 selectedName: name,
@@ -500,7 +502,8 @@ define('calendar/calendar-dialog', [
                 selectedDisplayedFields: displayedFields ? displayedFields.split(',') : [],
                 showIssueStatus: showIssueStatus,
                 timelineGroup: timelineGroup,
-                permissions: permissions && permissions.length ? permissions : []
+                permissions: permissions && permissions.length ? permissions : [],
+                canCreateEvents: canCreateEvents,
             };
         },
         _ajaxSuccessHandler: function(model, response) {

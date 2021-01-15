@@ -40,6 +40,8 @@ public class CalendarDto {
     private List<QuickFilterDto> favouriteQuickFilters;
     @XmlElement
     private List<QuickFilterDto> selectedQuickFilters;
+    @XmlElement
+    private boolean canCreateEvents;
 
     public CalendarDto() {
     }
@@ -54,6 +56,7 @@ public class CalendarDto {
             this.name = calendar.getName();
             this.color = calendar.getColor();
             this.source = calendar.getSource();
+            this.canCreateEvents = calendar.getCanCreateEvents();
         }
     }
 
