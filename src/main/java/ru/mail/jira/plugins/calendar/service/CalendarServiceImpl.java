@@ -234,7 +234,7 @@ public class CalendarServiceImpl implements CalendarService {
         validateCalendar(user, calendarSettingDto, true);
         Calendar calendar = ao.create(Calendar.class);
         calendar.setAuthorKey(user.getKey());
-        calendar.setCanCreateEvents(true);
+        calendar.setCanCreateEvents(calendarSettingDto.isCanCreateEvents());
         calendar.setShowIssueStatus(calendarSettingDto.isShowIssueStatus());
         setCalendarFields(calendar, calendarSettingDto);
 
