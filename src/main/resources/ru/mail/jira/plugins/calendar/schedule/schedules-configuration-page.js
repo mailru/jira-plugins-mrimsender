@@ -19,17 +19,7 @@ require(['jquery', 'backbone'], function($, Backbone) {
                 'click .calendar-schedule-run': 'runSchedule'
             },
             initialize: function() {
-                this.collection.on('request', this.startLoadingCallback);
-                this.collection.on('sync', this.finishLoadingCallback);
                 this.collection.on('add', this._addSchedule, this);
-            },
-            startLoadingCallback: function() {
-                AJS.dim();
-                JIRA.Loading.showLoadingIndicator();
-            },
-            finishLoadingCallback: function() {
-                JIRA.Loading.hideLoadingIndicator();
-                AJS.undim();
             },
             runSchedule: function(e){
                 e.preventDefault();
@@ -43,7 +33,6 @@ require(['jquery', 'backbone'], function($, Backbone) {
                     },
                     error: function(xhr) {
                         alert(xhr.responseText);
-                        mainView.finishLoadingCallback();
                     }
                 });
             },

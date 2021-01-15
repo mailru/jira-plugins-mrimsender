@@ -21,19 +21,10 @@ require(['jquery', 'underscore', 'backbone', 'calendar/non-working-day-configura
                 'click .non-working-day-delete': 'deleteNonWorkingDay'
             },
             initialize: function() {
-                this.collection.on('request', this.startLoadingScriptsCallback);
-                this.collection.on('sync', this.finishLoadingScriptsCallback);
                 this.collection.on('add', this._addNonWorkingDay, this);
                 this.collection.on('remove', this._removeNonWorkingDay, this);
             },
-            startLoadingScriptsCallback: function() {
-                AJS.dim();
-                JIRA.Loading.showLoadingIndicator();
-            },
-            finishLoadingScriptsCallback: function() {
-                JIRA.Loading.hideLoadingIndicator();
-                AJS.undim();
-            },
+
             changeWorkingDays: function(e) {
                var selectedDays = [];
                this.$('input.calendar-working-day:checked').map(function(index, item) { selectedDays.push($(item).attr('id')); });
@@ -65,7 +56,6 @@ require(['jquery', 'underscore', 'backbone', 'calendar/non-working-day-configura
             },
             _removeNonWorkingDay: function(day) {
                 $('#calendar-non-working-days tr[id="' + day.id + '"]').remove();
-                this.finishLoadingScriptsCallback();
             }
         });
 
