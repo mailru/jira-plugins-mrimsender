@@ -18,6 +18,7 @@ import ru.mail.jira.plugins.myteam.model.PluginData;
 public class UserData {
   private static final String MRIM_LOGIN_USER_PROPERTY = "USER_MYTEAM_LOGIN";
   private static final String IS_ENABLED_USER_PROPERTY = "USER_MYTEAM_STATUS";
+  private static final String IS_CREATE_CHATS_WITH_USER_ALLOWED = "USER_MYTEAM_CHATSCREATION";
 
   private final PluginData pluginData;
   private final UserPropertyManager userPropertyManager;
@@ -55,6 +56,20 @@ public class UserData {
     userPropertyManager
         .getPropertySet(user)
         .setString(IS_ENABLED_USER_PROPERTY, Boolean.toString(enabled));
+  }
+
+  public boolean isCreateChatsWithUserAllowed(ApplicationUser user) {
+    String isAllowed =
+        userPropertyManager.getPropertySet(user).getString(IS_CREATE_CHATS_WITH_USER_ALLOWED);
+    // ALLOWED BY DEFAULT
+    if (isAllowed == null) return true;
+    return Boolean.parseBoolean(isAllowed);
+  }
+
+  public void setCreateChatsWithUserAllowed(ApplicationUser user, boolean isAllowed) {
+    userPropertyManager
+        .getPropertySet(user)
+        .setString(IS_CREATE_CHATS_WITH_USER_ALLOWED, Boolean.toString(isAllowed));
   }
 
   @Nullable

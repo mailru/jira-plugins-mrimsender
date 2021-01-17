@@ -11,4 +11,5 @@ import lombok.Setter;
 @XmlRootElement
 public class ChatMetaDto {
   @XmlElement @Getter @Setter private String link;
+  @XmlElement @Getter @Setter private String name;
 }

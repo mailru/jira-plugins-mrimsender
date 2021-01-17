@@ -36,4 +36,8 @@ public interface PluginData {
   Set<Long> getExcludingProjectIds();
 
   void setExcludingProjectIds(Set<Long> excludingProjectIds);
+
+  Set<Long> getChatCreationProjectIds();
+
+  void setChatCreationProjectIds(Set<Long> chatCreationProjectIds);
 }

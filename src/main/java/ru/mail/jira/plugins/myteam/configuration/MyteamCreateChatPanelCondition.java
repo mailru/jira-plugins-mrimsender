@@ -29,13 +29,16 @@ public class MyteamCreateChatPanelCondition implements Condition {
   public boolean shouldDisplay(Map<String, Object> map) {
     ApplicationUser currentUser = (ApplicationUser) map.get("user");
     Issue currentIssue = (Issue) map.get("issue");
+    if (currentIssue == null) return false;
     boolean isBotActive =
         StringUtils.isNotEmpty(pluginData.getToken())
             && StringUtils.isNotEmpty(pluginData.getBotApiUrl());
+    boolean isChatCreationAllowedProject =
+        pluginData.getChatCreationProjectIds().contains(currentIssue.getProjectId());
     return currentUser != null
         && currentUser.isActive()
-        && currentIssue != null
         && isBotActive
+        && isChatCreationAllowedProject
         && permissionManager.hasPermission(
             ProjectPermissions.EDIT_ISSUES, currentIssue, currentUser);
   }

@@ -19,12 +19,16 @@ public class MyteamChatRepository {
   }
 
   public MyteamChatMetaEntity persistChat(
-      @Nonnull String chatId, @Nonnull String issueKey, @Nonnull URL chatLink) {
+      @Nonnull String chatId,
+      @Nonnull String issueKey,
+      @Nonnull URL chatLink,
+      @Nonnull String chatName) {
     // persist new one
     MyteamChatMetaEntity myteamChatMetaEntity = ao.create(MyteamChatMetaEntity.class);
     myteamChatMetaEntity.setChatId(chatId);
     myteamChatMetaEntity.setIssueKey(issueKey.toUpperCase());
     myteamChatMetaEntity.setChatLink(chatLink.toString());
+    myteamChatMetaEntity.setChatName(chatName);
     myteamChatMetaEntity.save();
     return myteamChatMetaEntity;
   }

@@ -34,19 +34,24 @@ export class ChatPanelStore {
   isCreateChatDialogOpen = false;
 
   @observable
+  chatAlreadyExist = false;
+
   chatLink?: string;
+  chatName?: string;
 
   @action('loadPanelData')
   loadPanelData = () => {
     this.loadingService.loadChatPanelData(this.issueKey).then(
-      (chatMeta) => {
-        if (chatMeta != null && chatMeta.link != null) {
+      action((chatMeta: ChatMeta) => {
+        if (chatMeta != null && chatMeta.link != null && chatMeta.name != null) {
+          this.chatAlreadyExist = true;
           this.chatLink = chatMeta.link;
+          this.chatName = chatMeta.name;
         }
-      },
-      () => {
+      }),
+      action(() => {
         this.hasErrors = true;
-      },
+      }),
     );
   };
 
@@ -86,8 +91,10 @@ export class ChatPanelStore {
 
   @action('setChatLink')
   setChatLink = (chatMeta: ChatMeta) => {
-    if (chatMeta != null && chatMeta.link != null) {
+    if (chatMeta != null && chatMeta.link != null && chatMeta.name != null) {
+      this.chatAlreadyExist = true;
       this.chatLink = chatMeta.link;
+      this.chatName = chatMeta.name;
     } else {
       this.hasErrors = true;
     }

@@ -4,6 +4,7 @@ import { ChatCreationData } from './ChatPanelStore';
 
 export type ChatMeta = {
   link: string | null;
+  name: string | null;
 };
 
 export class LoadingService {

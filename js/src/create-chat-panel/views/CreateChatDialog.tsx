@@ -26,7 +26,7 @@ const validateChatName = (value?: string) => {
 };
 
 const validateChatMembers = (value: ValueType<OptionData, true>) => {
-  if (!value || value.length == 0) {
+  if (!value || value.length <= 1) {
     return 'TOO_SHORT';
   }
 };
@@ -47,11 +47,13 @@ export const CreateChatDialog = (props: ChatDialogProps) => {
         Container: ({ children, className }: ContainerComponentProps) => (
           <Form<CreateChatDialogFormValuesType>
             onSubmit={(values) => {
-              createChat(
-                values['chat-name'],
-                values['chat-members']!.map((member) => Number.parseInt(member.id)),
-              );
-              closeDialog();
+              if (values != null && values['chat-members'] != null && values['chat-name'] != null) {
+                createChat(
+                  values['chat-name'],
+                  values['chat-members'].map((member) => Number.parseInt(member.id)),
+                );
+                closeDialog();
+              }
             }}>
             {({ formProps }) => (
               <form {...formProps} className={className}>
@@ -74,18 +76,26 @@ export const CreateChatDialog = (props: ChatDialogProps) => {
           </ModalFooter>
         ),
       }}>
-      <Field label="Chat name" name="chat-name" defaultValue={chatCreationData.name} validate={validateChatName}>
+      <Field
+        label={I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.name')}
+        name="chat-name"
+        defaultValue={chatCreationData.name}
+        validate={validateChatName}>
         {({ fieldProps, valid, error }) => (
           <>
             <Textfield {...fieldProps} />
-            {error === 'TOO_SHORT' && !valid && <ErrorMessage>Chat name should be not empty</ErrorMessage>}
+            {error === 'TOO_SHORT' && !valid && (
+              <ErrorMessage>
+                {I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.error.empty_name')}
+              </ErrorMessage>
+            )}
           </>
         )}
       </Field>
 
       <Field<ValueType<OptionData, true>>
         name="chat-members"
-        label="Select chat memebers"
+        label={I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.members')}
         defaultValue={[...chatMembersOptions]}
         validate={validateChatMembers}>
         {({ fieldProps: { id, ...rest }, error, valid }) => (
@@ -102,7 +112,11 @@ export const CreateChatDialog = (props: ChatDialogProps) => {
               isMulti
               fieldId={null}
             />
-            {error === 'TOO_SHORT' && !valid && <ErrorMessage>Chat members list should be not empty</ErrorMessage>}
+            {error === 'TOO_SHORT' && !valid && (
+              <ErrorMessage>
+                {I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.error.empty_members')}
+              </ErrorMessage>
+            )}
           </>
         )}
       </Field>

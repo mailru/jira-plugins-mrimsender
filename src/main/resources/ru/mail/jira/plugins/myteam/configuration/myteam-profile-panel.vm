@@ -32,6 +32,16 @@
                         #end
                     </dd>
                 </dl>
+                <dl>
+                    <dt>$i18n.getText("ru.mail.jira.plugins.myteam.profilePanel.chatCreation"):</dt>
+                    <dd id="myteam-create-chats-with-me" data-enabled="$isChatCreationAllowed">
+                        #if( $isChatCreationAllowed)
+                            $i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.chatCreation.allowed" )
+                        #else
+                            $i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.chatCreation.forbidden" )
+                        #end
+                    </dd>
+                </dl>
                 #if ($enabled)
                     #if ($botName && !$botName.isEmpty())
                         <dl>
@@ -78,6 +88,14 @@
                 <option value="false">$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.notifications.disabled" )</option>
             </select>
             <div class="description">$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.notifications.description" )</div>
+        </div>
+        <div class="field-group">
+            <label for="myteam-dialog-chat-creation">$i18n.getText("ru.mail.jira.plugins.myteam.profilePanel.chatCreation")</label>
+            <select id="myteam-dialog-chat-creation" class="select">
+                <option value="true">$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.chatCreation.allowed" )</option>
+                <option value="false">$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.chatCreation.forbidden" )</option>
+            </select>
+            <div class="description">$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.chatCreation.description" )</div>
         </div>
         <input type="submit" class="hidden" />
     </form>

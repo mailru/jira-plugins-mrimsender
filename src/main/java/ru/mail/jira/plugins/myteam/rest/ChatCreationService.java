@@ -84,7 +84,7 @@ public class ChatCreationService {
     MyteamChatMetaEntity chatMeta = myteamChatRepository.findChatByIssueKey(issueKey);
     if (chatMeta == null) return Response.ok().build();
 
-    return Response.ok(new ChatMetaDto(chatMeta.getChatLink())).build();
+    return Response.ok(new ChatMetaDto(chatMeta.getChatLink(), chatMeta.getChatName())).build();
   }
 
   @GET
@@ -105,8 +105,10 @@ public class ChatCreationService {
                 Stream.of(loggedInUser, currentIssue.getAssignee(), currentIssue.getReporter()))
             .filter(Objects::nonNull)
             .distinct()
-            // TODO filter chat creation disabled users here
+            .filter(userData::isCreateChatsWithUserAllowed)
             .sorted((u1, u2) -> u1.getDisplayName().compareToIgnoreCase(u2.getDisplayName()))
+            // TODO max chat members hardcoded here
+            .limit(30)
             .map(
                 user ->
                     new ChatMemberDto(
@@ -131,22 +133,23 @@ public class ChatCreationService {
     if (loggedInUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
 
     Issue currentIssue = issueManager.getIssueByKeyIgnoreCase(issueKey);
-    if (currentIssue == null) return Response.ok().build();
-
     // TODO max chat members hardcoded here
-    if (memberIds.size() >= 30) {
-      return Response.status(Response.Status.BAD_REQUEST).build();
-    }
+    if (currentIssue == null
+        || !pluginData.getChatCreationProjectIds().contains(currentIssue.getProjectId())
+        || memberIds.size() >= 30) return Response.status(Response.Status.BAD_REQUEST).build();
+
     List<ChatMemberId> chatMembers =
         memberIds.stream()
             .map(memberId -> userManager.getUserById(memberId).orElse(null))
             .filter(Objects::nonNull)
+            .filter(userData::isCreateChatsWithUserAllowed)
             .map(user -> new ChatMemberId(userData.getMrimLogin(user)))
             .collect(Collectors.toList());
 
     try {
       HttpResponse<CreateChatResponse> createChatResponse =
-          this.myteamApiClient.createChat(pluginData.getToken(), chatName, null, chatMembers, true);
+          this.myteamApiClient.createChat(
+              pluginData.getToken(), chatName, null, chatMembers, false);
       if (createChatResponse.getStatus() == 200
           && createChatResponse.getBody() != null
           && createChatResponse.getBody().getSn() != null) {
@@ -158,8 +161,8 @@ public class ChatCreationService {
           ChatInfoResponse chatInfo = chatInfoResponse.getBody();
           if (chatInfo instanceof GroupChatInfo) {
             URL chatLink = new URL(((GroupChatInfo) chatInfo).getInviteLink());
-            myteamChatRepository.persistChat(chatId, issueKey, chatLink);
-            return Response.ok(new ChatMetaDto(chatLink.toString())).build();
+            myteamChatRepository.persistChat(chatId, issueKey, chatLink, chatName);
+            return Response.ok(new ChatMetaDto(chatLink.toString(), chatName)).build();
           }
         }
       }

@@ -138,18 +138,20 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       @NotNull List<ChatMemberId> members,
       boolean isPublic)
       throws IOException, UnirestException {
-    if (members.size() > 0) {
+    if (members.size() > 1 && members.size() <= 30) {
       MultipartBody postBody =
           Unirest.post(botApiUrl + "/chats/createChat")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", creatorBotToken)
               .field("name", name)
-              .field("members", objectMapper.writeValueAsString(members));
+              .field("members", objectMapper.writeValueAsString(members))
+              .field("public", isPublic);
       if (description != null) postBody.field("description", description);
       return postBody.asObject(CreateChatResponse.class);
     } else {
       throw new IOException(
-          "Error occurred in createChat method: attempt to create chat without eny members");
+          "Error occurred in createChat method: attempt to create chat with not available number of members :"
+              + members.size());
     }
   }
 

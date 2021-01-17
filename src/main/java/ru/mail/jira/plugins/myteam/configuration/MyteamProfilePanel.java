@@ -48,6 +48,7 @@ public class MyteamProfilePanel implements ContextProvider {
     Map<String, Object> result = new HashMap<String, Object>();
     result.put("mrimLogin", userData.getMrimLogin(user));
     result.put("enabled", userData.isEnabled(user));
+    result.put("isChatCreationAllowed", userData.isCreateChatsWithUserAllowed(user));
     result.put("botName", pluginData.getBotName());
     result.put("botLink", pluginData.getBotLink());
     return result;
@@ -57,7 +58,8 @@ public class MyteamProfilePanel implements ContextProvider {
   @POST
   public Response updateMrimEnabled(
       @FormParam("mrim_login") final String mrimLogin,
-      @FormParam("enabled") final boolean enabled) {
+      @FormParam("enabled") final boolean enabled,
+      @FormParam("isChatCreationAllowed") final boolean isChatCreaionAllowed) {
 
     if (enabled && StringUtils.isBlank(mrimLogin))
       throw new IllegalArgumentException(
@@ -68,6 +70,7 @@ public class MyteamProfilePanel implements ContextProvider {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     userData.setMrimLogin(user, StringUtils.defaultString(mrimLogin).trim());
     userData.setEnabled(user, enabled);
+    userData.setCreateChatsWithUserAllowed(user, isChatCreaionAllowed);
 
     return RestUtils.success(null);
   }

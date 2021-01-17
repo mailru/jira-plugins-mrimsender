@@ -32,4 +32,25 @@ module.exports = {
       amd: 'jira/issues/search/legacyissue',
     },
   },
+  'jira/util/events': {
+    dependency: 'jira.webresources:jira-events',
+    import: {
+      var: "require('jira/util/events')",
+      amd: 'jira/util/events',
+    },
+  },
+  'jira/util/events/types': {
+    dependency: 'jira.webresources:jira-events',
+    import: {
+      var: "require('jira/util/events/types')",
+      amd: 'jira/util/events/types',
+    },
+  },
+  'jira/util/events/reasons': {
+    dependency: 'jira.webresources:jira-events',
+    import: {
+      var: "require('jira/util/events/reasons')",
+      amd: 'jira/util/events/reasons',
+    },
+  },
 };
