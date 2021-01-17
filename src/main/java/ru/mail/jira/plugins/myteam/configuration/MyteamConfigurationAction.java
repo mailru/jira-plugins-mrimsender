@@ -168,6 +168,14 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   }
 
   @SuppressWarnings("UnusedDeclaration")
+  public String getChatCreationAllowedProjectIds() {
+    return CommonUtils.join(
+        this.chatCreationAllowedProjectIds.stream()
+            .map(String::valueOf)
+            .collect(Collectors.toList()));
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
   public void setChatCreationAllowedProjectIds(String chatCreationAllowedProjectIds) {
     this.chatCreationAllowedProjectIds =
         StringUtils.isBlank(chatCreationAllowedProjectIds)
