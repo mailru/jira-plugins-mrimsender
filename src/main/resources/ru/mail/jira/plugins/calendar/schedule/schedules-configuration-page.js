@@ -19,9 +19,9 @@ require(['jquery', 'backbone'], function($, Backbone) {
                 'click .calendar-schedule-run': 'runSchedule'
             },
             initialize: function() {
+                this.collection.on('add', this._addSchedule, this);
                 this.collection.on('request', this.startLoadingCallback);
                 this.collection.on('sync', this.finishLoadingCallback);
-                this.collection.on('add', this._addSchedule, this);
             },
             startLoadingCallback: function() {
                 AJS.dim();
@@ -42,8 +42,8 @@ require(['jquery', 'backbone'], function($, Backbone) {
                         location.reload();
                     },
                     error: function(xhr) {
-                        alert(xhr.responseText);
                         mainView.finishLoadingCallback();
+                        alert(xhr.responseText);
                     }
                 });
             },

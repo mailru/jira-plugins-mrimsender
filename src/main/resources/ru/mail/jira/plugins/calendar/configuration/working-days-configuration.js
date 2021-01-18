@@ -21,10 +21,10 @@ require(['jquery', 'underscore', 'backbone', 'calendar/non-working-day-configura
                 'click .non-working-day-delete': 'deleteNonWorkingDay'
             },
             initialize: function() {
-                this.collection.on('request', this.startLoadingScriptsCallback);
-                this.collection.on('sync', this.finishLoadingScriptsCallback);
                 this.collection.on('add', this._addNonWorkingDay, this);
                 this.collection.on('remove', this._removeNonWorkingDay, this);
+                this.collection.on('request', this.startLoadingScriptsCallback);
+                this.collection.on('sync', this.finishLoadingScriptsCallback);
             },
             startLoadingScriptsCallback: function() {
                 AJS.dim();

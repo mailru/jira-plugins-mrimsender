@@ -79,7 +79,6 @@ require(['jquery',
                 this.calendarView = new CalendarView({enableFullscreen: true});
                 this.initializeTooltips();
 
-                this.calendarView.on('addSource', this.startLoadingCalendarsCallback, this);
                 this.calendarView.on('renderComplete', this.finishLoadingCalendarsCallback, this);
                 this.calendarView.on('render', this.updatePeriodButton, this);
                 this.calendarView.on('render', this.updateViewInterval, this);
@@ -138,15 +137,8 @@ require(['jquery',
                 var calendarId = $(this).data('id');
                 $('div.calendar-list-item-block[data-id=' + calendarId + ']').toggleClass('calendar-list-item-selected', false);
             },
-            startLoadingCalendarsCallback: function() {
-                AJS.dim();
-                JIRA.Loading.showLoadingIndicator();
-            },
             finishLoadingCalendarsCallback: function() {
                 this.$('.calendar-name').removeClass('not-active');
-                JIRA.Loading.hideLoadingIndicator();
-                if (!$('.aui-dialog2[aria-hidden=false]').length)
-                    AJS.undim();
             },
             loadFullCalendar: function(view, hideWeekends, timezone, workingDays) {
                 this.updatePeriodButton(view);
@@ -256,8 +248,6 @@ require(['jquery',
                     return;
                 }
 
-                if (calendar.get('visible'))
-                    this.startLoadingCalendarsCallback();
                 $calendarNameLink.addClass('not-active');
 
                 $.ajax({
@@ -267,7 +257,6 @@ require(['jquery',
                         calendar.set('visible', !calendar.get('visible'));
                     },
                     error: function(request) {
-                        self.finishLoadingCalendarsCallback();
                         alert(request.responseText);
                     }
                 });
@@ -377,13 +366,10 @@ require(['jquery',
 
                 var calendar = this.collection.get($(e.currentTarget).closest('div.aui-dropdown2').data('id'));
 
-                if (this.calendarView.isCalendarInSources(calendar.id))
-                    this.startLoadingCalendarsCallback();
                 $.ajax({
                     url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/userPreference/favorite/' + calendar.id,
                     type: 'DELETE',
                     error: $.proxy(function(xhr) {
-                        this.finishLoadingCalendarsCallback();
                         alert(xhr.responseText || 'Internal error');
                     }, this),
                     success: $.proxy(function() {
@@ -411,13 +397,10 @@ require(['jquery',
                         header: AJS.I18n.getText('ru.mail.jira.plugins.calendar.confirmDeleteHeader'),
                         text: confirmText,
                         okHandler: $.proxy(function() {
-                            if (this.calendarView.isCalendarInSources(calendar.id))
-                                this.startLoadingCalendarsCallback();
                             $.ajax({
                                 url: AJS.contextPath() + '/rest/mailrucalendar/1.0/calendar/' + calendar.id,
                                 type: 'DELETE',
                                 error: $.proxy(function(xhr) {
-                                    this.finishLoadingCalendarsCallback();
                                     alert(xhr.responseText || 'Internal error');
                                 }, this),
                                 success: $.proxy(function() {
@@ -517,7 +500,6 @@ require(['jquery',
                         });
                     }, this),
                     error: $.proxy(function(xhr) {
-                        this.finishLoadingCalendarsCallback();
                         alert(xhr.responseText || 'Internal error');
                     }, this)
                 });
@@ -620,7 +602,6 @@ require(['jquery',
                 Backbone.history.start();
             }
         });
-        mainView.startLoadingCalendarsCallback();
         mainView.collection.fetch({
             silent: true,
             success: function(collection) {
