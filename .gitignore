@@ -2,3 +2,5 @@
 .idea
 target
 /src/main/resources/env.properties
+/js/node_modules
+/js/*.log

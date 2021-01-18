@@ -65,7 +65,7 @@
         <div class="description">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.enabledByDefaultDescription" )</div>
         #fieldError( "enabledByDefault" )
     </div>
-    <input id="mrimsender-create-issue-excluding-projects-ids" class="hidden" name="excludingProjectIds" value="$action.excludingProjectIds">
+    <input id="mrimsender-create-issue-excluding-projects-ids" class="hidden" name="excludingProjectIds" value="$action.excludingProjectIds"/>
     <div class="field-group">
         <label for="mrimsender-create-issue-excluding-projects">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.excludedProjects")</label>
         <select class="select long-field mrimsender-create-issue-excluding-projects" type="text" name="mrimsender-create-issue-excluding-projects" multiple="true">
@@ -75,6 +75,18 @@
         </select>
         <div class="description">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.excludedProjects.description")</div>
         #fieldError( "excludingProjectIds" )
+    </div>
+
+    <input id="myteam-chat-creation-enabled-project-ids" class="hidden" name="chatCreationAllowedProjectIds" value="$action.chatCreationAllowedProjectIds"/>
+    <div class="field-group">
+        <label for="myteam-chat-creation-enabled-projects">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.chatCreationProjects")</label>
+        <select class="select long-field myteam-chat-creation-enabled-projects" type="text" name="myteam-chat-creation-enabled-projects" multiple="true">
+            #foreach( $project in $action.getProjects() )
+                <option value="$project.id" #select( $action.getChatCreationAllowedProjects() $project.id )>$project.name ($project.key)</option>
+            #end
+        </select>
+        <div class="description">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.chatCreationProjects.description")</div>
+        #fieldError( "chatCreationAllowedProjectIds" )
     </div>
 
     <div class="field-group">

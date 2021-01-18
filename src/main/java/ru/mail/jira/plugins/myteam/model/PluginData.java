@@ -1,5 +1,5 @@
 /* (C)2020 */
-package ru.mail.jira.plugins.myteam.configuration;
+package ru.mail.jira.plugins.myteam.model;
 
 import java.util.List;
 import java.util.Set;
@@ -36,4 +36,8 @@ public interface PluginData {
   Set<Long> getExcludingProjectIds();
 
   void setExcludingProjectIds(Set<Long> excludingProjectIds);
+
+  Set<Long> getChatCreationProjectIds();
+
+  void setChatCreationProjectIds(Set<Long> chatCreationProjectIds);
 }

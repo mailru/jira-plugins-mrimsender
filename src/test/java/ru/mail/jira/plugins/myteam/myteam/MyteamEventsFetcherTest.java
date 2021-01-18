@@ -19,7 +19,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
-import ru.mail.jira.plugins.myteam.configuration.PluginData;
+import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.IcqEvent;
@@ -49,7 +49,7 @@ public class MyteamEventsFetcherTest {
       properties.load(resourceAsStream);
       this.pluginData = Mockito.mock(PluginData.class);
       when(pluginData.getToken()).thenReturn(properties.getProperty("myteam.test.bot.token"));
-      when(pluginData.getBotApiUrl()).thenReturn("https://api.internal.myteam.mail.ru/bot/v1");
+      when(pluginData.getBotApiUrl()).thenReturn(properties.getProperty("myteam.test.bot.api"));
       this.myteamApiClient = new MyteamApiClientImpl(this.pluginData);
     } catch (IOException ioException) {
       ioException.printStackTrace();

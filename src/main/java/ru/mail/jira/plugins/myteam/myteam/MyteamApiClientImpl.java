@@ -5,17 +5,23 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.mashape.unirest.request.body.MultipartBody;
 import java.io.IOException;
 import java.util.List;
+import javax.annotation.Nonnull;
 import org.apache.http.entity.ContentType;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.mail.jira.plugins.myteam.configuration.PluginData;
+import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
 
 @Component
 public class MyteamApiClientImpl implements MyteamApiClient {
@@ -122,5 +128,40 @@ public class MyteamApiClientImpl implements MyteamApiClient {
         .field("text", text)
         .field("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
         .asObject(MessageResponse.class);
+  }
+
+  @Override
+  public HttpResponse<CreateChatResponse> createChat(
+      @NotNull String creatorBotToken,
+      @NotNull String name,
+      String description,
+      @NotNull List<ChatMemberId> members,
+      boolean isPublic)
+      throws IOException, UnirestException {
+    if (members.size() > 1 && members.size() <= 30) {
+      MultipartBody postBody =
+          Unirest.post(botApiUrl + "/chats/createChat")
+              .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
+              .field("token", creatorBotToken)
+              .field("name", name)
+              .field("members", objectMapper.writeValueAsString(members))
+              .field("public", isPublic);
+      if (description != null) postBody.field("description", description);
+      return postBody.asObject(CreateChatResponse.class);
+    } else {
+      throw new IOException(
+          "Error occurred in createChat method: attempt to create chat with not available number of members :"
+              + members.size());
+    }
+  }
+
+  @Override
+  public HttpResponse<ChatInfoResponse> getChatInfo(
+      @Nonnull String botToken, @Nonnull String chatId) throws UnirestException {
+    return Unirest.post(botApiUrl + "/chats/getInfo")
+        .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
+        .field("token", apiToken)
+        .field("chatId", chatId)
+        .asObject(ChatInfoResponse.class);
   }
 }

@@ -1,7 +1,8 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.myteam;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.mashape.unirest.http.HttpResponse;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.mockito.Mockito;
-import ru.mail.jira.plugins.myteam.configuration.PluginData;
+import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
@@ -42,7 +43,7 @@ public class MyteamApiClientImplTest {
       properties.load(resourceAsStream);
       this.pluginData = Mockito.mock(PluginData.class);
       when(pluginData.getToken()).thenReturn(properties.getProperty("myteam.test.bot.token"));
-      when(pluginData.getBotApiUrl()).thenReturn("https://api.internal.myteam.mail.ru/bot/v1");
+      when(pluginData.getBotApiUrl()).thenReturn(properties.getProperty("myteam.test.bot.api"));
       this.myteamApiClient = new MyteamApiClientImpl(this.pluginData);
     } catch (IOException ioException) {
       ioException.printStackTrace();

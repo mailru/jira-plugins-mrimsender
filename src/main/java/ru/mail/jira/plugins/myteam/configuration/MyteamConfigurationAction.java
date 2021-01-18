@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.commons.CommonUtils;
+import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.protocol.BotsOrchestrationService;
 
 public class MyteamConfigurationAction extends JiraWebActionSupport {
@@ -41,6 +42,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
 
   private List<String> notifiedUserKeys;
   private Set<Long> excludingProjectIds;
+  private Set<Long> chatCreationAllowedProjectIds;
 
   @Override
   public String doDefault() {
@@ -50,6 +52,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     botName = pluginData.getBotName();
     botLink = pluginData.getBotLink();
     excludingProjectIds = pluginData.getExcludingProjectIds();
+    chatCreationAllowedProjectIds = pluginData.getChatCreationProjectIds();
     notifiedUsers = CommonUtils.convertUserKeysToJoinedString(pluginData.getNotifiedUserKeys());
     return INPUT;
   }
@@ -63,6 +66,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     pluginData.setBotLink(botLink);
     pluginData.setEnabledByDefault(enabledByDefault);
     pluginData.setExcludingProjectIds(excludingProjectIds);
+    pluginData.setChatCreationProjectIds(chatCreationAllowedProjectIds);
     pluginData.setNotifiedUserKeys(notifiedUserKeys);
 
     saved = true;
@@ -159,6 +163,31 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   @SuppressWarnings("UnusedDeclaration")
   public List<Project> getExcludingProjects() {
     return excludingProjectIds.stream()
+        .map(projectManager::getProjectObj)
+        .collect(Collectors.toList());
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public String getChatCreationAllowedProjectIds() {
+    return CommonUtils.join(
+        this.chatCreationAllowedProjectIds.stream()
+            .map(String::valueOf)
+            .collect(Collectors.toList()));
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public void setChatCreationAllowedProjectIds(String chatCreationAllowedProjectIds) {
+    this.chatCreationAllowedProjectIds =
+        StringUtils.isBlank(chatCreationAllowedProjectIds)
+            ? Collections.emptySet()
+            : CommonUtils.split(chatCreationAllowedProjectIds).stream()
+                .map(Long::valueOf)
+                .collect(Collectors.toSet());
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public List<Project> getChatCreationAllowedProjects() {
+    return chatCreationAllowedProjectIds.stream()
         .map(projectManager::getProjectObj)
         .collect(Collectors.toList());
   }
