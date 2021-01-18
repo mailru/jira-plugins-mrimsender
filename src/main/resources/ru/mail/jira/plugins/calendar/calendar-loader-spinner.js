@@ -4,11 +4,10 @@ define('calendar/calendar-loader-spinner', function () {
             setTimeout(dfrd.resolve, ms);
         });
     }
-    var calendarHideDiv;
     var spinnerDelayDeferred;
     return {
-        startSpinner: function () {
-            calendarHideDiv = $("#calendar-hide-div");
+        start: function () {
+            var calendarHideDiv = $("#calendar-hide-div");
 
             if (spinnerDelayDeferred !== undefined)
                 spinnerDelayDeferred.reject();
@@ -24,8 +23,8 @@ define('calendar/calendar-loader-spinner', function () {
             });
 
         },
-        stopSpinner: function () {
-            calendarHideDiv.hide();
+        stop: function () {
+            $("#calendar-hide-div").hide();
             if (spinnerDelayDeferred !== undefined)
                 spinnerDelayDeferred.reject();
         },

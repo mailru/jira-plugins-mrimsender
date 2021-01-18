@@ -672,9 +672,9 @@ define('calendar/calendar-view', [
                         for (; start.isBefore(end); start.add(1, 'M')) {
                             this.$('.fc-day.fc-daygrid-day[data-date=' + start.format('YYYY-MM-DD') + ']').addClass('fc-first-day-of-month');
                         }
-                        CalendarLoaderSpinner.stopSpinner();
+                        CalendarLoaderSpinner.stop();
                     } else {
-                        CalendarLoaderSpinner.startSpinner();
+                        CalendarLoaderSpinner.start();
                     }
                 }, this),
                 datesSet: $.proxy(function(params) {
