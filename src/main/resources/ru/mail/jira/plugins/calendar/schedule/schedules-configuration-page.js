@@ -20,6 +20,16 @@ require(['jquery', 'backbone'], function($, Backbone) {
             },
             initialize: function() {
                 this.collection.on('add', this._addSchedule, this);
+                this.collection.on('request', this.startLoadingCallback);
+                this.collection.on('sync', this.finishLoadingCallback);
+            },
+            startLoadingCallback: function() {
+                AJS.dim();
+                JIRA.Loading.showLoadingIndicator();
+            },
+            finishLoadingCallback: function() {
+                JIRA.Loading.hideLoadingIndicator();
+                AJS.undim();
             },
             runSchedule: function(e){
                 e.preventDefault();
@@ -32,6 +42,7 @@ require(['jquery', 'backbone'], function($, Backbone) {
                         location.reload();
                     },
                     error: function(xhr) {
+                        mainView.finishLoadingCallback();
                         alert(xhr.responseText);
                     }
                 });
