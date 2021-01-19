@@ -31,6 +31,7 @@
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v3.Version3UpgradeTask</upgradeTask>
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v4.Version4UpgradeTask</upgradeTask>
         <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v5.Version5UpgradeTask</upgradeTask>
+        <upgradeTask>ru.mail.jira.plugins.calendar.upgrades.v6.Version6UpgradeTask</upgradeTask>
     </ao>
 
     <webwork1 key="calendar-action" class="java.lang.Object" roles-required="use">
