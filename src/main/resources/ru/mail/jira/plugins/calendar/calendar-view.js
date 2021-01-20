@@ -41,6 +41,14 @@ define('calendar/calendar-view', [
         _eventSource: function(id) {
             return this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + id;
         },
+        _calculateInitDate: function(start, end, view) {
+            if (start && end) {
+                var midRange = new Date((moment(start).toDate().getTime() + moment(end).toDate().getTime()) / 2);
+                return view !== undefined && view === 'quarter' ? new Date(midRange.setMonth(midRange.getMonth() - 1)) : midRange;
+            } else {
+                return undefined;
+            }
+        },
         _getCalendarHeaderButton: function(buttonName) {
             return this.$el.find('.fc-' + buttonName + '-button');
         },
@@ -536,7 +544,7 @@ define('calendar/calendar-view', [
             this.calendar = new FullCalendar.Calendar(this.$el[0], {
                 contentHeight: 'auto',
                 initialView : view,
-                initialDate: start && end ? new Date((moment(start).toDate().getTime() + moment(end).toDate().getTime()) / 2) : undefined,
+                initialDate: this._calculateInitDate(start, end, view),
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
