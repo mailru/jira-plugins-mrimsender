@@ -633,23 +633,18 @@ div.calendar-list-item-block.calendar-list-item-selected .calendar-vews-buttons-
 .fc-daygrid-event {
     white-space: normal !important;
     display: block !important;
+    padding: 1px;
 }
 
-.fc-daygrid-dot-event .fc-daygrid-event-dot,
-.fc-daygrid-dot-event .fc-event-time{
-    display: inline-block !important;
+.fc-daygrid-dot-event .fc-daygrid-event-dot {
+    display: none;
+}
+
+.fc-daygrid-dot-event .fc-event-title,
+.fc-daygrid-dot-event .fc-event-time {
+    display: inline !important;
     font-weight: normal !important;
 }
-
-.fc-daygrid-dot-event .fc-event-title {
-    display: block !important;
-    font-weight: normal !important;
-}
-
-/*.fc-daygrid-event.fc-daygrid-dot-event .fc-daygrid-event-dot,*/
-/*.fc-daygrid-event.fc-daygrid-dot-event .fc-event-time {*/
-/*    display: inline-block !important;*/
-/*}*/
 
 .fc-daygrid-event .fc-event-main .fc-event-title {
     display: inline !important;
