@@ -617,6 +617,10 @@ define('calendar/calendar-view', [
                     if (event.extendedProps.datesError)
                         $element.addClass('calendar-event-dates-error');
 
+                    if (!event.allDay) {
+                        $element.attr('style', AJS.format('border-color: {0}; background-color: {0}; color: #ffffff', event.backgroundColor));
+                    }
+
                     if (event.extendedProps.type === 'ISSUE') {
                         $element.find('.fc-event-title').prepend(event.id + ' ');
                         var $eventContent = $element.find('.fc-event-title');
