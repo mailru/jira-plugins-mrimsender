@@ -1,4 +1,4 @@
-define('calendar/calendar-loader-spinner', function () {
+define('calendar/calendar-loader-spinner',["jquery"], function ($) {
     var loadingIndicatorDelay = function (ms) {
         return $.Deferred(function (dfrd) {
             setTimeout(dfrd.resolve, ms);
