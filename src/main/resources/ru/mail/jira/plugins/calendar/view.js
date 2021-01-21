@@ -570,6 +570,14 @@ require(['jquery',
             success: function(model) {
                 var hideWeekends = Preferences.getItem('mailrucalendar.hideWeekends') === 'true';
                 var calendarView = Preferences.getItem('mailrucalendar.calendarView') || 'dayGridMonth';
+                var oldViews = {
+                    month: 'dayGridMonth',
+                    agendaWeek: 'timeGridWeek',
+                    agendaDay: 'timeGridDay'
+                }
+                if (oldViews.hasOwnProperty(calendarView)) {
+                    calendarView = oldViews[calendarView]
+                }
                 var view = calendarView || 'dayGridMonth';
                 if (view === 'dayGridWeek')
                     view = 'timeGridWeek';
