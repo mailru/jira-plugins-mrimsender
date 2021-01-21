@@ -43,7 +43,12 @@ define('calendar/calendar-view', [
         },
         _calculateInitDate: function(start, end, view) {
             if (start && end) {
-                var midRange = new Date((moment(start).toDate().getTime() + moment(end).toDate().getTime()) / 2);
+                var timeStart = moment(start).toDate().getTime();
+                var timeEnd = moment(end).toDate().getTime();
+                if (isNaN(timeStart) || isNaN(timeEnd)) {
+                    return undefined;
+                }
+                var midRange = new Date((timeStart + timeEnd) / 2);
                 return view !== undefined && view === 'quarter' ? new Date(midRange.setMonth(midRange.getMonth() - 1)) : midRange;
             } else {
                 return undefined;
