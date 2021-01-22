@@ -1203,7 +1203,7 @@ public class CustomEventServiceImpl implements CustomEventService {
 
     private DateTimeFormatter getDateFormatter(ApplicationUser user, boolean allDay) {
         if (allDay) {
-            return dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE);
+            return dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE).withZone(Consts.UTC_TZ);
         } else {
             return dateTimeFormatter.forUser(user).withStyle(DateTimeStyle.ISO_8601_DATE_TIME);
         }
