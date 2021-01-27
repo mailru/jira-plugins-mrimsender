@@ -8,6 +8,7 @@ import legacyIssueApi from 'jira/issues/search/legacyissue';
 import { IntlProvider } from 'react-intl';
 import EventTypes from 'jira/util/events/types';
 import Events from 'jira/util/events';
+import { ErrorView, makeFaultTolerantComponent } from './views/ErrorView';
 
 const PANEL_CONTAINER_ID_SELECTOR = '#myteam-chat-creation-panel-container';
 
@@ -24,13 +25,17 @@ function memoizeStoreCreation(createStoreFunc: (issueKey: string) => ChatPanelSt
 
 const createStore = memoizeStoreCreation((issueKey: string): ChatPanelStore => new ChatPanelStore(issueKey));
 
+const ErrorBoundary = makeFaultTolerantComponent(ErrorView);
+
 function renderMyteamChatPanel(reactDomRoot: HTMLElement) {
   const issueKey: string = legacyIssueApi.getIssueKey();
   const memoizedStore = createStore(issueKey);
   ReactDOM.render(
-    <IntlProvider locale="en">
-      <ChatPanel store={memoizedStore} />
-    </IntlProvider>,
+    <ErrorBoundary>
+      <IntlProvider locale="en">
+        <ChatPanel store={memoizedStore} />
+      </IntlProvider>
+    </ErrorBoundary>,
     reactDomRoot,
   );
 }

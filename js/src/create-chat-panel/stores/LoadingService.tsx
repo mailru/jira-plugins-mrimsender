@@ -2,9 +2,9 @@ import $ from 'jquery';
 import contextPath from 'wrm/context-path';
 import { ChatCreationData } from './ChatPanelStore';
 
-export type ChatMeta = {
-  link: string | null;
-  name: string | null;
+export type ChatInfoType = {
+  link: string;
+  name: string;
 };
 
 export class LoadingService {
@@ -16,7 +16,7 @@ export class LoadingService {
     });
   }
 
-  async loadChatPanelData(issueKey: string): Promise<ChatMeta> {
+  async loadChatPanelData(issueKey: string): Promise<ChatInfoType> {
     return $.ajax({
       type: 'GET',
       context: this,
@@ -24,7 +24,7 @@ export class LoadingService {
     });
   }
 
-  async createChat(issueKey: string, name: string, memberIds: number[]): Promise<ChatMeta> {
+  async createChat(issueKey: string, name: string, memberIds: number[]): Promise<ChatInfoType> {
     return $.ajax({
       type: 'POST',
       context: this,

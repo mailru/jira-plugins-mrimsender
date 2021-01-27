@@ -17,12 +17,4 @@ public interface MyteamChatMetaEntity extends Entity {
   String getIssueKey();
 
   void setIssueKey(String issueKey);
-
-  String getChatLink();
-
-  void setChatLink(String chatLink);
-
-  String getChatName();
-
-  void setChatName(String chatName);
 }

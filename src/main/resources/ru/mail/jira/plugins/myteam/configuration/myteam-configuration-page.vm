@@ -39,9 +39,9 @@
     #end
     <input type="hidden" name="atl_token" value="$atl_token" />
     <div class="field-group">
-        <label for="token">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.token" )<span class="aui-icon icon-required"></span></label>
-        <input type="password" class="password" id="token" name="token" value="$!token" />
-        #fieldError( "token" )
+        <label for="tokenFilePath">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.tokenFilePath" )<span class="aui-icon icon-required"></span></label>
+        <input type="text" class="text" id="tokenFilePath" name="tokenFilePath" value="$!tokenFilePath" />
+        #fieldError( "tokenFilePath" )
     </div>
     <div class="field-group">
         <label for="botApiUrl">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.botApiUrl" )<span class="aui-icon icon-required"></span></label>

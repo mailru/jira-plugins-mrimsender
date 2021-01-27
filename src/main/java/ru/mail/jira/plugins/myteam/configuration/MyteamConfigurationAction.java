@@ -7,11 +7,13 @@ import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.myteam.model.PluginData;
@@ -34,6 +36,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
 
   private boolean saved;
   private String token;
+  private String tokenFilePath;
   private String botApiUrl;
   private String botName;
   private String botLink;
@@ -46,7 +49,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
 
   @Override
   public String doDefault() {
-    token = pluginData.getToken();
+    tokenFilePath = pluginData.getTokenFilePath();
     enabledByDefault = pluginData.isEnabledByDefault();
     botApiUrl = pluginData.getBotApiUrl();
     botName = pluginData.getBotName();
@@ -60,7 +63,13 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   @RequiresXsrfCheck
   @Override
   protected String doExecute() {
-    pluginData.setToken(token);
+    pluginData.setTokenFilePath(tokenFilePath);
+    try {
+      String botToken = loadBotTokenFromFile(tokenFilePath);
+      pluginData.setToken(botToken);
+    } catch (IOException ioException) {
+      log.error("Can't load bot token");
+    }
     pluginData.setBotApiUrl(botApiUrl);
     pluginData.setBotName(botName);
     pluginData.setBotLink(botLink);
@@ -78,8 +87,27 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
 
   @Override
   protected void doValidation() {
-    if (StringUtils.isEmpty(token))
-      addError("token", getText("ru.mail.jira.plugins.myteam.configuration.specifyToken"));
+    if (StringUtils.isEmpty(tokenFilePath))
+      addError(
+          "tokenFilePath",
+          getText("ru.mail.jira.plugins.myteam.configuration.tokenFilePath.isEmptyError"));
+    else {
+      File file = new File(tokenFilePath);
+      if (file.isDirectory())
+        addError(
+            "tokenFilePath",
+            getText(
+                "ru.mail.jira.plugins.myteam.configuration.tokenFilePath.shouldNotBeDirectoryError"));
+      else if (!file.exists()) {
+        addError(
+            "tokenFilePath",
+            getText("ru.mail.jira.plugins.myteam.configuration.tokenFilePath.fileNotExistError"));
+      } else if (!file.canRead())
+        addError(
+            "tokenFilePath",
+            getText(
+                "ru.mail.jira.plugins.myteam.configuration.tokenFilePath.readPermissionsError"));
+    }
     if (StringUtils.isEmpty(botApiUrl))
       addError("botApiUrl", getText("ru.mail.jira.plugins.myteam.configuration.specifyBotApiUrl"));
     try {
@@ -89,19 +117,29 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     }
   }
 
+  @Nullable
+  private String loadBotTokenFromFile(String tokenFilePath) throws IOException {
+    Properties myteamBotPropeties = new Properties();
+    InputStream inputStream = new FileInputStream(tokenFilePath);
+    myteamBotPropeties.load(inputStream);
+    String token = myteamBotPropeties.getOrDefault("token", "").toString();
+    inputStream.close();
+    return token;
+  }
+
   @SuppressWarnings("UnusedDeclaration")
   public boolean isSaved() {
     return saved;
   }
 
   @SuppressWarnings("UnusedDeclaration")
-  public String getToken() {
-    return token;
+  public String getTokenFilePath() {
+    return tokenFilePath;
   }
 
   @SuppressWarnings("UnusedDeclaration")
-  public void setToken(String token) {
-    this.token = token;
+  public void setTokenFilePath(String tokenFilePath) {
+    this.tokenFilePath = tokenFilePath;
   }
 
   @SuppressWarnings("UnusedDeclaration")

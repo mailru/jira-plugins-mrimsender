@@ -14,6 +14,7 @@ import ru.mail.jira.plugins.commons.CommonUtils;
 public class PluginDataImpl implements PluginData {
   private static final String PLUGIN_PREFIX = "ru.mail.jira.plugins.myteam:";
   private static final String TOKEN = PLUGIN_PREFIX + "token";
+  private static final String TOKEN_FILE_PATH = PLUGIN_PREFIX + "tokenFilePath";
   private static final String ENABLED_BY_DEFAULT = PLUGIN_PREFIX + "enabledByDefault";
   private static final String NOTIFIED_USER_KEYS = PLUGIN_PREFIX + "notifiedUserKeys";
   private static final String MAIN_NODE_ID = PLUGIN_PREFIX + "mainNodeId";
@@ -37,6 +38,14 @@ public class PluginDataImpl implements PluginData {
   @Override
   public void setToken(String token) {
     pluginSettingsFactory.createGlobalSettings().put(TOKEN, token);
+  }
+
+  public String getTokenFilePath() {
+    return (String) pluginSettingsFactory.createGlobalSettings().get(TOKEN_FILE_PATH);
+  }
+
+  public void setTokenFilePath(String tokenFilePath) {
+    pluginSettingsFactory.createGlobalSettings().put(TOKEN_FILE_PATH, tokenFilePath);
   }
 
   @Override
