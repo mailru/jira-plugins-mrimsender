@@ -28,6 +28,14 @@ const config = {
                 use: ['ts-loader'], // TypeScript loader for webpack
                 exclude: /node_modules/, // exludes node_modules directory
             },
+            {
+                test: /\.(png)$/i,
+                use: [
+                    {
+                        loader: 'url-loader',
+                    },
+                ],
+            },
         ],
     },
     plugins: [

@@ -9,6 +9,10 @@ public interface PluginData {
 
   void setToken(String token);
 
+  String getTokenFilePath();
+
+  void setTokenFilePath(String tokenFilePath);
+
   boolean isEnabledByDefault();
 
   void setEnabledByDefault(boolean enabledByDefault);

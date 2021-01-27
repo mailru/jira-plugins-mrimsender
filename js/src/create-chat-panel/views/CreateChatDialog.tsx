@@ -96,7 +96,7 @@ export const CreateChatDialog = (props: ChatDialogProps) => {
       <Field<ValueType<OptionData, true>>
         name="chat-members"
         label={I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.members')}
-        defaultValue={[...chatMembersOptions]}
+        defaultValue={chatMembersOptions}
         validate={validateChatMembers}>
         {({ fieldProps: { id, ...rest }, error, valid }) => (
           <>

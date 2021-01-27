@@ -3,6 +3,8 @@ package ru.mail.jira.plugins.myteam.rest;
 
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
+import com.atlassian.jira.bc.JiraServiceContextImpl;
+import com.atlassian.jira.bc.user.search.UserSearchService;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.watchers.WatcherManager;
@@ -12,15 +14,6 @@ import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import java.io.IOException;
-import java.net.URL;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -32,10 +25,18 @@ import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.GroupChatInfo;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatCreationDataDto;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatMemberDto;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatMetaDto;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Controller
 @Path("/chats")
@@ -48,6 +49,7 @@ public class ChatCreationService {
   private final WatcherManager watcherManager;
   private final AvatarService avatarService;
   private final UserManager userManager;
+  private final UserSearchService userSearchService;
   private final MyteamChatRepository myteamChatRepository;
   private final PluginData pluginData;
   private final UserData userData;
@@ -59,6 +61,7 @@ public class ChatCreationService {
       @ComponentImport WatcherManager watcherManager,
       @ComponentImport AvatarService avatarService,
       @ComponentImport UserManager userManager,
+      @ComponentImport UserSearchService userSearchService,
       MyteamApiClient myteamApiClient,
       MyteamChatRepository myteamChatRepository,
       PluginData pluginData,
@@ -70,6 +73,7 @@ public class ChatCreationService {
     this.myteamChatRepository = myteamChatRepository;
     this.avatarService = avatarService;
     this.userManager = userManager;
+    this.userSearchService = userSearchService;
     this.pluginData = pluginData;
     this.userData = userData;
   }
@@ -78,13 +82,36 @@ public class ChatCreationService {
   @Path("/chatData/{issueKey}")
   @Produces({MediaType.APPLICATION_JSON})
   public Response findChatData(@PathParam("issueKey") String issueKey) {
+
     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
 
     if (loggedInUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
     MyteamChatMetaEntity chatMeta = myteamChatRepository.findChatByIssueKey(issueKey);
     if (chatMeta == null) return Response.ok().build();
-
-    return Response.ok(new ChatMetaDto(chatMeta.getChatLink(), chatMeta.getChatName())).build();
+    /*
+    TODO localhost test stubbing part
+    return Response.ok(
+            ChatMetaDto.buildChatInfo(
+                new GroupChatInfo(
+                    "title", "about", "rules", "http:/myteam/inite/link", false, false)))
+        .build()
+    ;*/
+    try {
+      HttpResponse<ChatInfoResponse> chatInfoResponse =
+          myteamApiClient.getChatInfo(pluginData.getToken(), chatMeta.getChatId());
+      if (chatInfoResponse.getStatus() == 200 && chatInfoResponse.getBody() != null) {
+        ChatInfoResponse chatInfo = chatInfoResponse.getBody();
+        return Response.ok(ChatMetaDto.buildChatInfo(chatInfo)).build();
+      } else {
+        log.error(
+            "getChatInfo method returns NOT OK status or empty body for chat with chatId = "
+                + chatMeta.getChatId());
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+      }
+    } catch (UnirestException e) {
+      log.error("exception in getChatInfo method call for chatId = " + chatMeta.getChatId(), e);
+      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+    }
   }
 
   @GET
@@ -146,6 +173,12 @@ public class ChatCreationService {
             .map(user -> new ChatMemberId(userData.getMrimLogin(user)))
             .collect(Collectors.toList());
 
+    // TODO localhost tests stubbing
+    /* return Response.ok(
+        ChatMetaDto.buildChatInfo(
+            new GroupChatInfo(
+                "title", "about", "rules", "http:/myteam/inite/link", false, false)))
+    .build();*/
     try {
       HttpResponse<CreateChatResponse> createChatResponse =
           this.myteamApiClient.createChat(
@@ -154,16 +187,12 @@ public class ChatCreationService {
           && createChatResponse.getBody() != null
           && createChatResponse.getBody().getSn() != null) {
         String chatId = createChatResponse.getBody().getSn();
+        myteamChatRepository.persistChat(chatId, issueKey);
 
         HttpResponse<ChatInfoResponse> chatInfoResponse =
             myteamApiClient.getChatInfo(pluginData.getToken(), chatId);
         if (chatInfoResponse.getStatus() == 200 && chatInfoResponse.getBody() != null) {
-          ChatInfoResponse chatInfo = chatInfoResponse.getBody();
-          if (chatInfo instanceof GroupChatInfo) {
-            URL chatLink = new URL(((GroupChatInfo) chatInfo).getInviteLink());
-            myteamChatRepository.persistChat(chatId, issueKey, chatLink, chatName);
-            return Response.ok(new ChatMetaDto(chatLink.toString(), chatName)).build();
-          }
+          return Response.ok(ChatMetaDto.buildChatInfo(chatInfoResponse.getBody())).build();
         }
       }
       log.error("Exception during chat creation chat sn not found");
@@ -172,5 +201,32 @@ public class ChatCreationService {
       log.error("Exception during chat creation", e);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
+  }
+
+  @GET
+  @Path("/chatCreationData/{issueKey}/availableMembers/{input:.*}")
+  @Produces({MediaType.APPLICATION_JSON})
+  public Response getAvailableChatMembers(
+      @PathParam("issueKey") String issueKey, @PathParam("input") String input) {
+    ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
+    if (loggedInUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+
+    Issue currentIssue = issueManager.getIssueByKeyIgnoreCase(issueKey);
+    if (currentIssue == null) return Response.ok().build();
+
+    return Response.ok(
+            userSearchService
+                .findUsersAllowEmptyQuery(new JiraServiceContextImpl(loggedInUser), input)
+                .stream()
+                .map(
+                    user ->
+                        new ChatMemberDto(
+                            user.getDisplayName(),
+                            user.getId(),
+                            avatarService
+                                .getAvatarURL(loggedInUser, user, Avatar.Size.LARGE)
+                                .toString()))
+                .collect(Collectors.toList()))
+        .build();
   }
 }
