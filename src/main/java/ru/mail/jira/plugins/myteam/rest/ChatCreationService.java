@@ -14,6 +14,14 @@ import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -28,15 +36,6 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatCreationDataDto;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatMemberDto;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatMetaDto;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Controller
 @Path("/chats")
@@ -216,8 +215,7 @@ public class ChatCreationService {
 
     return Response.ok(
             userSearchService
-                .findUsersAllowEmptyQuery(new JiraServiceContextImpl(loggedInUser), input)
-                .stream()
+                .findUsersAllowEmptyQuery(new JiraServiceContextImpl(loggedInUser), input).stream()
                 .map(
                     user ->
                         new ChatMemberDto(

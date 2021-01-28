@@ -2,39 +2,52 @@ import { observer } from 'mobx-react';
 import React from 'react';
 import styled from '@emotion/styled';
 import { gridSize } from '@atlaskit/theme';
-import { N200, N40 } from '@atlaskit/theme/colors';
 import { ChatInfoType } from '../stores/LoadingService';
-
-const StyledPanelContainerStatic = styled.div`
-  text-align: center;
-  min-height: ${gridSize() * gridSize()}px;
-  border-width: 3px;
-  border-color: ${N40};
-  border-style: dashed;
-  border-radius: ${gridSize()}px;
-  font-weight: 500;
-  font-size: ${gridSize() * 2}px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: ${N200};
-`;
-
-const StyledChatLink = styled.a`
-  padding: 10px;'
-`;
 
 type ChatInfoProps = {
   chatInfo: ChatInfoType;
 };
 
+export const StyledContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  line-height: 1.5;
+  margin-bottom: ${gridSize() / 2}px;
+`;
+
+export const StyledLabel = styled.span`
+  font-weight: 500;
+  margin-right: 24px;
+`;
+
+const StyledValue = styled.span`
+  text-align: right;
+`;
+
 export const ChatInfo = observer((props: ChatInfoProps) => {
   const { chatInfo } = props;
   return (
-    <StyledPanelContainerStatic>
-      <StyledChatLink href={chatInfo.link} target="_blank" rel="noreferrer">
-        {chatInfo.name}
-      </StyledChatLink>
-    </StyledPanelContainerStatic>
+    <div>
+      <StyledContainer>
+        <StyledLabel>Myteam chat:</StyledLabel>
+        <StyledValue>{chatInfo.name}</StyledValue>
+      </StyledContainer>
+      <StyledContainer>
+        <StyledLabel>Chat link:</StyledLabel>
+        <StyledValue>
+          <a href={chatInfo.link} target="_blank" rel="noreferrer">
+            {chatInfo.link}
+          </a>
+        </StyledValue>
+      </StyledContainer>
+      <StyledContainer>
+        <StyledLabel>Chat about:</StyledLabel>
+        <StyledValue>{chatInfo.about}</StyledValue>
+      </StyledContainer>
+      <StyledContainer>
+        <StyledLabel>Chat rules:</StyledLabel>
+        <StyledValue>{chatInfo.rules}</StyledValue>
+      </StyledContainer>
+    </div>
   );
 });

@@ -17,15 +17,25 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.PrivateChatInfo;
 public class ChatMetaDto {
   @XmlElement @Getter @Setter private String link;
   @XmlElement @Getter @Setter private String name;
+  @XmlElement @Getter @Setter private String about;
+  @XmlElement @Getter @Setter private String rules;
 
   @Nullable
   public static ChatMetaDto buildChatInfo(ChatInfoResponse chatInfoResponse) {
     if (chatInfoResponse instanceof GroupChatInfo) {
       GroupChatInfo groupChatInfo = (GroupChatInfo) chatInfoResponse;
-      return new ChatMetaDto(groupChatInfo.getInviteLink(), groupChatInfo.getTitle());
+      return new ChatMetaDto(
+          groupChatInfo.getInviteLink(),
+          groupChatInfo.getTitle(),
+          groupChatInfo.getAbout(),
+          groupChatInfo.getRules());
     } else if (chatInfoResponse instanceof ChannelChatInfo) {
       ChannelChatInfo channelChatInfo = (ChannelChatInfo) chatInfoResponse;
-      return new ChatMetaDto(channelChatInfo.getInviteLink(), channelChatInfo.getTitle());
+      return new ChatMetaDto(
+          channelChatInfo.getInviteLink(),
+          channelChatInfo.getTitle(),
+          channelChatInfo.getAbout(),
+          channelChatInfo.getRules());
     } else if (chatInfoResponse instanceof PrivateChatInfo) {
       // private chat can't be crated from Myteam bot createChat api method
       // so this is not very useful right now

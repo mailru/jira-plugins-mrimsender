@@ -10,7 +10,6 @@
   "dependencies": {
     "@atlaskit/button": "^15.1.4",
     "@atlaskit/form": "^8.2.0",
-    "@atlaskit/icon": "^21.2.2",
     "@atlaskit/modal-dialog": "^11.2.4",
     "@atlaskit/section-message": "^5.0.9",
     "@atlaskit/select": "^13.1.1",
