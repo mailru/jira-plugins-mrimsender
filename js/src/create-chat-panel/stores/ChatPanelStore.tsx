@@ -34,6 +34,9 @@ export class ChatPanelStore {
   isLoading = false;
 
   @observable
+  isDialogDataLoading = false;
+
+  @observable
   isCreateChatDialogOpen = false;
 
   @observable
@@ -77,11 +80,18 @@ export class ChatPanelStore {
 
   @action('openCreateChatDialog')
   openCreateChatDialog = () => {
-    this.loadDialogData().then(
-      action(() => {
-        this.isCreateChatDialogOpen = true;
-      }),
-    );
+    this.isDialogDataLoading = true;
+    this.loadDialogData()
+      .then(
+        action(() => {
+          this.isCreateChatDialogOpen = true;
+        }),
+      )
+      .finally(
+        action(() => {
+          this.isDialogDataLoading = false;
+        }),
+      );
   };
 
   @action('closeCreateChatDialog')

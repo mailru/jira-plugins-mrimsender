@@ -5,6 +5,8 @@ import { ChatCreationData } from './ChatPanelStore';
 export type ChatInfoType = {
   link: string;
   name: string;
+  about: string;
+  rules?: string;
 };
 
 export class LoadingService {
