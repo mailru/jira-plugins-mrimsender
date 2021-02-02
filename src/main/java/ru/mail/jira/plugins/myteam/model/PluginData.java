@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.Set;
 
 public interface PluginData {
+  Boolean isSetTokenViaFile();
+
+  void setSetTokenViaFile(Boolean setTokenViaFile);
+
   String getToken();
 
   void setToken(String token);

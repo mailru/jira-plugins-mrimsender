@@ -13,6 +13,7 @@ import ru.mail.jira.plugins.commons.CommonUtils;
 @Component
 public class PluginDataImpl implements PluginData {
   private static final String PLUGIN_PREFIX = "ru.mail.jira.plugins.myteam:";
+  private static final String IS_SET_TOKEN_VIA_FILE = PLUGIN_PREFIX + "setTokenViaFile";
   private static final String TOKEN = PLUGIN_PREFIX + "token";
   private static final String TOKEN_FILE_PATH = PLUGIN_PREFIX + "tokenFilePath";
   private static final String ENABLED_BY_DEFAULT = PLUGIN_PREFIX + "enabledByDefault";
@@ -28,6 +29,19 @@ public class PluginDataImpl implements PluginData {
 
   public PluginDataImpl(@ComponentImport PluginSettingsFactory pluginSettingsFactory) {
     this.pluginSettingsFactory = pluginSettingsFactory;
+  }
+
+  @Override
+  public Boolean isSetTokenViaFile() {
+    return Boolean.parseBoolean(
+        (String) pluginSettingsFactory.createGlobalSettings().get(IS_SET_TOKEN_VIA_FILE));
+  }
+
+  @Override
+  public void setSetTokenViaFile(Boolean setTokenViaFile) {
+    pluginSettingsFactory
+        .createGlobalSettings()
+        .put(IS_SET_TOKEN_VIA_FILE, String.valueOf(setTokenViaFile));
   }
 
   @Override
