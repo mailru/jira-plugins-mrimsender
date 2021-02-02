@@ -35,6 +35,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   }
 
   private boolean saved;
+  private boolean setTokenViaFile;
   private String token;
   private String tokenFilePath;
   private String botApiUrl;
@@ -49,7 +50,9 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
 
   @Override
   public String doDefault() {
-    tokenFilePath = pluginData.getTokenFilePath();
+    setTokenViaFile = pluginData.isSetTokenViaFile();
+    if (setTokenViaFile) tokenFilePath = pluginData.getTokenFilePath();
+    else token = pluginData.getToken();
     enabledByDefault = pluginData.isEnabledByDefault();
     botApiUrl = pluginData.getBotApiUrl();
     botName = pluginData.getBotName();
@@ -63,12 +66,17 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   @RequiresXsrfCheck
   @Override
   protected String doExecute() {
-    pluginData.setTokenFilePath(tokenFilePath);
-    try {
-      String botToken = loadBotTokenFromFile(tokenFilePath);
-      pluginData.setToken(botToken);
-    } catch (IOException ioException) {
-      log.error("Can't load bot token");
+    pluginData.setSetTokenViaFile(setTokenViaFile);
+    if (setTokenViaFile) {
+      pluginData.setTokenFilePath(tokenFilePath);
+      try {
+        String botToken = loadBotTokenFromFile(tokenFilePath);
+        pluginData.setToken(botToken);
+      } catch (IOException ioException) {
+        log.error("Can't load bot token");
+      }
+    } else {
+      pluginData.setToken(token);
     }
     pluginData.setBotApiUrl(botApiUrl);
     pluginData.setBotName(botName);
@@ -87,27 +95,33 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
 
   @Override
   protected void doValidation() {
-    if (StringUtils.isEmpty(tokenFilePath))
-      addError(
-          "tokenFilePath",
-          getText("ru.mail.jira.plugins.myteam.configuration.tokenFilePath.isEmptyError"));
-    else {
-      File file = new File(tokenFilePath);
-      if (file.isDirectory())
+    if (setTokenViaFile) {
+      if (StringUtils.isEmpty(tokenFilePath))
         addError(
             "tokenFilePath",
-            getText(
-                "ru.mail.jira.plugins.myteam.configuration.tokenFilePath.shouldNotBeDirectoryError"));
-      else if (!file.exists()) {
-        addError(
-            "tokenFilePath",
-            getText("ru.mail.jira.plugins.myteam.configuration.tokenFilePath.fileNotExistError"));
-      } else if (!file.canRead())
-        addError(
-            "tokenFilePath",
-            getText(
-                "ru.mail.jira.plugins.myteam.configuration.tokenFilePath.readPermissionsError"));
+            getText("ru.mail.jira.plugins.myteam.configuration.tokenFilePath.isEmptyError"));
+      else {
+        File file = new File(tokenFilePath);
+        if (file.isDirectory())
+          addError(
+              "tokenFilePath",
+              getText(
+                  "ru.mail.jira.plugins.myteam.configuration.tokenFilePath.shouldNotBeDirectoryError"));
+        else if (!file.exists()) {
+          addError(
+              "tokenFilePath",
+              getText("ru.mail.jira.plugins.myteam.configuration.tokenFilePath.fileNotExistError"));
+        } else if (!file.canRead())
+          addError(
+              "tokenFilePath",
+              getText(
+                  "ru.mail.jira.plugins.myteam.configuration.tokenFilePath.readPermissionsError"));
+      }
+    } else {
+      if (StringUtils.isEmpty(token))
+        addError("token", getText("ru.mail.jira.plugins.myteam.configuration.specifyToken"));
     }
+
     if (StringUtils.isEmpty(botApiUrl))
       addError("botApiUrl", getText("ru.mail.jira.plugins.myteam.configuration.specifyBotApiUrl"));
     try {
@@ -130,6 +144,26 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   @SuppressWarnings("UnusedDeclaration")
   public boolean isSaved() {
     return saved;
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public boolean isSetTokenViaFile() {
+    return setTokenViaFile;
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public void setSetTokenViaFile(boolean setTokenViaFile) {
+    this.setTokenViaFile = setTokenViaFile;
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public String getToken() {
+    return token;
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public void setToken(String token) {
+    this.token = token;
   }
 
   @SuppressWarnings("UnusedDeclaration")

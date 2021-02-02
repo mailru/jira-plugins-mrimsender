@@ -38,7 +38,19 @@
         #end
     #end
     <input type="hidden" name="atl_token" value="$atl_token" />
-    <div class="field-group">
+    <fieldset class="group">
+        <legend><span>$i18n.getText("ru.mail.jira.plugins.myteam.configuration.tokensetmethod.description")</span></legend>
+        <div class="checkbox">
+            <label for="setTokenViaFile">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.tokensetmethod.viafile")</label>
+            <input class="checkbox" type="checkbox" name="setTokenViaFile" id="setTokenViaFile" value="$!setTokenViaFile" #if($setTokenViaFile)checked#end>
+        </div>
+    </fieldset>
+    <div class="field-group" id="myteam-config-page-token-field" #if($setTokenViaFile)style="display:none;"#end>
+        <label for="token">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.token" )<span class="aui-icon icon-required"></span></label>
+        <input type="password" class="password" id="token" name="token" value="$!token" />
+        #fieldError( "token" )
+    </div>
+    <div class="field-group" id="myteam-config-page-token-file-field" #if(!$setTokenViaFile)style="display:none;"#end>
         <label for="tokenFilePath">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.tokenFilePath" )<span class="aui-icon icon-required"></span></label>
         <input type="text" class="text" id="tokenFilePath" name="tokenFilePath" value="$!tokenFilePath" />
         #fieldError( "tokenFilePath" )

@@ -1,5 +1,19 @@
 require(['jquery'], function($) {
     AJS.toInit(function () {
+
+        const checkbox = document.getElementById('setTokenViaFile');
+        checkbox.addEventListener('change', (event) => {
+            if (event.currentTarget.checked) {
+                document.getElementById('setTokenViaFile').value="true";
+                document.getElementById('myteam-config-page-token-field').style.display = 'none';
+                document.getElementById('myteam-config-page-token-file-field').style.display = 'block';
+            } else {
+                document.getElementById('setTokenViaFile').value="false";
+                document.getElementById('myteam-config-page-token-field').style.display = 'block';
+                document.getElementById('myteam-config-page-token-file-field').style.display = 'none';
+            }
+        });
+
         $(".mrimsender-create-issue-excluding-projects").auiSelect2({
             placeholder:AJS.I18n.getText('ru.mail.jira.plugins.myteam.configuration.excludedProjects.placeholder'),
             allowClear: true
