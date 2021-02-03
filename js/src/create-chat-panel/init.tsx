@@ -9,6 +9,8 @@ import { IntlProvider } from 'react-intl';
 import EventTypes from 'jira/util/events/types';
 import Events from 'jira/util/events';
 import { ErrorView, makeFaultTolerantComponent } from './views/ErrorView';
+import { CacheProvider, EmotionCache } from '@emotion/core';
+import createCache from '@emotion/cache';
 
 const PANEL_CONTAINER_ID_SELECTOR = '#myteam-chat-creation-panel-container';
 
@@ -27,20 +29,22 @@ const createStore = memoizeStoreCreation((issueKey: string): ChatPanelStore => n
 
 const ErrorBoundary = makeFaultTolerantComponent(ErrorView);
 
-function renderMyteamChatPanel(reactDomRoot: HTMLElement) {
+function renderMyteamChatPanel(reactDomRoot: HTMLElement, emotionCache: EmotionCache) {
   const issueKey: string = legacyIssueApi.getIssueKey();
   const memoizedStore = createStore(issueKey);
   ReactDOM.render(
-    <ErrorBoundary>
-      <IntlProvider locale="en">
-        <ChatPanel store={memoizedStore} />
-      </IntlProvider>
-    </ErrorBoundary>,
+    <CacheProvider value={emotionCache}>
+      <ErrorBoundary>
+        <IntlProvider locale="en">
+          <ChatPanel store={memoizedStore} />
+        </IntlProvider>
+      </ErrorBoundary>
+    </CacheProvider>,
     reactDomRoot,
   );
 }
 
-function renderAllContentInContext($context: JQuery<any>) {
+function renderAllContentInContext($context: JQuery<any>, emotionCache: EmotionCache) {
   if ($context.length === 0) return;
   try {
     // for each found custom table cfId root container on viewing page
@@ -57,7 +61,7 @@ function renderAllContentInContext($context: JQuery<any>) {
           console.error('Myteam chat panel container not found');
           return;
         }
-        renderMyteamChatPanel(container);
+        renderMyteamChatPanel(container, emotionCache);
       });
   } catch (e) {
     console.error('Error occurred during renderAllContent function called', e);
@@ -66,6 +70,9 @@ function renderAllContentInContext($context: JQuery<any>) {
 
 export function init() {
   configure({ enforceActions: 'observed', isolateGlobalState: true });
+  const emotionCache = createCache({
+    key: 'myteam-styles',
+  });
 
   const listener = (event: any, context: any) => {
     try {
@@ -75,12 +82,12 @@ export function init() {
       } else {
         $context = context;
       }
-      renderAllContentInContext($context);
+      renderAllContentInContext($context, emotionCache);
     } catch (e) {
       console.error('Myteam chat panel an error occured in events listener', e);
     }
   };
   Events.bind(EventTypes.NEW_CONTENT_ADDED, listener);
   Events.bind(EventTypes.ISSUE_REFRESHED, listener);
-  renderAllContentInContext($(document));
+  renderAllContentInContext($(document), emotionCache);
 }
