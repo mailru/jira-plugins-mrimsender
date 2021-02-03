@@ -25,8 +25,8 @@ const config = {
             {
                 // more info about ts-loader configuration here: https://github.com/TypeStrong/ts-loader
                 test: /\.(ts|tsx)$/, // compiles all TypeScript files
-                use: ['ts-loader'], // TypeScript loader for webpack
-                exclude: /node_modules/, // exludes node_modules directory
+                use: ['babel-loader', 'ts-loader'], // TypeScript loader for webpack
+                exclude: /node_modules/, // excludes node_modules directory
             },
             {
                 test: /\.(png)$/i,
