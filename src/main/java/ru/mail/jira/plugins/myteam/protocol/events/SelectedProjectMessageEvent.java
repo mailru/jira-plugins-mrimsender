@@ -13,7 +13,7 @@ public class SelectedProjectMessageEvent {
 
   public SelectedProjectMessageEvent(
       ChatMessageEvent chatMessageEvent, IssueCreationDto issueCreationDto) {
-    userId = chatMessageEvent.getUerId();
+    userId = chatMessageEvent.getUserId();
     chatId = chatMessageEvent.getChatId();
     selectedProjectKey = chatMessageEvent.getMessage().trim().toUpperCase();
     this.issueCreationDto = issueCreationDto;

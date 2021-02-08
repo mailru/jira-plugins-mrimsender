@@ -26,6 +26,6 @@ public class SearchIssuesEvent {
   public SearchIssuesEvent(ChatMessageEvent chatMessageEvent) {
     this.chatId = chatMessageEvent.getChatId();
     this.jqlClause = chatMessageEvent.getMessage().trim();
-    this.userId = chatMessageEvent.getUerId();
+    this.userId = chatMessageEvent.getUserId();
   }
 }

@@ -10,7 +10,7 @@ public class ShowMenuEvent {
   private final String chatId;
 
   public ShowMenuEvent(ChatMessageEvent chatMessageEvent) {
-    this.userId = chatMessageEvent.getUerId();
+    this.userId = chatMessageEvent.getUserId();
     this.chatId = chatMessageEvent.getChatId();
   }
 

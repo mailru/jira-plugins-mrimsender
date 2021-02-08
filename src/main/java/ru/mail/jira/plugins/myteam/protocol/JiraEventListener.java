@@ -36,8 +36,8 @@ import ru.mail.jira.plugins.myteam.protocol.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
 
 @Component
-public class MyteamEventListener implements InitializingBean, DisposableBean {
-  private static final Logger log = Logger.getLogger(MyteamEventListener.class);
+public class JiraEventListener implements InitializingBean, DisposableBean {
+  private static final Logger log = Logger.getLogger(JiraEventListener.class);
 
   private final EventPublisher eventPublisher;
   private final GroupManager groupManager;
@@ -50,7 +50,7 @@ public class MyteamEventListener implements InitializingBean, DisposableBean {
   private final MyteamEventsListener myteamEventsListener;
 
   @Autowired
-  public MyteamEventListener(
+  public JiraEventListener(
       @ComponentImport EventPublisher eventPublisher,
       @ComponentImport GroupManager groupManager,
       @ComponentImport NotificationFilterManager notificationFilterManager,

@@ -14,7 +14,7 @@ public class IssueKeyMessageEvent {
 
   public IssueKeyMessageEvent(ChatMessageEvent chatMessageEvent, String jiraBaseUrl) {
     this.chatId = chatMessageEvent.getChatId();
-    this.userId = chatMessageEvent.getUerId();
+    this.userId = chatMessageEvent.getUserId();
 
     String baseIssueLinkUrlPrefix = String.format("%s/browse/", jiraBaseUrl);
     URL url = Utils.tryFindUrlByPrefixInStr(chatMessageEvent.getMessage(), baseIssueLinkUrlPrefix);

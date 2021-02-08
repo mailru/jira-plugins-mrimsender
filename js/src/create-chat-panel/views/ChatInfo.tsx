@@ -40,14 +40,6 @@ export const ChatInfo = observer((props: ChatInfoProps) => {
           </a>
         </StyledValue>
       </StyledContainer>
-      <StyledContainer>
-        <StyledLabel>Chat about:</StyledLabel>
-        <StyledValue>{chatInfo.about}</StyledValue>
-      </StyledContainer>
-      <StyledContainer>
-        <StyledLabel>Chat rules:</StyledLabel>
-        <StyledValue>{chatInfo.rules}</StyledValue>
-      </StyledContainer>
     </div>
   );
 });

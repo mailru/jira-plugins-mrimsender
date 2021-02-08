@@ -13,6 +13,10 @@ import LoadingButton from '@atlaskit/button/loading-button';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const MyteamImage = require('../../assets/myteam.png');
 
+export const StyledChatPanelContainer = styled.div`
+  width: ${gridSize() * 50}px;
+`;
+
 const StyledSpinnerContainer = styled.div`
   text-align: center;
 `;
