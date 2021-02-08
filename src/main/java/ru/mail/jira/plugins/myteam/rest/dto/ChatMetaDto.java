@@ -33,7 +33,7 @@ public class ChatMetaDto {
       URL url = new URL(inviteLink);
       if (!url.getHost().equals(MYTEAM_INVITE_LINK_HOST)) {
         String someId = StringUtils.substringAfterLast(url.getPath(), "/");
-        return String.join("/", "https", MYTEAM_INVITE_LINK_HOST, "profile", someId);
+        return String.join("/", "https:/", MYTEAM_INVITE_LINK_HOST, "profile", someId);
       }
     } catch (MalformedURLException ignored) {
       // inviteLink is not a correct URL at all... just leave it as it is

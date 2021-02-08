@@ -3,6 +3,7 @@ import React from 'react';
 import styled from '@emotion/styled';
 import { gridSize } from '@atlaskit/theme';
 import { ChatInfoType } from '../stores/LoadingService';
+import { I18n } from '@atlassian/wrm-react-i18n';
 
 type ChatInfoProps = {
   chatInfo: ChatInfoType;
@@ -36,7 +37,7 @@ export const ChatInfo = observer((props: ChatInfoProps) => {
         <StyledLabel>Chat link:</StyledLabel>
         <StyledValue>
           <a href={chatInfo.link} target="_blank" rel="noreferrer">
-            {chatInfo.link}
+            {I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.linkname')}
           </a>
         </StyledValue>
       </StyledContainer>
