@@ -13,7 +13,7 @@ public class SelectedIssueTypeMessageEvent {
 
   public SelectedIssueTypeMessageEvent(
       ChatMessageEvent chatMessageEvent, IssueCreationDto issueCreationDto) {
-    userId = chatMessageEvent.getUerId();
+    userId = chatMessageEvent.getUserId();
     chatId = chatMessageEvent.getChatId();
     this.issueCreationDto = issueCreationDto;
     selectedIssueTypePosition = chatMessageEvent.getMessage().trim().toUpperCase();

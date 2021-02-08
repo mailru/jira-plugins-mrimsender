@@ -3,8 +3,6 @@ package ru.mail.jira.plugins.myteam.rest;
 
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
-import com.atlassian.jira.bc.JiraServiceContextImpl;
-import com.atlassian.jira.bc.user.search.UserSearchService;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.watchers.WatcherManager;
@@ -33,6 +31,8 @@ import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
+import ru.mail.jira.plugins.myteam.protocol.events.JiraIssueViewEvent;
+import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatCreationDataDto;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatMemberDto;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatMetaDto;
@@ -48,10 +48,10 @@ public class ChatCreationService {
   private final WatcherManager watcherManager;
   private final AvatarService avatarService;
   private final UserManager userManager;
-  private final UserSearchService userSearchService;
   private final MyteamChatRepository myteamChatRepository;
   private final PluginData pluginData;
   private final UserData userData;
+  private final MyteamEventsListener myteamEventsListener;
 
   @Autowired
   public ChatCreationService(
@@ -60,11 +60,11 @@ public class ChatCreationService {
       @ComponentImport WatcherManager watcherManager,
       @ComponentImport AvatarService avatarService,
       @ComponentImport UserManager userManager,
-      @ComponentImport UserSearchService userSearchService,
       MyteamApiClient myteamApiClient,
       MyteamChatRepository myteamChatRepository,
       PluginData pluginData,
-      UserData userData) {
+      UserData userData,
+      MyteamEventsListener myteamEventsListener) {
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.issueManager = issueManager;
     this.watcherManager = watcherManager;
@@ -72,9 +72,9 @@ public class ChatCreationService {
     this.myteamChatRepository = myteamChatRepository;
     this.avatarService = avatarService;
     this.userManager = userManager;
-    this.userSearchService = userSearchService;
     this.pluginData = pluginData;
     this.userData = userData;
+    this.myteamEventsListener = myteamEventsListener;
   }
 
   @GET
@@ -88,13 +88,12 @@ public class ChatCreationService {
     MyteamChatMetaEntity chatMeta = myteamChatRepository.findChatByIssueKey(issueKey);
     if (chatMeta == null) return Response.ok().build();
     /*
-    TODO localhost test stubbing part
+    localhost test stubbing part
     return Response.ok(
             ChatMetaDto.buildChatInfo(
                 new GroupChatInfo(
                     "title", "about", "rules", "http:/myteam/inite/link", false, false)))
-        .build()
-    ;*/
+        .build();*/
     try {
       HttpResponse<ChatInfoResponse> chatInfoResponse =
           myteamApiClient.getChatInfo(pluginData.getToken(), chatMeta.getChatId());
@@ -172,7 +171,7 @@ public class ChatCreationService {
             .map(user -> new ChatMemberId(userData.getMrimLogin(user)))
             .collect(Collectors.toList());
 
-    // TODO localhost tests stubbing
+    // localhost tests stubbing
     /* return Response.ok(
         ChatMetaDto.buildChatInfo(
             new GroupChatInfo(
@@ -187,6 +186,8 @@ public class ChatCreationService {
           && createChatResponse.getBody().getSn() != null) {
         String chatId = createChatResponse.getBody().getSn();
         myteamChatRepository.persistChat(chatId, issueKey);
+        myteamEventsListener.publishEvent(
+            new JiraIssueViewEvent(chatId, issueKey, loggedInUser, true));
 
         HttpResponse<ChatInfoResponse> chatInfoResponse =
             myteamApiClient.getChatInfo(pluginData.getToken(), chatId);
@@ -202,29 +203,31 @@ public class ChatCreationService {
     }
   }
 
+  /*
+  TODO this REST is needed for user-picker search requests in future
   @GET
-  @Path("/chatCreationData/{issueKey}/availableMembers/{input:.*}")
-  @Produces({MediaType.APPLICATION_JSON})
-  public Response getAvailableChatMembers(
-      @PathParam("issueKey") String issueKey, @PathParam("input") String input) {
-    ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
-    if (loggedInUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+   @Path("/chatCreationData/{issueKey}/availableMembers/{input:.*}")
+   @Produces({MediaType.APPLICATION_JSON})
+   public Response getAvailableChatMembers(
+       @PathParam("issueKey") String issueKey, @PathParam("input") String input) {
+     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
+     if (loggedInUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
 
-    Issue currentIssue = issueManager.getIssueByKeyIgnoreCase(issueKey);
-    if (currentIssue == null) return Response.ok().build();
+     Issue currentIssue = issueManager.getIssueByKeyIgnoreCase(issueKey);
+     if (currentIssue == null) return Response.ok().build();
 
-    return Response.ok(
-            userSearchService
-                .findUsersAllowEmptyQuery(new JiraServiceContextImpl(loggedInUser), input).stream()
-                .map(
-                    user ->
-                        new ChatMemberDto(
-                            user.getDisplayName(),
-                            user.getId(),
-                            avatarService
-                                .getAvatarURL(loggedInUser, user, Avatar.Size.LARGE)
-                                .toString()))
-                .collect(Collectors.toList()))
-        .build();
-  }
+     return Response.ok(
+             userSearchService
+                 .findUsersAllowEmptyQuery(new JiraServiceContextImpl(loggedInUser), input).stream()
+                 .map(
+                     user ->
+                         new ChatMemberDto(
+                             user.getDisplayName(),
+                             user.getId(),
+                             avatarService
+                                 .getAvatarURL(loggedInUser, user, Avatar.Size.LARGE)
+                                 .toString()))
+                 .collect(Collectors.toList()))
+         .build();
+   }*/
 }

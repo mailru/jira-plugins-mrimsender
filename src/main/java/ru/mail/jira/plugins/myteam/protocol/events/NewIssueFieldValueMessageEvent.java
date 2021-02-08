@@ -16,7 +16,7 @@ public class NewIssueFieldValueMessageEvent implements NewIssueValueEvent {
       ChatMessageEvent chatMessageEvent,
       IssueCreationDto issueCreationDto,
       Integer currentFieldNum) {
-    userId = chatMessageEvent.getUerId();
+    userId = chatMessageEvent.getUserId();
     chatId = chatMessageEvent.getChatId();
     fieldValue = chatMessageEvent.getMessage().trim();
     this.issueCreationDto = issueCreationDto;

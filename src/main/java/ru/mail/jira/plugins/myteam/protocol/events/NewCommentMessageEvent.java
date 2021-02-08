@@ -14,7 +14,7 @@ public class NewCommentMessageEvent {
   private final List<Part> messageParts;
 
   public NewCommentMessageEvent(ChatMessageEvent chatMessageEvent, String commentingIssueKey) {
-    this.userId = chatMessageEvent.getUerId();
+    this.userId = chatMessageEvent.getUserId();
     this.chatId = chatMessageEvent.getChatId();
     this.messageParts = chatMessageEvent.getMessageParts();
     this.message = chatMessageEvent.getMessage();

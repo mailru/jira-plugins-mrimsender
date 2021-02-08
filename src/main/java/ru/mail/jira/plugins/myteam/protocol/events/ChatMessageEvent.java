@@ -11,7 +11,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 @Getter
 public class ChatMessageEvent implements Event {
   private final String chatId;
-  private final String uerId;
+  private final String userId;
   private final String message;
   private final ChatType chatType;
   private final List<Part> messageParts;
@@ -19,7 +19,7 @@ public class ChatMessageEvent implements Event {
 
   public ChatMessageEvent(NewMessageEvent newMessageEvent) {
     chatId = newMessageEvent.getChat().getChatId();
-    uerId = newMessageEvent.getFrom().getUserId();
+    userId = newMessageEvent.getFrom().getUserId();
     message = newMessageEvent.getText();
     chatType = ChatType.fromApiValue(newMessageEvent.getChat().getType());
     messageParts = newMessageEvent.getParts();

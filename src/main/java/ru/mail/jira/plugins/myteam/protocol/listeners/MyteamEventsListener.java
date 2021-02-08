@@ -52,19 +52,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
-import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.Event;
-import ru.mail.jira.plugins.myteam.protocol.events.IssueKeyMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.JiraNotifyEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.NewCommentMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.NewIssueFieldValueMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.SearchIssuesEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.SelectedIssueTypeMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.SelectedProjectMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.ShowDefaultMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.ShowHelpEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.ShowIssueEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.ShowMenuEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.CancelClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.CommentIssueClickEvent;
@@ -106,6 +94,7 @@ public class MyteamEventsListener {
   private final SearchService searchService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final String JIRA_BASE_URL;
+  private final ChatCommandListener chatCommandListener;
 
   @Autowired
   public MyteamEventsListener(
@@ -151,6 +140,7 @@ public class MyteamEventsListener {
     this.searchService = searchService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
+    this.chatCommandListener = chatCommandListener;
   }
 
   public void publishEvent(Event event) {
@@ -354,6 +344,21 @@ public class MyteamEventsListener {
   public void handleJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) throws Exception {
     myteamApiClient.sendMessageText(
         jiraNotifyEvent.getChatId(), jiraNotifyEvent.getMessage(), jiraNotifyEvent.getButtons());
+  }
+
+  @Subscribe
+  public void handleJiraIssueViewEvent(JiraIssueViewEvent jiraIssueViewEvent)
+      throws IOException, UnirestException {
+    if (jiraIssueViewEvent.isGroupChat())
+      chatCommandListener.sendIssueViewToGroup(
+          jiraIssueViewEvent.getIssueKey(),
+          jiraIssueViewEvent.getInitiator(),
+          jiraIssueViewEvent.getChatId());
+    else
+      chatCommandListener.sendIssueViewToUser(
+          jiraIssueViewEvent.getIssueKey(),
+          jiraIssueViewEvent.getInitiator(),
+          jiraIssueViewEvent.getChatId());
   }
 
   @Subscribe

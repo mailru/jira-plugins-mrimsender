@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import { configure } from 'mobx';
-import { ChatPanel } from './views/ChatPanel';
+import { ChatPanel, StyledChatPanelContainer } from './views/ChatPanel';
 import { ChatPanelStore } from './stores/ChatPanelStore';
 import legacyIssueApi from 'jira/issues/search/legacyissue';
 import { IntlProvider } from 'react-intl';
@@ -34,11 +34,13 @@ function renderMyteamChatPanel(reactDomRoot: HTMLElement, emotionCache: EmotionC
   const memoizedStore = createStore(issueKey);
   ReactDOM.render(
     <CacheProvider value={emotionCache}>
-      <ErrorBoundary>
-        <IntlProvider locale="en">
-          <ChatPanel store={memoizedStore} />
-        </IntlProvider>
-      </ErrorBoundary>
+      <StyledChatPanelContainer>
+        <ErrorBoundary>
+          <IntlProvider locale="en">
+            <ChatPanel store={memoizedStore} />
+          </IntlProvider>
+        </ErrorBoundary>
+      </StyledChatPanelContainer>
     </CacheProvider>,
     reactDomRoot,
   );

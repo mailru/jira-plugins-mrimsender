@@ -108,7 +108,9 @@ public class ChatCommandListener {
     log.debug("ShowIssueEvent handling started");
     ApplicationUser currentUser = userData.getUserByMrimLogin(showIssueEvent.getUserId());
     String chatId = showIssueEvent.getChatId();
-    this.sendIssueViewToUser(showIssueEvent.getIssueKey(), currentUser, chatId);
+    if (showIssueEvent.isGroupChat())
+      sendIssueViewToGroup(showIssueEvent.getIssueKey(), currentUser, chatId);
+    else sendIssueViewToUser(showIssueEvent.getIssueKey(), currentUser, chatId);
   }
 
   @Subscribe
@@ -160,6 +162,36 @@ public class ChatCommandListener {
               chatId,
               messageFormatter.createIssueSummary(issueToShow, user),
               messageFormatter.getIssueButtons(issueToShow.getKey(), user));
+        } else {
+          myteamApiClient.sendMessageText(
+              chatId,
+              i18nResolver.getRawText(
+                  localeManager.getLocaleFor(user),
+                  "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
+        }
+      } else {
+        myteamApiClient.sendMessageText(
+            chatId,
+            i18nResolver.getRawText(
+                localeManager.getLocaleFor(user),
+                "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
+      }
+    } finally {
+      jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
+    }
+  }
+
+  public void sendIssueViewToGroup(String issueKey, ApplicationUser user, String chatId)
+      throws IOException, UnirestException {
+    ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
+    try {
+      jiraAuthenticationContext.setLoggedInUser(user);
+      Issue issueToShow = issueManager.getIssueByKeyIgnoreCase(issueKey);
+      if (issueToShow != null) {
+        if (permissionManager.hasPermission(
+            ProjectPermissions.BROWSE_PROJECTS, issueToShow, user)) {
+          myteamApiClient.sendMessageText(
+              chatId, messageFormatter.createIssueSummary(issueToShow, user), null);
         } else {
           myteamApiClient.sendMessageText(
               chatId,

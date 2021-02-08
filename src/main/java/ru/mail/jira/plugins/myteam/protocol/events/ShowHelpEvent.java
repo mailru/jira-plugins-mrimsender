@@ -12,7 +12,7 @@ public class ShowHelpEvent {
 
   public ShowHelpEvent(ChatMessageEvent chatMessageEvent) {
     this.chatId = chatMessageEvent.getChatId();
-    this.userId = chatMessageEvent.getUerId();
+    this.userId = chatMessageEvent.getUserId();
     this.chatType = chatMessageEvent.getChatType();
   }
 }
