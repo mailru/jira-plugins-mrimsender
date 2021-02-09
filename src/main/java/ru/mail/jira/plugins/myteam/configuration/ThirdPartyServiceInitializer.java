@@ -7,6 +7,7 @@ import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
+import org.codehaus.jackson.JsonParseException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -27,14 +28,20 @@ public class ThirdPartyServiceInitializer implements LifecycleAware {
           public <T> T readValue(String value, Class<T> valueType) {
             try {
               return jacksonObjectMapper.readValue(value, valueType);
+            } catch (JsonParseException jsonParseException) {
+              log.error(
+                  "Error while read value: {} with value type = {}",
+                  value,
+                  valueType.getName(),
+                  jsonParseException);
             } catch (IOException e) {
               log.error(
-                  String.format(
-                      "Unirest JacksonObjectMapper exception during reading value = %s as type = %s",
-                      value, valueType.toString()),
+                  "Unirest JacksonObjectMapper exception during reading value = {} as type = {}",
+                  value,
+                  valueType.toString(),
                   e);
-              throw new RuntimeException(e);
             }
+            return null;
           }
 
           @Override
@@ -43,9 +50,7 @@ public class ThirdPartyServiceInitializer implements LifecycleAware {
               return jacksonObjectMapper.writeValueAsString(value);
             } catch (IOException e) {
               log.error(
-                  String.format(
-                      "Unirest JacksonObjectMapper exception during writing  value = %s ", value),
-                  e);
+                  "Unirest JacksonObjectMapper exception during writing  value = {}", value, e);
               throw new RuntimeException(e);
             }
           }

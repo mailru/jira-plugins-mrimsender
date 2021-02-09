@@ -132,9 +132,8 @@ public class MyteamEventsListener {
             executorService,
             (exception, context) ->
                 log.error(
-                    String.format(
-                        "Exception occurred in subscriber = %s",
-                        context.getSubscriber().toString()),
+                    "Exception occurred in subscriber = {}",
+                    context.getSubscriber().toString(),
                     exception));
     this.asyncEventBus.register(this);
     this.asyncEventBus.register(chatCommandListener);
