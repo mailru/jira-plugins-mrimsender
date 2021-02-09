@@ -64,9 +64,7 @@ public class MyteamEventsFetcher {
 
   public void fetchIcqEvents() {
     try {
-      log.debug(
-          String.format(
-              "IcqEventsFetcher fetch icq events started  lastEventId=%d...", lastEventId));
+      log.debug("IcqEventsFetcher fetch icq events started  lastEventId={}...", lastEventId);
       HttpResponse<FetchResponseDto> httpResponse = myteamApiClient.getEvents(lastEventId, 15);
       if (httpResponse.getStatus() == 200) {
         log.debug("IcqEventsFetcher handle icq events started ...");

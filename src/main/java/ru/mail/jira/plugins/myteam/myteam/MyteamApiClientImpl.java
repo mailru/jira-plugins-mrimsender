@@ -7,15 +7,18 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.configuration.PluginData;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 
+@Slf4j
 @Component
 public class MyteamApiClientImpl implements MyteamApiClient {
   private String apiToken;
@@ -41,18 +44,39 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   public HttpResponse<MessageResponse> sendMessageText(
       String chatId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException {
-    if (inlineKeyboardMarkup == null)
-      return Unirest.get(botApiUrl + "/messages/sendText")
-          .queryString("token", apiToken)
-          .queryString("chatId", chatId)
-          .queryString("text", text)
-          .asObject(MessageResponse.class);
-    return Unirest.get(botApiUrl + "/messages/sendText")
-        .queryString("token", apiToken)
-        .queryString("chatId", chatId)
-        .queryString("text", text)
-        .queryString("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
-        .asObject(MessageResponse.class);
+    try {
+      HttpResponse<MessageResponse> response;
+      if (inlineKeyboardMarkup == null) {
+        response =
+            Unirest.get(botApiUrl + "/messages/sendText")
+                .queryString("token", apiToken)
+                .queryString("chatId", chatId)
+                .queryString("text", text)
+                .asObject(MessageResponse.class);
+      } else {
+        response =
+            Unirest.get(botApiUrl + "/messages/sendText")
+                .queryString("token", apiToken)
+                .queryString("chatId", chatId)
+                .queryString("text", text)
+                .queryString(
+                    "inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
+                .asObject(MessageResponse.class);
+      }
+      if (response.getStatus() >= 500 || response.getStatus() < 600) {
+        throw new MyteamServerErrorException(
+            response.getStatus(), response.getRawBody().toString());
+      }
+      return response;
+    } catch (MyteamServerErrorException serverErrorException) {
+      log.error(
+          "Myteam server error while sendMessageText({},{},inlineKeyboardMarkup): Status = {}",
+          chatId,
+          text,
+          serverErrorException.getStatus(),
+          serverErrorException);
+    }
+    return null;
   }
 
   @Override
@@ -64,23 +88,58 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   @Override
   public HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime)
       throws UnirestException {
-    return Unirest.get(botApiUrl + "/events/get")
-        .queryString("token", apiToken)
-        .queryString("lastEventId", lastEventId)
-        .queryString("pollTime", pollTime)
-        .asObject(FetchResponseDto.class);
+    try {
+      HttpResponse<FetchResponseDto> response =
+          Unirest.get(botApiUrl + "/events/get")
+              .queryString("token", apiToken)
+              .queryString("lastEventId", lastEventId)
+              .queryString("pollTime", pollTime)
+              .asObject(FetchResponseDto.class);
+      if (response.getStatus() >= 500 || response.getStatus() < 600) {
+        throw new MyteamServerErrorException(
+            response.getStatus(), response.getRawBody().toString());
+      }
+      return response;
+    } catch (MyteamServerErrorException serverErrorException) {
+      log.error(
+          "Myteam server error while getEvents({},{}): Status = {}",
+          lastEventId,
+          pollTime,
+          serverErrorException.getStatus(),
+          serverErrorException);
+    }
+    return null;
   }
 
   @Override
   public HttpResponse<JsonNode> answerCallbackQuery(
       String queryId, String text, boolean showAlert, String url) throws UnirestException {
-    return Unirest.get(botApiUrl + "/messages/answerCallbackQuery")
-        .queryString("token", apiToken)
-        .queryString("queryId", queryId)
-        .queryString("text", text)
-        .queryString("showAlert", showAlert)
-        .queryString("url", url)
-        .asJson();
+    try {
+
+      HttpResponse<JsonNode> response =
+          Unirest.get(botApiUrl + "/messages/answerCallbackQuery")
+              .queryString("token", apiToken)
+              .queryString("queryId", queryId)
+              .queryString("text", text)
+              .queryString("showAlert", showAlert)
+              .queryString("url", url)
+              .asJson();
+      if (response.getStatus() >= 500 || response.getStatus() < 600) {
+        throw new MyteamServerErrorException(
+            response.getStatus(), response.getRawBody().toString());
+      }
+      return response;
+    } catch (MyteamServerErrorException serverErrorException) {
+      log.error(
+          "Myteam server error while answerCallbackQuery({},{},{},{}): Status = {}",
+          queryId,
+          text,
+          showAlert,
+          url,
+          serverErrorException.getStatus(),
+          serverErrorException);
+    }
+    return null;
   }
 
   @Override
@@ -90,10 +149,25 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
   @Override
   public HttpResponse<FileResponse> getFile(String fileId) throws UnirestException {
-    return Unirest.get(botApiUrl + "/files/getInfo")
-        .queryString("token", apiToken)
-        .queryString("fileId", fileId)
-        .asObject(FileResponse.class);
+    try {
+      HttpResponse<FileResponse> response =
+          Unirest.get(botApiUrl + "/files/getInfo")
+              .queryString("token", apiToken)
+              .queryString("fileId", fileId)
+              .asObject(FileResponse.class);
+      if (response.getStatus() >= 500 || response.getStatus() < 600) {
+        throw new MyteamServerErrorException(
+            response.getStatus(), response.getRawBody().toString());
+      }
+      return response;
+    } catch (MyteamServerErrorException serverErrorException) {
+      log.error(
+          "Myteam server error while getFile({}): Status = {}",
+          fileId,
+          serverErrorException.getStatus(),
+          serverErrorException);
+    }
+    return null;
   }
 
   @Override
@@ -103,19 +177,41 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       String text,
       List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException {
-    if (inlineKeyboardMarkup == null)
-      return Unirest.get(botApiUrl + "/messages/editText")
-          .queryString("token", apiToken)
-          .queryString("chatId", chatId)
-          .queryString("msgId", messageId)
-          .queryString("text", text)
-          .asObject(MessageResponse.class);
-    return Unirest.get(botApiUrl + "/messages/editText")
-        .queryString("token", apiToken)
-        .queryString("chatId", chatId)
-        .queryString("msgId", messageId)
-        .queryString("text", text)
-        .queryString("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
-        .asObject(MessageResponse.class);
+    HttpResponse<MessageResponse> response;
+    try {
+      if (inlineKeyboardMarkup == null) {
+        response =
+            Unirest.get(botApiUrl + "/messages/editText")
+                .queryString("token", apiToken)
+                .queryString("chatId", chatId)
+                .queryString("msgId", messageId)
+                .queryString("text", text)
+                .asObject(MessageResponse.class);
+      } else {
+        response =
+            Unirest.get(botApiUrl + "/messages/editText")
+                .queryString("token", apiToken)
+                .queryString("chatId", chatId)
+                .queryString("msgId", messageId)
+                .queryString("text", text)
+                .queryString(
+                    "inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
+                .asObject(MessageResponse.class);
+      }
+      if (response.getStatus() >= 500 || response.getStatus() < 600) {
+        throw new MyteamServerErrorException(
+            response.getStatus(), response.getRawBody().toString());
+      }
+      return response;
+    } catch (MyteamServerErrorException serverErrorException) {
+      log.error(
+          "Myteam server error while editMessageText({},{},{},inlineKeyboardMarkup): Status = {}",
+          chatId,
+          messageId,
+          text,
+          serverErrorException.getStatus(),
+          serverErrorException);
+    }
+    return null;
   }
 }
