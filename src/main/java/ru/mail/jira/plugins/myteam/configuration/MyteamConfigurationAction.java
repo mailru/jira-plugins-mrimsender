@@ -46,7 +46,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
 
   private List<String> notifiedUserKeys;
   private Set<Long> excludingProjectIds;
-  private Set<Long> chatCreationAllowedProjectIds;
+  private Set<Long> chatCreationNotAllowedProjectIds;
 
   @Override
   public String doDefault() {
@@ -58,7 +58,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     botName = pluginData.getBotName();
     botLink = pluginData.getBotLink();
     excludingProjectIds = pluginData.getExcludingProjectIds();
-    chatCreationAllowedProjectIds = pluginData.getChatCreationProjectIds();
+    chatCreationNotAllowedProjectIds = pluginData.getChatCreationBannedProjectIds();
     notifiedUsers = CommonUtils.convertUserKeysToJoinedString(pluginData.getNotifiedUserKeys());
     return INPUT;
   }
@@ -66,6 +66,10 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   @RequiresXsrfCheck
   @Override
   protected String doExecute() {
+    // persist old token and api url values for bot smart restart decision making
+    String prevToken = pluginData.getToken();
+    String prevBotApiUrl = pluginData.getBotApiUrl();
+
     pluginData.setSetTokenViaFile(setTokenViaFile);
     if (setTokenViaFile) {
       pluginData.setTokenFilePath(tokenFilePath);
@@ -83,13 +87,14 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     pluginData.setBotLink(botLink);
     pluginData.setEnabledByDefault(enabledByDefault);
     pluginData.setExcludingProjectIds(excludingProjectIds);
-    pluginData.setChatCreationProjectIds(chatCreationAllowedProjectIds);
+    pluginData.setChatCreationBannedProjectIds(chatCreationNotAllowedProjectIds);
     pluginData.setNotifiedUserKeys(notifiedUserKeys);
 
     saved = true;
     notifiedUsers = CommonUtils.convertUserKeysToJoinedString(notifiedUserKeys);
 
-    botsOrchestrationService.restartAll();
+    boolean shouldRestartBot = !prevToken.equals(token) || !prevBotApiUrl.equals(botApiUrl);
+    if (shouldRestartBot) botsOrchestrationService.restartAll();
     return INPUT;
   }
 
@@ -240,26 +245,26 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   }
 
   @SuppressWarnings("UnusedDeclaration")
-  public String getChatCreationAllowedProjectIds() {
+  public String getChatCreationNotAllowedProjectIds() {
     return CommonUtils.join(
-        this.chatCreationAllowedProjectIds.stream()
+        this.chatCreationNotAllowedProjectIds.stream()
             .map(String::valueOf)
             .collect(Collectors.toList()));
   }
 
   @SuppressWarnings("UnusedDeclaration")
-  public void setChatCreationAllowedProjectIds(String chatCreationAllowedProjectIds) {
-    this.chatCreationAllowedProjectIds =
-        StringUtils.isBlank(chatCreationAllowedProjectIds)
+  public void setChatCreationNotAllowedProjectIds(String chatCreationNotAllowedProjectIds) {
+    this.chatCreationNotAllowedProjectIds =
+        StringUtils.isBlank(chatCreationNotAllowedProjectIds)
             ? Collections.emptySet()
-            : CommonUtils.split(chatCreationAllowedProjectIds).stream()
+            : CommonUtils.split(chatCreationNotAllowedProjectIds).stream()
                 .map(Long::valueOf)
                 .collect(Collectors.toSet());
   }
 
   @SuppressWarnings("UnusedDeclaration")
-  public List<Project> getChatCreationAllowedProjects() {
-    return chatCreationAllowedProjectIds.stream()
+  public List<Project> getChatCreationNotAllowedProjects() {
+    return chatCreationNotAllowedProjectIds.stream()
         .map(projectManager::getProjectObj)
         .collect(Collectors.toList());
   }

@@ -23,7 +23,8 @@ public class PluginDataImpl implements PluginData {
   private static final String BOT_NAME = PLUGIN_PREFIX + "botName";
   private static final String BOT_LINK = PLUGIN_PREFIX + "botLink";
   private static final String EXCLUDING_PROJECT_IDS = PLUGIN_PREFIX + "excludingProjectIds";
-  private static final String CHAT_CREATION_PROJECT_IDS = PLUGIN_PREFIX + "chatCreationProjectIds";
+  private static final String CHAT_CREATION_BANNED_PROJECT_IDS =
+      PLUGIN_PREFIX + "chatCreationBannedProjectIds";
 
   private final PluginSettingsFactory pluginSettingsFactory;
 
@@ -149,9 +150,9 @@ public class PluginDataImpl implements PluginData {
   }
 
   @Override
-  public Set<Long> getChatCreationProjectIds() {
+  public Set<Long> getChatCreationBannedProjectIds() {
     String chatCreationPorjectIds =
-        (String) pluginSettingsFactory.createGlobalSettings().get(CHAT_CREATION_PROJECT_IDS);
+        (String) pluginSettingsFactory.createGlobalSettings().get(CHAT_CREATION_BANNED_PROJECT_IDS);
     if (chatCreationPorjectIds == null) {
       return Collections.emptySet();
     }
@@ -161,12 +162,14 @@ public class PluginDataImpl implements PluginData {
   }
 
   @Override
-  public void setChatCreationProjectIds(Set<Long> chatCreationProjectIds) {
+  public void setChatCreationBannedProjectIds(Set<Long> chatCreationBannedProjectIds) {
     pluginSettingsFactory
         .createGlobalSettings()
         .put(
-            CHAT_CREATION_PROJECT_IDS,
+            CHAT_CREATION_BANNED_PROJECT_IDS,
             CommonUtils.join(
-                chatCreationProjectIds.stream().map(String::valueOf).collect(Collectors.toList())));
+                chatCreationBannedProjectIds.stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.toList())));
   }
 }
