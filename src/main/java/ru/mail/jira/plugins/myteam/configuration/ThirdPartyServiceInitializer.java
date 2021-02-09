@@ -35,17 +35,14 @@ public class ThirdPartyServiceInitializer implements LifecycleAware {
                   value,
                   valueType.getName(),
                   jsonParseException);
-              SentryClient.capture(value);
-              SentryClient.capture(jsonParseException);
-              throw new RuntimeException(jsonParseException);
             } catch (IOException e) {
               log.error(
                   "Unirest JacksonObjectMapper exception during reading value = {} as type = {}",
                   value,
                   valueType.toString(),
                   e);
-              throw new RuntimeException(e);
             }
+            return null;
           }
 
           @Override
@@ -53,10 +50,7 @@ public class ThirdPartyServiceInitializer implements LifecycleAware {
             try {
               return jacksonObjectMapper.writeValueAsString(value);
             } catch (IOException e) {
-              log.error(
-                  String.format(
-                      "Unirest JacksonObjectMapper exception during writing  value = %s ", value),
-                  e);
+              log.error("Unirest JacksonObjectMapper exception during writing  value = {}", value,e);
               throw new RuntimeException(e);
             }
           }
