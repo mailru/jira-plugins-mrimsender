@@ -19,6 +19,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
@@ -82,7 +83,7 @@ public class MyteamEventsFetcherTest {
   }
 
   @Test
-  public void fetchIcqEvents() throws UnirestException {
+  public void fetchIcqEvents() throws UnirestException, MyteamServerErrorException {
     HttpResponse<FetchResponseDto> eventHttpResponse = this.myteamApiClient.getEvents(0, 5);
     System.out.println(eventHttpResponse.getBody());
     eventHttpResponse.getBody().getEvents().forEach(event -> System.out.println(event.toString()));

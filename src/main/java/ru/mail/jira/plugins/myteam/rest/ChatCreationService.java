@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.MyteamChatMetaEntity;
 import ru.mail.jira.plugins.myteam.model.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.model.PluginData;
@@ -106,7 +107,7 @@ public class ChatCreationService {
                 + chatMeta.getChatId());
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
       }
-    } catch (UnirestException e) {
+    } catch (UnirestException | MyteamServerErrorException e) {
       log.error("exception in getChatInfo method call for chatId = " + chatMeta.getChatId(), e);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
@@ -197,7 +198,7 @@ public class ChatCreationService {
       }
       log.error("Exception during chat creation chat sn not found");
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-    } catch (IOException | UnirestException e) {
+    } catch (IOException | UnirestException | MyteamServerErrorException e) {
       log.error("Exception during chat creation", e);
       return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }

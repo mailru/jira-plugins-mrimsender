@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.mockito.Mockito;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -77,7 +78,7 @@ public class MyteamApiClientImplTest {
   }
 
   @Ignore
-  public void sendMessageText() throws IOException, UnirestException {
+  public void sendMessageText() throws IOException, UnirestException, MyteamServerErrorException {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
     buttons.add(new ArrayList<>(2));
     buttons
@@ -94,7 +95,7 @@ public class MyteamApiClientImplTest {
   }
 
   @Ignore
-  public void editMessageText() throws IOException, UnirestException {
+  public void editMessageText() throws IOException, UnirestException, MyteamServerErrorException {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
     buttons.add(new ArrayList<>(2));
     buttons
@@ -119,13 +120,13 @@ public class MyteamApiClientImplTest {
   }
 
   @Ignore
-  public void getEvents() throws UnirestException {
+  public void getEvents() throws UnirestException, MyteamServerErrorException {
     HttpResponse<FetchResponseDto> httpResponse = myteamApiClient.getEvents(0, 5);
     assertEquals(200, httpResponse.getStatus());
   }
 
   @Ignore
-  public void answerCallbackQuery() throws UnirestException {
+  public void answerCallbackQuery() throws UnirestException, MyteamServerErrorException {
     HttpResponse<FetchResponseDto> httpResponse = myteamApiClient.getEvents(0, 5);
     List<CallbackQueryEvent> callbackQueryEventList =
         httpResponse.getBody().getEvents().stream()

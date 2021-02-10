@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
@@ -96,7 +97,7 @@ public class MyteamEventsFetcher {
         this.lastEventId = eventId.get();
       }
       log.debug("IcqEventsFetcher fetchIcqEvents finished.... ");
-    } catch (UnirestException e) {
+    } catch (UnirestException | MyteamServerErrorException e) {
       log.error("unirest exception occurred", e);
       // exception occurred during events fetching, for example http connection timeout
     }

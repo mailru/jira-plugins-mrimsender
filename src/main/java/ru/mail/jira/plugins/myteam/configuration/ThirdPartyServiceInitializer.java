@@ -9,7 +9,6 @@ import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.jackson.JsonParseException;
 import org.springframework.stereotype.Component;
-import ru.mail.jira.plugins.commons.SentryClient;
 
 @Component
 @Slf4j
@@ -50,7 +49,8 @@ public class ThirdPartyServiceInitializer implements LifecycleAware {
             try {
               return jacksonObjectMapper.writeValueAsString(value);
             } catch (IOException e) {
-              log.error("Unirest JacksonObjectMapper exception during writing  value = {}", value,e);
+              log.error(
+                  "Unirest JacksonObjectMapper exception during writing  value = {}", value, e);
               throw new RuntimeException(e);
             }
           }
