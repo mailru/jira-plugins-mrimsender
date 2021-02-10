@@ -55,18 +55,16 @@ public class MyteamBot implements DisposableBean {
     }
   }
 
-  public void restartBot(boolean didSettingsChanged) {
+  public void restartBot() {
     startLock.lock();
     try {
       if (isRespondingBot) {
         this.myteamEventsFetcher.stop();
-        if (didSettingsChanged) {
-          this.myteamApiClient.updateSettings();
-          this.myteamEventsFetcher.resetLastEventId();
-        }
+        this.myteamApiClient.updateSettings();
+        this.myteamEventsFetcher.resetLastEventId();
         this.myteamEventsFetcher.start();
       } else {
-        if (didSettingsChanged) this.myteamApiClient.updateSettings();
+        this.myteamApiClient.updateSettings();
       }
     } finally {
       startLock.unlock();

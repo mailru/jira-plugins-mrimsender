@@ -89,16 +89,16 @@
         #fieldError( "excludingProjectIds" )
     </div>
 
-    <input id="myteam-chat-creation-enabled-project-ids" class="hidden" name="chatCreationAllowedProjectIds" value="$action.chatCreationAllowedProjectIds"/>
+    <input id="myteam-chat-creation-disabled-project-ids" class="hidden" name="chatCreationNotAllowedProjectIds" value="$action.chatCreationNotAllowedProjectIds"/>
     <div class="field-group">
-        <label for="myteam-chat-creation-enabled-projects">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.chatCreationProjects")</label>
-        <select class="select long-field myteam-chat-creation-enabled-projects" type="text" name="myteam-chat-creation-enabled-projects" multiple="true">
+        <label for="myteam-chat-creation-disabled-projects">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.chatCreationProjects")</label>
+        <select class="select long-field myteam-chat-creation-disabled-projects" type="text" name="myteam-chat-creation-disabled-projects" multiple="true">
             #foreach( $project in $action.getProjects() )
-                <option value="$project.id" #select( $action.getChatCreationAllowedProjects() $project.id )>$project.name ($project.key)</option>
+                <option value="$project.id" #select( $action.getChatCreationNotAllowedProjects() $project.id )>$project.name ($project.key)</option>
             #end
         </select>
         <div class="description">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.chatCreationProjects.description")</div>
-        #fieldError( "chatCreationAllowedProjectIds" )
+        #fieldError( "chatCreationNotAllowedProjectIds" )
     </div>
 
     <div class="field-group">
