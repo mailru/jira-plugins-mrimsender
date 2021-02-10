@@ -34,7 +34,7 @@ public class MyteamCreateChatPanelCondition implements Condition {
         StringUtils.isNotEmpty(pluginData.getToken())
             && StringUtils.isNotEmpty(pluginData.getBotApiUrl());
     boolean isChatCreationAllowedProject =
-        pluginData.getChatCreationProjectIds().contains(currentIssue.getProjectId());
+        !pluginData.getChatCreationBannedProjectIds().contains(currentIssue.getProjectId());
     return currentUser != null
         && currentUser.isActive()
         && isBotActive

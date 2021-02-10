@@ -160,7 +160,7 @@ public class ChatCreationService {
     Issue currentIssue = issueManager.getIssueByKeyIgnoreCase(issueKey);
     // TODO max chat members hardcoded here
     if (currentIssue == null
-        || !pluginData.getChatCreationProjectIds().contains(currentIssue.getProjectId())
+        || pluginData.getChatCreationBannedProjectIds().contains(currentIssue.getProjectId())
         || memberIds.size() >= 30) return Response.status(Response.Status.BAD_REQUEST).build();
 
     List<ChatMemberId> chatMembers =
