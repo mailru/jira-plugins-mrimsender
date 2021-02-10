@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
@@ -87,7 +88,7 @@ public class ButtonClickListener {
 
   @Subscribe
   public void onViewIssueButtonClick(ViewIssueClickEvent viewIssueClickEvent)
-      throws UnirestException, IOException {
+      throws UnirestException, IOException, MyteamServerErrorException {
     myteamApiClient.answerCallbackQuery(viewIssueClickEvent.getQueryId());
     Issue currentIssue = issueManager.getIssueByCurrentKey(viewIssueClickEvent.getIssueKey());
     ApplicationUser currentUser = userData.getUserByMrimLogin(viewIssueClickEvent.getUserId());
@@ -113,7 +114,7 @@ public class ButtonClickListener {
 
   @Subscribe
   public void onCommentIssueButtonClick(CommentIssueClickEvent commentIssueClickEvent)
-      throws UnirestException, IOException {
+      throws UnirestException, IOException, MyteamServerErrorException {
     log.debug("CreateCommentCommand execution started...");
     ApplicationUser commentedUser = userData.getUserByMrimLogin(commentIssueClickEvent.getUserId());
     if (commentedUser != null) {
@@ -135,7 +136,8 @@ public class ButtonClickListener {
   }
 
   @Subscribe
-  public void onCancelButtonClick(CancelClickEvent cancelClickEvent) throws UnirestException {
+  public void onCancelButtonClick(CancelClickEvent cancelClickEvent)
+      throws UnirestException, MyteamServerErrorException {
     log.debug("CancelCommand execution started...");
     String message =
         i18nResolver.getRawText(
@@ -148,7 +150,7 @@ public class ButtonClickListener {
 
   @Subscribe
   public void onShowIssueButtonClick(ShowIssueClickEvent showIssueClickEvent)
-      throws IOException, UnirestException {
+      throws IOException, UnirestException, MyteamServerErrorException {
     log.debug("OnSearchIssueButtonClick event handling started");
     ApplicationUser currentUser = userData.getUserByMrimLogin(showIssueClickEvent.getUserId());
     if (currentUser != null) {
@@ -166,7 +168,7 @@ public class ButtonClickListener {
 
   @Subscribe
   public void onSearchIssuesClickEvent(SearchIssuesClickEvent searchIssuesClickEvent)
-      throws IOException, UnirestException, SearchException {
+      throws IOException, UnirestException, SearchException, MyteamServerErrorException {
     log.debug("ShowIssuesFilterResultsEvent handling started");
     JiraThreadLocalUtils.preCall();
     try {
@@ -218,7 +220,7 @@ public class ButtonClickListener {
 
   @Subscribe
   public void onNextIssuesPageClickEvent(NextIssuesPageClickEvent nextIssuesPageClickEvent)
-      throws SearchException, UnirestException, IOException {
+      throws SearchException, UnirestException, IOException, MyteamServerErrorException {
     log.debug("(NextPageClickEvent handling started");
     JiraThreadLocalUtils.preCall();
     try {
@@ -256,7 +258,7 @@ public class ButtonClickListener {
 
   @Subscribe
   public void onPrevIssuesPageClickEvent(PrevIssuesPageClickEvent prevIssuesPageClickEvent)
-      throws UnirestException, IOException, SearchException {
+      throws UnirestException, IOException, SearchException, MyteamServerErrorException {
     log.debug("NextProjectsPageClickEvent handling started");
     JiraThreadLocalUtils.preCall();
     try {
@@ -294,7 +296,7 @@ public class ButtonClickListener {
 
   @Subscribe
   public void onSearchByJqlClickEvent(SearchByJqlClickEvent searchByJqlClickEvent)
-      throws UnirestException, IOException {
+      throws UnirestException, IOException, MyteamServerErrorException {
     log.debug("SearchByJqlClickEvent handling started");
     ApplicationUser currentUser = userData.getUserByMrimLogin(searchByJqlClickEvent.getUserId());
     String chatId = searchByJqlClickEvent.getChatId();
@@ -318,7 +320,7 @@ public class ButtonClickListener {
 
   @Subscribe
   public void onIssueCommentsButtonClick(ViewIssueCommentsClickEvent viewIssueCommentsClickEvent)
-      throws UnirestException, IOException {
+      throws UnirestException, IOException, MyteamServerErrorException {
     log.debug("ShowCommentsEvent handling started");
     JiraThreadLocalUtils.preCall();
     try {
@@ -360,7 +362,7 @@ public class ButtonClickListener {
   @Subscribe
   public void onNextIssueCommentsPageClickEvent(
       NextIssueCommentsPageClickEvent nextIssueCommentsPageClickEvent)
-      throws UnirestException, IOException {
+      throws UnirestException, IOException, MyteamServerErrorException {
     log.debug("(NextPageClickEvent handling started");
     JiraThreadLocalUtils.preCall();
     try {
@@ -401,7 +403,7 @@ public class ButtonClickListener {
   @Subscribe
   public void onPrevIssueCommentsPageClickEvent(
       PrevIssueCommentsPageClickEvent prevIssueCommentsPageClickEvent)
-      throws UnirestException, IOException {
+      throws UnirestException, IOException, MyteamServerErrorException {
     log.debug("NextProjectsPageClickEvent handling started");
     JiraThreadLocalUtils.preCall();
     try {

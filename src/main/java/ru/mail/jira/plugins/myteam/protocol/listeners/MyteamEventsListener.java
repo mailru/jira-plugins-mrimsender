@@ -44,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.Utils;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
@@ -121,9 +122,8 @@ public class MyteamEventsListener {
             executorService,
             (exception, context) ->
                 log.error(
-                    String.format(
-                        "Exception occurred in subscriber = %s",
-                        context.getSubscriber().toString()),
+                    "Exception occurred in subscriber = {}",
+                    context.getSubscriber().toString(),
                     exception));
     this.asyncEventBus.register(this);
     this.asyncEventBus.register(chatCommandListener);
@@ -208,7 +208,7 @@ public class MyteamEventsListener {
 
   @Subscribe
   public void handleButtonClickEvent(ButtonClickEvent buttonClickEvent)
-      throws UnirestException, IOException {
+      throws UnirestException, IOException, MyteamServerErrorException {
     String buttonPrefix = StringUtils.substringBefore(buttonClickEvent.getCallbackData(), "-");
     String chatId = buttonClickEvent.getChatId();
     boolean isGroupChatEvent = buttonClickEvent.getChatType() == ChatType.GROUP;
@@ -348,7 +348,7 @@ public class MyteamEventsListener {
 
   @Subscribe
   public void handleJiraIssueViewEvent(JiraIssueViewEvent jiraIssueViewEvent)
-      throws IOException, UnirestException {
+      throws IOException, UnirestException, MyteamServerErrorException {
     if (jiraIssueViewEvent.isGroupChat())
       chatCommandListener.sendIssueViewToGroup(
           jiraIssueViewEvent.getIssueKey(),
@@ -363,7 +363,7 @@ public class MyteamEventsListener {
 
   @Subscribe
   public void handleNewCommentMessageEvent(NewCommentMessageEvent newCommentMessageEvent)
-      throws IOException, UnirestException {
+      throws IOException, UnirestException, MyteamServerErrorException {
     JiraThreadLocalUtils.preCall();
     try {
       log.debug("CreateCommentCommand execution started...");
@@ -408,7 +408,7 @@ public class MyteamEventsListener {
 
   @Subscribe
   public void handleNewIssueKeyMessageEvent(IssueKeyMessageEvent issueKeyMessageEvent)
-      throws IOException, UnirestException {
+      throws IOException, UnirestException, MyteamServerErrorException {
     log.debug("NewIssueKeyMessageEvent handling started");
     ApplicationUser currentUser = userData.getUserByMrimLogin(issueKeyMessageEvent.getUserId());
     ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
@@ -446,7 +446,7 @@ public class MyteamEventsListener {
 
   @Subscribe
   public void onSearchIssuesEvent(SearchIssuesEvent searchIssuesEvent)
-      throws IOException, UnirestException, SearchException {
+      throws IOException, UnirestException, SearchException, MyteamServerErrorException {
     log.debug("ShowIssuesFilterResultsEvent handling started");
     JiraThreadLocalUtils.preCall();
     try {
@@ -540,7 +540,7 @@ public class MyteamEventsListener {
                 }
               }
 
-            } catch (UnirestException | IOException e) {
+            } catch (UnirestException | IOException | MyteamServerErrorException e) {
               log.error(
                   "Unable to create attachment for comment on Issue {}",
                   commentedIssue.getKey(),
