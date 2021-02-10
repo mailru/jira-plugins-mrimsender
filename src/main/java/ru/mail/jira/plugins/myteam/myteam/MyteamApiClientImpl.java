@@ -200,7 +200,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
   void checkMyteamServerErrorException(HttpResponse<?> response, String methodName)
       throws MyteamServerErrorException {
-    if (response.getStatus() >= 500 || response.getStatus() < 600 || response.getBody() == null) {
+    if (response.getStatus() >= 500 || response.getBody() == null) {
       MyteamServerErrorException newException =
           new MyteamServerErrorException(response.getStatus(), response.getRawBody().toString());
       log.error("Myteam server error while {}()", methodName, newException);
