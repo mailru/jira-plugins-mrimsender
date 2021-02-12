@@ -1,7 +1,10 @@
 package ru.mail.jira.plugins.calendar.common;
 
+import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
-class FieldUtilsTest {
+
+public class FieldUtilsTest {
 
     @org.junit.jupiter.api.Test
     void getSearcherKey() {
