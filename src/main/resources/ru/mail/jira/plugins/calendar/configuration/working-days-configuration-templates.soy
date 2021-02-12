@@ -3,7 +3,7 @@
 /**
  * Non working day configuration dialog
  */
-{template .dialog autoescape="false"}
+{template .dialog}
     <section role="dialog" id="calendar-non-working-day-configuration-dialog" class="aui-layer aui-dialog2 aui-dialog2-medium" aria-hidden="true">
         <header class="aui-dialog2-header">
             <h2 class="aui-dialog2-header-main">Add day</h2>
@@ -39,7 +39,7 @@
  * Non working day entry
  * @param day day
  */
-{template .nonWorkingDay autoescape="false"}
+{template .nonWorkingDay}
     <tr id="{$day.id}" class="non-working-day">
         <td>{$day.date}</td>
         <td>
