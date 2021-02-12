@@ -1,0 +1,37 @@
+version: 2
+plan:
+  project-key: JP
+  name: mailrucal
+  key: MAILRUCAL
+
+stages:
+  - Build:
+      jobs:
+        - Build jar
+  - Cleanup:
+      final: true
+      jobs:
+        - Cleanup
+
+Build jar:
+  tasks:
+    - script:
+        - atlas-clean
+        - atlas-package
+  final-tasks:
+    - test-parser:
+        type: junit
+        test-results:
+          - target/surefire-reports/*.xml
+  artifacts:
+    - name: mailrucal
+      location: target
+      pattern: '*.jar'
+      required: true
+      shared: true
+
+Cleanup:
+  tasks:
+    - clean
+    - script:
+        - atlas-clean
