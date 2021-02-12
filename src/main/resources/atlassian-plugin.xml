@@ -275,7 +275,7 @@
         <link linkId="working-days-configuration-link">/secure/MailRuCalendarWorkingDaysConfiguration.jspa</link>
     </web-item>
 
-    <webwork1 key="working-days-configuration-action" class="java.lang.Object" roles-required="use">
+    <webwork1 key="working-days-configuration-action" class="java.lang.Object" roles-required="admin">
         <actions>
             <action name="ru.mail.jira.plugins.calendar.configuration.MailRuCalendarWorkingDaysConfigurationAction" alias="MailRuCalendarWorkingDaysConfiguration">
                 <view name="success">/ru/mail/jira/plugins/calendar/configuration/working-days-configuration.vm</view>

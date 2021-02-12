@@ -3,37 +3,36 @@ package ru.mail.jira.plugins.calendar.configuration;
 import com.atlassian.jira.datetime.DateTimeFormatUtils;
 import com.atlassian.jira.datetime.DateTimeFormatterFactory;
 import com.atlassian.jira.datetime.DateTimeStyle;
+import com.atlassian.jira.permission.GlobalPermissionKey;
+import com.atlassian.jira.security.GlobalPermissionManager;
+import com.atlassian.jira.security.JiraAuthenticationContext;
+import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import ru.mail.jira.plugins.commons.RestExecutor;
 
-import javax.ws.rs.DELETE;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Path("/configuration/workingDays")
 @Produces(MediaType.APPLICATION_JSON)
 public class MailRuCalendarWorkingDaysConfigurationAction extends JiraWebActionSupport {
     private final DateTimeFormatterFactory dateTimeFormatterFactory;
     private final WorkingDaysService workingDaysService;
+    private final GlobalPermissionManager globalPermissionManager;
+    private final JiraAuthenticationContext jiraAuthenticationContext;
 
     public MailRuCalendarWorkingDaysConfigurationAction(
             @ComponentImport DateTimeFormatterFactory dateTimeFormatterFactory,
-            WorkingDaysService workingDaysService
-    ) {
+            WorkingDaysService workingDaysService,
+            @ComponentImport GlobalPermissionManager globalPermissionManager,
+            @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
         this.dateTimeFormatterFactory = dateTimeFormatterFactory;
         this.workingDaysService = workingDaysService;
+        this.globalPermissionManager = globalPermissionManager;
+        this.jiraAuthenticationContext = jiraAuthenticationContext;
     }
 
     @Override
@@ -47,7 +46,7 @@ public class MailRuCalendarWorkingDaysConfigurationAction extends JiraWebActionS
     }
 
     private Date getParsedDatePicker(String date) {
-        return (date == null) ? null :  dateTimeFormatterFactory.formatter().forLoggedInUser().withStyle(DateTimeStyle.DATE_PICKER).parse(date);
+        return (date == null) ? null : dateTimeFormatterFactory.formatter().forLoggedInUser().withStyle(DateTimeStyle.DATE_PICKER).parse(date);
     }
 
     public List<Integer> getWorkingDays() {
@@ -59,6 +58,9 @@ public class MailRuCalendarWorkingDaysConfigurationAction extends JiraWebActionS
         return new RestExecutor<Void>() {
             @Override
             protected Void doAction() throws Exception {
+                if (!isAdministrator(getJiraServiceContext().getLoggedInApplicationUser())) {
+                    throw new SecurityException("User doesn't have admin permissions");
+                }
                 workingDaysService.setWorkingDays(days);
                 return null;
             }
@@ -86,6 +88,9 @@ public class MailRuCalendarWorkingDaysConfigurationAction extends JiraWebActionS
         return new RestExecutor<NonWorkingDayDto>() {
             @Override
             protected NonWorkingDayDto doAction() throws Exception {
+                if (!isAdministrator(getJiraServiceContext().getLoggedInApplicationUser())) {
+                    throw new SecurityException("User doesn't have admin permissions");
+                }
                 NonWorkingDay nonWorkingDay = workingDaysService.addNonWorkingDay(getParsedDatePicker(nonWorkingDayDto.getDate()), nonWorkingDayDto.getDescription());
                 return new NonWorkingDayDto(nonWorkingDay.getID(), getFormattedDatePicker(nonWorkingDay.getDate()), nonWorkingDay.getDescription());
             }
@@ -98,6 +103,9 @@ public class MailRuCalendarWorkingDaysConfigurationAction extends JiraWebActionS
         return new RestExecutor<Void>() {
             @Override
             protected Void doAction() throws Exception {
+                if (!isAdministrator(getJiraServiceContext().getLoggedInApplicationUser())) {
+                    throw new SecurityException("User doesn't have admin permissions");
+                }
                 workingDaysService.deleteNonWorkingDay(id);
                 return null;
             }
@@ -117,5 +125,9 @@ public class MailRuCalendarWorkingDaysConfigurationAction extends JiraWebActionS
                 return result;
             }
         }.getResponse();
+    }
+
+    private boolean isAdministrator(ApplicationUser user) {
+        return globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, user);
     }
 }
