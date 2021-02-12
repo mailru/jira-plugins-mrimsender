@@ -58,7 +58,7 @@ public class MailRuCalendarWorkingDaysConfigurationAction extends JiraWebActionS
         return new RestExecutor<Void>() {
             @Override
             protected Void doAction() throws Exception {
-                if (!isAdministrator(getJiraServiceContext().getLoggedInApplicationUser())) {
+                if (!isAdministrator(jiraAuthenticationContext.getLoggedInUser())) {
                     throw new SecurityException("User doesn't have admin permissions");
                 }
                 workingDaysService.setWorkingDays(days);
@@ -88,7 +88,7 @@ public class MailRuCalendarWorkingDaysConfigurationAction extends JiraWebActionS
         return new RestExecutor<NonWorkingDayDto>() {
             @Override
             protected NonWorkingDayDto doAction() throws Exception {
-                if (!isAdministrator(getJiraServiceContext().getLoggedInApplicationUser())) {
+                if (!isAdministrator(jiraAuthenticationContext.getLoggedInUser())) {
                     throw new SecurityException("User doesn't have admin permissions");
                 }
                 NonWorkingDay nonWorkingDay = workingDaysService.addNonWorkingDay(getParsedDatePicker(nonWorkingDayDto.getDate()), nonWorkingDayDto.getDescription());
@@ -103,7 +103,7 @@ public class MailRuCalendarWorkingDaysConfigurationAction extends JiraWebActionS
         return new RestExecutor<Void>() {
             @Override
             protected Void doAction() throws Exception {
-                if (!isAdministrator(getJiraServiceContext().getLoggedInApplicationUser())) {
+                if (!isAdministrator(jiraAuthenticationContext.getLoggedInUser())) {
                     throw new SecurityException("User doesn't have admin permissions");
                 }
                 workingDaysService.deleteNonWorkingDay(id);
