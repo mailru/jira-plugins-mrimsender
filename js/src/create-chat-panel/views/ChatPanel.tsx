@@ -14,7 +14,7 @@ import LoadingButton from '@atlaskit/button/loading-button';
 const MyteamImage = require('../../assets/myteam.png');
 
 export const StyledChatPanelContainer = styled.div`
-  width: ${gridSize() * 50}px;
+  max-width: ${gridSize() * 50}px;
 `;
 
 const StyledSpinnerContainer = styled.div`
