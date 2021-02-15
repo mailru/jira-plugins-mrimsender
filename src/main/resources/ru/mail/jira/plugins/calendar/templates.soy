@@ -5,6 +5,18 @@
  * @param label name
  * @param value value
  */
+{template .issueInfoBuildHtmlField private="true" autoescape="false"}
+    <dl>
+        <dt>{$label}:</dt>
+        <dd>{$value}</dd>
+    </dl>
+{/template}
+
+/**
+ * Build common output for issue field
+ * @param label name
+ * @param value value
+ */
 {template .issueInfoBuildField private="true"}
     <dl>
         <dt>{$label}:</dt>
@@ -45,13 +57,13 @@
             or $issue.created or $issue.updated or length(keys($issue.customFields)) > 0 or $issue.description}
             <div class="calenar-issue-popup-key-fields">
                 {if $issue.assignee}
-                    {call .issueInfoBuildField}
+                    {call .issueInfoBuildHtmlField}
                         {param value: $issue.assignee /}
                         {param label: getText('issue.field.assignee') /}
                     {/call}
                 {/if}
                 {if $issue.reporter}
-                    {call .issueInfoBuildField}
+                    {call .issueInfoBuildHtmlField}
                         {param value: $issue.reporter /}
                         {param label: getText('issue.field.reporter') /}
                     {/call}
@@ -65,7 +77,7 @@
                     </dl>
                 {/if}
                 {if $issue.labels}
-                    {call .issueInfoBuildField}
+                    {call .issueInfoBuildHtmlField}
                         {param value: $issue.labels /}
                         {param label: getText('common.concepts.labels') /}
                     {/call}
