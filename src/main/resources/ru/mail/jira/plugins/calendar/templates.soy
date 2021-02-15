@@ -5,7 +5,7 @@
  * @param label name
  * @param value value
  */
-{template .issueInfoBuildField private="true" autoescape="false"}
+{template .issueInfoBuildField private="true"}
     <dl>
         <dt>{$label}:</dt>
         <dd>{$value}</dd>
@@ -60,7 +60,7 @@
                     <dl>
                         <dt>{getText('common.words.status')}:</dt>
                         <dd>
-                            <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-{$issue.statusColor}">{$issue.status |escapeHtml}</span>
+                            <span class="jira-issue-status-lozenge aui-lozenge jira-issue-status-lozenge-{$issue.statusColor |escapeHtml}">{$issue.status |escapeHtml}</span>
                         </dd>
                     </dl>
                 {/if}
