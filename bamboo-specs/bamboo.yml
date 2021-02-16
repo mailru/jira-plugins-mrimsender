@@ -17,6 +17,7 @@ Build jar:
   tasks:
     - script:
         - atlas-clean
+        - [ -f ./js/package.json ] && yarn --cwd ./js build-prod
         - atlas-package
   final-tasks:
     - test-parser:
