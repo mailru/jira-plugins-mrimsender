@@ -44,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.Utils;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
@@ -52,19 +53,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
-import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.Event;
-import ru.mail.jira.plugins.myteam.protocol.events.IssueKeyMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.JiraNotifyEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.NewCommentMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.NewIssueFieldValueMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.SearchIssuesEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.SelectedIssueTypeMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.SelectedProjectMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.ShowDefaultMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.ShowHelpEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.ShowIssueEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.ShowMenuEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.CancelClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.CommentIssueClickEvent;
@@ -106,6 +95,7 @@ public class MyteamEventsListener {
   private final SearchService searchService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final String JIRA_BASE_URL;
+  private final ChatCommandListener chatCommandListener;
 
   @Autowired
   public MyteamEventsListener(
@@ -150,6 +140,7 @@ public class MyteamEventsListener {
     this.searchService = searchService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
+    this.chatCommandListener = chatCommandListener;
   }
 
   public void publishEvent(Event event) {
@@ -217,7 +208,7 @@ public class MyteamEventsListener {
 
   @Subscribe
   public void handleButtonClickEvent(ButtonClickEvent buttonClickEvent)
-      throws UnirestException, IOException {
+      throws UnirestException, IOException, MyteamServerErrorException {
     String buttonPrefix = StringUtils.substringBefore(buttonClickEvent.getCallbackData(), "-");
     String chatId = buttonClickEvent.getChatId();
     boolean isGroupChatEvent = buttonClickEvent.getChatType() == ChatType.GROUP;
@@ -356,8 +347,23 @@ public class MyteamEventsListener {
   }
 
   @Subscribe
+  public void handleJiraIssueViewEvent(JiraIssueViewEvent jiraIssueViewEvent)
+      throws IOException, UnirestException, MyteamServerErrorException {
+    if (jiraIssueViewEvent.isGroupChat())
+      chatCommandListener.sendIssueViewToGroup(
+          jiraIssueViewEvent.getIssueKey(),
+          jiraIssueViewEvent.getInitiator(),
+          jiraIssueViewEvent.getChatId());
+    else
+      chatCommandListener.sendIssueViewToUser(
+          jiraIssueViewEvent.getIssueKey(),
+          jiraIssueViewEvent.getInitiator(),
+          jiraIssueViewEvent.getChatId());
+  }
+
+  @Subscribe
   public void handleNewCommentMessageEvent(NewCommentMessageEvent newCommentMessageEvent)
-      throws IOException, UnirestException {
+      throws IOException, UnirestException, MyteamServerErrorException {
     JiraThreadLocalUtils.preCall();
     try {
       log.debug("CreateCommentCommand execution started...");
@@ -402,7 +408,7 @@ public class MyteamEventsListener {
 
   @Subscribe
   public void handleNewIssueKeyMessageEvent(IssueKeyMessageEvent issueKeyMessageEvent)
-      throws IOException, UnirestException {
+      throws IOException, UnirestException, MyteamServerErrorException {
     log.debug("NewIssueKeyMessageEvent handling started");
     ApplicationUser currentUser = userData.getUserByMrimLogin(issueKeyMessageEvent.getUserId());
     ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
@@ -440,7 +446,7 @@ public class MyteamEventsListener {
 
   @Subscribe
   public void onSearchIssuesEvent(SearchIssuesEvent searchIssuesEvent)
-      throws IOException, UnirestException, SearchException {
+      throws IOException, UnirestException, SearchException, MyteamServerErrorException {
     log.debug("ShowIssuesFilterResultsEvent handling started");
     JiraThreadLocalUtils.preCall();
     try {
@@ -534,7 +540,7 @@ public class MyteamEventsListener {
                 }
               }
 
-            } catch (UnirestException | IOException e) {
+            } catch (UnirestException | IOException | MyteamServerErrorException e) {
               log.error(
                   "Unable to create attachment for comment on Issue {}",
                   commentedIssue.getKey(),

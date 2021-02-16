@@ -1,13 +1,21 @@
 /* (C)2020 */
-package ru.mail.jira.plugins.myteam.configuration;
+package ru.mail.jira.plugins.myteam.model;
 
 import java.util.List;
 import java.util.Set;
 
 public interface PluginData {
+  Boolean isSetTokenViaFile();
+
+  void setSetTokenViaFile(Boolean setTokenViaFile);
+
   String getToken();
 
   void setToken(String token);
+
+  String getTokenFilePath();
+
+  void setTokenFilePath(String tokenFilePath);
 
   boolean isEnabledByDefault();
 
@@ -36,4 +44,8 @@ public interface PluginData {
   Set<Long> getExcludingProjectIds();
 
   void setExcludingProjectIds(Set<Long> excludingProjectIds);
+
+  Set<Long> getChatCreationBannedProjectIds();
+
+  void setChatCreationBannedProjectIds(Set<Long> chatCreationBannedProjectIds);
 }

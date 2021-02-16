@@ -1,5 +1,5 @@
 /* (C)2020 */
-package ru.mail.jira.plugins.myteam.configuration;
+package ru.mail.jira.plugins.myteam.model;
 
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
@@ -13,7 +13,9 @@ import ru.mail.jira.plugins.commons.CommonUtils;
 @Component
 public class PluginDataImpl implements PluginData {
   private static final String PLUGIN_PREFIX = "ru.mail.jira.plugins.myteam:";
+  private static final String IS_SET_TOKEN_VIA_FILE = PLUGIN_PREFIX + "setTokenViaFile";
   private static final String TOKEN = PLUGIN_PREFIX + "token";
+  private static final String TOKEN_FILE_PATH = PLUGIN_PREFIX + "tokenFilePath";
   private static final String ENABLED_BY_DEFAULT = PLUGIN_PREFIX + "enabledByDefault";
   private static final String NOTIFIED_USER_KEYS = PLUGIN_PREFIX + "notifiedUserKeys";
   private static final String MAIN_NODE_ID = PLUGIN_PREFIX + "mainNodeId";
@@ -21,11 +23,26 @@ public class PluginDataImpl implements PluginData {
   private static final String BOT_NAME = PLUGIN_PREFIX + "botName";
   private static final String BOT_LINK = PLUGIN_PREFIX + "botLink";
   private static final String EXCLUDING_PROJECT_IDS = PLUGIN_PREFIX + "excludingProjectIds";
+  private static final String CHAT_CREATION_BANNED_PROJECT_IDS =
+      PLUGIN_PREFIX + "chatCreationBannedProjectIds";
 
   private final PluginSettingsFactory pluginSettingsFactory;
 
   public PluginDataImpl(@ComponentImport PluginSettingsFactory pluginSettingsFactory) {
     this.pluginSettingsFactory = pluginSettingsFactory;
+  }
+
+  @Override
+  public Boolean isSetTokenViaFile() {
+    return Boolean.parseBoolean(
+        (String) pluginSettingsFactory.createGlobalSettings().get(IS_SET_TOKEN_VIA_FILE));
+  }
+
+  @Override
+  public void setSetTokenViaFile(Boolean setTokenViaFile) {
+    pluginSettingsFactory
+        .createGlobalSettings()
+        .put(IS_SET_TOKEN_VIA_FILE, String.valueOf(setTokenViaFile));
   }
 
   @Override
@@ -36,6 +53,14 @@ public class PluginDataImpl implements PluginData {
   @Override
   public void setToken(String token) {
     pluginSettingsFactory.createGlobalSettings().put(TOKEN, token);
+  }
+
+  public String getTokenFilePath() {
+    return (String) pluginSettingsFactory.createGlobalSettings().get(TOKEN_FILE_PATH);
+  }
+
+  public void setTokenFilePath(String tokenFilePath) {
+    pluginSettingsFactory.createGlobalSettings().put(TOKEN_FILE_PATH, tokenFilePath);
   }
 
   @Override
@@ -122,6 +147,29 @@ public class PluginDataImpl implements PluginData {
             EXCLUDING_PROJECT_IDS,
             CommonUtils.join(
                 excludingProjectIds.stream().map(String::valueOf).collect(Collectors.toList())));
-    ;
+  }
+
+  @Override
+  public Set<Long> getChatCreationBannedProjectIds() {
+    String chatCreationPorjectIds =
+        (String) pluginSettingsFactory.createGlobalSettings().get(CHAT_CREATION_BANNED_PROJECT_IDS);
+    if (chatCreationPorjectIds == null) {
+      return Collections.emptySet();
+    }
+    return CommonUtils.split(chatCreationPorjectIds).stream()
+        .map(Long::valueOf)
+        .collect(Collectors.toSet());
+  }
+
+  @Override
+  public void setChatCreationBannedProjectIds(Set<Long> chatCreationBannedProjectIds) {
+    pluginSettingsFactory
+        .createGlobalSettings()
+        .put(
+            CHAT_CREATION_BANNED_PROJECT_IDS,
+            CommonUtils.join(
+                chatCreationBannedProjectIds.stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.toList())));
   }
 }

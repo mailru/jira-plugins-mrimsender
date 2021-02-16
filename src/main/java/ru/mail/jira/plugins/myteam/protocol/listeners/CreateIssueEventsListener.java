@@ -48,8 +48,9 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.mail.jira.plugins.myteam.configuration.PluginData;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
@@ -129,7 +130,7 @@ public class CreateIssueEventsListener {
 
   @Subscribe
   public void onCreateIssueClickEvent(CreateIssueClickEvent createIssueClickEvent)
-      throws UnirestException, IOException {
+      throws UnirestException, IOException, MyteamServerErrorException {
     log.debug("CreateIssueClickEvent handling started");
     ApplicationUser currentUser = userData.getUserByMrimLogin(createIssueClickEvent.getUserId());
     String chatId = createIssueClickEvent.getChatId();
@@ -160,7 +161,7 @@ public class CreateIssueEventsListener {
 
   @Subscribe
   public void onNextProjectPageClickEvent(NextProjectsPageClickEvent nextProjectsPageClickEvent)
-      throws UnirestException, IOException {
+      throws UnirestException, IOException, MyteamServerErrorException {
     log.debug("NextProjectsPageClickEvent handling started");
     ApplicationUser currentUser =
         userData.getUserByMrimLogin(nextProjectsPageClickEvent.getUserId());
@@ -202,7 +203,7 @@ public class CreateIssueEventsListener {
 
   @Subscribe
   public void onPrevProjectPageClickEvent(PrevProjectsPageClickEvent prevProjectsPageClickEvent)
-      throws UnirestException, IOException {
+      throws UnirestException, IOException, MyteamServerErrorException {
     log.debug("PrevProjectsPageClickEvent handling started");
     ApplicationUser currentUser =
         userData.getUserByMrimLogin(prevProjectsPageClickEvent.getUserId());
@@ -243,7 +244,7 @@ public class CreateIssueEventsListener {
 
   @Subscribe
   public void onSelectedProjectMessageEvent(SelectedProjectMessageEvent selectedProjectMessageEvent)
-      throws IOException, UnirestException {
+      throws IOException, UnirestException, MyteamServerErrorException {
     IssueCreationDto currentIssueCreationDto = selectedProjectMessageEvent.getIssueCreationDto();
     ApplicationUser currentUser =
         userData.getUserByMrimLogin(selectedProjectMessageEvent.getUserId());
@@ -309,7 +310,7 @@ public class CreateIssueEventsListener {
 
   @Subscribe
   public void onIssueTypeButtonClickEvent(IssueTypeButtonClickEvent issueTypeButtonClickEvent)
-      throws IOException, UnirestException {
+      throws IOException, UnirestException, MyteamServerErrorException {
     String queryId = issueTypeButtonClickEvent.getQueryId();
     IssueCreationDto currentIssueCreationDto = issueTypeButtonClickEvent.getIssueCreationDto();
     ApplicationUser currentUser =
@@ -427,7 +428,7 @@ public class CreateIssueEventsListener {
   @Subscribe
   public void onNewIssueFieldValueButtonEvent(
       NewIssueFieldValueButtonClickEvent newIssueFieldValueButtonClickEvent)
-      throws IOException, UnirestException {
+      throws IOException, UnirestException, MyteamServerErrorException {
     myteamApiClient.answerCallbackQuery(newIssueFieldValueButtonClickEvent.getQueryId());
     onNewValueSelected(newIssueFieldValueButtonClickEvent);
   }
@@ -435,12 +436,12 @@ public class CreateIssueEventsListener {
   @Subscribe
   public void onNewIssueFieldValueMessageEvent(
       NewIssueFieldValueMessageEvent newIssueFieldValueMessageEvent)
-      throws IOException, UnirestException {
+      throws IOException, UnirestException, MyteamServerErrorException {
     onNewValueSelected(newIssueFieldValueMessageEvent);
   }
 
   private void onNewValueSelected(NewIssueValueEvent newIssueValueEvent)
-      throws UnirestException, IOException {
+      throws UnirestException, IOException, MyteamServerErrorException {
     ApplicationUser currentUser = userData.getUserByMrimLogin(newIssueValueEvent.getUserId());
     if (currentUser == null) {
       // TODO unauthorized

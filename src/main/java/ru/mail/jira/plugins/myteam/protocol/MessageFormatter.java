@@ -17,11 +17,7 @@ import com.atlassian.jira.issue.IssueConstant;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.attachment.Attachment;
 import com.atlassian.jira.issue.comments.Comment;
-import com.atlassian.jira.issue.fields.CustomField;
-import com.atlassian.jira.issue.fields.Field;
-import com.atlassian.jira.issue.fields.FieldManager;
-import com.atlassian.jira.issue.fields.IssueLinksSystemField;
-import com.atlassian.jira.issue.fields.NavigableField;
+import com.atlassian.jira.issue.fields.*;
 import com.atlassian.jira.issue.fields.screen.FieldScreen;
 import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
@@ -44,16 +40,7 @@ import com.atlassian.jira.util.MessageSet;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.ofbiz.core.entity.GenericEntityException;
@@ -526,21 +513,19 @@ public class MessageFormatter {
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
     buttons.add(buttonsRow);
 
-    InlineKeyboardMarkupButton comment = new InlineKeyboardMarkupButton();
-    comment.setText(
-        i18nResolver.getRawText(
-            localeManager.getLocaleFor(recipient),
-            "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"));
-    comment.setCallbackData(String.join("-", "comment", issueKey));
-    buttonsRow.add(comment);
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getText(
+                localeManager.getLocaleFor(recipient),
+                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"),
+            String.join("-", "comment", issueKey)));
 
-    InlineKeyboardMarkupButton viewComments = new InlineKeyboardMarkupButton();
-    viewComments.setText(
-        i18nResolver.getRawText(
-            localeManager.getLocaleFor(recipient),
-            "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"));
-    viewComments.setCallbackData(String.join("-", "showComments", issueKey));
-    buttonsRow.add(viewComments);
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getText(
+                localeManager.getLocaleFor(recipient),
+                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"),
+            String.join("-", "showComments", issueKey)));
 
     return buttons;
   }
@@ -880,10 +865,7 @@ public class MessageFormatter {
 
   private List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-    InlineKeyboardMarkupButton cancel = new InlineKeyboardMarkupButton();
-    cancel.setText(title);
-    cancel.setCallbackData("cancel");
-    buttonsRow.add(cancel);
+    buttonsRow.add(InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, "cancel"));
     return buttonsRow;
   }
 

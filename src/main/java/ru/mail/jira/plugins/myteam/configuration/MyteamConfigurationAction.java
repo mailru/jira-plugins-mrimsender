@@ -7,13 +7,16 @@ import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.commons.CommonUtils;
+import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.protocol.BotsOrchestrationService;
 
 public class MyteamConfigurationAction extends JiraWebActionSupport {
@@ -32,7 +35,9 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   }
 
   private boolean saved;
+  private boolean setTokenViaFile;
   private String token;
+  private String tokenFilePath;
   private String botApiUrl;
   private String botName;
   private String botLink;
@@ -41,15 +46,19 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
 
   private List<String> notifiedUserKeys;
   private Set<Long> excludingProjectIds;
+  private Set<Long> chatCreationNotAllowedProjectIds;
 
   @Override
   public String doDefault() {
-    token = pluginData.getToken();
+    setTokenViaFile = pluginData.isSetTokenViaFile();
+    if (setTokenViaFile) tokenFilePath = pluginData.getTokenFilePath();
+    else token = pluginData.getToken();
     enabledByDefault = pluginData.isEnabledByDefault();
     botApiUrl = pluginData.getBotApiUrl();
     botName = pluginData.getBotName();
     botLink = pluginData.getBotLink();
     excludingProjectIds = pluginData.getExcludingProjectIds();
+    chatCreationNotAllowedProjectIds = pluginData.getChatCreationBannedProjectIds();
     notifiedUsers = CommonUtils.convertUserKeysToJoinedString(pluginData.getNotifiedUserKeys());
     return INPUT;
   }
@@ -57,25 +66,67 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   @RequiresXsrfCheck
   @Override
   protected String doExecute() {
-    pluginData.setToken(token);
+    // persist old token and api url values for bot smart restart decision making
+    String prevToken = pluginData.getToken();
+    String prevBotApiUrl = pluginData.getBotApiUrl();
+
+    pluginData.setSetTokenViaFile(setTokenViaFile);
+    if (setTokenViaFile) {
+      pluginData.setTokenFilePath(tokenFilePath);
+      try {
+        String botToken = loadBotTokenFromFile(tokenFilePath);
+        pluginData.setToken(botToken);
+      } catch (IOException ioException) {
+        log.error("Can't load bot token");
+      }
+    } else {
+      pluginData.setToken(token);
+    }
     pluginData.setBotApiUrl(botApiUrl);
     pluginData.setBotName(botName);
     pluginData.setBotLink(botLink);
     pluginData.setEnabledByDefault(enabledByDefault);
     pluginData.setExcludingProjectIds(excludingProjectIds);
+    pluginData.setChatCreationBannedProjectIds(chatCreationNotAllowedProjectIds);
     pluginData.setNotifiedUserKeys(notifiedUserKeys);
 
     saved = true;
     notifiedUsers = CommonUtils.convertUserKeysToJoinedString(notifiedUserKeys);
 
-    botsOrchestrationService.restartAll();
+    boolean shouldRestartBot = !prevToken.equals(token) || !prevBotApiUrl.equals(botApiUrl);
+    if (shouldRestartBot) botsOrchestrationService.restartAll();
     return INPUT;
   }
 
   @Override
   protected void doValidation() {
-    if (StringUtils.isEmpty(token))
-      addError("token", getText("ru.mail.jira.plugins.myteam.configuration.specifyToken"));
+    if (setTokenViaFile) {
+      if (StringUtils.isEmpty(tokenFilePath))
+        addError(
+            "tokenFilePath",
+            getText("ru.mail.jira.plugins.myteam.configuration.tokenFilePath.isEmptyError"));
+      else {
+        File file = new File(tokenFilePath);
+        if (file.isDirectory())
+          addError(
+              "tokenFilePath",
+              getText(
+                  "ru.mail.jira.plugins.myteam.configuration.tokenFilePath.shouldNotBeDirectoryError"));
+        else if (!file.exists()) {
+          addError(
+              "tokenFilePath",
+              getText("ru.mail.jira.plugins.myteam.configuration.tokenFilePath.fileNotExistError"));
+        } else if (!file.canRead())
+          addError(
+              "tokenFilePath",
+              getText(
+                  "ru.mail.jira.plugins.myteam.configuration.tokenFilePath.readPermissionsError"));
+      }
+    } else {
+      if (StringUtils.isEmpty(token))
+        addError("token", getText("ru.mail.jira.plugins.myteam.configuration.specifyToken"));
+    }
+
     if (StringUtils.isEmpty(botApiUrl))
       addError("botApiUrl", getText("ru.mail.jira.plugins.myteam.configuration.specifyBotApiUrl"));
     try {
@@ -85,9 +136,29 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     }
   }
 
+  @Nullable
+  private String loadBotTokenFromFile(String tokenFilePath) throws IOException {
+    Properties myteamBotPropeties = new Properties();
+    InputStream inputStream = new FileInputStream(tokenFilePath);
+    myteamBotPropeties.load(inputStream);
+    String token = myteamBotPropeties.getOrDefault("token", "").toString();
+    inputStream.close();
+    return token;
+  }
+
   @SuppressWarnings("UnusedDeclaration")
   public boolean isSaved() {
     return saved;
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public boolean isSetTokenViaFile() {
+    return setTokenViaFile;
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public void setSetTokenViaFile(boolean setTokenViaFile) {
+    this.setTokenViaFile = setTokenViaFile;
   }
 
   @SuppressWarnings("UnusedDeclaration")
@@ -98,6 +169,16 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   @SuppressWarnings("UnusedDeclaration")
   public void setToken(String token) {
     this.token = token;
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public String getTokenFilePath() {
+    return tokenFilePath;
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public void setTokenFilePath(String tokenFilePath) {
+    this.tokenFilePath = tokenFilePath;
   }
 
   @SuppressWarnings("UnusedDeclaration")
@@ -159,6 +240,31 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   @SuppressWarnings("UnusedDeclaration")
   public List<Project> getExcludingProjects() {
     return excludingProjectIds.stream()
+        .map(projectManager::getProjectObj)
+        .collect(Collectors.toList());
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public String getChatCreationNotAllowedProjectIds() {
+    return CommonUtils.join(
+        this.chatCreationNotAllowedProjectIds.stream()
+            .map(String::valueOf)
+            .collect(Collectors.toList()));
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public void setChatCreationNotAllowedProjectIds(String chatCreationNotAllowedProjectIds) {
+    this.chatCreationNotAllowedProjectIds =
+        StringUtils.isBlank(chatCreationNotAllowedProjectIds)
+            ? Collections.emptySet()
+            : CommonUtils.split(chatCreationNotAllowedProjectIds).stream()
+                .map(Long::valueOf)
+                .collect(Collectors.toSet());
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public List<Project> getChatCreationNotAllowedProjects() {
+    return chatCreationNotAllowedProjectIds.stream()
         .map(projectManager::getProjectObj)
         .collect(Collectors.toList());
   }

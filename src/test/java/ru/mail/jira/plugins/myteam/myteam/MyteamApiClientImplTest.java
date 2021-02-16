@@ -1,7 +1,8 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.myteam;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.mashape.unirest.http.HttpResponse;
@@ -11,14 +12,17 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.mockito.Mockito;
-import ru.mail.jira.plugins.myteam.configuration.PluginData;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 
@@ -40,7 +44,7 @@ public class MyteamApiClientImplTest {
       properties.load(resourceAsStream);
       this.pluginData = Mockito.mock(PluginData.class);
       when(pluginData.getToken()).thenReturn(properties.getProperty("myteam.test.bot.token"));
-      when(pluginData.getBotApiUrl()).thenReturn("https://api.internal.myteam.mail.ru/bot/v1");
+      when(pluginData.getBotApiUrl()).thenReturn(properties.getProperty("myteam.test.bot.api"));
       this.myteamApiClient = new MyteamApiClientImpl(this.pluginData);
     } catch (IOException ioException) {
       ioException.printStackTrace();
@@ -74,21 +78,55 @@ public class MyteamApiClientImplTest {
   }
 
   @Ignore
-  public void sendMessageText() throws IOException, UnirestException {
+  public void sendMessageText() throws IOException, UnirestException, MyteamServerErrorException {
+    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
+    buttons.add(new ArrayList<>(2));
+    buttons
+        .get(0)
+        .add(InlineKeyboardMarkupButton.buildButtonWithoutUrl("example button1", "callbackData1"));
+    buttons
+        .get(0)
+        .add(InlineKeyboardMarkupButton.buildButtonWithoutUrl("example button 2", "callbackData2"));
     HttpResponse<MessageResponse> httpResponse =
-        myteamApiClient.sendMessageText("d.udovichenko@corp.mail.ru", "test text", null);
-    System.out.println(httpResponse.getBody());
+        myteamApiClient.sendMessageText(
+            "d.udovichenko@corp.mail.ru", "hello from sendMessageText() test", buttons);
+
     assertTrue(httpResponse.getBody().isOk());
   }
 
   @Ignore
-  public void getEvents() throws UnirestException {
+  public void editMessageText() throws IOException, UnirestException, MyteamServerErrorException {
+    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
+    buttons.add(new ArrayList<>(2));
+    buttons
+        .get(0)
+        .add(InlineKeyboardMarkupButton.buildButtonWithoutUrl("example button1", "callbackData1"));
+    buttons
+        .get(0)
+        .add(InlineKeyboardMarkupButton.buildButtonWithoutUrl("example button 2", "callbackData2"));
+
+    HttpResponse<MessageResponse> sendMessageResponse =
+        myteamApiClient.sendMessageText(
+            "d.udovichenko@corp.mail.ru", "hello from editMessageText() test", buttons);
+    long sentMsgId = sendMessageResponse.getBody().getMsgId();
+
+    HttpResponse<MessageResponse> editMessageResponse =
+        myteamApiClient.editMessageText(
+            "d.udovichenko@corp.mail.ru",
+            sentMsgId,
+            "edited message from editMessageText() test",
+            buttons);
+    assertTrue(editMessageResponse.getBody().isOk());
+  }
+
+  @Ignore
+  public void getEvents() throws UnirestException, MyteamServerErrorException {
     HttpResponse<FetchResponseDto> httpResponse = myteamApiClient.getEvents(0, 5);
     assertEquals(200, httpResponse.getStatus());
   }
 
   @Ignore
-  public void answerCallbackQuery() throws UnirestException {
+  public void answerCallbackQuery() throws UnirestException, MyteamServerErrorException {
     HttpResponse<FetchResponseDto> httpResponse = myteamApiClient.getEvents(0, 5);
     List<CallbackQueryEvent> callbackQueryEventList =
         httpResponse.getBody().getEvents().stream()

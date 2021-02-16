@@ -16,7 +16,7 @@ public class ShowDefaultMessageEvent {
 
   public ShowDefaultMessageEvent(ChatMessageEvent chatMessageEvent) {
     chatId = chatMessageEvent.getChatId();
-    userId = chatMessageEvent.getUerId();
+    userId = chatMessageEvent.getUserId();
     message = chatMessageEvent.getMessage();
     hasForwards = chatMessageEvent.isHasForwards();
     forwardList =

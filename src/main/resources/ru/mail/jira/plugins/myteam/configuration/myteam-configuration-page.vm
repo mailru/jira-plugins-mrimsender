@@ -38,10 +38,22 @@
         #end
     #end
     <input type="hidden" name="atl_token" value="$atl_token" />
-    <div class="field-group">
+    <fieldset class="group">
+        <legend><span>$i18n.getText("ru.mail.jira.plugins.myteam.configuration.tokensetmethod.description")</span></legend>
+        <div class="checkbox">
+            <label for="setTokenViaFile">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.tokensetmethod.viafile")</label>
+            <input class="checkbox" type="checkbox" name="setTokenViaFile" id="setTokenViaFile" value="$!setTokenViaFile" #if($setTokenViaFile)checked#end>
+        </div>
+    </fieldset>
+    <div class="field-group" id="myteam-config-page-token-field" #if($setTokenViaFile)style="display:none;"#end>
         <label for="token">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.token" )<span class="aui-icon icon-required"></span></label>
         <input type="password" class="password" id="token" name="token" value="$!token" />
         #fieldError( "token" )
+    </div>
+    <div class="field-group" id="myteam-config-page-token-file-field" #if(!$setTokenViaFile)style="display:none;"#end>
+        <label for="tokenFilePath">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.tokenFilePath" )<span class="aui-icon icon-required"></span></label>
+        <input type="text" class="text" id="tokenFilePath" name="tokenFilePath" value="$!tokenFilePath" />
+        #fieldError( "tokenFilePath" )
     </div>
     <div class="field-group">
         <label for="botApiUrl">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.botApiUrl" )<span class="aui-icon icon-required"></span></label>
@@ -65,7 +77,7 @@
         <div class="description">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.enabledByDefaultDescription" )</div>
         #fieldError( "enabledByDefault" )
     </div>
-    <input id="mrimsender-create-issue-excluding-projects-ids" class="hidden" name="excludingProjectIds" value="$action.excludingProjectIds">
+    <input id="mrimsender-create-issue-excluding-projects-ids" class="hidden" name="excludingProjectIds" value="$action.excludingProjectIds"/>
     <div class="field-group">
         <label for="mrimsender-create-issue-excluding-projects">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.excludedProjects")</label>
         <select class="select long-field mrimsender-create-issue-excluding-projects" type="text" name="mrimsender-create-issue-excluding-projects" multiple="true">
@@ -75,6 +87,18 @@
         </select>
         <div class="description">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.excludedProjects.description")</div>
         #fieldError( "excludingProjectIds" )
+    </div>
+
+    <input id="myteam-chat-creation-disabled-project-ids" class="hidden" name="chatCreationNotAllowedProjectIds" value="$action.chatCreationNotAllowedProjectIds"/>
+    <div class="field-group">
+        <label for="myteam-chat-creation-disabled-projects">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.chatCreationProjects")</label>
+        <select class="select long-field myteam-chat-creation-disabled-projects" type="text" name="myteam-chat-creation-disabled-projects" multiple="true">
+            #foreach( $project in $action.getProjects() )
+                <option value="$project.id" #select( $action.getChatCreationNotAllowedProjects() $project.id )>$project.name ($project.key)</option>
+            #end
+        </select>
+        <div class="description">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.chatCreationProjects.description")</div>
+        #fieldError( "chatCreationNotAllowedProjectIds" )
     </div>
 
     <div class="field-group">

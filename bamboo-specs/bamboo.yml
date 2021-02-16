@@ -17,7 +17,7 @@ Build jar:
   tasks:
     - script:
         - atlas-clean
-        - atlas-package
+        - atlas-package -P production
   final-tasks:
     - test-parser:
         type: junit

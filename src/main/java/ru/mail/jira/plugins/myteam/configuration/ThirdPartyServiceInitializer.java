@@ -21,7 +21,7 @@ public class ThirdPartyServiceInitializer implements LifecycleAware {
     Unirest.setTimeouts(10_000, 300_000);
     Unirest.setObjectMapper(
         new ObjectMapper() {
-          private org.codehaus.jackson.map.ObjectMapper jacksonObjectMapper =
+          private final org.codehaus.jackson.map.ObjectMapper jacksonObjectMapper =
               new org.codehaus.jackson.map.ObjectMapper();
 
           @Override

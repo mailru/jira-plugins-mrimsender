@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.Utils;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
@@ -68,7 +69,8 @@ public class ChatCommandListener {
   }
 
   @Subscribe
-  public void onShowHelpEvent(ShowHelpEvent showHelpEvent) throws IOException, UnirestException {
+  public void onShowHelpEvent(ShowHelpEvent showHelpEvent)
+      throws IOException, UnirestException, MyteamServerErrorException {
     log.debug("ShowHelpEvent handling started");
     ApplicationUser currentUser = userData.getUserByMrimLogin(showHelpEvent.getUserId());
     if (currentUser != null) {
@@ -89,7 +91,8 @@ public class ChatCommandListener {
   }
 
   @Subscribe
-  public void onShowMenuEvent(ShowMenuEvent showMenuEvent) throws IOException, UnirestException {
+  public void onShowMenuEvent(ShowMenuEvent showMenuEvent)
+      throws IOException, UnirestException, MyteamServerErrorException {
     log.debug("ShowDefaultMenuEvent handling started...");
     ApplicationUser currentUser = userData.getUserByMrimLogin(showMenuEvent.getUserId());
     if (currentUser != null) {
@@ -104,16 +107,19 @@ public class ChatCommandListener {
   }
 
   @Subscribe
-  public void onShowIssueEvent(ShowIssueEvent showIssueEvent) throws IOException, UnirestException {
+  public void onShowIssueEvent(ShowIssueEvent showIssueEvent)
+      throws IOException, UnirestException, MyteamServerErrorException {
     log.debug("ShowIssueEvent handling started");
     ApplicationUser currentUser = userData.getUserByMrimLogin(showIssueEvent.getUserId());
     String chatId = showIssueEvent.getChatId();
-    this.sendIssueViewToUser(showIssueEvent.getIssueKey(), currentUser, chatId);
+    if (showIssueEvent.isGroupChat())
+      sendIssueViewToGroup(showIssueEvent.getIssueKey(), currentUser, chatId);
+    else sendIssueViewToUser(showIssueEvent.getIssueKey(), currentUser, chatId);
   }
 
   @Subscribe
   public void onShowDefaultMessageEvent(ShowDefaultMessageEvent showDefaultMessageEvent)
-      throws IOException, UnirestException {
+      throws IOException, UnirestException, MyteamServerErrorException {
     log.debug("ShowDefaultMessageEvent handling started");
     ApplicationUser currentUser = userData.getUserByMrimLogin(showDefaultMessageEvent.getUserId());
     String chatId = showDefaultMessageEvent.getChatId();
@@ -148,7 +154,7 @@ public class ChatCommandListener {
   }
 
   public void sendIssueViewToUser(String issueKey, ApplicationUser user, String chatId)
-      throws IOException, UnirestException {
+      throws IOException, UnirestException, MyteamServerErrorException {
     ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
     try {
       jiraAuthenticationContext.setLoggedInUser(user);
@@ -160,6 +166,36 @@ public class ChatCommandListener {
               chatId,
               messageFormatter.createIssueSummary(issueToShow, user),
               messageFormatter.getIssueButtons(issueToShow.getKey(), user));
+        } else {
+          myteamApiClient.sendMessageText(
+              chatId,
+              i18nResolver.getRawText(
+                  localeManager.getLocaleFor(user),
+                  "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
+        }
+      } else {
+        myteamApiClient.sendMessageText(
+            chatId,
+            i18nResolver.getRawText(
+                localeManager.getLocaleFor(user),
+                "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
+      }
+    } finally {
+      jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
+    }
+  }
+
+  public void sendIssueViewToGroup(String issueKey, ApplicationUser user, String chatId)
+      throws IOException, UnirestException, MyteamServerErrorException {
+    ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
+    try {
+      jiraAuthenticationContext.setLoggedInUser(user);
+      Issue issueToShow = issueManager.getIssueByKeyIgnoreCase(issueKey);
+      if (issueToShow != null) {
+        if (permissionManager.hasPermission(
+            ProjectPermissions.BROWSE_PROJECTS, issueToShow, user)) {
+          myteamApiClient.sendMessageText(
+              chatId, messageFormatter.createIssueSummary(issueToShow, user), null);
         } else {
           myteamApiClient.sendMessageText(
               chatId,
