@@ -214,7 +214,7 @@ define('calendar/calendar-gadget-config', ['calendar/calendar-view', 'underscore
                         '   <div id="mailru-calendar-gadget-legend"/>' +
                         '</div>');
                     gadget.calendarView = new CalendarView({
-                        contextPath: '',
+                        contextPath: getContextPath(),
                         el: '#mailru-calendar-gadget-full-calendar',
                         timeFormat: args.props.timeFormat,
                         dateFormat: args.props.dateFormat,
