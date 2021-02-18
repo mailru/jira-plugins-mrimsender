@@ -289,20 +289,20 @@
     <div class="calendar-list-item-block {$calendar.visible ? 'calendar-visible' : '' }" data-id="{$calendar.id}" data-color="{$calendar.color}" id="calendar-list-item-block-{$calendar.id}">
         {if $calendar.hasError}
         <a href="#" class="calendar-name not-working">
-            <span class="aui-icon aui-icon-small aui-iconfont-error" title="{$calendar.error}"/>
+            <span class="aui-icon aui-icon-small aui-iconfont-error" title="{$calendar.error}"></span>
         {elseif $calendar.visible }
         <a href="#" class="calendar-name not-active">
-            <div class="calendar-view-color-box" style="background-color: {$calendar.color};"/>
+            <div class="calendar-view-color-box" style="background-color: {$calendar.color};"></div>
         {else}
         <a href="#" class="calendar-name">
-            <div class="calendar-view-color-box" style="border: 2px solid {$calendar.color};"/>
+            <div class="calendar-view-color-box" style="border: 2px solid {$calendar.color};"></div>
         {/if}
             <span class="aui-nav-item-label" title="{$calendar.name}">{$calendar.name}</span>
         </a>
         {if $enableButton}
             <div class="calendar-vews-buttons-block aui-buttons">
                 <button class="aui-button aui-button-subtle aui-button-compact aui-dropdown2-trigger aui-dropdown2-trigger-arrowless calendar-buttons-dropdown" aria-owns="calendar-buttons-dropdown-{$calendar.id}" aria-haspopup="true">
-                    <span class="aui-icon aui-icon-small aui-iconfont-more"/>
+                    <span class="aui-icon aui-icon-small aui-iconfont-more"></span>
                 </button>
             </div>
             <div id="calendar-buttons-dropdown-{$calendar.id}" data-id="{$calendar.id}" class="aui-style-default aui-dropdown2" aria-hidden="true" data-dropdown2-alignment="left">
