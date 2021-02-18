@@ -21,12 +21,6 @@ const StyledSpinnerContainer = styled.div`
   text-align: center;
 `;
 
-const StyledCreateChatButtonContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
 type CreateChatPanelProps = {
   store: ChatPanelStore;
 };
@@ -49,14 +43,14 @@ export const ChatPanel = observer((props: CreateChatPanelProps) => {
 
   return (
     <>
-      <StyledCreateChatButtonContainer>
+      <div>
         <LoadingButton
           isLoading={store.isDialogDataLoading}
           onClick={store.openCreateChatDialog}
           iconBefore={<img height={gridSize() * 2.5} src={MyteamImage.default} alt="Some image here" />}>
           {I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.title')}
         </LoadingButton>
-      </StyledCreateChatButtonContainer>
+      </div>
       <ModalTransition>
         {store.isCreateChatDialogOpen && store.dialogData && (
           <CreateChatDialog
