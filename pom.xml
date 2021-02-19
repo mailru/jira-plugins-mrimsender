@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>mailrucal</artifactId>
-    <version>4.1.4</version>
+    <version>4.1.5</version>
     <organization>
         <name>Mail.Ru Group</name>
         <url>http://mail.ru</url>
@@ -269,7 +269,7 @@
         </plugins>
     </build>
     <properties>
-        <jira.version>8.13.1</jira.version>
+        <jira.version>8.15.0</jira.version>
         <amps.version>8.0.2</amps.version>
         <ao.version>1.2.0</ao.version>
         <quick.reload.version>3.0.0</quick.reload.version>
