@@ -3,11 +3,13 @@ package ru.mail.jira.plugins.myteam.rest.dto;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang.StringUtils;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChannelChatInfo;
@@ -15,11 +17,13 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.GroupChatInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.PrivateChatInfo;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @XmlRootElement
 public class ChatMetaDto {
-  @XmlElement @Getter @Setter private String link;
-  @XmlElement @Getter @Setter private String name;
+
+  @NonNull @XmlElement @Getter @Setter private String link;
+  @NonNull @XmlElement @Getter @Setter private String name;
+  @XmlElement @Getter @Setter private List<ChatMemberDto> members;
 
   private static final String MYTEAM_INVITE_LINK_HOST = "u.internal.myteam.mail.ru";
   /**

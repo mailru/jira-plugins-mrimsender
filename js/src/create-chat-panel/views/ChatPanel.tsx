@@ -6,7 +6,7 @@ import { ModalTransition } from '@atlaskit/modal-dialog';
 import { I18n } from '@atlassian/wrm-react-i18n';
 import styled from '@emotion/styled';
 import { gridSize } from '@atlaskit/theme';
-import { ChatInfo, StyledLabel } from './ChatInfo';
+import { ChatInfo } from './ChatInfo';
 import Spinner from '@atlaskit/spinner';
 import { ErrorView } from './ErrorView';
 import LoadingButton from '@atlaskit/button/loading-button';
@@ -44,13 +44,12 @@ export const ChatPanel = observer((props: CreateChatPanelProps) => {
     );
 
   if (store.chatAlreadyExist && store.chatInfo != null) {
-    return <ChatInfo chatInfo={store.chatInfo} />;
+    return <ChatInfo chatInfo={store.chatInfo}/>;
   }
 
   return (
     <>
       <StyledCreateChatButtonContainer>
-        <StyledLabel>Myteam chat: </StyledLabel>
         <LoadingButton
           isLoading={store.isDialogDataLoading}
           onClick={store.openCreateChatDialog}

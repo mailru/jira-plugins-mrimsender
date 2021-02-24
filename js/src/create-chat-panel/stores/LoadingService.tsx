@@ -5,7 +5,14 @@ import { ChatCreationData } from './ChatPanelStore';
 export type ChatInfoType = {
   link: string;
   name: string;
+  members:ChatMember[];
 };
+
+export type ChatMember = {
+  id:number,
+  displayName:string,
+  avatarUrl:string,
+}
 
 export class LoadingService {
   async loadChatCreationData(issueKey: string): Promise<ChatCreationData> {
