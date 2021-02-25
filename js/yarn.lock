@@ -19,6 +19,19 @@
     prop-types "^15.5.10"
     use-memo-one "^1.1.1"
 
+"@atlaskit/avatar-group@^8.0.14":
+  version "8.0.14"
+  resolved "https://registry.yarnpkg.com/@atlaskit/avatar-group/-/avatar-group-8.0.14.tgz#4c136c78df593d5ac731f3e38156961304d92762"
+  integrity sha512-S/dot+fo2pDIPK+gw8oOZSM4/mLQ8+iLs9t+SFEnsawXUah7uhjR/qe3CQpL6CtXx2IZeZB24HV4xlB9TAvmhg==
+  dependencies:
+    "@atlaskit/avatar" "^20.0.0"
+    "@atlaskit/menu" "^0.7.0"
+    "@atlaskit/popup" "^1.0.0"
+    "@atlaskit/theme" "^11.0.0"
+    "@atlaskit/tooltip" "^17.0.0"
+    "@babel/runtime" "^7.0.0"
+    "@emotion/core" "^10.0.9"
+
 "@atlaskit/avatar@^20.0.0":
   version "20.0.8"
   resolved "https://registry.yarnpkg.com/@atlaskit/avatar/-/avatar-20.0.8.tgz#e981f1783f66d688ba0582916fcaac354101c8e0"
@@ -105,6 +118,15 @@
     "@babel/runtime" "^7.0.0"
     "@emotion/core" "^10.0.9"
 
+"@atlaskit/menu@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/menu/-/menu-0.7.0.tgz#db98c3808d31f3d6990fdb37ea0189741220b7da"
+  integrity sha512-TrwOEvAT7iyFvfNPSuizJ/I8URezuHmHfhBY8sAyePv9u7GgfWDfvc/ayDtDS4XmUPe9txuUyLpOnxCoTukI5g==
+  dependencies:
+    "@atlaskit/theme" "^11.0.0"
+    "@babel/runtime" "^7.0.0"
+    "@emotion/core" "^10.0.9"
+
 "@atlaskit/modal-dialog@^11.2.4":
   version "11.2.4"
   resolved "https://registry.yarnpkg.com/@atlaskit/modal-dialog/-/modal-dialog-11.2.4.tgz#7d657e11b93deca26821e0731904759f0992b836"
@@ -143,6 +165,19 @@
     "@babel/runtime" "^7.0.0"
     "@popperjs/core" "^2.4.2"
     react-popper "^2.2.3"
+
+"@atlaskit/popup@^1.0.0":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@atlaskit/popup/-/popup-1.0.6.tgz#5a9a1992222aee5cc0ad962ba5ab102db4f93aef"
+  integrity sha512-1cxXscBN28adezEPHcm22YVHDtXcXqEcAagkVtx1wRXcA+WlyA4U2UHnc51cLWDRMdePLysuZqCbicDHTi4wlw==
+  dependencies:
+    "@atlaskit/popper" "^5.0.0"
+    "@atlaskit/portal" "^4.0.0"
+    "@atlaskit/theme" "^11.0.0"
+    "@babel/runtime" "^7.0.0"
+    "@emotion/core" "^10.0.9"
+    bind-event-listener "^1.0.2"
+    focus-trap "^2.4.5"
 
 "@atlaskit/portal@^4.0.0":
   version "4.0.5"
