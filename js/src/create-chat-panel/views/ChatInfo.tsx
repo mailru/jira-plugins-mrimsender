@@ -5,76 +5,38 @@ import {ChatInfoType} from '../stores/LoadingService';
 import {I18n} from '@atlassian/wrm-react-i18n';
 import AvatarGroup from '@atlaskit/avatar-group';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const MyteamImage = require('../../assets/myteam.png');
+import MyteamImage from '../../assets/myteam.png';
 
 type ChatInfoProps = {
     chatInfo: ChatInfoType;
 };
 
 export const StyledContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  line-height: 1.5;
+  align-items: center;
+  display: flex; 
 `;
 
-export const StyledDt = styled.dt`
+const StyledLabel = styled.span`
   color: #6b778c;
-  width: 140px;
-  display: table-cell;
-  vertical-align:middle;
+  flex: 0 0 140px;
 `;
 
-export const StyledDd = styled.dd`
-  display: table-cell;
-`;
-
-const StyledValue = styled.span`
-  text-align: left;
-  display:table;
-`;
-
-const StyledSpan = styled.span`
-    display:table-cell;
-    vertical-align:middle;
-    padding-left:5px;
+const Logo = styled.img`
+    padding-right:5px;
+    vertical-align: middle;
 `;
 
 export const ChatInfo = observer((props: ChatInfoProps) => {
     const {chatInfo} = props;
-    const avatarGroupData = chatInfo.members.map(function (member) {
-        return {
-            name: member.displayName,
-            key: member.id,
-            avatarUrl: member.avatarUrl,
-        }
-    });
     return (
         <div>
+            <a href={chatInfo.link} target="_blank" rel="noreferrer">
+                <Logo height={16} src={MyteamImage} alt="Myteam logo"/>
+                {chatInfo.name}
+            </a>
             <StyledContainer>
-                <a href={chatInfo.link} target="_blank" rel="noreferrer">
-                    <StyledValue>
-                        <img height={24} src={MyteamImage.default} alt="Myteam logo"/>
-                        <StyledSpan>{chatInfo.name}</StyledSpan>
-                    </StyledValue>
-                </a>
-
-            </StyledContainer>
-            <StyledContainer>
-                <dl>
-                    <StyledDt>{I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.members.preview')}</StyledDt>
-                    <StyledDd>
-                        <AvatarGroup appearance="stack" data={avatarGroupData}
-                                     overrides={{
-                                         Avatar: {
-                                             render: (Component, props, index) => {
-                                                 return <Component {...props} src={avatarGroupData[index].avatarUrl}/>;
-                                             },
-                                         },
-                                     }}
-                        />
-                    </StyledDd>
-                </dl>
+                <StyledLabel>{I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.members.preview')}</StyledLabel>
+                <AvatarGroup appearance="stack" data={chatInfo.members}/>
             </StyledContainer>
         </div>
     );

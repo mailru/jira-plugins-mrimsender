@@ -209,8 +209,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     }
   }
 
-  public HttpResponse<ChatMember> getMembersWithoutCursor(@Nonnull String chatId)
-      throws UnirestException {
+  public HttpResponse<ChatMember> getMembers(@Nonnull String chatId) throws UnirestException {
     return Unirest.post("https://api.internal.myteam.mail.ru/bot/v1" + "/chats/getMembers")
         .header("Accept", "application/json")
         .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())

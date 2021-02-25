@@ -58,5 +58,5 @@ public interface MyteamApiClient {
   HttpResponse<ChatInfoResponse> getChatInfo(@Nonnull String botToken, @Nonnull String chatId)
       throws UnirestException, MyteamServerErrorException;
 
-  HttpResponse<ChatMember> getMembersWithoutCursor(@Nonnull String chatId) throws UnirestException;
+  HttpResponse<ChatMember> getMembers(@Nonnull String chatId) throws UnirestException;
 }

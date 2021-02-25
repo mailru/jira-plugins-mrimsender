@@ -107,8 +107,7 @@ public class ChatCreationService {
                     "title", "about", "rules", "http:/myteam/inite/link", false, false)))
         .build();*/
     try {
-      ChatMember chatMembersFromApi =
-          myteamApiClient.getMembersWithoutCursor(chatMeta.getChatId()).getBody();
+      ChatMember chatMembersFromApi = myteamApiClient.getMembers(chatMeta.getChatId()).getBody();
       List<ApplicationUser> applicationUsers =
           chatMembersFromApi.members.stream()
               .map(
@@ -135,8 +134,7 @@ public class ChatCreationService {
           myteamApiClient.getChatInfo(pluginData.getToken(), chatMeta.getChatId());
       if (chatInfoResponse.getStatus() == 200 && chatInfoResponse.getBody() != null) {
         ChatInfoResponse chatInfo = chatInfoResponse.getBody();
-        ChatMetaDto chatMetaDto = ChatMetaDto.buildChatInfo(chatInfo);
-        if (chatMetaDto != null) chatMetaDto.setMembers(chatMemberDtos);
+        ChatMetaDto chatMetaDto = ChatMetaDto.buildChatInfo(chatInfo, chatMemberDtos);
         return Response.ok(chatMetaDto).build();
       } else {
         log.error(
@@ -209,6 +207,25 @@ public class ChatCreationService {
             .map(user -> new ChatMemberId(userData.getMrimLogin(user)))
             .collect(Collectors.toList());
 
+    List<ApplicationUser> applicationUsers =
+        chatMembers.stream()
+            .map(
+                member ->
+                    StreamSupport.stream(
+                            userSearchService.findUsersByEmail(member.getSn()).spliterator(), false)
+                        .filter(ApplicationUser::isActive)
+                        .findFirst()
+                        .orElse(null))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    List<ChatMemberDto> chatMemberDtos =
+        applicationUsers.stream()
+            .map(
+                member -> {
+                  String url = avatarService.getAvatarURL(loggedInUser, member).toString();
+                  return new ChatMemberDto(member.getDisplayName(), member.getId(), url);
+                })
+            .collect(Collectors.toList());
     // localhost tests stubbing
     /* return Response.ok(
         ChatMetaDto.buildChatInfo(
@@ -230,7 +247,8 @@ public class ChatCreationService {
         HttpResponse<ChatInfoResponse> chatInfoResponse =
             myteamApiClient.getChatInfo(pluginData.getToken(), chatId);
         if (chatInfoResponse.getStatus() == 200 && chatInfoResponse.getBody() != null) {
-          return Response.ok(ChatMetaDto.buildChatInfo(chatInfoResponse.getBody())).build();
+          return Response.ok(ChatMetaDto.buildChatInfo(chatInfoResponse.getBody(), chatMemberDtos))
+              .build();
         }
       }
       log.error("Exception during chat creation chat sn not found");

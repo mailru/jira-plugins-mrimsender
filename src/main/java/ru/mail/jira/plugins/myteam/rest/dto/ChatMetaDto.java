@@ -7,9 +7,9 @@ import java.util.List;
 import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.lang.StringUtils;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChannelChatInfo;
@@ -17,7 +17,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.GroupChatInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.PrivateChatInfo;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
 @XmlRootElement
 public class ChatMetaDto {
 
@@ -46,15 +46,20 @@ public class ChatMetaDto {
   }
 
   @Nullable
-  public static ChatMetaDto buildChatInfo(ChatInfoResponse chatInfoResponse) {
+  public static ChatMetaDto buildChatInfo(
+      ChatInfoResponse chatInfoResponse, List<ChatMemberDto> chatMemberDtos) {
     if (chatInfoResponse instanceof GroupChatInfo) {
       GroupChatInfo groupChatInfo = (GroupChatInfo) chatInfoResponse;
       return new ChatMetaDto(
-          clarifyChatInviteLink(groupChatInfo.getInviteLink()), groupChatInfo.getTitle());
+          clarifyChatInviteLink(groupChatInfo.getInviteLink()),
+          groupChatInfo.getTitle(),
+          chatMemberDtos);
     } else if (chatInfoResponse instanceof ChannelChatInfo) {
       ChannelChatInfo channelChatInfo = (ChannelChatInfo) chatInfoResponse;
       return new ChatMetaDto(
-          clarifyChatInviteLink(channelChatInfo.getInviteLink()), channelChatInfo.getTitle());
+          clarifyChatInviteLink(channelChatInfo.getInviteLink()),
+          channelChatInfo.getTitle(),
+          chatMemberDtos);
     } else if (chatInfoResponse instanceof PrivateChatInfo) {
       // private chat can't be created from Myteam bot createChat api method
       // so this is not very useful right now

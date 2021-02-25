@@ -1,18 +1,13 @@
 import $ from 'jquery';
 import contextPath from 'wrm/context-path';
 import { ChatCreationData } from './ChatPanelStore';
+import {AvatarProps} from "@atlaskit/avatar-group";
 
 export type ChatInfoType = {
   link: string;
   name: string;
-  members:ChatMember[];
+  members:AvatarProps[];
 };
-
-export type ChatMember = {
-  id:number,
-  displayName:string,
-  avatarUrl:string,
-}
 
 export class LoadingService {
   async loadChatCreationData(issueKey: string): Promise<ChatCreationData> {
