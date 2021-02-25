@@ -74,6 +74,8 @@ public class RestQuickFilterService {
             @Override
             protected QuickFilterDto doAction() throws Exception {
                 ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+                if (!canUseCalendar(user, calendarId))
+                    throw new SecurityException("No permission to view quick filter for this calendar");
                 List<QuickFilter> favouriteQuickFilters = userCalendarService.getFavouriteQuickFilters(calendarId, user.getKey());
                 QuickFilter quickFilter = quickFilterService.getQuickFilter(id);
                 return new QuickFilterDto(quickFilter, quickFilter.getCreatorKey().equals(user.getKey()), favouriteQuickFilters != null && favouriteQuickFilters.contains(quickFilter));
@@ -88,6 +90,8 @@ public class RestQuickFilterService {
             @Override
             protected QuickFilterDto doAction() throws Exception {
                 ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+                if (!canUseCalendar(user, calendarId))
+                    throw new SecurityException("No permission to update quick filter for this calendar");
                 List<QuickFilter> favouriteQuickFilters = userCalendarService.getFavouriteQuickFilters(calendarId, user.getKey());
                 QuickFilter quickFilter = quickFilterService.updateQuickFilter(id, calendarId, quickFilterDto.getName(), quickFilterDto.getJql(), quickFilterDto.getDescription(), quickFilterDto.isShare(), user);
                 return new QuickFilterDto(quickFilter, quickFilter.getCreatorKey().equals(user.getKey()), favouriteQuickFilters != null && favouriteQuickFilters.contains(quickFilter));
@@ -101,7 +105,10 @@ public class RestQuickFilterService {
         return new RestExecutor<Void>() {
             @Override
             protected Void doAction() throws Exception {
-                quickFilterService.deleteQuickFilterById(id, jiraAuthenticationContext.getLoggedInUser());
+                ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+                if (!canUseCalendar(user, calendarId))
+                    throw new SecurityException("No permission to delete quick filter for this calendar");
+                quickFilterService.deleteQuickFilterById(id, user);
                 return null;
             }
         }.getResponse();
@@ -115,6 +122,8 @@ public class RestQuickFilterService {
             protected List<QuickFilterDto> doAction() throws Exception {
                 List<QuickFilterDto> result = new ArrayList<QuickFilterDto>();
                 ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+                if (!canUseCalendar(user, calendarId))
+                    throw new SecurityException("No permission to view quick filters for this calendar");
                 List<QuickFilter> favouriteQuickFilters = userCalendarService.getFavouriteQuickFilters(calendarId, user.getKey());
                 for (QuickFilter quickFilter : quickFilterService.getQuickFilters(calendarId, jiraAuthenticationContext.getLoggedInUser(), true))
                     result.add(new QuickFilterDto(quickFilter, quickFilter.getCreatorKey().equals(user.getKey()), favouriteQuickFilters != null && favouriteQuickFilters.contains(quickFilter)));
