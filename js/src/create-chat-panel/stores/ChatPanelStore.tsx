@@ -3,8 +3,8 @@ import { ChatInfoType, LoadingService } from './LoadingService';
 
 type ChatMember = {
   id: string;
-  displayName: string;
-  avatarUrl: string;
+  name: string;
+  src: string;
 };
 
 export type ChatCreationData = {

@@ -11,3 +11,5 @@ declare module 'jira/util/events';
 declare module 'jira/api/projects';
 
 declare module 'jira/issues/search/legacyissue';
+declare module '*.png';
+

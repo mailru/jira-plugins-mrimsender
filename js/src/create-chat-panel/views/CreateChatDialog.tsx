@@ -33,11 +33,6 @@ const validateChatMembers = (value: ValueType<OptionData, true>) => {
 
 export const CreateChatDialog = (props: ChatDialogProps) => {
   const { closeDialog, chatCreationData, createChat } = props;
-  const chatMembersOptions = chatCreationData.members.map((member) => ({
-    id: member.id,
-    name: member.displayName,
-    avatarUrl: member.avatarUrl,
-  }));
   return (
     <Modal
       onClose={closeDialog}
@@ -96,7 +91,7 @@ export const CreateChatDialog = (props: ChatDialogProps) => {
       <Field<ValueType<OptionData, true>>
         name="chat-members"
         label={I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.members')}
-        defaultValue={chatMembersOptions}
+        defaultValue={chatCreationData.members}
         validate={validateChatMembers}>
         {({ fieldProps: { id, ...rest }, error, valid }) => (
           <>
@@ -108,7 +103,7 @@ export const CreateChatDialog = (props: ChatDialogProps) => {
                 rest.onChange(value as ValueType<OptionData, true>);
               }}
               inputId={id}
-              options={chatMembersOptions}
+              options={chatCreationData.members}
               isMulti
               fieldId={null}
             />
