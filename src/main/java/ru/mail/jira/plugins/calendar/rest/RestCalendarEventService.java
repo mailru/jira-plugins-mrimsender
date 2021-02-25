@@ -6,6 +6,9 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.mail.jira.plugins.calendar.model.Calendar;
+import ru.mail.jira.plugins.calendar.service.CalendarService;
+import ru.mail.jira.plugins.calendar.service.PermissionService;
 import ru.mail.jira.plugins.calendar.service.licence.LicenseService;
 import ru.mail.jira.plugins.calendar.rest.dto.EventDto;
 import ru.mail.jira.plugins.calendar.rest.dto.IssueInfo;
@@ -30,17 +33,26 @@ public class RestCalendarEventService {
     private final static Logger log = LoggerFactory.getLogger(RestCalendarEventService.class);
 
     private final CalendarEventService calendarEventService;
+    private final CalendarService calendarService;
     private final JiraAuthenticationContext jiraAuthenticationContext;
     private final LicenseService licenseService;
+    private final PermissionService permissionService;
 
     public RestCalendarEventService(
-        @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-        CalendarEventService calendarEventService,
-        LicenseService licenseService
-    ) {
+            @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+            CalendarEventService calendarEventService,
+            CalendarService calendarService, LicenseService licenseService,
+            PermissionService permissionService) {
         this.jiraAuthenticationContext = jiraAuthenticationContext;
         this.calendarEventService = calendarEventService;
+        this.calendarService = calendarService;
         this.licenseService = licenseService;
+        this.permissionService = permissionService;
+    }
+
+    private boolean canUseCalendar(ApplicationUser user, int calendarId) throws Exception {
+        Calendar calendar = calendarService.getCalendar(calendarId);
+        return permissionService.hasAdminPermission(user, calendar) || permissionService.hasUsePermission(user, calendar);
     }
 
     @GET
@@ -66,7 +78,10 @@ public class RestCalendarEventService {
         return new RestExecutor<IssueInfo>() {
             @Override
             protected IssueInfo doAction() throws Exception {
-                return calendarEventService.getEventInfo(jiraAuthenticationContext.getUser(), calendarId, eventId);
+                ApplicationUser currentUser = jiraAuthenticationContext.getLoggedInUser();
+                if (!canUseCalendar(currentUser, calendarId))
+                    throw new SecurityException("No permission to view event info for this calendar");
+                return calendarEventService.getEventInfo(currentUser, calendarId, eventId);
             }
         }.getResponse();
     }
@@ -82,7 +97,10 @@ public class RestCalendarEventService {
         try {
             if (log.isDebugEnabled())
                 log.debug("getEvents with params. calendarId={}, start={}, end={}", calendarId, start, end);
-            List<EventDto> result = calendarEventService.findEvents(calendarId, StringUtils.trimToNull(groupBy), start, end, jiraAuthenticationContext.getUser());
+            ApplicationUser currentUser = jiraAuthenticationContext.getLoggedInUser();
+            if (!canUseCalendar(currentUser, calendarId))
+                throw new SecurityException("No permission to view events in this calendar");
+            List<EventDto> result = calendarEventService.findEvents(calendarId, StringUtils.trimToNull(groupBy), start, end, currentUser);
             CacheControl cacheControl = new CacheControl();
             cacheControl.setNoCache(true);
             cacheControl.setNoStore(true);
@@ -104,8 +122,10 @@ public class RestCalendarEventService {
             @Override
             protected EventDto doAction() throws Exception {
                 licenseService.checkLicense();
-                ApplicationUser user = jiraAuthenticationContext.getUser();
-                return calendarEventService.moveEvent(user, calendarId, eventId, StringUtils.trimToNull(start), StringUtils.trimToNull(end));
+                ApplicationUser currentUser = jiraAuthenticationContext.getLoggedInUser();
+                if (!canUseCalendar(currentUser, calendarId))
+                    throw new SecurityException("No permission to move event in this calendar");
+                return calendarEventService.moveEvent(currentUser, calendarId, eventId, StringUtils.trimToNull(start), StringUtils.trimToNull(end));
             }
         }.getResponse();
     }
