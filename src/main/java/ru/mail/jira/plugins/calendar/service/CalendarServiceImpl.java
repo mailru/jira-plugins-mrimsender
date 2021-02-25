@@ -476,7 +476,7 @@ public class CalendarServiceImpl implements CalendarService {
                         throw new RestFieldException("Can not find project with id => " + projectId, "source");
 
                     if (!permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, project, user, false))
-                        throw new RestFieldException("No Permission to browse project " + project.getName(), "source");
+                        throw new RestFieldException("No Permission to browse this project", "source");
                 }
             } else if (selectedSourceType.equals("filter")) {
                 long filterId = Long.parseLong(calendarSettingDto.getSelectedSourceValue());
