@@ -127,7 +127,7 @@ public class ButtonClickListener {
       myteamApiClient.sendMessageText(
           commentIssueClickEvent.getChatId(),
           message,
-          messageFormatter.getCancelButton(commentedUser));
+          messageFormatter.getCancelButton(localeManager.getLocaleFor(commentedUser)));
       chatsStateMap.put(
           commentIssueClickEvent.getChatId(),
           ChatState.buildCommentWaitingState(commentIssueClickEvent.getIssueKey()));
@@ -160,7 +160,9 @@ public class ButtonClickListener {
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.searchButton.insertIssueKey.message");
       myteamApiClient.answerCallbackQuery(showIssueClickEvent.getQueryId());
       myteamApiClient.sendMessageText(
-          showIssueClickEvent.getChatId(), message, messageFormatter.getCancelButton(currentUser));
+          showIssueClickEvent.getChatId(),
+          message,
+          messageFormatter.getCancelButton(localeManager.getLocaleFor(currentUser)));
       chatsStateMap.put(showIssueClickEvent.getChatId(), ChatState.issueKeyWaitingState);
     }
     log.debug("OnSearchIssueButtonClick event handling finished");

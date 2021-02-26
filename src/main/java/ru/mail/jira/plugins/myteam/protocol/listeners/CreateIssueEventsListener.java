@@ -1,6 +1,7 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol.listeners;
 
+import static ru.mail.jira.plugins.myteam.protocol.MessageFormatter.ADDITIONAL_FIELD_LIST_PAGE_SIZE;
 import static ru.mail.jira.plugins.myteam.protocol.MessageFormatter.LIST_PAGE_SIZE;
 
 import com.atlassian.jira.bc.issue.IssueService;
@@ -34,13 +35,7 @@ import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.eventbus.Subscribe;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -48,6 +43,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilterEnum;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.PluginData;
@@ -56,14 +52,12 @@ import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.IssueCreationDto;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
+import ru.mail.jira.plugins.myteam.protocol.events.NewAdditionalFieldMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.NewIssueFieldValueMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.NewIssueValueEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.SelectedProjectMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.CreateIssueClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.IssueTypeButtonClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.NewIssueFieldValueButtonClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.NextProjectsPageClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.PrevProjectsPageClickEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
 
 @Slf4j
 @Component
@@ -348,8 +342,12 @@ public class CreateIssueEventsListener {
         Stream.of(fieldManager.getProjectField().getId(), fieldManager.getIssueTypeField().getId())
             .collect(Collectors.toSet());
     LinkedHashMap<Field, String> issueCreationRequiredFieldsValues =
-        getIssueCreationRequiredFieldsValues(
-            selectedProject, selectedIssueType, includedFieldIds, excludedFieldIds);
+        getIssueCreationFieldsValues(
+            selectedProject,
+            selectedIssueType,
+            includedFieldIds,
+            excludedFieldIds,
+            IssueFieldsFilterEnum.REQUIRED);
 
     // We don't need allow user to fill reporter field
     issueCreationRequiredFieldsValues.remove(
@@ -394,7 +392,7 @@ public class CreateIssueEventsListener {
                   locale,
                   "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
       chatsStateMap.put(
-          chatId, ChatState.buildNewIssueFieldsFillingState(0, currentIssueCreationDto));
+          chatId, ChatState.buildNewIssueRequiredFieldsFillingState(0, currentIssueCreationDto));
     } else {
       // well, all required issue fields are filled, then just create issue
       IssueService.CreateValidationResult issueValidationResult =
@@ -486,41 +484,289 @@ public class CreateIssueEventsListener {
                     "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
         chatsStateMap.put(
             chatId,
-            ChatState.buildNewIssueFieldsFillingState(nextFieldNum, currentIssueCreationDto));
+            ChatState.buildNewIssueRequiredFieldsFillingState(
+                nextFieldNum, currentIssueCreationDto));
       }
     } else {
       JiraThreadLocalUtils.preCall();
-      try {
-        // then user filled all new issue fields which are required
+      chatsStateMap.put(chatId, ChatState.buildIssueCreationConfirmState(currentIssueCreationDto));
+      myteamApiClient.sendMessageText(
+          chatId,
+          i18nResolver.getText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreationConfirmation"),
+          messageFormatter.getIssueCreationConfirmButtons(currentUser));
+    }
+  }
 
-        IssueService.CreateValidationResult issueValidationResult =
-            validateIssueWithGivenFields(currentUser, currentIssueCreationDto);
-        if (issueValidationResult.isValid()) {
-          MutableIssue createdIssue =
-              issueService.create(currentUser, issueValidationResult).getIssue();
-          String createdIssueLink = messageFormatter.createIssueLink(createdIssue);
-          myteamApiClient.sendMessageText(
-              chatId,
+  @Subscribe
+  public void onAddExtraIssueFieldCilckEvent(
+      AddAdditionalIssueFieldCilckEvent addExtraIssueFieldCilckEvent)
+      throws UnirestException, IOException, MyteamServerErrorException {
+
+    ApplicationUser currentUser =
+        userData.getUserByMrimLogin(addExtraIssueFieldCilckEvent.getUserId());
+    if (currentUser == null) {
+      // TODO unauthorized
+      return;
+    }
+    String chatId = addExtraIssueFieldCilckEvent.getChatId();
+    IssueCreationDto issueCreationDto = addExtraIssueFieldCilckEvent.getIssueCreationDto();
+    Locale locale = localeManager.getLocaleFor(currentUser);
+
+    LinkedHashMap<Field, String> nonRequiredFields =
+        getIssueCreationFieldsValues(
+            projectManager.getProjectObj(issueCreationDto.getProjectId()),
+            issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()),
+            null,
+            null,
+            IssueFieldsFilterEnum.NON_REQUIRED);
+
+    myteamApiClient.answerCallbackQuery(addExtraIssueFieldCilckEvent.getQueryId());
+
+    List<Field> firstPageFieldsInterval =
+        nonRequiredFields.keySet().stream()
+            .limit(ADDITIONAL_FIELD_LIST_PAGE_SIZE)
+            .collect(Collectors.toList());
+    myteamApiClient.sendMessageText(
+        chatId,
+        i18nResolver.getRawText(
+            locale,
+            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"),
+        messageFormatter.getSelectAdditionalFieldMessageButtons(
+            locale,
+            false,
+            nonRequiredFields.size() > ADDITIONAL_FIELD_LIST_PAGE_SIZE,
+            firstPageFieldsInterval));
+    chatsStateMap.put(
+        chatId, ChatState.buildAdditionalIssueFieldSelectWaitingState(0, issueCreationDto));
+  }
+
+  @Subscribe
+  public void onPrevAdditionalFieldPageClickEvent(
+      PrevAdditionalFieldPageClickEvent prevAdditionalFieldPageClickEvent)
+      throws UnirestException, IOException, MyteamServerErrorException {
+    log.debug("PrevProjectsPageClickEvent handling started");
+    ApplicationUser currentUser =
+        userData.getUserByMrimLogin(prevAdditionalFieldPageClickEvent.getUserId());
+    if (currentUser != null) {
+      IssueCreationDto issueCreationDto = prevAdditionalFieldPageClickEvent.getIssueCreationDto();
+      int prevPageNumber = prevAdditionalFieldPageClickEvent.getCurrentPage() - 1;
+      int prevPageStartIndex = prevPageNumber * ADDITIONAL_FIELD_LIST_PAGE_SIZE;
+      Locale locale = localeManager.getLocaleFor(currentUser);
+      String chatId = prevAdditionalFieldPageClickEvent.getChatId();
+
+      LinkedHashMap<Field, String> nonRequiredFields =
+          getIssueCreationFieldsValues(
+              projectManager.getProjectObj(issueCreationDto.getProjectId()),
+              issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()),
+              null,
+              null,
+              IssueFieldsFilterEnum.NON_REQUIRED);
+      List<Field> pageFieldsInterval =
+          nonRequiredFields.keySet().stream()
+              .skip(prevPageStartIndex)
+              .limit(ADDITIONAL_FIELD_LIST_PAGE_SIZE)
+              .collect(Collectors.toList());
+      myteamApiClient.answerCallbackQuery(prevAdditionalFieldPageClickEvent.getQueryId());
+      myteamApiClient.editMessageText(
+          chatId,
+          prevAdditionalFieldPageClickEvent.getMsgId(),
+          i18nResolver.getRawText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"),
+          messageFormatter.getSelectAdditionalFieldMessageButtons(
+              locale,
+              prevPageStartIndex >= ADDITIONAL_FIELD_LIST_PAGE_SIZE,
+              true,
+              pageFieldsInterval));
+      chatsStateMap.put(
+          chatId,
+          ChatState.buildAdditionalIssueFieldSelectWaitingState(prevPageNumber, issueCreationDto));
+    }
+    log.debug("PrevProjectsPageClickEvent handling finished");
+  }
+
+  @Subscribe
+  public void onNextAdditionalFieldPageClickEvent(
+      NextAdditionalFieldPageClickEvent nextAdditionalFieldPageClickEvent)
+      throws UnirestException, IOException, MyteamServerErrorException {
+    log.debug("PrevProjectsPageClickEvent handling started");
+    ApplicationUser currentUser =
+        userData.getUserByMrimLogin(nextAdditionalFieldPageClickEvent.getUserId());
+    if (currentUser != null) {
+      IssueCreationDto issueCreationDto = nextAdditionalFieldPageClickEvent.getIssueCreationDto();
+      int nextPageNumber = nextAdditionalFieldPageClickEvent.getCurrentPage() + 1;
+      int nextPageStartIndex = nextPageNumber * ADDITIONAL_FIELD_LIST_PAGE_SIZE;
+      Locale locale = localeManager.getLocaleFor(currentUser);
+      String chatId = nextAdditionalFieldPageClickEvent.getChatId();
+
+      LinkedHashMap<Field, String> nonRequiredFields =
+          getIssueCreationFieldsValues(
+              projectManager.getProjectObj(issueCreationDto.getProjectId()),
+              issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()),
+              null,
+              null,
+              IssueFieldsFilterEnum.NON_REQUIRED);
+      List<Field> pageFieldsInterval =
+          nonRequiredFields.keySet().stream()
+              .skip(nextPageStartIndex)
+              .limit(ADDITIONAL_FIELD_LIST_PAGE_SIZE)
+              .collect(Collectors.toList());
+
+      myteamApiClient.answerCallbackQuery(nextAdditionalFieldPageClickEvent.getQueryId());
+      myteamApiClient.editMessageText(
+          chatId,
+          nextAdditionalFieldPageClickEvent.getMsgId(),
+          i18nResolver.getRawText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"),
+          messageFormatter.getSelectAdditionalFieldMessageButtons(
+              locale,
+              true,
+              nonRequiredFields.size() > ADDITIONAL_FIELD_LIST_PAGE_SIZE + nextPageStartIndex,
+              pageFieldsInterval));
+      chatsStateMap.put(
+          chatId,
+          ChatState.buildAdditionalIssueFieldSelectWaitingState(nextPageNumber, issueCreationDto));
+    }
+    log.debug("PrevProjectsPageClickEvent handling finished");
+  }
+
+  @Subscribe
+  public void onSelectAdditionalIssueFieldClickEvent(
+      SelectAdditionalIssueFieldClickEvent selectAdditionalIssueFieldClickEvent)
+      throws UnirestException, IOException, MyteamServerErrorException {
+
+    ApplicationUser currentUser =
+        userData.getUserByMrimLogin(selectAdditionalIssueFieldClickEvent.getUserId());
+    if (currentUser == null) {
+      // TODO unauthorized
+      return;
+    }
+    String fieldId = selectAdditionalIssueFieldClickEvent.getFieldId();
+    String chatId = selectAdditionalIssueFieldClickEvent.getChatId();
+    IssueCreationDto issueCreationDto = selectAdditionalIssueFieldClickEvent.getIssueCreationDto();
+    Locale locale = localeManager.getLocaleFor(currentUser);
+
+    LinkedHashMap<Field, String> nonRequiredFields =
+        getIssueCreationFieldsValues(
+            projectManager.getProjectObj(issueCreationDto.getProjectId()),
+            issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()),
+            null,
+            null,
+            IssueFieldsFilterEnum.NON_REQUIRED);
+
+    myteamApiClient.answerCallbackQuery(selectAdditionalIssueFieldClickEvent.getQueryId());
+
+    Optional<Field> field =
+        nonRequiredFields.keySet().stream().filter(f -> f.getId().equals(fieldId)).findAny();
+    if (field.isPresent()) {
+      myteamApiClient.sendMessageText(
+          chatId,
+          String.format(
+              "%s\n%s: -",
+              messageFormatter.createInsertFieldMessage(locale, field.get(), issueCreationDto),
+              field.get().getName()));
+      chatsStateMap.put(
+          chatId, ChatState.buildIssueFieldFillingState(issueCreationDto, field.get()));
+    }
+  }
+
+  @Subscribe
+  public void onNewAdditionalFieldMessageEvent(
+      NewAdditionalFieldMessageEvent newAdditionalFieldMessageEvent)
+      throws UnirestException, IOException, MyteamServerErrorException {
+
+    ApplicationUser currentUser =
+        userData.getUserByMrimLogin(newAdditionalFieldMessageEvent.getUserId());
+    if (currentUser == null) {
+      // TODO unauthorized
+      return;
+    }
+    String chatId = newAdditionalFieldMessageEvent.getChatId();
+    IssueCreationDto issueCreationDto = newAdditionalFieldMessageEvent.getIssueCreationDto();
+    String currentFieldValueStr = newAdditionalFieldMessageEvent.getFieldValue();
+    Locale locale = localeManager.getLocaleFor(currentUser);
+
+    issueCreationDto
+        .getRequiredIssueCreationFieldValues()
+        .put(newAdditionalFieldMessageEvent.getField(), currentFieldValueStr);
+
+    chatsStateMap.put(chatId, ChatState.buildIssueCreationConfirmState(issueCreationDto));
+
+    IssueService.CreateValidationResult issueValidationResult =
+        validateIssueWithGivenFields(currentUser, issueCreationDto);
+    if (issueValidationResult.isValid()) {
+      myteamApiClient.sendMessageText(
+          chatId,
+          i18nResolver.getText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreationConfirmation"),
+          messageFormatter.getIssueCreationConfirmButtons(currentUser));
+    } else {
+      issueCreationDto
+          .getRequiredIssueCreationFieldValues()
+          .remove(newAdditionalFieldMessageEvent.getField());
+      myteamApiClient.sendMessageText(
+          chatId,
+          String.join(
+              "\n",
               i18nResolver.getText(
                   locale,
-                  "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreated",
-                  createdIssueLink));
-        } else {
-          myteamApiClient.sendMessageText(
-              chatId,
-              String.join(
-                  "\n",
-                  i18nResolver.getText(
-                      locale,
-                      "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.validationError"),
-                  messageFormatter.stringifyMap(
-                      issueValidationResult.getErrorCollection().getErrors()),
-                  messageFormatter.stringifyCollection(
-                      locale, issueValidationResult.getErrorCollection().getErrorMessages())));
-        }
-      } finally {
-        JiraThreadLocalUtils.postCall();
+                  "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.additionalField.validationError"),
+              messageFormatter.stringifyMap(issueValidationResult.getErrorCollection().getErrors()),
+              messageFormatter.stringifyCollection(
+                  locale, issueValidationResult.getErrorCollection().getErrorMessages())),
+          messageFormatter.getIssueCreationConfirmButtons(currentUser));
+    }
+  }
+
+  @Subscribe
+  public void onCreateIssueConfirmClickEvent(
+      CreateIssueConfirmClickEvent createIssueConfirmClickEvent)
+      throws UnirestException, IOException, MyteamServerErrorException {
+
+    ApplicationUser currentUser =
+        userData.getUserByMrimLogin(createIssueConfirmClickEvent.getUserId());
+    if (currentUser == null) {
+      // TODO unauthorized
+      return;
+    }
+    String chatId = createIssueConfirmClickEvent.getChatId();
+    IssueCreationDto currentIssueCreationDto = createIssueConfirmClickEvent.getIssueCreationDto();
+    Locale locale = localeManager.getLocaleFor(currentUser);
+
+    try {
+      // then user filled all new issue fields which are required
+
+      IssueService.CreateValidationResult issueValidationResult =
+          validateIssueWithGivenFields(currentUser, currentIssueCreationDto);
+      if (issueValidationResult.isValid()) {
+        MutableIssue createdIssue =
+            issueService.create(currentUser, issueValidationResult).getIssue();
+        String createdIssueLink = messageFormatter.createIssueLink(createdIssue);
+        myteamApiClient.sendMessageText(
+            chatId,
+            i18nResolver.getText(
+                locale,
+                "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreated",
+                createdIssueLink));
+      } else {
+        myteamApiClient.sendMessageText(
+            chatId,
+            String.join(
+                "\n",
+                i18nResolver.getText(
+                    locale,
+                    "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.validationError"),
+                messageFormatter.stringifyMap(
+                    issueValidationResult.getErrorCollection().getErrors()),
+                messageFormatter.stringifyCollection(
+                    locale, issueValidationResult.getErrorCollection().getErrorMessages())));
       }
+    } finally {
+      JiraThreadLocalUtils.postCall();
     }
   }
 
@@ -536,13 +782,15 @@ public class CreateIssueEventsListener {
    *     or not
    * @param excludedFieldIds - fields which must be excluded from result map no matter required them
    *     or not
+   * @param issueFieldsFilter - which fields needs to be filtered
    * @return LinkedHashMap of field and empty string value
    */
-  private LinkedHashMap<Field, String> getIssueCreationRequiredFieldsValues(
+  private LinkedHashMap<Field, String> getIssueCreationFieldsValues(
       Project project,
       IssueType issueType,
       Set<String> includedFieldIds,
-      Set<String> excludedFieldIds) {
+      Set<String> excludedFieldIds,
+      IssueFieldsFilterEnum issueFieldsFilter) {
     // getting (selectedProject, selectedIssueType) fields configuration
     FieldLayout fieldLayout = fieldLayoutManager.getFieldLayout(project, issueType.getId());
     // getting (selectedProject, selectedIssueType, selectedIssueOperation) fields screen
@@ -556,10 +804,24 @@ public class CreateIssueEventsListener {
                         fieldScreenLayoutItem -> {
                           String fieldId = fieldScreenLayoutItem.getFieldId();
                           FieldLayoutItem fieldLayoutItem = fieldLayout.getFieldLayoutItem(fieldId);
-                          return fieldLayoutItem != null && fieldLayoutItem.isRequired()
-                              || includedFieldIds.contains(fieldId);
+                          if (fieldLayoutItem == null) return false;
+                          boolean isRequired = fieldLayoutItem.isRequired();
+                          boolean filterResult = false;
+                          switch (issueFieldsFilter) {
+                            case REQUIRED:
+                              filterResult = isRequired;
+                              break;
+                            case NON_REQUIRED:
+                              filterResult = !isRequired;
+                              break;
+                          }
+                          return filterResult
+                              || includedFieldIds != null && includedFieldIds.contains(fieldId);
                         })
-                    .filter(layoutItem -> !excludedFieldIds.contains(layoutItem.getFieldId()))
+                    .filter(
+                        layoutItem ->
+                            excludedFieldIds == null
+                                || !excludedFieldIds.contains(layoutItem.getFieldId()))
                     .filter(
                         fieldScreenLayoutItem -> {
                           // all custom fields must be in project and issue type context scope
