@@ -22,6 +22,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
 
@@ -206,5 +207,14 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       log.error("Myteam server error while {}()", methodName, newException);
       throw newException;
     }
+  }
+
+  public HttpResponse<ChatMember> getMembers(@Nonnull String chatId) throws UnirestException {
+    return Unirest.post("https://api.internal.myteam.mail.ru/bot/v1" + "/chats/getMembers")
+        .header("Accept", "application/json")
+        .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
+        .field("token", apiToken)
+        .field("chatId", chatId)
+        .asObject(ChatMember.class);
   }
 }

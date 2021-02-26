@@ -1,10 +1,12 @@
 import $ from 'jquery';
 import contextPath from 'wrm/context-path';
 import { ChatCreationData } from './ChatPanelStore';
+import {AvatarProps} from "@atlaskit/avatar-group";
 
 export type ChatInfoType = {
   link: string;
   name: string;
+  members:AvatarProps[];
 };
 
 export class LoadingService {
