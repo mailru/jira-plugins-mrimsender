@@ -292,27 +292,39 @@ public class MyteamEventsListener {
           return;
         }
       }
+
+      if (chatState.isWaitingForIssueCreationConfirm()) {
+        if (buttonPrefix.equals("addExtraIssueFields")) {
+          asyncEventBus.post(
+              new AddAdditionalIssueFieldClickEvent(
+                  buttonClickEvent, chatState.getIssueCreationDto()));
+          return;
+        }
+        if (buttonPrefix.equals("confirmIssueCreation")) {
+          asyncEventBus.post(
+              new CreateIssueConfirmClickEvent(buttonClickEvent, chatState.getIssueCreationDto()));
+          return;
+        }
+      }
+
+      if (chatState.isWaitingForAdditionalFieldSelect()) {
+        if (buttonPrefix.equals("selectAdditionalField")) {
+          asyncEventBus.post(
+              new SelectAdditionalIssueFieldClickEvent(
+                  buttonClickEvent,
+                  chatState.getIssueCreationDto(),
+                  StringUtils.substringAfter(buttonClickEvent.getCallbackData(), "-")));
+        }
+        if (buttonPrefix.equals("cancel")) {
+          asyncEventBus.post(
+              new CancelAdditionalFieldClickEvent(
+                  buttonClickEvent, chatState.getIssueCreationDto()));
+          return;
+        }
+      }
       if (chatState.isWaiting() && buttonPrefix.equals("cancel")) {
         asyncEventBus.post(new CancelClickEvent(buttonClickEvent));
         return;
-      }
-      if (buttonPrefix.equals("confirmIssueCreation")) {
-        asyncEventBus.post(
-            new CreateIssueConfirmClickEvent(buttonClickEvent, chatState.getIssueCreationDto()));
-      }
-      if (chatState.isWaitingForIssueCreationConfirm()
-          && buttonPrefix.equals("addExtraIssueFields")) {
-        asyncEventBus.post(
-            new AddAdditionalIssueFieldCilckEvent(
-                buttonClickEvent, chatState.getIssueCreationDto()));
-      }
-
-      if (buttonPrefix.equals("selectAdditionalField")) {
-        asyncEventBus.post(
-            new SelectAdditionalIssueFieldClickEvent(
-                buttonClickEvent,
-                chatState.getIssueCreationDto(),
-                StringUtils.substringAfter(buttonClickEvent.getCallbackData(), "-")));
       }
     }
 

@@ -500,18 +500,18 @@ public class CreateIssueEventsListener {
   }
 
   @Subscribe
-  public void onAddExtraIssueFieldCilckEvent(
-      AddAdditionalIssueFieldCilckEvent addExtraIssueFieldCilckEvent)
+  public void onAddExtraIssueFieldClickEvent(
+      AddAdditionalIssueFieldClickEvent addExtraIssueFieldClickEvent)
       throws UnirestException, IOException, MyteamServerErrorException {
 
     ApplicationUser currentUser =
-        userData.getUserByMrimLogin(addExtraIssueFieldCilckEvent.getUserId());
+        userData.getUserByMrimLogin(addExtraIssueFieldClickEvent.getUserId());
     if (currentUser == null) {
       // TODO unauthorized
       return;
     }
-    String chatId = addExtraIssueFieldCilckEvent.getChatId();
-    IssueCreationDto issueCreationDto = addExtraIssueFieldCilckEvent.getIssueCreationDto();
+    String chatId = addExtraIssueFieldClickEvent.getChatId();
+    IssueCreationDto issueCreationDto = addExtraIssueFieldClickEvent.getIssueCreationDto();
     Locale locale = localeManager.getLocaleFor(currentUser);
 
     LinkedHashMap<Field, String> nonRequiredFields =
@@ -522,17 +522,18 @@ public class CreateIssueEventsListener {
             null,
             IssueFieldsFilterEnum.NON_REQUIRED);
 
-    myteamApiClient.answerCallbackQuery(addExtraIssueFieldCilckEvent.getQueryId());
+    myteamApiClient.answerCallbackQuery(addExtraIssueFieldClickEvent.getQueryId());
 
     List<Field> firstPageFieldsInterval =
         nonRequiredFields.keySet().stream()
             .limit(ADDITIONAL_FIELD_LIST_PAGE_SIZE)
             .collect(Collectors.toList());
-    myteamApiClient.sendMessageText(
+    myteamApiClient.editMessageText(
         chatId,
+        addExtraIssueFieldClickEvent.getMsgId(),
         i18nResolver.getRawText(
             locale,
-            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"),
+            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectAdditionalField.message"),
         messageFormatter.getSelectAdditionalFieldMessageButtons(
             locale,
             false,
@@ -662,12 +663,14 @@ public class CreateIssueEventsListener {
     Optional<Field> field =
         nonRequiredFields.keySet().stream().filter(f -> f.getId().equals(fieldId)).findAny();
     if (field.isPresent()) {
-      myteamApiClient.sendMessageText(
+      myteamApiClient.editMessageText(
           chatId,
+          selectAdditionalIssueFieldClickEvent.getMsgId(),
           String.format(
               "%s\n%s: -",
               messageFormatter.createInsertFieldMessage(locale, field.get(), issueCreationDto),
-              field.get().getName()));
+              field.get().getName()),
+          null);
       chatsStateMap.put(
           chatId, ChatState.buildIssueFieldFillingState(issueCreationDto, field.get()));
     }
@@ -702,7 +705,8 @@ public class CreateIssueEventsListener {
           chatId,
           i18nResolver.getText(
               locale,
-              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreationConfirmation"),
+              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.additionalField.success",
+              newAdditionalFieldMessageEvent.getField().getName()),
           messageFormatter.getIssueCreationConfirmButtons(currentUser));
     } else {
       issueCreationDto
@@ -723,6 +727,29 @@ public class CreateIssueEventsListener {
   }
 
   @Subscribe
+  public void onCancelAdditionalFieldClickEvent(
+      CancelAdditionalFieldClickEvent cancelAdditionalFieldClickEvent)
+      throws UnirestException, IOException, MyteamServerErrorException {
+    ApplicationUser currentUser =
+        userData.getUserByMrimLogin(cancelAdditionalFieldClickEvent.getUserId());
+    if (currentUser == null) {
+      return;
+    }
+    String chatId = cancelAdditionalFieldClickEvent.getChatId();
+    IssueCreationDto issueCreationDto = cancelAdditionalFieldClickEvent.getIssueCreationDto();
+    Locale locale = localeManager.getLocaleFor(currentUser);
+    chatsStateMap.put(chatId, ChatState.buildIssueCreationConfirmState(issueCreationDto));
+    myteamApiClient.answerCallbackQuery(cancelAdditionalFieldClickEvent.getQueryId());
+    myteamApiClient.editMessageText(
+        chatId,
+        cancelAdditionalFieldClickEvent.getMsgId(),
+        i18nResolver.getText(
+            locale,
+            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreationConfirmation"),
+        messageFormatter.getIssueCreationConfirmButtons(currentUser));
+  }
+
+  @Subscribe
   public void onCreateIssueConfirmClickEvent(
       CreateIssueConfirmClickEvent createIssueConfirmClickEvent)
       throws UnirestException, IOException, MyteamServerErrorException {
@@ -736,12 +763,13 @@ public class CreateIssueEventsListener {
     String chatId = createIssueConfirmClickEvent.getChatId();
     IssueCreationDto currentIssueCreationDto = createIssueConfirmClickEvent.getIssueCreationDto();
     Locale locale = localeManager.getLocaleFor(currentUser);
-
+    JiraThreadLocalUtils.preCall();
     try {
       // then user filled all new issue fields which are required
 
       IssueService.CreateValidationResult issueValidationResult =
           validateIssueWithGivenFields(currentUser, currentIssueCreationDto);
+      myteamApiClient.answerCallbackQuery(createIssueConfirmClickEvent.getQueryId());
       if (issueValidationResult.isValid()) {
         MutableIssue createdIssue =
             issueService.create(currentUser, issueValidationResult).getIssue();
