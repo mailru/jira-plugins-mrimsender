@@ -53,7 +53,9 @@ import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 public class MessageFormatter {
   public static final int LIST_PAGE_SIZE = 15;
   public static final int COMMENT_LIST_PAGE_SIZE = 10;
-  public static final int ADDITIONAL_FIELD_LIST_PAGE_SIZE = 5;
+  public static final int ADDITIONAL_FIELD_LIST_PAGE_SIZE = 30;
+  public static final int ADDITIONAL_FIELD_ONE_COLUMN_MAX_COUNT = 5;
+  public static final int ADDITIONAL_FIELD_TWO_COLUMN_MAX_COUNT = 15;
   public static final String DELIMITER_STR = "----------";
 
   private final ApplicationProperties applicationProperties;
@@ -789,37 +791,40 @@ public class MessageFormatter {
             "prevAdditionalFieldListPage",
             "nextAdditionalFieldListPage");
 
+    int colCount =
+        fields.size() <= ADDITIONAL_FIELD_ONE_COLUMN_MAX_COUNT
+            ? 1
+            : (fields.size() <= ADDITIONAL_FIELD_TWO_COLUMN_MAX_COUNT ? 2 : 3);
+
     List<List<InlineKeyboardMarkupButton>> fieldButtons = new ArrayList<>();
-    fields.forEach(
-        field -> {
-          fieldButtons.add(
-              new ArrayList<InlineKeyboardMarkupButton>() {
-                {
-                  add(
-                      InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-                          field.getName(),
-                          String.join("-", "selectAdditionalField", field.getId())));
-                }
-              });
-        });
+    List<InlineKeyboardMarkupButton> fieldButtonRow = new ArrayList<>();
+
+    int i = 0;
+    while (i < fields.size()) {
+      Field field = fields.get(i);
+      fieldButtonRow.add(
+          InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+              field.getName(), String.join("-", "selectAdditionalField", field.getId())));
+
+      if (i % colCount == 0) {
+        fieldButtons.add(fieldButtonRow);
+        fieldButtonRow = new ArrayList<>();
+      }
+      i++;
+    }
 
     String cancelTitle =
         i18nResolver.getRawText(
             locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text");
 
-    if (buttons == null || buttons.size() == 0) {
-      List<InlineKeyboardMarkupButton> row = getCancelButtonRow(cancelTitle);
-      buttons =
-          new ArrayList<List<InlineKeyboardMarkupButton>>() {
-            {
-              add(row);
-            }
-          };
+    if (buttons == null || buttons.size() == 0) { // if no pager buttons
+      fieldButtons.add(getCancelButtonRow(cancelTitle));
+      return fieldButtons;
     } else {
       buttons.get(0).add(InlineKeyboardMarkupButton.buildButtonWithoutUrl(cancelTitle, "cancel"));
+      buttons.addAll(0, fieldButtons);
     }
 
-    buttons.addAll(0, fieldButtons);
     return buttons;
   }
 

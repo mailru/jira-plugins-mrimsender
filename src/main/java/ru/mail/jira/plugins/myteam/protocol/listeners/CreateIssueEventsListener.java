@@ -43,7 +43,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilterEnum;
+import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.PluginData;
@@ -347,7 +347,7 @@ public class CreateIssueEventsListener {
             selectedIssueType,
             includedFieldIds,
             excludedFieldIds,
-            IssueFieldsFilterEnum.REQUIRED);
+            IssueFieldsFilter.REQUIRED);
 
     // We don't need allow user to fill reporter field
     issueCreationRequiredFieldsValues.remove(
@@ -520,7 +520,7 @@ public class CreateIssueEventsListener {
             issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()),
             null,
             null,
-            IssueFieldsFilterEnum.NON_REQUIRED);
+            IssueFieldsFilter.NON_REQUIRED);
 
     myteamApiClient.answerCallbackQuery(addExtraIssueFieldClickEvent.getQueryId());
 
@@ -563,7 +563,7 @@ public class CreateIssueEventsListener {
               issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()),
               null,
               null,
-              IssueFieldsFilterEnum.NON_REQUIRED);
+              IssueFieldsFilter.NON_REQUIRED);
       List<Field> pageFieldsInterval =
           nonRequiredFields.keySet().stream()
               .skip(prevPageStartIndex)
@@ -608,7 +608,7 @@ public class CreateIssueEventsListener {
               issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()),
               null,
               null,
-              IssueFieldsFilterEnum.NON_REQUIRED);
+              IssueFieldsFilter.NON_REQUIRED);
       List<Field> pageFieldsInterval =
           nonRequiredFields.keySet().stream()
               .skip(nextPageStartIndex)
@@ -656,7 +656,7 @@ public class CreateIssueEventsListener {
             issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()),
             null,
             null,
-            IssueFieldsFilterEnum.NON_REQUIRED);
+            IssueFieldsFilter.NON_REQUIRED);
 
     myteamApiClient.answerCallbackQuery(selectAdditionalIssueFieldClickEvent.getQueryId());
 
@@ -818,7 +818,7 @@ public class CreateIssueEventsListener {
       IssueType issueType,
       Set<String> includedFieldIds,
       Set<String> excludedFieldIds,
-      IssueFieldsFilterEnum issueFieldsFilter) {
+      IssueFieldsFilter issueFieldsFilter) {
     // getting (selectedProject, selectedIssueType) fields configuration
     FieldLayout fieldLayout = fieldLayoutManager.getFieldLayout(project, issueType.getId());
     // getting (selectedProject, selectedIssueType, selectedIssueOperation) fields screen
