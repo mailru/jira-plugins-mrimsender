@@ -1,6 +1,7 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol;
 
+import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.query.Query;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,9 +16,13 @@ public class ChatState {
   private final boolean isWaitingForJqlClause;
   private final boolean isWaitingForProjectSelect;
   private final boolean isWaitingForIssueTypeSelect;
-  private final boolean isNewIssueFieldsFillingState;
+  private final boolean isNewIssueRequiredFieldsFillingState;
+  private final boolean isIssueFieldsFillingState;
   private final boolean isWaitingForNewIssueButtonFillingState;
+  private final boolean isWaitingForIssueCreationConfirm;
+  private final boolean isWaitingForAdditionalFieldSelect;
   private final String issueKey;
+  private final Field field;
   private final Query currentSearchJqlClause;
   private final Integer currentSelectListPage;
   private final Integer currentFillingFieldNum;
@@ -30,7 +35,9 @@ public class ChatState {
         || isWaitingForJqlClause
         || isWaitingForProjectSelect
         || isWaitingForNewIssueButtonFillingState
-        || isNewIssueFieldsFillingState;
+        || isNewIssueRequiredFieldsFillingState
+        || isIssueFieldsFillingState
+        || isWaitingForAdditionalFieldSelect;
   }
 
   public static final ChatState issueKeyWaitingState = builder().isWaitingForIssueKey(true).build();
@@ -81,11 +88,36 @@ public class ChatState {
         .build();
   }
 
-  public static ChatState buildNewIssueFieldsFillingState(
+  public static ChatState buildIssueCreationConfirmState(IssueCreationDto issueCreationDto) {
+    return builder()
+        .isWaitingForIssueCreationConfirm(true)
+        .issueCreationDto(issueCreationDto)
+        .build();
+  }
+
+  public static ChatState buildNewIssueRequiredFieldsFillingState(
       Integer currentFillingFieldNum, IssueCreationDto issueCreationDto) {
     return builder()
-        .isNewIssueFieldsFillingState(true)
+        .isNewIssueRequiredFieldsFillingState(true)
         .currentFillingFieldNum(currentFillingFieldNum)
+        .issueCreationDto(issueCreationDto)
+        .build();
+  }
+
+  public static ChatState buildAdditionalIssueFieldSelectWaitingState(
+      Integer currentListPage, IssueCreationDto issueCreationDto) {
+    return builder()
+        .isWaitingForAdditionalFieldSelect(true)
+        .currentSelectListPage(currentListPage)
+        .issueCreationDto(issueCreationDto)
+        .build();
+  }
+
+  public static ChatState buildIssueFieldFillingState(
+      IssueCreationDto issueCreationDto, Field field) {
+    return builder()
+        .isIssueFieldsFillingState(true)
+        .field(field)
         .issueCreationDto(issueCreationDto)
         .build();
   }

@@ -4,7 +4,7 @@ package ru.mail.jira.plugins.myteam.protocol.events;
 import java.net.URL;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
-import ru.mail.jira.plugins.myteam.Utils;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 
 @Getter
 public class IssueKeyMessageEvent {
