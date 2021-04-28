@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.calendar.rest;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.plugins.rest.common.security.CorsAllowed;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ import java.util.List;
 
 @Path("/calendar/events")
 @Produces(MediaType.APPLICATION_JSON)
+@CorsAllowed
 public class RestCalendarEventService {
     private final static Logger log = LoggerFactory.getLogger(RestCalendarEventService.class);
 
