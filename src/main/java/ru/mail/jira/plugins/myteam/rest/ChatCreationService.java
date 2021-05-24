@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.rest;
 
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
+import com.atlassian.jira.bc.user.search.UserSearchService;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.watchers.WatcherManager;
@@ -17,7 +18,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.ws.rs.*;
+import java.util.stream.StreamSupport;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
@@ -30,6 +37,7 @@ import ru.mail.jira.plugins.myteam.model.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.JiraIssueViewEvent;
@@ -53,6 +61,7 @@ public class ChatCreationService {
   private final PluginData pluginData;
   private final UserData userData;
   private final MyteamEventsListener myteamEventsListener;
+  private final UserSearchService userSearchService;
 
   @Autowired
   public ChatCreationService(
@@ -61,6 +70,7 @@ public class ChatCreationService {
       @ComponentImport WatcherManager watcherManager,
       @ComponentImport AvatarService avatarService,
       @ComponentImport UserManager userManager,
+      @ComponentImport UserSearchService userSearchService,
       MyteamApiClient myteamApiClient,
       MyteamChatRepository myteamChatRepository,
       PluginData pluginData,
@@ -70,6 +80,7 @@ public class ChatCreationService {
     this.issueManager = issueManager;
     this.watcherManager = watcherManager;
     this.myteamApiClient = myteamApiClient;
+    this.userSearchService = userSearchService;
     this.myteamChatRepository = myteamChatRepository;
     this.avatarService = avatarService;
     this.userManager = userManager;
@@ -89,18 +100,42 @@ public class ChatCreationService {
     MyteamChatMetaEntity chatMeta = myteamChatRepository.findChatByIssueKey(issueKey);
     if (chatMeta == null) return Response.ok().build();
     /*
-    localhost test stubbing part
+    //localhost test stubbing part
     return Response.ok(
             ChatMetaDto.buildChatInfo(
                 new GroupChatInfo(
                     "title", "about", "rules", "http:/myteam/inite/link", false, false)))
         .build();*/
     try {
+      ChatMember chatMembersFromApi = myteamApiClient.getMembers(chatMeta.getChatId()).getBody();
+      List<ApplicationUser> applicationUsers =
+          chatMembersFromApi.members.stream()
+              .map(
+                  member ->
+                      StreamSupport.stream(
+                              userSearchService.findUsersByEmail(member.userId).spliterator(),
+                              false)
+                          .filter(ApplicationUser::isActive)
+                          .findFirst()
+                          .orElse(null))
+              .filter(Objects::nonNull)
+              .collect(Collectors.toList());
+
+      List<ChatMemberDto> chatMemberDtos =
+          applicationUsers.stream()
+              .map(
+                  member -> {
+                    String url = avatarService.getAvatarURL(loggedInUser, member).toString();
+                    return new ChatMemberDto(member.getDisplayName(), member.getId(), url);
+                  })
+              .collect(Collectors.toList());
+
       HttpResponse<ChatInfoResponse> chatInfoResponse =
           myteamApiClient.getChatInfo(pluginData.getToken(), chatMeta.getChatId());
       if (chatInfoResponse.getStatus() == 200 && chatInfoResponse.getBody() != null) {
         ChatInfoResponse chatInfo = chatInfoResponse.getBody();
-        return Response.ok(ChatMetaDto.buildChatInfo(chatInfo)).build();
+        ChatMetaDto chatMetaDto = ChatMetaDto.buildChatInfo(chatInfo, chatMemberDtos);
+        return Response.ok(chatMetaDto).build();
       } else {
         log.error(
             "getChatInfo method returns NOT OK status or empty body for chat with chatId = "
@@ -172,6 +207,25 @@ public class ChatCreationService {
             .map(user -> new ChatMemberId(userData.getMrimLogin(user)))
             .collect(Collectors.toList());
 
+    List<ApplicationUser> applicationUsers =
+        chatMembers.stream()
+            .map(
+                member ->
+                    StreamSupport.stream(
+                            userSearchService.findUsersByEmail(member.getSn()).spliterator(), false)
+                        .filter(ApplicationUser::isActive)
+                        .findFirst()
+                        .orElse(null))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    List<ChatMemberDto> chatMemberDtos =
+        applicationUsers.stream()
+            .map(
+                member -> {
+                  String url = avatarService.getAvatarURL(loggedInUser, member).toString();
+                  return new ChatMemberDto(member.getDisplayName(), member.getId(), url);
+                })
+            .collect(Collectors.toList());
     // localhost tests stubbing
     /* return Response.ok(
         ChatMetaDto.buildChatInfo(
@@ -193,7 +247,8 @@ public class ChatCreationService {
         HttpResponse<ChatInfoResponse> chatInfoResponse =
             myteamApiClient.getChatInfo(pluginData.getToken(), chatId);
         if (chatInfoResponse.getStatus() == 200 && chatInfoResponse.getBody() != null) {
-          return Response.ok(ChatMetaDto.buildChatInfo(chatInfoResponse.getBody())).build();
+          return Response.ok(ChatMetaDto.buildChatInfo(chatInfoResponse.getBody(), chatMemberDtos))
+              .build();
         }
       }
       log.error("Exception during chat creation chat sn not found");

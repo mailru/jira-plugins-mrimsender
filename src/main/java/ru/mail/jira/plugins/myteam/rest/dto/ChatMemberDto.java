@@ -10,7 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @XmlRootElement
 public class ChatMemberDto {
-  @XmlElement @Getter @Setter private String displayName;
+  @XmlElement @Getter @Setter private String name;
   @XmlElement @Getter @Setter private Long id;
-  @XmlElement @Getter @Setter private String avatarUrl;
+  @XmlElement @Getter @Setter private String src;
 }

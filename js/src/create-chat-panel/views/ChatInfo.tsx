@@ -1,46 +1,43 @@
-import { observer } from 'mobx-react';
+import {observer} from 'mobx-react';
 import React from 'react';
 import styled from '@emotion/styled';
-import { gridSize } from '@atlaskit/theme';
-import { ChatInfoType } from '../stores/LoadingService';
-import { I18n } from '@atlassian/wrm-react-i18n';
+import {ChatInfoType} from '../stores/LoadingService';
+import {I18n} from '@atlassian/wrm-react-i18n';
+import AvatarGroup from '@atlaskit/avatar-group';
+
+import MyteamImage from '../../assets/myteam.png';
 
 type ChatInfoProps = {
-  chatInfo: ChatInfoType;
+    chatInfo: ChatInfoType;
 };
 
 export const StyledContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  line-height: 1.5;
-  margin-bottom: ${gridSize() / 2}px;
+  align-items: center;
+  display: flex; 
 `;
 
-export const StyledLabel = styled.span`
-  font-weight: 500;
-  margin-right: 24px;
+const StyledLabel = styled.span`
+  color: #6b778c;
+  flex: 0 0 140px;
 `;
 
-const StyledValue = styled.span`
-  text-align: right;
+const Logo = styled.img`
+    padding-right:5px;
+    vertical-align: middle;
 `;
 
 export const ChatInfo = observer((props: ChatInfoProps) => {
-  const { chatInfo } = props;
-  return (
-    <div>
-      <StyledContainer>
-        <StyledLabel>Myteam chat:</StyledLabel>
-        <StyledValue>{chatInfo.name}</StyledValue>
-      </StyledContainer>
-      <StyledContainer>
-        <StyledLabel>Chat link:</StyledLabel>
-        <StyledValue>
-          <a href={chatInfo.link} target="_blank" rel="noreferrer">
-            {I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.linkname')}
-          </a>
-        </StyledValue>
-      </StyledContainer>
-    </div>
-  );
+    const {chatInfo} = props;
+    return (
+        <div>
+            <a href={chatInfo.link} target="_blank" rel="noreferrer">
+                <Logo height={16} src={MyteamImage} alt="Myteam logo"/>
+                {chatInfo.name}
+            </a>
+            <StyledContainer>
+                <StyledLabel>{I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.members.preview')}</StyledLabel>
+                <AvatarGroup appearance="stack" data={chatInfo.members}/>
+            </StyledContainer>
+        </div>
+    );
 });

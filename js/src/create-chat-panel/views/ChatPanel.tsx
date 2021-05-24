@@ -44,7 +44,7 @@ export const ChatPanel = observer((props: CreateChatPanelProps) => {
     );
 
   if (store.chatAlreadyExist && store.chatInfo != null) {
-    return <ChatInfo chatInfo={store.chatInfo} />;
+    return <ChatInfo chatInfo={store.chatInfo}/>;
   }
 
   return (

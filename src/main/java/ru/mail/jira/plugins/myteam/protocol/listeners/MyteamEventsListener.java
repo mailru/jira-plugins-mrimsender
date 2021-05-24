@@ -42,7 +42,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.mail.jira.plugins.myteam.Utils;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
@@ -54,23 +54,8 @@ import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.CancelClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.CommentIssueClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.CreateIssueClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.IssueTypeButtonClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.NewIssueFieldValueButtonClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.NextIssueCommentsPageClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.NextIssuesPageClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.NextProjectsPageClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.PrevIssueCommentsPageClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.PrevIssuesPageClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.PrevProjectsPageClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.SearchByJqlClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.SearchIssuesClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.ShowIssueClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.ViewIssueClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.ViewIssueCommentsClickEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
 
 @Slf4j
 @Component
@@ -177,12 +162,18 @@ public class MyteamEventsListener {
             new SelectedIssueTypeMessageEvent(chatMessageEvent, chatState.getIssueCreationDto()));
         return;
       }
-      if (chatState.isNewIssueFieldsFillingState()) {
+      if (chatState.isNewIssueRequiredFieldsFillingState()) {
         asyncEventBus.post(
             new NewIssueFieldValueMessageEvent(
                 chatMessageEvent,
                 chatState.getIssueCreationDto(),
                 chatState.getCurrentFillingFieldNum()));
+        return;
+      }
+      if (chatState.isIssueFieldsFillingState()) {
+        asyncEventBus.post(
+            new NewAdditionalFieldMessageEvent(
+                chatMessageEvent, chatState.getIssueCreationDto(), chatState.getField()));
         return;
       }
     }
@@ -266,6 +257,24 @@ public class MyteamEventsListener {
           return;
         }
       }
+      if (chatState.isWaitingForAdditionalFieldSelect()) {
+        if (buttonPrefix.equals("nextAdditionalFieldListPage")) {
+          asyncEventBus.post(
+              new NextAdditionalFieldPageClickEvent(
+                  buttonClickEvent,
+                  chatState.getCurrentSelectListPage(),
+                  chatState.getIssueCreationDto()));
+          return;
+        }
+        if (buttonPrefix.equals("prevAdditionalFieldListPage")) {
+          asyncEventBus.post(
+              new PrevAdditionalFieldPageClickEvent(
+                  buttonClickEvent,
+                  chatState.getCurrentSelectListPage(),
+                  chatState.getIssueCreationDto()));
+          return;
+        }
+      }
       if (chatState.isWaitingForIssueTypeSelect()) {
         if (buttonPrefix.equals("selectIssueType")) {
           asyncEventBus.post(
@@ -280,6 +289,36 @@ public class MyteamEventsListener {
                   buttonClickEvent,
                   chatState.getIssueCreationDto(),
                   chatState.getCurrentFillingFieldNum()));
+          return;
+        }
+      }
+
+      if (chatState.isWaitingForIssueCreationConfirm()) {
+        if (buttonPrefix.equals("addExtraIssueFields")) {
+          asyncEventBus.post(
+              new AddAdditionalIssueFieldClickEvent(
+                  buttonClickEvent, chatState.getIssueCreationDto()));
+          return;
+        }
+        if (buttonPrefix.equals("confirmIssueCreation")) {
+          asyncEventBus.post(
+              new CreateIssueConfirmClickEvent(buttonClickEvent, chatState.getIssueCreationDto()));
+          return;
+        }
+      }
+
+      if (chatState.isWaitingForAdditionalFieldSelect()) {
+        if (buttonPrefix.equals("selectAdditionalField")) {
+          asyncEventBus.post(
+              new SelectAdditionalIssueFieldClickEvent(
+                  buttonClickEvent,
+                  chatState.getIssueCreationDto(),
+                  StringUtils.substringAfter(buttonClickEvent.getCallbackData(), "-")));
+        }
+        if (buttonPrefix.equals("cancel")) {
+          asyncEventBus.post(
+              new CancelAdditionalFieldClickEvent(
+                  buttonClickEvent, chatState.getIssueCreationDto()));
           return;
         }
       }
