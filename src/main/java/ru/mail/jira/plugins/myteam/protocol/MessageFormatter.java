@@ -277,7 +277,7 @@ public class MessageFormatter {
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
     Issue issue = issueEvent.getIssue();
     ApplicationUser user = issueEvent.getUser();
-    String issueLink = createIssueLink(issue);
+    String issueLink = "[" + issue.getKey() + "](" + createIssueLink(issue) + ")";
 
     StringBuilder sb = new StringBuilder();
 
@@ -434,12 +434,10 @@ public class MessageFormatter {
 
   public String createIssueSummary(Issue issue, ApplicationUser user) {
     StringBuilder sb = new StringBuilder();
-    sb.append(issue.getKey()).append("   ").append(issue.getSummary()).append("\n");
     String issueLink =
         String.format(
             "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
-    sb.append(issueLink);
-
+    sb.append("[").append(issue.getKey()).append("](").append(issueLink).append(")\n");
     // append status field because it doesn't exist in formatSystemFields string
     appendField(
         sb,
@@ -720,7 +718,16 @@ public class MessageFormatter {
     return stringifyPagedCollection(
         locale,
         issueList.stream()
-            .map(issue -> String.join("", "[", issue.getKey(), "] ", issue.getSummary()))
+            .map(
+                issue ->
+                    String.join(
+                        "",
+                        "["
+                            + issue.getKey()
+                            + "]("
+                            + String.format("%s/browse/%s", jiraBaseUrl, issue.getKey())
+                            + ") ",
+                        issue.getSummary()))
             .collect(Collectors.toList()),
         pageNumber,
         total,
