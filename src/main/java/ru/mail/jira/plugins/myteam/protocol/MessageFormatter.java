@@ -721,14 +721,9 @@ public class MessageFormatter {
         issueList.stream()
             .map(
                 issue ->
-                    String.join(
-                        "",
-                        "["
-                            + issue.getKey()
-                            + "]("
-                            + String.format("%s/browse/%s", jiraBaseUrl, issue.getKey())
-                            + ") ",
-                        issue.getSummary()))
+                    markdownTextLink(issue.getKey(), createIssueLink(issue))
+                        + ' '
+                        + issue.getSummary())
             .collect(Collectors.toList()),
         pageNumber,
         total,
