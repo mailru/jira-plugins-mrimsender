@@ -113,7 +113,7 @@ public class MessageFormatter {
   private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
     if (user != null) {
       if (mention) {
-        return "@[" + user.getEmailAddress() + "]";
+        return "@\\[" + user.getEmailAddress() + "\\]";
       }
       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
     } else return i18nHelper.getText(messageKey);
@@ -274,10 +274,16 @@ public class MessageFormatter {
         "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
   }
 
+  private String markdownIssueLink(String issueKey, String issueLink) {
+    if (issueKey != null) {
+      return "[" + issueKey + "](" + issueLink + ")";
+    } else return issueLink;
+  }
+
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
     Issue issue = issueEvent.getIssue();
     ApplicationUser user = issueEvent.getUser();
-    String issueLink = "[" + issue.getKey() + "](" + createIssueLink(issue) + ")";
+    String issueLink = markdownIssueLink(issue.getKey(), createIssueLink(issue));
 
     StringBuilder sb = new StringBuilder();
 
@@ -415,8 +421,11 @@ public class MessageFormatter {
     Issue issue = mentionIssueEvent.getIssue();
     ApplicationUser user = mentionIssueEvent.getFromUser();
     String issueLink =
-        String.format(
-            "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
+        markdownIssueLink(
+            issue.getKey(),
+            String.format(
+                "%s/browse/%s",
+                applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey()));
 
     StringBuilder sb = new StringBuilder();
     sb.append(
@@ -434,10 +443,13 @@ public class MessageFormatter {
 
   public String createIssueSummary(Issue issue, ApplicationUser user) {
     StringBuilder sb = new StringBuilder();
-    String issueLink =
-        String.format(
-            "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
-    sb.append("[").append(issue.getKey()).append("](").append(issueLink).append(")\n");
+    sb.append(
+            markdownIssueLink(
+                issue.getKey(),
+                String.format(
+                    "%s/browse/%s",
+                    applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey())))
+        .append('\n');
     // append status field because it doesn't exist in formatSystemFields string
     appendField(
         sb,
