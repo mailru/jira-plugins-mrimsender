@@ -274,7 +274,7 @@ public class MessageFormatter {
         "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
   }
 
-  private String markdownIssueLink(String issueKey, String issueLink) {
+  private String markdownTextLink(String issueKey, String issueLink) {
     if (issueKey != null) {
       return "[" + issueKey + "](" + issueLink + ")";
     } else return issueLink;
@@ -283,7 +283,7 @@ public class MessageFormatter {
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
     Issue issue = issueEvent.getIssue();
     ApplicationUser user = issueEvent.getUser();
-    String issueLink = markdownIssueLink(issue.getKey(), createIssueLink(issue));
+    String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue));
 
     StringBuilder sb = new StringBuilder();
 
@@ -420,12 +420,7 @@ public class MessageFormatter {
   public String formatEvent(MentionIssueEvent mentionIssueEvent) {
     Issue issue = mentionIssueEvent.getIssue();
     ApplicationUser user = mentionIssueEvent.getFromUser();
-    String issueLink =
-        markdownIssueLink(
-            issue.getKey(),
-            String.format(
-                "%s/browse/%s",
-                applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey()));
+    String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue));
 
     StringBuilder sb = new StringBuilder();
     sb.append(
@@ -443,13 +438,7 @@ public class MessageFormatter {
 
   public String createIssueSummary(Issue issue, ApplicationUser user) {
     StringBuilder sb = new StringBuilder();
-    sb.append(
-            markdownIssueLink(
-                issue.getKey(),
-                String.format(
-                    "%s/browse/%s",
-                    applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey())))
-        .append('\n');
+    sb.append(markdownTextLink(issue.getKey(), createIssueLink(issue))).append('\n');
     // append status field because it doesn't exist in formatSystemFields string
     appendField(
         sb,
