@@ -18,7 +18,6 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ru.mail.jira.plugins.commons.RestUtils;
 import ru.mail.jira.plugins.myteam.model.PluginData;
 
 @Controller
@@ -72,6 +71,6 @@ public class MyteamProfilePanel implements ContextProvider {
     userData.setEnabled(user, enabled);
     userData.setCreateChatsWithUserAllowed(user, isChatCreaionAllowed);
 
-    return RestUtils.success(null);
+    return Response.ok().build();
   }
 }
