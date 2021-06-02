@@ -15,7 +15,7 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
 @ToString
 public class PullRequestApprovedByReviewer extends BitbucketEventDto {
   private UserDto actor;
-  private PullRequestDto pullRequestDto;
+  private PullRequestDto pullRequest;
   private PullRequestParticipantDto participant;
   private String previousStatus;
 }

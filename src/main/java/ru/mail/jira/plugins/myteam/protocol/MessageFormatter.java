@@ -47,6 +47,8 @@ import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.myteam.bitbucket.dto.*;
+import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
 @Component
@@ -111,6 +113,15 @@ public class MessageFormatter {
   }
 
   private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
+    if (user != null) {
+      if (mention) {
+        return "@[" + user.getEmailAddress() + "]";
+      }
+      return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
+    } else return i18nHelper.getText(messageKey);
+  }
+
+  private String formatBitbucketUser(UserDto user, String messageKey, boolean mention) {
     if (user != null) {
       if (mention) {
         return "@[" + user.getEmailAddress() + "]";
@@ -272,6 +283,243 @@ public class MessageFormatter {
   public String createIssueLink(Issue issue) {
     return String.format(
         "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
+  }
+
+  public String formatBitbucketEvent(ApplicationUser recipient, BitbucketEventDto bitbucketEvent) {
+    StringBuilder sb = new StringBuilder();
+
+    // Repository events
+    if (bitbucketEvent instanceof RepositoryPushEventDto) {
+      RepositoryPushEventDto repositoryPushEventDto = (RepositoryPushEventDto) bitbucketEvent;
+      UserDto actor = repositoryPushEventDto.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pushed",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              repositoryPushEventDto.getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof RepositoryModifiedEventDto) {
+      RepositoryModifiedEventDto repositoryModifiedEventDto =
+          (RepositoryModifiedEventDto) bitbucketEvent;
+      UserDto actor = repositoryModifiedEventDto.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.modified",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              repositoryModifiedEventDto.getOldRepo().getName()));
+    }
+    if (bitbucketEvent instanceof RepositoryForkedEventDto) {
+      RepositoryForkedEventDto repositoryForkedEventDto = (RepositoryForkedEventDto) bitbucketEvent;
+      UserDto actor = repositoryForkedEventDto.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.forked",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              repositoryForkedEventDto.getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof RepositoryMirrorSynchronizedEventDto) {
+      RepositoryMirrorSynchronizedEventDto repositoryMirrorSynchronizedEventDto =
+          (RepositoryMirrorSynchronizedEventDto) bitbucketEvent;
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.mirror",
+              repositoryMirrorSynchronizedEventDto.getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof RepositoryCommitCommentCreatedEventDto) {
+      RepositoryCommitCommentCreatedEventDto repositoryCommitCommentCreatedEventDto =
+          (RepositoryCommitCommentCreatedEventDto) bitbucketEvent;
+      UserDto actor = repositoryCommitCommentCreatedEventDto.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.create",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              repositoryCommitCommentCreatedEventDto.getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof RepositoryCommitCommentEditedEventDto) {
+      RepositoryCommitCommentEditedEventDto repositoryCommitCommentEditedEventDto =
+          (RepositoryCommitCommentEditedEventDto) bitbucketEvent;
+      UserDto actor = repositoryCommitCommentEditedEventDto.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              repositoryCommitCommentEditedEventDto.getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof RepositoryCommitCommentDeletedEventDto) {
+      RepositoryCommitCommentDeletedEventDto repositoryCommitCommentDeletedEventDto =
+          (RepositoryCommitCommentDeletedEventDto) bitbucketEvent;
+      UserDto actor = repositoryCommitCommentDeletedEventDto.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.delete",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              repositoryCommitCommentDeletedEventDto.getRepository().getName()));
+    }
+
+    // PR events
+    if (bitbucketEvent instanceof PullRequestOpened) {
+      PullRequestOpened pullRequestOpened = (PullRequestOpened) bitbucketEvent;
+      UserDto actor = pullRequestOpened.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.opened",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              pullRequestOpened.getPullRequest().getFromRef().getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof PullRequestModified) {
+      PullRequestModified pullRequestModified = (PullRequestModified) bitbucketEvent;
+      UserDto actor = pullRequestModified.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              pullRequestModified.getPullRequest().getFromRef().getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof PullRequestReviewersUpdated) {
+      PullRequestReviewersUpdated pullRequestReviewersUpdated =
+          (PullRequestReviewersUpdated) bitbucketEvent;
+      UserDto actor = pullRequestReviewersUpdated.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewersupdated",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              pullRequestReviewersUpdated.getPullRequest().getFromRef().getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof PullRequestApprovedByReviewer) {
+      PullRequestApprovedByReviewer pullRequestApprovedByReviewer =
+          (PullRequestApprovedByReviewer) bitbucketEvent;
+      UserDto actor = pullRequestApprovedByReviewer.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.approved",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              pullRequestApprovedByReviewer
+                  .getPullRequest()
+                  .getFromRef()
+                  .getRepository()
+                  .getName()));
+    }
+    if (bitbucketEvent instanceof PullRequestUnapprovedByReviewer) {
+      PullRequestUnapprovedByReviewer pullRequestUnapprovedByReviewer =
+          (PullRequestUnapprovedByReviewer) bitbucketEvent;
+      UserDto actor = pullRequestUnapprovedByReviewer.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.unapproved",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              pullRequestUnapprovedByReviewer
+                  .getPullRequest()
+                  .getFromRef()
+                  .getRepository()
+                  .getName()));
+    }
+    if (bitbucketEvent instanceof PullRequestNeedsWorkByReviewer) {
+      PullRequestNeedsWorkByReviewer pullRequestNeedsWorkByReviewer =
+          (PullRequestNeedsWorkByReviewer) bitbucketEvent;
+      UserDto actor = pullRequestNeedsWorkByReviewer.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.needswork",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              pullRequestNeedsWorkByReviewer
+                  .getPullRequest()
+                  .getFromRef()
+                  .getRepository()
+                  .getName()));
+    }
+    if (bitbucketEvent instanceof PullRequestMerged) {
+      PullRequestMerged pullRequestMerged = (PullRequestMerged) bitbucketEvent;
+      UserDto actor = pullRequestMerged.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.merged",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              pullRequestMerged.getPullRequest().getFromRef().getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof PullRequestDeclined) {
+      PullRequestDeclined pullRequestDeclined = (PullRequestDeclined) bitbucketEvent;
+      UserDto actor = pullRequestDeclined.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.declined",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              pullRequestDeclined.getPullRequest().getFromRef().getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof PullRequestDeleted) {
+      PullRequestDeleted pullRequestDeleted = (PullRequestDeleted) bitbucketEvent;
+      UserDto actor = pullRequestDeleted.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.declined",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              pullRequestDeleted.getPullRequest().getFromRef().getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof PullRequestCommentAdded) {
+      PullRequestCommentAdded pullRequestCommentAdded = (PullRequestCommentAdded) bitbucketEvent;
+      UserDto actor = pullRequestCommentAdded.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.comment.added",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              pullRequestCommentAdded.getPullRequest().getFromRef().getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof PullRequestCommentEdited) {
+      PullRequestCommentEdited pullRequestCommentEdited = (PullRequestCommentEdited) bitbucketEvent;
+      UserDto actor = pullRequestCommentEdited.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.comment.edited",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              pullRequestCommentEdited.getPullRequest().getFromRef().getRepository().getName()));
+    }
+    if (bitbucketEvent instanceof PullRequestCommentDeleted) {
+      PullRequestCommentDeleted pullRequestCommentDeleted =
+          (PullRequestCommentDeleted) bitbucketEvent;
+      UserDto actor = pullRequestCommentDeleted.getActor();
+      boolean useMentionFormat =
+          !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.comment.deleted",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              pullRequestCommentDeleted.getPullRequest().getFromRef().getRepository().getName()));
+    }
+    sb.append("\n");
+    return sb.toString();
   }
 
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {

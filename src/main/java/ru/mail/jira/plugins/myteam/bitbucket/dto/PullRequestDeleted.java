@@ -14,5 +14,5 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
 @ToString
 public class PullRequestDeleted extends BitbucketEventDto {
   private UserDto actor;
-  private PullRequestDto pullRequestDto;
+  private PullRequestDto pullRequest;
 }

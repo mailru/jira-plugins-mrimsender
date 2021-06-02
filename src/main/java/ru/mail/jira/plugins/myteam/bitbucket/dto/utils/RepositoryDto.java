@@ -27,7 +27,7 @@ public class RepositoryDto {
   @JsonProperty("forkable")
   private boolean isForkable;
 
-  private ProjectDto projectDto;
+  private ProjectDto project;
 
   @JsonProperty("public")
   private boolean isPublic;
