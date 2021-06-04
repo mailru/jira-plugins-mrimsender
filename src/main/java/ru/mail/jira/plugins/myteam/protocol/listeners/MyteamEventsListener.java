@@ -386,6 +386,15 @@ public class MyteamEventsListener {
   }
 
   @Subscribe
+  public void handleBitbucketNotifyEvent(BitbucketNotifyEvent bitbucketNotifyEvent)
+      throws Exception {
+    myteamApiClient.sendMessageText(
+        bitbucketNotifyEvent.getChatId(),
+        bitbucketNotifyEvent.getMessage(),
+        bitbucketNotifyEvent.getButtons());
+  }
+
+  @Subscribe
   public void handleJiraIssueViewEvent(JiraIssueViewEvent jiraIssueViewEvent)
       throws IOException, UnirestException, MyteamServerErrorException {
     if (jiraIssueViewEvent.isGroupChat())
