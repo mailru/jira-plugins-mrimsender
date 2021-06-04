@@ -4,6 +4,7 @@ package ru.mail.jira.plugins.myteam.bitbucket.dto;
 import lombok.*;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
+import ru.mail.jira.plugins.myteam.bitbucket.BitbucketWebhookEvent;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.CommentDto;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.RepositoryDto;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
@@ -14,12 +15,21 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ToString
-public class RepositoryCommitCommentCreatedEventDto extends BitbucketEventDto {
+public class RepositoryCommitCommentDeleted extends BitbucketEventDto implements BitbucketWebhookEvent {
   private UserDto actor;
+  private CommentDto comment;
   private RepositoryDto repository;
 
   @JsonProperty("commit")
   private String commitHash;
 
-  private CommentDto comment;
+  @Override
+  public String getProjectName() {
+    return repository.getProject().getName();
+  }
+
+  @Override
+  public String getRepoSlug() {
+    return repository.getSlug();
+  }
 }

@@ -16,7 +16,7 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.BitbucketEventDto;
 
 @Provider
 @Consumes(MediaType.APPLICATION_JSON)
-public class JSONObjectMessageBodyReader implements MessageBodyReader<BitbucketEventDto> {
+public class BitbucketEventDtoMessageBodyReader implements MessageBodyReader<BitbucketEventDto> {
   private final ObjectMapper objectMapper = new ObjectMapper();
 
   @Override

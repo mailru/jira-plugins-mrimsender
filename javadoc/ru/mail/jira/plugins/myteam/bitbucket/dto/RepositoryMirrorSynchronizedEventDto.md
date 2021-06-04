@@ -1,6 +1,6 @@
 Class RepositoryMirrorSynchronizedEventDto
 ==========================================
-ru.mail.jira.plugins.myteam.bitbucket.dto.RepositoryMirrorSynchronizedEventDto
+ru.mail.jira.plugins.myteam.bitbucket.dto.RepositoryMirrorSynchronized
 Summary
 -------
 #### Constructors

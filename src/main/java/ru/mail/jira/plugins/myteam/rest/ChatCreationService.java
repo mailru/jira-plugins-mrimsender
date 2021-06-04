@@ -27,7 +27,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.apache.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
@@ -49,7 +51,7 @@ import ru.mail.jira.plugins.myteam.rest.dto.ChatMetaDto;
 @Controller
 @Path("/chats")
 public class ChatCreationService {
-  private static final Logger log = Logger.getLogger(ChatCreationService.class);
+  private static final Logger log = LoggerFactory.getLogger(ChatCreationService.class);
 
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final MyteamApiClient myteamApiClient;

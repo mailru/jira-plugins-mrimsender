@@ -4,9 +4,10 @@ package ru.mail.jira.plugins.myteam.bitbucket.dto;
 import java.util.List;
 import lombok.*;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
+import ru.mail.jira.plugins.myteam.bitbucket.BitbucketWebhookEvent;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.ChangeDto;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.RepositoryDto;
+import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
 
 @Getter
 @Setter
@@ -14,12 +15,18 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.RepositoryDto;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ToString
-public class RepositoryMirrorSynchronizedEventDto extends BitbucketEventDto {
-  private Void mirrorServer;
-  private String syncType;
+public class RepositoryPush extends BitbucketEventDto implements BitbucketWebhookEvent {
+  private UserDto actor;
   private RepositoryDto repository;
   private List<ChangeDto> changes;
 
-  @JsonProperty("refLimitExceeded")
-  private boolean isRefLimitExceeded;
+  @Override
+  public String getProjectName() {
+    return repository.getProject().getName();
+  }
+
+  @Override
+  public String getRepoSlug() {
+    return repository.getSlug();
+  }
 }

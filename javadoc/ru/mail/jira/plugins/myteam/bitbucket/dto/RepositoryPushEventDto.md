@@ -1,6 +1,6 @@
 Class RepositoryPushEventDto
 ============================
-ru.mail.jira.plugins.myteam.bitbucket.dto.RepositoryPushEventDto
+ru.mail.jira.plugins.myteam.bitbucket.dto.RepositoryPush
 Summary
 -------
 #### Constructors

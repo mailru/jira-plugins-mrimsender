@@ -1,6 +1,6 @@
 Class RepositoryModifiedEventDto
 ================================
-ru.mail.jira.plugins.myteam.bitbucket.dto.RepositoryModifiedEventDto
+ru.mail.jira.plugins.myteam.bitbucket.dto.RepositoryModified
 Summary
 -------
 #### Constructors

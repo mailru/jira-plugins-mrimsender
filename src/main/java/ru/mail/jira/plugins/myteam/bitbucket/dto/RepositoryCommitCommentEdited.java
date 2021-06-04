@@ -3,9 +3,10 @@ package ru.mail.jira.plugins.myteam.bitbucket.dto;
 
 import lombok.*;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
 import ru.mail.jira.plugins.myteam.bitbucket.BitbucketWebhookEvent;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.CommentDto;
-import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.PullRequestDto;
+import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.RepositoryDto;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
 
 @Getter
@@ -14,19 +15,22 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ToString
-public class PullRequestCommentAdded extends BitbucketEventDto implements BitbucketWebhookEvent {
+public class RepositoryCommitCommentEdited extends BitbucketEventDto implements BitbucketWebhookEvent {
   private UserDto actor;
-  private PullRequestDto pullRequest;
   private CommentDto comment;
-  private long commentParentId;
+  private CommentDto previousComment;
+  private RepositoryDto repository;
+
+  @JsonProperty("commit")
+  private String commitHash;
 
   @Override
   public String getProjectName() {
-    return pullRequest.getFromRef().getRepository().getProject().getName();
+    return repository.getProject().getName();
   }
 
   @Override
   public String getRepoSlug() {
-    return pullRequest.getFromRef().getRepository().getSlug();
+    return repository.getSlug();
   }
 }

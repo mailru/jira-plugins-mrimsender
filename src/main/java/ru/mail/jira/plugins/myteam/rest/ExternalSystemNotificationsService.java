@@ -23,12 +23,13 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
+import ru.mail.jira.plugins.myteam.bitbucket.BitbucketWebhookEvent;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.*;
-import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.RepositoryDto;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.BitbucketNotifyEvent;
@@ -38,7 +39,7 @@ import ru.mail.jira.plugins.myteam.rest.dto.BitbucketRepoWatcherDto;
 @Controller
 @Path("/external/notifications/")
 public class ExternalSystemNotificationsService {
-  private static final Logger log = Logger.getLogger(ExternalSystemNotificationsService.class);
+  private static final Logger log = LoggerFactory.getLogger(ExternalSystemNotificationsService.class);
   private static final String bitbucketRepoWatchersRestStr =
       "/rest/additional/1.0/watchers/repository/%s/%s";
   private static final String JIRA_ADMIN_USERNAME_FOR_APP_LINK = "admin";
@@ -73,132 +74,16 @@ public class ExternalSystemNotificationsService {
   public Void bitbucketProjectEventsWebHook(BitbucketEventDto event) {
     log.error("BITBUCKET JSON =" + event.toString());
 
-    Pair<String, String> projectNameAndRepoSlug = getProjectNameAndRepoSlug(event);
-    if (projectNameAndRepoSlug == null) {
-      throw new RuntimeException("project name ad repo slug can't be parsed");
+    if (!(event instanceof BitbucketWebhookEvent)) {
+      log.error("Bitbucket webhook event project name ad repo slug can't be parsed event = {}", event.toString(), new RuntimeException());
     }
+    BitbucketWebhookEvent bitbucketWebhookEvent = (BitbucketWebhookEvent) event;
     List<BitbucketRepoWatcherDto> allBitbucketRepositoryWatchers =
-        getAllBitbucketRepositoryWatchers(
-            projectNameAndRepoSlug.left(), projectNameAndRepoSlug.right());
+        getAllBitbucketRepositoryWatchers(bitbucketWebhookEvent.getProjectName(), bitbucketWebhookEvent.getRepoSlug());
     sendMyteamNotifications(
         allBitbucketRepositoryWatchers.stream()
             .map(watcher -> userData.getUserByMrimLogin(watcher.getEmail())),
         event);
-    return null;
-  }
-
-  public Pair<String, String> getProjectNameAndRepoSlug(BitbucketEventDto bitbucketEvent) {
-    if (bitbucketEvent instanceof RepositoryPushEventDto) {
-      RepositoryPushEventDto repositoryPushEventDto = (RepositoryPushEventDto) bitbucketEvent;
-      RepositoryDto repo = repositoryPushEventDto.getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof RepositoryModifiedEventDto) {
-      RepositoryModifiedEventDto repositoryModifiedEventDto =
-          (RepositoryModifiedEventDto) bitbucketEvent;
-      RepositoryDto repo = repositoryModifiedEventDto.getOldRepo();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof RepositoryForkedEventDto) {
-      RepositoryForkedEventDto repositoryForkedEventDto = (RepositoryForkedEventDto) bitbucketEvent;
-      RepositoryDto repo = repositoryForkedEventDto.getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof RepositoryMirrorSynchronizedEventDto) {
-      RepositoryMirrorSynchronizedEventDto repositoryMirrorSynchronizedEventDto =
-          (RepositoryMirrorSynchronizedEventDto) bitbucketEvent;
-      RepositoryDto repo = repositoryMirrorSynchronizedEventDto.getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof RepositoryCommitCommentCreatedEventDto) {
-      RepositoryCommitCommentCreatedEventDto repositoryCommitCommentCreatedEventDto =
-          (RepositoryCommitCommentCreatedEventDto) bitbucketEvent;
-      RepositoryDto repo = repositoryCommitCommentCreatedEventDto.getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof RepositoryCommitCommentEditedEventDto) {
-      RepositoryCommitCommentEditedEventDto repositoryCommitCommentEditedEventDto =
-          (RepositoryCommitCommentEditedEventDto) bitbucketEvent;
-      RepositoryDto repo = repositoryCommitCommentEditedEventDto.getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof RepositoryCommitCommentDeletedEventDto) {
-      RepositoryCommitCommentDeletedEventDto repositoryCommitCommentDeletedEventDto =
-          (RepositoryCommitCommentDeletedEventDto) bitbucketEvent;
-      RepositoryDto repo = repositoryCommitCommentDeletedEventDto.getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-
-    // PR events
-    if (bitbucketEvent instanceof PullRequestOpened) {
-      PullRequestOpened pullRequestOpened = (PullRequestOpened) bitbucketEvent;
-      RepositoryDto repo = pullRequestOpened.getPullRequest().getFromRef().getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof PullRequestModified) {
-      PullRequestModified pullRequestModified = (PullRequestModified) bitbucketEvent;
-      RepositoryDto repo = pullRequestModified.getPullRequest().getFromRef().getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof PullRequestReviewersUpdated) {
-      PullRequestReviewersUpdated pullRequestReviewersUpdated =
-          (PullRequestReviewersUpdated) bitbucketEvent;
-      RepositoryDto repo =
-          pullRequestReviewersUpdated.getPullRequest().getFromRef().getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof PullRequestApprovedByReviewer) {
-      PullRequestApprovedByReviewer pullRequestApprovedByReviewer =
-          (PullRequestApprovedByReviewer) bitbucketEvent;
-      RepositoryDto repo =
-          pullRequestApprovedByReviewer.getPullRequest().getFromRef().getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof PullRequestUnapprovedByReviewer) {
-      PullRequestUnapprovedByReviewer pullRequestUnapprovedByReviewer =
-          (PullRequestUnapprovedByReviewer) bitbucketEvent;
-      RepositoryDto repo =
-          pullRequestUnapprovedByReviewer.getPullRequest().getFromRef().getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof PullRequestNeedsWorkByReviewer) {
-      PullRequestNeedsWorkByReviewer pullRequestNeedsWorkByReviewer =
-          (PullRequestNeedsWorkByReviewer) bitbucketEvent;
-      RepositoryDto repo =
-          pullRequestNeedsWorkByReviewer.getPullRequest().getFromRef().getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof PullRequestMerged) {
-      PullRequestMerged pullRequestMerged = (PullRequestMerged) bitbucketEvent;
-      RepositoryDto repo = pullRequestMerged.getPullRequest().getFromRef().getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof PullRequestDeclined) {
-      PullRequestDeclined pullRequestDeclined = (PullRequestDeclined) bitbucketEvent;
-      RepositoryDto repo = pullRequestDeclined.getPullRequest().getFromRef().getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof PullRequestDeleted) {
-      PullRequestDeleted pullRequestDeleted = (PullRequestDeleted) bitbucketEvent;
-      RepositoryDto repo = pullRequestDeleted.getPullRequest().getFromRef().getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof PullRequestCommentAdded) {
-      PullRequestCommentAdded pullRequestCommentAdded = (PullRequestCommentAdded) bitbucketEvent;
-      RepositoryDto repo = pullRequestCommentAdded.getPullRequest().getFromRef().getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof PullRequestCommentEdited) {
-      PullRequestCommentEdited pullRequestCommentEdited = (PullRequestCommentEdited) bitbucketEvent;
-      RepositoryDto repo = pullRequestCommentEdited.getPullRequest().getFromRef().getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
-    if (bitbucketEvent instanceof PullRequestCommentDeleted) {
-      PullRequestCommentDeleted pullRequestCommentDeleted =
-          (PullRequestCommentDeleted) bitbucketEvent;
-      RepositoryDto repo = pullRequestCommentDeleted.getPullRequest().getFromRef().getRepository();
-      return new Pair<>(repo.getProject().getKey(), repo.getSlug());
-    }
     return null;
   }
 
@@ -210,7 +95,8 @@ public class ExternalSystemNotificationsService {
             .findFirst();
 
     if (!bitbucketAppLinkOptional.isPresent()) {
-      throw new RuntimeException("ALARM 1 !");
+      log.error("Bitbucket application link not found in method getAllBitbucketRepositoryWatchers");
+      return Collections.emptyList();
     }
     ApplicationLink bitbucketAppLink = bitbucketAppLinkOptional.get();
 
@@ -234,7 +120,6 @@ public class ExternalSystemNotificationsService {
                     throws ResponseException {
                   log.error("Bitbucket app-link credential required inside ResponseHandler called");
                   try {
-
                     return objectMapper.readValue(
                         response.getResponseBodyAsStream(),
                         new TypeReference<List<BitbucketRepoWatcherDto>>() {});
@@ -283,10 +168,12 @@ public class ExternalSystemNotificationsService {
               String myteamLogin = userData.getMrimLogin(recipient);
               if (myteamLogin == null) {
                 log.error("Myteam login not found");
+                return;
               }
               String message = messageFormatter.formatBitbucketEvent(recipient, event);
               if (message == null) {
                 log.error("Bitbucket notification message is null");
+                return;
               }
               myteamEventsListener.publishEvent(
                   new BitbucketNotifyEvent(myteamLogin, message, null));

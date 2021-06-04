@@ -1,6 +1,6 @@
 Class RepositoryForkedEventDto
 ==============================
-ru.mail.jira.plugins.myteam.bitbucket.dto.RepositoryForkedEventDto
+ru.mail.jira.plugins.myteam.bitbucket.dto.RepositoryForked
 Summary
 -------
 #### Constructors

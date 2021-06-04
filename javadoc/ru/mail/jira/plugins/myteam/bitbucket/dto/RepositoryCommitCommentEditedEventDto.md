@@ -1,6 +1,6 @@
 Class RepositoryCommitCommentEditedEventDto
 ===========================================
-ru.mail.jira.plugins.myteam.bitbucket.dto.RepositoryCommitCommentEditedEventDto
+ru.mail.jira.plugins.myteam.bitbucket.dto.RepositoryCommitCommentEdited
 Summary
 -------
 #### Constructors

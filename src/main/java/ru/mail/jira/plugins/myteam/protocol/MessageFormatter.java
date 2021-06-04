@@ -289,83 +289,83 @@ public class MessageFormatter {
     StringBuilder sb = new StringBuilder();
 
     // Repository events
-    if (bitbucketEvent instanceof RepositoryPushEventDto) {
-      RepositoryPushEventDto repositoryPushEventDto = (RepositoryPushEventDto) bitbucketEvent;
-      UserDto actor = repositoryPushEventDto.getActor();
+    if (bitbucketEvent instanceof RepositoryPush) {
+      RepositoryPush repositoryPush = (RepositoryPush) bitbucketEvent;
+      UserDto actor = repositoryPush.getActor();
       boolean useMentionFormat =
           !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.pushed",
               formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              repositoryPushEventDto.getRepository().getName()));
+              repositoryPush.getRepository().getName()));
     }
-    if (bitbucketEvent instanceof RepositoryModifiedEventDto) {
-      RepositoryModifiedEventDto repositoryModifiedEventDto =
-          (RepositoryModifiedEventDto) bitbucketEvent;
-      UserDto actor = repositoryModifiedEventDto.getActor();
+    if (bitbucketEvent instanceof RepositoryModified) {
+      RepositoryModified repositoryModified =
+          (RepositoryModified) bitbucketEvent;
+      UserDto actor = repositoryModified.getActor();
       boolean useMentionFormat =
           !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.modified",
               formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              repositoryModifiedEventDto.getOldRepo().getName()));
+              repositoryModified.getOldRepo().getName()));
     }
-    if (bitbucketEvent instanceof RepositoryForkedEventDto) {
-      RepositoryForkedEventDto repositoryForkedEventDto = (RepositoryForkedEventDto) bitbucketEvent;
-      UserDto actor = repositoryForkedEventDto.getActor();
+    if (bitbucketEvent instanceof RepositoryForked) {
+      RepositoryForked repositoryForked = (RepositoryForked) bitbucketEvent;
+      UserDto actor = repositoryForked.getActor();
       boolean useMentionFormat =
           !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.forked",
               formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              repositoryForkedEventDto.getRepository().getName()));
+              repositoryForked.getRepository().getName()));
     }
-    if (bitbucketEvent instanceof RepositoryMirrorSynchronizedEventDto) {
-      RepositoryMirrorSynchronizedEventDto repositoryMirrorSynchronizedEventDto =
-          (RepositoryMirrorSynchronizedEventDto) bitbucketEvent;
+    if (bitbucketEvent instanceof RepositoryMirrorSynchronized) {
+      RepositoryMirrorSynchronized repositoryMirrorSynchronized =
+          (RepositoryMirrorSynchronized) bitbucketEvent;
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.mirror",
-              repositoryMirrorSynchronizedEventDto.getRepository().getName()));
+              repositoryMirrorSynchronized.getRepository().getName()));
     }
-    if (bitbucketEvent instanceof RepositoryCommitCommentCreatedEventDto) {
-      RepositoryCommitCommentCreatedEventDto repositoryCommitCommentCreatedEventDto =
-          (RepositoryCommitCommentCreatedEventDto) bitbucketEvent;
-      UserDto actor = repositoryCommitCommentCreatedEventDto.getActor();
+    if (bitbucketEvent instanceof RepositoryCommitCommentCreated) {
+      RepositoryCommitCommentCreated repositoryCommitCommentCreated =
+          (RepositoryCommitCommentCreated) bitbucketEvent;
+      UserDto actor = repositoryCommitCommentCreated.getActor();
       boolean useMentionFormat =
           !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.create",
               formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              repositoryCommitCommentCreatedEventDto.getRepository().getName()));
+              repositoryCommitCommentCreated.getRepository().getName()));
     }
-    if (bitbucketEvent instanceof RepositoryCommitCommentEditedEventDto) {
-      RepositoryCommitCommentEditedEventDto repositoryCommitCommentEditedEventDto =
-          (RepositoryCommitCommentEditedEventDto) bitbucketEvent;
-      UserDto actor = repositoryCommitCommentEditedEventDto.getActor();
+    if (bitbucketEvent instanceof RepositoryCommitCommentEdited) {
+      RepositoryCommitCommentEdited repositoryCommitCommentEdited =
+          (RepositoryCommitCommentEdited) bitbucketEvent;
+      UserDto actor = repositoryCommitCommentEdited.getActor();
       boolean useMentionFormat =
           !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit",
               formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              repositoryCommitCommentEditedEventDto.getRepository().getName()));
+              repositoryCommitCommentEdited.getRepository().getName()));
     }
-    if (bitbucketEvent instanceof RepositoryCommitCommentDeletedEventDto) {
-      RepositoryCommitCommentDeletedEventDto repositoryCommitCommentDeletedEventDto =
-          (RepositoryCommitCommentDeletedEventDto) bitbucketEvent;
-      UserDto actor = repositoryCommitCommentDeletedEventDto.getActor();
+    if (bitbucketEvent instanceof RepositoryCommitCommentDeleted) {
+      RepositoryCommitCommentDeleted repositoryCommitCommentDeleted =
+          (RepositoryCommitCommentDeleted) bitbucketEvent;
+      UserDto actor = repositoryCommitCommentDeleted.getActor();
       boolean useMentionFormat =
           !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.delete",
               formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              repositoryCommitCommentDeletedEventDto.getRepository().getName()));
+              repositoryCommitCommentDeleted.getRepository().getName()));
     }
 
     // PR events
