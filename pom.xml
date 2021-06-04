@@ -6,6 +6,7 @@
         <artifactId>parent</artifactId>
         <version>2.0.9</version>
     </parent>
+    <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>myteam</artifactId>
     <version>6.2.8</version>
     <organization>
