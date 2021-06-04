@@ -18,12 +18,12 @@ public class RepositoryForked extends BitbucketEventDto implements BitbucketWebh
   private RepositoryDto repository;
 
   @Override
-  public String getProjectName() {
-    return repository.getProject().getName();
+  public String getProjectKey() {
+    return repository.getOrigin().getProject().getKey();
   }
 
   @Override
   public String getRepoSlug() {
-    return repository.getSlug();
+    return repository.getOrigin().getSlug();
   }
 }

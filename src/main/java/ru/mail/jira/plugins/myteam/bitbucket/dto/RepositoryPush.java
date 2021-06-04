@@ -21,8 +21,8 @@ public class RepositoryPush extends BitbucketEventDto implements BitbucketWebhoo
   private List<ChangeDto> changes;
 
   @Override
-  public String getProjectName() {
-    return repository.getProject().getName();
+  public String getProjectKey() {
+    return repository.getProject().getKey();
   }
 
   @Override

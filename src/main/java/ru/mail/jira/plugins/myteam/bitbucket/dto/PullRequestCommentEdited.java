@@ -25,8 +25,8 @@ public class PullRequestCommentEdited extends BitbucketEventDto implements Bitbu
   private String previousCommentText;
 
   @Override
-  public String getProjectName() {
-    return pullRequest.getFromRef().getRepository().getProject().getName();
+  public String getProjectKey() {
+    return pullRequest.getFromRef().getRepository().getProject().getKey();
   }
 
   @Override

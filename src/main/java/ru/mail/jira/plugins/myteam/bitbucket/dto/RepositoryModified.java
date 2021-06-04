@@ -24,12 +24,12 @@ public class RepositoryModified extends BitbucketEventDto implements BitbucketWe
   private UserDto actor;
 
   @Override
-  public String getProjectName() {
-    return oldRepo.getProject().getName();
+  public String getProjectKey() {
+    return newRepo.getProject().getKey();
   }
 
   @Override
   public String getRepoSlug() {
-    return oldRepo.getSlug();
+    return newRepo.getSlug();
   }
 }

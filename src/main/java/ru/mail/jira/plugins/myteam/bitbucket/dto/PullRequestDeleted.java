@@ -18,8 +18,8 @@ public class PullRequestDeleted extends BitbucketEventDto implements BitbucketWe
   private PullRequestDto pullRequest;
 
   @Override
-  public String getProjectName() {
-    return pullRequest.getFromRef().getRepository().getProject().getName();
+  public String getProjectKey() {
+    return pullRequest.getFromRef().getRepository().getProject().getKey();
   }
 
   @Override

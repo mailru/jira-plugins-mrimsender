@@ -6,7 +6,6 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import ru.mail.jira.plugins.myteam.bitbucket.BitbucketWebhookEvent;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.PullRequestDto;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.PullRequestParticipantDto;
-import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.RepositoryDto;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
 
 @Getter
@@ -15,15 +14,16 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ToString
-public class PullRequestApprovedByReviewer extends BitbucketEventDto implements BitbucketWebhookEvent {
+public class PullRequestApprovedByReviewer extends BitbucketEventDto
+    implements BitbucketWebhookEvent {
   private UserDto actor;
   private PullRequestDto pullRequest;
   private PullRequestParticipantDto participant;
   private String previousStatus;
 
   @Override
-  public String getProjectName() {
-    return pullRequest.getFromRef().getRepository().getProject().getName();
+  public String getProjectKey() {
+    return pullRequest.getFromRef().getRepository().getProject().getKey();
   }
 
   @Override

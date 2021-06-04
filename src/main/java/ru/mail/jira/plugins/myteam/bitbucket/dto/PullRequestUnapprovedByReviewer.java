@@ -14,15 +14,16 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ToString
-public class PullRequestUnapprovedByReviewer extends BitbucketEventDto implements BitbucketWebhookEvent {
+public class PullRequestUnapprovedByReviewer extends BitbucketEventDto
+    implements BitbucketWebhookEvent {
   private UserDto actor;
   private PullRequestDto pullRequest;
   private PullRequestParticipantDto participant;
   private String previousStatus;
 
   @Override
-  public String getProjectName() {
-    return pullRequest.getFromRef().getRepository().getProject().getName();
+  public String getProjectKey() {
+    return pullRequest.getFromRef().getRepository().getProject().getKey();
   }
 
   @Override

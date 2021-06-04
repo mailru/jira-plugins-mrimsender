@@ -21,8 +21,8 @@ public class PullRequestCommentDeleted extends BitbucketEventDto implements Bitb
   private long commentParentId;
 
   @Override
-  public String getProjectName() {
-    return pullRequest.getFromRef().getRepository().getProject().getName();
+  public String getProjectKey() {
+    return pullRequest.getFromRef().getRepository().getProject().getKey();
   }
 
   @Override

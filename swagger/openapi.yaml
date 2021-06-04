@@ -76,9 +76,9 @@ paths:
       responses:
         default:
           content:
-            '*/*':
+            application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/BitbucketWebhookResultDto'
           description: default response
   /preferences:
     post:
@@ -106,4 +106,9 @@ components:
       type: object
       properties:
         date:
+          type: string
+    BitbucketWebhookResultDto:
+      type: object
+      properties:
+        resultInfo:
           type: string

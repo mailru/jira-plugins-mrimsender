@@ -22,8 +22,8 @@ public class PullRequestModified extends BitbucketEventDto implements BitbucketW
   private RefDto previousTarget;
 
   @Override
-  public String getProjectName() {
-    return pullRequest.getFromRef().getRepository().getProject().getName();
+  public String getProjectKey() {
+    return pullRequest.getFromRef().getRepository().getProject().getKey();
   }
 
   @Override

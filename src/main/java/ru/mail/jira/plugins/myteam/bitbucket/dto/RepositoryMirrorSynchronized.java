@@ -15,7 +15,8 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.RepositoryDto;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ToString
-public class RepositoryMirrorSynchronized extends BitbucketEventDto implements BitbucketWebhookEvent {
+public class RepositoryMirrorSynchronized extends BitbucketEventDto
+    implements BitbucketWebhookEvent {
   private Void mirrorServer;
   private String syncType;
   private RepositoryDto repository;
@@ -25,8 +26,8 @@ public class RepositoryMirrorSynchronized extends BitbucketEventDto implements B
   private boolean isRefLimitExceeded;
 
   @Override
-  public String getProjectName() {
-    return repository.getProject().getName();
+  public String getProjectKey() {
+    return repository.getProject().getKey();
   }
 
   @Override

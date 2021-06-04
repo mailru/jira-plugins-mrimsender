@@ -18,18 +18,10 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
   @JsonSubTypes.Type(value = RepositoryPush.class, name = "repo:refs_changed"),
   @JsonSubTypes.Type(value = RepositoryModified.class, name = "repo:modified"),
   @JsonSubTypes.Type(value = RepositoryForked.class, name = "repo:forked"),
-  @JsonSubTypes.Type(
-      value = RepositoryCommitCommentCreated.class,
-      name = "repo:comment:added"),
-  @JsonSubTypes.Type(
-      value = RepositoryCommitCommentEdited.class,
-      name = "repo:comment:edited"),
-  @JsonSubTypes.Type(
-      value = RepositoryCommitCommentDeleted.class,
-      name = "repo:comment:deleted"),
-  @JsonSubTypes.Type(
-      value = RepositoryMirrorSynchronized.class,
-      name = "mirror:repo_synchronized"),
+  @JsonSubTypes.Type(value = RepositoryCommitCommentCreated.class, name = "repo:comment:added"),
+  @JsonSubTypes.Type(value = RepositoryCommitCommentEdited.class, name = "repo:comment:edited"),
+  @JsonSubTypes.Type(value = RepositoryCommitCommentDeleted.class, name = "repo:comment:deleted"),
+  @JsonSubTypes.Type(value = RepositoryMirrorSynchronized.class, name = "mirror:repo_synchronized"),
   // pr events
   @JsonSubTypes.Type(value = PullRequestOpened.class, name = "pr:opened"),
   @JsonSubTypes.Type(value = PullRequestModified.class, name = "pr:modified"),

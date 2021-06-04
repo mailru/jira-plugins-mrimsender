@@ -1,6 +1,8 @@
+/* (C)2021 */
 package ru.mail.jira.plugins.myteam.bitbucket;
 
 public interface BitbucketWebhookEvent {
-    String getProjectName();
-    String getRepoSlug();
+  String getProjectKey();
+
+  String getRepoSlug();
 }

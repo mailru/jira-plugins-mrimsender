@@ -2,7 +2,6 @@
 package ru.mail.jira.plugins.myteam.rest;
 
 import com.atlassian.applinks.api.*;
-import com.atlassian.fugue.Pair;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
@@ -16,12 +15,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
@@ -35,11 +34,13 @@ import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.BitbucketNotifyEvent;
 import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
 import ru.mail.jira.plugins.myteam.rest.dto.BitbucketRepoWatcherDto;
+import ru.mail.jira.plugins.myteam.rest.dto.BitbucketWebhookResultDto;
 
 @Controller
 @Path("/external/notifications/")
 public class ExternalSystemNotificationsService {
-  private static final Logger log = LoggerFactory.getLogger(ExternalSystemNotificationsService.class);
+  private static final Logger log =
+      LoggerFactory.getLogger(ExternalSystemNotificationsService.class);
   private static final String bitbucketRepoWatchersRestStr =
       "/rest/additional/1.0/watchers/repository/%s/%s";
   private static final String JIRA_ADMIN_USERNAME_FOR_APP_LINK = "admin";
@@ -70,21 +71,29 @@ public class ExternalSystemNotificationsService {
   @Path("/bitbucket")
   @POST
   @Consumes({MediaType.APPLICATION_JSON})
+  @Produces({MediaType.APPLICATION_JSON})
   @AnonymousAllowed
-  public Void bitbucketProjectEventsWebHook(BitbucketEventDto event) {
-    log.error("BITBUCKET JSON =" + event.toString());
-
+  public BitbucketWebhookResultDto bitbucketProjectEventsWebHook(BitbucketEventDto event) {
     if (!(event instanceof BitbucketWebhookEvent)) {
-      log.error("Bitbucket webhook event project name ad repo slug can't be parsed event = {}", event.toString(), new RuntimeException());
+      String errorInfo =
+          String.format(
+              "Bitbucket webhook event project name ad repo slug can't be parsed event = %s",
+              event.toString());
+      log.error(errorInfo);
+      throw new BitbucketWebhookException(errorInfo);
     }
     BitbucketWebhookEvent bitbucketWebhookEvent = (BitbucketWebhookEvent) event;
     List<BitbucketRepoWatcherDto> allBitbucketRepositoryWatchers =
-        getAllBitbucketRepositoryWatchers(bitbucketWebhookEvent.getProjectName(), bitbucketWebhookEvent.getRepoSlug());
+        getAllBitbucketRepositoryWatchers(
+            bitbucketWebhookEvent.getProjectKey(), bitbucketWebhookEvent.getRepoSlug());
     sendMyteamNotifications(
         allBitbucketRepositoryWatchers.stream()
             .map(watcher -> userData.getUserByMrimLogin(watcher.getEmail())),
         event);
-    return null;
+    if (allBitbucketRepositoryWatchers.size() == 0) {
+      return new BitbucketWebhookResultDto("no watchers found");
+    }
+    return new BitbucketWebhookResultDto("success");
   }
 
   public List<BitbucketRepoWatcherDto> getAllBitbucketRepositoryWatchers(
@@ -112,42 +121,33 @@ public class ExternalSystemNotificationsService {
           authenticatedRequestFactory.createRequest(
               Request.MethodType.GET,
               String.format(bitbucketRepoWatchersRestStr, projectKey, repositorySlug));
-      List<BitbucketRepoWatcherDto> watchers =
-          request.execute(
-              new ApplicationLinkResponseHandler<List<BitbucketRepoWatcherDto>>() {
-                @Override
-                public List<BitbucketRepoWatcherDto> credentialsRequired(Response response)
-                    throws ResponseException {
-                  log.error("Bitbucket app-link credential required inside ResponseHandler called");
-                  try {
-                    return objectMapper.readValue(
-                        response.getResponseBodyAsStream(),
-                        new TypeReference<List<BitbucketRepoWatcherDto>>() {});
-                  } catch (IOException ioException) {
-                    log.error("IOException during ObjectMapper.readValue:", ioException);
-                    return Collections.emptyList();
-                  }
-                }
+      return request.execute(
+          new ApplicationLinkResponseHandler<List<BitbucketRepoWatcherDto>>() {
+            @Override
+            public List<BitbucketRepoWatcherDto> credentialsRequired(Response response)
+                throws ResponseException {
+              log.error(
+                  "Bitbucket app-link credential required inside ResponseHandler called, bitbucket server response = {}",
+                  response.getResponseBodyAsString());
+              return Collections.emptyList();
+            }
 
-                @Override
-                public List<BitbucketRepoWatcherDto> handle(Response response)
-                    throws ResponseException {
-                  try {
-                    return objectMapper.readValue(
-                        response.getResponseBodyAsStream(),
-                        new TypeReference<List<BitbucketRepoWatcherDto>>() {});
-                  } catch (IOException ioException) {
-                    log.error("IOException during ObjectMapper.readValue:", ioException);
-                    return Collections.emptyList();
-                  }
-                }
-              });
-      log.error(
-          "BITBUCKET RESPONSE BODY = "
-              + watchers.stream()
-                  .map(BitbucketRepoWatcherDto::getEmail)
-                  .collect(Collectors.joining()));
-      return watchers;
+            @Override
+            public List<BitbucketRepoWatcherDto> handle(Response response)
+                throws ResponseException {
+              try {
+                return objectMapper.readValue(
+                    response.getResponseBodyAsStream(),
+                    new TypeReference<List<BitbucketRepoWatcherDto>>() {});
+              } catch (IOException ioException) {
+                log.error(
+                    "IOException during ObjectMapper.readValue input entity string was: {}",
+                    response.getResponseBodyAsString(),
+                    ioException);
+                return Collections.emptyList();
+              }
+            }
+          });
     } catch (CredentialsRequiredException e) {
       log.error("CredentialsRequiredException inside getAllBitbucketRepositoryWatchers", e);
       return Collections.emptyList();

@@ -18,8 +18,8 @@ public class PullRequestDeclined extends BitbucketEventDto implements BitbucketW
   private PullRequestDto pullRequest;
 
   @Override
-  public String getProjectName() {
-    return pullRequest.getFromRef().getRepository().getProject().getName();
+  public String getProjectKey() {
+    return pullRequest.getFromRef().getRepository().getProject().getKey();
   }
 
   @Override

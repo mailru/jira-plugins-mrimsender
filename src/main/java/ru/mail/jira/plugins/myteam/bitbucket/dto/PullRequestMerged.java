@@ -18,8 +18,8 @@ public class PullRequestMerged extends BitbucketEventDto implements BitbucketWeb
   private PullRequestDto pullRequest;
 
   @Override
-  public String getProjectName() {
-    return pullRequest.getFromRef().getRepository().getName();
+  public String getProjectKey() {
+    return pullRequest.getFromRef().getRepository().getProject().getKey();
   }
 
   @Override

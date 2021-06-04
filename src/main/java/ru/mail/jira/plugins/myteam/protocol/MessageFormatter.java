@@ -301,8 +301,7 @@ public class MessageFormatter {
               repositoryPush.getRepository().getName()));
     }
     if (bitbucketEvent instanceof RepositoryModified) {
-      RepositoryModified repositoryModified =
-          (RepositoryModified) bitbucketEvent;
+      RepositoryModified repositoryModified = (RepositoryModified) bitbucketEvent;
       UserDto actor = repositoryModified.getActor();
       boolean useMentionFormat =
           !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
@@ -480,7 +479,7 @@ public class MessageFormatter {
           !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
       sb.append(
           i18nHelper.getText(
-              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.declined",
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.deleted",
               formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
               pullRequestDeleted.getPullRequest().getFromRef().getRepository().getName()));
     }
