@@ -5,7 +5,7 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   title: "Mail.ru Plugin: Mrimsender"
-  version: 6.2.7
+  version: 6.2.8
 servers:
 - description: Plugin Endpoint URL
   url: https://jira.mail.ru/rest/contracts/1.0
