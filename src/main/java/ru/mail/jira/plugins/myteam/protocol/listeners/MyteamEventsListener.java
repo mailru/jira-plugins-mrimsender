@@ -192,6 +192,10 @@ public class MyteamEventsListener {
       if (command.startsWith("issue")) {
         asyncEventBus.post(new ShowIssueEvent(chatMessageEvent, JIRA_BASE_URL));
       }
+
+      if (command.startsWith("link") && isGroupChatEvent) {
+        asyncEventBus.post(new LinkIssueWithChatEvent(chatMessageEvent));
+      }
     } else if (!isGroupChatEvent && (message != null || chatMessageEvent.isHasForwards())) {
       asyncEventBus.post(new ShowDefaultMessageEvent(chatMessageEvent));
     }
