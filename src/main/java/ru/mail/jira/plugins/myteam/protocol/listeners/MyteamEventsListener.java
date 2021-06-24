@@ -192,6 +192,10 @@ public class MyteamEventsListener {
       if (command.startsWith("issue")) {
         asyncEventBus.post(new ShowIssueEvent(chatMessageEvent, JIRA_BASE_URL));
       }
+
+      if (command.startsWith("link") && isGroupChatEvent) {
+        asyncEventBus.post(new LinkIssueWithChatEvent(chatMessageEvent));
+      }
     } else if (!isGroupChatEvent && (message != null || chatMessageEvent.isHasForwards())) {
       asyncEventBus.post(new ShowDefaultMessageEvent(chatMessageEvent));
     }
@@ -383,6 +387,15 @@ public class MyteamEventsListener {
   public void handleJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) throws Exception {
     myteamApiClient.sendMessageText(
         jiraNotifyEvent.getChatId(), jiraNotifyEvent.getMessage(), jiraNotifyEvent.getButtons());
+  }
+
+  @Subscribe
+  public void handleBitbucketNotifyEvent(BitbucketNotifyEvent bitbucketNotifyEvent)
+      throws Exception {
+    myteamApiClient.sendMessageText(
+        bitbucketNotifyEvent.getChatId(),
+        bitbucketNotifyEvent.getMessage(),
+        bitbucketNotifyEvent.getButtons());
   }
 
   @Subscribe
