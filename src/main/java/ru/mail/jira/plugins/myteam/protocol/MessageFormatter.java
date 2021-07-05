@@ -33,6 +33,7 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectConstant;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.project.version.VersionManager;
+import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.I18nHelper;
@@ -48,7 +49,7 @@ import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.*;
-import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
+import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
 @Component
@@ -76,6 +77,7 @@ public class MessageFormatter {
   private final GroupManager groupManager;
   private final ProjectComponentManager projectComponentManager;
   private final VersionManager versionManager;
+  private final JiraAuthenticationContext jiraAuthenticationContext;
 
   @Autowired
   public MessageFormatter(
@@ -93,7 +95,8 @@ public class MessageFormatter {
       @ComponentImport IssueTypeManager issueTypeManager,
       @ComponentImport GroupManager groupManager,
       @ComponentImport ProjectComponentManager projectComponentManager,
-      @ComponentImport VersionManager versionManager) {
+      @ComponentImport VersionManager versionManager,
+      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
     this.applicationProperties = applicationProperties;
     this.constantsManager = constantsManager;
     this.dateTimeFormatter = dateTimeFormatter;
@@ -110,12 +113,17 @@ public class MessageFormatter {
     this.groupManager = groupManager;
     this.projectComponentManager = projectComponentManager;
     this.versionManager = versionManager;
+    this.jiraAuthenticationContext = jiraAuthenticationContext;
   }
 
   private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
     if (user != null) {
       if (mention) {
-        return "@[" + user.getEmailAddress() + "]";
+        return "["
+            + user.getName()
+            + "](https://u.internal.myteam.mail.ru/profile/"
+            + user.getEmailAddress()
+            + ")";
       }
       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
     } else return i18nHelper.getText(messageKey);
@@ -124,7 +132,11 @@ public class MessageFormatter {
   private String formatBitbucketUser(UserDto user, String messageKey, boolean mention) {
     if (user != null) {
       if (mention) {
-        return "@[" + user.getEmailAddress() + "]";
+        return "["
+            + user.getName()
+            + "](https://u.internal.myteam.mail.ru/profile/"
+            + user.getEmailAddress()
+            + ")";
       }
       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
     } else return i18nHelper.getText(messageKey);
@@ -236,6 +248,157 @@ public class MessageFormatter {
     return sb.toString();
   }
 
+  private String markdownTextLink(String issueKey, String issueLink) {
+    if (issueKey != null) {
+      return "[" + issueKey + "](" + issueLink + ")";
+    } else return issueLink;
+  }
+
+  private String getHostLink(LinksDto linksDto) {
+    List<LinkDto> selfLinkDto = linksDto.getSelf();
+    if (selfLinkDto != null && selfLinkDto.size() > 0 && selfLinkDto.get(0).getHref() != null) {
+      String[] selfLinkDtoParts = selfLinkDto.get(0).getHref().split("/");
+      if (selfLinkDtoParts.length >= 3)
+        return String.join("/", selfLinkDtoParts[0], selfLinkDtoParts[1], selfLinkDtoParts[2]);
+    }
+    return null;
+  }
+
+  private String getPullRequestLink(
+      String hostLink, String projectKey, String repoName, long pullRequestId) {
+    if (hostLink != null && projectKey != null && repoName != null) {
+      return i18nHelper.getText(
+          "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.brackets",
+          String.join(
+              "",
+              "(",
+              hostLink,
+              "/projects/",
+              projectKey,
+              "/repos/",
+              repoName,
+              "/pull-requests/",
+              String.valueOf(pullRequestId),
+              "/overview)"));
+    } else {
+      return i18nHelper.getText("ru.mail.jira.plugins.myteam.bitbucket.notification.pr");
+    }
+  }
+
+  private String makeCommitLink(
+      String hostLink, String projectKey, String repoName, String CommitHash) {
+    return String.join(
+        "",
+        "(",
+        hostLink,
+        "/projects/",
+        projectKey,
+        "/repos/",
+        repoName,
+        "/commits/",
+        CommitHash,
+        ")");
+  }
+
+  private String makeRepoText(
+      String prepositions, String ending, String hostLink, String projectKey, String projectName) {
+    if (hostLink != null) {
+      if (projectKey != null && projectName != null) {
+        return i18nHelper.getText(
+            "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.repo.brackets",
+            prepositions,
+            ending,
+            projectKey,
+            String.join("", hostLink, "/projects/", projectKey, "/repos/", projectName, "/browse"));
+      } else {
+        return i18nHelper.getText(
+            "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.repo", prepositions, ending, "");
+      }
+    } else {
+      if (projectKey != null && projectName != null) {
+        return i18nHelper.getText(
+            "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.repo",
+            prepositions,
+            ending,
+            projectKey);
+      } else {
+        return i18nHelper.getText(
+            "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.repo", prepositions, ending, "");
+      }
+    }
+  }
+
+  private String makeBranchText(
+      String prepositions,
+      String ending,
+      String hostLink,
+      String projectKey,
+      String projectName,
+      String branchId) {
+    if (hostLink != null) {
+      if (projectKey != null && projectName != null && branchId != null) {
+        return i18nHelper.getText(
+            "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.branch.brackets",
+            prepositions,
+            ending,
+            branchId,
+            String.join(
+                "",
+                hostLink,
+                "/projects/",
+                projectKey,
+                "/repos/",
+                projectName,
+                "/browse?at=",
+                branchId));
+      } else {
+        return i18nHelper.getText(
+            "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.branch",
+            prepositions,
+            ending,
+            "");
+      }
+    } else {
+      if (projectKey != null && projectName != null && branchId != null) {
+        return i18nHelper.getText(
+            "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.branch",
+            prepositions,
+            ending,
+            branchId);
+      } else {
+        return i18nHelper.getText(
+            "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.branch",
+            prepositions,
+            ending,
+            "");
+      }
+    }
+  }
+
+  private String makeReviewersText(
+      List<PullRequestParticipantDto> reviewers, String recipientEmailAddress) {
+    StringBuilder sb = new StringBuilder();
+    if (reviewers != null && reviewers.size() != 0) {
+      boolean counter = false;
+      for (PullRequestParticipantDto reviewer : reviewers) {
+        if (reviewer.getUser().getEmailAddress().equals(recipientEmailAddress)) {
+          if (counter) sb.append(", ");
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.you"));
+        } else {
+          if (counter) sb.append(", ");
+          sb.append(formatBitbucketUser(reviewer.getUser(), "common.words.anonymous", true));
+        }
+        counter = true;
+      }
+      sb.append('.');
+      return i18nHelper.getText(
+          "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers", sb.toString());
+    }
+    return "";
+  }
+
   private String formatChangeLog(GenericValue changeLog, boolean ignoreAssigneeField) {
     StringBuilder sb = new StringBuilder();
     if (changeLog != null)
@@ -288,7 +451,7 @@ public class MessageFormatter {
   public String formatBitbucketEvent(ApplicationUser recipient, BitbucketEventDto bitbucketEvent) {
     StringBuilder sb = new StringBuilder();
 
-    // Repository events
+    // Repository events тут
     if (bitbucketEvent instanceof RepositoryPush) {
       RepositoryPush repositoryPush = (RepositoryPush) bitbucketEvent;
       UserDto actor = repositoryPush.getActor();
@@ -299,6 +462,27 @@ public class MessageFormatter {
               "ru.mail.jira.plugins.myteam.bitbucket.notification.pushed",
               formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
               repositoryPush.getRepository().getName()));
+      String hostLink = getHostLink(repositoryPush.getRepository().getLinks());
+      if (hostLink != null
+          && repositoryPush.getProjectKey() != null
+          && repositoryPush.getRepository() != null
+          && repositoryPush.getRepository().getName() != null
+          && repositoryPush.getChanges().size() > 0
+          && repositoryPush.getChanges().get(0).getToHash() != null) {
+        List<ChangeDto> changesDTOs = repositoryPush.getChanges();
+        sb.append(
+            String.join(
+                "",
+                "(",
+                hostLink,
+                "/projects/",
+                repositoryPush.getProjectKey(),
+                "/repos/",
+                repositoryPush.getRepository().getName(),
+                "/commits/",
+                changesDTOs.get(0).getToHash(),
+                ")"));
+      }
     }
     if (bitbucketEvent instanceof RepositoryModified) {
       RepositoryModified repositoryModified = (RepositoryModified) bitbucketEvent;
@@ -309,7 +493,8 @@ public class MessageFormatter {
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.modified",
               formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              repositoryModified.getOldRepo().getName()));
+              repositoryModified.getOldRepo().getName(),
+              repositoryModified.getNewRepo().getName()));
     }
     if (bitbucketEvent instanceof RepositoryForked) {
       RepositoryForked repositoryForked = (RepositoryForked) bitbucketEvent;
@@ -320,6 +505,7 @@ public class MessageFormatter {
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.forked",
               formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
+              repositoryForked.getRepository().getOrigin().getName(),
               repositoryForked.getRepository().getName()));
     }
     if (bitbucketEvent instanceof RepositoryMirrorSynchronized) {
@@ -328,7 +514,17 @@ public class MessageFormatter {
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.mirror",
-              repositoryMirrorSynchronized.getRepository().getName()));
+              repositoryMirrorSynchronized.getMirrorServer().getName(),
+              repositoryMirrorSynchronized.getMirrorServer().getId(),
+              repositoryMirrorSynchronized.getRepository().getName(),
+              repositoryMirrorSynchronized.getSyncType()));
+      List<LinkDto> linkDtos = repositoryMirrorSynchronized.getRepository().getLinks().getSelf();
+      if (linkDtos.size() > 0) {
+        sb.append(
+            i18nHelper.getText(
+                "ru.mail.jira.plugins.myteam.bitbucket.notification.mirror.repository",
+                "(" + linkDtos.get(0).getHref() + ")"));
+      }
     }
     if (bitbucketEvent instanceof RepositoryCommitCommentCreated) {
       RepositoryCommitCommentCreated repositoryCommitCommentCreated =
@@ -339,8 +535,55 @@ public class MessageFormatter {
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.create",
-              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              repositoryCommitCommentCreated.getRepository().getName()));
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat)));
+      String hostLink = getHostLink(repositoryCommitCommentCreated.getRepository().getLinks());
+      if (hostLink != null
+          && repositoryCommitCommentCreated.getProjectKey() != null
+          && repositoryCommitCommentCreated.getRepository() != null
+          && repositoryCommitCommentCreated.getRepository().getName() != null) {
+        if (repositoryCommitCommentCreated.getCommitHash() != null) {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.create.commit.brackets",
+                  makeCommitLink(
+                      hostLink,
+                      repositoryCommitCommentCreated.getProjectKey(),
+                      repositoryCommitCommentCreated.getRepository().getName(),
+                      repositoryCommitCommentCreated.getCommitHash())));
+        }
+        if (repositoryCommitCommentCreated.getComment() != null
+            && repositoryCommitCommentCreated.getComment().getText() != null) {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.create.comment",
+                  String.join(
+                      "",
+                      "[",
+                      repositoryCommitCommentCreated.getProjectKey(),
+                      "]",
+                      "(",
+                      hostLink,
+                      "/projects/",
+                      repositoryCommitCommentCreated.getProjectKey(),
+                      "/repos/",
+                      repositoryCommitCommentCreated.getRepository().getName(),
+                      "/browse",
+                      ")"),
+                  "*" + repositoryCommitCommentCreated.getComment().getText() + "*"));
+        }
+      } else {
+        sb.append(
+            i18nHelper.getText(
+                "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.create.commit"));
+        if (repositoryCommitCommentCreated.getComment() != null
+            && repositoryCommitCommentCreated.getComment().getText() != null) {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.create.comment",
+                  repositoryCommitCommentCreated.getProjectKey(),
+                  "*" + repositoryCommitCommentCreated.getComment().getText() + "*"));
+        }
+      }
     }
     if (bitbucketEvent instanceof RepositoryCommitCommentEdited) {
       RepositoryCommitCommentEdited repositoryCommitCommentEdited =
@@ -351,8 +594,75 @@ public class MessageFormatter {
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit",
-              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              repositoryCommitCommentEdited.getRepository().getName()));
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat)));
+      String hostLink = getHostLink(repositoryCommitCommentEdited.getRepository().getLinks());
+      if (hostLink != null) {
+        if (repositoryCommitCommentEdited.getProjectKey() != null
+            && repositoryCommitCommentEdited.getRepository().getName() != null
+            && repositoryCommitCommentEdited.getCommitHash() != null) {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit.commit.brackets",
+                  makeCommitLink(
+                      hostLink,
+                      repositoryCommitCommentEdited.getProjectKey(),
+                      repositoryCommitCommentEdited.getRepository().getName(),
+                      repositoryCommitCommentEdited.getCommitHash()),
+                  String.join(
+                      "",
+                      "[",
+                      repositoryCommitCommentEdited.getProjectKey(),
+                      "]",
+                      "(",
+                      hostLink,
+                      "/projects/",
+                      repositoryCommitCommentEdited.getProjectKey(),
+                      "/repos/",
+                      repositoryCommitCommentEdited.getRepository().getName(),
+                      "/browse",
+                      ")")));
+        } else {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit.commit", ""));
+        }
+        if (repositoryCommitCommentEdited.getPreviousComment() != null)
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit.from",
+                  repositoryCommitCommentEdited.getPreviousComment()));
+        if (repositoryCommitCommentEdited.getComment() != null
+            && repositoryCommitCommentEdited.getComment().getText() != null) {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit.to",
+                  repositoryCommitCommentEdited.getComment().getText()));
+        }
+      } else {
+        if (repositoryCommitCommentEdited.getProjectKey() != null
+            && repositoryCommitCommentEdited.getRepository().getName() != null) {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit.commit.repo",
+                  repositoryCommitCommentEdited.getProjectKey()));
+        } else {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit.commit", ""));
+        }
+        if (repositoryCommitCommentEdited.getPreviousComment() != null)
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit.from",
+                  repositoryCommitCommentEdited.getPreviousComment()));
+        if (repositoryCommitCommentEdited.getComment() != null
+            && repositoryCommitCommentEdited.getComment().getText() != null) {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit.to",
+                  repositoryCommitCommentEdited.getComment().getText()));
+        }
+      }
     }
     if (bitbucketEvent instanceof RepositoryCommitCommentDeleted) {
       RepositoryCommitCommentDeleted repositoryCommitCommentDeleted =
@@ -364,7 +674,52 @@ public class MessageFormatter {
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.delete",
               formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              repositoryCommitCommentDeleted.getRepository().getName()));
+              repositoryCommitCommentDeleted.getComment().getText()));
+      String hostLink = getHostLink(repositoryCommitCommentDeleted.getRepository().getLinks());
+      if (hostLink != null) {
+        if (repositoryCommitCommentDeleted.getProjectKey() != null
+            && repositoryCommitCommentDeleted.getRepository().getName() != null
+            && repositoryCommitCommentDeleted.getCommitHash() != null) {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.delete.commit.brackets",
+                  makeCommitLink(
+                      hostLink,
+                      repositoryCommitCommentDeleted.getProjectKey(),
+                      repositoryCommitCommentDeleted.getRepository().getName(),
+                      repositoryCommitCommentDeleted.getCommitHash()),
+                  String.join(
+                      "",
+                      "[",
+                      repositoryCommitCommentDeleted.getProjectKey(),
+                      "]",
+                      "(",
+                      hostLink,
+                      "/projects/",
+                      repositoryCommitCommentDeleted.getProjectKey(),
+                      "/repos/",
+                      repositoryCommitCommentDeleted.getRepository().getName(),
+                      "/browse",
+                      ")")));
+        } else {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.delete.commit", ""));
+        }
+      } else {
+        if (repositoryCommitCommentDeleted.getProjectKey() != null
+            && repositoryCommitCommentDeleted.getRepository().getName() != null
+            && repositoryCommitCommentDeleted.getCommitHash() != null) {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.delete.commit.repo",
+                  repositoryCommitCommentDeleted.getRepository().getName()));
+        } else {
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.delete.commit", ""));
+        }
+      }
     }
 
     // PR events
@@ -376,8 +731,48 @@ public class MessageFormatter {
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.opened",
-              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              pullRequestOpened.getPullRequest().getFromRef().getRepository().getName()));
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat)));
+
+      String hostLink = getHostLink(pullRequestOpened.getPullRequest().getLinks());
+      sb.append(
+          getPullRequestLink(
+              hostLink,
+              pullRequestOpened.getProjectKey(),
+              pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
+              pullRequestOpened.getPullRequest().getId()));
+      sb.append(
+          makeRepoText(
+              i18nHelper.getText("ru.mail.jira.plugins.myteam.notification.prepositions.to"),
+              i18nHelper.getText("ru.mail.jira.plugins.myteam.notification.only.rus.ending.ii"),
+              hostLink,
+              pullRequestOpened.getPullRequest().getToRef().getRepository().getProject().getKey(),
+              pullRequestOpened.getPullRequest().getToRef().getRepository().getName()));
+      sb.append(
+          makeBranchText(
+              i18nHelper.getText("ru.mail.jira.plugins.myteam.notification.prepositions.from"),
+              i18nHelper.getText("ru.mail.jira.plugins.myteam.notification.branch.ending.to.i"),
+              hostLink,
+              pullRequestOpened.getPullRequest().getFromRef().getRepository().getProject().getKey(),
+              pullRequestOpened.getPullRequest().getFromRef().getRepository().getName(),
+              pullRequestOpened.getPullRequest().getFromRef().getId()));
+      sb.append(
+          makeBranchText(
+              i18nHelper.getText("ru.mail.jira.plugins.myteam.notification.prepositions.to"),
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.notification.branch.ending.to.no.arrow"),
+              hostLink,
+              pullRequestOpened.getPullRequest().getToRef().getRepository().getProject().getKey(),
+              pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
+              pullRequestOpened.getPullRequest().getToRef().getId()));
+      if (pullRequestOpened.getPullRequest().getTitle() != null) {
+        sb.append(
+            i18nHelper.getText(
+                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.opened.title",
+                pullRequestOpened.getPullRequest().getTitle()));
+      }
+      sb.append(
+          makeReviewersText(
+              pullRequestOpened.getPullRequest().getReviewers(), recipient.getEmailAddress()));
     }
     if (bitbucketEvent instanceof PullRequestModified) {
       PullRequestModified pullRequestModified = (PullRequestModified) bitbucketEvent;
@@ -387,8 +782,98 @@ public class MessageFormatter {
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified",
-              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              pullRequestModified.getPullRequest().getFromRef().getRepository().getName()));
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat)));
+      String hostLink = getHostLink(pullRequestModified.getPullRequest().getLinks());
+      sb.append(
+          getPullRequestLink(
+              hostLink,
+              pullRequestModified.getProjectKey(),
+              pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
+              pullRequestModified.getPullRequest().getId()));
+      sb.append(
+          makeRepoText(
+              i18nHelper.getText("ru.mail.jira.plugins.myteam.notification.prepositions.to"),
+              i18nHelper.getText("ru.mail.jira.plugins.myteam.notification.only.rus.ending.ii"),
+              hostLink,
+              pullRequestModified.getPullRequest().getToRef().getRepository().getProject().getKey(),
+              pullRequestModified.getPullRequest().getToRef().getRepository().getName()));
+
+      byte counter = 1;
+      if (pullRequestModified.getPreviousTitle() != null
+          && pullRequestModified.getPullRequest() != null
+          && pullRequestModified.getPullRequest().getTitle() != null
+          && !pullRequestModified
+              .getPullRequest()
+              .getTitle()
+              .equals(pullRequestModified.getPreviousTitle())) {
+        sb.append(
+            i18nHelper.getText(
+                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified.changes"));
+        sb.append(
+            i18nHelper.getText(
+                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified.title",
+                String.valueOf(counter) + '.',
+                pullRequestModified.getPreviousTitle(),
+                pullRequestModified.getPullRequest().getTitle()));
+        counter++;
+      }
+      if (pullRequestModified.getPreviousDescription() != null
+          && pullRequestModified.getPullRequest() != null
+          && pullRequestModified.getPullRequest().getDescription() != null
+          && !pullRequestModified
+              .getPullRequest()
+              .getDescription()
+              .equals(pullRequestModified.getPreviousDescription())) {
+        if (counter == 1)
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified.changes"));
+        sb.append(
+            i18nHelper.getText(
+                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified.description",
+                String.valueOf(counter) + '.',
+                pullRequestModified.getPreviousDescription(),
+                pullRequestModified.getPullRequest().getDescription()));
+        counter++;
+      }
+      if (pullRequestModified.getPreviousTarget() != null
+          && pullRequestModified.getPreviousTarget().getId() != null
+          && pullRequestModified.getPullRequest() != null
+          && pullRequestModified.getPullRequest().getToRef() != null
+          && pullRequestModified.getPullRequest().getToRef().getId() != null
+          && !pullRequestModified
+              .getPreviousTarget()
+              .getId()
+              .equals(pullRequestModified.getPullRequest().getToRef().getId())) {
+        if (counter == 1)
+          sb.append(
+              i18nHelper.getText(
+                  "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified.changes"));
+        sb.append(
+            i18nHelper.getText(
+                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified.target",
+                String.valueOf(counter) + '.',
+                makeBranchText(
+                    i18nHelper.getText("ru.mail.jira.plugins.myteam.notification.prepositions.c"),
+                    i18nHelper.getText(
+                        "ru.mail.jira.plugins.myteam.notification.only.rus.ending.i"),
+                    hostLink,
+                    pullRequestModified.getProjectKey(),
+                    pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
+                    pullRequestModified.getPreviousTarget().getId()),
+                makeBranchText(
+                    i18nHelper.getText(
+                        "ru.mail.jira.plugins.myteam.notification.prepositions.on.to"),
+                    i18nHelper.getText(
+                        "ru.mail.jira.plugins.myteam.notification.only.rus.ending.y"),
+                    hostLink,
+                    pullRequestModified.getProjectKey(),
+                    pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
+                    pullRequestModified.getPullRequest().getToRef().getId())));
+        sb.append("\n");
+        System.out.println(sb);
+      }
+      if (counter == 1) return "Empty PullRequestModified event";
     }
     if (bitbucketEvent instanceof PullRequestReviewersUpdated) {
       PullRequestReviewersUpdated pullRequestReviewersUpdated =
@@ -398,9 +883,43 @@ public class MessageFormatter {
           !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
       sb.append(
           i18nHelper.getText(
-              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewersupdated",
-              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-              pullRequestReviewersUpdated.getPullRequest().getFromRef().getRepository().getName()));
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified",
+              formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat)));
+      String hostLink = getHostLink(pullRequestReviewersUpdated.getPullRequest().getLinks());
+      sb.append(
+          getPullRequestLink(
+              hostLink,
+              pullRequestReviewersUpdated.getProjectKey(),
+              pullRequestReviewersUpdated.getPullRequest().getToRef().getRepository().getName(),
+              pullRequestReviewersUpdated.getPullRequest().getId()));
+      sb.append(
+          makeRepoText(
+              i18nHelper.getText("ru.mail.jira.plugins.myteam.notification.prepositions.to"),
+              i18nHelper.getText("ru.mail.jira.plugins.myteam.notification.only.rus.ending.ii"),
+              hostLink,
+              pullRequestReviewersUpdated
+                  .getPullRequest()
+                  .getToRef()
+                  .getRepository()
+                  .getProject()
+                  .getKey(),
+              pullRequestReviewersUpdated.getPullRequest().getToRef().getRepository().getName()));
+      sb.append(
+          i18nHelper.getText(
+              "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewersupdated.changes"));
+      if (pullRequestReviewersUpdated.getAddedReviewers() != null
+          && pullRequestReviewersUpdated.getAddedReviewers().size() > 0) {
+        System.out.println("\n==============\n");
+        System.out.println(sb);
+        System.out.println("\n==============\n");
+        sb.append(
+            i18nHelper.getText(
+                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewersupdated.added",
+                makeReviewersText(
+                    pullRequestReviewersUpdated.getAddedReviewers(), recipient.getEmailAddress())));
+      }
+
+      // pullRequestReviewersUpdated.getPullRequest().getFromRef().getRepository().getName()
     }
     if (bitbucketEvent instanceof PullRequestApprovedByReviewer) {
       PullRequestApprovedByReviewer pullRequestApprovedByReviewer =
@@ -440,6 +959,7 @@ public class MessageFormatter {
       UserDto actor = pullRequestNeedsWorkByReviewer.getActor();
       boolean useMentionFormat =
           !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
+      // Здесь
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.needswork",
@@ -488,7 +1008,7 @@ public class MessageFormatter {
       UserDto actor = pullRequestCommentAdded.getActor();
       boolean useMentionFormat =
           !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase());
-      sb.append(
+      sb.append( // тут
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.comment.added",
               formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
@@ -524,10 +1044,12 @@ public class MessageFormatter {
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
     Issue issue = issueEvent.getIssue();
     ApplicationUser user = issueEvent.getUser();
-    String issueLink = createIssueLink(issue);
+
+    String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue));
 
     StringBuilder sb = new StringBuilder();
 
+    // ТУТ
     boolean useMentionFormat = !recipient.equals(user);
     Long eventTypeId = issueEvent.getEventTypeId();
     if (EventType.ISSUE_CREATED_ID.equals(eventTypeId)) {
@@ -539,6 +1061,7 @@ public class MessageFormatter {
     } else if (EventType.ISSUE_UPDATED_ID.equals(eventTypeId)
         || EventType.ISSUE_COMMENT_DELETED_ID.equals(eventTypeId)
         || EventType.ISSUE_GENERICEVENT_ID.equals(eventTypeId)) {
+      // {0} обновил запрос [ {1} ]
       sb.append(
           i18nHelper.getText(
               "ru.mail.jira.plugins.myteam.notification.updated",
@@ -648,6 +1171,7 @@ public class MessageFormatter {
     if (EventType.ISSUE_CREATED_ID.equals(eventTypeId))
       sb.append(formatSystemFields(recipient, issue, useMentionFormat));
 
+    // тут начал прикреплять конец с мылом
     sb.append(
         formatChangeLog(
             issueEvent.getChangeLog(), EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId)));
@@ -661,9 +1185,7 @@ public class MessageFormatter {
   public String formatEvent(MentionIssueEvent mentionIssueEvent) {
     Issue issue = mentionIssueEvent.getIssue();
     ApplicationUser user = mentionIssueEvent.getFromUser();
-    String issueLink =
-        String.format(
-            "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
+    String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue));
 
     StringBuilder sb = new StringBuilder();
     sb.append(
@@ -682,10 +1204,7 @@ public class MessageFormatter {
   public String createIssueSummary(Issue issue, ApplicationUser user) {
     StringBuilder sb = new StringBuilder();
     sb.append(issue.getKey()).append("   ").append(issue.getSummary()).append("\n");
-    String issueLink =
-        String.format(
-            "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
-    sb.append(issueLink);
+    sb.append(markdownTextLink(issue.getKey(), createIssueLink(issue))).append('\n');
 
     // append status field because it doesn't exist in formatSystemFields string
     appendField(
@@ -967,7 +1486,11 @@ public class MessageFormatter {
     return stringifyPagedCollection(
         locale,
         issueList.stream()
-            .map(issue -> String.join("", "[", issue.getKey(), "] ", issue.getSummary()))
+            .map(
+                issue ->
+                    markdownTextLink(issue.getKey(), createIssueLink(issue))
+                        + ' '
+                        + issue.getSummary())
             .collect(Collectors.toList()),
         pageNumber,
         total,

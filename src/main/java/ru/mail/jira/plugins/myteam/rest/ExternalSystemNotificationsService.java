@@ -43,9 +43,9 @@ public class ExternalSystemNotificationsService {
       LoggerFactory.getLogger(ExternalSystemNotificationsService.class);
   private static final String bitbucketRepoWatchersRestStr =
       "/rest/additional/1.0/watchers/repository/%s/%s";
-  private static final String JIRA_ADMIN_USERNAME_FOR_APP_LINK = "jellyrunner";
+  // private static final String JIRA_ADMIN_USERNAME_FOR_APP_LINK = "jellyrunner";
   // for localhost tests
-  // private static final String JIRA_ADMIN_USERNAME_FOR_APP_LINK = "admin";
+  private static final String JIRA_ADMIN_USERNAME_FOR_APP_LINK = "admin";
 
   private final ApplicationLinkService applicationLinkService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
@@ -84,6 +84,9 @@ public class ExternalSystemNotificationsService {
       log.error(errorInfo);
       throw new BitbucketWebhookException(errorInfo);
     }
+
+    System.out.println(applicationLinkService.getApplicationLinks());
+
     BitbucketWebhookEvent bitbucketWebhookEvent = (BitbucketWebhookEvent) event;
     List<BitbucketRepoWatcherDto> allBitbucketRepositoryWatchers =
         getAllBitbucketRepositoryWatchers(
@@ -177,6 +180,8 @@ public class ExternalSystemNotificationsService {
                 log.error("Bitbucket notification message is null");
                 return;
               }
+              if (message.equals("Empty PullRequestModified event")) return;
+
               myteamEventsListener.publishEvent(
                   new BitbucketNotifyEvent(myteamLogin, message, null));
             });
