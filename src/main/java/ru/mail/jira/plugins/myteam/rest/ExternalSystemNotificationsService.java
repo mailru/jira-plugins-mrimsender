@@ -43,9 +43,9 @@ public class ExternalSystemNotificationsService {
       LoggerFactory.getLogger(ExternalSystemNotificationsService.class);
   private static final String bitbucketRepoWatchersRestStr =
       "/rest/additional/1.0/watchers/repository/%s/%s";
-  // private static final String JIRA_ADMIN_USERNAME_FOR_APP_LINK = "jellyrunner";
+  private static final String JIRA_ADMIN_USERNAME_FOR_APP_LINK = "jellyrunner";
   // for localhost tests
-  private static final String JIRA_ADMIN_USERNAME_FOR_APP_LINK = "admin";
+  // private static final String JIRA_ADMIN_USERNAME_FOR_APP_LINK = "admin";
 
   private final ApplicationLinkService applicationLinkService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
