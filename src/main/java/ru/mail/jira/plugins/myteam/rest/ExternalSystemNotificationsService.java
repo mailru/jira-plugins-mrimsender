@@ -85,8 +85,6 @@ public class ExternalSystemNotificationsService {
       throw new BitbucketWebhookException(errorInfo);
     }
 
-    System.out.println(applicationLinkService.getApplicationLinks());
-
     BitbucketWebhookEvent bitbucketWebhookEvent = (BitbucketWebhookEvent) event;
     List<BitbucketRepoWatcherDto> allBitbucketRepositoryWatchers =
         getAllBitbucketRepositoryWatchers(
