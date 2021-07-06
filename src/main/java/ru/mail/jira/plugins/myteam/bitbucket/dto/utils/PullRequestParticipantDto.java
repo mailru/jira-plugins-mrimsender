@@ -19,6 +19,11 @@ import org.codehaus.jackson.annotate.JsonProperty;
 public class PullRequestParticipantDto {
   private UserDto user;
   private String role;
+  private String name;
+  private String emailAddress;
+  private String displayName;
+  private boolean active;
+  private String type;
 
   @JsonProperty("approved")
   private boolean isApproved;
