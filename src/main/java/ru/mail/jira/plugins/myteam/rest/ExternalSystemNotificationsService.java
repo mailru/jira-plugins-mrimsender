@@ -77,12 +77,16 @@ public class ExternalSystemNotificationsService {
   @AnonymousAllowed
   public BitbucketWebhookResultDto bitbucketProjectEventsWebHook(BitbucketEventDto event) {
     if (!(event instanceof BitbucketWebhookEvent)) {
-      String errorInfo =
-          String.format(
-              "Bitbucket webhook event project name ad repo slug can't be parsed event = %s",
-              event.toString());
-      log.error(errorInfo);
-      throw new BitbucketWebhookException(errorInfo);
+      if (event.isTest()) {
+        return new BitbucketWebhookResultDto("success");
+      } else {
+        String errorInfo =
+            String.format(
+                "Bitbucket webhook event project name ad repo slug can't be parsed event = %s",
+                event.toString());
+        log.error(errorInfo);
+        throw new BitbucketWebhookException(errorInfo);
+      }
     }
     BitbucketWebhookEvent bitbucketWebhookEvent = (BitbucketWebhookEvent) event;
     List<BitbucketRepoWatcherDto> allBitbucketRepositoryWatchers =
