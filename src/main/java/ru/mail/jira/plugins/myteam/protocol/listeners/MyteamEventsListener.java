@@ -10,6 +10,8 @@ import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
+import com.atlassian.jira.issue.attachment.ConvertTemporaryAttachmentParams;
+import com.atlassian.jira.issue.attachment.TemporaryAttachmentId;
 import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
@@ -26,20 +28,31 @@ import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
+import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.CommentaryParts;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.File;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
@@ -419,12 +432,7 @@ public class MyteamEventsListener {
           commentManager.create(
               commentedIssue,
               commentedUser,
-              messageFormatter.ConvertToJiraCommentStyle(
-                  newCommentMessageEvent,
-                  myteamApiClient,
-                  attachmentManager,
-                  commentedUser,
-                  commentedIssue),
+              convertToJiraCommentStyle(newCommentMessageEvent, commentedUser, commentedIssue),
               true);
           log.debug("CreateCommentCommand comment created...");
           myteamApiClient.sendMessageText(
@@ -549,4 +557,71 @@ public class MyteamEventsListener {
     }
   }
 
+  public String convertToJiraCommentStyle(
+      NewCommentMessageEvent event, ApplicationUser commentedUser, Issue commentedIssue) {
+    List<Part> parts = event.getMessageParts();
+    if (parts == null || parts.size() == 0) return event.getMessage();
+    else {
+      StringBuilder outPutStrings = new StringBuilder(event.getMessage());
+      parts.forEach(
+          part -> {
+            CommentaryParts currentPartClass =
+                CommentaryParts.valueOf(part.getClass().getSimpleName());
+            switch (currentPartClass) {
+              case File:
+                File file = (File) part;
+                try {
+                  HttpResponse<FileResponse> response = myteamApiClient.getFile(file.getFileId());
+                  FileResponse fileInfo = response.getBody();
+                  try (InputStream attachment = Utils.loadUrlFile(fileInfo.getUrl())) {
+                    TemporaryAttachmentId tmpAttachmentId =
+                        attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
+                    ConvertTemporaryAttachmentParams params =
+                        ConvertTemporaryAttachmentParams.builder()
+                            .setTemporaryAttachmentId(tmpAttachmentId)
+                            .setAuthor(commentedUser)
+                            .setIssue(commentedIssue)
+                            .setFilename(fileInfo.getFilename())
+                            .setContentType(fileInfo.getType())
+                            .setCreatedTime(DateTime.now())
+                            .setFileSize(fileInfo.getSize())
+                            .build();
+                    attachmentManager.convertTemporaryAttachment(params);
+                    if (fileInfo.getType().equals("image")) {
+                      outPutStrings.append(String.format("!%s!\n", fileInfo.getFilename()));
+                    } else {
+                      outPutStrings.append(String.format("[%s]\n", fileInfo.getFilename()));
+                    }
+                    if (file.getCaption() != null) {
+                      outPutStrings.append(String.format("%s\n", file.getCaption()));
+                    }
+                  }
+                } catch (UnirestException | IOException | MyteamServerErrorException e) {
+                  log.error(
+                      "Unable to create attachment for comment on Issue {}",
+                      commentedIssue.getKey(),
+                      e);
+                }
+                break;
+              case Mention:
+                Mention mention = (Mention) part;
+                ApplicationUser user = userData.getUserByMrimLogin(mention.getUserId());
+                if (user != null) {
+                  String temp =
+                      Pattern.compile("@\\[" + mention.getUserId() + "]")
+                          .matcher(outPutStrings)
+                          .replaceAll("[~" + user.getName() + "]");
+                  outPutStrings.setLength(0);
+                  outPutStrings.append(temp);
+                } else {
+                  log.error(
+                      "Unable change Myteam mention to Jira's mention, because Can't find user with id:{}",
+                      mention.getUserId());
+                }
+                break;
+            }
+          });
+      return outPutStrings.toString();
+    }
+  }
 }

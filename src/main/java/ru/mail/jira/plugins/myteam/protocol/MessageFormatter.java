@@ -12,13 +12,10 @@ import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.event.type.EventType;
-import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueConstant;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.attachment.Attachment;
-import com.atlassian.jira.issue.attachment.ConvertTemporaryAttachmentParams;
-import com.atlassian.jira.issue.attachment.TemporaryAttachmentId;
 import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.fields.*;
 import com.atlassian.jira.issue.fields.screen.FieldScreen;
@@ -42,36 +39,18 @@ import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.util.MessageSet;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.*;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
-import ru.mail.jira.plugins.myteam.commons.Utils;
-import ru.mail.jira.plugins.myteam.configuration.UserData;
-import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.CommentaryParts;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.File;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
-import ru.mail.jira.plugins.myteam.protocol.events.NewCommentMessageEvent;
 
-@Slf4j
 @Component
 public class MessageFormatter {
   public static final int LIST_PAGE_SIZE = 15;
@@ -97,11 +76,9 @@ public class MessageFormatter {
   private final GroupManager groupManager;
   private final ProjectComponentManager projectComponentManager;
   private final VersionManager versionManager;
-  private final UserData userData;
 
   @Autowired
   public MessageFormatter(
-      UserData userData,
       @ComponentImport ApplicationProperties applicationProperties,
       @ComponentImport ConstantsManager constantsManager,
       @ComponentImport DateTimeFormatter dateTimeFormatter,
@@ -133,7 +110,6 @@ public class MessageFormatter {
     this.groupManager = groupManager;
     this.projectComponentManager = projectComponentManager;
     this.versionManager = versionManager;
-    this.userData = userData;
   }
 
   private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
@@ -1356,77 +1332,5 @@ public class MessageFormatter {
       return mapStringToArrayFieldValue(projectId, field, fieldValue);
     }
     return mapStringToSingleFieldValue(projectId, field, fieldValue);
-  }
-
-  public String ConvertToJiraCommentStyle(
-      NewCommentMessageEvent event,
-      MyteamApiClient myteamApiClient,
-      AttachmentManager attachmentManager,
-      ApplicationUser commentedUser,
-      Issue commentedIssue) {
-    List<Part> parts = event.getMessageParts();
-    if (parts == null || parts.size() == 0) return event.getMessage();
-    else {
-      StringBuilder outPutStrings = new StringBuilder(event.getMessage());
-      parts.forEach(
-          part -> {
-            CommentaryParts currentPartClass =
-                CommentaryParts.valueOf(part.getClass().getSimpleName());
-            switch (currentPartClass) {
-              case File:
-                File file = (File) part;
-                try {
-                  HttpResponse<FileResponse> response = myteamApiClient.getFile(file.getFileId());
-                  FileResponse fileInfo = response.getBody();
-                  try (InputStream attachment = Utils.loadUrlFile(fileInfo.getUrl())) {
-                    TemporaryAttachmentId tmpAttachmentId =
-                        attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
-                    ConvertTemporaryAttachmentParams params =
-                        ConvertTemporaryAttachmentParams.builder()
-                            .setTemporaryAttachmentId(tmpAttachmentId)
-                            .setAuthor(commentedUser)
-                            .setIssue(commentedIssue)
-                            .setFilename(fileInfo.getFilename())
-                            .setContentType(fileInfo.getType())
-                            .setCreatedTime(DateTime.now())
-                            .setFileSize(fileInfo.getSize())
-                            .build();
-                    attachmentManager.convertTemporaryAttachment(params);
-                    if (fileInfo.getType().equals("image")) {
-                      outPutStrings.append(String.format("!%s!\n", fileInfo.getFilename()));
-                    } else {
-                      outPutStrings.append(String.format("[%s]\n", fileInfo.getFilename()));
-                    }
-                    if (file.getCaption() != null) {
-                      outPutStrings.append(String.format("%s\n", file.getCaption()));
-                    }
-                  }
-                } catch (UnirestException | IOException | MyteamServerErrorException e) {
-                  log.error(
-                      "Unable to create attachment for comment on Issue {}",
-                      commentedIssue.getKey(),
-                      e);
-                }
-                break;
-              case Mention:
-                Mention mention = (Mention) part;
-                ApplicationUser user = userData.getUserByMrimLogin(mention.getUserId());
-                if (user != null) {
-                  String temp =
-                      Pattern.compile("@\\[" + mention.getUserId() + "]")
-                          .matcher(outPutStrings)
-                          .replaceAll("[~" + user.getName() + "]");
-                  outPutStrings.setLength(0);
-                  outPutStrings.append(temp);
-                } else {
-                  log.error(
-                      "Unable change Myteam mention to Jira's mention, because Can't find user with id:{}",
-                      mention.getUserId());
-                }
-                break;
-            }
-          });
-      return outPutStrings.toString();
-    }
   }
 }
