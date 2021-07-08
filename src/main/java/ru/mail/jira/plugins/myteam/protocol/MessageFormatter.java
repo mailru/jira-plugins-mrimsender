@@ -115,7 +115,11 @@ public class MessageFormatter {
   private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
     if (user != null) {
       if (mention) {
-        return "@[" + user.getEmailAddress() + "]";
+        return "["
+            + user.getName()
+            + "](https://u.internal.myteam.mail.ru/profile/"
+            + user.getEmailAddress()
+            + ")";
       }
       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
     } else return i18nHelper.getText(messageKey);
@@ -124,7 +128,11 @@ public class MessageFormatter {
   private String formatBitbucketUser(UserDto user, String messageKey, boolean mention) {
     if (user != null) {
       if (mention) {
-        return "@[" + user.getEmailAddress() + "]";
+        return "["
+            + user.getName()
+            + "](https://u.internal.myteam.mail.ru/profile/"
+            + user.getEmailAddress()
+            + ")";
       }
       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
     } else return i18nHelper.getText(messageKey);
