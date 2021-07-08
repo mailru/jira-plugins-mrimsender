@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonSubTypes;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 
@@ -43,5 +44,8 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BitbucketEventDto {
+  @JsonProperty("test")
+  private boolean isTest;
+
   private String date;
 }
