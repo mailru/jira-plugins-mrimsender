@@ -114,19 +114,41 @@ public class MessageFormatter {
 
   private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
     if (user != null) {
+      /* #TODO Вернуть когда починят mentions в myteam
       if (mention) {
-        return "@[" + user.getEmailAddress() + "]";
-      }
-      return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
+        return "["
+            + user.getName()
+            + "](https://u.internal.myteam.mail.ru/profile/"
+            + user.getEmailAddress()
+            + ")";
+       }
+       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
+       */
+      return "["
+              + user.getName()
+              + "](https://u.internal.myteam.mail.ru/profile/"
+              + user.getEmailAddress()
+              + ")";
     } else return i18nHelper.getText(messageKey);
   }
 
   private String formatBitbucketUser(UserDto user, String messageKey, boolean mention) {
     if (user != null) {
+      /* #TODO Вернуть когда починят mentions в myteam
       if (mention) {
-        return "@[" + user.getEmailAddress() + "]";
+        return "["
+                + user.getName()
+                + "](https://u.internal.myteam.mail.ru/profile/"
+                + user.getEmailAddress()
+                + ")";
       }
       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
+       */
+      return "["
+              + user.getName()
+              + "](https://u.internal.myteam.mail.ru/profile/"
+              + user.getEmailAddress()
+              + ")";
     } else return i18nHelper.getText(messageKey);
   }
 
@@ -278,6 +300,12 @@ public class MessageFormatter {
       } catch (GenericEntityException ignored) {
       }
     return sb.toString();
+  }
+
+  private String markdownTextLink(String issueKey, String issueLink) {
+    if (issueKey != null) {
+      return "[" + issueKey + "](" + issueLink + ")";
+    } else return issueLink;
   }
 
   public String createIssueLink(Issue issue) {
@@ -524,7 +552,7 @@ public class MessageFormatter {
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
     Issue issue = issueEvent.getIssue();
     ApplicationUser user = issueEvent.getUser();
-    String issueLink = createIssueLink(issue);
+    String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue));
 
     StringBuilder sb = new StringBuilder();
 
@@ -662,8 +690,11 @@ public class MessageFormatter {
     Issue issue = mentionIssueEvent.getIssue();
     ApplicationUser user = mentionIssueEvent.getFromUser();
     String issueLink =
-        String.format(
-            "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
+        markdownTextLink(
+            issue.getKey(),
+            String.format(
+                "%s/browse/%s",
+                applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey()));
 
     StringBuilder sb = new StringBuilder();
     sb.append(
@@ -681,11 +712,15 @@ public class MessageFormatter {
 
   public String createIssueSummary(Issue issue, ApplicationUser user) {
     StringBuilder sb = new StringBuilder();
-    sb.append(issue.getKey()).append("   ").append(issue.getSummary()).append("\n");
-    String issueLink =
-        String.format(
-            "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
-    sb.append(issueLink);
+    sb.append(
+            markdownTextLink(
+                issue.getKey(),
+                String.format(
+                    "%s/browse/%s",
+                    applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey())))
+        .append("   ")
+        .append(issue.getSummary())
+        .append("\n");
 
     // append status field because it doesn't exist in formatSystemFields string
     appendField(
@@ -967,7 +1002,11 @@ public class MessageFormatter {
     return stringifyPagedCollection(
         locale,
         issueList.stream()
-            .map(issue -> String.join("", "[", issue.getKey(), "] ", issue.getSummary()))
+            .map(
+                issue ->
+                    markdownTextLink(issue.getKey(), createIssueLink(issue))
+                        + ' '
+                        + issue.getSummary())
             .collect(Collectors.toList()),
         pageNumber,
         total,
