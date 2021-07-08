@@ -1,0 +1,116 @@
+openapi: 3.0.1
+info:
+  description: todo
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: "Mail.ru Plugin: Mrimsender"
+  version: 6.3.0
+servers:
+- description: Plugin Endpoint URL
+  url: https://jira.mail.ru/rest/contracts/1.0
+paths:
+  /chats/chatCreationData/{issueKey}:
+    get:
+      operationId: getChatCreationData
+      parameters:
+      - in: path
+        name: issueKey
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/json: {}
+          description: default response
+  /chats/chatData/{issueKey}:
+    get:
+      operationId: findChatData
+      parameters:
+      - in: path
+        name: issueKey
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/json: {}
+          description: default response
+  /chats/createChat/{issueKey}:
+    post:
+      operationId: createChat
+      parameters:
+      - in: path
+        name: issueKey
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: object
+              properties:
+                memberIds:
+                  type: array
+                  items:
+                    type: integer
+                    format: int64
+                name:
+                  type: string
+      responses:
+        default:
+          content:
+            application/json: {}
+          description: default response
+  /external/notifications/bitbucket:
+    post:
+      operationId: bitbucketProjectEventsWebHook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BitbucketEventDto'
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BitbucketWebhookResultDto'
+          description: default response
+  /preferences:
+    post:
+      operationId: updateMrimEnabled
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                isChatCreationAllowed:
+                  type: boolean
+                mrim_login:
+                  type: string
+      responses:
+        default:
+          content:
+            application/json: {}
+          description: default response
+components:
+  schemas:
+    BitbucketEventDto:
+      type: object
+      properties:
+        date:
+          type: string
+        test:
+          type: boolean
+    BitbucketWebhookResultDto:
+      type: object
+      properties:
+        resultInfo:
+          type: string

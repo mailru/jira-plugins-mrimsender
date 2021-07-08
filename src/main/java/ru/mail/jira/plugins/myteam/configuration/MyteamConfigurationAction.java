@@ -93,7 +93,11 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     saved = true;
     notifiedUsers = CommonUtils.convertUserKeysToJoinedString(notifiedUserKeys);
 
-    boolean shouldRestartBot = !prevToken.equals(token) || !prevBotApiUrl.equals(botApiUrl);
+    boolean shouldRestartBot =
+        prevToken == null
+            || prevBotApiUrl == null
+            || !prevToken.equals(token)
+            || !prevBotApiUrl.equals(botApiUrl);
     if (shouldRestartBot) botsOrchestrationService.restartAll();
     return INPUT;
   }
