@@ -118,27 +118,41 @@ public class MessageFormatter {
 
   private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
     if (user != null) {
+      /* #TODO Вернуть когда починят mentions в myteam
       if (mention) {
         return "["
             + user.getName()
             + "](https://u.internal.myteam.mail.ru/profile/"
             + user.getEmailAddress()
             + ")";
-      }
-      return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
+       }
+       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
+       */
+      return "["
+              + user.getName()
+              + "](https://u.internal.myteam.mail.ru/profile/"
+              + user.getEmailAddress()
+              + ")";
     } else return i18nHelper.getText(messageKey);
   }
 
   private String formatBitbucketUser(UserDto user, String messageKey, boolean mention) {
     if (user != null) {
+      /* #TODO Вернуть когда починят mentions в myteam
       if (mention) {
         return "["
-            + user.getName()
-            + "](https://u.internal.myteam.mail.ru/profile/"
-            + user.getEmailAddress()
-            + ")";
+                + user.getName()
+                + "](https://u.internal.myteam.mail.ru/profile/"
+                + user.getEmailAddress()
+                + ")";
       }
       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
+       */
+      return "["
+              + user.getName()
+              + "](https://u.internal.myteam.mail.ru/profile/"
+              + user.getEmailAddress()
+              + ")";
     } else return i18nHelper.getText(messageKey);
   }
 
@@ -559,6 +573,12 @@ public class MessageFormatter {
       } catch (GenericEntityException ignored) {
       }
     return sb.toString();
+  }
+
+  private String markdownTextLink(String issueKey, String issueLink) {
+    if (issueKey != null) {
+      return "[" + issueKey + "](" + issueLink + ")";
+    } else return issueLink;
   }
 
   public String createIssueLink(Issue issue) {
@@ -1509,12 +1529,10 @@ public class MessageFormatter {
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
     Issue issue = issueEvent.getIssue();
     ApplicationUser user = issueEvent.getUser();
-    Locale recipientLocale = localeManager.getLocaleFor(recipient);
     String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue));
 
     StringBuilder sb = new StringBuilder();
 
-    // ТУТ
     boolean useMentionFormat = !recipient.equals(user);
     Long eventTypeId = issueEvent.getEventTypeId();
     if (EventType.ISSUE_CREATED_ID.equals(eventTypeId)) {
@@ -1652,7 +1670,6 @@ public class MessageFormatter {
     if (EventType.ISSUE_CREATED_ID.equals(eventTypeId))
       sb.append(formatSystemFields(recipient, issue, useMentionFormat));
 
-    // тут начал прикреплять конец с мылом
     sb.append(
         formatChangeLog(
             issueEvent.getChangeLog(),
@@ -1668,7 +1685,12 @@ public class MessageFormatter {
   public String formatEvent(MentionIssueEvent mentionIssueEvent) {
     Issue issue = mentionIssueEvent.getIssue();
     ApplicationUser user = mentionIssueEvent.getFromUser();
-    String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue));
+    String issueLink =
+        markdownTextLink(
+            issue.getKey(),
+            String.format(
+                "%s/browse/%s",
+                applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey()));
 
     StringBuilder sb = new StringBuilder();
     sb.append(
@@ -1686,8 +1708,15 @@ public class MessageFormatter {
 
   public String createIssueSummary(Issue issue, ApplicationUser user) {
     StringBuilder sb = new StringBuilder();
-    sb.append(issue.getKey()).append("   ").append(issue.getSummary()).append("\n");
-    sb.append(markdownTextLink(issue.getKey(), createIssueLink(issue))).append('\n');
+    sb.append(
+            markdownTextLink(
+                issue.getKey(),
+                String.format(
+                    "%s/browse/%s",
+                    applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey())))
+        .append("   ")
+        .append(issue.getSummary())
+        .append("\n");
 
     // append status field because it doesn't exist in formatSystemFields string
     appendField(

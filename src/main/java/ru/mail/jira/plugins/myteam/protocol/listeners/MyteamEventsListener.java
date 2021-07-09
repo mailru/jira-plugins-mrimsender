@@ -37,6 +37,7 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -48,7 +49,9 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.CommentaryParts;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.File;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
@@ -426,14 +429,10 @@ public class MyteamEventsListener {
       if (commentedUser != null && commentedIssue != null) {
         if (permissionManager.hasPermission(
             ProjectPermissions.ADD_COMMENTS, commentedIssue, commentedUser)) {
-          List<Part> parts = newCommentMessageEvent.getMessageParts();
           commentManager.create(
               commentedIssue,
               commentedUser,
-              parts != null && parts.size() > 0
-                  ? insertAttachments(
-                      commentedUser, commentedIssue, newCommentMessageEvent.getMessageParts())
-                  : newCommentMessageEvent.getMessage(),
+              convertToJiraCommentStyle(newCommentMessageEvent, commentedUser, commentedIssue),
               true);
           log.debug("CreateCommentCommand comment created...");
           myteamApiClient.sendMessageText(
@@ -558,48 +557,71 @@ public class MyteamEventsListener {
     }
   }
 
-  private String insertAttachments(
-      ApplicationUser commentedUser, Issue commentedIssue, List<Part> parts) {
-    StringBuilder attachmentsStrings = new StringBuilder();
-    parts.forEach(
-        part -> {
-          if (part instanceof File) {
-            File file = (File) part;
-            try {
-              HttpResponse<FileResponse> response = myteamApiClient.getFile(file.getFileId());
-              FileResponse fileInfo = response.getBody();
-              try (InputStream attachment = Utils.loadUrlFile(fileInfo.getUrl())) {
-                TemporaryAttachmentId tmpAttachmentId =
-                    attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
-                ConvertTemporaryAttachmentParams params =
-                    ConvertTemporaryAttachmentParams.builder()
-                        .setTemporaryAttachmentId(tmpAttachmentId)
-                        .setAuthor(commentedUser)
-                        .setIssue(commentedIssue)
-                        .setFilename(fileInfo.getFilename())
-                        .setContentType(fileInfo.getType())
-                        .setCreatedTime(DateTime.now())
-                        .setFileSize(fileInfo.getSize())
-                        .build();
-                attachmentManager.convertTemporaryAttachment(params);
-                if (fileInfo.getType().equals("image")) {
-                  attachmentsStrings.append(String.format("!%s!\n", fileInfo.getFilename()));
+  public String convertToJiraCommentStyle(
+      NewCommentMessageEvent event, ApplicationUser commentedUser, Issue commentedIssue) {
+    List<Part> parts = event.getMessageParts();
+    if (parts == null || parts.size() == 0) return event.getMessage();
+    else {
+      StringBuilder outPutStrings = new StringBuilder(event.getMessage());
+      parts.forEach(
+          part -> {
+            CommentaryParts currentPartClass =
+                CommentaryParts.valueOf(part.getClass().getSimpleName());
+            switch (currentPartClass) {
+              case File:
+                File file = (File) part;
+                try {
+                  HttpResponse<FileResponse> response = myteamApiClient.getFile(file.getFileId());
+                  FileResponse fileInfo = response.getBody();
+                  try (InputStream attachment = Utils.loadUrlFile(fileInfo.getUrl())) {
+                    TemporaryAttachmentId tmpAttachmentId =
+                        attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
+                    ConvertTemporaryAttachmentParams params =
+                        ConvertTemporaryAttachmentParams.builder()
+                            .setTemporaryAttachmentId(tmpAttachmentId)
+                            .setAuthor(commentedUser)
+                            .setIssue(commentedIssue)
+                            .setFilename(fileInfo.getFilename())
+                            .setContentType(fileInfo.getType())
+                            .setCreatedTime(DateTime.now())
+                            .setFileSize(fileInfo.getSize())
+                            .build();
+                    attachmentManager.convertTemporaryAttachment(params);
+                    if (fileInfo.getType().equals("image")) {
+                      outPutStrings.append(String.format("!%s!\n", fileInfo.getFilename()));
+                    } else {
+                      outPutStrings.append(String.format("[%s]\n", fileInfo.getFilename()));
+                    }
+                    if (file.getCaption() != null) {
+                      outPutStrings.append(String.format("%s\n", file.getCaption()));
+                    }
+                  }
+                } catch (UnirestException | IOException | MyteamServerErrorException e) {
+                  log.error(
+                      "Unable to create attachment for comment on Issue {}",
+                      commentedIssue.getKey(),
+                      e);
+                }
+                break;
+              case Mention:
+                Mention mention = (Mention) part;
+                ApplicationUser user = userData.getUserByMrimLogin(mention.getUserId());
+                if (user != null) {
+                  String temp =
+                      Pattern.compile("@\\[" + mention.getUserId() + "]")
+                          .matcher(outPutStrings)
+                          .replaceAll("[~" + user.getName() + "]");
+                  outPutStrings.setLength(0);
+                  outPutStrings.append(temp);
                 } else {
-                  attachmentsStrings.append(String.format("[%s]\n", fileInfo.getFilename()));
+                  log.error(
+                      "Unable change Myteam mention to Jira's mention, because Can't find user with id:{}",
+                      mention.getUserId());
                 }
-                if (file.getCaption() != null) {
-                  attachmentsStrings.append(String.format("%s\n", file.getCaption()));
-                }
-              }
-
-            } catch (UnirestException | IOException | MyteamServerErrorException e) {
-              log.error(
-                  "Unable to create attachment for comment on Issue {}",
-                  commentedIssue.getKey(),
-                  e);
+                break;
             }
-          }
-        });
-    return attachmentsStrings.toString();
+          });
+      return outPutStrings.toString();
+    }
   }
 }
