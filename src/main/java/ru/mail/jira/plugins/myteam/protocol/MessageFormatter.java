@@ -1,6 +1,8 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol;
 
+import static java.util.stream.Collectors.joining;
+
 import com.atlassian.jira.bc.project.component.ProjectComponentManager;
 import com.atlassian.jira.config.ConstantsManager;
 import com.atlassian.jira.config.IssueTypeManager;
@@ -122,19 +124,12 @@ public class MessageFormatter {
     if (user != null) {
       /* #TODO Вернуть когда починят mentions в myteam
       if (mention) {
-        return "["
-            + user.getName()
-            + "](https://u.internal.myteam.mail.ru/profile/"
-            + user.getEmailAddress()
-            + ")";
+        return markdownTextLink(user.getName(),"u.internal.myteam.mail.ru/profile/"+user.getEmailAddress())
        }
        return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
        */
-      return "["
-          + user.getName()
-          + "](https://u.internal.myteam.mail.ru/profile/"
-          + user.getEmailAddress()
-          + ")";
+      return markdownTextLink(
+          user.getName(), "u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
     } else return i18nHelper.getText(messageKey);
   }
 
@@ -142,19 +137,12 @@ public class MessageFormatter {
     if (user != null) {
       /* #TODO Вернуть когда починят mentions в myteam
       if (mention) {
-        return "["
-                + user.getName()
-                + "](https://u.internal.myteam.mail.ru/profile/"
-                + user.getEmailAddress()
-                + ")";
+        return markdownTextLink(user.getName(),"u.internal.myteam.mail.ru/profile/"+user.getEmailAddress())
       }
       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
        */
-      return "["
-          + user.getName()
-          + "](https://u.internal.myteam.mail.ru/profile/"
-          + user.getEmailAddress()
-          + ")";
+      return markdownTextLink(
+          user.getName(), "u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
     } else return i18nHelper.getText(messageKey);
   }
 
@@ -303,119 +291,71 @@ public class MessageFormatter {
 
   private String makePullRequestLink(
       String hostLink, String projectKey, String repoName, long pullRequestId) {
-    return String.join(
-        "",
-        "(",
-        hostLink,
-        "/projects/",
-        projectKey,
-        "/repos/",
-        repoName,
-        "/pull-requests/",
-        String.valueOf(pullRequestId),
-        "/overview)");
+    return hostLink
+        + "/projects/"
+        + projectKey
+        + "/repos/"
+        + repoName
+        + "/pull-requests/"
+        + pullRequestId
+        + "/overview";
   }
 
   private String makeCommitLink(
       String hostLink, String projectKey, String repoName, String CommitHash) {
-    return String.join(
-        "",
-        "(",
-        hostLink,
-        "/projects/",
-        projectKey,
-        "/repos/",
-        repoName,
-        "/commits/",
-        CommitHash,
-        ")");
+    return hostLink + "/projects/" + projectKey + "/repos/" + repoName + "/commits/" + CommitHash;
   }
 
-  private String makeRepoText(String hostLink, String projectKey, String projectName) {
-    return String.join(
-        "",
-        "[",
-        projectName,
-        "](",
-        hostLink,
-        "/projects/",
-        projectKey,
-        "/repos/",
-        projectName,
-        "/browse)");
+  private String makeRepoLink(String hostLink, String projectKey, String projectName) {
+    return hostLink + "/projects/" + projectKey + "/repos/" + projectName + "/browse";
   }
 
   private String makeBranchLink(
       String hostLink, String projectKey, String projectName, String branchId) {
-    return String.join(
-        "",
-        "(",
-        hostLink,
-        "/projects/",
-        projectKey,
-        "/repos/",
-        projectName,
-        "/browse?at=",
-        branchId,
-        ")");
+    return hostLink
+        + "/projects/"
+        + projectKey
+        + "/repos/"
+        + projectName
+        + "/browse?at="
+        + branchId;
   }
 
   private String makeReviewersText(
       List<PullRequestParticipantDto> reviewers,
       String recipientEmailAddress,
       Locale recipientLocale) {
-    StringBuilder sb = new StringBuilder();
-    if (reviewers != null && reviewers.size() != 0) {
-      boolean counter = false;
-      for (PullRequestParticipantDto reviewer : reviewers) {
-        if (reviewer.getUser().getEmailAddress().equals(recipientEmailAddress)) {
-          if (counter) sb.append(", ");
-          sb.append(
-              i18nResolver.getText(
-                  recipientLocale,
-                  "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.you"));
-        } else {
-          if (counter) sb.append(", ");
-          sb.append(formatBitbucketUser(reviewer.getUser(), "common.words.anonymous", true));
-        }
-        counter = true;
-      }
-      sb.append('.');
-      return i18nResolver.getText(
-          recipientLocale,
-          "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers",
-          sb.toString());
-    }
-    return "";
+    return reviewers.stream()
+        .map(
+            reviewer -> {
+              if (reviewer.getUser().getEmailAddress().equals(recipientEmailAddress)) {
+                return i18nResolver.getText(
+                    recipientLocale,
+                    "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.you");
+              } else {
+                return formatBitbucketUser(reviewer.getUser(), "common.words.anonymous", true);
+              }
+            })
+        .collect(joining(","));
   }
 
   private String makeChangedReviewersText(
       List<PullRequestParticipantDto> reviewers,
       String recipientEmailAddress,
       Locale recipientLocale) {
-    StringBuilder sb = new StringBuilder();
-    if (reviewers != null && reviewers.size() != 0) {
-      boolean counter = false;
-      for (PullRequestParticipantDto reviewer : reviewers) {
-        if (reviewer.getEmailAddress().equals(recipientEmailAddress)) {
-          if (counter) sb.append(", ");
-          sb.append(
-              i18nResolver.getText(
-                  recipientLocale,
-                  "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.you"));
-        } else {
-          if (counter) sb.append(", ");
-          sb.append("[")
-              .append(reviewer.getName())
-              .append("](https://u.internal.myteam.mail.ru/profile/")
-              .append(reviewer.getEmailAddress())
-              .append(")");
-        }
-        counter = true;
-      }
-      return sb.append('.').toString();
-    }
-    return "";
+
+    return reviewers.stream()
+        .map(
+            reviewer -> {
+              if (reviewer.getEmailAddress().equals(recipientEmailAddress)) {
+                return i18nResolver.getText(
+                    recipientLocale,
+                    "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.you");
+              } else {
+                return markdownTextLink(reviewer.getName(), "u.internal.myteam.mail.ru/profile/");
+              }
+            })
+        .collect(joining(", "));
   }
 
   private String shieldDescription(String inputDescription) {
@@ -522,13 +462,18 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pushed",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makeRepoText(
-                    hostLink, repositoryDto.getProject().getKey(), repositoryDto.getName()),
-                makeCommitLink(
-                    hostLink,
-                    repositoryDto.getProject().getKey(),
+                markdownTextLink(
                     repositoryDto.getName(),
-                    changesDTOs.get(0).getToHash())));
+                    makeRepoLink(
+                        hostLink, repositoryDto.getProject().getKey(), repositoryDto.getName())),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.commit"),
+                    makeCommitLink(
+                        hostLink,
+                        repositoryDto.getProject().getKey(),
+                        repositoryDto.getName(),
+                        changesDTOs.get(0).getToHash()))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about RepositoryPush.",
@@ -548,10 +493,12 @@ public class MessageFormatter {
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.modified",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
                 repositoryModified.getOldRepo().getName(),
-                makeRepoText(
-                    hostLink,
-                    repositoryModified.getNewRepo().getProject().getKey(),
-                    repositoryModified.getNewRepo().getName())));
+                markdownTextLink(
+                    repositoryModified.getNewRepo().getName(),
+                    makeRepoLink(
+                        hostLink,
+                        repositoryModified.getNewRepo().getProject().getKey(),
+                        repositoryModified.getNewRepo().getName()))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about RepositoryModified.",
@@ -571,14 +518,18 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.forked",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makeRepoText(
-                    hostLink,
-                    repositoryForked.getRepository().getOrigin().getProject().getKey(),
-                    repositoryForked.getRepository().getOrigin().getName()),
-                makeRepoText(
-                    hostLink,
-                    repositoryForked.getRepository().getProject().getKey(),
-                    repositoryForked.getRepository().getName())));
+                markdownTextLink(
+                    repositoryForked.getRepository().getOrigin().getName(),
+                    makeRepoLink(
+                        hostLink,
+                        repositoryForked.getRepository().getOrigin().getProject().getKey(),
+                        repositoryForked.getRepository().getOrigin().getName())),
+                markdownTextLink(
+                    repositoryForked.getRepository().getName(),
+                    makeRepoLink(
+                        hostLink,
+                        repositoryForked.getRepository().getProject().getKey(),
+                        repositoryForked.getRepository().getName()))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about RepositoryForked.",
@@ -598,10 +549,12 @@ public class MessageFormatter {
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.mirror",
                 repositoryMirrorSynchronized.getMirrorServer().getName(),
                 repositoryMirrorSynchronized.getMirrorServer().getId(),
-                makeRepoText(
-                    linkDtos.get(0).getHref(),
-                    repositoryMirrorSynchronized.getProjectKey(),
-                    repositoryMirrorSynchronized.getRepository().getName()),
+                markdownTextLink(
+                    repositoryMirrorSynchronized.getRepository().getName(),
+                    makeRepoLink(
+                        linkDtos.get(0).getHref(),
+                        repositoryMirrorSynchronized.getProjectKey(),
+                        repositoryMirrorSynchronized.getRepository().getName())),
                 repositoryMirrorSynchronized.getSyncType()));
       } catch (NullPointerException exception) {
         log.error(
@@ -622,11 +575,14 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.create",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makeCommitLink(
-                    hostLink,
-                    repositoryCommitCommentCreated.getProjectKey(),
-                    repositoryCommitCommentCreated.getRepository().getName(),
-                    repositoryCommitCommentCreated.getCommitHash()),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.commit"),
+                    makeCommitLink(
+                        hostLink,
+                        repositoryCommitCommentCreated.getProjectKey(),
+                        repositoryCommitCommentCreated.getRepository().getName(),
+                        repositoryCommitCommentCreated.getCommitHash())),
                 shieldDescription(repositoryCommitCommentCreated.getComment().getText())));
       } catch (NullPointerException exception) {
         log.error(
@@ -646,11 +602,14 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makeCommitLink(
-                    hostLink,
-                    repositoryCommitCommentEdited.getProjectKey(),
-                    repositoryCommitCommentEdited.getRepository().getName(),
-                    repositoryCommitCommentEdited.getCommitHash()),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.commite"),
+                    makeCommitLink(
+                        hostLink,
+                        repositoryCommitCommentEdited.getProjectKey(),
+                        repositoryCommitCommentEdited.getRepository().getName(),
+                        repositoryCommitCommentEdited.getCommitHash())),
                 shieldDescription(repositoryCommitCommentEdited.getPreviousComment()),
                 shieldDescription(repositoryCommitCommentEdited.getComment().getText())));
       } catch (NullPointerException exception) {
@@ -671,11 +630,14 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.delete",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makeCommitLink(
-                    hostLink,
-                    repositoryCommitCommentDeleted.getProjectKey(),
-                    repositoryCommitCommentDeleted.getRepository().getName(),
-                    repositoryCommitCommentDeleted.getCommitHash()),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.commite"),
+                    makeCommitLink(
+                        hostLink,
+                        repositoryCommitCommentDeleted.getProjectKey(),
+                        repositoryCommitCommentDeleted.getRepository().getName(),
+                        repositoryCommitCommentDeleted.getCommitHash())),
                 shieldDescription(repositoryCommitCommentDeleted.getComment().getText())));
       } catch (NullPointerException exception) {
         log.error(
@@ -696,42 +658,49 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.opened",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makePullRequestLink(
-                    hostLink,
-                    pullRequestOpened.getProjectKey(),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
+                    makePullRequestLink(
+                        hostLink,
+                        pullRequestOpened.getProjectKey(),
+                        pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
+                        pullRequestOpened.getPullRequest().getId())),
+                markdownTextLink(
                     pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
-                    pullRequestOpened.getPullRequest().getId()),
-                makeRepoText(
-                    hostLink,
-                    pullRequestOpened
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestOpened.getPullRequest().getToRef().getRepository().getName()),
-                pullRequestOpened.getPullRequest().getFromRef().getId(),
-                makeBranchLink(
-                    hostLink,
-                    pullRequestOpened
-                        .getPullRequest()
-                        .getFromRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestOpened.getPullRequest().getFromRef().getRepository().getName(),
-                    pullRequestOpened.getPullRequest().getFromRef().getId()),
-                pullRequestOpened.getPullRequest().getToRef().getId(),
-                makeBranchLink(
-                    hostLink,
-                    pullRequestOpened
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
-                    pullRequestOpened.getPullRequest().getToRef().getId()),
+                    makeRepoLink(
+                        hostLink,
+                        pullRequestOpened
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestOpened.getPullRequest().getToRef().getRepository().getName())),
+                markdownTextLink(
+                    pullRequestOpened.getPullRequest().getFromRef().getId(),
+                    makeBranchLink(
+                        hostLink,
+                        pullRequestOpened
+                            .getPullRequest()
+                            .getFromRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestOpened.getPullRequest().getFromRef().getRepository().getName(),
+                        pullRequestOpened.getPullRequest().getFromRef().getId())),
+                markdownTextLink(
+                    pullRequestOpened.getPullRequest().getToRef().getId(),
+                    makeBranchLink(
+                        hostLink,
+                        pullRequestOpened
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
+                        pullRequestOpened.getPullRequest().getToRef().getId())),
                 pullRequestOpened.getPullRequest().getTitle(),
                 shieldDescription(pullRequestOpened.getPullRequest().getDescription()),
                 makeReviewersText(
@@ -799,18 +768,21 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified.target",
                 String.valueOf(counter) + '.',
-                pullRequestModified.getPreviousTarget().getId(),
-                makeBranchLink(
-                    hostLink,
-                    pullRequestModified.getProjectKey(),
-                    pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
-                    pullRequestModified.getPreviousTarget().getId()),
-                pullRequestModified.getPullRequest().getToRef().getId(),
-                makeBranchLink(
-                    hostLink,
-                    pullRequestModified.getProjectKey(),
-                    pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
-                    pullRequestModified.getPullRequest().getToRef().getId())));
+                markdownTextLink(
+                    pullRequestModified.getPreviousTarget().getId(),
+                    makeBranchLink(
+                        hostLink,
+                        pullRequestModified.getProjectKey(),
+                        pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
+                        pullRequestModified.getPreviousTarget().getId())),
+                markdownTextLink(
+                    pullRequestModified.getPullRequest().getToRef().getId(),
+                    makeBranchLink(
+                        hostLink,
+                        pullRequestModified.getProjectKey(),
+                        pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
+                        pullRequestModified.getPullRequest().getToRef().getId()))));
+        counter++;
       }
       if (counter == 1) return "Empty PullRequestModified event";
       try {
@@ -819,20 +791,25 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makePullRequestLink(
-                    hostLink,
-                    pullRequestModified.getProjectKey(),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
+                    makePullRequestLink(
+                        hostLink,
+                        pullRequestModified.getProjectKey(),
+                        pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
+                        pullRequestModified.getPullRequest().getId())),
+                markdownTextLink(
                     pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
-                    pullRequestModified.getPullRequest().getId()),
-                makeRepoText(
-                    hostLink,
-                    pullRequestModified
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestModified.getPullRequest().getToRef().getRepository().getName()),
+                    makeRepoLink(
+                        hostLink,
+                        pullRequestModified
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestModified.getPullRequest().getToRef().getRepository().getName())),
                 pullRequestModified.getPullRequest().getTitle(),
                 changes.toString()));
       } catch (NullPointerException exception) {
@@ -853,28 +830,37 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.updated",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makePullRequestLink(
-                    hostLink,
-                    pullRequestReviewersUpdated.getProjectKey(),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pre"),
+                    makePullRequestLink(
+                        hostLink,
+                        pullRequestReviewersUpdated.getProjectKey(),
+                        pullRequestReviewersUpdated
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName(),
+                        pullRequestReviewersUpdated.getPullRequest().getId())),
+                markdownTextLink(
                     pullRequestReviewersUpdated
                         .getPullRequest()
                         .getToRef()
                         .getRepository()
                         .getName(),
-                    pullRequestReviewersUpdated.getPullRequest().getId()),
-                makeRepoText(
-                    hostLink,
-                    pullRequestReviewersUpdated
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestReviewersUpdated
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName()),
+                    makeRepoLink(
+                        hostLink,
+                        pullRequestReviewersUpdated
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestReviewersUpdated
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName())),
                 pullRequestReviewersUpdated.getPullRequest().getTitle()));
 
         if (pullRequestReviewersUpdated.getAddedReviewers() != null
@@ -917,29 +903,38 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.approved",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makePullRequestLink(
-                    hostLink,
-                    pullRequestApprovedByReviewer.getProjectKey(),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
+                    makePullRequestLink(
+                        hostLink,
+                        pullRequestApprovedByReviewer.getProjectKey(),
+                        pullRequestApprovedByReviewer
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName(),
+                        pullRequestApprovedByReviewer.getPullRequest().getId())),
+                pullRequestApprovedByReviewer.getPullRequest().getTitle(),
+                markdownTextLink(
                     pullRequestApprovedByReviewer
                         .getPullRequest()
                         .getToRef()
                         .getRepository()
                         .getName(),
-                    pullRequestApprovedByReviewer.getPullRequest().getId()),
-                pullRequestApprovedByReviewer.getPullRequest().getTitle(),
-                makeRepoText(
-                    hostLink,
-                    pullRequestApprovedByReviewer
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestApprovedByReviewer
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName()),
+                    makeRepoLink(
+                        hostLink,
+                        pullRequestApprovedByReviewer
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestApprovedByReviewer
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName())),
                 pullRequestApprovedByReviewer.getPullRequest().getDescription()));
       } catch (NullPointerException exception) {
         log.error(
@@ -959,29 +954,38 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.unapproved",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makePullRequestLink(
-                    hostLink,
-                    pullRequestUnapprovedByReviewer.getProjectKey(),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pra"),
+                    makePullRequestLink(
+                        hostLink,
+                        pullRequestUnapprovedByReviewer.getProjectKey(),
+                        pullRequestUnapprovedByReviewer
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName(),
+                        pullRequestUnapprovedByReviewer.getPullRequest().getId())),
+                pullRequestUnapprovedByReviewer.getPullRequest().getTitle(),
+                markdownTextLink(
                     pullRequestUnapprovedByReviewer
                         .getPullRequest()
                         .getToRef()
                         .getRepository()
                         .getName(),
-                    pullRequestUnapprovedByReviewer.getPullRequest().getId()),
-                pullRequestUnapprovedByReviewer.getPullRequest().getTitle(),
-                makeRepoText(
-                    hostLink,
-                    pullRequestUnapprovedByReviewer
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestUnapprovedByReviewer
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName()),
+                    makeRepoLink(
+                        hostLink,
+                        pullRequestUnapprovedByReviewer
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestUnapprovedByReviewer
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName())),
                 pullRequestUnapprovedByReviewer.getPullRequest().getDescription()));
       } catch (NullPointerException exception) {
         log.error(
@@ -1001,29 +1005,38 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.needswork",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makePullRequestLink(
-                    hostLink,
-                    pullRequestNeedsWorkByReviewer.getProjectKey(),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
+                    makePullRequestLink(
+                        hostLink,
+                        pullRequestNeedsWorkByReviewer.getProjectKey(),
+                        pullRequestNeedsWorkByReviewer
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName(),
+                        pullRequestNeedsWorkByReviewer.getPullRequest().getId())),
+                pullRequestNeedsWorkByReviewer.getPullRequest().getTitle(),
+                markdownTextLink(
                     pullRequestNeedsWorkByReviewer
                         .getPullRequest()
                         .getToRef()
                         .getRepository()
                         .getName(),
-                    pullRequestNeedsWorkByReviewer.getPullRequest().getId()),
-                pullRequestNeedsWorkByReviewer.getPullRequest().getTitle(),
-                makeRepoText(
-                    hostLink,
-                    pullRequestNeedsWorkByReviewer
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestNeedsWorkByReviewer
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName())));
+                    makeRepoLink(
+                        hostLink,
+                        pullRequestNeedsWorkByReviewer
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestNeedsWorkByReviewer
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName()))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about PullRequestNeedsWorkByReviewer.",
@@ -1041,21 +1054,26 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.merged",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makePullRequestLink(
-                    hostLink,
-                    pullRequestMerged.getProjectKey(),
-                    pullRequestMerged.getPullRequest().getToRef().getRepository().getName(),
-                    pullRequestMerged.getPullRequest().getId()),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
+                    makePullRequestLink(
+                        hostLink,
+                        pullRequestMerged.getProjectKey(),
+                        pullRequestMerged.getPullRequest().getToRef().getRepository().getName(),
+                        pullRequestMerged.getPullRequest().getId())),
                 pullRequestMerged.getPullRequest().getTitle(),
-                makeRepoText(
-                    hostLink,
-                    pullRequestMerged
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestMerged.getPullRequest().getToRef().getRepository().getName())));
+                markdownTextLink(
+                    pullRequestMerged.getPullRequest().getToRef().getRepository().getName(),
+                    makeRepoLink(
+                        hostLink,
+                        pullRequestMerged
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestMerged.getPullRequest().getToRef().getRepository().getName()))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about PullRequestMerged.",
@@ -1073,21 +1091,30 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.declined",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makePullRequestLink(
-                    hostLink,
-                    pullRequestDeclined.getProjectKey(),
-                    pullRequestDeclined.getPullRequest().getToRef().getRepository().getName(),
-                    pullRequestDeclined.getPullRequest().getId()),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
+                    makePullRequestLink(
+                        hostLink,
+                        pullRequestDeclined.getProjectKey(),
+                        pullRequestDeclined.getPullRequest().getToRef().getRepository().getName(),
+                        pullRequestDeclined.getPullRequest().getId())),
                 pullRequestDeclined.getPullRequest().getTitle(),
-                makeRepoText(
-                    hostLink,
-                    pullRequestDeclined
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestDeclined.getPullRequest().getToRef().getRepository().getName())));
+                markdownTextLink(
+                    pullRequestDeclined.getPullRequest().getToRef().getRepository().getName(),
+                    makeRepoLink(
+                        hostLink,
+                        pullRequestDeclined
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestDeclined
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName()))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about PullRequestDeclined.",
@@ -1105,21 +1132,30 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.deleted",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makePullRequestLink(
-                    hostLink,
-                    pullRequestDeleted.getProjectKey(),
-                    pullRequestDeleted.getPullRequest().getToRef().getRepository().getName(),
-                    pullRequestDeleted.getPullRequest().getId()),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
+                    makePullRequestLink(
+                        hostLink,
+                        pullRequestDeleted.getProjectKey(),
+                        pullRequestDeleted.getPullRequest().getToRef().getRepository().getName(),
+                        pullRequestDeleted.getPullRequest().getId())),
                 pullRequestDeleted.getPullRequest().getTitle(),
-                makeRepoText(
-                    hostLink,
-                    pullRequestDeleted
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestDeleted.getPullRequest().getToRef().getRepository().getName())));
+                markdownTextLink(
+                    pullRequestDeleted.getPullRequest().getToRef().getRepository().getName(),
+                    makeRepoLink(
+                        hostLink,
+                        pullRequestDeleted
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestDeleted
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName()))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about PullRequestDeleted.",
@@ -1139,21 +1175,34 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.comment.added",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makePullRequestLink(
-                    hostLink,
-                    pullRequestCommentAdded.getProjectKey(),
-                    pullRequestCommentAdded.getPullRequest().getToRef().getRepository().getName(),
-                    pullRequestCommentAdded.getPullRequest().getId()),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
+                    makePullRequestLink(
+                        hostLink,
+                        pullRequestCommentAdded.getProjectKey(),
+                        pullRequestCommentAdded
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName(),
+                        pullRequestCommentAdded.getPullRequest().getId())),
                 pullRequestCommentAdded.getPullRequest().getTitle(),
-                makeRepoText(
-                    hostLink,
-                    pullRequestCommentAdded
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestCommentAdded.getPullRequest().getToRef().getRepository().getName()),
+                markdownTextLink(
+                    pullRequestCommentAdded.getPullRequest().getToRef().getRepository().getName(),
+                    makeRepoLink(
+                        hostLink,
+                        pullRequestCommentAdded
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestCommentAdded
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName())),
                 pullRequestCommentAdded.getComment().getText()));
       } catch (NullPointerException exception) {
         log.error(
@@ -1175,21 +1224,34 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.comment.edited",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makePullRequestLink(
-                    hostLink,
-                    pullRequestCommentEdited.getProjectKey(),
-                    pullRequestCommentEdited.getPullRequest().getToRef().getRepository().getName(),
-                    pullRequestCommentEdited.getPullRequest().getId()),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pry"),
+                    makePullRequestLink(
+                        hostLink,
+                        pullRequestCommentEdited.getProjectKey(),
+                        pullRequestCommentEdited
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName(),
+                        pullRequestCommentEdited.getPullRequest().getId())),
                 pullRequestCommentEdited.getPullRequest().getTitle(),
-                makeRepoText(
-                    hostLink,
-                    pullRequestCommentEdited
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestCommentEdited.getPullRequest().getToRef().getRepository().getName()),
+                markdownTextLink(
+                    pullRequestCommentEdited.getPullRequest().getToRef().getRepository().getName(),
+                    makeRepoLink(
+                        hostLink,
+                        pullRequestCommentEdited
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestCommentEdited
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName())),
                 pullRequestCommentEdited.getPreviousCommentText(),
                 pullRequestCommentEdited.getComment().getText()));
       } catch (NullPointerException exception) {
@@ -1212,25 +1274,34 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.comment.deleted",
                 formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                makePullRequestLink(
-                    hostLink,
-                    pullRequestCommentDeleted.getProjectKey(),
-                    pullRequestCommentDeleted.getPullRequest().getToRef().getRepository().getName(),
-                    pullRequestCommentDeleted.getPullRequest().getId()),
+                markdownTextLink(
+                    i18nResolver.getText(
+                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pry"),
+                    makePullRequestLink(
+                        hostLink,
+                        pullRequestCommentDeleted.getProjectKey(),
+                        pullRequestCommentDeleted
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName(),
+                        pullRequestCommentDeleted.getPullRequest().getId())),
                 pullRequestCommentDeleted.getPullRequest().getTitle(),
-                makeRepoText(
-                    hostLink,
-                    pullRequestCommentDeleted
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getProject()
-                        .getKey(),
-                    pullRequestCommentDeleted
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName()),
+                markdownTextLink(
+                    pullRequestCommentDeleted.getPullRequest().getToRef().getRepository().getName(),
+                    makeRepoLink(
+                        hostLink,
+                        pullRequestCommentDeleted
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getProject()
+                            .getKey(),
+                        pullRequestCommentDeleted
+                            .getPullRequest()
+                            .getToRef()
+                            .getRepository()
+                            .getName())),
                 pullRequestCommentDeleted.getComment().getText()));
       } catch (NullPointerException exception) {
         log.error(
@@ -1671,7 +1742,7 @@ public class MessageFormatter {
     return map.entrySet().stream()
         .map(
             ((entry) -> String.join(" : ", entry.getKey().toString(), entry.getValue().toString())))
-        .collect(Collectors.joining("\n"));
+        .collect(joining("\n"));
   }
 
   public String stringifyCollection(Locale locale, Collection<?> collection) {
