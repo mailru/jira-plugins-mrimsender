@@ -124,12 +124,12 @@ public class MessageFormatter {
     if (user != null) {
       /* #TODO Вернуть когда починят mentions в myteam
       if (mention) {
-        return markdownTextLink(user.getName(),"u.internal.myteam.mail.ru/profile/"+user.getEmailAddress())
+        return markdownTextLink(user.getDisplayName(),"u.internal.myteam.mail.ru/profile/"+user.getEmailAddress())
        }
        return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
        */
       return markdownTextLink(
-          user.getName(), "u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
+          user.getDisplayName(), "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
     } else return i18nHelper.getText(messageKey);
   }
 
@@ -137,12 +137,12 @@ public class MessageFormatter {
     if (user != null) {
       /* #TODO Вернуть когда починят mentions в myteam
       if (mention) {
-        return markdownTextLink(user.getName(),"u.internal.myteam.mail.ru/profile/"+user.getEmailAddress())
+        return markdownTextLink(user.getDisplayName(), "u.internal.myteam.mail.ru/profile/"+user.getEmailAddress())
       }
       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
        */
       return markdownTextLink(
-          user.getName(), "u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
+          user.getDisplayName(), "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
     } else return i18nHelper.getText(messageKey);
   }
 
