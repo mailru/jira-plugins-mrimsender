@@ -88,6 +88,7 @@ public class ExternalSystemNotificationsService {
         throw new BitbucketWebhookException(errorInfo);
       }
     }
+
     BitbucketWebhookEvent bitbucketWebhookEvent = (BitbucketWebhookEvent) event;
     List<BitbucketRepoWatcherDto> allBitbucketRepositoryWatchers =
         getAllBitbucketRepositoryWatchers(
@@ -181,6 +182,8 @@ public class ExternalSystemNotificationsService {
                 log.error("Bitbucket notification message is null");
                 return;
               }
+              if (message.equals("Empty PullRequestModified event")) return;
+
               myteamEventsListener.publishEvent(
                   new BitbucketNotifyEvent(myteamLogin, message, null));
             });

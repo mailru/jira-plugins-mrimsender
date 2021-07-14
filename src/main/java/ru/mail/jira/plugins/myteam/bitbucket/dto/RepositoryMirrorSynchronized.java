@@ -7,6 +7,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import ru.mail.jira.plugins.myteam.bitbucket.BitbucketWebhookEvent;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.ChangeDto;
+import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.MirrorServerDto;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.RepositoryDto;
 
 @Getter
@@ -17,7 +18,7 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.RepositoryDto;
 @ToString
 public class RepositoryMirrorSynchronized extends BitbucketEventDto
     implements BitbucketWebhookEvent {
-  private Void mirrorServer;
+  private MirrorServerDto mirrorServer;
   private String syncType;
   private RepositoryDto repository;
   private List<ChangeDto> changes;

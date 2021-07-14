@@ -16,6 +16,7 @@ public class PullRequestDto {
   private long id;
   private long version;
   private String title;
+  private String description;
 
   @JsonProperty("open")
   private boolean isOpen;

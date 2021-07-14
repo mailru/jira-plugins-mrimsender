@@ -18,7 +18,7 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.UserDto;
 public class PullRequestCommentEdited extends BitbucketEventDto implements BitbucketWebhookEvent {
   private UserDto actor;
   private PullRequestDto pullRequest;
-  private CommentDto commentDto;
+  private CommentDto comment;
   private long commentParentId;
 
   @JsonProperty("previousComment")
