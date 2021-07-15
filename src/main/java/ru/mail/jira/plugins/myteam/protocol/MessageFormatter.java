@@ -268,7 +268,7 @@ public class MessageFormatter {
         issue.getAttachments());
 
     if (!StringUtils.isBlank(issue.getDescription()))
-      sb.append("\n\n").append(issue.getDescription());
+      sb.append("\n\n").append(shieldDescription(issue.getDescription()));
 
     return sb.toString();
   }
@@ -352,7 +352,7 @@ public class MessageFormatter {
                     recipientLocale,
                     "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.you");
               } else {
-                return markdownTextLink(reviewer.getName(), "u.internal.myteam.mail.ru/profile/");
+                return markdownTextLink(reviewer.getName(), "https://u.internal.myteam.mail.ru/profile/" + reviewer.getEmailAddress());
               }
             })
         .collect(joining(", "));
@@ -1813,7 +1813,7 @@ public class MessageFormatter {
                         "[",
                         comment.getAuthorFullName(),
                         "] ",
-                        comment.getBody()))
+                        shieldDescription(comment.getBody())))
             .collect(Collectors.toList()),
         pageNumber,
         total,
