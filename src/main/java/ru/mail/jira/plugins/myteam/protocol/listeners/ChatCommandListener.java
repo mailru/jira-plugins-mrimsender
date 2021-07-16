@@ -219,6 +219,8 @@ public class ChatCommandListener {
                 localeManager.getLocaleFor(user),
                 "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
       }
+    } catch (Exception e) {
+      log.error("sendIssueViewToUser({}, {}, {})", issueKey, user, chatId, e);
     } finally {
       jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
     }
