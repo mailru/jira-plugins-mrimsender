@@ -42,10 +42,14 @@ import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.util.MessageSet;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.httpclient.URI;
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.lang3.StringUtils;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
@@ -129,7 +133,8 @@ public class MessageFormatter {
        return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
        */
       return markdownTextLink(
-          user.getDisplayName(), "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
+          user.getDisplayName(),
+          "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
     } else return i18nHelper.getText(messageKey);
   }
 
@@ -142,7 +147,8 @@ public class MessageFormatter {
       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
        */
       return markdownTextLink(
-          user.getDisplayName(), "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
+          user.getDisplayName(),
+          "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
     } else return i18nHelper.getText(messageKey);
   }
 
@@ -169,13 +175,20 @@ public class MessageFormatter {
         if (object instanceof ProjectConstant) value.append(((ProjectConstant) object).getName());
         if (object instanceof Attachment) {
           Attachment attachment = (Attachment) object;
-          String attachmentUrl =
-              String.format(
-                  "%s/secure/attachment/%d/%s",
-                  jiraBaseUrl, attachment.getId(), attachment.getFilename());
-          value.append(attachment.getFilename());
-          value.append(" - ");
-          value.append(attachmentUrl);
+          String attachmentUrl = "";
+          try {
+            attachmentUrl =
+                new URI(
+                        String.format(
+                            "%s/secure/attachment/%d/%s",
+                            jiraBaseUrl, attachment.getId(), attachment.getFilename()),
+                        false,
+                        StandardCharsets.UTF_8.toString())
+                    .getEscapedURI();
+          } catch (URIException e) {
+            log.error("Unable to create attachment link for file: {}", attachment.getFilename());
+          }
+          value.append(markdownTextLink(attachment.getFilename(), attachmentUrl));
         }
         if (object instanceof Label) value.append(((Label) object).getLabel());
         if (iterator.hasNext()) value.append(", ");
@@ -275,8 +288,17 @@ public class MessageFormatter {
 
   private String markdownTextLink(String issueKey, String issueLink) {
     if (issueKey != null) {
-      return "[" + issueKey + "](" + issueLink + ")";
-    } else return issueLink;
+      try {
+        return "["
+            + issueKey
+            + "]("
+            + new URI(issueLink, false, StandardCharsets.UTF_8.toString()).getEscapedURI()
+            + ")";
+      } catch (URIException e) {
+        log.error("Unable to create text link for issueKey: {}, issueLink:{}", issueKey, issueLink);
+      }
+    }
+    return issueLink;
   }
 
   private String getHostLink(LinksDto linksDto) {
@@ -352,7 +374,9 @@ public class MessageFormatter {
                     recipientLocale,
                     "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.you");
               } else {
-                return markdownTextLink(reviewer.getName(), "https://u.internal.myteam.mail.ru/profile/" + reviewer.getEmailAddress());
+                return markdownTextLink(
+                    reviewer.getName(),
+                    "https://u.internal.myteam.mail.ru/profile/" + reviewer.getEmailAddress());
               }
             })
         .collect(joining(", "));
@@ -380,6 +404,39 @@ public class MessageFormatter {
           break;
         case '>':
           result.append("\\>");
+          break;
+        case '\\':
+          result.append("\\\\");
+          break;
+        case '{':
+          result.append("\\{");
+          break;
+        case '}':
+          result.append("\\}");
+          break;
+        case '[':
+          result.append("\\[");
+          break;
+        case ']':
+          result.append("\\]");
+          break;
+        case '(':
+          result.append("\\(");
+          break;
+        case ')':
+          result.append("\\)");
+          break;
+        case '#':
+          result.append("\\#");
+          break;
+        case '+':
+          result.append("\\+");
+          break;
+        case '.':
+          result.append("\\.");
+          break;
+        case '!':
+          result.append("\\!");
           break;
         default:
           result.append(c);
@@ -442,7 +499,8 @@ public class MessageFormatter {
         "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
   }
 
-  public String formatBitbucketEvent(ApplicationUser recipient, BitbucketEventDto bitbucketEvent) {
+  public String formatBitbucketEvent(ApplicationUser recipient, BitbucketEventDto bitbucketEvent)
+      throws UnsupportedEncodingException {
     StringBuilder sb = new StringBuilder();
     boolean useMentionFormat = true;
     // TODO Вернуть когда починят меншены
@@ -935,7 +993,7 @@ public class MessageFormatter {
                             .getToRef()
                             .getRepository()
                             .getName())),
-                pullRequestApprovedByReviewer.getPullRequest().getDescription()));
+                    shieldDescription(pullRequestApprovedByReviewer.getPullRequest().getDescription())));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about PullRequestApprovedByReviewer.",
@@ -986,7 +1044,7 @@ public class MessageFormatter {
                             .getToRef()
                             .getRepository()
                             .getName())),
-                pullRequestUnapprovedByReviewer.getPullRequest().getDescription()));
+                shieldDescription(pullRequestUnapprovedByReviewer.getPullRequest().getDescription())));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about PullRequestUnapprovedByReviewer.",
@@ -1807,12 +1865,12 @@ public class MessageFormatter {
                 comment ->
                     String.join(
                         "",
-                        "[",
+                        "\\[",
                         dateFormatter.format(comment.getCreated()),
-                        "] ",
-                        "[",
+                        "\\] ",
+                        "\\[",
                         comment.getAuthorFullName(),
-                        "] ",
+                        "\\] ",
                         shieldDescription(comment.getBody())))
             .collect(Collectors.toList()),
         pageNumber,

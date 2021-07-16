@@ -145,6 +145,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .field("chatId", chatId)
               .field("msgId", messageId)
               .field("text", text)
+              .field("parseMode", "MarkdownV2")
               .asObject(MessageResponse.class);
     else
       response =
@@ -154,6 +155,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .field("chatId", chatId)
               .field("msgId", messageId)
               .field("text", text)
+              .field("parseMode", "MarkdownV2")
               .field("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
               .asObject(MessageResponse.class);
     checkMyteamServerErrorException(response, "editMessageText");
