@@ -182,7 +182,7 @@ public class ExternalSystemNotificationsService {
               try {
                 message = messageFormatter.formatBitbucketEvent(recipient, event);
               } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                log.error("Unable to encode message for {}:", recipient.getEmailAddress(), e);
               }
               if (message == null) {
                 log.error("Bitbucket notification message is null");
