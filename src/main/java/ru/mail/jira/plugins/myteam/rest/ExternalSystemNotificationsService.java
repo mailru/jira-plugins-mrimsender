@@ -11,6 +11,7 @@ import com.atlassian.sal.api.net.Request;
 import com.atlassian.sal.api.net.Response;
 import com.atlassian.sal.api.net.ResponseException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -177,7 +178,12 @@ public class ExternalSystemNotificationsService {
                 log.error("Myteam login not found");
                 return;
               }
-              String message = messageFormatter.formatBitbucketEvent(recipient, event);
+              String message = null;
+              try {
+                message = messageFormatter.formatBitbucketEvent(recipient, event);
+              } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+              }
               if (message == null) {
                 log.error("Bitbucket notification message is null");
                 return;

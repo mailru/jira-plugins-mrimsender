@@ -42,6 +42,9 @@ import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.util.MessageSet;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -129,7 +132,8 @@ public class MessageFormatter {
        return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
        */
       return markdownTextLink(
-          user.getDisplayName(), "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
+          user.getDisplayName(),
+          "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
     } else return i18nHelper.getText(messageKey);
   }
 
@@ -142,7 +146,8 @@ public class MessageFormatter {
       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
        */
       return markdownTextLink(
-          user.getDisplayName(), "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
+          user.getDisplayName(),
+          "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
     } else return i18nHelper.getText(messageKey);
   }
 
@@ -169,13 +174,20 @@ public class MessageFormatter {
         if (object instanceof ProjectConstant) value.append(((ProjectConstant) object).getName());
         if (object instanceof Attachment) {
           Attachment attachment = (Attachment) object;
-          String attachmentUrl =
-              String.format(
-                  "%s/secure/attachment/%d/%s",
-                  jiraBaseUrl, attachment.getId(), attachment.getFilename());
-          value.append(attachment.getFilename());
-          value.append(" - ");
-          value.append(attachmentUrl);
+          String attachmentUrl = "";
+          try {
+            attachmentUrl =
+                String.format(
+                    "%s/secure/attachment/%d/%s",
+                    jiraBaseUrl,
+                    attachment.getId(),
+                    URLEncoder.encode(attachment.getFilename(), StandardCharsets.UTF_8.toString()));
+          } catch (UnsupportedEncodingException e) {
+            log.error("Unable to create attachment link for file: {}", attachment.getFilename());
+            e.printStackTrace();
+          }
+          value.append(
+              markdownTextLink(attachment.getFilename(), attachmentUrl));
         }
         if (object instanceof Label) value.append(((Label) object).getLabel());
         if (iterator.hasNext()) value.append(", ");
@@ -352,7 +364,9 @@ public class MessageFormatter {
                     recipientLocale,
                     "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.you");
               } else {
-                return markdownTextLink(reviewer.getName(), "https://u.internal.myteam.mail.ru/profile/" + reviewer.getEmailAddress());
+                return markdownTextLink(
+                    reviewer.getName(),
+                    "https://u.internal.myteam.mail.ru/profile/" + reviewer.getEmailAddress());
               }
             })
         .collect(joining(", "));
@@ -380,6 +394,39 @@ public class MessageFormatter {
           break;
         case '>':
           result.append("\\>");
+          break;
+        case '\\':
+          result.append("\\\\");
+          break;
+        case '{':
+          result.append("\\{");
+          break;
+        case '}':
+          result.append("\\}");
+          break;
+        case '[':
+          result.append("\\[");
+          break;
+        case ']':
+          result.append("\\]");
+          break;
+        case '(':
+          result.append("\\(");
+          break;
+        case ')':
+          result.append("\\)");
+          break;
+        case '#':
+          result.append("\\#");
+          break;
+        case '+':
+          result.append("\\+");
+          break;
+        case '.':
+          result.append("\\.");
+          break;
+        case '!':
+          result.append("\\!");
           break;
         default:
           result.append(c);
@@ -442,7 +489,8 @@ public class MessageFormatter {
         "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
   }
 
-  public String formatBitbucketEvent(ApplicationUser recipient, BitbucketEventDto bitbucketEvent) {
+  public String formatBitbucketEvent(ApplicationUser recipient, BitbucketEventDto bitbucketEvent)
+      throws UnsupportedEncodingException {
     StringBuilder sb = new StringBuilder();
     boolean useMentionFormat = true;
     // TODO Вернуть когда починят меншены
@@ -465,14 +513,18 @@ public class MessageFormatter {
                 markdownTextLink(
                     repositoryDto.getName(),
                     makeRepoLink(
-                        hostLink, repositoryDto.getProject().getKey(), repositoryDto.getName())),
+                        hostLink,
+                        repositoryDto.getProject().getKey(),
+                        URLEncoder.encode(
+                            repositoryDto.getName(), StandardCharsets.UTF_8.toString()))),
                 markdownTextLink(
                     i18nResolver.getText(
                         recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.commit"),
                     makeCommitLink(
                         hostLink,
                         repositoryDto.getProject().getKey(),
-                        repositoryDto.getName(),
+                        URLEncoder.encode(
+                            repositoryDto.getName(), StandardCharsets.UTF_8.toString()),
                         changesDTOs.get(0).getToHash()))));
       } catch (NullPointerException exception) {
         log.error(
@@ -498,7 +550,9 @@ public class MessageFormatter {
                     makeRepoLink(
                         hostLink,
                         repositoryModified.getNewRepo().getProject().getKey(),
-                        repositoryModified.getNewRepo().getName()))));
+                        URLEncoder.encode(
+                            repositoryModified.getNewRepo().getName(),
+                            StandardCharsets.UTF_8.toString())))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about RepositoryModified.",
@@ -523,13 +577,17 @@ public class MessageFormatter {
                     makeRepoLink(
                         hostLink,
                         repositoryForked.getRepository().getOrigin().getProject().getKey(),
-                        repositoryForked.getRepository().getOrigin().getName())),
+                        URLEncoder.encode(
+                            repositoryForked.getRepository().getOrigin().getName(),
+                            StandardCharsets.UTF_8.toString()))),
                 markdownTextLink(
                     repositoryForked.getRepository().getName(),
                     makeRepoLink(
                         hostLink,
                         repositoryForked.getRepository().getProject().getKey(),
-                        repositoryForked.getRepository().getName()))));
+                        URLEncoder.encode(
+                            repositoryForked.getRepository().getName(),
+                            StandardCharsets.UTF_8.toString())))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about RepositoryForked.",
@@ -554,7 +612,9 @@ public class MessageFormatter {
                     makeRepoLink(
                         linkDtos.get(0).getHref(),
                         repositoryMirrorSynchronized.getProjectKey(),
-                        repositoryMirrorSynchronized.getRepository().getName())),
+                        URLEncoder.encode(
+                            repositoryMirrorSynchronized.getRepository().getName(),
+                            StandardCharsets.UTF_8.toString()))),
                 repositoryMirrorSynchronized.getSyncType()));
       } catch (NullPointerException exception) {
         log.error(
@@ -581,7 +641,9 @@ public class MessageFormatter {
                     makeCommitLink(
                         hostLink,
                         repositoryCommitCommentCreated.getProjectKey(),
-                        repositoryCommitCommentCreated.getRepository().getName(),
+                        URLEncoder.encode(
+                            repositoryCommitCommentCreated.getRepository().getName(),
+                            StandardCharsets.UTF_8.toString()),
                         repositoryCommitCommentCreated.getCommitHash())),
                 shieldDescription(repositoryCommitCommentCreated.getComment().getText())));
       } catch (NullPointerException exception) {
@@ -608,7 +670,9 @@ public class MessageFormatter {
                     makeCommitLink(
                         hostLink,
                         repositoryCommitCommentEdited.getProjectKey(),
-                        repositoryCommitCommentEdited.getRepository().getName(),
+                        URLEncoder.encode(
+                            repositoryCommitCommentEdited.getRepository().getName(),
+                            StandardCharsets.UTF_8.toString()),
                         repositoryCommitCommentEdited.getCommitHash())),
                 shieldDescription(repositoryCommitCommentEdited.getPreviousComment()),
                 shieldDescription(repositoryCommitCommentEdited.getComment().getText())));
@@ -636,7 +700,9 @@ public class MessageFormatter {
                     makeCommitLink(
                         hostLink,
                         repositoryCommitCommentDeleted.getProjectKey(),
-                        repositoryCommitCommentDeleted.getRepository().getName(),
+                        URLEncoder.encode(
+                            repositoryCommitCommentDeleted.getRepository().getName(),
+                            StandardCharsets.UTF_8.toString()),
                         repositoryCommitCommentDeleted.getCommitHash())),
                 shieldDescription(repositoryCommitCommentDeleted.getComment().getText())));
       } catch (NullPointerException exception) {
@@ -664,7 +730,9 @@ public class MessageFormatter {
                     makePullRequestLink(
                         hostLink,
                         pullRequestOpened.getProjectKey(),
-                        pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
+                        URLEncoder.encode(
+                            pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
+                            StandardCharsets.UTF_8.toString()),
                         pullRequestOpened.getPullRequest().getId())),
                 markdownTextLink(
                     pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
@@ -676,7 +744,9 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestOpened.getPullRequest().getToRef().getRepository().getName())),
+                        URLEncoder.encode(
+                            pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
+                            StandardCharsets.UTF_8.toString()))),
                 markdownTextLink(
                     pullRequestOpened.getPullRequest().getFromRef().getId(),
                     makeBranchLink(
@@ -687,7 +757,13 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestOpened.getPullRequest().getFromRef().getRepository().getName(),
+                        URLEncoder.encode(
+                            pullRequestOpened
+                                .getPullRequest()
+                                .getFromRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()),
                         pullRequestOpened.getPullRequest().getFromRef().getId())),
                 markdownTextLink(
                     pullRequestOpened.getPullRequest().getToRef().getId(),
@@ -699,7 +775,9 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
+                        URLEncoder.encode(
+                            pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
+                            StandardCharsets.UTF_8.toString()),
                         pullRequestOpened.getPullRequest().getToRef().getId())),
                 pullRequestOpened.getPullRequest().getTitle(),
                 shieldDescription(pullRequestOpened.getPullRequest().getDescription()),
@@ -773,14 +851,26 @@ public class MessageFormatter {
                     makeBranchLink(
                         hostLink,
                         pullRequestModified.getProjectKey(),
-                        pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
+                        URLEncoder.encode(
+                            pullRequestModified
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()),
                         pullRequestModified.getPreviousTarget().getId())),
                 markdownTextLink(
                     pullRequestModified.getPullRequest().getToRef().getId(),
                     makeBranchLink(
                         hostLink,
                         pullRequestModified.getProjectKey(),
-                        pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
+                        URLEncoder.encode(
+                            pullRequestModified
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()),
                         pullRequestModified.getPullRequest().getToRef().getId()))));
         counter++;
       }
@@ -797,7 +887,13 @@ public class MessageFormatter {
                     makePullRequestLink(
                         hostLink,
                         pullRequestModified.getProjectKey(),
-                        pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
+                        URLEncoder.encode(
+                            pullRequestModified
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()),
                         pullRequestModified.getPullRequest().getId())),
                 markdownTextLink(
                     pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
@@ -809,7 +905,13 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestModified.getPullRequest().getToRef().getRepository().getName())),
+                        URLEncoder.encode(
+                            pullRequestModified
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()))),
                 pullRequestModified.getPullRequest().getTitle(),
                 changes.toString()));
       } catch (NullPointerException exception) {
@@ -836,18 +938,22 @@ public class MessageFormatter {
                     makePullRequestLink(
                         hostLink,
                         pullRequestReviewersUpdated.getProjectKey(),
+                            URLEncoder.encode(
+                                    pullRequestReviewersUpdated
+                                            .getPullRequest()
+                                            .getToRef()
+                                            .getRepository()
+                                            .getName(),
+                                    StandardCharsets.UTF_8.toString()),
+                        pullRequestReviewersUpdated.getPullRequest().getId())),
+                markdownTextLink(
+                    URLEncoder.encode(
                         pullRequestReviewersUpdated
                             .getPullRequest()
                             .getToRef()
                             .getRepository()
                             .getName(),
-                        pullRequestReviewersUpdated.getPullRequest().getId())),
-                markdownTextLink(
-                    pullRequestReviewersUpdated
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName(),
+                        StandardCharsets.UTF_8.toString()),
                     makeRepoLink(
                         hostLink,
                         pullRequestReviewersUpdated
@@ -856,11 +962,13 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestReviewersUpdated
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName())),
+                        URLEncoder.encode(
+                            pullRequestReviewersUpdated
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()))),
                 pullRequestReviewersUpdated.getPullRequest().getTitle()));
 
         if (pullRequestReviewersUpdated.getAddedReviewers() != null
@@ -909,19 +1017,23 @@ public class MessageFormatter {
                     makePullRequestLink(
                         hostLink,
                         pullRequestApprovedByReviewer.getProjectKey(),
+                        URLEncoder.encode(
+                            pullRequestApprovedByReviewer
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()),
+                        pullRequestApprovedByReviewer.getPullRequest().getId())),
+                pullRequestApprovedByReviewer.getPullRequest().getTitle(),
+                markdownTextLink(
+                    URLEncoder.encode(
                         pullRequestApprovedByReviewer
                             .getPullRequest()
                             .getToRef()
                             .getRepository()
                             .getName(),
-                        pullRequestApprovedByReviewer.getPullRequest().getId())),
-                pullRequestApprovedByReviewer.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestApprovedByReviewer
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName(),
+                        StandardCharsets.UTF_8.toString()),
                     makeRepoLink(
                         hostLink,
                         pullRequestApprovedByReviewer
@@ -930,11 +1042,13 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestApprovedByReviewer
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName())),
+                        URLEncoder.encode(
+                            pullRequestApprovedByReviewer
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()))),
                 pullRequestApprovedByReviewer.getPullRequest().getDescription()));
       } catch (NullPointerException exception) {
         log.error(
@@ -960,19 +1074,23 @@ public class MessageFormatter {
                     makePullRequestLink(
                         hostLink,
                         pullRequestUnapprovedByReviewer.getProjectKey(),
+                        URLEncoder.encode(
+                            pullRequestUnapprovedByReviewer
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()),
+                        pullRequestUnapprovedByReviewer.getPullRequest().getId())),
+                pullRequestUnapprovedByReviewer.getPullRequest().getTitle(),
+                markdownTextLink(
+                    URLEncoder.encode(
                         pullRequestUnapprovedByReviewer
                             .getPullRequest()
                             .getToRef()
                             .getRepository()
                             .getName(),
-                        pullRequestUnapprovedByReviewer.getPullRequest().getId())),
-                pullRequestUnapprovedByReviewer.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestUnapprovedByReviewer
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName(),
+                        StandardCharsets.UTF_8.toString()),
                     makeRepoLink(
                         hostLink,
                         pullRequestUnapprovedByReviewer
@@ -981,11 +1099,13 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestUnapprovedByReviewer
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName())),
+                        URLEncoder.encode(
+                            pullRequestUnapprovedByReviewer
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()))),
                 pullRequestUnapprovedByReviewer.getPullRequest().getDescription()));
       } catch (NullPointerException exception) {
         log.error(
@@ -1011,19 +1131,23 @@ public class MessageFormatter {
                     makePullRequestLink(
                         hostLink,
                         pullRequestNeedsWorkByReviewer.getProjectKey(),
+                        URLEncoder.encode(
+                            pullRequestNeedsWorkByReviewer
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()),
+                        pullRequestNeedsWorkByReviewer.getPullRequest().getId())),
+                pullRequestNeedsWorkByReviewer.getPullRequest().getTitle(),
+                markdownTextLink(
+                    URLEncoder.encode(
                         pullRequestNeedsWorkByReviewer
                             .getPullRequest()
                             .getToRef()
                             .getRepository()
                             .getName(),
-                        pullRequestNeedsWorkByReviewer.getPullRequest().getId())),
-                pullRequestNeedsWorkByReviewer.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestNeedsWorkByReviewer
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName(),
+                        StandardCharsets.UTF_8.toString()),
                     makeRepoLink(
                         hostLink,
                         pullRequestNeedsWorkByReviewer
@@ -1032,11 +1156,13 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestNeedsWorkByReviewer
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName()))));
+                        URLEncoder.encode(
+                            pullRequestNeedsWorkByReviewer
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString())))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about PullRequestNeedsWorkByReviewer.",
@@ -1060,11 +1186,15 @@ public class MessageFormatter {
                     makePullRequestLink(
                         hostLink,
                         pullRequestMerged.getProjectKey(),
-                        pullRequestMerged.getPullRequest().getToRef().getRepository().getName(),
+                        URLEncoder.encode(
+                            pullRequestMerged.getPullRequest().getToRef().getRepository().getName(),
+                            StandardCharsets.UTF_8.toString()),
                         pullRequestMerged.getPullRequest().getId())),
                 pullRequestMerged.getPullRequest().getTitle(),
                 markdownTextLink(
-                    pullRequestMerged.getPullRequest().getToRef().getRepository().getName(),
+                    URLEncoder.encode(
+                        pullRequestMerged.getPullRequest().getToRef().getRepository().getName(),
+                        StandardCharsets.UTF_8.toString()),
                     makeRepoLink(
                         hostLink,
                         pullRequestMerged
@@ -1073,7 +1203,9 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestMerged.getPullRequest().getToRef().getRepository().getName()))));
+                        URLEncoder.encode(
+                            pullRequestMerged.getPullRequest().getToRef().getRepository().getName(),
+                            StandardCharsets.UTF_8.toString())))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about PullRequestMerged.",
@@ -1097,11 +1229,19 @@ public class MessageFormatter {
                     makePullRequestLink(
                         hostLink,
                         pullRequestDeclined.getProjectKey(),
-                        pullRequestDeclined.getPullRequest().getToRef().getRepository().getName(),
+                        URLEncoder.encode(
+                            pullRequestDeclined
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()),
                         pullRequestDeclined.getPullRequest().getId())),
                 pullRequestDeclined.getPullRequest().getTitle(),
                 markdownTextLink(
-                    pullRequestDeclined.getPullRequest().getToRef().getRepository().getName(),
+                    URLEncoder.encode(
+                        pullRequestDeclined.getPullRequest().getToRef().getRepository().getName(),
+                        StandardCharsets.UTF_8.toString()),
                     makeRepoLink(
                         hostLink,
                         pullRequestDeclined
@@ -1110,11 +1250,13 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestDeclined
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName()))));
+                        URLEncoder.encode(
+                            pullRequestDeclined
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString())))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about PullRequestDeclined.",
@@ -1138,11 +1280,19 @@ public class MessageFormatter {
                     makePullRequestLink(
                         hostLink,
                         pullRequestDeleted.getProjectKey(),
-                        pullRequestDeleted.getPullRequest().getToRef().getRepository().getName(),
+                        URLEncoder.encode(
+                            pullRequestDeleted
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()),
                         pullRequestDeleted.getPullRequest().getId())),
                 pullRequestDeleted.getPullRequest().getTitle(),
                 markdownTextLink(
-                    pullRequestDeleted.getPullRequest().getToRef().getRepository().getName(),
+                    URLEncoder.encode(
+                        pullRequestDeleted.getPullRequest().getToRef().getRepository().getName(),
+                        StandardCharsets.UTF_8.toString()),
                     makeRepoLink(
                         hostLink,
                         pullRequestDeleted
@@ -1151,11 +1301,13 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestDeleted
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName()))));
+                        URLEncoder.encode(
+                            pullRequestDeleted
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString())))));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about PullRequestDeleted.",
@@ -1181,11 +1333,13 @@ public class MessageFormatter {
                     makePullRequestLink(
                         hostLink,
                         pullRequestCommentAdded.getProjectKey(),
-                        pullRequestCommentAdded
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName(),
+                        URLEncoder.encode(
+                            pullRequestCommentAdded
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()),
                         pullRequestCommentAdded.getPullRequest().getId())),
                 pullRequestCommentAdded.getPullRequest().getTitle(),
                 markdownTextLink(
@@ -1198,11 +1352,13 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestCommentAdded
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName())),
+                        URLEncoder.encode(
+                            pullRequestCommentAdded
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()))),
                 pullRequestCommentAdded.getComment().getText()));
       } catch (NullPointerException exception) {
         log.error(
@@ -1230,15 +1386,23 @@ public class MessageFormatter {
                     makePullRequestLink(
                         hostLink,
                         pullRequestCommentEdited.getProjectKey(),
+                        URLEncoder.encode(
+                            pullRequestCommentEdited
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()),
+                        pullRequestCommentEdited.getPullRequest().getId())),
+                pullRequestCommentEdited.getPullRequest().getTitle(),
+                markdownTextLink(
+                    URLEncoder.encode(
                         pullRequestCommentEdited
                             .getPullRequest()
                             .getToRef()
                             .getRepository()
                             .getName(),
-                        pullRequestCommentEdited.getPullRequest().getId())),
-                pullRequestCommentEdited.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestCommentEdited.getPullRequest().getToRef().getRepository().getName(),
+                        StandardCharsets.UTF_8.toString()),
                     makeRepoLink(
                         hostLink,
                         pullRequestCommentEdited
@@ -1247,11 +1411,13 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestCommentEdited
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName())),
+                        URLEncoder.encode(
+                            pullRequestCommentEdited
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()))),
                 pullRequestCommentEdited.getPreviousCommentText(),
                 pullRequestCommentEdited.getComment().getText()));
       } catch (NullPointerException exception) {
@@ -1280,15 +1446,23 @@ public class MessageFormatter {
                     makePullRequestLink(
                         hostLink,
                         pullRequestCommentDeleted.getProjectKey(),
+                        URLEncoder.encode(
+                            pullRequestCommentDeleted
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()),
+                        pullRequestCommentDeleted.getPullRequest().getId())),
+                pullRequestCommentDeleted.getPullRequest().getTitle(),
+                markdownTextLink(
+                    URLEncoder.encode(
                         pullRequestCommentDeleted
                             .getPullRequest()
                             .getToRef()
                             .getRepository()
                             .getName(),
-                        pullRequestCommentDeleted.getPullRequest().getId())),
-                pullRequestCommentDeleted.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestCommentDeleted.getPullRequest().getToRef().getRepository().getName(),
+                        StandardCharsets.UTF_8.toString()),
                     makeRepoLink(
                         hostLink,
                         pullRequestCommentDeleted
@@ -1297,11 +1471,13 @@ public class MessageFormatter {
                             .getRepository()
                             .getProject()
                             .getKey(),
-                        pullRequestCommentDeleted
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName())),
+                        URLEncoder.encode(
+                            pullRequestCommentDeleted
+                                .getPullRequest()
+                                .getToRef()
+                                .getRepository()
+                                .getName(),
+                            StandardCharsets.UTF_8.toString()))),
                 pullRequestCommentDeleted.getComment().getText()));
       } catch (NullPointerException exception) {
         log.error(
@@ -1807,12 +1983,12 @@ public class MessageFormatter {
                 comment ->
                     String.join(
                         "",
-                        "[",
+                        "\\[",
                         dateFormatter.format(comment.getCreated()),
-                        "] ",
-                        "[",
+                        "\\] ",
+                        "\\[",
                         comment.getAuthorFullName(),
-                        "] ",
+                        "\\] ",
                         shieldDescription(comment.getBody())))
             .collect(Collectors.toList()),
         pageNumber,
