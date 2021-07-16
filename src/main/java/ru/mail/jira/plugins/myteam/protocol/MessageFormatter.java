@@ -195,7 +195,7 @@ public class MessageFormatter {
                 if (object instanceof Label) value.append(shieldDescription(((Label) object).getLabel()));
                 if (iterator.hasNext()) value.append(", ");
             }
-            appendField(sb, title, shieldDescription(value.toString()), false);
+            appendField(sb, title, value.toString(), false);
         }
     }
 
