@@ -292,9 +292,9 @@ public class MessageFormatter {
         if (issueKey != null) {
             try {
                 return "["
-                        + issueKey
+                        + shieldDescription(issueKey)
                         + "]("
-                        + new URI(issueLink, false, StandardCharsets.UTF_8.toString()).getEscapedURI()
+                        + shieldDescription(new URI(issueLink, false, StandardCharsets.UTF_8.toString()).getEscapedURI())
                         + ")";
             } catch (URIException e) {
                 log.error("Unable to create text link for issueKey: {}, issueLink:{}", issueKey, issueLink);
