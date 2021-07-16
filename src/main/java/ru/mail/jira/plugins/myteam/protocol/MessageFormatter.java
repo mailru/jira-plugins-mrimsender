@@ -385,6 +385,9 @@ public class MessageFormatter {
     }
 
     private String shieldDescription(String inputDescription) {
+        if(inputDescription == null) {
+            return null;
+        }
         StringBuilder result = new StringBuilder();
         char[] arrayFromInput = inputDescription.toCharArray();
         for (char c : arrayFromInput) {
