@@ -1529,7 +1529,7 @@ public class MessageFormatter {
                         recipientLocale));
 
         if (issueEvent.getComment() != null && !StringUtils.isBlank(issueEvent.getComment().getBody()))
-            sb.append("\n\n").append(issueEvent.getComment().getBody());
+            sb.append("\n\n").append(shieldDescription(issueEvent.getComment().getBody()));
 
         return sb.toString();
     }
@@ -1550,10 +1550,10 @@ public class MessageFormatter {
                         "ru.mail.jira.plugins.myteam.notification.mentioned",
                         formatUser(user, "common.words.anonymous", true),
                         issueLink));
-        sb.append("\n").append(issue.getSummary());
+        sb.append("\n").append(shieldDescription(issue.getSummary()));
 
         if (!StringUtils.isBlank(mentionIssueEvent.getMentionText()))
-            sb.append("\n\n").append(mentionIssueEvent.getMentionText());
+            sb.append("\n\n").append(shieldDescription(mentionIssueEvent.getMentionText()));
 
         return sb.toString();
     }
@@ -1597,7 +1597,7 @@ public class MessageFormatter {
                                                         if (customField.isShown(issue))
                                                             appendField(
                                                                     sb,
-                                                                    customField.getFieldName(),
+                                                                    shieldDescription(customField.getFieldName()),
                                                                     shieldDescription(customField.getValueFromIssue(issue)),
                                                                     false);
                                                     }
