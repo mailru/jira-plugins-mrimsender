@@ -127,12 +127,10 @@ public class MessageFormatter {
 
     private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
         if (user != null) {
-      /* #TODO Вернуть когда починят mentions в myteam
-      if (mention) {
-        return markdownTextLink(user.getDisplayName(),"u.internal.myteam.mail.ru/profile/"+user.getEmailAddress())
-       }
-       return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
-       */
+            if (mention) {
+                return "@\\[" + shieldDescription(user.getEmailAddress()) + "\\]";
+            }
+
             return markdownTextLink(
                     user.getDisplayName(),
                     "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
@@ -141,12 +139,10 @@ public class MessageFormatter {
 
     private String formatBitbucketUser(UserDto user, String messageKey, boolean mention) {
         if (user != null) {
-      /* #TODO Вернуть когда починят mentions в myteam
-      if (mention) {
-        return markdownTextLink(user.getDisplayName(), "u.internal.myteam.mail.ru/profile/"+user.getEmailAddress())
-      }
-      return user.getDisplayName() + " (" + user.getEmailAddress() + ")";
-       */
+            if (mention) {
+                return "@\\[" + shieldDescription(user.getEmailAddress()) + "\\]";
+            }
+
             return markdownTextLink(
                     user.getDisplayName(),
                     "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
@@ -288,19 +284,19 @@ public class MessageFormatter {
         return sb.toString();
     }
 
-    private String markdownTextLink(String issueKey, String issueLink) {
-        if (issueKey != null) {
+    private String markdownTextLink(String text, String url) {
+        if (text != null) {
             try {
                 return "["
-                        + shieldDescription(issueKey)
+                        + shieldDescription(text)
                         + "]("
-                        + shieldDescription(new URI(issueLink, false, StandardCharsets.UTF_8.toString()).getEscapedURI())
+                        + shieldDescription(new URI(url, false, StandardCharsets.UTF_8.toString()).getEscapedURI())
                         + ")";
             } catch (URIException e) {
-                log.error("Unable to create text link for issueKey: {}, issueLink:{}", issueKey, issueLink);
+                log.error("Unable to create text link for issueKey: {}, url:{}", text, url);
             }
         }
-        return issueLink;
+        return url;
     }
 
     private String getHostLink(LinksDto linksDto) {
@@ -385,7 +381,7 @@ public class MessageFormatter {
     }
 
     private String shieldDescription(String inputDescription) {
-        if(inputDescription == null) {
+        if (inputDescription == null) {
             return null;
         }
         StringBuilder result = new StringBuilder();
@@ -1561,11 +1557,11 @@ public class MessageFormatter {
     public String createIssueSummary(Issue issue, ApplicationUser user) {
         StringBuilder sb = new StringBuilder();
         sb.append(
-                markdownTextLink(
-                        issue.getKey(),
-                        String.format(
-                                "%s/browse/%s",
-                                applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey())))
+                        markdownTextLink(
+                                issue.getKey(),
+                                String.format(
+                                        "%s/browse/%s",
+                                        applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey())))
                 .append("   ")
                 .append(shieldDescription(issue.getSummary()))
                 .append("\n");
@@ -2110,7 +2106,7 @@ public class MessageFormatter {
                         .map(
                                 strValue ->
                                         Optional.ofNullable(
-                                                projectComponentManager.findByComponentName(projectId, strValue))
+                                                        projectComponentManager.findByComponentName(projectId, strValue))
                                                 .map(projectComponent -> projectComponent.getId().toString())
                                                 .orElse(null))
                         .toArray(String[]::new);
