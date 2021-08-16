@@ -131,9 +131,11 @@ public class MessageFormatter {
                 return "@\\[" + shieldDescription(user.getEmailAddress()) + "\\]";
             }
 
-            return markdownTextLink(
-                    user.getDisplayName(),
-                    "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
+            return "["
+                    + shieldDescription(user.getDisplayName())
+                    + "]("
+                    + shieldDescription("https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress())
+                    + ")";
         } else return i18nHelper.getText(messageKey);
     }
 
