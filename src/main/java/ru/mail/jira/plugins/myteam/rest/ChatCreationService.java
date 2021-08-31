@@ -4,6 +4,9 @@ package ru.mail.jira.plugins.myteam.rest;
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.bc.user.search.UserSearchService;
+import com.atlassian.jira.config.LocaleManager;
+import com.atlassian.jira.config.properties.APKeys;
+import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.watchers.WatcherManager;
@@ -11,10 +14,12 @@ import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.message.I18nResolver;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -63,6 +68,9 @@ public class ChatCreationService {
   private final UserData userData;
   private final MyteamEventsListener myteamEventsListener;
   private final UserSearchService userSearchService;
+  private final I18nResolver i18nResolver;
+  private final LocaleManager localeManager;
+  private final String JIRA_BASE_URL;
 
   @Autowired
   public ChatCreationService(
@@ -72,6 +80,9 @@ public class ChatCreationService {
       @ComponentImport AvatarService avatarService,
       @ComponentImport UserManager userManager,
       @ComponentImport UserSearchService userSearchService,
+      @ComponentImport I18nResolver i18nResolver,
+      @ComponentImport LocaleManager localeManager,
+      @ComponentImport ApplicationProperties applicationProperties,
       MyteamApiClient myteamApiClient,
       MyteamChatRepository myteamChatRepository,
       PluginData pluginData,
@@ -88,6 +99,9 @@ public class ChatCreationService {
     this.pluginData = pluginData;
     this.userData = userData;
     this.myteamEventsListener = myteamEventsListener;
+    this.i18nResolver = i18nResolver;
+    this.localeManager = localeManager;
+    this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
   }
 
   @GET
@@ -190,8 +204,7 @@ public class ChatCreationService {
   public Response createChat(
       @PathParam("issueKey") String issueKey,
       @FormParam("name") String chatName,
-      @FormParam("memberIds") List<Long> memberIds,
-      @FormParam("about") String about) {
+      @FormParam("memberIds") List<Long> memberIds) {
     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
     if (loggedInUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
 
@@ -235,9 +248,17 @@ public class ChatCreationService {
                 "title", "about", "rules", "http:/myteam/inite/link", false, false)))
     .build();*/
     try {
+      Locale recipientLocale = localeManager.getLocaleFor(loggedInUser);
       HttpResponse<CreateChatResponse> createChatResponse =
           this.myteamApiClient.createChat(
-              pluginData.getToken(), chatName, about, chatMembers, false);
+              pluginData.getToken(),
+              chatName,
+              i18nResolver.getText(
+                  recipientLocale,
+                  "ru.mail.jira.plugins.myteam.createChat.about.text",
+                  this.JIRA_BASE_URL + "/browse/" + issueKey),
+              chatMembers,
+              false);
       if (createChatResponse.getStatus() == 200
           && createChatResponse.getBody() != null
           && createChatResponse.getBody().getSn() != null) {

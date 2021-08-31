@@ -53,8 +53,6 @@ paths:
             schema:
               type: object
               properties:
-                about:
-                  type: string
                 memberIds:
                   type: array
                   items:

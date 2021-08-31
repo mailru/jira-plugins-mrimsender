@@ -50,7 +50,7 @@ public interface MyteamApiClient {
   HttpResponse<CreateChatResponse> createChat(
       @Nonnull String creatorBotToken,
       @Nonnull String name,
-      String description,
+      String about,
       @Nonnull List<ChatMemberId> members,
       boolean isPublic)
       throws IOException, UnirestException, MyteamServerErrorException;

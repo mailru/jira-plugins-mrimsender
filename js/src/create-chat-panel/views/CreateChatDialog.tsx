@@ -11,7 +11,7 @@ import UserPicker, { OptionData, Value } from '@atlaskit/user-picker';
 type ChatDialogProps = {
   chatCreationData: ChatCreationData;
   closeDialog(): void;
-  createChat(name: string, memberIds: number[], about: string): void;
+  createChat(name: string, memberIds: number[]): void;
 };
 
 type CreateChatDialogFormValuesType = {
@@ -46,7 +46,6 @@ export const CreateChatDialog = (props: ChatDialogProps) => {
                 createChat(
                   values['chat-name'],
                   values['chat-members'].map((member) => Number.parseInt(member.id)),
-                  `${I18n.getText('ru.mail.jira.plugins.myteam.createChat.about.text')} ${window.location.href}`,
                 );
                 closeDialog();
               }

@@ -100,8 +100,8 @@ export class ChatPanelStore {
   };
 
   @action('createChat')
-  createChat = (name: string, members: number[], about: string) => {
-    this.loadingService.createChat(this.issueKey, name, members, about).then(
+  createChat = (name: string, members: number[]) => {
+    this.loadingService.createChat(this.issueKey, name, members).then(
       this.setChatInfo,
       action((reason: JQueryXHR) => {
         this.error = new Error(`An error in createChat status=${reason.status} statusText=${reason.statusText}`);
