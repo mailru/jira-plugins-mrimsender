@@ -70,7 +70,7 @@ public class ChatCreationService {
   private final UserSearchService userSearchService;
   private final I18nResolver i18nResolver;
   private final LocaleManager localeManager;
-  private final String JIRA_BASE_URL;
+  private final ApplicationProperties applicationProperties;
 
   @Autowired
   public ChatCreationService(
@@ -101,7 +101,7 @@ public class ChatCreationService {
     this.myteamEventsListener = myteamEventsListener;
     this.i18nResolver = i18nResolver;
     this.localeManager = localeManager;
-    this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
+    this.applicationProperties = applicationProperties;
   }
 
   @GET
@@ -256,7 +256,7 @@ public class ChatCreationService {
               i18nResolver.getText(
                   recipientLocale,
                   "ru.mail.jira.plugins.myteam.createChat.about.text",
-                  this.JIRA_BASE_URL + "/browse/" + issueKey),
+                  applicationProperties.getString(APKeys.JIRA_BASEURL) + "/browse/" + issueKey),
               chatMembers,
               false);
       if (createChatResponse.getStatus() == 200
