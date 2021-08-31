@@ -166,7 +166,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   public HttpResponse<CreateChatResponse> createChat(
       @NotNull String creatorBotToken,
       @NotNull String name,
-      String description,
+      String about,
       @NotNull List<ChatMemberId> members,
       boolean isPublic)
       throws IOException, UnirestException, MyteamServerErrorException {
@@ -178,7 +178,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .field("name", name)
               .field("members", objectMapper.writeValueAsString(members))
               .field("public", isPublic);
-      if (description != null) postBody.field("description", description);
+      if (about != null) postBody.field("about", about);
       HttpResponse<CreateChatResponse> response = postBody.asObject(CreateChatResponse.class);
       checkMyteamServerErrorException(response, "createChat");
       return response;

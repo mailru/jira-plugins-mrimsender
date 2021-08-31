@@ -190,7 +190,8 @@ public class ChatCreationService {
   public Response createChat(
       @PathParam("issueKey") String issueKey,
       @FormParam("name") String chatName,
-      @FormParam("memberIds") List<Long> memberIds) {
+      @FormParam("memberIds") List<Long> memberIds,
+      @FormParam("about") String about) {
     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
     if (loggedInUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
 
@@ -236,7 +237,7 @@ public class ChatCreationService {
     try {
       HttpResponse<CreateChatResponse> createChatResponse =
           this.myteamApiClient.createChat(
-              pluginData.getToken(), chatName, null, chatMembers, false);
+              pluginData.getToken(), chatName, about, chatMembers, false);
       if (createChatResponse.getStatus() == 200
           && createChatResponse.getBody() != null
           && createChatResponse.getBody().getSn() != null) {

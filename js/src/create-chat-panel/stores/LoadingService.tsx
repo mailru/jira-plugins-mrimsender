@@ -1,12 +1,12 @@
 import $ from 'jquery';
 import contextPath from 'wrm/context-path';
 import { ChatCreationData } from './ChatPanelStore';
-import {AvatarProps} from "@atlaskit/avatar-group";
+import { AvatarProps } from '@atlaskit/avatar-group';
 
 export type ChatInfoType = {
   link: string;
   name: string;
-  members:AvatarProps[];
+  members: AvatarProps[];
 };
 
 export class LoadingService {
@@ -26,13 +26,14 @@ export class LoadingService {
     });
   }
 
-  async createChat(issueKey: string, name: string, memberIds: number[]): Promise<ChatInfoType> {
+  async createChat(issueKey: string, name: string, memberIds: number[], about: string): Promise<ChatInfoType> {
     return $.ajax({
       type: 'POST',
       context: this,
       data: {
         name: name,
         memberIds: memberIds,
+        about: about,
       },
       url: `${contextPath()}/rest/myteam/1.0/chats/createChat/${issueKey}`,
     });
