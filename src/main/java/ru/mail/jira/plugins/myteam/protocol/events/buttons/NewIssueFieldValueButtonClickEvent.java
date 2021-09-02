@@ -9,10 +9,20 @@ import ru.mail.jira.plugins.myteam.protocol.events.NewIssueValueEvent;
 @Getter
 public class NewIssueFieldValueButtonClickEvent implements NewIssueValueEvent {
   private final String queryId;
+
+  @Getter(onMethod_ = {@Override})
   private final String userId;
+
+  @Getter(onMethod_ = {@Override})
   private final String chatId;
+
+  @Getter(onMethod_ = {@Override})
   private final String fieldValue;
+
+  @Getter(onMethod_ = {@Override})
   private final IssueCreationDto issueCreationDto;
+
+  @Getter(onMethod_ = {@Override})
   private final Integer currentFieldNum;
 
   public NewIssueFieldValueButtonClickEvent(

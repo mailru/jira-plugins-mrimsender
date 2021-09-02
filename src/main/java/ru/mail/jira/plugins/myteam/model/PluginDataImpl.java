@@ -55,10 +55,12 @@ public class PluginDataImpl implements PluginData {
     pluginSettingsFactory.createGlobalSettings().put(TOKEN, token);
   }
 
+  @Override
   public String getTokenFilePath() {
     return (String) pluginSettingsFactory.createGlobalSettings().get(TOKEN_FILE_PATH);
   }
 
+  @Override
   public void setTokenFilePath(String tokenFilePath) {
     pluginSettingsFactory.createGlobalSettings().put(TOKEN_FILE_PATH, tokenFilePath);
   }

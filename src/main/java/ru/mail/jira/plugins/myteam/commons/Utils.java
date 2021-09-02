@@ -1,18 +1,21 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.commons;
 
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import javax.annotation.Nullable;
+import kong.unirest.UnirestException;
 import org.apache.commons.lang.StringUtils;
+import ru.mail.jira.plugins.commons.HttpClient;
 
 public class Utils {
   /**
+   * Finding URL in string
+   *
    * @param str - string in which we wiil look for url
-   * @param urlPrefix
+   * @param urlPrefix base url for search
    * @return parsed URL object from first found prefix occurrence or null value if first occurrence
    *     couldn't be parsed to url
    */
@@ -39,6 +42,6 @@ public class Utils {
   }
 
   public static InputStream loadUrlFile(String url) throws UnirestException {
-    return Unirest.get(url).asBinary().getBody();
+    return new ByteArrayInputStream(HttpClient.getPrimaryClient().get(url).asBytes().getBody());
   }
 }

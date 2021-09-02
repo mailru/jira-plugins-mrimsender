@@ -1,24 +1,21 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.myteam;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.ObjectMapper;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import kong.unirest.HttpResponse;
+import kong.unirest.UnirestException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
+import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
@@ -38,7 +35,7 @@ public class MyteamEventsFetcherTest {
   private org.codehaus.jackson.map.ObjectMapper jacksonObjectMapper;
 
   @Before
-  public void init() {
+  public void init() throws IOException {
     // Mocking MyteamApiClient object
     try (InputStream resourceAsStream =
         getClass().getClassLoader().getResourceAsStream("env.properties")) {
@@ -52,34 +49,11 @@ public class MyteamEventsFetcherTest {
       when(pluginData.getToken()).thenReturn(properties.getProperty("myteam.test.bot.token"));
       when(pluginData.getBotApiUrl()).thenReturn(properties.getProperty("myteam.test.bot.api"));
       this.myteamApiClient = new MyteamApiClientImpl(this.pluginData);
-    } catch (IOException ioException) {
-      ioException.printStackTrace();
     }
 
     // unirest initialization
     jacksonObjectMapper = new org.codehaus.jackson.map.ObjectMapper();
-    Unirest.setTimeouts(10_000, 300_000);
-    Unirest.setObjectMapper(
-        new ObjectMapper() {
-
-          @Override
-          public <T> T readValue(String value, Class<T> valueType) {
-            try {
-              return jacksonObjectMapper.readValue(value, valueType);
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          }
-
-          @Override
-          public String writeValue(Object value) {
-            try {
-              return jacksonObjectMapper.writeValueAsString(value);
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        });
+    HttpClient.init();
   }
 
   @Test
@@ -96,7 +70,7 @@ public class MyteamEventsFetcherTest {
     FetchResponseDto fetchResponseDto =
         jacksonObjectMapper.readValue(example, FetchResponseDto.class);
     assertTrue(fetchResponseDto.isOk());
-    assertEquals(fetchResponseDto.getEvents().size(), 3);
+    assertEquals(3, fetchResponseDto.getEvents().size());
     assertEquals(NewMessageEvent.class, fetchResponseDto.getEvents().get(0).getClass());
     assertEquals(IcqEvent.class, fetchResponseDto.getEvents().get(1).getClass());
     assertEquals(CallbackQueryEvent.class, fetchResponseDto.getEvents().get(2).getClass());
@@ -109,7 +83,7 @@ public class MyteamEventsFetcherTest {
     FetchResponseDto fetchResponseDto =
         jacksonObjectMapper.readValue(example, FetchResponseDto.class);
     assertTrue(fetchResponseDto.isOk());
-    assertEquals(fetchResponseDto.getEvents().size(), 5);
+    assertEquals(5, fetchResponseDto.getEvents().size());
     fetchResponseDto
         .getEvents()
         .forEach(event -> assertEquals(NewMessageEvent.class, event.getClass()));
@@ -131,19 +105,19 @@ public class MyteamEventsFetcherTest {
         "{\"eventId\":1,\"payload\":{\"chat\":{\"chatId\":\"example@example.ru\",\"type\":\"private\"},\"msgId\":\"6811058128403038841\",\"from\":{\"firstName\":\"Данил\",\"userId\":\"example@example.ru\"},\"text\":\"meh\",\"timestamp\":1585823048},\"type\":\"newMessage\"}";
 
     IcqEvent<?> e = jacksonObjectMapper.readValue(example, IcqEvent.class);
-    assertEquals(e.getEventId(), 1);
+    assertEquals(1, e.getEventId());
     assertEquals(e.getClass(), NewMessageEvent.class);
     NewMessageEvent newMessageEvent = (NewMessageEvent) e;
-    assertEquals(newMessageEvent.getMsgId(), 6811058128403038841L);
-    assertEquals(newMessageEvent.getTimestamp(), 1585823048);
-    assertEquals(newMessageEvent.getText(), "meh");
-    assertEquals(newMessageEvent.getChat().getChatId(), "example@example.ru");
+    assertEquals(6811058128403038841L, newMessageEvent.getMsgId());
+    assertEquals(1585823048, newMessageEvent.getTimestamp());
+    assertEquals("meh", newMessageEvent.getText());
+    assertEquals("example@example.ru", newMessageEvent.getChat().getChatId());
     assertNull(newMessageEvent.getChat().getTitle());
-    assertEquals(newMessageEvent.getChat().getType(), "private");
-    assertEquals(newMessageEvent.getFrom().getFirstName(), "Данил");
+    assertEquals("private", newMessageEvent.getChat().getType());
+    assertEquals("Данил", newMessageEvent.getFrom().getFirstName());
     assertNull(newMessageEvent.getFrom().getLastName());
     assertNull(newMessageEvent.getFrom().getNick());
-    assertEquals(newMessageEvent.getFrom().getUserId(), "example@example.ru");
+    assertEquals("example@example.ru", newMessageEvent.getFrom().getUserId());
   }
 
   @Test
@@ -162,15 +136,15 @@ public class MyteamEventsFetcherTest {
     assertNull(callbackQueryEvent.getFrom().getLastName());
     assertNull(callbackQueryEvent.getFrom().getNick());
     assertEquals("example@example.ru", callbackQueryEvent.getFrom().getUserId());
-    assertEquals(callbackQueryEvent.getMessage().getParts().size(), 1);
-    assertEquals(callbackQueryEvent.getMessage().getChat().getChatId(), "example@example.ru");
-    assertEquals(callbackQueryEvent.getMessage().getChat().getType(), "private");
-    assertEquals(callbackQueryEvent.getMessage().getMsgId(), 6812931455698600506L);
-    assertEquals(callbackQueryEvent.getMessage().getTimestamp(), 1586259216);
-    assertEquals(callbackQueryEvent.getMessage().getText(), "kek");
-    assertEquals(callbackQueryEvent.getMessage().getFrom().getUserId(), "751619011");
-    assertEquals(callbackQueryEvent.getMessage().getFrom().getFirstName(), "OnlyMineAgentBot");
-    assertEquals(callbackQueryEvent.getMessage().getFrom().getNick(), "OnlyMineAgentBot");
+    assertEquals(1, callbackQueryEvent.getMessage().getParts().size());
+    assertEquals("example@example.ru", callbackQueryEvent.getMessage().getChat().getChatId());
+    assertEquals("private", callbackQueryEvent.getMessage().getChat().getType());
+    assertEquals(6812931455698600506L, callbackQueryEvent.getMessage().getMsgId());
+    assertEquals(1586259216, callbackQueryEvent.getMessage().getTimestamp());
+    assertEquals("kek", callbackQueryEvent.getMessage().getText());
+    assertEquals("751619011", callbackQueryEvent.getMessage().getFrom().getUserId());
+    assertEquals("OnlyMineAgentBot", callbackQueryEvent.getMessage().getFrom().getFirstName());
+    assertEquals("OnlyMineAgentBot", callbackQueryEvent.getMessage().getFrom().getNick());
   }
 
   @Ignore

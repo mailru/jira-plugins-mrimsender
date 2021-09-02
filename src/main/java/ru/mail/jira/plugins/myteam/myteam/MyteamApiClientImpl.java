@@ -1,20 +1,17 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.myteam;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.mashape.unirest.request.body.MultipartBody;
 import java.io.IOException;
 import java.util.List;
 import javax.annotation.Nonnull;
+import kong.unirest.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
@@ -29,10 +26,10 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
 @Slf4j
 @Component
 public class MyteamApiClientImpl implements MyteamApiClient {
-  private String apiToken;
-  private String botApiUrl;
   private final ObjectMapper objectMapper;
   private final PluginData pluginData;
+  private String apiToken;
+  private String botApiUrl;
 
   @Autowired
   public MyteamApiClientImpl(PluginData pluginData) {
@@ -55,7 +52,8 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     HttpResponse<MessageResponse> response;
     if (inlineKeyboardMarkup == null)
       response =
-          Unirest.post(botApiUrl + "/messages/sendText")
+          HttpClient.getPrimaryClient()
+              .post(botApiUrl + "/messages/sendText")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", apiToken)
               .field("chatId", chatId)
@@ -64,7 +62,8 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .asObject(MessageResponse.class);
     else
       response =
-          Unirest.post(botApiUrl + "/messages/sendText")
+          HttpClient.getPrimaryClient()
+              .post(botApiUrl + "/messages/sendText")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", apiToken)
               .field("chatId", chatId)
@@ -86,7 +85,8 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   public HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<FetchResponseDto> response =
-        Unirest.get(botApiUrl + "/events/get")
+        HttpClient.getPrimaryClient()
+            .get(botApiUrl + "/events/get")
             .queryString("token", apiToken)
             .queryString("lastEventId", lastEventId)
             .queryString("pollTime", pollTime)
@@ -100,7 +100,8 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       String queryId, String text, boolean showAlert, String url)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<JsonNode> response =
-        Unirest.get(botApiUrl + "/messages/answerCallbackQuery")
+        HttpClient.getPrimaryClient()
+            .get(botApiUrl + "/messages/answerCallbackQuery")
             .queryString("token", apiToken)
             .queryString("queryId", queryId)
             .queryString("text", text)
@@ -121,7 +122,8 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   public HttpResponse<FileResponse> getFile(String fileId)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<FileResponse> response =
-        Unirest.get(botApiUrl + "/files/getInfo")
+        HttpClient.getPrimaryClient()
+            .get(botApiUrl + "/files/getInfo")
             .queryString("token", apiToken)
             .queryString("fileId", fileId)
             .asObject(FileResponse.class);
@@ -139,21 +141,23 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     HttpResponse<MessageResponse> response;
     if (inlineKeyboardMarkup == null)
       response =
-          Unirest.post(botApiUrl + "/messages/editText")
+          HttpClient.getPrimaryClient()
+              .post(botApiUrl + "/messages/editText")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", apiToken)
               .field("chatId", chatId)
-              .field("msgId", messageId)
+              .field("msgId", String.valueOf(messageId))
               .field("text", text)
               .field("parseMode", "MarkdownV2")
               .asObject(MessageResponse.class);
     else
       response =
-          Unirest.post(botApiUrl + "/messages/editText")
+          HttpClient.getPrimaryClient()
+              .post(botApiUrl + "/messages/editText")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", apiToken)
               .field("chatId", chatId)
-              .field("msgId", messageId)
+              .field("msgId", String.valueOf(messageId))
               .field("text", text)
               .field("parseMode", "MarkdownV2")
               .field("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
@@ -172,12 +176,13 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       throws IOException, UnirestException, MyteamServerErrorException {
     if (members.size() > 1 && members.size() <= 30) {
       MultipartBody postBody =
-          Unirest.post(botApiUrl + "/chats/createChat")
+          HttpClient.getPrimaryClient()
+              .post(botApiUrl + "/chats/createChat")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", creatorBotToken)
               .field("name", name)
               .field("members", objectMapper.writeValueAsString(members))
-              .field("public", isPublic);
+              .field("public", String.valueOf(isPublic));
       if (about != null) postBody.field("about", about);
       HttpResponse<CreateChatResponse> response = postBody.asObject(CreateChatResponse.class);
       checkMyteamServerErrorException(response, "createChat");
@@ -194,7 +199,8 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       @Nonnull String botToken, @Nonnull String chatId)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<ChatInfoResponse> response =
-        Unirest.post(botApiUrl + "/chats/getInfo")
+        HttpClient.getPrimaryClient()
+            .post(botApiUrl + "/chats/getInfo")
             .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
             .field("token", apiToken)
             .field("chatId", chatId)
@@ -207,14 +213,18 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       throws MyteamServerErrorException {
     if (response.getStatus() >= 500 || response.getBody() == null) {
       MyteamServerErrorException newException =
-          new MyteamServerErrorException(response.getStatus(), response.getRawBody().toString());
+          new MyteamServerErrorException(
+              response.getStatus(),
+              response.getParsingError().map(UnirestParsingException::getOriginalBody).orElse(""));
       log.error("Myteam server error while {}()", methodName, newException);
       throw newException;
     }
   }
 
+  @Override
   public HttpResponse<ChatMember> getMembers(@Nonnull String chatId) throws UnirestException {
-    return Unirest.post("https://api.internal.myteam.mail.ru/bot/v1" + "/chats/getMembers")
+    return HttpClient.getPrimaryClient()
+        .post("https://api.internal.myteam.mail.ru/bot/v1" + "/chats/getMembers")
         .header("Accept", "application/json")
         .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
         .field("token", apiToken)

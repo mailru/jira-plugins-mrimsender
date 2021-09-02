@@ -42,8 +42,6 @@ import ru.mail.jira.plugins.myteam.rest.dto.BitbucketWebhookResultDto;
 public class ExternalSystemNotificationsService {
   private static final Logger log =
       LoggerFactory.getLogger(ExternalSystemNotificationsService.class);
-  private static final String bitbucketRepoWatchersRestStr =
-      "/rest/additional/1.0/watchers/repository/%s/%s";
   private static final String JIRA_ADMIN_USERNAME_FOR_APP_LINK = "jellyrunner";
   // for localhost tests
   // private static final String JIRA_ADMIN_USERNAME_FOR_APP_LINK = "admin";
@@ -128,7 +126,8 @@ public class ExternalSystemNotificationsService {
       ApplicationLinkRequest request =
           authenticatedRequestFactory.createRequest(
               Request.MethodType.GET,
-              String.format(bitbucketRepoWatchersRestStr, projectKey, repositorySlug));
+              String.format(
+                  "/rest/additional/1.0/watchers/repository/%s/%s", projectKey, repositorySlug));
       return request.execute(
           new ApplicationLinkResponseHandler<List<BitbucketRepoWatcherDto>>() {
             @Override

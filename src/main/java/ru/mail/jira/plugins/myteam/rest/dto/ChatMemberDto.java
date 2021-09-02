@@ -12,5 +12,5 @@ import lombok.Setter;
 public class ChatMemberDto {
   @XmlElement @Getter @Setter private String name;
   @XmlElement @Getter @Setter private Long id;
-  @XmlElement @Getter @Setter private String src;
+  @XmlElement @Getter @Setter private String avatarUrl;
 }

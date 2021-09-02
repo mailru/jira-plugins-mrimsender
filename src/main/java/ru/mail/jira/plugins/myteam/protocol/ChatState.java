@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@SuppressWarnings("MissingSummary")
 @Builder
 public class ChatState {
   private final boolean isWaitingForComment;

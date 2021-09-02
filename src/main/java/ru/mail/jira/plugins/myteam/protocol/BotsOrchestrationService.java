@@ -70,10 +70,10 @@ public class BotsOrchestrationService implements LifecycleAware {
     public void receive(String channel, String message, String senderId) {
       if (BOT_LIFECYCLE_CHANNEL.equals(channel)) {
         if (BOT_RESTART_MESSAGE.equals(message)) {
-          executorService.submit(myteamBot::restartBot);
+          executorService.execute(myteamBot::restartBot);
         }
         if (BOT_STOP_MESSAGE.equals(message)) {
-          executorService.submit(myteamBot::stopBot);
+          executorService.execute(myteamBot::stopBot);
         }
       }
     }

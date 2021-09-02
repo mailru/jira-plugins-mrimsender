@@ -6,10 +6,19 @@ import ru.mail.jira.plugins.myteam.protocol.IssueCreationDto;
 
 @Getter
 public class NewIssueFieldValueMessageEvent implements NewIssueValueEvent {
+  @Getter(onMethod_ = {@Override})
   private final String userId;
+
+  @Getter(onMethod_ = {@Override})
   private final String chatId;
+
+  @Getter(onMethod_ = {@Override})
   private final String fieldValue;
+
+  @Getter(onMethod_ = {@Override})
   private final IssueCreationDto issueCreationDto;
+
+  @Getter(onMethod_ = {@Override})
   private final Integer currentFieldNum;
 
   public NewIssueFieldValueMessageEvent(

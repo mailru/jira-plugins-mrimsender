@@ -17,7 +17,6 @@ public interface MyteamService {
    *
    * @param chatId recipient of the message
    * @param message sent message
-   * @return message sent or not
    */
   void sendMessage(String chatId, String message);
 }

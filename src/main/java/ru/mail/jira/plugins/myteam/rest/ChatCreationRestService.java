@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.rest;
 
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
+import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.user.search.UserSearchService;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.APKeys;
@@ -15,8 +16,6 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -24,14 +23,10 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import kong.unirest.HttpResponse;
+import kong.unirest.UnirestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,8 +49,8 @@ import ru.mail.jira.plugins.myteam.rest.dto.ChatMetaDto;
 
 @Controller
 @Path("/chats")
-public class ChatCreationService {
-  private static final Logger log = LoggerFactory.getLogger(ChatCreationService.class);
+public class ChatCreationRestService {
+  private static final Logger log = LoggerFactory.getLogger(ChatCreationRestService.class);
 
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final MyteamApiClient myteamApiClient;
@@ -73,7 +68,7 @@ public class ChatCreationService {
   private final ApplicationProperties applicationProperties;
 
   @Autowired
-  public ChatCreationService(
+  public ChatCreationRestService(
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport IssueManager issueManager,
       @ComponentImport WatcherManager watcherManager,
@@ -107,13 +102,17 @@ public class ChatCreationService {
   @GET
   @Path("/chatData/{issueKey}")
   @Produces({MediaType.APPLICATION_JSON})
-  public Response findChatData(@PathParam("issueKey") String issueKey) {
+  public ChatMetaDto findChatData(@PathParam("issueKey") String issueKey) {
 
     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
 
-    if (loggedInUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+    if (loggedInUser == null) {
+      throw new SecurityException();
+    }
     MyteamChatMetaEntity chatMeta = myteamChatRepository.findChatByIssueKey(issueKey);
-    if (chatMeta == null) return Response.ok().build();
+    if (chatMeta == null) {
+      return null;
+    }
     /*
     //localhost test stubbing part
     return Response.ok(
@@ -149,29 +148,35 @@ public class ChatCreationService {
           myteamApiClient.getChatInfo(pluginData.getToken(), chatMeta.getChatId());
       if (chatInfoResponse.getStatus() == 200 && chatInfoResponse.getBody() != null) {
         ChatInfoResponse chatInfo = chatInfoResponse.getBody();
-        ChatMetaDto chatMetaDto = ChatMetaDto.buildChatInfo(chatInfo, chatMemberDtos);
-        return Response.ok(chatMetaDto).build();
+        return ChatMetaDto.buildChatInfo(chatInfo, chatMemberDtos);
       } else {
         log.error(
             "getChatInfo method returns NOT OK status or empty body for chat with chatId = "
                 + chatMeta.getChatId());
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+        throw new RuntimeException(
+            "getChatInfo method returns NOT OK status or empty body for chat with chatId = "
+                + chatMeta.getChatId());
       }
     } catch (UnirestException | MyteamServerErrorException e) {
       log.error("exception in getChatInfo method call for chatId = " + chatMeta.getChatId(), e);
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+      throw new RuntimeException(
+          "exception in getChatInfo method call for chatId = " + chatMeta.getChatId(), e);
     }
   }
 
   @GET
   @Path("/chatCreationData/{issueKey}")
   @Produces({MediaType.APPLICATION_JSON})
-  public Response getChatCreationData(@PathParam("issueKey") String issueKey) {
+  public ChatCreationDataDto getChatCreationData(@PathParam("issueKey") String issueKey) {
     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
-    if (loggedInUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+    if (loggedInUser == null) {
+      throw new SecurityException();
+    }
 
     Issue currentIssue = issueManager.getIssueByKeyIgnoreCase(issueKey);
-    if (currentIssue == null) return Response.ok().build();
+    if (currentIssue == null) {
+      return null;
+    }
 
     String chatName = String.join(": ", currentIssue.getKey(), currentIssue.getSummary());
 
@@ -195,24 +200,28 @@ public class ChatCreationService {
                             .toString()))
             .collect(Collectors.toList());
 
-    return Response.ok(new ChatCreationDataDto(chatName, availableChatUsers)).build();
+    return new ChatCreationDataDto(chatName, availableChatUsers);
   }
 
   @POST
   @Path("/createChat/{issueKey}")
   @Produces({MediaType.APPLICATION_JSON})
-  public Response createChat(
+  public ChatMetaDto createChat(
       @PathParam("issueKey") String issueKey,
       @FormParam("name") String chatName,
       @FormParam("memberIds") List<Long> memberIds) {
     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
-    if (loggedInUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
+    if (loggedInUser == null) {
+      throw new SecurityException();
+    }
 
     Issue currentIssue = issueManager.getIssueByKeyIgnoreCase(issueKey);
     // TODO max chat members hardcoded here
     if (currentIssue == null
         || pluginData.getChatCreationBannedProjectIds().contains(currentIssue.getProjectId())
-        || memberIds.size() >= 30) return Response.status(Response.Status.BAD_REQUEST).build();
+        || memberIds.size() >= 30) {
+      throw new IllegalArgumentException();
+    }
 
     List<ChatMemberId> chatMembers =
         memberIds.stream()
@@ -270,43 +279,34 @@ public class ChatCreationService {
         HttpResponse<ChatInfoResponse> chatInfoResponse =
             myteamApiClient.getChatInfo(pluginData.getToken(), chatId);
         if (chatInfoResponse.getStatus() == 200 && chatInfoResponse.getBody() != null) {
-          return Response.ok(ChatMetaDto.buildChatInfo(chatInfoResponse.getBody(), chatMemberDtos))
-              .build();
+          return ChatMetaDto.buildChatInfo(chatInfoResponse.getBody(), chatMemberDtos);
         }
       }
       log.error("Exception during chat creation chat sn not found");
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+
+      throw new RuntimeException("Exception during chat creation chat sn not found");
     } catch (IOException | UnirestException | MyteamServerErrorException e) {
       log.error("Exception during chat creation", e);
-      return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+      throw new RuntimeException("Exception during chat creation", e);
     }
   }
 
-  /*
-  TODO this REST is needed for user-picker search requests in future
   @GET
-   @Path("/chatCreationData/{issueKey}/availableMembers/{input:.*}")
-   @Produces({MediaType.APPLICATION_JSON})
-   public Response getAvailableChatMembers(
-       @PathParam("issueKey") String issueKey, @PathParam("input") String input) {
-     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
-     if (loggedInUser == null) return Response.status(Response.Status.UNAUTHORIZED).build();
-
-     Issue currentIssue = issueManager.getIssueByKeyIgnoreCase(issueKey);
-     if (currentIssue == null) return Response.ok().build();
-
-     return Response.ok(
-             userSearchService
-                 .findUsersAllowEmptyQuery(new JiraServiceContextImpl(loggedInUser), input).stream()
-                 .map(
-                     user ->
-                         new ChatMemberDto(
-                             user.getDisplayName(),
-                             user.getId(),
-                             avatarService
-                                 .getAvatarURL(loggedInUser, user, Avatar.Size.LARGE)
-                                 .toString()))
-                 .collect(Collectors.toList()))
-         .build();
-   }*/
+  @Path("/chatCreationData/users")
+  @Produces({MediaType.APPLICATION_JSON})
+  public List<ChatMemberDto> getAvailableChatMembers(@QueryParam("searchText") String searchText) {
+    ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
+    if (loggedInUser == null) {
+      throw new SecurityException();
+    }
+    return userSearchService
+        .findUsersAllowEmptyQuery(new JiraServiceContextImpl(loggedInUser), searchText).stream()
+        .map(
+            user ->
+                new ChatMemberDto(
+                    user.getDisplayName(),
+                    user.getId(),
+                    avatarService.getAvatarURL(loggedInUser, user, Avatar.Size.LARGE).toString()))
+        .collect(Collectors.toList());
+  }
 }

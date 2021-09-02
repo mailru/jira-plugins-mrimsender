@@ -28,8 +28,6 @@ import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -38,6 +36,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
+import kong.unirest.HttpResponse;
+import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
@@ -618,6 +618,8 @@ public class MyteamEventsListener {
                       "Unable change Myteam mention to Jira's mention, because Can't find user with id:{}",
                       mention.getUserId());
                 }
+                break;
+              default:
                 break;
             }
           });

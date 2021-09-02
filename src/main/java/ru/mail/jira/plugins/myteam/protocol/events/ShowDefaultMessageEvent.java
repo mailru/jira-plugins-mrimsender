@@ -20,7 +20,7 @@ public class ShowDefaultMessageEvent {
     message = chatMessageEvent.getMessage();
     hasForwards = chatMessageEvent.isHasForwards();
     forwardList =
-        (hasForwards)
+        hasForwards
             ? chatMessageEvent.getMessageParts().stream()
                 .filter(part -> part instanceof Forward)
                 .map(part -> (Forward) part)

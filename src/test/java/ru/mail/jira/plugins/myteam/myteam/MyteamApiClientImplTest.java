@@ -5,20 +5,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.ObjectMapper;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import kong.unirest.HttpResponse;
+import kong.unirest.JsonNode;
+import kong.unirest.UnirestException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.mockito.Mockito;
+import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
@@ -45,36 +44,10 @@ public class MyteamApiClientImplTest {
       this.pluginData = Mockito.mock(PluginData.class);
       when(pluginData.getToken()).thenReturn(properties.getProperty("myteam.test.bot.token"));
       when(pluginData.getBotApiUrl()).thenReturn(properties.getProperty("myteam.test.bot.api"));
-      this.myteamApiClient = new MyteamApiClientImpl(this.pluginData);
-    } catch (IOException ioException) {
-      ioException.printStackTrace();
     }
 
     // unirest initialization
-    Unirest.setTimeouts(10_000, 300_000);
-    Unirest.setObjectMapper(
-        new ObjectMapper() {
-          private org.codehaus.jackson.map.ObjectMapper jacksonObjectMapper =
-              new org.codehaus.jackson.map.ObjectMapper();
-
-          @Override
-          public <T> T readValue(String value, Class<T> valueType) {
-            try {
-              return jacksonObjectMapper.readValue(value, valueType);
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          }
-
-          @Override
-          public String writeValue(Object value) {
-            try {
-              return jacksonObjectMapper.writeValueAsString(value);
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        });
+    HttpClient.init();
   }
 
   @Ignore

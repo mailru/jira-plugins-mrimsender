@@ -8,7 +8,7 @@ public enum ChatType {
   GROUP("group"),
   CHANNEL("channel");
 
-  private String apiValue;
+  private final String apiValue;
 
   ChatType(final String apiValue) {
     this.apiValue = apiValue;

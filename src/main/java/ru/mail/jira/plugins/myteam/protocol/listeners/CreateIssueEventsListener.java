@@ -33,13 +33,13 @@ import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.eventbus.Subscribe;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -844,7 +844,7 @@ public class CreateIssueEventsListener {
                               break;
                           }
                           return filterResult
-                              || includedFieldIds != null && includedFieldIds.contains(fieldId);
+                              || (includedFieldIds != null && includedFieldIds.contains(fieldId));
                         })
                     .filter(
                         layoutItem ->

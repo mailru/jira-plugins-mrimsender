@@ -1,6 +1,6 @@
 Class ChatCreationService
 =========================
-ru.mail.jira.plugins.myteam.rest.ChatCreationService
+ru.mail.jira.plugins.myteam.rest.ChatCreationRestService
 Summary
 -------
 #### Constructors
