@@ -15,6 +15,7 @@ import com.atlassian.jira.issue.attachment.TemporaryAttachmentId;
 import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
+import com.atlassian.jira.issue.watchers.WatcherManager;
 import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.PermissionManager;
@@ -84,6 +85,7 @@ public class MyteamEventsListener {
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final String JIRA_BASE_URL;
   private final ChatCommandListener chatCommandListener;
+  private final WatcherManager watcherManager;
 
   @Autowired
   public MyteamEventsListener(
@@ -102,9 +104,11 @@ public class MyteamEventsListener {
       @ComponentImport AttachmentManager attachmentManager,
       @ComponentImport SearchService searchService,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-      @ComponentImport ApplicationProperties applicationProperties) {
+      @ComponentImport ApplicationProperties applicationProperties,
+      @ComponentImport WatcherManager watcherManager) {
     this.chatsStateMap = chatStateMapping.getChatsStateMap();
     this.attachmentManager = attachmentManager;
+    this.watcherManager = watcherManager;
     this.asyncEventBus =
         new AsyncEventBus(
             executorService,
@@ -355,6 +359,10 @@ public class MyteamEventsListener {
       case "showIssue":
         asyncEventBus.post(new ShowIssueClickEvent(buttonClickEvent));
         break;
+      case "watch":
+      case "unwatch":
+        asyncEventBus.post(new ChangeIssueWatchingEvent(buttonClickEvent));
+        break;
       case "activeIssuesAssigned":
         asyncEventBus.post(
             new SearchIssuesClickEvent(
@@ -478,7 +486,10 @@ public class MyteamEventsListener {
           myteamApiClient.sendMessageText(
               issueKeyMessageEvent.getChatId(),
               messageFormatter.createIssueSummary(currentIssue, currentUser),
-              messageFormatter.getIssueButtons(currentIssue.getKey(), currentUser));
+              messageFormatter.getIssueButtons(
+                  currentIssue.getKey(),
+                  currentUser,
+                  watcherManager.isWatching(currentUser, currentIssue)));
           log.debug("ViewIssueCommand message sent...");
         } else {
           myteamApiClient.sendMessageText(

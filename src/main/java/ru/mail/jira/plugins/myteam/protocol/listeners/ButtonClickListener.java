@@ -12,6 +12,7 @@ import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
+import com.atlassian.jira.issue.watchers.WatcherManager;
 import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
@@ -61,6 +62,7 @@ public class ButtonClickListener {
   private final PermissionManager permissionManager;
   private final CommentManager commentManager;
   private final SearchService searchService;
+  private final WatcherManager watcherManager;
 
   @Autowired
   public ButtonClickListener(
@@ -73,7 +75,8 @@ public class ButtonClickListener {
       @ComponentImport IssueManager issueManager,
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport SearchService searchService,
-      @ComponentImport CommentManager commentManager) {
+      @ComponentImport CommentManager commentManager,
+      @ComponentImport WatcherManager watcherManager) {
     this.chatsStateMap = chatStateMapping.getChatsStateMap();
     this.myteamApiClient = myteamApiClient;
     this.userData = userData;
@@ -84,6 +87,7 @@ public class ButtonClickListener {
     this.permissionManager = permissionManager;
     this.commentManager = commentManager;
     this.searchService = searchService;
+    this.watcherManager = watcherManager;
   }
 
   @Subscribe
@@ -98,7 +102,10 @@ public class ButtonClickListener {
         myteamApiClient.sendMessageText(
             viewIssueClickEvent.getChatId(),
             messageFormatter.createIssueSummary(currentIssue, currentUser),
-            messageFormatter.getIssueButtons(viewIssueClickEvent.getIssueKey(), currentUser));
+            messageFormatter.getIssueButtons(
+                viewIssueClickEvent.getIssueKey(),
+                currentUser,
+                watcherManager.isWatching(currentUser, currentIssue)));
         log.debug("ViewIssueCommand message sent...");
       } else {
         myteamApiClient.sendMessageText(

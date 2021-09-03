@@ -244,6 +244,9 @@ public class ChatCommandListener {
               localeManager.getLocaleFor(user),
               "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
     }
+    if (changeIssueWatchingEvent.getQueryId() != null) {
+      myteamApiClient.answerCallbackQuery(changeIssueWatchingEvent.getQueryId());
+    }
   }
 
   public void sendIssueViewToUser(String issueKey, ApplicationUser user, String chatId)
@@ -259,7 +262,8 @@ public class ChatCommandListener {
               myteamApiClient.sendMessageText(
                   chatId,
                   messageFormatter.createIssueSummary(issueToShow, user),
-                  messageFormatter.getIssueButtons(issueToShow.getKey(), user));
+                  messageFormatter.getIssueButtons(
+                      issueToShow.getKey(), user, watcherManager.isWatching(user, issueToShow)));
           if (response.getStatus() != 200
               || (response.getBody() != null && !response.getBody().isOk())) {
             log.warn(
