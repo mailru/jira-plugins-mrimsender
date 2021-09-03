@@ -199,6 +199,12 @@ public class MyteamEventsListener {
       if (command.startsWith("link") && isGroupChatEvent) {
         asyncEventBus.post(new LinkIssueWithChatEvent(chatMessageEvent));
       }
+      if (command.startsWith("watch")) {
+        asyncEventBus.post(new ChangeIssueWatchingEvent(chatMessageEvent));
+      }
+      if (command.startsWith("unwatch")) {
+        asyncEventBus.post(new ChangeIssueWatchingEvent(chatMessageEvent));
+      }
     } else if (!isGroupChatEvent && (message != null || chatMessageEvent.isHasForwards())) {
       asyncEventBus.post(new ShowDefaultMessageEvent(chatMessageEvent));
     }

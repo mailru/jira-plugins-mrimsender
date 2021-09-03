@@ -6,6 +6,7 @@ import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
+import com.atlassian.jira.issue.watchers.WatcherManager;
 import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.PermissionManager;
@@ -46,6 +47,7 @@ public class ChatCommandListener {
   private final PermissionManager permissionManager;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final String JIRA_BASE_URL;
+  private final WatcherManager watcherManager;
 
   @Autowired
   public ChatCommandListener(
@@ -58,7 +60,8 @@ public class ChatCommandListener {
       @ComponentImport IssueManager issueManager,
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-      @ComponentImport ApplicationProperties applicationProperties) {
+      @ComponentImport ApplicationProperties applicationProperties,
+      @ComponentImport WatcherManager watcherManager) {
     this.myteamApiClient = myteamApiClient;
     this.myteamChatRepository = myteamChatRepository;
     this.userData = userData;
@@ -69,6 +72,7 @@ public class ChatCommandListener {
     this.permissionManager = permissionManager;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
+    this.watcherManager = watcherManager;
   }
 
   @Subscribe
@@ -180,6 +184,58 @@ public class ChatCommandListener {
                 localeManager.getLocaleFor(user),
                 "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueLinkedToChat.error",
                 messageFormatter.createIssueLink(issue)));
+      }
+    } else {
+      myteamApiClient.sendMessageText(
+          chatId,
+          i18nResolver.getRawText(
+              localeManager.getLocaleFor(user),
+              "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
+    }
+  }
+
+  @Subscribe
+  public void onChangeIssueWatching(ChangeIssueWatchingEvent changeIssueWatchingEvent)
+      throws IOException, UnirestException, MyteamServerErrorException {
+    ApplicationUser user = userData.getUserByMrimLogin(changeIssueWatchingEvent.getUserId());
+    String chatId = changeIssueWatchingEvent.getChatId();
+    String issueKey = changeIssueWatchingEvent.getIssueKey();
+    Issue issue = issueManager.getIssueByKeyIgnoreCase(issueKey);
+    if (issue != null) {
+      if (changeIssueWatchingEvent.isWatching()) {
+        if (watcherManager.isWatching(user, issue)) {
+          myteamApiClient.sendMessageText(
+              chatId,
+              i18nResolver.getText(
+                  localeManager.getLocaleFor(user),
+                  "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyWatching",
+                  messageFormatter.createIssueLink(issue)));
+        } else {
+          watcherManager.startWatching(user, issue);
+          myteamApiClient.sendMessageText(
+              chatId,
+              i18nResolver.getText(
+                  localeManager.getLocaleFor(user),
+                  "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyWatch",
+                  messageFormatter.createIssueLink(issue)));
+        }
+      } else {
+        if (!watcherManager.isWatching(user, issue)) {
+          myteamApiClient.sendMessageText(
+              chatId,
+              i18nResolver.getText(
+                  localeManager.getLocaleFor(user),
+                  "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyUnwatching",
+                  messageFormatter.createIssueLink(issue)));
+        } else {
+          watcherManager.stopWatching(user, issue);
+          myteamApiClient.sendMessageText(
+              chatId,
+              i18nResolver.getText(
+                  localeManager.getLocaleFor(user),
+                  "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyUnwatch",
+                  messageFormatter.createIssueLink(issue)));
+        }
       }
     } else {
       myteamApiClient.sendMessageText(
