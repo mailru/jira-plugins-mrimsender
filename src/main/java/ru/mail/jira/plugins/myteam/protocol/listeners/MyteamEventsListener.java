@@ -204,10 +204,10 @@ public class MyteamEventsListener {
         asyncEventBus.post(new LinkIssueWithChatEvent(chatMessageEvent));
       }
       if (command.startsWith("watch")) {
-        asyncEventBus.post(new ChangeIssueWatchingEvent(chatMessageEvent));
+        asyncEventBus.post(new IssueWatchEvent(chatMessageEvent));
       }
       if (command.startsWith("unwatch")) {
-        asyncEventBus.post(new ChangeIssueWatchingEvent(chatMessageEvent));
+        asyncEventBus.post(new IssueUnwatchEvent(chatMessageEvent));
       }
     } else if (!isGroupChatEvent && (message != null || chatMessageEvent.isHasForwards())) {
       asyncEventBus.post(new ShowDefaultMessageEvent(chatMessageEvent));
@@ -360,8 +360,10 @@ public class MyteamEventsListener {
         asyncEventBus.post(new ShowIssueClickEvent(buttonClickEvent));
         break;
       case "watch":
+        asyncEventBus.post(new IssueWatchEvent(buttonClickEvent));
+        break;
       case "unwatch":
-        asyncEventBus.post(new ChangeIssueWatchingEvent(buttonClickEvent));
+        asyncEventBus.post(new IssueUnwatchEvent(buttonClickEvent));
         break;
       case "activeIssuesAssigned":
         asyncEventBus.post(

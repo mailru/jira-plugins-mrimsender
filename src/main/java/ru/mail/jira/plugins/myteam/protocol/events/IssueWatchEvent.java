@@ -8,32 +8,27 @@ import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 
 @Getter
-public class ChangeIssueWatchingEvent {
+public class IssueWatchEvent {
   private final String chatId;
   private final String userId;
   public String queryId;
   private String issueKey;
 
-  private boolean isWatching;
-
-  public ChangeIssueWatchingEvent(ChatMessageEvent chatMessageEvent) {
+  public IssueWatchEvent(ChatMessageEvent chatMessageEvent) {
     this.chatId = chatMessageEvent.getChatId();
     this.userId = chatMessageEvent.getUserId();
     List<String> splitedCmd =
         Splitter.on("watch").splitToList(chatMessageEvent.getMessage().toLowerCase());
 
     if (splitedCmd.size() > 1) {
-      this.isWatching = !splitedCmd.get(0).equals("/un");
       this.issueKey = splitedCmd.get(1).trim();
     }
   }
 
-  public ChangeIssueWatchingEvent(ButtonClickEvent buttonClickEvent) {
+  public IssueWatchEvent(ButtonClickEvent buttonClickEvent) {
     this.chatId = buttonClickEvent.getChatId();
     this.userId = buttonClickEvent.getUserId();
     this.issueKey = StringUtils.substringAfter(buttonClickEvent.getCallbackData(), "-");
-    this.isWatching =
-        StringUtils.substringBefore(buttonClickEvent.getCallbackData(), "-").equals("watch");
     this.queryId = buttonClickEvent.getQueryId();
   }
 }
