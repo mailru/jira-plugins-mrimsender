@@ -1640,7 +1640,7 @@ public class MessageFormatter {
   }
 
   public List<List<InlineKeyboardMarkupButton>> getIssueButtons(
-      String issueKey, ApplicationUser recipient) {
+      String issueKey, ApplicationUser recipient, boolean isWatching) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
     buttons.add(buttonsRow);
@@ -1658,6 +1658,19 @@ public class MessageFormatter {
                 localeManager.getLocaleFor(recipient),
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"),
             String.join("-", "showComments", issueKey)));
+
+    ArrayList<InlineKeyboardMarkupButton> watchButtonRow = new ArrayList<>();
+
+    watchButtonRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getText(
+                localeManager.getLocaleFor(recipient),
+                isWatching
+                    ? "ru.mail.jira.plugins.myteam.mrimsenderEventListener.unwatchButton.text"
+                    : "ru.mail.jira.plugins.myteam.mrimsenderEventListener.watchButton.text"),
+            String.join("-", isWatching ? "unwatch" : "watch", issueKey)));
+
+    buttons.add(watchButtonRow);
 
     return buttons;
   }

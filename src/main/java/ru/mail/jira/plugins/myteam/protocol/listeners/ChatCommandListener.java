@@ -6,6 +6,7 @@ import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
+import com.atlassian.jira.issue.watchers.WatcherManager;
 import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.PermissionManager;
@@ -46,6 +47,7 @@ public class ChatCommandListener {
   private final PermissionManager permissionManager;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final String JIRA_BASE_URL;
+  private final WatcherManager watcherManager;
 
   @Autowired
   public ChatCommandListener(
@@ -58,7 +60,8 @@ public class ChatCommandListener {
       @ComponentImport IssueManager issueManager,
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-      @ComponentImport ApplicationProperties applicationProperties) {
+      @ComponentImport ApplicationProperties applicationProperties,
+      @ComponentImport WatcherManager watcherManager) {
     this.myteamApiClient = myteamApiClient;
     this.myteamChatRepository = myteamChatRepository;
     this.userData = userData;
@@ -69,6 +72,7 @@ public class ChatCommandListener {
     this.permissionManager = permissionManager;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
+    this.watcherManager = watcherManager;
   }
 
   @Subscribe
@@ -190,6 +194,78 @@ public class ChatCommandListener {
     }
   }
 
+  @Subscribe
+  public void onIssueWatch(IssueWatchEvent issueWatchEvent)
+      throws IOException, UnirestException, MyteamServerErrorException {
+    ApplicationUser user = userData.getUserByMrimLogin(issueWatchEvent.getUserId());
+    String chatId = issueWatchEvent.getChatId();
+    String issueKey = issueWatchEvent.getIssueKey();
+    Issue issue = issueManager.getIssueByKeyIgnoreCase(issueKey);
+    if (issue != null) {
+      if (watcherManager.isWatching(user, issue)) {
+        myteamApiClient.sendMessageText(
+            chatId,
+            i18nResolver.getText(
+                localeManager.getLocaleFor(user),
+                "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyWatching",
+                messageFormatter.createIssueLink(issue)));
+      } else {
+        watcherManager.startWatching(user, issue);
+        myteamApiClient.sendMessageText(
+            chatId,
+            i18nResolver.getText(
+                localeManager.getLocaleFor(user),
+                "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyWatch",
+                messageFormatter.createIssueLink(issue)));
+      }
+    } else {
+      myteamApiClient.sendMessageText(
+          chatId,
+          i18nResolver.getRawText(
+              localeManager.getLocaleFor(user),
+              "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
+    }
+    if (issueWatchEvent.getQueryId() != null) {
+      myteamApiClient.answerCallbackQuery(issueWatchEvent.getQueryId());
+    }
+  }
+
+  @Subscribe
+  public void onIssueUnwatch(IssueUnwatchEvent issueUnwatchEvent)
+      throws IOException, UnirestException, MyteamServerErrorException {
+    ApplicationUser user = userData.getUserByMrimLogin(issueUnwatchEvent.getUserId());
+    String chatId = issueUnwatchEvent.getChatId();
+    String issueKey = issueUnwatchEvent.getIssueKey();
+    Issue issue = issueManager.getIssueByKeyIgnoreCase(issueKey);
+    if (issue != null) {
+      if (!watcherManager.isWatching(user, issue)) {
+        myteamApiClient.sendMessageText(
+            chatId,
+            i18nResolver.getText(
+                localeManager.getLocaleFor(user),
+                "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyUnwatching",
+                messageFormatter.createIssueLink(issue)));
+      } else {
+        watcherManager.stopWatching(user, issue);
+        myteamApiClient.sendMessageText(
+            chatId,
+            i18nResolver.getText(
+                localeManager.getLocaleFor(user),
+                "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyUnwatch",
+                messageFormatter.createIssueLink(issue)));
+      }
+    } else {
+      myteamApiClient.sendMessageText(
+          chatId,
+          i18nResolver.getRawText(
+              localeManager.getLocaleFor(user),
+              "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
+    }
+    if (issueUnwatchEvent.getQueryId() != null) {
+      myteamApiClient.answerCallbackQuery(issueUnwatchEvent.getQueryId());
+    }
+  }
+
   public void sendIssueViewToUser(String issueKey, ApplicationUser user, String chatId)
       throws IOException, UnirestException, MyteamServerErrorException {
     ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
@@ -203,7 +279,8 @@ public class ChatCommandListener {
               myteamApiClient.sendMessageText(
                   chatId,
                   messageFormatter.createIssueSummary(issueToShow, user),
-                  messageFormatter.getIssueButtons(issueToShow.getKey(), user));
+                  messageFormatter.getIssueButtons(
+                      issueToShow.getKey(), user, watcherManager.isWatching(user, issueToShow)));
           if (response.getStatus() != 200
               || (response.getBody() != null && !response.getBody().isOk())) {
             log.warn(
