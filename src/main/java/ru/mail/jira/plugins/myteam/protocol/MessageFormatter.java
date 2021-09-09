@@ -48,6 +48,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -385,13 +386,13 @@ public class MessageFormatter {
         .collect(joining(", "));
   }
 
-  private String conventToMyteamMarkdown(
-      String inputText, Pattern pattern, JiraMarkDownConverter converter) {
+  private String convertToMarkdown(
+      String inputText, Pattern pattern, Function<Matcher, String> converter) {
     int lastIndex = 0;
     StringBuilder output = new StringBuilder();
     Matcher matcher = pattern.matcher(inputText);
     while (matcher.find()) {
-      output.append(inputText, lastIndex, matcher.start()).append(converter.convert(matcher));
+      output.append(inputText, lastIndex, matcher.start()).append(converter.apply(matcher));
       lastIndex = matcher.end();
     }
     if (lastIndex < inputText.length()) {
@@ -404,60 +405,88 @@ public class MessageFormatter {
     if (inputText == null) {
       return null;
     }
-
-    Pattern multiLevelNumberedList =
-        Pattern.compile("^((?:#|-|\\+|\\*)+) (.*)$", Pattern.MULTILINE);
-    Pattern boldPattern = Pattern.compile("(^|\\s)\\*([^*]*)\\*($|\\s)");
-    Pattern singleAsterisk = Pattern.compile("(?<!\\±)\\*");
-    Pattern markedAsterisk = Pattern.compile("\\±\\*");
-    Pattern strikethroughtPattern = Pattern.compile("($|\\s)-([^-]*)-($|\\s)");
-    Pattern underLinePattern = Pattern.compile("\\+([^+]*)\\+");
-    Pattern linkPattern = Pattern.compile("\\[([^|]+)\\|(.+?)\\]");
-    Pattern mentionPattern = Pattern.compile("\\[~(.*?)\\]");
-    Pattern inlineCodePattern = Pattern.compile("\\{\\{([^}]+)\\}\\}");
-    Pattern codeBlockPattern =
-        Pattern.compile("\\{code:([a-z]+?)\\}([^+]*?)\\{code\\}", Pattern.MULTILINE);
-
+    // codeBlockPattern
     inputText =
-        conventToMyteamMarkdown(
+        convertToMarkdown(
             inputText,
-            codeBlockPattern,
+            Pattern.compile("\\{code:([a-z]+?)\\}([^+]*?)\\{code\\}", Pattern.MULTILINE),
             (input) -> {
-              if (input.group(1).equals("python")) return "```python" + input.group(2) + "```";
-              else return "```" + input.group(2) + "```";
+              if (input.group(1).equals("python"))
+                return "±`±`±`python" + input.group(2) + "±`±`±`";
+              else return "±`±`±`" + input.group(2) + "±`±`±`";
             });
+    // inlineCodePattern
     inputText =
-        conventToMyteamMarkdown(
-            inputText, inlineCodePattern, (input) -> '`' + input.group(1) + '`');
-    inputText =
-        conventToMyteamMarkdown(
+        convertToMarkdown(
             inputText,
-            mentionPattern,
+            Pattern.compile("\\{\\{([^}]+)\\}\\}"),
+            (input) -> "±`" + input.group(1) + "±`");
+    // mentionPattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\[~(.*?)\\]"),
             (input) -> {
               ApplicationUser mentionUser = userManager.getUserByName(input.group(1));
-              return formatUser(mentionUser, "common.words.anonymous", useMentionFormat);
+              if (mentionUser != null) {
+                if (useMentionFormat) {
+                  return "±@[" + shieldText(mentionUser.getEmailAddress()) + "]";
+                }
+                return "["
+                    + shieldText(mentionUser.getDisplayName())
+                    + "]("
+                    + shieldText(
+                        "https://u.internal.myteam.mail.ru/profile/"
+                            + mentionUser.getEmailAddress())
+                    + ")";
+              } else return i18nHelper.getText("common.words.anonymous");
             });
+    // strikethroughtPattern
     inputText =
-        conventToMyteamMarkdown(
+        convertToMarkdown(
+            inputText, Pattern.compile("-([^-].*?)-"), (input) -> "±~" + input.group(1) + "±~");
+    // multi level numbered list
+    inputText =
+        convertToMarkdown(
             inputText,
-            strikethroughtPattern,
-            (input) -> input.group(1) + '~' + input.group(2) + '~' + input.group(3));
+            Pattern.compile("^((?:#|-|\\+|\\*)+) (.*)$", Pattern.MULTILINE),
+            (input) -> "±- " + input.group(2));
+    // bold Pattern
     inputText =
-        conventToMyteamMarkdown(
-            inputText, multiLevelNumberedList, (input) -> "- " + input.group(2));
-    inputText =
-        conventToMyteamMarkdown(
+        convertToMarkdown(
             inputText,
-            boldPattern,
+            Pattern.compile("(^|\\s)\\*([^*]*)\\*($|\\s)"),
             (input) -> input.group(1) + "±*" + input.group(2) + "±*" + input.group(3));
-    inputText = conventToMyteamMarkdown(inputText, singleAsterisk, input -> "\\" + input.group(0));
-    inputText = conventToMyteamMarkdown(inputText, markedAsterisk, input -> "*");
+    // underLinePattern
     inputText =
-        conventToMyteamMarkdown(
-            inputText, underLinePattern, (input) -> "__" + input.group(1) + "__");
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\+([^+]*)\\+"),
+            (input) -> "±_±_" + input.group(1) + "±_±_");
+    // linkPattern
     inputText =
-        conventToMyteamMarkdown(
-            inputText, linkPattern, (input) -> '[' + input.group(1) + "](" + input.group(2) + ')');
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\[([^|]+)\\|(.+?)\\]"),
+            (input) -> "±[" + input.group(1) + "±]±(" + input.group(2) + "±)");
+    // Italic
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("(?<!±)\\_([^_]*)\\_"),
+            (input) -> "±_" + input.group(1) + "±_");
+    // Single characters
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("(?<!\\±)([\\`\\@\\[\\]\\(\\)\\~\\-\\*\\_])"),
+            input -> "\\" + input.group(1));
+    // Marked characters
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("±([\\`\\@\\[\\]\\(\\)\\~\\-\\*\\_])"),
+            input -> input.group(1));
 
     return inputText;
   }
