@@ -284,8 +284,9 @@ public class MessageFormatter {
         i18nResolver.getRawText(recipientLocale, "issue.field.attachment"),
         issue.getAttachments());
 
-    if (!StringUtils.isBlank(issue.getDescription()))
-      sb.append("\n\n").append(shieldText(issue.getDescription()));
+    if (!StringUtils.isBlank(issue.getDescription())) {
+      sb.append("\n\n").append(makeMyteamMarkdownFromJira(issue.getDescription(), useMentionFormat));
+    }
 
     return sb.toString();
   }
