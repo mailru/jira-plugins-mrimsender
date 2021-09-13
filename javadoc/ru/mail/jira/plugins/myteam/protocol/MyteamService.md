@@ -26,7 +26,5 @@ Send message to recipient with id in Mail.Ru Agent.
 ### Parameters
 - chatId: recipient of the message
 - message: sent message
-### Returns
-message sent or not
 
 

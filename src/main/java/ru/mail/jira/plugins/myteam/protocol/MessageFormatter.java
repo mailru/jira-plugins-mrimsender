@@ -285,7 +285,8 @@ public class MessageFormatter {
         issue.getAttachments());
 
     if (!StringUtils.isBlank(issue.getDescription())) {
-      sb.append("\n\n").append(makeMyteamMarkdownFromJira(issue.getDescription(), useMentionFormat));
+      sb.append("\n\n")
+          .append(makeMyteamMarkdownFromJira(issue.getDescription(), useMentionFormat));
     }
 
     return sb.toString();
@@ -410,12 +411,13 @@ public class MessageFormatter {
     inputText =
         convertToMarkdown(
             inputText,
+            Pattern.compile("\\{code}([^+]*?)\\{code}", Pattern.MULTILINE),
+            (input) -> "±`±`±`" + input.group(1) + "±`±`±`");
+    inputText =
+        convertToMarkdown(
+            inputText,
             Pattern.compile("\\{code:([a-z]+?)}([^+]*?)\\{code}", Pattern.MULTILINE),
-            (input) -> {
-              if (input.group(1).equals("python"))
-                return "±`±`±`python" + input.group(2) + "±`±`±`";
-              else return "±`±`±`" + input.group(2) + "±`±`±`";
-            });
+            (input) -> "±`±`±`" + input.group(1) + " " + input.group(2) + "±`±`±`");
     // inlineCodePattern
     inputText =
         convertToMarkdown(

@@ -4,7 +4,7 @@ Classes
 =======
 | Name                                                                        |
 | --------------------------------------------------------------------------- |
-| [ChatCreationService](ChatCreationService.md)                               |
 | [ExternalSystemNotificationsService](ExternalSystemNotificationsService.md) |
 | [BitbucketWebhookException](BitbucketWebhookException.md)                   |
+| [ChatCreationRestService](ChatCreationRestService.md)                       |
 

@@ -5,11 +5,87 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   title: "Mail.ru Plugin: Mrimsender"
-  version: 6.3.7
+  version: 6.4.2
 servers:
 - description: Plugin Endpoint URL
   url: https://jira.mail.ru/rest/contracts/1.0
 paths:
+  /admin/user:
+    get:
+      operationId: getList
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+          format: int32
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          format: int32
+      - in: query
+        name: filter
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataListDTOUserDto'
+          description: default response
+  /admin/user/many:
+    get:
+      operationId: getMany
+      parameters:
+      - in: query
+        name: "ids[]"
+        schema:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataListDTOUserDto'
+          description: default response
+  /admin/user/{userKey}:
+    get:
+      operationId: getOne
+      parameters:
+      - in: path
+        name: userKey
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataDTOUserDto'
+          description: default response
+  /chats/chatCreationData/users:
+    get:
+      operationId: getAvailableChatMembers
+      parameters:
+      - in: query
+        name: searchText
+        schema:
+          type: string
+      responses:
+        default:
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatMemberDto'
+          description: default response
   /chats/chatCreationData/{issueKey}:
     get:
       operationId: getChatCreationData
@@ -22,7 +98,9 @@ paths:
       responses:
         default:
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatCreationDataDto'
           description: default response
   /chats/chatData/{issueKey}:
     get:
@@ -36,7 +114,9 @@ paths:
       responses:
         default:
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMetaDto'
           description: default response
   /chats/createChat/{issueKey}:
     post:
@@ -63,7 +143,9 @@ paths:
       responses:
         default:
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMetaDto'
           description: default response
   /external/notifications/bitbucket:
     post:
@@ -113,4 +195,76 @@ components:
       type: object
       properties:
         resultInfo:
+          type: string
+    ChatCreationDataDto:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMemberDto'
+        name:
+          type: string
+    ChatMemberDto:
+      type: object
+      properties:
+        avatarUrl:
+          type: string
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    ChatMetaDto:
+      type: object
+      properties:
+        link:
+          type: string
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMemberDto'
+        name:
+          type: string
+    DataDTOUserDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/UserDto'
+        validUntil:
+          type: string
+          format: date-time
+    DataListDTOUserDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserDto'
+        total:
+          type: integer
+          format: int32
+        validUntil:
+          type: string
+          format: date-time
+    UserDto:
+      type: object
+      properties:
+        avatarUrl:
+          type: string
+        displayName:
+          type: string
+        displayNameWithEmail:
+          type: string
+        email:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        profileUrl:
+          type: string
+        type:
+          type: string
+        userKey:
           type: string
