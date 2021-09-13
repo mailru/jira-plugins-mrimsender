@@ -39,6 +39,7 @@ import com.atlassian.jira.project.ProjectConstant;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.project.version.VersionManager;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.jira.util.MessageSet;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
@@ -47,6 +48,9 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.URI;
@@ -85,6 +89,7 @@ public class MessageFormatter {
   private final IssueTypeManager issueTypeManager;
   private final ProjectComponentManager projectComponentManager;
   private final VersionManager versionManager;
+  private final UserManager userManager;
 
   @Autowired
   public MessageFormatter(
@@ -101,7 +106,8 @@ public class MessageFormatter {
       @ComponentImport ProjectManager projectManager,
       @ComponentImport IssueTypeManager issueTypeManager,
       @ComponentImport ProjectComponentManager projectComponentManager,
-      @ComponentImport VersionManager versionManager) {
+      @ComponentImport VersionManager versionManager,
+      @ComponentImport UserManager userManager) {
     this.applicationProperties = applicationProperties;
     this.constantsManager = constantsManager;
     this.dateTimeFormatter = dateTimeFormatter;
@@ -117,18 +123,19 @@ public class MessageFormatter {
     this.issueTypeManager = issueTypeManager;
     this.projectComponentManager = projectComponentManager;
     this.versionManager = versionManager;
+    this.userManager = userManager;
   }
 
   private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
     if (user != null) {
       if (mention) {
-        return "@\\[" + shieldDescription(user.getEmailAddress()) + "\\]";
+        return "@\\[" + shieldText(user.getEmailAddress()) + "\\]";
       }
 
       return "["
-          + shieldDescription(user.getDisplayName())
+          + shieldText(user.getDisplayName())
           + "]("
-          + shieldDescription("https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress())
+          + shieldText("https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress())
           + ")";
     } else return i18nHelper.getText(messageKey);
   }
@@ -136,7 +143,7 @@ public class MessageFormatter {
   private String formatBitbucketUser(UserDto user, String messageKey, boolean mention) {
     if (user != null) {
       if (mention) {
-        return "@\\[" + shieldDescription(user.getEmailAddress()) + "\\]";
+        return "@\\[" + shieldText(user.getEmailAddress()) + "\\]";
       }
 
       return markdownTextLink(
@@ -166,7 +173,7 @@ public class MessageFormatter {
       while (iterator.hasNext()) {
         Object object = iterator.next();
         if (object instanceof ProjectConstant)
-          value.append(shieldDescription(((ProjectConstant) object).getName()));
+          value.append(shieldText(((ProjectConstant) object).getName()));
         if (object instanceof Attachment) {
           Attachment attachment = (Attachment) object;
           String attachmentUrl = "";
@@ -184,7 +191,7 @@ public class MessageFormatter {
           }
           value.append(markdownTextLink(attachment.getFilename(), attachmentUrl));
         }
-        if (object instanceof Label) value.append(shieldDescription(((Label) object).getLabel()));
+        if (object instanceof Label) value.append(shieldText(((Label) object).getLabel()));
         if (iterator.hasNext()) value.append(", ");
       }
       appendField(sb, title, value.toString(), false);
@@ -199,7 +206,7 @@ public class MessageFormatter {
       appendField(
           sb,
           i18nResolver.getRawText(recipientLocale, "issue.field.issuetype"),
-          shieldDescription(issue.getIssueType().getNameTranslation(i18nHelper)),
+          shieldText(issue.getIssueType().getNameTranslation(i18nHelper)),
           false);
 
     appendField(
@@ -241,7 +248,7 @@ public class MessageFormatter {
     appendField(
         sb,
         i18nResolver.getRawText(recipientLocale, "issue.field.environment"),
-        shieldDescription(issue.getEnvironment()),
+        shieldText(issue.getEnvironment()),
         false);
     appendField(
         sb,
@@ -252,7 +259,7 @@ public class MessageFormatter {
     appendField(
         sb,
         i18nResolver.getRawText(recipientLocale, "issue.field.priority"),
-        shieldDescription(formatPriority(issue.getPriority())),
+        shieldText(formatPriority(issue.getPriority())),
         false);
     appendField(
         sb,
@@ -269,7 +276,7 @@ public class MessageFormatter {
       appendField(
           sb,
           i18nResolver.getRawText(recipientLocale, "issue.field.securitylevel"),
-          shieldDescription(value),
+          shieldText(value),
           false);
     }
     appendField(
@@ -278,7 +285,7 @@ public class MessageFormatter {
         issue.getAttachments());
 
     if (!StringUtils.isBlank(issue.getDescription()))
-      sb.append("\n\n").append(shieldDescription(issue.getDescription()));
+      sb.append("\n\n").append(shieldText(issue.getDescription()));
 
     return sb.toString();
   }
@@ -287,10 +294,9 @@ public class MessageFormatter {
     if (text != null) {
       try {
         return "["
-            + shieldDescription(text)
+            + shieldText(text)
             + "]("
-            + shieldDescription(
-                new URI(url, false, StandardCharsets.UTF_8.toString()).getEscapedURI())
+            + shieldText(new URI(url, false, StandardCharsets.UTF_8.toString()).getEscapedURI())
             + ")";
       } catch (URIException e) {
         log.error("Unable to create text link for issueKey: {}, url:{}", text, url);
@@ -380,7 +386,112 @@ public class MessageFormatter {
         .collect(joining(", "));
   }
 
-  private String shieldDescription(String inputDescription) {
+  private String convertToMarkdown(
+      String inputText, Pattern pattern, Function<Matcher, String> converter) {
+    int lastIndex = 0;
+    StringBuilder output = new StringBuilder();
+    Matcher matcher = pattern.matcher(inputText);
+    while (matcher.find()) {
+      output.append(inputText, lastIndex, matcher.start()).append(converter.apply(matcher));
+      lastIndex = matcher.end();
+    }
+    if (lastIndex < inputText.length()) {
+      output.append(inputText, lastIndex, inputText.length());
+    }
+    return output.toString();
+  }
+
+  private String makeMyteamMarkdownFromJira(String inputText, boolean useMentionFormat) {
+    if (inputText == null) {
+      return null;
+    }
+    // codeBlockPattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\{code:([a-z]+?)}([^+]*?)\\{code}", Pattern.MULTILINE),
+            (input) -> {
+              if (input.group(1).equals("python"))
+                return "±`±`±`python" + input.group(2) + "±`±`±`";
+              else return "±`±`±`" + input.group(2) + "±`±`±`";
+            });
+    // inlineCodePattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\{\\{([^}?\\n]+)}}"),
+            (input) -> "±`" + input.group(1) + "±`");
+    // mentionPattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\[~(.*?)]"),
+            (input) -> {
+              ApplicationUser mentionUser = userManager.getUserByName(input.group(1));
+              if (mentionUser != null) {
+                if (useMentionFormat) {
+                  return "±@[" + shieldText(mentionUser.getEmailAddress()) + "]";
+                }
+                return "["
+                    + shieldText(mentionUser.getDisplayName())
+                    + "]("
+                    + shieldText(
+                        "https://u.internal.myteam.mail.ru/profile/"
+                            + mentionUser.getEmailAddress())
+                    + ")";
+              } else return i18nHelper.getText("common.words.anonymous");
+            });
+    // strikethroughtPattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("(^|\\s)-([^-].*?)-($|\\s|\\.)"),
+            (input) -> input.group(1) + "±~" + input.group(2) + "±~" + input.group(3));
+    // multi level numbered list
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("^((?:#|-|\\+|\\*)+) (.*)$", Pattern.MULTILINE),
+            (input) -> "±- " + input.group(2));
+    // bold Pattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("(^|\\s)\\*([^*?\\n]*)\\*($|\\s|\\.)"),
+            (input) -> input.group(1) + "±*" + input.group(2) + "±*" + input.group(3));
+    // underLinePattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("(^|\\s)\\+([^+?\\n]*)\\+($|\\s|\\.)"),
+            (input) -> input.group(1) + "±_±_" + input.group(2) + "±_±_" + input.group(3));
+    // linkPattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\[([^|?\n]+)\\|(.+?)]"),
+            (input) -> "±[" + input.group(1) + "±]±(" + input.group(2) + "±)");
+    // Italic
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("(?<!±)_([^_?\\n]*)_"),
+            (input) -> "±_" + input.group(1) + "±_");
+    // Single characters
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("(?<!±)([`{}+|@\\[\\]()~\\-*_])"),
+            input -> "\\" + input.group(1));
+    // Marked characters
+    inputText =
+        convertToMarkdown(
+            inputText, Pattern.compile("±([`{}+|@\\[\\]()~\\-*_])"), input -> input.group(1));
+
+    return inputText;
+  }
+
+  private String shieldText(String inputDescription) {
     if (inputDescription == null) {
       return null;
     }
@@ -447,7 +558,10 @@ public class MessageFormatter {
   }
 
   private String formatChangeLog(
-      GenericValue changeLog, boolean ignoreAssigneeField, Locale recipientLocale) {
+      GenericValue changeLog,
+      boolean ignoreAssigneeField,
+      Locale recipientLocale,
+      boolean useMentionFormat) {
     StringBuilder sb = new StringBuilder();
     if (changeLog != null)
       try {
@@ -486,11 +600,12 @@ public class MessageFormatter {
               newString = navigableField.prettyPrintChangeHistory(newString, i18nHelper);
           }
 
-          appendField(sb, title, shieldDescription(newString), true);
+          appendField(sb, title, shieldText(newString), true);
         }
 
         if (!StringUtils.isBlank(changedDescription))
-          sb.append("\n\n").append(shieldDescription(changedDescription));
+          sb.append("\n\n")
+              .append(makeMyteamMarkdownFromJira(changedDescription, useMentionFormat));
       } catch (GenericEntityException ignored) {
         // ignore
       }
@@ -644,7 +759,7 @@ public class MessageFormatter {
                         repositoryCommitCommentCreated.getProjectKey(),
                         repositoryCommitCommentCreated.getRepository().getName(),
                         repositoryCommitCommentCreated.getCommitHash())),
-                shieldDescription(repositoryCommitCommentCreated.getComment().getText())));
+                shieldText(repositoryCommitCommentCreated.getComment().getText())));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about RepositoryCommitCommentCreated.",
@@ -671,8 +786,8 @@ public class MessageFormatter {
                         repositoryCommitCommentEdited.getProjectKey(),
                         repositoryCommitCommentEdited.getRepository().getName(),
                         repositoryCommitCommentEdited.getCommitHash())),
-                shieldDescription(repositoryCommitCommentEdited.getPreviousComment()),
-                shieldDescription(repositoryCommitCommentEdited.getComment().getText())));
+                shieldText(repositoryCommitCommentEdited.getPreviousComment()),
+                shieldText(repositoryCommitCommentEdited.getComment().getText())));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about RepositoryCommitCommentEdited.",
@@ -699,7 +814,7 @@ public class MessageFormatter {
                         repositoryCommitCommentDeleted.getProjectKey(),
                         repositoryCommitCommentDeleted.getRepository().getName(),
                         repositoryCommitCommentDeleted.getCommitHash())),
-                shieldDescription(repositoryCommitCommentDeleted.getComment().getText())));
+                shieldText(repositoryCommitCommentDeleted.getComment().getText())));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about RepositoryCommitCommentDeleted.",
@@ -763,7 +878,7 @@ public class MessageFormatter {
                         pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
                         pullRequestOpened.getPullRequest().getToRef().getId())),
                 pullRequestOpened.getPullRequest().getTitle(),
-                shieldDescription(pullRequestOpened.getPullRequest().getDescription()),
+                shieldText(pullRequestOpened.getPullRequest().getDescription()),
                 makeReviewersText(
                     pullRequestOpened.getPullRequest().getReviewers(),
                     recipient.getEmailAddress(),
@@ -811,8 +926,8 @@ public class MessageFormatter {
                 recipientLocale,
                 "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified.description",
                 String.valueOf(counter) + '.',
-                shieldDescription(pullRequestModified.getPreviousDescription()),
-                shieldDescription(pullRequestModified.getPullRequest().getDescription())));
+                shieldText(pullRequestModified.getPreviousDescription()),
+                shieldText(pullRequestModified.getPullRequest().getDescription())));
         counter++;
       }
       if (pullRequestModified.getPreviousTarget() != null
@@ -996,8 +1111,7 @@ public class MessageFormatter {
                             .getToRef()
                             .getRepository()
                             .getName())),
-                shieldDescription(
-                    pullRequestApprovedByReviewer.getPullRequest().getDescription())));
+                shieldText(pullRequestApprovedByReviewer.getPullRequest().getDescription())));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about PullRequestApprovedByReviewer.",
@@ -1048,8 +1162,7 @@ public class MessageFormatter {
                             .getToRef()
                             .getRepository()
                             .getName())),
-                shieldDescription(
-                    pullRequestUnapprovedByReviewer.getPullRequest().getDescription())));
+                shieldText(pullRequestUnapprovedByReviewer.getPullRequest().getDescription())));
       } catch (NullPointerException exception) {
         log.error(
             "Error: Can't notify user {} about PullRequestUnapprovedByReviewer.",
@@ -1511,12 +1624,11 @@ public class MessageFormatter {
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     }
-
-    sb.append("\n").append(shieldDescription(issue.getSummary()));
+    sb.append("\n").append(shieldText(issue.getSummary()));
 
     if (issueEvent.getWorklog() != null
         && !StringUtils.isBlank(issueEvent.getWorklog().getComment()))
-      sb.append("\n\n").append(shieldDescription(issueEvent.getWorklog().getComment()));
+      sb.append("\n\n").append(shieldText(issueEvent.getWorklog().getComment()));
 
     if (EventType.ISSUE_CREATED_ID.equals(eventTypeId))
       sb.append(formatSystemFields(recipient, issue, useMentionFormat));
@@ -1525,11 +1637,11 @@ public class MessageFormatter {
         formatChangeLog(
             issueEvent.getChangeLog(),
             EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId),
-            recipientLocale));
-
+            recipientLocale,
+            useMentionFormat));
     if (issueEvent.getComment() != null && !StringUtils.isBlank(issueEvent.getComment().getBody()))
-      sb.append("\n\n").append(shieldDescription(issueEvent.getComment().getBody()));
-
+      sb.append("\n\n")
+          .append(makeMyteamMarkdownFromJira(issueEvent.getComment().getBody(), useMentionFormat));
     return sb.toString();
   }
 
@@ -1549,10 +1661,10 @@ public class MessageFormatter {
             "ru.mail.jira.plugins.myteam.notification.mentioned",
             formatUser(user, "common.words.anonymous", true),
             issueLink));
-    sb.append("\n").append(shieldDescription(issue.getSummary()));
+    sb.append("\n").append(shieldText(issue.getSummary()));
 
     if (!StringUtils.isBlank(mentionIssueEvent.getMentionText()))
-      sb.append("\n\n").append(shieldDescription(mentionIssueEvent.getMentionText()));
+      sb.append("\n\n").append(shieldText(mentionIssueEvent.getMentionText()));
 
     return sb.toString();
   }
@@ -1566,14 +1678,14 @@ public class MessageFormatter {
                     "%s/browse/%s",
                     applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey())))
         .append("   ")
-        .append(shieldDescription(issue.getSummary()))
+        .append(shieldText(issue.getSummary()))
         .append("\n");
 
     // append status field because it doesn't exist in formatSystemFields string
     appendField(
         sb,
         i18nHelper.getText(fieldManager.getField(IssueFieldConstants.STATUS).getNameKey()),
-        shieldDescription(issue.getStatus().getNameTranslation(i18nHelper)),
+        shieldText(issue.getStatus().getNameTranslation(i18nHelper)),
         false);
 
     sb.append(formatSystemFields(user, issue, true));
@@ -1596,8 +1708,8 @@ public class MessageFormatter {
                             if (customField.isShown(issue))
                               appendField(
                                   sb,
-                                  shieldDescription(customField.getFieldName()),
-                                  shieldDescription(customField.getValueFromIssue(issue)),
+                                  shieldText(customField.getFieldName()),
+                                  shieldText(customField.getValueFromIssue(issue)),
                                   false);
                           }
                         }));
@@ -1888,7 +2000,7 @@ public class MessageFormatter {
                         "\\[",
                         comment.getAuthorFullName(),
                         "\\] ",
-                        shieldDescription(comment.getBody())))
+                        shieldText(comment.getBody())))
             .collect(Collectors.toList()),
         pageNumber,
         total,
