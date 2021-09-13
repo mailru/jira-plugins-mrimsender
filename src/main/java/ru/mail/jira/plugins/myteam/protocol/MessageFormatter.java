@@ -409,7 +409,7 @@ public class MessageFormatter {
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("\\{code:([a-z]+?)\\}([^+]*?)\\{code\\}", Pattern.MULTILINE),
+            Pattern.compile("\\{code:([a-z]+?)}([^+]*?)\\{code}", Pattern.MULTILINE),
             (input) -> {
               if (input.group(1).equals("python"))
                 return "±`±`±`python" + input.group(2) + "±`±`±`";
@@ -419,13 +419,13 @@ public class MessageFormatter {
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("\\{\\{([^}]+)\\}\\}"),
+            Pattern.compile("\\{\\{([^}?\\n]+)}}"),
             (input) -> "±`" + input.group(1) + "±`");
     // mentionPattern
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("\\[~(.*?)\\]"),
+            Pattern.compile("\\[~(.*?)]"),
             (input) -> {
               ApplicationUser mentionUser = userManager.getUserByName(input.group(1));
               if (mentionUser != null) {
@@ -444,7 +444,9 @@ public class MessageFormatter {
     // strikethroughtPattern
     inputText =
         convertToMarkdown(
-            inputText, Pattern.compile("-([^-].*?)-"), (input) -> "±~" + input.group(1) + "±~");
+            inputText,
+            Pattern.compile("(^|\\s)-([^-].*?)-($|\\s|\\.)"),
+            (input) -> input.group(1) + "±~" + input.group(2) + "±~" + input.group(3));
     // multi level numbered list
     inputText =
         convertToMarkdown(
@@ -455,38 +457,36 @@ public class MessageFormatter {
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("(^|\\s)\\*([^*]*)\\*($|\\s)"),
+            Pattern.compile("(^|\\s)\\*([^*?\\n]*)\\*($|\\s|\\.)"),
             (input) -> input.group(1) + "±*" + input.group(2) + "±*" + input.group(3));
     // underLinePattern
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("\\+([^+]*)\\+"),
-            (input) -> "±_±_" + input.group(1) + "±_±_");
+            Pattern.compile("(^|\\s)\\+([^+?\\n]*)\\+($|\\s|\\.)"),
+            (input) -> input.group(1) + "±_±_" + input.group(2) + "±_±_" + input.group(3));
     // linkPattern
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("\\[([^|]+)\\|(.+?)\\]"),
+            Pattern.compile("\\[([^|?\n]+)\\|(.+?)]"),
             (input) -> "±[" + input.group(1) + "±]±(" + input.group(2) + "±)");
     // Italic
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("(?<!±)\\_([^_]*)\\_"),
+            Pattern.compile("(?<!±)_([^_?\\n]*)_"),
             (input) -> "±_" + input.group(1) + "±_");
     // Single characters
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("(?<!\\±)([\\`\\@\\[\\]\\(\\)\\~\\-\\*\\_])"),
+            Pattern.compile("(?<!±)([`{}+|@\\[\\]()~\\-*_])"),
             input -> "\\" + input.group(1));
     // Marked characters
     inputText =
         convertToMarkdown(
-            inputText,
-            Pattern.compile("±([\\`\\@\\[\\]\\(\\)\\~\\-\\*\\_])"),
-            input -> input.group(1));
+            inputText, Pattern.compile("±([`{}+|@\\[\\]()~\\-*_])"), input -> input.group(1));
 
     return inputText;
   }
