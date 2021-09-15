@@ -14,6 +14,7 @@ import com.atlassian.jira.datetime.DateTimeStyle;
 import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.event.type.EventType;
+import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueConstant;
 import com.atlassian.jira.issue.IssueFieldConstants;
@@ -90,6 +91,7 @@ public class MessageFormatter {
   private final ProjectComponentManager projectComponentManager;
   private final VersionManager versionManager;
   private final UserManager userManager;
+  private final AttachmentManager attachmentManager;
 
   @Autowired
   public MessageFormatter(
@@ -107,7 +109,8 @@ public class MessageFormatter {
       @ComponentImport IssueTypeManager issueTypeManager,
       @ComponentImport ProjectComponentManager projectComponentManager,
       @ComponentImport VersionManager versionManager,
-      @ComponentImport UserManager userManager) {
+      @ComponentImport UserManager userManager,
+      @ComponentImport AttachmentManager attachmentManager) {
     this.applicationProperties = applicationProperties;
     this.constantsManager = constantsManager;
     this.dateTimeFormatter = dateTimeFormatter;
@@ -124,6 +127,7 @@ public class MessageFormatter {
     this.projectComponentManager = projectComponentManager;
     this.versionManager = versionManager;
     this.userManager = userManager;
+    this.attachmentManager = attachmentManager;
   }
 
   private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
@@ -411,12 +415,12 @@ public class MessageFormatter {
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("\\{code}([^+]*?)\\{code}", Pattern.MULTILINE),
+            Pattern.compile("\\{[Cc]ode}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
             (input) -> "±`±`±`" + input.group(1) + "±`±`±`");
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("\\{code:([a-z]+?)}([^+]*?)\\{code}", Pattern.MULTILINE),
+            Pattern.compile("\\{[Cc]ode:([a-z]+?)}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
             (input) -> "±`±`±`" + input.group(1) + " " + input.group(2) + "±`±`±`");
     // inlineCodePattern
     inputText =
@@ -478,8 +482,8 @@ public class MessageFormatter {
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("(?<!±)_([^_?\\n]*)_"),
-            (input) -> "±_" + input.group(1) + "±_");
+            Pattern.compile("(^|\\s)_([^_?\\n]*)_($|\\s|\\.)"),
+            (input) -> input.group(1) + "±_" + input.group(2) + "±_" + input.group(3));
     // Single characters
     inputText =
         convertToMarkdown(
@@ -583,6 +587,30 @@ public class MessageFormatter {
               || ("assignee".equals(field) && ignoreAssigneeField)) continue;
 
           String title = field;
+          if ("Attachment".equals(field)) {
+            Attachment attachment =
+                attachmentManager.getAttachment(Long.valueOf(changeItem.getString("newvalue")));
+            try {
+              sb.append("\n\n")
+                  .append(
+                      markdownTextLink(
+                          attachment.getFilename(),
+                          new URI(
+                                  String.format(
+                                      "%s/secure/attachment/%d/%s",
+                                      jiraBaseUrl, attachment.getId(), attachment.getFilename()),
+                                  false,
+                                  StandardCharsets.UTF_8.toString())
+                              .getEscapedURI()));
+            } catch (URIException e) {
+              log.error(
+                  "Can't find attachment id:{} name:{}",
+                  changeItem.getString("newvalue"),
+                  changeItem.getString("newstring"),
+                  e);
+            }
+            continue;
+          }
           if (!"custom".equalsIgnoreCase(changeItem.getString("fieldtype")))
             title =
                 i18nResolver.getText(
