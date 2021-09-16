@@ -12,6 +12,7 @@ import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.event.issue.IssueEvent;
+import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
@@ -57,6 +58,7 @@ public class MessageFormatterTest {
     ProjectComponentManager projectComponentManager = Mockito.mock(ProjectComponentManager.class);
     VersionManager versionManager = Mockito.mock(VersionManager.class);
     UserManager userManager = Mockito.mock(UserManager.class);
+    AttachmentManager attachmentManager = Mockito.mock(AttachmentManager.class);
     this.messageFormatter =
         new MessageFormatter(
             applicationProperties,
@@ -73,7 +75,8 @@ public class MessageFormatterTest {
             issueTypeManager,
             projectComponentManager,
             versionManager,
-            userManager);
+            userManager,
+            attachmentManager);
     IssueEvent event = Mockito.mock(IssueEvent.class);
     Issue mockedIssue = Mockito.mock(Issue.class);
     ApplicationUser assigneedUser = Mockito.mock(ApplicationUser.class);
@@ -204,7 +207,7 @@ public class MessageFormatterTest {
     when(descriptionField.getString("field")).thenReturn("description");
     when(descriptionField.getString("newstring"))
         .thenReturn(
-            "_Lorem_ ipsum dolor sit amet, -consectetur adipiscing- elit, sed* do eiusmod tempor incididunt ut *labore* -et [dolore|http://example.com] magna aliqua-. Ut enim ad minim veniam, *quis* +nostrud exercitation ullamco+ labo-ris *nisi ut aliquip* ex ea commodo * +consequat. Duis+ aute iru-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, -sunt in culpa qui officia- *deserunt mollit* anim id est -laborum-.\n"
+            "_Lorem_ ipsum dolor sit amet, -consectetur adipiscing- elit, sed* do eiusmod _tempor incididunt_ ut *labore* -et [dolore|http://example.com] magna aliqua-. Ut enim ad minim veniam, *quis* +nostrud exercitation ullamco+ labo-ris *nisi ut aliquip* ex ea commodo * +consequat. Duis+ aute iru-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, -sunt in culpa qui officia- *deserunt mollit* anim id est -laborum-.\n"
                 + "\n"
                 + "\n"
                 + "_asdf asdf asdf\n"
@@ -217,7 +220,7 @@ public class MessageFormatterTest {
     when(this.mockedIssueEvent.getChangeLog()).thenReturn(changeLog);
     String testedHeader = "null\nSummary\n\n";
     String testedContent =
-        "_Lorem_ ipsum dolor sit amet, ~consectetur adipiscing~ elit, sed\\* do eiusmod tempor incididunt ut *labore* ~et [dolore](http://example.com) magna aliqua~. Ut enim ad minim veniam, *quis* __nostrud exercitation ullamco__ labo\\-ris *nisi ut aliquip* ex ea commodo \\* __consequat. Duis__ aute iru\\-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, ~sunt in culpa qui officia~ *deserunt mollit* anim id est ~laborum~.\n"
+        "_Lorem_ ipsum dolor sit amet, ~consectetur adipiscing~ elit, sed\\* do eiusmod _tempor incididunt_ ut *labore* ~et [dolore](http://example.com) magna aliqua~. Ut enim ad minim veniam, *quis* __nostrud exercitation ullamco__ labo\\-ris *nisi ut aliquip* ex ea commodo \\* __consequat. Duis__ aute iru\\-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, ~sunt in culpa qui officia~ *deserunt mollit* anim id est ~laborum~.\n"
             + "\n"
             + "\n"
             + "\\_asdf asdf asdf\n"
@@ -293,6 +296,30 @@ public class MessageFormatterTest {
             + "\n"
             + "__asdadda__ asd asd. asd\n"
             + "asdasd as. a sd __aasdad__";
+    assertEquals(
+        testedHeader + testedContent,
+        this.messageFormatter.formatEvent(recipient, this.mockedIssueEvent));
+  }
+
+  @Test
+  public void italicTestInLink() throws GenericEntityException {
+    GenericValue changeLog = mock(GenericValue.class);
+    List<GenericValue> changeLogRelated = new ArrayList<>();
+    GenericValue descriptionField = Mockito.mock(GenericValue.class);
+    when(descriptionField.getString("field")).thenReturn("description");
+    when(descriptionField.getString("newstring"))
+        .thenReturn(
+            "Jenkins Job: https://jenkins-cpp.rbdev.mail.ru/job/target-cpp-mr-handler/24183/\n"
+                + "    RPM: bannerd-3.0.53-1_ga9a32ff643.x86_64.rpm\n"
+                + "    Merge Request URL: https://gitlab.corp.mail.ru/target-cpp/target/merge_requests/5433");
+    changeLogRelated.add(descriptionField);
+    when(changeLog.getRelated("ChildChangeItem")).thenReturn(changeLogRelated);
+    when(this.mockedIssueEvent.getChangeLog()).thenReturn(changeLog);
+    String testedHeader = "null\nSummary\n\n";
+    String testedContent =
+        "Jenkins Job: https://jenkins\\-cpp.rbdev.mail.ru/job/target\\-cpp\\-mr\\-handler/24183/\n"
+            + "    RPM: bannerd\\-3.0.53\\-1\\_ga9a32ff643.x86\\_64.rpm\n"
+            + "    Merge Request URL: https://gitlab.corp.mail.ru/target\\-cpp/target/merge\\_requests/5433";
     assertEquals(
         testedHeader + testedContent,
         this.messageFormatter.formatEvent(recipient, this.mockedIssueEvent));
