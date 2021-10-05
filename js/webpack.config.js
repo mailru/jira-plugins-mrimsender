@@ -45,7 +45,7 @@ const config = {
             pluginKey: PLUGIN_KEY, // current plugin key
             providedDependencies: WRM_DEPENDENCIES_CONFIG, // internal jira plugins web-resource dependencies
             contextMap: {
-                'create-chat-panel': ['jira.browse.project'], // Specify in which web-resource context to include entrypoint resources
+                'create-chat-panel': ['jira.browse.project', 'jira.navigator.advanced'], // Specify in which web-resource context to include entrypoint resources
             },
             verbose: false,
             xmlDescriptors: path.resolve(MVN_OUTPUT_DIR, 'META-INF', 'plugin-descriptors', 'wr-webpack-bundles.xml'), //An absolute filepath to where the generated XML should be output to
