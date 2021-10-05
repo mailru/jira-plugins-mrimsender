@@ -437,15 +437,15 @@ public class MessageFormatter {
               ApplicationUser mentionUser = userManager.getUserByName(input.group(1));
               if (mentionUser != null) {
                 if (useMentionFormat) {
-                  return "±@[" + shieldText(mentionUser.getEmailAddress()) + "]";
+                  return "±@±[" + shieldText(mentionUser.getEmailAddress()) + "±]";
                 }
-                return "["
+                return "±["
                     + shieldText(mentionUser.getDisplayName())
-                    + "]("
+                    + "±]±("
                     + shieldText(
                         "https://u.internal.myteam.mail.ru/profile/"
                             + mentionUser.getEmailAddress())
-                    + ")";
+                    + "±)";
               } else return i18nHelper.getText("common.words.anonymous");
             });
     // strikethroughtPattern
