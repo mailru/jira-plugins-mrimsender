@@ -1090,7 +1090,11 @@ public class CustomEventServiceImpl implements CustomEventService {
         result.setStatus(null);
         result.setType(EventDto.Type.CUSTOM);
         result.setParticipants(parseParticipants(event.getParticipants()));
-        result.setStart(dateFormatter.format(event.getStartDate()));
+        if (event.isAllDay()) {
+            result.setStart(dateFormatter.format(new Date(event.getStartDate().getTime() + TimeUnit.HOURS.toMillis(24))));
+        } else {
+            result.setStart(dateFormatter.format(event.getStartDate()));
+        }
 
         Date end = event.getEndDate();
         if (end != null) {
