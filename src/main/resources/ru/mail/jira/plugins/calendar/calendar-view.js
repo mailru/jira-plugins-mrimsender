@@ -152,11 +152,7 @@ define('calendar/calendar-view', [
 
                 if (end) {
                     var momentEnd = moment(event.end).clone();
-                    if (!allDay) {
-                        endValue = momentEnd.format('x');
-                    } else {
-                        endValue = momentEnd.format('x')
-                    }
+                    endValue = momentEnd.format('x');
                 }
 
                 var data = {
