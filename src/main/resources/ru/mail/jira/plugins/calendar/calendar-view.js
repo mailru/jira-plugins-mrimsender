@@ -142,8 +142,12 @@ define('calendar/calendar-view', [
                 var allDay = event.allDay;
 
                 if (start) {
-                    var momentStart = moment(event.start).clone();
-                    startValue = momentStart.format('x');
+                    if(event.allDay) {
+                        startValue = moment(event.start).utcOffset(0, true).format('x');
+                    } else {
+                        var momentStart = moment(event.start).clone();
+                        startValue = momentStart.format('x');
+                    }
                 }
 
                 if (end) {
@@ -151,7 +155,7 @@ define('calendar/calendar-view', [
                     if (!allDay) {
                         endValue = momentEnd.format('x');
                     } else {
-                        endValue = momentEnd.subtract(1, 'days').format('x')
+                        endValue = momentEnd.format('x')
                     }
                 }
 
