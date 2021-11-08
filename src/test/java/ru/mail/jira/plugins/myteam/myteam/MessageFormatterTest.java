@@ -324,4 +324,40 @@ public class MessageFormatterTest {
         testedHeader + testedContent,
         this.messageFormatter.formatEvent(recipient, this.mockedIssueEvent));
   }
+
+  @Test
+  public void JD1784TaskTestTrue() throws GenericEntityException {
+    GenericValue changeLog = mock(GenericValue.class);
+    List<GenericValue> changeLogRelated = new ArrayList<>();
+    GenericValue descriptionField = Mockito.mock(GenericValue.class);
+    when(descriptionField.getString("field")).thenReturn("description");
+    when(descriptionField.getString("newstring"))
+        .thenReturn("Начало предложения -какой либо текст для проверки- ДОЛЖНО");
+    changeLogRelated.add(descriptionField);
+    when(changeLog.getRelated("ChildChangeItem")).thenReturn(changeLogRelated);
+    when(this.mockedIssueEvent.getChangeLog()).thenReturn(changeLog);
+    String testedHeader = "null\nSummary\n\n";
+    String testedContent = "Начало предложения ~какой либо текст для проверки~ ДОЛЖНО";
+    assertEquals(
+        testedHeader + testedContent,
+        this.messageFormatter.formatEvent(recipient, this.mockedIssueEvent));
+  }
+
+  @Test
+  public void JD1784TaskTestFalse() throws GenericEntityException {
+    GenericValue changeLog = mock(GenericValue.class);
+    List<GenericValue> changeLogRelated = new ArrayList<>();
+    GenericValue descriptionField = Mockito.mock(GenericValue.class);
+    when(descriptionField.getString("field")).thenReturn("description");
+    when(descriptionField.getString("newstring"))
+        .thenReturn("Начало предложения - какой либо текст для проверки - НЕДОЛЖНО");
+    changeLogRelated.add(descriptionField);
+    when(changeLog.getRelated("ChildChangeItem")).thenReturn(changeLogRelated);
+    when(this.mockedIssueEvent.getChangeLog()).thenReturn(changeLog);
+    String testedHeader = "null\nSummary\n\n";
+    String testedContent = "Начало предложения \\- какой либо текст для проверки \\- НЕДОЛЖНО";
+    assertEquals(
+        testedHeader + testedContent,
+        this.messageFormatter.formatEvent(recipient, this.mockedIssueEvent));
+  }
 }
