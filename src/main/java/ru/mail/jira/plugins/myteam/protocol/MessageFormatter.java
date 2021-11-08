@@ -452,7 +452,7 @@ public class MessageFormatter {
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("(^|\\s)-([^-].*?)-($|\\s|\\.)"),
+            Pattern.compile("(^|\\s)-([^- \\n].*?[^- \\n])-($|\\s|\\.)"),
             (input) -> input.group(1) + "±~" + input.group(2) + "±~" + input.group(3));
     // multi level numbered list
     inputText =
@@ -464,13 +464,13 @@ public class MessageFormatter {
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("(^|\\s)\\*([^*?\\n]*)\\*($|\\s|\\.)"),
+            Pattern.compile("(^|\\s)\\*([^* \\n].*?[^* \\n])\\*($|\\s|\\.)"),
             (input) -> input.group(1) + "±*" + input.group(2) + "±*" + input.group(3));
     // underLinePattern
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("(^|\\s)\\+([^+?\\n]*)\\+($|\\s|\\.)"),
+            Pattern.compile("(^|\\s)\\+([^+ \\n].*?[^+ \\n])\\+($|\\s|\\.)"),
             (input) -> input.group(1) + "±_±_" + input.group(2) + "±_±_" + input.group(3));
     // linkPattern
     inputText =
@@ -482,7 +482,7 @@ public class MessageFormatter {
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("(^|\\s)_([^_?\\n]*)_($|\\s|\\.)"),
+            Pattern.compile("(^|\\s)_([^_ \\n].*?[^_ \\n])_($|\\s|\\.)"),
             (input) -> input.group(1) + "±_" + input.group(2) + "±_" + input.group(3));
     // Single characters
     inputText =

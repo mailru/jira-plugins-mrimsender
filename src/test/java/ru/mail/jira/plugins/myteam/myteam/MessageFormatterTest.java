@@ -324,4 +324,64 @@ public class MessageFormatterTest {
         testedHeader + testedContent,
         this.messageFormatter.formatEvent(recipient, this.mockedIssueEvent));
   }
+
+  @Test
+  public void JD1784TaskTest() throws GenericEntityException {
+    GenericValue changeLog = mock(GenericValue.class);
+    List<GenericValue> changeLogRelated = new ArrayList<>();
+    GenericValue descriptionField = Mockito.mock(GenericValue.class);
+    when(descriptionField.getString("field")).thenReturn("description");
+    when(descriptionField.getString("newstring"))
+        .thenReturn(
+            "Виктор Попов (21.10.2021 11:02): в оригинале в комменте так:\n"
+                + "Слать по email на тот же адрес.\n"
+                + "Отправка отчёта - это последняя строка {{cat mail | sendmail $destination_email}}. Если у нас ошибка - надо сформировать другое письмо и отправить его.\n"
+                + "\n"
+                + "Иван Машинцев (21.10.2021 12:43):\n"
+                + "закинь таском, поправим regexp");
+    changeLogRelated.add(descriptionField);
+    when(changeLog.getRelated("ChildChangeItem")).thenReturn(changeLogRelated);
+    when(this.mockedIssueEvent.getChangeLog()).thenReturn(changeLog);
+    String testedHeader = "null\nSummary\n\n";
+    String testedContent =
+        "Виктор Попов \\(21.10.2021 11:02\\): в оригинале в комменте так:\n"
+            + "Слать по email на тот же адрес.\n"
+            + "Отправка отчёта \\- это последняя строка `cat mail \\| sendmail $destination\\_email`. Если у нас ошибка \\- надо сформировать другое письмо и отправить его.\n"
+            + "\n"
+            + "Иван Машинцев \\(21.10.2021 12:43\\):\n"
+            + "закинь таском, поправим regexp";
+    assertEquals(
+        testedHeader + testedContent,
+        this.messageFormatter.formatEvent(recipient, this.mockedIssueEvent));
+  }
+
+  @Test
+  public void JD1784TaskTest2() throws GenericEntityException {
+    GenericValue changeLog = mock(GenericValue.class);
+    List<GenericValue> changeLogRelated = new ArrayList<>();
+    GenericValue descriptionField = Mockito.mock(GenericValue.class);
+    when(descriptionField.getString("field")).thenReturn("description");
+    when(descriptionField.getString("newstring"))
+        .thenReturn(
+            "Виктор Попов (21.10.2021 11:02): в оригинале в комменте так:\n"
+                + "Слать по email на тот же адрес.\n"
+                + "Отправка отчёта - это последняя строка {{cat mail | sendmail $destination_email}}. -Если у нас ошибка - надо сформировать другое письмо и -отправить- его.\n"
+                + "\n"
+                + "Иван Машинцев (21.10.2021 12:43):\n"
+                + "закинь таском, поправим regexp");
+    changeLogRelated.add(descriptionField);
+    when(changeLog.getRelated("ChildChangeItem")).thenReturn(changeLogRelated);
+    when(this.mockedIssueEvent.getChangeLog()).thenReturn(changeLog);
+    String testedHeader = "null\nSummary\n\n";
+    String testedContent =
+        "Виктор Попов \\(21.10.2021 11:02\\): в оригинале в комменте так:\n"
+            + "Слать по email на тот же адрес.\n"
+            + "Отправка отчёта \\- это последняя строка `cat mail \\| sendmail $destination\\_email`. ~Если у нас ошибка \\- надо сформировать другое письмо и \\-отправить~ его.\n"
+            + "\n"
+            + "Иван Машинцев \\(21.10.2021 12:43\\):\n"
+            + "закинь таском, поправим regexp";
+    assertEquals(
+        testedHeader + testedContent,
+        this.messageFormatter.formatEvent(recipient, this.mockedIssueEvent));
+  }
 }
