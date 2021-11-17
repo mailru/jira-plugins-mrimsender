@@ -11,6 +11,7 @@ import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.IssueInputParameters;
 import com.atlassian.jira.issue.MutableIssue;
+import com.atlassian.jira.issue.customfields.impl.AbstractCustomFieldType;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
@@ -45,6 +46,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
+import ru.mail.jira.plugins.myteam.configuration.createissuecf.Checkbox;
+import ru.mail.jira.plugins.myteam.configuration.createissuecf.CreateIssueBaseCF;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
@@ -79,6 +82,8 @@ public class CreateIssueEventsListener {
   private final ConstantsManager constantsManager;
   private final IssueService issueService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
+  private final HashMap<Class<? extends AbstractCustomFieldType>, CreateIssueBaseCF>
+      supportedIssueCreationCustomFields;
 
   @Autowired
   public CreateIssueEventsListener(
@@ -116,6 +121,13 @@ public class CreateIssueEventsListener {
     this.constantsManager = constantsManager;
     this.issueService = issueService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
+    this.supportedIssueCreationCustomFields = new HashMap<>();
+    registerCreateIssueCF();
+  }
+
+  private void registerCreateIssueCF() {
+    Checkbox checkbox = new Checkbox(messageFormatter);
+    supportedIssueCreationCustomFields.put(checkbox.getCFTypeClass(), checkbox);
   }
 
   private boolean isProjectExcluded(Long projectId) {
@@ -360,10 +372,27 @@ public class CreateIssueEventsListener {
     // order saved here because LinkedHashMap keySet() method  in reality returns LinkedHashSet
     List<Field> requiredFields = new ArrayList<>(issueCreationRequiredFieldsValues.keySet());
 
+    //    List<Class<? extends AbstractCustomFieldType>> supportedCF =
+    //        supportedIssueCreationCustomFields..stream()
+    //            .map(CreateIssueBaseCF::getCFTypeClass)
+    //            .collect(Collectors.toList());
+
     List<Field> requiredCustomFieldsInScope =
         requiredFields.stream()
-            .filter(field -> fieldManager.isCustomFieldId(field.getId()))
+            .filter(
+                field ->
+                    fieldManager.isCustomFieldId(field.getId())
+                        && !supportedIssueCreationCustomFields.containsKey(
+                            fieldManager
+                                .getCustomField(field.getId())
+                                .getCustomFieldType()
+                                .getClass()))
             .collect(Collectors.toList());
+
+    CustomField a = fieldManager.getCustomField(requiredFields.get(3).getId());
+    //    MultiSelectCFType
+
+    log.error(a.getName());
 
     if (!requiredCustomFieldsInScope.isEmpty()) {
       // send user message that we can't create issue with required customFields
@@ -424,21 +453,29 @@ public class CreateIssueEventsListener {
   }
 
   @Subscribe
+  public void onNewIssueFieldValueUpdateButtonEvent(
+      NewIssueFieldValueUpdateButtonClickEvent newIssueFieldValueUpdateButtonClickEvent)
+      throws IOException, UnirestException, MyteamServerErrorException {
+    myteamApiClient.answerCallbackQuery(newIssueFieldValueUpdateButtonClickEvent.getQueryId());
+    onNewValueSelected(newIssueFieldValueUpdateButtonClickEvent, true);
+  }
+
+  @Subscribe
   public void onNewIssueFieldValueButtonEvent(
       NewIssueFieldValueButtonClickEvent newIssueFieldValueButtonClickEvent)
       throws IOException, UnirestException, MyteamServerErrorException {
     myteamApiClient.answerCallbackQuery(newIssueFieldValueButtonClickEvent.getQueryId());
-    onNewValueSelected(newIssueFieldValueButtonClickEvent);
+    onNewValueSelected(newIssueFieldValueButtonClickEvent, false);
   }
 
   @Subscribe
   public void onNewIssueFieldValueMessageEvent(
       NewIssueFieldValueMessageEvent newIssueFieldValueMessageEvent)
       throws IOException, UnirestException, MyteamServerErrorException {
-    onNewValueSelected(newIssueFieldValueMessageEvent);
+    onNewValueSelected(newIssueFieldValueMessageEvent, false);
   }
 
-  private void onNewValueSelected(NewIssueValueEvent newIssueValueEvent)
+  private void onNewValueSelected(NewIssueValueEvent newIssueValueEvent, boolean update)
       throws UnirestException, IOException, MyteamServerErrorException {
     ApplicationUser currentUser = userData.getUserByMrimLogin(newIssueValueEvent.getUserId());
     if (currentUser == null) {
@@ -450,17 +487,42 @@ public class CreateIssueEventsListener {
     int currentFieldNum = newIssueValueEvent.getCurrentFieldNum();
     String currentFieldValueStr = newIssueValueEvent.getFieldValue();
     Locale locale = localeManager.getLocaleFor(currentUser);
-    int nextFieldNum = currentFieldNum + 1;
+    int nextFieldNum = update ? currentFieldNum : currentFieldNum + 1;
+
     List<Field> requiredFields =
         new ArrayList<>(currentIssueCreationDto.getRequiredIssueCreationFieldValues().keySet());
+    Field currentField = requiredFields.get(currentFieldNum);
 
-    // setting new field string value
-    currentIssueCreationDto
-        .getRequiredIssueCreationFieldValues()
-        .put(requiredFields.get(currentFieldNum), currentFieldValueStr);
+    if (currentField != null && !fieldManager.isCustomFieldId(currentField.getId()))
+      currentIssueCreationDto
+          .getRequiredIssueCreationFieldValues()
+          .put(requiredFields.get(currentFieldNum), currentFieldValueStr);
 
-    if (requiredFields.size() > nextFieldNum) {
+    if ((update && requiredFields.size() >= nextFieldNum) || requiredFields.size() > nextFieldNum) {
       Field nextField = requiredFields.get(nextFieldNum);
+
+      if (fieldManager.isCustomFieldId(nextField.getId())) {
+        CustomField cf = fieldManager.getCustomField(nextField.getId());
+
+        if (cf != null
+            && supportedIssueCreationCustomFields.containsKey(cf.getCustomFieldType().getClass())) {
+          CreateIssueBaseCF cfConfig =
+              supportedIssueCreationCustomFields.get(cf.getCustomFieldType().getClass());
+
+          if (update) cfConfig.updateValue(currentIssueCreationDto, cf, currentFieldValueStr);
+
+          myteamApiClient.sendMessageText(
+              chatId,
+              cfConfig.getInsertFieldMessage(
+                  locale, cf, currentIssueCreationDto, currentFieldValueStr),
+              cfConfig.getButtons(locale, cf, currentIssueCreationDto, currentFieldValueStr));
+          chatsStateMap.put(
+              chatId, cfConfig.getNewChatState(nextFieldNum, currentIssueCreationDto));
+        }
+        return;
+      }
+      // setting new field string value
+
       if (nextField.getId().equals("priority")) { // select value with buttons
         myteamApiClient.sendMessageText(
             chatId,
@@ -473,22 +535,26 @@ public class CreateIssueEventsListener {
         chatsStateMap.put(
             chatId,
             ChatState.buildNewIssueButtonFieldsWaitingState(nextFieldNum, currentIssueCreationDto));
-      } else { // select value by message
-        myteamApiClient.sendMessageText(
-            chatId,
-            messageFormatter.createInsertFieldMessage(locale, nextField, currentIssueCreationDto),
-            messageFormatter.buildButtonsWithCancel(
-                null,
-                i18nResolver.getRawText(
-                    locale,
-                    "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
-        chatsStateMap.put(
-            chatId,
-            ChatState.buildNewIssueRequiredFieldsFillingState(
-                nextFieldNum, currentIssueCreationDto));
-      }
+        return;
+      } // select value by message
+      myteamApiClient.sendMessageText(
+          chatId,
+          messageFormatter.createInsertFieldMessage(locale, nextField, currentIssueCreationDto),
+          messageFormatter.buildButtonsWithCancel(
+              null,
+              i18nResolver.getRawText(
+                  locale,
+                  "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
+      chatsStateMap.put(
+          chatId,
+          ChatState.buildNewIssueRequiredFieldsFillingState(nextFieldNum, currentIssueCreationDto));
+
     } else {
       JiraThreadLocalUtils.preCall();
+      // setting new field string value
+      currentIssueCreationDto
+          .getRequiredIssueCreationFieldValues()
+          .put(requiredFields.get(currentFieldNum), currentFieldValueStr);
       chatsStateMap.put(chatId, ChatState.buildIssueCreationConfirmState(currentIssueCreationDto));
       myteamApiClient.sendMessageText(
           chatId,

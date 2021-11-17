@@ -309,7 +309,16 @@ public class MyteamEventsListener {
           return;
         }
       }
-
+      if (chatState.isWaitingForNewIssueButtonFillingState()) {
+        if (buttonPrefix.equals("updateIssueButtonValue")) {
+          asyncEventBus.post(
+              new NewIssueFieldValueUpdateButtonClickEvent(
+                  buttonClickEvent,
+                  chatState.getIssueCreationDto(),
+                  chatState.getCurrentFillingFieldNum()));
+          return;
+        }
+      }
       if (chatState.isWaitingForIssueCreationConfirm()) {
         if (buttonPrefix.equals("addExtraIssueFields")) {
           asyncEventBus.post(
