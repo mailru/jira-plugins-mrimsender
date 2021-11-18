@@ -948,9 +948,23 @@ public class CreateIssueEventsListener {
                   .collect(
                       Collectors.toMap(
                           (e) -> e.getKey().getId(),
-                          (e) ->
-                              messageFormatter.mapUserInputStringToFieldValue(
-                                  projectId, e.getKey(), e.getValue()))));
+                          (e) -> {
+                            if (fieldManager.isCustomFieldId(e.getKey().getId())) {
+                              CustomField cf = fieldManager.getCustomField(e.getKey().getId());
+
+                              if (cf != null
+                                  && supportedIssueCreationCustomFields.containsKey(
+                                      cf.getCustomFieldType().getClass())) {
+                                CreateIssueBaseCF cfConfig =
+                                    supportedIssueCreationCustomFields.get(
+                                        cf.getCustomFieldType().getClass());
+
+                                return cfConfig.getValue(issueCreationDto, cf);
+                              }
+                            }
+                            return messageFormatter.mapUserInputStringToFieldValue(
+                                projectId, e.getKey(), e.getValue());
+                          })));
       issueInputParameters.setRetainExistingValuesWhenParameterNotProvided(true, true);
 
       // manually setting current user as issue reporter and selected ProjectId and IssueTypeId

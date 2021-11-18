@@ -5,6 +5,7 @@ import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.issue.customfields.impl.AbstractCustomFieldType;
 import com.atlassian.jira.issue.customfields.impl.MultiSelectCFType;
 import com.atlassian.jira.issue.customfields.manager.OptionsManager;
+import com.atlassian.jira.issue.customfields.option.Option;
 import com.atlassian.jira.issue.customfields.option.Options;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.config.FieldConfig;
@@ -19,6 +20,7 @@ public class Checkbox implements CreateIssueBaseCF {
 
   private final OptionsManager optionsManager;
   private final MessageFormatter messageFormatter;
+  private static final String delimeter = ", ";
 
   public Checkbox(MessageFormatter messageFormatter) {
     this.messageFormatter = messageFormatter;
@@ -45,7 +47,7 @@ public class Checkbox implements CreateIssueBaseCF {
 
     List<String> values =
         Arrays.asList(
-            issueCreationDto.getRequiredIssueCreationFieldValues().get(field).split(", "));
+            issueCreationDto.getRequiredIssueCreationFieldValues().get(field).split(delimeter));
 
     options.forEach(
         option -> {
@@ -65,7 +67,8 @@ public class Checkbox implements CreateIssueBaseCF {
             String.join(
                 "-",
                 "selectIssueButtonValue",
-                issueCreationDto.getRequiredIssueCreationFieldValues().get(field)));
+                String.format("%s", String.join(delimeter, values))));
+
     List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
     newButtonsRow.add(optionButton);
     buttons.add(newButtonsRow);
@@ -81,21 +84,35 @@ public class Checkbox implements CreateIssueBaseCF {
   @Override
   public void updateValue(IssueCreationDto issueCreationDto, CustomField field, String newValue) {
     String fieldValue = issueCreationDto.getRequiredIssueCreationFieldValues().get(field);
-    List<String> values = new ArrayList<String>(Arrays.asList(fieldValue.split(", ")));
+    List<String> values = new ArrayList<>(Arrays.asList(fieldValue.split(delimeter)));
 
     if (values.contains(newValue)) {
-      values.remove(values.indexOf(newValue));
+      values.remove(newValue);
 
-      issueCreationDto.getRequiredIssueCreationFieldValues().put(field, String.join(", ", values));
+      issueCreationDto
+          .getRequiredIssueCreationFieldValues()
+          .put(field, String.join(delimeter, values));
     } else {
       if (fieldValue.length() == 0) {
         issueCreationDto.getRequiredIssueCreationFieldValues().put(field, newValue);
       } else {
         issueCreationDto
             .getRequiredIssueCreationFieldValues()
-            .put(field, String.format("%s, %s", fieldValue, newValue));
+            .put(field, String.format("%s%s%s", fieldValue, delimeter, newValue));
       }
     }
+  }
+
+  @Override
+  public String[] getValue(IssueCreationDto issueCreationDto, CustomField field) {
+    String fieldValue = issueCreationDto.getRequiredIssueCreationFieldValues().get(field);
+    List<String> values = new ArrayList<>(Arrays.asList(fieldValue.split(delimeter)));
+
+    Options options = getOptions(field);
+
+    return values.stream()
+        .map(v -> String.valueOf(getOption(options, v).getOptionId()))
+        .toArray(String[]::new);
   }
 
   private Options getOptions(CustomField field) {
@@ -112,7 +129,20 @@ public class Checkbox implements CreateIssueBaseCF {
         }
       }
     }
-    System.out.println(options.isEmpty());
     return options;
+  }
+
+  public Option getOption(Options options, String value) {
+    Option result = null;
+    Option opt;
+    for (Option object : options) {
+      opt = object;
+      if (opt.getValue().equals(value)) {
+        result = object;
+        break;
+      }
+    }
+
+    return result;
   }
 }

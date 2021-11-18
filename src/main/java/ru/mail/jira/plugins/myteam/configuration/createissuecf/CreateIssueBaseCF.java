@@ -22,4 +22,6 @@ public interface CreateIssueBaseCF {
   ChatState getNewChatState(int nextFieldNum, IssueCreationDto issueCreationDto);
 
   void updateValue(IssueCreationDto issueCreationDto, CustomField field, String newValue);
+
+  String[] getValue(IssueCreationDto issueCreationDto, CustomField field);
 }
