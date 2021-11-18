@@ -849,15 +849,16 @@ public class CreateIssueEventsListener {
       } else {
         myteamApiClient.sendMessageText(
             chatId,
-            String.join(
-                "\n",
-                i18nResolver.getText(
-                    locale,
-                    "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.validationError"),
-                messageFormatter.stringifyMap(
-                    issueValidationResult.getErrorCollection().getErrors()),
-                messageFormatter.stringifyCollection(
-                    locale, issueValidationResult.getErrorCollection().getErrorMessages())));
+            messageFormatter.shieldText(
+                String.join(
+                    "\n",
+                    i18nResolver.getText(
+                        locale,
+                        "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.validationError"),
+                    messageFormatter.stringifyMap(
+                        issueValidationResult.getErrorCollection().getErrors()),
+                    messageFormatter.stringifyCollection(
+                        locale, issueValidationResult.getErrorCollection().getErrorMessages()))));
       }
     } finally {
       JiraThreadLocalUtils.postCall();
