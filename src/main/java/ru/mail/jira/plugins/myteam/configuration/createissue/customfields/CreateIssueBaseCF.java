@@ -10,7 +10,11 @@ import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.IssueCreationDto;
 
 public interface CreateIssueBaseCF {
-
+  /**
+   * Function to detect custom field
+   *
+   * @return custom field type from customField.getCustomFieldType()
+   */
   Class<? extends AbstractCustomFieldType> getCFTypeClass();
 
   /**
