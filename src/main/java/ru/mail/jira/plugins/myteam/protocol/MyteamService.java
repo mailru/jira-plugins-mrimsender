@@ -13,6 +13,13 @@ public interface MyteamService {
    */
   boolean sendMessage(ApplicationUser user, String message);
   /**
+   * Send message to user in Mail.Ru Agent.
+   *
+   * @param groupName name of Jira group
+   * @param message sent message
+   */
+  void sendMessageToUserGroup(String groupName, String message);
+  /**
    * Send message to recipient with id in Mail.Ru Agent.
    *
    * @param chatId recipient of the message
