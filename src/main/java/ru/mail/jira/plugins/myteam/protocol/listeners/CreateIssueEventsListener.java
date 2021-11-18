@@ -46,8 +46,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
-import ru.mail.jira.plugins.myteam.configuration.createissuecf.Checkbox;
-import ru.mail.jira.plugins.myteam.configuration.createissuecf.CreateIssueBaseCF;
+import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.Checkbox;
+import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueBaseCF;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
@@ -126,7 +126,7 @@ public class CreateIssueEventsListener {
   }
 
   private void registerCreateIssueCF() {
-    Checkbox checkbox = new Checkbox(messageFormatter);
+    Checkbox checkbox = new Checkbox(i18nResolver, messageFormatter);
     supportedIssueCreationCustomFields.put(checkbox.getCFTypeClass(), checkbox);
   }
 
