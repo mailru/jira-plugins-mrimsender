@@ -713,6 +713,20 @@ public class CreateIssueEventsListener {
     IssueCreationDto dto = event.getIssueCreationDto();
 
     Field field = fieldManager.getField(event.getFieldId());
+
+    if (dto.getRequiredIssueCreationFieldValues().containsKey(field)) {
+      JiraThreadLocalUtils.preCall();
+      Locale locale = localeManager.getLocaleFor(currentUser);
+      chatsStateMap.put(event.getChatId(), ChatState.buildIssueCreationConfirmState(dto));
+      myteamApiClient.sendMessageText(
+          event.getChatId(),
+          i18nResolver.getText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreationConfirmationAfterAdditionalFieldError"),
+          messageFormatter.getIssueCreationConfirmButtons(currentUser));
+      return;
+    }
+
     if (field != null) {
       dto.getRequiredIssueCreationFieldValues().put(field, "");
 
