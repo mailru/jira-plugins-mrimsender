@@ -177,12 +177,6 @@ public class MyteamEventsListener {
                 chatState.getCurrentFillingFieldNum()));
         return;
       }
-      if (chatState.isIssueFieldsFillingState()) {
-        asyncEventBus.post(
-            new NewAdditionalFieldMessageEvent(
-                chatMessageEvent, chatState.getIssueCreationDto(), chatState.getField()));
-        return;
-      }
     }
 
     // if chat isn't in some state then just process new message
@@ -309,7 +303,16 @@ public class MyteamEventsListener {
           return;
         }
       }
-
+      if (chatState.isWaitingForNewIssueButtonFillingState()) {
+        if (buttonPrefix.equals("updateIssueButtonValue")) {
+          asyncEventBus.post(
+              new NewIssueFieldValueUpdateButtonClickEvent(
+                  buttonClickEvent,
+                  chatState.getIssueCreationDto(),
+                  chatState.getCurrentFillingFieldNum()));
+          return;
+        }
+      }
       if (chatState.isWaitingForIssueCreationConfirm()) {
         if (buttonPrefix.equals("addExtraIssueFields")) {
           asyncEventBus.post(

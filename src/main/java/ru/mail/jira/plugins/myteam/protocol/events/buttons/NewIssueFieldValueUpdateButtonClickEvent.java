@@ -1,15 +1,13 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol.events.buttons;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.myteam.protocol.IssueCreationDto;
 import ru.mail.jira.plugins.myteam.protocol.events.NewIssueValueEvent;
 
 @Getter
-@AllArgsConstructor
-public class NewIssueFieldValueButtonClickEvent implements NewIssueValueEvent {
+public class NewIssueFieldValueUpdateButtonClickEvent implements NewIssueValueEvent {
   private final String queryId;
 
   @Getter(onMethod_ = {@Override})
@@ -27,7 +25,7 @@ public class NewIssueFieldValueButtonClickEvent implements NewIssueValueEvent {
   @Getter(onMethod_ = {@Override})
   private final Integer currentFieldNum;
 
-  public NewIssueFieldValueButtonClickEvent(
+  public NewIssueFieldValueUpdateButtonClickEvent(
       ButtonClickEvent buttonClickEvent,
       IssueCreationDto issueCreationDto,
       Integer currentFieldNum) {

@@ -498,7 +498,7 @@ public class MessageFormatter {
     return inputText;
   }
 
-  private String shieldText(String inputDescription) {
+  public String shieldText(String inputDescription) {
     if (inputDescription == null) {
       return null;
     }
