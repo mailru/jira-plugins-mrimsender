@@ -177,12 +177,6 @@ public class MyteamEventsListener {
                 chatState.getCurrentFillingFieldNum()));
         return;
       }
-      if (chatState.isIssueFieldsFillingState()) {
-        asyncEventBus.post(
-            new NewAdditionalFieldMessageEvent(
-                chatMessageEvent, chatState.getIssueCreationDto(), chatState.getField()));
-        return;
-      }
     }
 
     // if chat isn't in some state then just process new message

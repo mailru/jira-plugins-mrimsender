@@ -18,7 +18,6 @@ public class ChatState {
   private final boolean isWaitingForProjectSelect;
   private final boolean isWaitingForIssueTypeSelect;
   private final boolean isNewIssueRequiredFieldsFillingState;
-  private final boolean isIssueFieldsFillingState;
   private final boolean isWaitingForNewIssueButtonFillingState;
   private final boolean isWaitingForIssueCreationConfirm;
   private final boolean isWaitingForAdditionalFieldSelect;
@@ -37,7 +36,6 @@ public class ChatState {
         || isWaitingForProjectSelect
         || isWaitingForNewIssueButtonFillingState
         || isNewIssueRequiredFieldsFillingState
-        || isIssueFieldsFillingState
         || isWaitingForAdditionalFieldSelect;
   }
 
@@ -110,15 +108,6 @@ public class ChatState {
     return builder()
         .isWaitingForAdditionalFieldSelect(true)
         .currentSelectListPage(currentListPage)
-        .issueCreationDto(issueCreationDto)
-        .build();
-  }
-
-  public static ChatState buildIssueFieldFillingState(
-      IssueCreationDto issueCreationDto, Field field) {
-    return builder()
-        .isIssueFieldsFillingState(true)
-        .field(field)
         .issueCreationDto(issueCreationDto)
         .build();
   }

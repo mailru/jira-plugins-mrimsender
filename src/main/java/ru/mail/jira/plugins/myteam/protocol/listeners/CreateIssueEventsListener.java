@@ -55,7 +55,6 @@ import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.IssueCreationDto;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
-import ru.mail.jira.plugins.myteam.protocol.events.NewAdditionalFieldMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.NewIssueFieldValueMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.NewIssueValueEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.SelectedProjectMessageEvent;
@@ -388,11 +387,6 @@ public class CreateIssueEventsListener {
                                 .getCustomFieldType()
                                 .getClass()))
             .collect(Collectors.toList());
-
-    CustomField a = fieldManager.getCustomField(requiredFields.get(3).getId());
-    //    MultiSelectCFType
-
-    log.error(a.getName());
 
     if (!requiredCustomFieldsInScope.isEmpty()) {
       // send user message that we can't create issue with required customFields
@@ -733,56 +727,6 @@ public class CreateIssueEventsListener {
               event.getIssueCreationDto(),
               lastValueIndex),
           false);
-    }
-  }
-
-  @Subscribe
-  public void onNewAdditionalFieldMessageEvent(
-      NewAdditionalFieldMessageEvent newAdditionalFieldMessageEvent)
-      throws UnirestException, IOException, MyteamServerErrorException {
-
-    ApplicationUser currentUser =
-        userData.getUserByMrimLogin(newAdditionalFieldMessageEvent.getUserId());
-    if (currentUser == null) {
-      // TODO unauthorized
-      return;
-    }
-    String chatId = newAdditionalFieldMessageEvent.getChatId();
-    IssueCreationDto issueCreationDto = newAdditionalFieldMessageEvent.getIssueCreationDto();
-    String currentFieldValueStr = newAdditionalFieldMessageEvent.getFieldValue();
-    Locale locale = localeManager.getLocaleFor(currentUser);
-
-    issueCreationDto
-        .getRequiredIssueCreationFieldValues()
-        .put(newAdditionalFieldMessageEvent.getField(), currentFieldValueStr);
-
-    chatsStateMap.put(chatId, ChatState.buildIssueCreationConfirmState(issueCreationDto));
-
-    IssueService.CreateValidationResult issueValidationResult =
-        validateIssueWithGivenFields(currentUser, issueCreationDto);
-    if (issueValidationResult.isValid()) {
-      myteamApiClient.sendMessageText(
-          chatId,
-          i18nResolver.getText(
-              locale,
-              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.additionalField.success",
-              newAdditionalFieldMessageEvent.getField().getName()),
-          messageFormatter.getIssueCreationConfirmButtons(currentUser));
-    } else {
-      issueCreationDto
-          .getRequiredIssueCreationFieldValues()
-          .remove(newAdditionalFieldMessageEvent.getField());
-      myteamApiClient.sendMessageText(
-          chatId,
-          String.join(
-              "\n",
-              i18nResolver.getText(
-                  locale,
-                  "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.additionalField.validationError"),
-              messageFormatter.stringifyMap(issueValidationResult.getErrorCollection().getErrors()),
-              messageFormatter.stringifyCollection(
-                  locale, issueValidationResult.getErrorCollection().getErrorMessages())),
-          messageFormatter.getIssueCreationConfirmButtons(currentUser));
     }
   }
 
