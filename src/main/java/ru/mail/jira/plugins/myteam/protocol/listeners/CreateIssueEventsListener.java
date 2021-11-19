@@ -701,44 +701,33 @@ public class CreateIssueEventsListener {
   }
 
   @Subscribe
-  public void onSelectAdditionalIssueFieldClickEvent(
-      SelectAdditionalIssueFieldClickEvent selectAdditionalIssueFieldClickEvent)
+  public void onSelectAdditionalIssueFieldClickEvent(SelectAdditionalIssueFieldClickEvent event)
       throws UnirestException, IOException, MyteamServerErrorException {
 
-    ApplicationUser currentUser =
-        userData.getUserByMrimLogin(selectAdditionalIssueFieldClickEvent.getUserId());
+    ApplicationUser currentUser = userData.getUserByMrimLogin(event.getUserId());
     if (currentUser == null) {
       // TODO unauthorized
       return;
     }
-    String fieldId = selectAdditionalIssueFieldClickEvent.getFieldId();
-    String chatId = selectAdditionalIssueFieldClickEvent.getChatId();
-    IssueCreationDto issueCreationDto = selectAdditionalIssueFieldClickEvent.getIssueCreationDto();
-    Locale locale = localeManager.getLocaleFor(currentUser);
 
-    LinkedHashMap<Field, String> nonRequiredFields =
-        getIssueCreationFieldsValues(
-            projectManager.getProjectObj(issueCreationDto.getProjectId()),
-            issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()),
-            null,
-            null,
-            IssueFieldsFilter.NON_REQUIRED);
+    IssueCreationDto dto = event.getIssueCreationDto();
 
-    myteamApiClient.answerCallbackQuery(selectAdditionalIssueFieldClickEvent.getQueryId());
+    Field field = fieldManager.getField(event.getFieldId());
+    if (field != null) {
+      dto.getRequiredIssueCreationFieldValues().put(field, "");
 
-    Optional<Field> field =
-        nonRequiredFields.keySet().stream().filter(f -> f.getId().equals(fieldId)).findAny();
-    if (field.isPresent()) {
-      myteamApiClient.editMessageText(
-          chatId,
-          selectAdditionalIssueFieldClickEvent.getMsgId(),
-          String.format(
-              "%s\n%s: -",
-              messageFormatter.createInsertFieldMessage(locale, field.get(), issueCreationDto),
-              field.get().getName()),
-          null);
-      chatsStateMap.put(
-          chatId, ChatState.buildIssueFieldFillingState(issueCreationDto, field.get()));
+      int lastValueIndex = dto.getRequiredIssueCreationFieldValues().size() - 2;
+
+      // imitation of last value insert success to handle new additional field
+      onNewValueSelected(
+          new NewIssueFieldValueButtonClickEvent(
+              event.getQueryId(),
+              event.getUserId(),
+              event.getChatId(),
+              (String) dto.getRequiredIssueCreationFieldValues().values().toArray()[lastValueIndex],
+              event.getIssueCreationDto(),
+              lastValueIndex),
+          false);
     }
   }
 

@@ -1,12 +1,14 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol.events.buttons;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.myteam.protocol.IssueCreationDto;
 import ru.mail.jira.plugins.myteam.protocol.events.NewIssueValueEvent;
 
 @Getter
+@AllArgsConstructor
 public class NewIssueFieldValueButtonClickEvent implements NewIssueValueEvent {
   private final String queryId;
 
