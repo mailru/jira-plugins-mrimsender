@@ -168,40 +168,13 @@ public class CreateIssueEventsListener {
   public void onNextProjectPageClickEvent(NextProjectsPageClickEvent event)
       throws UnirestException, IOException, MyteamServerErrorException {
     log.debug("NextProjectsPageClickEvent handling started");
-    ApplicationUser currentUser =
-        userData.getUserByMrimLogin(event.getUserId());
+    ApplicationUser currentUser = userData.getUserByMrimLogin(event.getUserId());
     if (currentUser != null) {
       int nextPageNumber = event.getCurrentPage() + 1;
       int nextPageStartIndex = nextPageNumber * LIST_PAGE_SIZE;
       Locale locale = localeManager.getLocaleFor(currentUser);
-      String chatId = event.getChatId();
-
-      List<Project> allowedProjectList =
-          projectManager.getProjects().stream()
-              .filter(proj -> !isProjectExcluded(proj.getId()))
-              .collect(Collectors.toList());
-      List<Project> nextProjectsInterval =
-          allowedProjectList.stream()
-              .skip(nextPageStartIndex)
-              .limit(LIST_PAGE_SIZE)
-              .collect(Collectors.toList());
-
-      myteamApiClient.answerCallbackQuery(event.getQueryId());
-      myteamApiClient.editMessageText(
-          chatId,
-          event.getMsgId(),
-          messageFormatter.createSelectProjectMessage(
-              locale, nextProjectsInterval, nextPageNumber, allowedProjectList.size()),
-          messageFormatter.buildButtonsWithCancel(
-              messageFormatter.getSelectProjectMessageButtons(
-                  locale, true, allowedProjectList.size() > LIST_PAGE_SIZE + nextPageStartIndex),
-              i18nResolver.getRawText(
-                  locale,
-                  "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
-      chatsStateMap.put(
-          chatId,
-          ChatState.buildProjectSelectWaitingState(
-              nextPageNumber, event.getIssueCreationDto()));
+      showProjectsPage(
+          event, nextPageNumber, nextPageStartIndex, locale, event.getIssueCreationDto());
     }
     log.debug("NextProjectsPageClickEvent handling finished");
   }
@@ -210,49 +183,59 @@ public class CreateIssueEventsListener {
   public void onPrevProjectPageClickEvent(PrevProjectsPageClickEvent event)
       throws UnirestException, IOException, MyteamServerErrorException {
     log.debug("PrevProjectsPageClickEvent handling started");
-    ApplicationUser currentUser =
-        userData.getUserByMrimLogin(event.getUserId());
+    ApplicationUser currentUser = userData.getUserByMrimLogin(event.getUserId());
     if (currentUser != null) {
       int prevPageNumber = event.getCurrentPage() - 1;
       int prevPageStartIndex = prevPageNumber * LIST_PAGE_SIZE;
       Locale locale = localeManager.getLocaleFor(currentUser);
-      String chatId = event.getChatId();
-
-      List<Project> allowedProjectList =
-          projectManager.getProjects().stream()
-              .filter(proj -> !isProjectExcluded(proj.getId()))
-              .collect(Collectors.toList());
-      List<Project> prevProjectsInterval =
-          allowedProjectList.stream()
-              .skip(prevPageStartIndex)
-              .limit(LIST_PAGE_SIZE)
-              .collect(Collectors.toList());
-      myteamApiClient.answerCallbackQuery(event.getQueryId());
-      myteamApiClient.editMessageText(
-          chatId,
-          event.getMsgId(),
-          messageFormatter.createSelectProjectMessage(
-              locale, prevProjectsInterval, prevPageNumber, allowedProjectList.size()),
-          messageFormatter.buildButtonsWithCancel(
-              messageFormatter.getSelectProjectMessageButtons(
-                  locale, prevPageStartIndex >= LIST_PAGE_SIZE, true),
-              i18nResolver.getRawText(
-                  locale,
-                  "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
-      chatsStateMap.put(
-          chatId,
-          ChatState.buildProjectSelectWaitingState(
-              prevPageNumber, event.getIssueCreationDto()));
+      showProjectsPage(
+          event, prevPageNumber, prevPageStartIndex, locale, event.getIssueCreationDto());
     }
     log.debug("PrevProjectsPageClickEvent handling finished");
+  }
+
+  private void showProjectsPage(
+      PageClickEvent event,
+      int pageNumber,
+      int pageStartIndex,
+      Locale locale,
+      IssueCreationDto issueCreationDto)
+      throws MyteamServerErrorException, IOException {
+    String chatId = event.getChatId();
+
+    List<Project> allowedProjectList =
+        projectManager.getProjects().stream()
+            .filter(proj -> !isProjectExcluded(proj.getId()))
+            .collect(Collectors.toList());
+    List<Project> nextProjectsInterval =
+        allowedProjectList.stream()
+            .skip(pageStartIndex)
+            .limit(LIST_PAGE_SIZE)
+            .collect(Collectors.toList());
+
+    myteamApiClient.answerCallbackQuery(event.getQueryId());
+    myteamApiClient.editMessageText(
+        chatId,
+        event.getMsgId(),
+        messageFormatter.createSelectProjectMessage(
+            locale, nextProjectsInterval, pageNumber, allowedProjectList.size()),
+        messageFormatter.buildButtonsWithCancel(
+            messageFormatter.getSelectProjectMessageButtons(
+                locale,
+                pageStartIndex >= LIST_PAGE_SIZE,
+                allowedProjectList.size() > LIST_PAGE_SIZE + pageStartIndex),
+            i18nResolver.getRawText(
+                locale,
+                "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
+    chatsStateMap.put(
+        chatId, ChatState.buildProjectSelectWaitingState(pageNumber, issueCreationDto));
   }
 
   @Subscribe
   public void onSelectedProjectMessageEvent(SelectedProjectMessageEvent event)
       throws IOException, UnirestException, MyteamServerErrorException {
     IssueCreationDto currentIssueCreationDto = event.getIssueCreationDto();
-    ApplicationUser currentUser =
-        userData.getUserByMrimLogin(event.getUserId());
+    ApplicationUser currentUser = userData.getUserByMrimLogin(event.getUserId());
     if (currentUser == null) {
       // TODO unauthorized
     }
@@ -318,8 +301,7 @@ public class CreateIssueEventsListener {
       throws IOException, UnirestException, MyteamServerErrorException {
     String queryId = event.getQueryId();
     IssueCreationDto currentIssueCreationDto = event.getIssueCreationDto();
-    ApplicationUser currentUser =
-        userData.getUserByMrimLogin(event.getUserId());
+    ApplicationUser currentUser = userData.getUserByMrimLogin(event.getUserId());
     if (currentUser == null) {
       // TODO unauthorized
     }
@@ -328,8 +310,7 @@ public class CreateIssueEventsListener {
     Locale locale = localeManager.getLocaleFor(currentUser);
 
     Optional<IssueType> maybeCorrectIssueType =
-        Optional.ofNullable(
-            issueTypeManager.getIssueType(event.getSelectedIssueTypeId()));
+        Optional.ofNullable(issueTypeManager.getIssueType(event.getSelectedIssueTypeId()));
     if (!maybeCorrectIssueType.isPresent()) {
       // inserted issue type position isn't correct
       myteamApiClient.answerCallbackQuery(queryId);
@@ -370,11 +351,6 @@ public class CreateIssueEventsListener {
 
     // order saved here because LinkedHashMap keySet() method  in reality returns LinkedHashSet
     List<Field> requiredFields = new ArrayList<>(issueCreationRequiredFieldsValues.keySet());
-
-    //    List<Class<? extends AbstractCustomFieldType>> supportedCF =
-    //        supportedIssueCreationCustomFields..stream()
-    //            .map(CreateIssueBaseCF::getCFTypeClass)
-    //            .collect(Collectors.toList());
 
     List<Field> requiredCustomFieldsInScope =
         requiredFields.stream()
@@ -447,24 +423,21 @@ public class CreateIssueEventsListener {
   }
 
   @Subscribe
-  public void onNewIssueFieldValueUpdateButtonEvent(
-      NewIssueFieldValueUpdateButtonClickEvent event)
+  public void onNewIssueFieldValueUpdateButtonEvent(NewIssueFieldValueUpdateButtonClickEvent event)
       throws IOException, UnirestException, MyteamServerErrorException {
     myteamApiClient.answerCallbackQuery(event.getQueryId());
     onNewValueSelected(event, true);
   }
 
   @Subscribe
-  public void onNewIssueFieldValueButtonEvent(
-      NewIssueFieldValueButtonClickEvent event)
+  public void onNewIssueFieldValueButtonEvent(NewIssueFieldValueButtonClickEvent event)
       throws IOException, UnirestException, MyteamServerErrorException {
     myteamApiClient.answerCallbackQuery(event.getQueryId());
     onNewValueSelected(event, false);
   }
 
   @Subscribe
-  public void onNewIssueFieldValueMessageEvent(
-      NewIssueFieldValueMessageEvent event)
+  public void onNewIssueFieldValueMessageEvent(NewIssueFieldValueMessageEvent event)
       throws IOException, UnirestException, MyteamServerErrorException {
     onNewValueSelected(event, false);
   }
@@ -515,8 +488,6 @@ public class CreateIssueEventsListener {
         }
         return;
       }
-      // setting new field string value
-
       if (nextField.getId().equals("priority")) { // select value with buttons
         myteamApiClient.sendMessageText(
             chatId,
@@ -545,10 +516,6 @@ public class CreateIssueEventsListener {
 
     } else {
       JiraThreadLocalUtils.preCall();
-      // setting new field string value
-      currentIssueCreationDto
-          .getRequiredIssueCreationFieldValues()
-          .put(requiredFields.get(currentFieldNum), currentFieldValueStr);
       chatsStateMap.put(chatId, ChatState.buildIssueCreationConfirmState(currentIssueCreationDto));
       myteamApiClient.sendMessageText(
           chatId,
@@ -560,12 +527,10 @@ public class CreateIssueEventsListener {
   }
 
   @Subscribe
-  public void onAddExtraIssueFieldClickEvent(
-      AddAdditionalIssueFieldClickEvent event)
+  public void onAddExtraIssueFieldClickEvent(AddAdditionalIssueFieldClickEvent event)
       throws UnirestException, IOException, MyteamServerErrorException {
 
-    ApplicationUser currentUser =
-        userData.getUserByMrimLogin(event.getUserId());
+    ApplicationUser currentUser = userData.getUserByMrimLogin(event.getUserId());
     if (currentUser == null) {
       // TODO unauthorized
       return;
@@ -604,46 +569,32 @@ public class CreateIssueEventsListener {
   }
 
   @Subscribe
-  public void onPrevAdditionalFieldPageClickEvent(
-      PrevAdditionalFieldPageClickEvent event)
+  public void onPrevAdditionalFieldPageClickEvent(PrevAdditionalFieldPageClickEvent event)
       throws UnirestException, IOException, MyteamServerErrorException {
     log.debug("PrevProjectsPageClickEvent handling started");
-    ApplicationUser currentUser =
-        userData.getUserByMrimLogin(event.getUserId());
+    ApplicationUser currentUser = userData.getUserByMrimLogin(event.getUserId());
     if (currentUser != null) {
       IssueCreationDto issueCreationDto = event.getIssueCreationDto();
       int prevPageNumber = event.getCurrentPage() - 1;
       int prevPageStartIndex = prevPageNumber * ADDITIONAL_FIELD_LIST_PAGE_SIZE;
       Locale locale = localeManager.getLocaleFor(currentUser);
 
-      showAdditionalFieldPage(
-          event,
-          issueCreationDto,
-          prevPageNumber,
-          prevPageStartIndex,
-          locale);
+      showAdditionalFieldPage(event, issueCreationDto, prevPageNumber, prevPageStartIndex, locale);
     }
     log.debug("PrevProjectsPageClickEvent handling finished");
   }
 
   @Subscribe
-  public void onNextAdditionalFieldPageClickEvent(
-      NextAdditionalFieldPageClickEvent event)
+  public void onNextAdditionalFieldPageClickEvent(NextAdditionalFieldPageClickEvent event)
       throws UnirestException, IOException, MyteamServerErrorException {
     log.debug("PrevProjectsPageClickEvent handling started");
-    ApplicationUser currentUser =
-        userData.getUserByMrimLogin(event.getUserId());
+    ApplicationUser currentUser = userData.getUserByMrimLogin(event.getUserId());
     if (currentUser != null) {
       IssueCreationDto issueCreationDto = event.getIssueCreationDto();
       int nextPageNumber = event.getCurrentPage() + 1;
       int nextPageStartIndex = nextPageNumber * ADDITIONAL_FIELD_LIST_PAGE_SIZE;
       Locale locale = localeManager.getLocaleFor(currentUser);
-      showAdditionalFieldPage(
-          event,
-          issueCreationDto,
-          nextPageNumber,
-          nextPageStartIndex,
-          locale);
+      showAdditionalFieldPage(event, issueCreationDto, nextPageNumber, nextPageStartIndex, locale);
     }
     log.debug("PrevProjectsPageClickEvent handling finished");
   }
@@ -731,11 +682,9 @@ public class CreateIssueEventsListener {
   }
 
   @Subscribe
-  public void onCancelAdditionalFieldClickEvent(
-      CancelAdditionalFieldClickEvent event)
+  public void onCancelAdditionalFieldClickEvent(CancelAdditionalFieldClickEvent event)
       throws UnirestException, IOException, MyteamServerErrorException {
-    ApplicationUser currentUser =
-        userData.getUserByMrimLogin(event.getUserId());
+    ApplicationUser currentUser = userData.getUserByMrimLogin(event.getUserId());
     if (currentUser == null) {
       return;
     }
@@ -754,12 +703,10 @@ public class CreateIssueEventsListener {
   }
 
   @Subscribe
-  public void onCreateIssueConfirmClickEvent(
-      CreateIssueConfirmClickEvent event)
+  public void onCreateIssueConfirmClickEvent(CreateIssueConfirmClickEvent event)
       throws UnirestException, IOException, MyteamServerErrorException {
 
-    ApplicationUser currentUser =
-        userData.getUserByMrimLogin(event.getUserId());
+    ApplicationUser currentUser = userData.getUserByMrimLogin(event.getUserId());
     if (currentUser == null) {
       // TODO unauthorized
       return;
