@@ -621,35 +621,13 @@ public class CreateIssueEventsListener {
       int prevPageNumber = prevAdditionalFieldPageClickEvent.getCurrentPage() - 1;
       int prevPageStartIndex = prevPageNumber * ADDITIONAL_FIELD_LIST_PAGE_SIZE;
       Locale locale = localeManager.getLocaleFor(currentUser);
-      String chatId = prevAdditionalFieldPageClickEvent.getChatId();
 
-      LinkedHashMap<Field, String> nonRequiredFields =
-          getIssueCreationFieldsValues(
-              projectManager.getProjectObj(issueCreationDto.getProjectId()),
-              issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()),
-              null,
-              null,
-              IssueFieldsFilter.NON_REQUIRED);
-      List<Field> pageFieldsInterval =
-          nonRequiredFields.keySet().stream()
-              .skip(prevPageStartIndex)
-              .limit(ADDITIONAL_FIELD_LIST_PAGE_SIZE)
-              .collect(Collectors.toList());
-      myteamApiClient.answerCallbackQuery(prevAdditionalFieldPageClickEvent.getQueryId());
-      myteamApiClient.editMessageText(
-          chatId,
-          prevAdditionalFieldPageClickEvent.getMsgId(),
-          i18nResolver.getRawText(
-              locale,
-              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"),
-          messageFormatter.getSelectAdditionalFieldMessageButtons(
-              locale,
-              prevPageStartIndex >= ADDITIONAL_FIELD_LIST_PAGE_SIZE,
-              true,
-              pageFieldsInterval));
-      chatsStateMap.put(
-          chatId,
-          ChatState.buildAdditionalIssueFieldSelectWaitingState(prevPageNumber, issueCreationDto));
+      showAdditionalFieldPage(
+          prevAdditionalFieldPageClickEvent,
+          issueCreationDto,
+          prevPageNumber,
+          prevPageStartIndex,
+          locale);
     }
     log.debug("PrevProjectsPageClickEvent handling finished");
   }
@@ -666,38 +644,51 @@ public class CreateIssueEventsListener {
       int nextPageNumber = nextAdditionalFieldPageClickEvent.getCurrentPage() + 1;
       int nextPageStartIndex = nextPageNumber * ADDITIONAL_FIELD_LIST_PAGE_SIZE;
       Locale locale = localeManager.getLocaleFor(currentUser);
-      String chatId = nextAdditionalFieldPageClickEvent.getChatId();
-
-      LinkedHashMap<Field, String> nonRequiredFields =
-          getIssueCreationFieldsValues(
-              projectManager.getProjectObj(issueCreationDto.getProjectId()),
-              issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()),
-              null,
-              null,
-              IssueFieldsFilter.NON_REQUIRED);
-      List<Field> pageFieldsInterval =
-          nonRequiredFields.keySet().stream()
-              .skip(nextPageStartIndex)
-              .limit(ADDITIONAL_FIELD_LIST_PAGE_SIZE)
-              .collect(Collectors.toList());
-
-      myteamApiClient.answerCallbackQuery(nextAdditionalFieldPageClickEvent.getQueryId());
-      myteamApiClient.editMessageText(
-          chatId,
-          nextAdditionalFieldPageClickEvent.getMsgId(),
-          i18nResolver.getRawText(
-              locale,
-              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"),
-          messageFormatter.getSelectAdditionalFieldMessageButtons(
-              locale,
-              true,
-              nonRequiredFields.size() > ADDITIONAL_FIELD_LIST_PAGE_SIZE + nextPageStartIndex,
-              pageFieldsInterval));
-      chatsStateMap.put(
-          chatId,
-          ChatState.buildAdditionalIssueFieldSelectWaitingState(nextPageNumber, issueCreationDto));
+      showAdditionalFieldPage(
+          nextAdditionalFieldPageClickEvent,
+          issueCreationDto,
+          nextPageNumber,
+          nextPageStartIndex,
+          locale);
     }
     log.debug("PrevProjectsPageClickEvent handling finished");
+  }
+
+  private void showAdditionalFieldPage(
+      PageClickEvent event,
+      IssueCreationDto issueCreationDto,
+      int pageNumber,
+      int pageStartIndex,
+      Locale locale)
+      throws MyteamServerErrorException, IOException {
+    LinkedHashMap<Field, String> nonRequiredFields =
+        getIssueCreationFieldsValues(
+            projectManager.getProjectObj(issueCreationDto.getProjectId()),
+            issueTypeManager.getIssueType(issueCreationDto.getIssueTypeId()),
+            null,
+            null,
+            IssueFieldsFilter.NON_REQUIRED);
+    List<Field> pageFieldsInterval =
+        nonRequiredFields.keySet().stream()
+            .skip(pageStartIndex)
+            .limit(ADDITIONAL_FIELD_LIST_PAGE_SIZE)
+            .collect(Collectors.toList());
+
+    myteamApiClient.answerCallbackQuery(event.getQueryId());
+    myteamApiClient.editMessageText(
+        event.getChatId(),
+        event.getMsgId(),
+        i18nResolver.getRawText(
+            locale,
+            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"),
+        messageFormatter.getSelectAdditionalFieldMessageButtons(
+            locale,
+            pageStartIndex >= ADDITIONAL_FIELD_LIST_PAGE_SIZE,
+            nonRequiredFields.size() > ADDITIONAL_FIELD_LIST_PAGE_SIZE + pageStartIndex,
+            pageFieldsInterval));
+    chatsStateMap.put(
+        event.getChatId(),
+        ChatState.buildAdditionalIssueFieldSelectWaitingState(pageNumber, issueCreationDto));
   }
 
   @Subscribe

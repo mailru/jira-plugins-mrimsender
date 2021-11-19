@@ -7,8 +7,8 @@ import lombok.Getter;
  * As a result of this event handled user message on which "prev" button was clicked should be
  * edited and previous page of content should shown to user
  */
-@Getter
-public class PrevPageClickEvent {
+@Getter(onMethod_ = {@Override})
+public class PrevPageClickEvent implements PageClickEvent {
   private final String chatId;
   private final long msgId;
   private final String userId;
