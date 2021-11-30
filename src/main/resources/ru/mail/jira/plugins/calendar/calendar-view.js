@@ -37,6 +37,7 @@ define('calendar/calendar-view', [
             this.popupWidth = options && _.has(options, 'popupWidth') ? options.popupWidth : 400;
             this.enableFullscreen = options && _.has(options, 'enableFullscreen') ? options.enableFullscreen : false;
             this.disableCustomEventEditing = options && _.has(options, 'disableCustomEventEditing') ? options.disableCustomEventEditing : false;
+            this.holidays = options && _.has(options, 'holidays') ? options.holidays : [{url: this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/holidays'}];
         },
         _eventSource: function(id) {
             return this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/' + id;
@@ -612,7 +613,23 @@ define('calendar/calendar-view', [
                         this._initTimelineGroupPicker();
                     }
                 }, this),
-                eventSources: [{url: this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/holidays'}],
+                eventSources: [
+                    {
+                        events: function(fetchInfo, successCallback, failureCallback) {
+                            AJS.$.ajax({
+                                url: this.contextPath + '/rest/mailrucalendar/1.0/calendar/events/holidays',
+                                type: "GET",
+                                data: {
+                                    start: fetchInfo.startStr,
+                                    end: fetchInfo.endStr,
+                                },
+                                success: function(events) {
+                                    successCallback(events);
+                                },
+                            });
+                        },
+                    }
+                ],
                 eventDidMount: function(options) {
                     var $element = $(options.el);
                     var event = options.event;
@@ -713,17 +730,25 @@ define('calendar/calendar-view', [
         },
         addEventSource: function(calendarId, silent) {
             !silent && this.trigger('addSource', calendarId);
+            var self = this;
             this.calendar.addEventSource({
                 id: calendarId,
-                url: this._eventSource(calendarId),
-                success: $.proxy(function() {
-                    !silent && this.trigger('addSourceSuccess', calendarId, true);
-                }, this),
-                extraParams: $.proxy(function() {
-                    return {
-                        groupBy: Preferences.getItem('groupBy')
-                    };
-                }, this)
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    AJS.$.ajax({
+                        url: self._eventSource(calendarId),
+                        type: "GET",
+                        data: {
+                            start: fetchInfo.startStr,
+                            end: fetchInfo.endStr,
+                            groupBy: Preferences.getItem('groupBy')
+                        },
+                        dataType: "json",
+                        success: function(events) {
+                            !silent && self.trigger('addSourceSuccess', calendarId, true);
+                            successCallback(events);
+                        },
+                    });
+                },
             });
             this.eventSources['' + calendarId] = this._eventSource(calendarId);
         },
