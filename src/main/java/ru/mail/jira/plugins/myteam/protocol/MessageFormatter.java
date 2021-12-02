@@ -1855,7 +1855,7 @@ public class MessageFormatter {
     return buttons;
   }
 
-  private void addRowWithButton(
+  public static void addRowWithButton(
       List<List<InlineKeyboardMarkupButton>> buttons, InlineKeyboardMarkupButton button) {
     List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
     newButtonsRow.add(button);

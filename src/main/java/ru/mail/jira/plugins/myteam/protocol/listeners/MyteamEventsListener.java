@@ -31,6 +31,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,6 +42,8 @@ import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jeasy.rules.api.Fact;
+import org.jeasy.rules.api.Facts;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -60,6 +63,10 @@ import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
+import ru.mail.jira.plugins.myteam.rulesengine.MyTeamRulesEngine;
+import ru.mail.jira.plugins.myteam.rulesengine.UserChatService;
+import ru.mail.jira.plugins.myteam.rulesengine.commands.HelpCommandRule;
+import ru.mail.jira.plugins.myteam.rulesengine.commands.MenuCommandRule;
 
 @Slf4j
 @Component
@@ -86,6 +93,8 @@ public class MyteamEventsListener {
   private final String JIRA_BASE_URL;
   private final ChatCommandListener chatCommandListener;
   private final WatcherManager watcherManager;
+  private final MyTeamRulesEngine myTeamRulesEngine;
+  private final UserChatService userChatService;
 
   @Autowired
   public MyteamEventsListener(
@@ -96,6 +105,8 @@ public class MyteamEventsListener {
       ChatCommandListener chatCommandListener,
       ButtonClickListener buttonClickListener,
       CreateIssueEventsListener createIssueEventsListener,
+      MyTeamRulesEngine myTeamRulesEngine,
+      UserChatService userChatService,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport I18nResolver i18nResolver,
       @ComponentImport IssueManager issueManager,
@@ -109,6 +120,8 @@ public class MyteamEventsListener {
     this.chatsStateMap = chatStateMapping.getChatsStateMap();
     this.attachmentManager = attachmentManager;
     this.watcherManager = watcherManager;
+    this.myTeamRulesEngine = myTeamRulesEngine;
+    this.userChatService = userChatService;
     this.asyncEventBus =
         new AsyncEventBus(
             executorService,
@@ -133,6 +146,8 @@ public class MyteamEventsListener {
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
     this.chatCommandListener = chatCommandListener;
+
+    registerCommands();
   }
 
   public void publishEvent(Event event) {
@@ -184,12 +199,16 @@ public class MyteamEventsListener {
 
     if (message != null && message.startsWith(CHAT_COMMAND_PREFIX)) {
       String command = StringUtils.substringAfter(message, CHAT_COMMAND_PREFIX).toLowerCase();
-      if (command.startsWith("help")) {
-        asyncEventBus.post(new ShowHelpEvent(chatMessageEvent));
-      }
-      if (command.startsWith("menu") && !isGroupChatEvent) {
-        asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
-      }
+
+      handleCommand(chatMessageEvent);
+
+      //      if (command.startsWith("help")) {
+      //        asyncEventBus.post(new ShowHelpEvent(chatMessageEvent));
+      //      }
+      //      if (command.startsWith("menu") && !isGroupChatEvent) {
+      //        asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
+      //      }
+
       if (command.startsWith("issue")) {
         asyncEventBus.post(new ShowIssueEvent(chatMessageEvent, JIRA_BASE_URL));
       }
@@ -206,6 +225,29 @@ public class MyteamEventsListener {
     } else if (!isGroupChatEvent && (message != null || chatMessageEvent.isHasForwards())) {
       asyncEventBus.post(new ShowDefaultMessageEvent(chatMessageEvent));
     }
+  }
+
+  private void registerCommands() {
+    myTeamRulesEngine.registerRule(new HelpCommandRule(userChatService));
+    myTeamRulesEngine.registerRule(new MenuCommandRule(userChatService));
+  }
+
+  private void handleCommand(ChatMessageEvent event) {
+    String withoutPrefix =
+        StringUtils.substringAfter(event.getMessage(), CHAT_COMMAND_PREFIX).toLowerCase();
+    String[] split = withoutPrefix.split("\\s+");
+
+    if (split.length == 0) return;
+
+    String command = split[0];
+    List<String> args = Arrays.asList(split).subList(1, split.length);
+
+    Facts facts = new Facts();
+    facts.add(new Fact<>("command", command));
+    facts.add(new Fact<>("args", args));
+    facts.add(new Fact<>("event", event));
+
+    myTeamRulesEngine.fire(facts);
   }
 
   @Subscribe
