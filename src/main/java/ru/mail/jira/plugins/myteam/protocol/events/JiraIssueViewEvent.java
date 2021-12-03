@@ -5,8 +5,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import lombok.Getter;
 
 @Getter
-public class JiraIssueViewEvent implements Event {
-  private final String chatId;
+public class JiraIssueViewEvent extends MyteamEvent {
   private final String issueKey;
   private final ApplicationUser initiator;
   private final boolean isGroupChat;

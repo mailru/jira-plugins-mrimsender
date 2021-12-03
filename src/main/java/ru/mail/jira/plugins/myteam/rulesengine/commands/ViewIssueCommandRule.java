@@ -16,7 +16,7 @@ import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
-import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
@@ -40,7 +40,7 @@ public class ViewIssueCommandRule extends BaseCommandRule {
 
   @Action
   public void execute(
-      @Fact("event") ChatMessageEvent event,
+      @Fact("event") MyteamEvent event,
       @Fact("args") List<String> args,
       @Fact("isGroup") boolean isGroup)
       throws MyteamServerErrorException, IOException {

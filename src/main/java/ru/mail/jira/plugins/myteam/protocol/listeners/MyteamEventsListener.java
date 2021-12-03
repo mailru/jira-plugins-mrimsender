@@ -162,7 +162,7 @@ public class MyteamEventsListener implements InitializingBean {
     myteamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
   }
 
-  public void publishEvent(Event event) {
+  public void publishEvent(MyteamEvent event) {
     asyncEventBus.post(event);
   }
 
@@ -211,19 +211,7 @@ public class MyteamEventsListener implements InitializingBean {
 
     if (message != null && message.startsWith(CHAT_COMMAND_PREFIX)) {
       String command = StringUtils.substringAfter(message, CHAT_COMMAND_PREFIX).toLowerCase();
-
       handleCommand(chatMessageEvent);
-
-      //      if (command.startsWith("help")) {
-      //        asyncEventBus.post(new ShowHelpEvent(chatMessageEvent));
-      //      }
-      //      if (command.startsWith("menu") && !isGroupChatEvent) {
-      //        asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
-      //      }
-
-      //      if (command.startsWith("issue")) {
-      //        asyncEventBus.post(new ShowIssueEvent(chatMessageEvent, JIRA_BASE_URL));
-      //      }
 
       if (command.startsWith("link") && isGroupChatEvent) {
         asyncEventBus.post(new LinkIssueWithChatEvent(chatMessageEvent));
@@ -441,7 +429,9 @@ public class MyteamEventsListener implements InitializingBean {
       case "showMenu":
         // answer button click here because ShowMenuEvent is originally MessageEvent =/
         myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
-        asyncEventBus.post(new ShowMenuEvent(buttonClickEvent));
+        myteamRulesEngine.fire(
+            MyteamRulesEngine.formCommandFacts(RuleEventType.Menu.toString(), buttonClickEvent));
+        //        asyncEventBus.post(new ShowMenuEvent(buttonClickEvent));
         break;
       default:
         // fix infinite spinners situations for not recognized button clicks

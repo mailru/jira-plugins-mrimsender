@@ -15,6 +15,7 @@ import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
@@ -34,14 +35,14 @@ public class DefaultMessageRule extends BaseCommandRule {
   }
 
   @Action
-  public void execute(@Fact("event") ChatMessageEvent event)
+  public void execute(@Fact("event") MyteamEvent event)
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    if (user != null) {
+    if (user != null && event instanceof ChatMessageEvent) {
       Locale locale = userChatService.getUserLocale(user);
       String chatId = event.getChatId();
 
-      List<Forward> forwards = getForwardList(event);
+      List<Forward> forwards = getForwardList((ChatMessageEvent) event);
 
       if (forwards != null) {
         Forward forward = forwards.get(0);
@@ -50,7 +51,7 @@ public class DefaultMessageRule extends BaseCommandRule {
         if (fireViewIssueResult(event, issueKey)) return;
       }
 
-      String issueKey = Utils.findIssueKeyInStr(event.getMessage());
+      String issueKey = Utils.findIssueKeyInStr(((ChatMessageEvent) event).getMessage());
       if (fireViewIssueResult(event, issueKey)) return;
       userChatService.sendMessageText(
           chatId,
@@ -60,7 +61,7 @@ public class DefaultMessageRule extends BaseCommandRule {
     }
   }
 
-  private boolean fireViewIssueResult(@Fact("event") ChatMessageEvent event, String issueKey) {
+  private boolean fireViewIssueResult(@Fact("event") MyteamEvent event, String issueKey) {
     if (issueKey != null) {
       userChatService.fireRule(
           MyteamRulesEngine.formCommandFacts(

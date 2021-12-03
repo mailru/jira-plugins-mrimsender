@@ -6,8 +6,7 @@ import lombok.Getter;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
 @Getter
-public class JiraNotifyEvent implements Event {
-  private final String chatId;
+public class JiraNotifyEvent extends MyteamEvent {
   private final String message;
   private final List<List<InlineKeyboardMarkupButton>> buttons;
 

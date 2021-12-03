@@ -10,7 +10,7 @@ import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
-import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
@@ -29,7 +29,7 @@ public class HelpCommandRule extends BaseCommandRule {
   }
 
   @Action
-  public void execute(@Fact("event") ChatMessageEvent event)
+  public void execute(@Fact("event") MyteamEvent event)
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
 

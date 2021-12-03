@@ -9,19 +9,17 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 
 @Getter
-public class ChatMessageEvent implements Event {
-  private final String chatId;
-  private final String userId;
+public class ChatMessageEvent extends MyteamEvent {
   private final String message;
-  private final ChatType chatType;
   private final List<Part> messageParts;
   private final boolean hasForwards;
 
   public ChatMessageEvent(NewMessageEvent newMessageEvent) {
-    chatId = newMessageEvent.getChat().getChatId();
-    userId = newMessageEvent.getFrom().getUserId();
+    super(
+        newMessageEvent.getChat().getChatId(),
+        newMessageEvent.getFrom().getUserId(),
+        ChatType.fromApiValue(newMessageEvent.getChat().getType()));
     message = newMessageEvent.getText();
-    chatType = ChatType.fromApiValue(newMessageEvent.getChat().getType());
     messageParts = newMessageEvent.getParts();
     if (messageParts != null)
       hasForwards = messageParts.stream().anyMatch(part -> part instanceof Forward);
