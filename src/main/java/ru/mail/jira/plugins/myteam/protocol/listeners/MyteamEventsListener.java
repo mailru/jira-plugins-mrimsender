@@ -42,8 +42,6 @@ import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.jeasy.rules.api.Fact;
-import org.jeasy.rules.api.Facts;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -63,8 +61,9 @@ import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
-import ru.mail.jira.plugins.myteam.rulesengine.MyTeamRulesEngine;
+import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.commands.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.commands.HelpCommandRule;
 import ru.mail.jira.plugins.myteam.rulesengine.commands.MenuCommandRule;
 import ru.mail.jira.plugins.myteam.rulesengine.commands.ViewIssueCommandRule;
@@ -96,7 +95,7 @@ public class MyteamEventsListener {
   private final String JIRA_BASE_URL;
   private final ChatCommandListener chatCommandListener;
   private final WatcherManager watcherManager;
-  private final MyTeamRulesEngine myTeamRulesEngine;
+  private final MyteamRulesEngine myteamRulesEngine;
   private final UserChatService userChatService;
   private final IssueService issueService;
 
@@ -109,7 +108,7 @@ public class MyteamEventsListener {
       ChatCommandListener chatCommandListener,
       ButtonClickListener buttonClickListener,
       CreateIssueEventsListener createIssueEventsListener,
-      MyTeamRulesEngine myTeamRulesEngine,
+      MyteamRulesEngine myteamRulesEngine,
       UserChatService userChatService,
       IssueService issueService,
       @ComponentImport LocaleManager localeManager,
@@ -125,7 +124,7 @@ public class MyteamEventsListener {
     this.chatsStateMap = chatStateMapping.getChatsStateMap();
     this.attachmentManager = attachmentManager;
     this.watcherManager = watcherManager;
-    this.myTeamRulesEngine = myTeamRulesEngine;
+    this.myteamRulesEngine = myteamRulesEngine;
     this.userChatService = userChatService;
     this.issueService = issueService;
     this.asyncEventBus =
@@ -218,6 +217,7 @@ public class MyteamEventsListener {
       //      if (command.startsWith("issue")) {
       //        asyncEventBus.post(new ShowIssueEvent(chatMessageEvent, JIRA_BASE_URL));
       //      }
+
       if (command.startsWith("link") && isGroupChatEvent) {
         asyncEventBus.post(new LinkIssueWithChatEvent(chatMessageEvent));
       }
@@ -228,16 +228,17 @@ public class MyteamEventsListener {
         asyncEventBus.post(new IssueUnwatchEvent(chatMessageEvent));
       }
     } else if (!isGroupChatEvent && (message != null || chatMessageEvent.isHasForwards())) {
-      Facts facts = new Facts();
-      facts.add(new Fact<>("command", RuleEventType.DefaultMessage));
-      myTeamRulesEngine.fire(facts);
+      myteamRulesEngine.fire(
+          MyteamRulesEngine.formCommandFacts(
+              RuleEventType.DefaultMessage.toString(), chatMessageEvent));
     }
   }
 
   private void registerCommands() {
-    myTeamRulesEngine.registerRule(new HelpCommandRule(userChatService));
-    myTeamRulesEngine.registerRule(new MenuCommandRule(userChatService));
-    myTeamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
+    myteamRulesEngine.registerRule(new HelpCommandRule(userChatService));
+    myteamRulesEngine.registerRule(new MenuCommandRule(userChatService));
+    myteamRulesEngine.registerRule(new DefaultMessageRule(userChatService, issueService));
+    myteamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
   }
 
   private void handleCommand(ChatMessageEvent event) {
@@ -250,12 +251,7 @@ public class MyteamEventsListener {
     String command = split[0];
     List<String> args = Arrays.asList(split).subList(1, split.length);
 
-    Facts facts = new Facts();
-    facts.add(new Fact<>("command", command));
-    facts.add(new Fact<>("args", args));
-    facts.add(new Fact<>("event", event));
-
-    myTeamRulesEngine.fire(facts);
+    myteamRulesEngine.fire(MyteamRulesEngine.formCommandFacts(command, event, args));
   }
 
   @Subscribe

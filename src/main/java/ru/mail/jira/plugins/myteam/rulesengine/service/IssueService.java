@@ -10,4 +10,8 @@ public interface IssueService {
 
   Issue getIssueByUser(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException;
+
+  boolean isUserWatching(Issue issue, ApplicationUser user);
+
+  String getJiraBaseUrl();
 }

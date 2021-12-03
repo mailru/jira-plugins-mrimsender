@@ -4,6 +4,7 @@ package ru.mail.jira.plugins.myteam.rulesengine.service;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.Locale;
+import org.jeasy.rules.api.Facts;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 
@@ -19,5 +20,5 @@ public interface UserChatService {
 
   MessageFormatter getMessageFormatter();
 
-  String getJiraBaseUrl();
+  void fireRule(Facts facts);
 }

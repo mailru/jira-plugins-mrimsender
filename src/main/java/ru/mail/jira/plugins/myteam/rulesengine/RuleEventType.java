@@ -11,10 +11,10 @@ public enum RuleEventType {
     name = s;
   }
 
-  //  public boolean equalsName(String otherName) {
-  //    // (otherName == null) check is not needed because name.equals(null) returns false
-  //    return name.equals(otherName);
-  //  }
+  public boolean equalsName(String otherName) {
+    return name.equals(otherName);
+  }
+
   @Override
   public String toString() {
     return this.name;
