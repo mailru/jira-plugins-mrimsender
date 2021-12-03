@@ -43,6 +43,7 @@ import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.commons.Utils;
@@ -72,7 +73,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Slf4j
 @Component
-public class MyteamEventsListener {
+public class MyteamEventsListener implements InitializingBean {
   private static final String THREAD_NAME_PREFIX = "icq-events-listener-thread-pool";
   private static final String CHAT_COMMAND_PREFIX = "/";
 
@@ -151,8 +152,14 @@ public class MyteamEventsListener {
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
     this.chatCommandListener = chatCommandListener;
+  }
 
-    registerCommands();
+  @Override
+  public void afterPropertiesSet() {
+    myteamRulesEngine.registerRule(new DefaultMessageRule(userChatService));
+    myteamRulesEngine.registerRule(new HelpCommandRule(userChatService));
+    myteamRulesEngine.registerRule(new MenuCommandRule(userChatService));
+    myteamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
   }
 
   public void publishEvent(Event event) {
@@ -232,13 +239,6 @@ public class MyteamEventsListener {
           MyteamRulesEngine.formCommandFacts(
               RuleEventType.DefaultMessage.toString(), chatMessageEvent));
     }
-  }
-
-  private void registerCommands() {
-    myteamRulesEngine.registerRule(new HelpCommandRule(userChatService));
-    myteamRulesEngine.registerRule(new MenuCommandRule(userChatService));
-    myteamRulesEngine.registerRule(new DefaultMessageRule(userChatService, issueService));
-    myteamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
   }
 
   private void handleCommand(ChatMessageEvent event) {

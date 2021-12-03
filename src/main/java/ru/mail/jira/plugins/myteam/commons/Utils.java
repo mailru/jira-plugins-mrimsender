@@ -5,12 +5,17 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import kong.unirest.UnirestException;
 import org.apache.commons.lang.StringUtils;
 import ru.mail.jira.plugins.commons.HttpClient;
 
 public class Utils {
+
+  private static final Pattern pattern = Pattern.compile("[A-Z]+-[1-9]+", Pattern.CASE_INSENSITIVE);
+
   /**
    * Finding URL in string
    *
@@ -43,5 +48,11 @@ public class Utils {
 
   public static InputStream loadUrlFile(String url) throws UnirestException {
     return new ByteArrayInputStream(HttpClient.getPrimaryClient().get(url).asBytes().getBody());
+  }
+
+  @Nullable
+  public static String findIssueKeyInStr(String str) {
+    Matcher result = pattern.matcher(str);
+    return result.find() ? result.group(0) : null;
   }
 }

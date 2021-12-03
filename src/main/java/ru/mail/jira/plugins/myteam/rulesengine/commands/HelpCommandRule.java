@@ -11,12 +11,13 @@ import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.rulesengine.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(name = "/help command rule", description = "shows help")
 public class HelpCommandRule extends BaseCommandRule {
 
-  static final String NAME = "help";
+  static final RuleEventType NAME = RuleEventType.Help;
 
   public HelpCommandRule(UserChatService userChatService) {
     super(userChatService);
@@ -24,7 +25,7 @@ public class HelpCommandRule extends BaseCommandRule {
 
   @Condition
   public boolean isValid(@Fact("command") String command) {
-    return command.equals(NAME);
+    return NAME.equalsName(command);
   }
 
   @Action
@@ -34,15 +35,15 @@ public class HelpCommandRule extends BaseCommandRule {
 
     Locale locale = userChatService.getUserLocale(user);
     if (event.getChatType() == ChatType.GROUP)
-      myteamClient.sendMessageText(
+      userChatService.sendMessageText(
           event.getChatId(),
-          i18nResolver.getRawText(
+          userChatService.getRawText(
               locale,
               "ru.mail.jira.plugins.myteam.myteamEventsListener.groupChat.helpMessage.text"));
     else
-      myteamClient.sendMessageText(
+      userChatService.sendMessageText(
           event.getChatId(),
-          i18nResolver.getRawText(
+          userChatService.getRawText(
               locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.helpMessage.text"));
   }
 }

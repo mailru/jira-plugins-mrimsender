@@ -3,12 +3,10 @@ package ru.mail.jira.plugins.myteam.rulesengine.commands;
 
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -19,24 +17,20 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.RuleEventType;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(name = "hello message rule", description = "shows hello message")
 public class DefaultMessageRule extends BaseCommandRule {
 
-  static final String EVENT_TYPE = RuleEventType.DefaultMessage.toString();
+  static final RuleEventType NAME = RuleEventType.DefaultMessage;
 
-  private final IssueService issueService;
-
-  public DefaultMessageRule(UserChatService userChatService, IssueService issueService) {
+  public DefaultMessageRule(UserChatService userChatService) {
     super(userChatService);
-    this.issueService = issueService;
   }
 
   @Condition
-  public boolean isValid(@Fact("command") String event) {
-    return event.equals(EVENT_TYPE);
+  public boolean isValid(@Fact("command") String command) {
+    return NAME.equalsName(command);
   }
 
   @Action
@@ -52,26 +46,22 @@ public class DefaultMessageRule extends BaseCommandRule {
       if (forwards != null) {
         Forward forward = forwards.get(0);
         String forwardMessageText = forward.getMessage().getText();
-        URL issueUrl =
-            Utils.tryFindUrlByPrefixInStr(forwardMessageText, issueService.getJiraBaseUrl());
-        if (fireViewIssueResult(event, issueUrl)) return;
+        String issueKey = Utils.findIssueKeyInStr(forwardMessageText);
+        if (fireViewIssueResult(event, issueKey)) return;
       }
 
-      URL issueUrl =
-          Utils.tryFindUrlByPrefixInStr(event.getMessage(), issueService.getJiraBaseUrl());
-
-      if (fireViewIssueResult(event, issueUrl)) return;
-      myteamClient.sendMessageText(
+      String issueKey = Utils.findIssueKeyInStr(event.getMessage());
+      if (fireViewIssueResult(event, issueKey)) return;
+      userChatService.sendMessageText(
           chatId,
-          i18nResolver.getRawText(
+          userChatService.getRawText(
               locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.defaultMessage.text"),
           messageFormatter.getMenuButtons(user));
     }
   }
 
-  private boolean fireViewIssueResult(@Fact("event") ChatMessageEvent event, URL issueUrl) {
-    if (issueUrl != null) {
-      String issueKey = StringUtils.substringAfterLast(issueUrl.getPath(), "/");
+  private boolean fireViewIssueResult(@Fact("event") ChatMessageEvent event, String issueKey) {
+    if (issueKey != null) {
       userChatService.fireRule(
           MyteamRulesEngine.formCommandFacts(
               RuleEventType.Issue.toString(), event, Collections.singletonList(issueKey)));

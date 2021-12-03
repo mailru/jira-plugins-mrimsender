@@ -10,11 +10,12 @@ import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.rulesengine.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(name = "/menu command rule", description = "shows menu")
 public class MenuCommandRule extends BaseCommandRule {
-  static final String NAME = "menu";
+  static final RuleEventType NAME = RuleEventType.Menu;
 
   public MenuCommandRule(UserChatService userChatService) {
     super(userChatService);
@@ -22,7 +23,7 @@ public class MenuCommandRule extends BaseCommandRule {
 
   @Condition
   public boolean isValid(@Fact("command") String command) {
-    return command.equals(NAME);
+    return NAME.equalsName(command);
   }
 
   @Action
@@ -31,9 +32,9 @@ public class MenuCommandRule extends BaseCommandRule {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     if (user != null) {
       Locale locale = userChatService.getUserLocale(user);
-      myteamClient.sendMessageText(
+      userChatService.sendMessageText(
           event.getChatId(),
-          i18nResolver.getRawText(
+          userChatService.getRawText(
               locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
           messageFormatter.getMenuButtons(user));
     }

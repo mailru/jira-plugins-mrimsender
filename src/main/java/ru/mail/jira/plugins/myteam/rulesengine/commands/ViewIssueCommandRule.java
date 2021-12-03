@@ -25,7 +25,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 @Rule(name = "/issue command rule", description = "view issue by key")
 public class ViewIssueCommandRule extends BaseCommandRule {
 
-  static final String NAME = RuleEventType.Issue.toString();
+  static final RuleEventType NAME = RuleEventType.Issue;
   private final IssueService issueService;
 
   public ViewIssueCommandRule(UserChatService userChatService, IssueService issueService) {
@@ -35,7 +35,7 @@ public class ViewIssueCommandRule extends BaseCommandRule {
 
   @Condition
   public boolean isValid(@Fact("command") String command) {
-    return command.equals(NAME);
+    return NAME.equalsName(command);
   }
 
   @Action
@@ -55,7 +55,7 @@ public class ViewIssueCommandRule extends BaseCommandRule {
                 issueKey, userChatService.getJiraUserFromUserChatId(event.getUserId()));
 
         HttpResponse<MessageResponse> response =
-            this.myteamClient.sendMessageText(
+            userChatService.sendMessageText(
                 chatId,
                 messageFormatter.createIssueSummary(issue, user),
                 isGroup
@@ -75,17 +75,17 @@ public class ViewIssueCommandRule extends BaseCommandRule {
               response.getBody().toString());
         }
       } catch (IssuePermissionException e) {
-        myteamClient.sendMessageText(
+        userChatService.sendMessageText(
             chatId,
-            i18nResolver.getRawText(
+            userChatService.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
         if (!isGroup) log.error("sendIssueViewToUser({}, {}, {})", issueKey, user, chatId, e);
 
       } catch (IssueNotFoundException e) {
-        myteamClient.sendMessageText(
+        userChatService.sendMessageText(
             chatId,
-            i18nResolver.getRawText(
+            userChatService.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
         if (!isGroup) log.error("sendIssueViewToUser({}, {}, {})", issueKey, user, chatId, e);

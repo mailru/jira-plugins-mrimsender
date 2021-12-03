@@ -3,6 +3,8 @@ package ru.mail.jira.plugins.myteam.rulesengine;
 
 public enum RuleEventType {
   DefaultMessage("defaultMessage"),
+  Help("help"),
+  Menu("menu"),
   Issue("issue");
 
   private final String name;
