@@ -10,9 +10,7 @@ import org.jeasy.rules.api.RulesEngine;
 import org.jeasy.rules.core.DefaultRulesEngine;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
-import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 
 @Component
 public class MyteamRulesEngine {
@@ -33,17 +31,9 @@ public class MyteamRulesEngine {
     rulesEngine.fire(rules, facts);
   }
 
-  public static Facts formCommandFacts(String command, ButtonClickEvent event) {
+  public static Facts formCommandFacts(String command, MyteamEvent event) {
     return formCommandFacts(command, event, Collections.emptyList());
   }
-
-  public static Facts formCommandFacts(String command, ChatMessageEvent event) {
-    return formCommandFacts(command, event, Collections.emptyList());
-  }
-
-  //  public static Facts formCommandFacts(String command, MyteamEvent event) {
-  //    return formCommandFacts(command, event, Collections.emptyList());
-  //  }
 
   public static Facts formCommandFacts(String command, MyteamEvent event, List<String> args) {
     Facts facts = new Facts();
