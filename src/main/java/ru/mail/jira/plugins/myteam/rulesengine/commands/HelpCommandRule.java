@@ -11,10 +11,11 @@ import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.UserChatService;
+import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(name = "/help command rule", description = "shows help")
 public class HelpCommandRule extends BaseCommandRule {
+
   static final String NAME = "help";
 
   public HelpCommandRule(UserChatService userChatService) {
@@ -22,12 +23,12 @@ public class HelpCommandRule extends BaseCommandRule {
   }
 
   @Condition
-  public boolean isHelpCommand(@Fact("command") String command) {
+  public boolean isValid(@Fact("command") String command) {
     return command.equals(NAME);
   }
 
   @Action
-  public void showHelp(@Fact("event") ChatMessageEvent event)
+  public void execute(@Fact("event") ChatMessageEvent event)
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
 

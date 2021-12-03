@@ -64,9 +64,12 @@ import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
 import ru.mail.jira.plugins.myteam.rulesengine.MyTeamRulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.UserChatService;
+import ru.mail.jira.plugins.myteam.rulesengine.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.commands.HelpCommandRule;
 import ru.mail.jira.plugins.myteam.rulesengine.commands.MenuCommandRule;
+import ru.mail.jira.plugins.myteam.rulesengine.commands.ViewIssueCommandRule;
+import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
+import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Slf4j
 @Component
@@ -95,6 +98,7 @@ public class MyteamEventsListener {
   private final WatcherManager watcherManager;
   private final MyTeamRulesEngine myTeamRulesEngine;
   private final UserChatService userChatService;
+  private final IssueService issueService;
 
   @Autowired
   public MyteamEventsListener(
@@ -107,6 +111,7 @@ public class MyteamEventsListener {
       CreateIssueEventsListener createIssueEventsListener,
       MyTeamRulesEngine myTeamRulesEngine,
       UserChatService userChatService,
+      IssueService issueService,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport I18nResolver i18nResolver,
       @ComponentImport IssueManager issueManager,
@@ -122,6 +127,7 @@ public class MyteamEventsListener {
     this.watcherManager = watcherManager;
     this.myTeamRulesEngine = myTeamRulesEngine;
     this.userChatService = userChatService;
+    this.issueService = issueService;
     this.asyncEventBus =
         new AsyncEventBus(
             executorService,
@@ -209,10 +215,9 @@ public class MyteamEventsListener {
       //        asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
       //      }
 
-      if (command.startsWith("issue")) {
-        asyncEventBus.post(new ShowIssueEvent(chatMessageEvent, JIRA_BASE_URL));
-      }
-
+      //      if (command.startsWith("issue")) {
+      //        asyncEventBus.post(new ShowIssueEvent(chatMessageEvent, JIRA_BASE_URL));
+      //      }
       if (command.startsWith("link") && isGroupChatEvent) {
         asyncEventBus.post(new LinkIssueWithChatEvent(chatMessageEvent));
       }
@@ -223,13 +228,16 @@ public class MyteamEventsListener {
         asyncEventBus.post(new IssueUnwatchEvent(chatMessageEvent));
       }
     } else if (!isGroupChatEvent && (message != null || chatMessageEvent.isHasForwards())) {
-      asyncEventBus.post(new ShowDefaultMessageEvent(chatMessageEvent));
+      Facts facts = new Facts();
+      facts.add(new Fact<>("command", RuleEventType.DefaultMessage));
+      myTeamRulesEngine.fire(facts);
     }
   }
 
   private void registerCommands() {
     myTeamRulesEngine.registerRule(new HelpCommandRule(userChatService));
     myTeamRulesEngine.registerRule(new MenuCommandRule(userChatService));
+    myTeamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
   }
 
   private void handleCommand(ChatMessageEvent event) {
