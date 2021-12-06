@@ -1,0 +1,4 @@
+include:
+  project: 'ATL-TEAM/gitlab'
+  ref: master
+  file: '/ci/templates/Plugin.gitlab-ci.yml'
