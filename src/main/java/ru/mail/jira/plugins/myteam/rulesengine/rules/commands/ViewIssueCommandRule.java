@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.commands;
+package ru.mail.jira.plugins.myteam.rulesengine.rules.commands;
 
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;

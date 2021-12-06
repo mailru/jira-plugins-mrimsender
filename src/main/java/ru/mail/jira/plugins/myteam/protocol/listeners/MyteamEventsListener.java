@@ -63,10 +63,15 @@ import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
 import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.commands.*;
-import ru.mail.jira.plugins.myteam.rulesengine.commands.buttons.NextPageRule;
-import ru.mail.jira.plugins.myteam.rulesengine.commands.buttons.PrevPageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.NextPageRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.PrevPageRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.DefaultMessageRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.HelpCommandRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.MenuCommandRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.ViewIssueCommandRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJQLIssuesRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.service.WatchingIssuesCommandRule;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 

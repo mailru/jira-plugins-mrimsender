@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.commands;
+package ru.mail.jira.plugins.myteam.rulesengine.rules.service;
 
 import com.atlassian.jira.user.ApplicationUser;
 import org.jeasy.rules.annotation.Action;

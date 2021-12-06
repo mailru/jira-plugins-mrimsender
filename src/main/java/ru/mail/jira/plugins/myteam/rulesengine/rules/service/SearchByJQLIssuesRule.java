@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.commands;
+package ru.mail.jira.plugins.myteam.rulesengine.rules.service;
 
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;

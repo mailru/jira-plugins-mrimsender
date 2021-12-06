@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.commands.buttons;
+package ru.mail.jira.plugins.myteam.rulesengine.rules.buttons;
 
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -13,12 +13,12 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.PageableState;
 
-@Rule(name = "next page", description = "Update page to next one")
-public class NextPageRule extends BaseRule {
+@Rule(name = "prev page", description = "Update page to previous one")
+public class PrevPageRule extends BaseRule {
 
-  static final RuleEventType NAME = RuleEventType.NextPage;
+  static final RuleEventType NAME = RuleEventType.PrevPage;
 
-  public NextPageRule(UserChatService userChatService) {
+  public PrevPageRule(UserChatService userChatService) {
     super(userChatService);
   }
 
@@ -33,7 +33,7 @@ public class NextPageRule extends BaseRule {
     PageableState state = (PageableState) userChatService.getState(event.getChatId());
 
     if (state != null) {
-      state.nextPage((ButtonClickEvent) event);
+      state.prevPage((ButtonClickEvent) event);
     }
   }
 }
