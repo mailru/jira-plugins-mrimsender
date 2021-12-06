@@ -17,13 +17,14 @@ import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Slf4j
 @Rule(name = "/issue command rule", description = "view issue by key")
-public class ViewIssueCommandRule extends BaseCommandRule {
+public class ViewIssueCommandRule extends BaseRule {
 
   static final RuleEventType NAME = RuleEventType.Issue;
   private final IssueService issueService;

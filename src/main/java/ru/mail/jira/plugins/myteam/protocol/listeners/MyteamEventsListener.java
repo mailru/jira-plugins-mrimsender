@@ -63,7 +63,7 @@ import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
 import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.commands.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.commands.HelpCommandRule;
 import ru.mail.jira.plugins.myteam.rulesengine.commands.MenuCommandRule;

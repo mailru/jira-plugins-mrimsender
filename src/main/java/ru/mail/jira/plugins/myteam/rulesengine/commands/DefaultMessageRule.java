@@ -17,11 +17,12 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(name = "hello message rule", description = "shows hello message")
-public class DefaultMessageRule extends BaseCommandRule {
+public class DefaultMessageRule extends BaseRule {
 
   static final RuleEventType NAME = RuleEventType.DefaultMessage;
 
@@ -30,15 +31,15 @@ public class DefaultMessageRule extends BaseCommandRule {
   }
 
   @Condition
-  public boolean isValid(@Fact("command") String command) {
-    return NAME.equalsName(command);
+  public boolean isValid(@Fact("command") String command, @Fact("event") MyteamEvent event) {
+    return NAME.equalsName(command) && event instanceof ChatMessageEvent;
   }
 
   @Action
   public void execute(@Fact("event") MyteamEvent event)
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    if (user != null && event instanceof ChatMessageEvent) {
+    if (user != null) {
       Locale locale = userChatService.getUserLocale(user);
       String chatId = event.getChatId();
 

@@ -14,7 +14,7 @@ import ru.mail.jira.plugins.commons.HttpClient;
 
 public class Utils {
 
-  private static final Pattern pattern = Pattern.compile("[A-Z]+-[1-9]+", Pattern.CASE_INSENSITIVE);
+  private static final Pattern pattern = Pattern.compile("[A-Z]+-[0-9]+", Pattern.CASE_INSENSITIVE);
 
   /**
    * Finding URL in string

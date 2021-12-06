@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine;
+package ru.mail.jira.plugins.myteam.rulesengine.models;
 
 public enum RuleEventType {
   DefaultMessage("defaultMessage"),

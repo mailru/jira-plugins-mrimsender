@@ -10,11 +10,12 @@ import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(name = "/menu command rule", description = "shows menu")
-public class MenuCommandRule extends BaseCommandRule {
+public class MenuCommandRule extends BaseRule {
   static final RuleEventType NAME = RuleEventType.Menu;
 
   public MenuCommandRule(UserChatService userChatService) {
