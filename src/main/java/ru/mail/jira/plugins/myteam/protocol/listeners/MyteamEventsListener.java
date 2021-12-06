@@ -63,11 +63,10 @@ import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
 import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
+import ru.mail.jira.plugins.myteam.rulesengine.commands.*;
+import ru.mail.jira.plugins.myteam.rulesengine.commands.buttons.NextPageRule;
+import ru.mail.jira.plugins.myteam.rulesengine.commands.buttons.PrevPageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
-import ru.mail.jira.plugins.myteam.rulesengine.commands.DefaultMessageRule;
-import ru.mail.jira.plugins.myteam.rulesengine.commands.HelpCommandRule;
-import ru.mail.jira.plugins.myteam.rulesengine.commands.MenuCommandRule;
-import ru.mail.jira.plugins.myteam.rulesengine.commands.ViewIssueCommandRule;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
@@ -156,10 +155,18 @@ public class MyteamEventsListener implements InitializingBean {
 
   @Override
   public void afterPropertiesSet() {
+    // Defaults
     myteamRulesEngine.registerRule(new DefaultMessageRule(userChatService));
+    myteamRulesEngine.registerRule(new NextPageRule(userChatService));
+    myteamRulesEngine.registerRule(new PrevPageRule(userChatService));
+    myteamRulesEngine.registerRule(new SearchByJQLIssuesRule(userChatService, issueService));
+    // Commands
     myteamRulesEngine.registerRule(new HelpCommandRule(userChatService));
     myteamRulesEngine.registerRule(new MenuCommandRule(userChatService));
     myteamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
+    myteamRulesEngine.registerRule(new WatchingIssuesCommandRule(userChatService));
+    // Services
+    myteamRulesEngine.registerRule(new SearchByJQLIssuesRule(userChatService, issueService));
   }
 
   public void publishEvent(MyteamEvent event) {
@@ -224,8 +231,7 @@ public class MyteamEventsListener implements InitializingBean {
       }
     } else if (!isGroupChatEvent && (message != null || chatMessageEvent.isHasForwards())) {
       myteamRulesEngine.fire(
-          MyteamRulesEngine.formCommandFacts(
-              RuleEventType.DefaultMessage.toString(), chatMessageEvent));
+          MyteamRulesEngine.formCommandFacts(RuleEventType.DefaultMessage, chatMessageEvent));
     }
   }
 
@@ -237,9 +243,15 @@ public class MyteamEventsListener implements InitializingBean {
     if (split.length == 0) return;
 
     String command = split[0];
-    List<String> args = Arrays.asList(split).subList(1, split.length);
+    String args = String.join("", Arrays.asList(split).subList(1, split.length));
 
     myteamRulesEngine.fire(MyteamRulesEngine.formCommandFacts(command, event, args));
+  }
+
+  private void handleButtonClick(ButtonClickEvent event) {
+    String buttonPrefix = StringUtils.substringBefore(event.getCallbackData(), "-");
+    String data = StringUtils.substringAfter(event.getCallbackData(), "-");
+    myteamRulesEngine.fire(MyteamRulesEngine.formCommandFacts(buttonPrefix, event, data));
   }
 
   @Subscribe
@@ -248,6 +260,8 @@ public class MyteamEventsListener implements InitializingBean {
     String buttonPrefix = StringUtils.substringBefore(buttonClickEvent.getCallbackData(), "-");
     String chatId = buttonClickEvent.getChatId();
     boolean isGroupChatEvent = buttonClickEvent.getChatType() == ChatType.GROUP;
+
+    handleButtonClick(buttonClickEvent);
 
     // if chat is in some state then use our state processing logic
     if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
@@ -408,12 +422,6 @@ public class MyteamEventsListener implements InitializingBean {
                 buttonClickEvent,
                 "assignee = currentUser() AND resolution = Unresolved ORDER BY updated"));
         break;
-      case "activeIssuesWatching":
-        asyncEventBus.post(
-            new SearchIssuesClickEvent(
-                buttonClickEvent,
-                "watcher = currentUser() AND resolution = Unresolved ORDER BY updated"));
-        break;
       case "activeIssuesCreated":
         asyncEventBus.post(
             new SearchIssuesClickEvent(
@@ -430,7 +438,7 @@ public class MyteamEventsListener implements InitializingBean {
         // answer button click here because ShowMenuEvent is originally MessageEvent =/
         myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
         myteamRulesEngine.fire(
-            MyteamRulesEngine.formCommandFacts(RuleEventType.Menu.toString(), buttonClickEvent));
+            MyteamRulesEngine.formCommandFacts(RuleEventType.Menu, buttonClickEvent));
         //        asyncEventBus.post(new ShowMenuEvent(buttonClickEvent));
         break;
       default:

@@ -2,23 +2,22 @@
 package ru.mail.jira.plugins.myteam.rulesengine.commands;
 
 import com.atlassian.jira.user.ApplicationUser;
-import java.io.IOException;
-import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
-import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import org.jeasy.rules.api.Facts;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
-@Rule(name = "/menu", description = "Shows menu")
-public class MenuCommandRule extends BaseRule {
-  static final RuleEventType NAME = RuleEventType.Menu;
+@Rule(name = "/watching", description = "Shows user's active watching issues")
+public class WatchingIssuesCommandRule extends BaseRule {
+  static final RuleEventType NAME = RuleEventType.WatchingIssues;
 
-  public MenuCommandRule(UserChatService userChatService) {
+  public WatchingIssuesCommandRule(UserChatService userChatService) {
     super(userChatService);
   }
 
@@ -28,16 +27,12 @@ public class MenuCommandRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") MyteamEvent event)
-      throws MyteamServerErrorException, IOException {
+  public void execute(@Fact("event") MyteamEvent event) {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     if (user != null) {
-      Locale locale = userChatService.getUserLocale(user);
-      userChatService.sendMessageText(
-          event.getChatId(),
-          userChatService.getRawText(
-              locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
-          messageFormatter.getMenuButtons(user));
+      Facts facts = MyteamRulesEngine.formBasicsFacts(RuleEventType.SearchByJql, event);
+      facts.put("args", "watcher = currentUser() AND resolution = Unresolved ORDER BY updated");
+      userChatService.fireRule(facts);
     }
   }
 }

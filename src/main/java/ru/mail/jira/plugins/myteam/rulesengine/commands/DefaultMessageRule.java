@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.rulesengine.commands;
 
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -17,11 +16,13 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
-@Rule(name = "hello message rule", description = "shows hello message")
+@Rule(
+    name = "Default message",
+    description = "Shows issue if message contains Issue key otherwise shows menu")
 public class DefaultMessageRule extends BaseRule {
 
   static final RuleEventType NAME = RuleEventType.DefaultMessage;
@@ -65,8 +66,7 @@ public class DefaultMessageRule extends BaseRule {
   private boolean fireViewIssueResult(@Fact("event") MyteamEvent event, String issueKey) {
     if (issueKey != null) {
       userChatService.fireRule(
-          MyteamRulesEngine.formCommandFacts(
-              RuleEventType.Issue.toString(), event, Collections.singletonList(issueKey)));
+          MyteamRulesEngine.formCommandFacts(RuleEventType.Issue.toString(), event, issueKey));
       return true;
     }
     return false;

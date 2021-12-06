@@ -64,6 +64,7 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.*;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
 
 @Slf4j
 @Component
@@ -1890,7 +1891,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.activeIssuesWatchingByMeButton.text"),
-            "activeIssuesWatching");
+            "watching");
     addRowWithButton(buttons, activeWatchingIssuesButton);
 
     // create 'Active issues crated by me' button
@@ -1946,6 +1947,31 @@ public class MessageFormatter {
                   locale,
                   "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.nextPageButton.text"),
               nextButtonData));
+    }
+    buttons.add(newButtonsRow);
+    return buttons;
+  }
+
+  public List<List<InlineKeyboardMarkupButton>> getPagerButtons(
+      Locale locale, boolean withPrev, boolean withNext) {
+    if (!withPrev && !withNext) return null;
+    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
+    List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>();
+    if (withPrev) {
+      newButtonsRow.add(
+          InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+              i18nResolver.getRawText(
+                  locale,
+                  "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.prevPageButton.text"),
+              RuleEventType.PrevPage.getName()));
+    }
+    if (withNext) {
+      newButtonsRow.add(
+          InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+              i18nResolver.getRawText(
+                  locale,
+                  "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.nextPageButton.text"),
+              RuleEventType.NextPage.getName()));
     }
     buttons.add(newButtonsRow);
     return buttons;

@@ -11,11 +11,11 @@ import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
-@Rule(name = "/help command rule", description = "shows help")
+@Rule(name = "/help", description = "Shows help")
 public class HelpCommandRule extends BaseRule {
 
   static final RuleEventType NAME = RuleEventType.Help;

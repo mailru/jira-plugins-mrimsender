@@ -1,8 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine;
 
-import java.util.Collections;
-import java.util.List;
 import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.Rules;
@@ -11,6 +9,7 @@ import org.jeasy.rules.core.DefaultRulesEngine;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
 
 @Component
 public class MyteamRulesEngine {
@@ -31,16 +30,29 @@ public class MyteamRulesEngine {
     rulesEngine.fire(rules, facts);
   }
 
-  public static Facts formCommandFacts(String command, MyteamEvent event) {
-    return formCommandFacts(command, event, Collections.emptyList());
+  public static Facts formCommandFacts(RuleEventType command, MyteamEvent event) {
+    return formCommandFacts(command.getName(), event, "");
   }
 
-  public static Facts formCommandFacts(String command, MyteamEvent event, List<String> args) {
+  public static Facts formCommandFacts(RuleEventType command, MyteamEvent event, String args) {
+    return formCommandFacts(command.getName(), event, args);
+  }
+
+  public static Facts formCommandFacts(String command, MyteamEvent event, String args) {
+    Facts facts = formBasicsFacts(command, event);
+    facts.add(new Fact<>("args", args));
+    return facts;
+  }
+
+  public static Facts formBasicsFacts(String command, MyteamEvent event) {
     Facts facts = new Facts();
     facts.put("command", command);
     facts.add(new Fact<>("event", event));
-    facts.add(new Fact<>("args", args));
     facts.add(new Fact<>("isGroup", event.getChatType().equals(ChatType.GROUP)));
     return facts;
+  }
+
+  public static Facts formBasicsFacts(RuleEventType command, MyteamEvent event) {
+    return formBasicsFacts(command.getName(), event);
   }
 }

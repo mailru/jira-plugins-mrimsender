@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import kong.unirest.HttpResponse;
+import kong.unirest.JsonNode;
+import kong.unirest.UnirestException;
 import lombok.Getter;
 import org.jeasy.rules.api.Facts;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
+import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Service
 public class UserChatServiceImpl implements UserChatService {
@@ -28,6 +31,7 @@ public class UserChatServiceImpl implements UserChatService {
   private final MyteamRulesEngine myTeamRulesEngine;
   private final MyteamApiClient myteamClient;
   private final I18nResolver i18nResolver;
+  private final StateManager stateManager;
 
   @Getter(onMethod_ = {@Override})
   private final MessageFormatter messageFormatter;
@@ -37,6 +41,7 @@ public class UserChatServiceImpl implements UserChatService {
       UserData userData,
       MyteamRulesEngine myTeamRulesEngine,
       MessageFormatter messageFormatter,
+      StateManager stateManager,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport I18nResolver i18nResolver) {
     this.myteamClient = myteamApiClient;
@@ -45,6 +50,7 @@ public class UserChatServiceImpl implements UserChatService {
     this.localeManager = localeManager;
     this.i18nResolver = i18nResolver;
     this.messageFormatter = messageFormatter;
+    this.stateManager = stateManager;
   }
 
   @Override
@@ -74,6 +80,32 @@ public class UserChatServiceImpl implements UserChatService {
   public void sendMessageText(String chatId, String message)
       throws MyteamServerErrorException, IOException {
     myteamClient.sendMessageText(chatId, message);
+  }
+
+  @Override
+  public BotState getState(String chatId) {
+    return stateManager.getState(chatId);
+  }
+
+  @Override
+  public void setState(String chatId, BotState state) {
+    stateManager.setState(chatId, state);
+  }
+
+  @Override
+  public HttpResponse<MessageResponse> editMessageText(
+      String chatId,
+      long messageId,
+      String text,
+      List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
+      throws UnirestException, IOException, MyteamServerErrorException {
+    return myteamClient.editMessageText(chatId, messageId, text, inlineKeyboardMarkup);
+  }
+
+  @Override
+  public HttpResponse<JsonNode> answerCallbackQuery(String queryId)
+      throws UnirestException, MyteamServerErrorException {
+    return myteamClient.answerCallbackQuery(queryId);
   }
 
   @Override
