@@ -2,7 +2,6 @@
 package ru.mail.jira.plugins.myteam.protocol.listeners;
 
 import com.atlassian.jira.config.LocaleManager;
-import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
@@ -15,24 +14,20 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
-import java.net.URL;
-import java.util.Locale;
 import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
-import ru.mail.jira.plugins.myteam.protocol.events.*;
+import ru.mail.jira.plugins.myteam.protocol.events.IssueUnwatchEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.IssueWatchEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.LinkIssueWithChatEvent;
 
 @Slf4j
 @Component
@@ -46,7 +41,6 @@ public class ChatCommandListener {
   private final IssueManager issueManager;
   private final PermissionManager permissionManager;
   private final JiraAuthenticationContext jiraAuthenticationContext;
-  private final String JIRA_BASE_URL;
   private final WatcherManager watcherManager;
 
   @Autowired
@@ -71,93 +65,7 @@ public class ChatCommandListener {
     this.issueManager = issueManager;
     this.permissionManager = permissionManager;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
-    this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
     this.watcherManager = watcherManager;
-  }
-
-  @Subscribe
-  public void onShowHelpEvent(ShowHelpEvent showHelpEvent)
-      throws IOException, UnirestException, MyteamServerErrorException {
-    log.debug("ShowHelpEvent handling started");
-    ApplicationUser currentUser = userData.getUserByMrimLogin(showHelpEvent.getUserId());
-    if (currentUser != null) {
-      Locale locale = localeManager.getLocaleFor(currentUser);
-      if (showHelpEvent.getChatType() == ChatType.GROUP)
-        myteamApiClient.sendMessageText(
-            showHelpEvent.getChatId(),
-            i18nResolver.getRawText(
-                locale,
-                "ru.mail.jira.plugins.myteam.myteamEventsListener.groupChat.helpMessage.text"));
-      else
-        myteamApiClient.sendMessageText(
-            showHelpEvent.getChatId(),
-            i18nResolver.getRawText(
-                locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.helpMessage.text"));
-    }
-    log.debug("ShowHelpEvent handling finished");
-  }
-
-  @Subscribe
-  public void onShowMenuEvent(ShowMenuEvent showMenuEvent)
-      throws IOException, UnirestException, MyteamServerErrorException {
-    log.debug("ShowDefaultMenuEvent handling started...");
-    ApplicationUser currentUser = userData.getUserByMrimLogin(showMenuEvent.getUserId());
-    if (currentUser != null) {
-      Locale locale = localeManager.getLocaleFor(currentUser);
-      myteamApiClient.sendMessageText(
-          showMenuEvent.getChatId(),
-          i18nResolver.getRawText(
-              locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
-          messageFormatter.getMenuButtons(currentUser));
-    }
-    log.debug("JiraMessageQueueProcessor showDefaultMenu finished...");
-  }
-
-  @Subscribe
-  public void onShowIssueEvent(ShowIssueEvent showIssueEvent)
-      throws IOException, UnirestException, MyteamServerErrorException {
-    log.debug("ShowIssueEvent handling started");
-    ApplicationUser currentUser = userData.getUserByMrimLogin(showIssueEvent.getUserId());
-    String chatId = showIssueEvent.getChatId();
-    if (showIssueEvent.isGroupChat())
-      sendIssueViewToGroup(showIssueEvent.getIssueKey(), currentUser, chatId);
-    else sendIssueViewToUser(showIssueEvent.getIssueKey(), currentUser, chatId);
-  }
-
-  @Subscribe
-  public void onShowDefaultMessageEvent(ShowDefaultMessageEvent showDefaultMessageEvent)
-      throws IOException, UnirestException, MyteamServerErrorException {
-    log.debug("ShowDefaultMessageEvent handling started");
-    ApplicationUser currentUser = userData.getUserByMrimLogin(showDefaultMessageEvent.getUserId());
-    String chatId = showDefaultMessageEvent.getChatId();
-    if (currentUser != null) {
-      Locale locale = localeManager.getLocaleFor(currentUser);
-      if (showDefaultMessageEvent.isHasForwards()) {
-        Forward forward = showDefaultMessageEvent.getForwardList().get(0);
-        String forwardMessageText = forward.getMessage().getText();
-        URL issueUrl = Utils.tryFindUrlByPrefixInStr(forwardMessageText, JIRA_BASE_URL);
-        if (issueUrl != null) {
-          String issueKey = StringUtils.substringAfterLast(issueUrl.getPath(), "/");
-          this.sendIssueViewToUser(issueKey, currentUser, chatId);
-          log.debug("ShowDefaultMessageEvent handling finished");
-          return;
-        }
-      }
-      URL issueUrl =
-          Utils.tryFindUrlByPrefixInStr(showDefaultMessageEvent.getMessage(), JIRA_BASE_URL);
-      if (issueUrl != null) {
-        String issueKey = StringUtils.substringAfterLast(issueUrl.getPath(), "/");
-        this.sendIssueViewToUser(issueKey, currentUser, chatId);
-        log.debug("ShowDefaultMessageEvent handling finished");
-        return;
-      }
-      myteamApiClient.sendMessageText(
-          showDefaultMessageEvent.getChatId(),
-          i18nResolver.getRawText(
-              locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.defaultMessage.text"),
-          messageFormatter.getMenuButtons(currentUser));
-    }
-    log.debug("ShowDefaultMessageEvent handling finished");
   }
 
   @Subscribe

@@ -31,6 +31,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,6 +43,7 @@ import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.commons.Utils;
@@ -60,10 +62,18 @@ import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
+import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.commands.DefaultMessageRule;
+import ru.mail.jira.plugins.myteam.rulesengine.commands.HelpCommandRule;
+import ru.mail.jira.plugins.myteam.rulesengine.commands.MenuCommandRule;
+import ru.mail.jira.plugins.myteam.rulesengine.commands.ViewIssueCommandRule;
+import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
+import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Slf4j
 @Component
-public class MyteamEventsListener {
+public class MyteamEventsListener implements InitializingBean {
   private static final String THREAD_NAME_PREFIX = "icq-events-listener-thread-pool";
   private static final String CHAT_COMMAND_PREFIX = "/";
 
@@ -86,6 +96,9 @@ public class MyteamEventsListener {
   private final String JIRA_BASE_URL;
   private final ChatCommandListener chatCommandListener;
   private final WatcherManager watcherManager;
+  private final MyteamRulesEngine myteamRulesEngine;
+  private final UserChatService userChatService;
+  private final IssueService issueService;
 
   @Autowired
   public MyteamEventsListener(
@@ -96,6 +109,9 @@ public class MyteamEventsListener {
       ChatCommandListener chatCommandListener,
       ButtonClickListener buttonClickListener,
       CreateIssueEventsListener createIssueEventsListener,
+      MyteamRulesEngine myteamRulesEngine,
+      UserChatService userChatService,
+      IssueService issueService,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport I18nResolver i18nResolver,
       @ComponentImport IssueManager issueManager,
@@ -109,6 +125,9 @@ public class MyteamEventsListener {
     this.chatsStateMap = chatStateMapping.getChatsStateMap();
     this.attachmentManager = attachmentManager;
     this.watcherManager = watcherManager;
+    this.myteamRulesEngine = myteamRulesEngine;
+    this.userChatService = userChatService;
+    this.issueService = issueService;
     this.asyncEventBus =
         new AsyncEventBus(
             executorService,
@@ -135,7 +154,15 @@ public class MyteamEventsListener {
     this.chatCommandListener = chatCommandListener;
   }
 
-  public void publishEvent(Event event) {
+  @Override
+  public void afterPropertiesSet() {
+    myteamRulesEngine.registerRule(new DefaultMessageRule(userChatService));
+    myteamRulesEngine.registerRule(new HelpCommandRule(userChatService));
+    myteamRulesEngine.registerRule(new MenuCommandRule(userChatService));
+    myteamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
+  }
+
+  public void publishEvent(MyteamEvent event) {
     asyncEventBus.post(event);
   }
 
@@ -184,15 +211,7 @@ public class MyteamEventsListener {
 
     if (message != null && message.startsWith(CHAT_COMMAND_PREFIX)) {
       String command = StringUtils.substringAfter(message, CHAT_COMMAND_PREFIX).toLowerCase();
-      if (command.startsWith("help")) {
-        asyncEventBus.post(new ShowHelpEvent(chatMessageEvent));
-      }
-      if (command.startsWith("menu") && !isGroupChatEvent) {
-        asyncEventBus.post(new ShowMenuEvent(chatMessageEvent));
-      }
-      if (command.startsWith("issue")) {
-        asyncEventBus.post(new ShowIssueEvent(chatMessageEvent, JIRA_BASE_URL));
-      }
+      handleCommand(chatMessageEvent);
 
       if (command.startsWith("link") && isGroupChatEvent) {
         asyncEventBus.post(new LinkIssueWithChatEvent(chatMessageEvent));
@@ -204,8 +223,23 @@ public class MyteamEventsListener {
         asyncEventBus.post(new IssueUnwatchEvent(chatMessageEvent));
       }
     } else if (!isGroupChatEvent && (message != null || chatMessageEvent.isHasForwards())) {
-      asyncEventBus.post(new ShowDefaultMessageEvent(chatMessageEvent));
+      myteamRulesEngine.fire(
+          MyteamRulesEngine.formCommandFacts(
+              RuleEventType.DefaultMessage.toString(), chatMessageEvent));
     }
+  }
+
+  private void handleCommand(ChatMessageEvent event) {
+    String withoutPrefix =
+        StringUtils.substringAfter(event.getMessage(), CHAT_COMMAND_PREFIX).toLowerCase();
+    String[] split = withoutPrefix.split("\\s+");
+
+    if (split.length == 0) return;
+
+    String command = split[0];
+    List<String> args = Arrays.asList(split).subList(1, split.length);
+
+    myteamRulesEngine.fire(MyteamRulesEngine.formCommandFacts(command, event, args));
   }
 
   @Subscribe
@@ -395,7 +429,9 @@ public class MyteamEventsListener {
       case "showMenu":
         // answer button click here because ShowMenuEvent is originally MessageEvent =/
         myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
-        asyncEventBus.post(new ShowMenuEvent(buttonClickEvent));
+        myteamRulesEngine.fire(
+            MyteamRulesEngine.formCommandFacts(RuleEventType.Menu.toString(), buttonClickEvent));
+        //        asyncEventBus.post(new ShowMenuEvent(buttonClickEvent));
         break;
       default:
         // fix infinite spinners situations for not recognized button clicks

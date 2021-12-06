@@ -4,23 +4,21 @@ package ru.mail.jira.plugins.myteam.protocol.events.buttons;
 import lombok.Getter;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.Event;
+import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 
 @Getter
-public class ButtonClickEvent implements Event {
+public class ButtonClickEvent extends MyteamEvent {
   private final String queryId;
-  private final String chatId;
-  private final String userId;
   private final long msgId;
   private final String callbackData;
-  private final ChatType chatType;
 
   public ButtonClickEvent(CallbackQueryEvent callbackQueryEvent) {
+    super(
+        callbackQueryEvent.getMessage().getChat().getChatId(),
+        callbackQueryEvent.getFrom().getUserId(),
+        ChatType.fromApiValue(callbackQueryEvent.getMessage().getChat().getType()));
     this.queryId = callbackQueryEvent.getQueryId();
-    this.chatId = callbackQueryEvent.getMessage().getChat().getChatId();
-    this.userId = callbackQueryEvent.getFrom().getUserId();
     this.msgId = callbackQueryEvent.getMessage().getMsgId();
     this.callbackData = callbackQueryEvent.getCallbackData();
-    this.chatType = ChatType.fromApiValue(callbackQueryEvent.getMessage().getChat().getType());
   }
 }
