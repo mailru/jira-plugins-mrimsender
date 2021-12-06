@@ -35,7 +35,7 @@ public class SearchByJQLIssuesRule extends BaseRule {
   public void execute(@Fact("event") MyteamEvent event, @Fact("args") String jql) {
     JqlSearchState newState = new JqlSearchState(userChatService, issueService, event, jql);
     try {
-      newState.onPageUpdate();
+      newState.updateMessage(event, false);
     } catch (MyteamServerErrorException | IOException e) {
       log.error(e.getLocalizedMessage());
     }

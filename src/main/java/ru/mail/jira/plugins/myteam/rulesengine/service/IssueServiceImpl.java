@@ -79,12 +79,15 @@ public class IssueServiceImpl implements IssueService {
   public SearchResults<Issue> SearchByJql(String jql, ApplicationUser user, int page, int pageSize)
       throws SearchException, ParseException {
     JiraThreadLocalUtils.preCall();
+
     SearchService.ParseResult parseResult = searchService.parseQuery(user, jql);
     if (parseResult.isValid()) {
+
       Query jqlQuery = parseResult.getQuery();
       Query sanitizedJql = searchService.sanitiseSearchQuery(user, jqlQuery);
       PagerFilter<Issue> pagerFilter = new PagerFilter<>(page * pageSize, pageSize);
       SearchResults<Issue> res = searchService.search(user, sanitizedJql, pagerFilter);
+
       JiraThreadLocalUtils.postCall();
       return res;
     } else {
