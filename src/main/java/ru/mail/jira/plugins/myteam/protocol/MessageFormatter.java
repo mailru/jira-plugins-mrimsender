@@ -1882,7 +1882,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.activeIssuesAssignedToMeButton.text"),
-            "activeIssuesAssigned");
+            "assigned");
     addRowWithButton(buttons, activeAssignedIssuesButton);
 
     // create 'Active issues i watching' button
@@ -1900,7 +1900,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.activeIssuesCreatedByMeButton.text"),
-            "activeIssuesCreated");
+            "created");
     addRowWithButton(buttons, activeCreatedIssuesButton);
 
     // create 'Search issue by JQL' button

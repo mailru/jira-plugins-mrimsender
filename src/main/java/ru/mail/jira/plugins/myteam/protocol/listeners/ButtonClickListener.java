@@ -37,17 +37,7 @@ import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.CancelClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.CommentIssueClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.NextIssueCommentsPageClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.NextIssuesPageClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.PrevIssueCommentsPageClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.PrevIssuesPageClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.SearchByJqlClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.SearchIssuesClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.ShowIssueClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.ViewIssueClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.ViewIssueCommentsClickEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 
 @Slf4j
 @Component

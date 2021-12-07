@@ -13,15 +13,15 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
-import ru.mail.jira.plugins.myteam.rulesengine.states.JqlSearchState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.ViewingJqlSearchResultsState;
 
 @Slf4j
 @Rule(name = "jql search", description = "Shows issues by JQL")
-public class SearchByJQLIssuesRule extends BaseRule {
+public class SearchByJqlIssuesRule extends BaseRule {
   static final RuleEventType NAME = RuleEventType.SearchByJql;
   private final IssueService issueService;
 
-  public SearchByJQLIssuesRule(UserChatService userChatService, IssueService issueService) {
+  public SearchByJqlIssuesRule(UserChatService userChatService, IssueService issueService) {
     super(userChatService);
     this.issueService = issueService;
   }
@@ -33,7 +33,8 @@ public class SearchByJQLIssuesRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("args") String jql) {
-    JqlSearchState newState = new JqlSearchState(userChatService, issueService, event, jql);
+    ViewingJqlSearchResultsState newState =
+        new ViewingJqlSearchResultsState(userChatService, issueService, event, jql);
     try {
       newState.updateMessage(event, false);
     } catch (MyteamServerErrorException | IOException e) {

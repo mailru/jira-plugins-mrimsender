@@ -9,6 +9,8 @@ public enum RuleEventType {
   Menu("menu"),
   Issue("issue"),
   WatchingIssues("watching"),
+  AssignedIssues("assigned"),
+  CreatedIssues("created"),
   SearchByJql("jql"),
   NextPage("next"),
   PrevPage("previous");

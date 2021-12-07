@@ -66,12 +66,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.NextPageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.PrevPageRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.DefaultMessageRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.HelpCommandRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.MenuCommandRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.ViewIssueCommandRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJQLIssuesRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.service.WatchingIssuesCommandRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.*;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
@@ -164,14 +160,16 @@ public class MyteamEventsListener implements InitializingBean {
     myteamRulesEngine.registerRule(new DefaultMessageRule(userChatService));
     myteamRulesEngine.registerRule(new NextPageRule(userChatService));
     myteamRulesEngine.registerRule(new PrevPageRule(userChatService));
-    myteamRulesEngine.registerRule(new SearchByJQLIssuesRule(userChatService, issueService));
+    myteamRulesEngine.registerRule(new SearchByJqlIssuesRule(userChatService, issueService));
     // Commands
     myteamRulesEngine.registerRule(new HelpCommandRule(userChatService));
     myteamRulesEngine.registerRule(new MenuCommandRule(userChatService));
     myteamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
     myteamRulesEngine.registerRule(new WatchingIssuesCommandRule(userChatService));
+    myteamRulesEngine.registerRule(new AssignedIssuesCommandRule(userChatService));
+    myteamRulesEngine.registerRule(new CreatedIssuesCommandRule(userChatService));
     // Services
-    myteamRulesEngine.registerRule(new SearchByJQLIssuesRule(userChatService, issueService));
+    myteamRulesEngine.registerRule(new SearchByJqlIssuesRule(userChatService, issueService));
   }
 
   public void publishEvent(MyteamEvent event) {
@@ -420,18 +418,6 @@ public class MyteamEventsListener implements InitializingBean {
         break;
       case "unwatch":
         asyncEventBus.post(new IssueUnwatchEvent(buttonClickEvent));
-        break;
-      case "activeIssuesAssigned":
-        asyncEventBus.post(
-            new SearchIssuesClickEvent(
-                buttonClickEvent,
-                "assignee = currentUser() AND resolution = Unresolved ORDER BY updated"));
-        break;
-      case "activeIssuesCreated":
-        asyncEventBus.post(
-            new SearchIssuesClickEvent(
-                buttonClickEvent,
-                "reporter = currentUser() AND resolution = Unresolved ORDER BY updated"));
         break;
       case "searchByJql":
         asyncEventBus.post(new SearchByJqlClickEvent(buttonClickEvent));

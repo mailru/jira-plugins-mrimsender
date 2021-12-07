@@ -20,7 +20,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Slf4j
-public class JqlSearchState implements PageableState {
+public class ViewingJqlSearchResultsState implements PageableState {
 
   public static final int JQL_SEARCH_PAGE_SIZE = 15;
 
@@ -29,7 +29,7 @@ public class JqlSearchState implements PageableState {
   private final String jql;
   private int page = 0;
 
-  public JqlSearchState(
+  public ViewingJqlSearchResultsState(
       UserChatService userChatService, IssueService issueService, MyteamEvent event, String jql) {
     this.issueService = issueService;
     this.userChatService = userChatService;
