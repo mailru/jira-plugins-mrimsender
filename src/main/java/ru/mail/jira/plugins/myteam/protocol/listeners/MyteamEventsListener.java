@@ -1,9 +1,6 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol.listeners;
 
-import static ru.mail.jira.plugins.myteam.protocol.MessageFormatter.LIST_PAGE_SIZE;
-
-import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
@@ -13,18 +10,13 @@ import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.attachment.ConvertTemporaryAttachmentParams;
 import com.atlassian.jira.issue.attachment.TemporaryAttachmentId;
 import com.atlassian.jira.issue.comments.CommentManager;
-import com.atlassian.jira.issue.search.SearchException;
-import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.issue.watchers.WatcherManager;
 import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.util.MessageSet;
 import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
-import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import com.atlassian.query.Query;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
@@ -33,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -95,7 +86,6 @@ public class MyteamEventsListener implements InitializingBean {
   private final PermissionManager permissionManager;
   private final CommentManager commentManager;
   private final AttachmentManager attachmentManager;
-  private final SearchService searchService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final String JIRA_BASE_URL;
   private final ChatCommandListener chatCommandListener;
@@ -122,7 +112,6 @@ public class MyteamEventsListener implements InitializingBean {
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport CommentManager commentManager,
       @ComponentImport AttachmentManager attachmentManager,
-      @ComponentImport SearchService searchService,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport ApplicationProperties applicationProperties,
       @ComponentImport WatcherManager watcherManager) {
@@ -152,7 +141,6 @@ public class MyteamEventsListener implements InitializingBean {
     this.issueManager = issueManager;
     this.permissionManager = permissionManager;
     this.commentManager = commentManager;
-    this.searchService = searchService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
     this.chatCommandListener = chatCommandListener;
@@ -204,10 +192,6 @@ public class MyteamEventsListener implements InitializingBean {
       }
       if (chatState.isWaitingForIssueKey()) {
         asyncEventBus.post(new IssueKeyMessageEvent(chatMessageEvent, JIRA_BASE_URL));
-        return;
-      }
-      if (chatState.isWaitingForJqlClause()) {
-        asyncEventBus.post(new SearchIssuesEvent(chatMessageEvent));
         return;
       }
       if (chatState.isWaitingForProjectSelect()) {
@@ -282,7 +266,7 @@ public class MyteamEventsListener implements InitializingBean {
 
   @Subscribe
   public void handleButtonClickEvent(ButtonClickEvent buttonClickEvent)
-      throws UnirestException, IOException, MyteamServerErrorException {
+      throws UnirestException, MyteamServerErrorException {
     String buttonPrefix = StringUtils.substringBefore(buttonClickEvent.getCallbackData(), "-");
     String chatId = buttonClickEvent.getChatId();
     boolean isGroupChatEvent = buttonClickEvent.getChatType() == ChatType.GROUP;
@@ -292,24 +276,6 @@ public class MyteamEventsListener implements InitializingBean {
     // if chat is in some state then use our state processing logic
     if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
       ChatState chatState = chatsStateMap.remove(chatId);
-      //      if (chatState.isIssueSearchResultsShowing()) {
-      //        if (buttonPrefix.equals("nextIssueListPage")) {
-      //          asyncEventBus.post(
-      //              new NextIssuesPageClickEvent(
-      //                  buttonClickEvent,
-      //                  chatState.getCurrentSelectListPage(),
-      //                  chatState.getCurrentSearchJqlClause()));
-      //          return;
-      //        }
-      //        if (buttonPrefix.equals("prevIssueListPage")) {
-      //          asyncEventBus.post(
-      //              new PrevIssuesPageClickEvent(
-      //                  buttonClickEvent,
-      //                  chatState.getCurrentSelectListPage(),
-      //                  chatState.getCurrentSearchJqlClause()));
-      //          return;
-      //        }
-      //      }
       if (chatState.isIssueCommentsShowing()) {
         if (buttonPrefix.equals("nextIssueCommentsListPage")) {
           asyncEventBus.post(
@@ -442,9 +408,6 @@ public class MyteamEventsListener implements InitializingBean {
       case "unwatch":
         asyncEventBus.post(new IssueUnwatchEvent(buttonClickEvent));
         break;
-      case "searchByJql":
-        asyncEventBus.post(new SearchByJqlClickEvent(buttonClickEvent));
-        break;
       case "createIssue":
         asyncEventBus.post(new CreateIssueClickEvent(buttonClickEvent));
         break;
@@ -573,68 +536,6 @@ public class MyteamEventsListener implements InitializingBean {
       jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
     }
     log.debug("NewIssueKeyMessageEvent handling finished");
-  }
-
-  @Subscribe
-  public void onSearchIssuesEvent(SearchIssuesEvent searchIssuesEvent)
-      throws IOException, UnirestException, SearchException, MyteamServerErrorException {
-    log.debug("ShowIssuesFilterResultsEvent handling started");
-    JiraThreadLocalUtils.preCall();
-    try {
-      ApplicationUser currentUser = userData.getUserByMrimLogin(searchIssuesEvent.getUserId());
-      if (currentUser != null) {
-        Locale locale = localeManager.getLocaleFor(currentUser);
-        SearchService.ParseResult parseResult =
-            searchService.parseQuery(currentUser, searchIssuesEvent.getJqlClause());
-        if (parseResult.isValid()) {
-          Query jqlQuery = parseResult.getQuery();
-          Query sanitizedJql = searchService.sanitiseSearchQuery(currentUser, jqlQuery);
-          MessageSet messageSet = searchService.validateQuery(currentUser, sanitizedJql);
-          if (!messageSet.hasAnyErrors()) {
-            PagerFilter<Issue> pagerFilter = new PagerFilter<>(0, LIST_PAGE_SIZE);
-            SearchResults<Issue> searchResults =
-                searchService.search(currentUser, sanitizedJql, pagerFilter);
-            int totalResultsSize = searchResults.getTotal();
-            if (totalResultsSize == 0)
-              myteamApiClient.sendMessageText(
-                  searchIssuesEvent.getChatId(),
-                  i18nResolver.getText(
-                      locale,
-                      "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.emptyResult"));
-            else {
-              myteamApiClient.sendMessageText(
-                  searchIssuesEvent.getChatId(),
-                  messageFormatter.stringifyIssueList(
-                      locale, searchResults.getResults(), 0, totalResultsSize),
-                  messageFormatter.getIssueListButtons(
-                      locale, false, totalResultsSize > LIST_PAGE_SIZE));
-
-              chatsStateMap.put(
-                  searchIssuesEvent.getChatId(),
-                  ChatState.buildIssueSearchResultsWatchingState(sanitizedJql, 0));
-            }
-          } else {
-            myteamApiClient.sendMessageText(
-                searchIssuesEvent.getChatId(),
-                String.join(
-                    "\n",
-                    i18nResolver.getRawText(
-                        locale,
-                        "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.jqlParseError.text"),
-                    messageFormatter.stringifyJqlClauseErrorsMap(messageSet, locale)));
-          }
-        } else {
-          myteamApiClient.sendMessageText(
-              searchIssuesEvent.getChatId(),
-              i18nResolver.getRawText(
-                  locale,
-                  "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.jqlParseError.text"));
-        }
-      }
-      log.debug("ShowIssuesFilterResultsEvent handling finished");
-    } finally {
-      JiraThreadLocalUtils.postCall();
-    }
   }
 
   public String convertToJiraCommentStyle(
