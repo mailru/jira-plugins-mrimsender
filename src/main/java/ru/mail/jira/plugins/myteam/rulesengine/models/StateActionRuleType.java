@@ -3,15 +3,13 @@ package ru.mail.jira.plugins.myteam.rulesengine.models;
 
 import lombok.Getter;
 
-public enum ButtonRuleType implements RuleType {
-  NextPage("next"),
-  PrevPage("previous"),
-  SearchByInputJql("searchByJqlInput");
+public enum StateActionRuleType implements RuleType {
+  JqlInput("jqlInput");
 
   @Getter(onMethod_ = {@Override})
   private final String name;
 
-  ButtonRuleType(String name) {
+  StateActionRuleType(String name) {
     this.name = name;
   }
 

@@ -65,6 +65,7 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.*;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
 
 @Slf4j
 @Component
@@ -1882,7 +1883,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.activeIssuesAssignedToMeButton.text"),
-            "assigned");
+            CommandRuleType.AssignedIssues.getName());
     addRowWithButton(buttons, activeAssignedIssuesButton);
 
     // create 'Active issues i watching' button
@@ -1891,7 +1892,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.activeIssuesWatchingByMeButton.text"),
-            "watching");
+            CommandRuleType.WatchingIssues.getName());
     addRowWithButton(buttons, activeWatchingIssuesButton);
 
     // create 'Active issues crated by me' button
@@ -1900,7 +1901,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.activeIssuesCreatedByMeButton.text"),
-            "created");
+            CommandRuleType.CreatedIssues.getName());
     addRowWithButton(buttons, activeCreatedIssuesButton);
 
     // create 'Search issue by JQL' button
@@ -1909,7 +1910,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.searchIssueByJqlButton.text"),
-            "searchByJql");
+            ButtonRuleType.SearchByInputJql.getName());
     addRowWithButton(buttons, searchIssueByJqlButton);
 
     // create 'create issue' button
@@ -1979,7 +1980,12 @@ public class MessageFormatter {
 
   public List<List<InlineKeyboardMarkupButton>> getIssueListButtons(
       Locale locale, boolean withPrev, boolean withNext) {
-    return getListButtons(locale, withPrev, withNext, "prevIssueListPage", "nextIssueListPage");
+    return getListButtons(
+        locale,
+        withPrev,
+        withNext,
+        ButtonRuleType.PrevPage.getName(),
+        ButtonRuleType.NextPage.getName());
   }
 
   public String stringifyMap(Map<?, ?> map) {

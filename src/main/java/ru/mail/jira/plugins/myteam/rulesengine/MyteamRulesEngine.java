@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Component
 public class MyteamRulesEngine {
@@ -54,5 +55,14 @@ public class MyteamRulesEngine {
 
   public static Facts formBasicsFacts(RuleType command, MyteamEvent event) {
     return formBasicsFacts(command.getName(), event);
+  }
+
+  public static Facts formStateActionFacts(BotState state, String args, MyteamEvent event) {
+    Facts facts = new Facts();
+    facts.put("args", args);
+    facts.add(new Fact<>("state", state));
+    facts.add(new Fact<>("event", event));
+    facts.add(new Fact<>("isGroup", event.getChatType().equals(ChatType.GROUP)));
+    return facts;
   }
 }

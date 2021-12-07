@@ -11,6 +11,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -20,16 +21,16 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Slf4j
-public class ViewingJqlSearchResultsState implements PageableState {
+public class JqlSearchState extends BotState implements PageableState {
 
   public static final int JQL_SEARCH_PAGE_SIZE = 15;
 
   private final IssueService issueService;
   private final UserChatService userChatService;
-  private final String jql;
+  @Getter private final String jql;
   private int page = 0;
 
-  public ViewingJqlSearchResultsState(
+  public JqlSearchState(
       UserChatService userChatService, IssueService issueService, MyteamEvent event, String jql) {
     this.issueService = issueService;
     this.userChatService = userChatService;

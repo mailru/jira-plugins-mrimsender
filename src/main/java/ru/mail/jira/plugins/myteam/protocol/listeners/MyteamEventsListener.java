@@ -67,10 +67,13 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ServiceRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.NextPageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.PrevPageRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.SearchByJqlInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Slf4j
 @Component
@@ -159,9 +162,12 @@ public class MyteamEventsListener implements InitializingBean {
   public void afterPropertiesSet() {
     // Defaults
     myteamRulesEngine.registerRule(new DefaultMessageRule(userChatService));
+
+    // Buttons
+    myteamRulesEngine.registerRule(new SearchByJqlInputRule(userChatService));
     myteamRulesEngine.registerRule(new NextPageRule(userChatService));
     myteamRulesEngine.registerRule(new PrevPageRule(userChatService));
-    myteamRulesEngine.registerRule(new SearchByJqlIssuesRule(userChatService, issueService));
+
     // Commands
     myteamRulesEngine.registerRule(new HelpCommandRule(userChatService));
     myteamRulesEngine.registerRule(new MenuCommandRule(userChatService));
@@ -171,6 +177,11 @@ public class MyteamEventsListener implements InitializingBean {
     myteamRulesEngine.registerRule(new CreatedIssuesCommandRule(userChatService));
     // Services
     myteamRulesEngine.registerRule(new SearchByJqlIssuesRule(userChatService, issueService));
+
+    // States
+
+    // JQL
+    myteamRulesEngine.registerRule(new JqlInputRule(userChatService));
   }
 
   public void publishEvent(MyteamEvent event) {
@@ -181,6 +192,8 @@ public class MyteamEventsListener implements InitializingBean {
   public void handleNewMessageEvent(ChatMessageEvent chatMessageEvent) {
     String chatId = chatMessageEvent.getChatId();
     boolean isGroupChatEvent = chatMessageEvent.getChatType() == ChatType.GROUP;
+
+    BotState state = userChatService.getState(chatMessageEvent.getChatId());
 
     // if chat is in some state then use our state processing logic
     if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
@@ -233,10 +246,13 @@ public class MyteamEventsListener implements InitializingBean {
       if (command.startsWith("unwatch")) {
         asyncEventBus.post(new IssueUnwatchEvent(chatMessageEvent));
       }
-    } else if (!isGroupChatEvent && (message != null || chatMessageEvent.isHasForwards())) {
+    } else if (!isGroupChatEvent
+        && (message != null || chatMessageEvent.isHasForwards())
+        && (state == null || !state.isWaiting())) {
       myteamRulesEngine.fire(
           MyteamRulesEngine.formCommandFacts(ServiceRuleType.DefaultMessage, chatMessageEvent));
     }
+    handleStateAction(chatMessageEvent);
   }
 
   private void handleCommand(ChatMessageEvent event) {
@@ -258,6 +274,12 @@ public class MyteamEventsListener implements InitializingBean {
     myteamRulesEngine.fire(MyteamRulesEngine.formCommandFacts(buttonPrefix, event, data));
   }
 
+  private void handleStateAction(ChatMessageEvent event) {
+    myteamRulesEngine.fire(
+        MyteamRulesEngine.formStateActionFacts(
+            userChatService.getState(event.getChatId()), event.getMessage(), event));
+  }
+
   @Subscribe
   public void handleButtonClickEvent(ButtonClickEvent buttonClickEvent)
       throws UnirestException, IOException, MyteamServerErrorException {
@@ -270,24 +292,24 @@ public class MyteamEventsListener implements InitializingBean {
     // if chat is in some state then use our state processing logic
     if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
       ChatState chatState = chatsStateMap.remove(chatId);
-      if (chatState.isIssueSearchResultsShowing()) {
-        if (buttonPrefix.equals("nextIssueListPage")) {
-          asyncEventBus.post(
-              new NextIssuesPageClickEvent(
-                  buttonClickEvent,
-                  chatState.getCurrentSelectListPage(),
-                  chatState.getCurrentSearchJqlClause()));
-          return;
-        }
-        if (buttonPrefix.equals("prevIssueListPage")) {
-          asyncEventBus.post(
-              new PrevIssuesPageClickEvent(
-                  buttonClickEvent,
-                  chatState.getCurrentSelectListPage(),
-                  chatState.getCurrentSearchJqlClause()));
-          return;
-        }
-      }
+      //      if (chatState.isIssueSearchResultsShowing()) {
+      //        if (buttonPrefix.equals("nextIssueListPage")) {
+      //          asyncEventBus.post(
+      //              new NextIssuesPageClickEvent(
+      //                  buttonClickEvent,
+      //                  chatState.getCurrentSelectListPage(),
+      //                  chatState.getCurrentSearchJqlClause()));
+      //          return;
+      //        }
+      //        if (buttonPrefix.equals("prevIssueListPage")) {
+      //          asyncEventBus.post(
+      //              new PrevIssuesPageClickEvent(
+      //                  buttonClickEvent,
+      //                  chatState.getCurrentSelectListPage(),
+      //                  chatState.getCurrentSearchJqlClause()));
+      //          return;
+      //        }
+      //      }
       if (chatState.isIssueCommentsShowing()) {
         if (buttonPrefix.equals("nextIssueCommentsListPage")) {
           asyncEventBus.post(
