@@ -64,7 +64,7 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.*;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ButtonRuleType;
 
 @Slf4j
 @Component
@@ -1963,7 +1963,7 @@ public class MessageFormatter {
               i18nResolver.getRawText(
                   locale,
                   "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.prevPageButton.text"),
-              RuleEventType.PrevPage.getName()));
+              ButtonRuleType.PrevPage.getName()));
     }
     if (withNext) {
       newButtonsRow.add(
@@ -1971,7 +1971,7 @@ public class MessageFormatter {
               i18nResolver.getRawText(
                   locale,
                   "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.nextPageButton.text"),
-              RuleEventType.NextPage.getName()));
+              ButtonRuleType.NextPage.getName()));
     }
     buttons.add(newButtonsRow);
     return buttons;

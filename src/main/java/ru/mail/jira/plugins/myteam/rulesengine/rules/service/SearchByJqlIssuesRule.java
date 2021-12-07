@@ -10,7 +10,8 @@ import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ServiceRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.ViewingJqlSearchResultsState;
@@ -18,7 +19,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.ViewingJqlSearchResultsSta
 @Slf4j
 @Rule(name = "jql search", description = "Shows issues by JQL")
 public class SearchByJqlIssuesRule extends BaseRule {
-  static final RuleEventType NAME = RuleEventType.SearchByJql;
+  static final RuleType NAME = ServiceRuleType.SearchByJql;
   private final IssueService issueService;
 
   public SearchByJqlIssuesRule(UserChatService userChatService, IssueService issueService) {

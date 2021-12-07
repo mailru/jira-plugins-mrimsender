@@ -12,13 +12,13 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(name = "/help", description = "Shows help")
 public class HelpCommandRule extends BaseRule {
 
-  static final RuleEventType NAME = RuleEventType.Help;
+  static final CommandRuleType NAME = CommandRuleType.Help;
 
   public HelpCommandRule(UserChatService userChatService) {
     super(userChatService);

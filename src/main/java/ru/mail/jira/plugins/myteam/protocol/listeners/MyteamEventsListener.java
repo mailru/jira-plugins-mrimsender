@@ -63,7 +63,8 @@ import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
 import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ServiceRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.NextPageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.PrevPageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.*;
@@ -234,7 +235,7 @@ public class MyteamEventsListener implements InitializingBean {
       }
     } else if (!isGroupChatEvent && (message != null || chatMessageEvent.isHasForwards())) {
       myteamRulesEngine.fire(
-          MyteamRulesEngine.formCommandFacts(RuleEventType.DefaultMessage, chatMessageEvent));
+          MyteamRulesEngine.formCommandFacts(ServiceRuleType.DefaultMessage, chatMessageEvent));
     }
   }
 
@@ -429,7 +430,7 @@ public class MyteamEventsListener implements InitializingBean {
         // answer button click here because ShowMenuEvent is originally MessageEvent =/
         myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
         myteamRulesEngine.fire(
-            MyteamRulesEngine.formCommandFacts(RuleEventType.Menu, buttonClickEvent));
+            MyteamRulesEngine.formCommandFacts(CommandRuleType.Menu, buttonClickEvent));
         //        asyncEventBus.post(new ShowMenuEvent(buttonClickEvent));
         break;
       default:

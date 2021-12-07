@@ -18,7 +18,8 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
@@ -26,7 +27,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 @Rule(name = "/issue", description = "View issue by key")
 public class ViewIssueCommandRule extends BaseRule {
 
-  static final RuleEventType NAME = RuleEventType.Issue;
+  static final RuleType NAME = CommandRuleType.Issue;
   private final IssueService issueService;
 
   public ViewIssueCommandRule(UserChatService userChatService, IssueService issueService) {

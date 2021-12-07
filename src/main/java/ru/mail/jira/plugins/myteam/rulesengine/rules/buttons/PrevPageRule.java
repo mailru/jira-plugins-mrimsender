@@ -8,7 +8,7 @@ import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.PageableState;
@@ -16,7 +16,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.PageableState;
 @Rule(name = "prev page", description = "Update page to previous one")
 public class PrevPageRule extends BaseRule {
 
-  static final RuleEventType NAME = RuleEventType.PrevPage;
+  static final ButtonRuleType NAME = ButtonRuleType.PrevPage;
 
   public PrevPageRule(UserChatService userChatService) {
     super(userChatService);

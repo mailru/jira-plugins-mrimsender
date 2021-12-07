@@ -16,8 +16,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.*;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(
@@ -25,7 +24,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
     description = "Shows issue if message contains Issue key otherwise shows menu")
 public class DefaultMessageRule extends BaseRule {
 
-  static final RuleEventType NAME = RuleEventType.DefaultMessage;
+  static final RuleType NAME = ServiceRuleType.DefaultMessage;
 
   public DefaultMessageRule(UserChatService userChatService) {
     super(userChatService);
@@ -66,7 +65,7 @@ public class DefaultMessageRule extends BaseRule {
   private boolean fireViewIssueResult(@Fact("event") MyteamEvent event, String issueKey) {
     if (issueKey != null) {
       userChatService.fireRule(
-          MyteamRulesEngine.formCommandFacts(RuleEventType.Issue.toString(), event, issueKey));
+          MyteamRulesEngine.formCommandFacts(CommandRuleType.Issue.toString(), event, issueKey));
       return true;
     }
     return false;

@@ -14,11 +14,11 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.PageableState;
 
 @Rule(name = "next page", description = "Update page to next one")
-public class NextPageRule extends BaseRule {
+public class SearchByJqlRule extends BaseRule {
 
   static final ButtonRuleType NAME = ButtonRuleType.NextPage;
 
-  public NextPageRule(UserChatService userChatService) {
+  public SearchByJqlRule(UserChatService userChatService) {
     super(userChatService);
   }
 

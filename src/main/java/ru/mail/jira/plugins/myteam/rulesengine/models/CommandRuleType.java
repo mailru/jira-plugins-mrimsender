@@ -3,24 +3,22 @@ package ru.mail.jira.plugins.myteam.rulesengine.models;
 
 import lombok.Getter;
 
-public enum RuleEventType {
-  DefaultMessage("defaultMessage"),
+public enum CommandRuleType implements RuleType {
   Help("help"),
   Menu("menu"),
   Issue("issue"),
   WatchingIssues("watching"),
   AssignedIssues("assigned"),
-  CreatedIssues("created"),
-  SearchByJql("jql"),
-  NextPage("next"),
-  PrevPage("previous");
+  CreatedIssues("created");
 
-  @Getter private final String name;
+  @Getter(onMethod_ = {@Override})
+  private final String name;
 
-  RuleEventType(String name) {
+  CommandRuleType(String name) {
     this.name = name;
   }
 
+  @Override
   public boolean equalsName(String otherName) {
     return name.equals(otherName);
   }

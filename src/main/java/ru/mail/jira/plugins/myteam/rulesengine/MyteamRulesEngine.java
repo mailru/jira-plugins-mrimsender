@@ -9,7 +9,7 @@ import org.jeasy.rules.core.DefaultRulesEngine;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
 
 @Component
 public class MyteamRulesEngine {
@@ -30,11 +30,11 @@ public class MyteamRulesEngine {
     rulesEngine.fire(rules, facts);
   }
 
-  public static Facts formCommandFacts(RuleEventType command, MyteamEvent event) {
+  public static Facts formCommandFacts(RuleType command, MyteamEvent event) {
     return formCommandFacts(command.getName(), event, "");
   }
 
-  public static Facts formCommandFacts(RuleEventType command, MyteamEvent event, String args) {
+  public static Facts formCommandFacts(RuleType command, MyteamEvent event, String args) {
     return formCommandFacts(command.getName(), event, args);
   }
 
@@ -52,7 +52,7 @@ public class MyteamRulesEngine {
     return facts;
   }
 
-  public static Facts formBasicsFacts(RuleEventType command, MyteamEvent event) {
+  public static Facts formBasicsFacts(RuleType command, MyteamEvent event) {
     return formBasicsFacts(command.getName(), event);
   }
 }

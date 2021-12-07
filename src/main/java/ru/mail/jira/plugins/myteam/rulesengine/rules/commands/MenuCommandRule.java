@@ -11,12 +11,13 @@ import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleEventType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(name = "/menu", description = "Shows menu")
 public class MenuCommandRule extends BaseRule {
-  static final RuleEventType NAME = RuleEventType.Menu;
+  static final RuleType NAME = CommandRuleType.Menu;
 
   public MenuCommandRule(UserChatService userChatService) {
     super(userChatService);
