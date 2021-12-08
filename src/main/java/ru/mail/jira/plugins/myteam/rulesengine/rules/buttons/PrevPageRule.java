@@ -6,7 +6,6 @@ import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
@@ -33,7 +32,7 @@ public class PrevPageRule extends BaseRule {
     PageableState state = (PageableState) userChatService.getState(event.getChatId());
 
     if (state != null) {
-      state.prevPage((ButtonClickEvent) event);
+      state.prevPage(event);
     }
   }
 }

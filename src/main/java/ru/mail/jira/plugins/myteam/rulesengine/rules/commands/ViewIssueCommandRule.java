@@ -6,7 +6,6 @@ import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.util.List;
 import java.util.Locale;
 import kong.unirest.HttpResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -43,13 +42,12 @@ public class ViewIssueCommandRule extends BaseRule {
   @Action
   public void execute(
       @Fact("event") MyteamEvent event,
-      @Fact("args") List<String> args,
+      @Fact("args") String issueKey,
       @Fact("isGroup") boolean isGroup)
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    if (args.size() >= 1 && user != null) {
+    if (issueKey.length() > 0 && user != null) {
       String chatId = event.getChatId();
-      String issueKey = args.get(0);
       Locale locale = userChatService.getUserLocale(user);
       try {
         Issue issue =

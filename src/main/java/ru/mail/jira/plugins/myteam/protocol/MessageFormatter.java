@@ -1778,7 +1778,7 @@ public class MessageFormatter {
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getText(
                 recipientLocale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
-            "showMenu");
+            CommandRuleType.Menu.getName());
     addRowWithButton(buttons, showMenuButton);
 
     return buttons;
@@ -1874,7 +1874,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.showIssueButton.text"),
-            "showIssue");
+            ButtonRuleType.SearchIssueByKeyInput.getName());
     addRowWithButton(buttons, showIssueButton);
 
     // create 'Active issues assigned to me' button
@@ -1910,7 +1910,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.searchIssueByJqlButton.text"),
-            ButtonRuleType.SearchByInputJql.getName());
+            ButtonRuleType.SearchIssueByJqlInput.getName());
     addRowWithButton(buttons, searchIssueByJqlButton);
 
     // create 'create issue' button

@@ -37,7 +37,7 @@ public class SearchByJqlIssuesRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("args") String jql) {
-    JqlSearchState newState = new JqlSearchState(userChatService, issueService, event, jql);
+    JqlSearchState newState = new JqlSearchState(userChatService, issueService, jql);
 
     if (jql == null || jql.length() == 0) { // if jql is not provided ask for input
       ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());

@@ -54,17 +54,17 @@ import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
 import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ServiceRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.NextPageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.PrevPageRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.SearchByJqlInputRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.SearchIssueByJqlInputRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.SearchIssueByKeyInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.*;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuesearch.IssueKeyInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
-import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Slf4j
 @Component
@@ -152,24 +152,26 @@ public class MyteamEventsListener implements InitializingBean {
     myteamRulesEngine.registerRule(new DefaultMessageRule(userChatService));
 
     // Buttons
-    myteamRulesEngine.registerRule(new SearchByJqlInputRule(userChatService));
+    myteamRulesEngine.registerRule(new SearchIssueByJqlInputRule(userChatService));
+    myteamRulesEngine.registerRule(new SearchIssueByKeyInputRule(userChatService));
     myteamRulesEngine.registerRule(new NextPageRule(userChatService));
     myteamRulesEngine.registerRule(new PrevPageRule(userChatService));
 
     // Commands
     myteamRulesEngine.registerRule(new HelpCommandRule(userChatService));
     myteamRulesEngine.registerRule(new MenuCommandRule(userChatService));
-    myteamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
     myteamRulesEngine.registerRule(new WatchingIssuesCommandRule(userChatService));
     myteamRulesEngine.registerRule(new AssignedIssuesCommandRule(userChatService));
     myteamRulesEngine.registerRule(new CreatedIssuesCommandRule(userChatService));
+    myteamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
+
     // Services
     myteamRulesEngine.registerRule(new SearchByJqlIssuesRule(userChatService, issueService));
 
     // States
-
-    // JQL
     myteamRulesEngine.registerRule(new JqlInputRule(userChatService));
+
+    myteamRulesEngine.registerRule(new IssueKeyInputRule(userChatService));
   }
 
   public void publishEvent(MyteamEvent event) {
@@ -180,8 +182,6 @@ public class MyteamEventsListener implements InitializingBean {
   public void handleNewMessageEvent(ChatMessageEvent chatMessageEvent) {
     String chatId = chatMessageEvent.getChatId();
     boolean isGroupChatEvent = chatMessageEvent.getChatType() == ChatType.GROUP;
-
-    BotState state = userChatService.getState(chatMessageEvent.getChatId());
 
     // if chat is in some state then use our state processing logic
     if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
@@ -230,11 +230,6 @@ public class MyteamEventsListener implements InitializingBean {
       if (command.startsWith("unwatch")) {
         asyncEventBus.post(new IssueUnwatchEvent(chatMessageEvent));
       }
-    } else if (!isGroupChatEvent
-        && (message != null || chatMessageEvent.isHasForwards())
-        && (state == null || !state.isWaiting())) {
-      myteamRulesEngine.fire(
-          MyteamRulesEngine.formCommandFacts(ServiceRuleType.DefaultMessage, chatMessageEvent));
     }
     handleStateAction(chatMessageEvent);
   }
@@ -390,18 +385,18 @@ public class MyteamEventsListener implements InitializingBean {
 
     // if chat isn't in some state then just process new command
     switch (buttonPrefix) {
-      case "view":
-        asyncEventBus.post(new ViewIssueClickEvent(buttonClickEvent));
-        break;
+        //      case "view":
+        //        asyncEventBus.post(new ViewIssueClickEvent(buttonClickEvent));
+        //        break;
       case "comment":
         asyncEventBus.post(new CommentIssueClickEvent(buttonClickEvent));
         break;
       case "showComments":
         asyncEventBus.post(new ViewIssueCommentsClickEvent(buttonClickEvent));
         break;
-      case "showIssue":
-        asyncEventBus.post(new ShowIssueClickEvent(buttonClickEvent));
-        break;
+        //      case "showIssue":
+        //        asyncEventBus.post(new ShowIssueClickEvent(buttonClickEvent));
+        //        break;
       case "watch":
         asyncEventBus.post(new IssueWatchEvent(buttonClickEvent));
         break;
@@ -411,13 +406,13 @@ public class MyteamEventsListener implements InitializingBean {
       case "createIssue":
         asyncEventBus.post(new CreateIssueClickEvent(buttonClickEvent));
         break;
-      case "showMenu":
-        // answer button click here because ShowMenuEvent is originally MessageEvent =/
-        myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
-        myteamRulesEngine.fire(
-            MyteamRulesEngine.formCommandFacts(CommandRuleType.Menu, buttonClickEvent));
-        //        asyncEventBus.post(new ShowMenuEvent(buttonClickEvent));
-        break;
+        //      case "showMenu":
+        //        // answer button click here because ShowMenuEvent is originally MessageEvent =/
+        //        myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
+        //        myteamRulesEngine.fire(
+        //            MyteamRulesEngine.formCommandFacts(CommandRuleType.Menu, buttonClickEvent));
+        //        //        asyncEventBus.post(new ShowMenuEvent(buttonClickEvent));
+        //        break;
       default:
         // fix infinite spinners situations for not recognized button clicks
         // for example next or prev button click when chat state was cleared

@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.rules.commands;
+package ru.mail.jira.plugins.myteam.rulesengine.rules.service;
 
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
@@ -12,27 +12,34 @@ import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.models.*;
+import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
+import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Rule(
     name = "Default message",
     description = "Shows issue if message contains Issue key otherwise shows menu")
 public class DefaultMessageRule extends BaseRule {
 
-  static final RuleType NAME = ServiceRuleType.DefaultMessage;
-
   public DefaultMessageRule(UserChatService userChatService) {
     super(userChatService);
   }
 
   @Condition
-  public boolean isValid(@Fact("command") String command, @Fact("event") MyteamEvent event) {
-    return NAME.equalsName(command) && event instanceof ChatMessageEvent;
+  public boolean isValid(
+      @Fact("state") BotState state,
+      @Fact("event") MyteamEvent event,
+      @Fact("command") String command) {
+    return !state.isWaiting()
+        && command.length() == 0
+        && event.getChatType() != ChatType.GROUP
+        && event instanceof ChatMessageEvent;
   }
 
   @Action
@@ -65,7 +72,7 @@ public class DefaultMessageRule extends BaseRule {
   private boolean fireViewIssueResult(@Fact("event") MyteamEvent event, String issueKey) {
     if (issueKey != null) {
       userChatService.fireRule(
-          MyteamRulesEngine.formCommandFacts(CommandRuleType.Issue.toString(), event, issueKey));
+          MyteamRulesEngine.formCommandFacts(CommandRuleType.Issue.getName(), event, issueKey));
       return true;
     }
     return false;

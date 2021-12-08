@@ -15,11 +15,11 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ServiceRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(name = "search by input jql", description = "Shows issues by JQL input")
-public class SearchByJqlInputRule extends BaseRule {
+public class SearchIssueByJqlInputRule extends BaseRule {
 
-  static final ButtonRuleType NAME = ButtonRuleType.SearchByInputJql;
+  static final ButtonRuleType NAME = ButtonRuleType.SearchIssueByJqlInput;
 
-  public SearchByJqlInputRule(UserChatService userChatService) {
+  public SearchIssueByJqlInputRule(UserChatService userChatService) {
     super(userChatService);
   }
 

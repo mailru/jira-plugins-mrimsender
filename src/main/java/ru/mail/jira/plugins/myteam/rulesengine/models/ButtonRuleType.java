@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum ButtonRuleType implements RuleType {
   NextPage("next"),
   PrevPage("previous"),
-  SearchByInputJql("searchByJqlInput");
+  SearchIssueByJqlInput("searchIssueByJqlInput"),
+  SearchIssueByKeyInput("searchIssueByKeyInput");
 
   @Getter(onMethod_ = {@Override})
   private final String name;

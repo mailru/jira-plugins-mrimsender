@@ -1,16 +1,14 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine;
 
-import org.jeasy.rules.api.Fact;
-import org.jeasy.rules.api.Facts;
-import org.jeasy.rules.api.Rules;
-import org.jeasy.rules.api.RulesEngine;
+import org.jeasy.rules.api.*;
 import org.jeasy.rules.core.DefaultRulesEngine;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.EmptyState;
 
 @Component
 public class MyteamRulesEngine {
@@ -19,7 +17,10 @@ public class MyteamRulesEngine {
   private final RulesEngine rulesEngine;
 
   public MyteamRulesEngine() {
-    rulesEngine = new DefaultRulesEngine();
+    rulesEngine =
+        new DefaultRulesEngine(
+            new RulesEngineParameters(
+                true, false, false, RulesEngineParameters.DEFAULT_RULE_PRIORITY_THRESHOLD));
     rules = new Rules();
   }
 
@@ -42,6 +43,7 @@ public class MyteamRulesEngine {
   public static Facts formCommandFacts(String command, MyteamEvent event, String args) {
     Facts facts = formBasicsFacts(command, event);
     facts.add(new Fact<>("args", args));
+    facts.add(new Fact<>("state", new EmptyState()));
     return facts;
   }
 
@@ -63,6 +65,7 @@ public class MyteamRulesEngine {
     facts.add(new Fact<>("state", state));
     facts.add(new Fact<>("event", event));
     facts.add(new Fact<>("isGroup", event.getChatType().equals(ChatType.GROUP)));
+    facts.put("command", "");
     return facts;
   }
 }

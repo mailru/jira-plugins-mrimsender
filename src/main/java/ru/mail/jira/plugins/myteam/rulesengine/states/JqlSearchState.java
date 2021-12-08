@@ -30,8 +30,7 @@ public class JqlSearchState extends BotState implements PageableState {
   @Getter private final String jql;
   private int page = 0;
 
-  public JqlSearchState(
-      UserChatService userChatService, IssueService issueService, MyteamEvent event, String jql) {
+  public JqlSearchState(UserChatService userChatService, IssueService issueService, String jql) {
     this.issueService = issueService;
     this.userChatService = userChatService;
     this.jql = jql;
