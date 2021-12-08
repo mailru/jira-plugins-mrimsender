@@ -88,6 +88,11 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
+  public void deleteState(String chatId) {
+    stateManager.deleteState(chatId);
+  }
+
+  @Override
   public void setState(String chatId, BotState state) {
     stateManager.setState(chatId, state);
   }

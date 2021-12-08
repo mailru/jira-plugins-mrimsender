@@ -8,4 +8,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ViewingIssueState extends BotState {
   @Getter @Setter private String issueKey;
+
+  public ViewingIssueState(String issueKey) {
+    this.issueKey = issueKey;
+  }
 }

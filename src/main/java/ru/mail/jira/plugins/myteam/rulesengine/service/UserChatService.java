@@ -17,6 +17,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 public interface UserChatService {
 
+  // Utils
+
   ApplicationUser getJiraUserFromUserChatId(String id);
 
   Locale getUserLocale(ApplicationUser user);
@@ -25,16 +27,14 @@ public interface UserChatService {
 
   MessageFormatter getMessageFormatter();
 
+  // Myteam Client
+
   HttpResponse<MessageResponse> sendMessageText(
       String chatId, String message, List<List<InlineKeyboardMarkupButton>> buttons)
       throws MyteamServerErrorException, IOException;
 
   void sendMessageText(String chatId, String message)
       throws MyteamServerErrorException, IOException;
-
-  BotState getState(String chatId);
-
-  void setState(String chatId, BotState state);
 
   HttpResponse<MessageResponse> editMessageText(
       String chatId,
@@ -45,6 +45,16 @@ public interface UserChatService {
 
   HttpResponse<JsonNode> answerCallbackQuery(String queryId)
       throws UnirestException, MyteamServerErrorException;
+
+  // State Manager
+
+  BotState getState(String chatId);
+
+  void deleteState(String chatId);
+
+  void setState(String chatId, BotState state);
+
+  // Rules Engine
 
   void fireRule(Facts facts);
 }

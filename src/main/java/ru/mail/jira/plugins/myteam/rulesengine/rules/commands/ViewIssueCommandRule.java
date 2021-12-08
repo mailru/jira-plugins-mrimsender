@@ -21,6 +21,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.ViewingIssueState;
 
 @Slf4j
 @Rule(name = "/issue", description = "View issue by key")
@@ -62,7 +64,7 @@ public class ViewIssueCommandRule extends BaseRule {
                     ? null
                     : messageFormatter.getIssueButtons(
                         issue.getKey(), user, issueService.isUserWatching(issue, user)));
-
+        updateState(chatId, issueKey);
         if (!isGroup
             && (response.getStatus() != 200
                 || (response.getBody() != null && !response.getBody().isOk()))) {
@@ -81,6 +83,7 @@ public class ViewIssueCommandRule extends BaseRule {
                 locale,
                 "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
         if (!isGroup) log.error("sendIssueViewToUser({}, {}, {})", issueKey, user, chatId, e);
+        userChatService.deleteState(chatId);
 
       } catch (IssueNotFoundException e) {
         userChatService.sendMessageText(
@@ -89,7 +92,19 @@ public class ViewIssueCommandRule extends BaseRule {
                 locale,
                 "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
         if (!isGroup) log.error("sendIssueViewToUser({}, {}, {})", issueKey, user, chatId, e);
+        userChatService.deleteState(chatId);
       }
+    }
+  }
+
+  private void updateState(String chatId, String issueKey) {
+    BotState state = userChatService.getState(chatId);
+
+    if (state instanceof ViewingIssueState) {
+      ((ViewingIssueState) state).setIssueKey(issueKey);
+      state.setWaiting(false);
+    } else {
+      userChatService.setState(chatId, new ViewingIssueState(issueKey));
     }
   }
 }
