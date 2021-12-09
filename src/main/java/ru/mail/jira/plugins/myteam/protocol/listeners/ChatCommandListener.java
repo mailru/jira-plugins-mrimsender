@@ -2,7 +2,6 @@
 package ru.mail.jira.plugins.myteam.protocol.listeners;
 
 import com.atlassian.jira.config.LocaleManager;
-import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.watchers.WatcherManager;
@@ -25,8 +24,6 @@ import ru.mail.jira.plugins.myteam.model.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
-import ru.mail.jira.plugins.myteam.protocol.events.IssueUnwatchEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.IssueWatchEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.LinkIssueWithChatEvent;
 
 @Slf4j
@@ -54,7 +51,6 @@ public class ChatCommandListener {
       @ComponentImport IssueManager issueManager,
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-      @ComponentImport ApplicationProperties applicationProperties,
       @ComponentImport WatcherManager watcherManager) {
     this.myteamApiClient = myteamApiClient;
     this.myteamChatRepository = myteamChatRepository;
@@ -99,78 +95,6 @@ public class ChatCommandListener {
           i18nResolver.getRawText(
               localeManager.getLocaleFor(user),
               "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
-    }
-  }
-
-  @Subscribe
-  public void onIssueWatch(IssueWatchEvent issueWatchEvent)
-      throws IOException, UnirestException, MyteamServerErrorException {
-    ApplicationUser user = userData.getUserByMrimLogin(issueWatchEvent.getUserId());
-    String chatId = issueWatchEvent.getChatId();
-    String issueKey = issueWatchEvent.getIssueKey();
-    Issue issue = issueManager.getIssueByKeyIgnoreCase(issueKey);
-    if (issue != null) {
-      if (watcherManager.isWatching(user, issue)) {
-        myteamApiClient.sendMessageText(
-            chatId,
-            i18nResolver.getText(
-                localeManager.getLocaleFor(user),
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyWatching",
-                messageFormatter.createIssueLink(issue.getKey())));
-      } else {
-        watcherManager.startWatching(user, issue);
-        myteamApiClient.sendMessageText(
-            chatId,
-            i18nResolver.getText(
-                localeManager.getLocaleFor(user),
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyWatch",
-                messageFormatter.createIssueLink(issue.getKey())));
-      }
-    } else {
-      myteamApiClient.sendMessageText(
-          chatId,
-          i18nResolver.getRawText(
-              localeManager.getLocaleFor(user),
-              "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
-    }
-    if (issueWatchEvent.getQueryId() != null) {
-      myteamApiClient.answerCallbackQuery(issueWatchEvent.getQueryId());
-    }
-  }
-
-  @Subscribe
-  public void onIssueUnwatch(IssueUnwatchEvent issueUnwatchEvent)
-      throws IOException, UnirestException, MyteamServerErrorException {
-    ApplicationUser user = userData.getUserByMrimLogin(issueUnwatchEvent.getUserId());
-    String chatId = issueUnwatchEvent.getChatId();
-    String issueKey = issueUnwatchEvent.getIssueKey();
-    Issue issue = issueManager.getIssueByKeyIgnoreCase(issueKey);
-    if (issue != null) {
-      if (!watcherManager.isWatching(user, issue)) {
-        myteamApiClient.sendMessageText(
-            chatId,
-            i18nResolver.getText(
-                localeManager.getLocaleFor(user),
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyUnwatching",
-                messageFormatter.createIssueLink(issue.getKey())));
-      } else {
-        watcherManager.stopWatching(user, issue);
-        myteamApiClient.sendMessageText(
-            chatId,
-            i18nResolver.getText(
-                localeManager.getLocaleFor(user),
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyUnwatch",
-                messageFormatter.createIssueLink(issue.getKey())));
-      }
-    } else {
-      myteamApiClient.sendMessageText(
-          chatId,
-          i18nResolver.getRawText(
-              localeManager.getLocaleFor(user),
-              "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
-    }
-    if (issueUnwatchEvent.getQueryId() != null) {
-      myteamApiClient.answerCallbackQuery(issueUnwatchEvent.getQueryId());
     }
   }
 

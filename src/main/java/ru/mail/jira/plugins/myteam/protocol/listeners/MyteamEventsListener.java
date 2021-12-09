@@ -2,17 +2,13 @@
 package ru.mail.jira.plugins.myteam.protocol.listeners;
 
 import com.atlassian.jira.config.LocaleManager;
-import com.atlassian.jira.config.properties.APKeys;
-import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.attachment.ConvertTemporaryAttachmentParams;
 import com.atlassian.jira.issue.attachment.TemporaryAttachmentId;
 import com.atlassian.jira.issue.comments.CommentManager;
-import com.atlassian.jira.issue.watchers.WatcherManager;
 import com.atlassian.jira.permission.ProjectPermissions;
-import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
@@ -49,7 +45,6 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
-import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
@@ -79,17 +74,13 @@ public class MyteamEventsListener implements InitializingBean {
   private final AsyncEventBus asyncEventBus;
   private final MyteamApiClient myteamApiClient;
   private final UserData userData;
-  private final MessageFormatter messageFormatter;
   private final I18nResolver i18nResolver;
   private final LocaleManager localeManager;
   private final IssueManager issueManager;
   private final PermissionManager permissionManager;
   private final CommentManager commentManager;
   private final AttachmentManager attachmentManager;
-  private final JiraAuthenticationContext jiraAuthenticationContext;
-  private final String JIRA_BASE_URL;
   private final ChatCommandListener chatCommandListener;
-  private final WatcherManager watcherManager;
   private final MyteamRulesEngine myteamRulesEngine;
   private final UserChatService userChatService;
   private final IssueService issueService;
@@ -99,7 +90,6 @@ public class MyteamEventsListener implements InitializingBean {
       ChatStateMapping chatStateMapping,
       MyteamApiClient myteamApiClient,
       UserData userData,
-      MessageFormatter messageFormatter,
       ChatCommandListener chatCommandListener,
       ButtonClickListener buttonClickListener,
       CreateIssueEventsListener createIssueEventsListener,
@@ -111,13 +101,9 @@ public class MyteamEventsListener implements InitializingBean {
       @ComponentImport IssueManager issueManager,
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport CommentManager commentManager,
-      @ComponentImport AttachmentManager attachmentManager,
-      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-      @ComponentImport ApplicationProperties applicationProperties,
-      @ComponentImport WatcherManager watcherManager) {
+      @ComponentImport AttachmentManager attachmentManager) {
     this.chatsStateMap = chatStateMapping.getChatsStateMap();
     this.attachmentManager = attachmentManager;
-    this.watcherManager = watcherManager;
     this.myteamRulesEngine = myteamRulesEngine;
     this.userChatService = userChatService;
     this.issueService = issueService;
@@ -135,14 +121,11 @@ public class MyteamEventsListener implements InitializingBean {
     this.asyncEventBus.register(createIssueEventsListener);
     this.myteamApiClient = myteamApiClient;
     this.userData = userData;
-    this.messageFormatter = messageFormatter;
     this.i18nResolver = i18nResolver;
     this.localeManager = localeManager;
     this.issueManager = issueManager;
     this.permissionManager = permissionManager;
     this.commentManager = commentManager;
-    this.jiraAuthenticationContext = jiraAuthenticationContext;
-    this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
     this.chatCommandListener = chatCommandListener;
   }
 
@@ -192,10 +175,6 @@ public class MyteamEventsListener implements InitializingBean {
         asyncEventBus.post(new NewCommentMessageEvent(chatMessageEvent, chatState.getIssueKey()));
         return;
       }
-      if (chatState.isWaitingForIssueKey()) {
-        asyncEventBus.post(new IssueKeyMessageEvent(chatMessageEvent, JIRA_BASE_URL));
-        return;
-      }
       if (chatState.isWaitingForProjectSelect()) {
         asyncEventBus.post(
             new SelectedProjectMessageEvent(chatMessageEvent, chatState.getIssueCreationDto()));
@@ -226,12 +205,6 @@ public class MyteamEventsListener implements InitializingBean {
       if (command.startsWith("link") && isGroupChatEvent) {
         asyncEventBus.post(new LinkIssueWithChatEvent(chatMessageEvent));
       }
-      //      if (command.startsWith("watch")) {
-      //        asyncEventBus.post(new IssueWatchEvent(chatMessageEvent));
-      //      }
-      //      if (command.startsWith("unwatch")) {
-      //        asyncEventBus.post(new IssueUnwatchEvent(chatMessageEvent));
-      //      }
       return;
     }
     handleStateAction(chatMessageEvent);
@@ -394,25 +367,9 @@ public class MyteamEventsListener implements InitializingBean {
       case "showComments":
         asyncEventBus.post(new ViewIssueCommentsClickEvent(buttonClickEvent));
         break;
-        //      case "showIssue":
-        //        asyncEventBus.post(new ShowIssueClickEvent(buttonClickEvent));
-        //        break;
-        //      case "watch":
-        //        asyncEventBus.post(new IssueWatchEvent(buttonClickEvent));
-        //        break;
-      case "unwatch":
-        asyncEventBus.post(new IssueUnwatchEvent(buttonClickEvent));
-        break;
       case "createIssue":
         asyncEventBus.post(new CreateIssueClickEvent(buttonClickEvent));
         break;
-        //      case "showMenu":
-        //        // answer button click here because ShowMenuEvent is originally MessageEvent =/
-        //        myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
-        //        myteamRulesEngine.fire(
-        //            MyteamRulesEngine.formCommandFacts(CommandRuleType.Menu, buttonClickEvent));
-        //        //        asyncEventBus.post(new ShowMenuEvent(buttonClickEvent));
-        //        break;
       default:
         // fix infinite spinners situations for not recognized button clicks
         // for example next or prev button click when chat state was cleared
@@ -490,47 +447,6 @@ public class MyteamEventsListener implements InitializingBean {
     } finally {
       JiraThreadLocalUtils.postCall();
     }
-  }
-
-  @Subscribe
-  public void handleNewIssueKeyMessageEvent(IssueKeyMessageEvent issueKeyMessageEvent)
-      throws IOException, UnirestException, MyteamServerErrorException {
-    log.debug("NewIssueKeyMessageEvent handling started");
-    ApplicationUser currentUser = userData.getUserByMrimLogin(issueKeyMessageEvent.getUserId());
-    ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
-    try {
-      jiraAuthenticationContext.setLoggedInUser(currentUser);
-      Issue currentIssue = issueManager.getIssueByKeyIgnoreCase(issueKeyMessageEvent.getIssueKey());
-      if (currentUser != null && currentIssue != null) {
-        if (permissionManager.hasPermission(
-            ProjectPermissions.BROWSE_PROJECTS, currentIssue, currentUser)) {
-          myteamApiClient.sendMessageText(
-              issueKeyMessageEvent.getChatId(),
-              messageFormatter.createIssueSummary(currentIssue, currentUser),
-              messageFormatter.getIssueButtons(
-                  currentIssue.getKey(),
-                  currentUser,
-                  watcherManager.isWatching(currentUser, currentIssue)));
-          log.debug("ViewIssueCommand message sent...");
-        } else {
-          myteamApiClient.sendMessageText(
-              issueKeyMessageEvent.getChatId(),
-              i18nResolver.getRawText(
-                  localeManager.getLocaleFor(currentUser),
-                  "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
-          log.debug("ViewIssueCommand no permissions message sent...");
-        }
-      } else if (currentUser != null) {
-        myteamApiClient.sendMessageText(
-            issueKeyMessageEvent.getChatId(),
-            i18nResolver.getRawText(
-                localeManager.getLocaleFor(currentUser),
-                "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
-      }
-    } finally {
-      jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
-    }
-    log.debug("NewIssueKeyMessageEvent handling finished");
   }
 
   public String convertToJiraCommentStyle(
