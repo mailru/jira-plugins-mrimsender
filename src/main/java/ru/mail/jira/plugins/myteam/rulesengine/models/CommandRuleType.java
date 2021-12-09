@@ -9,7 +9,9 @@ public enum CommandRuleType implements RuleType {
   Issue("issue"),
   WatchingIssues("watching"),
   AssignedIssues("assigned"),
-  CreatedIssues("created");
+  CreatedIssues("created"),
+  WatchIssue("watch"),
+  UnwatchIssue("unwatch");
 
   @Getter(onMethod_ = {@Override})
   private final String name;

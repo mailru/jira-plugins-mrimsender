@@ -8,6 +8,7 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.user.ApplicationUser;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 
 public interface IssueService {
 
@@ -20,4 +21,10 @@ public interface IssueService {
 
   SearchResults<Issue> SearchByJql(String jql, ApplicationUser user, int page, int pageSize)
       throws SearchException, ParseException;
+
+  void watchIssue(String issueKey, ApplicationUser user)
+      throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
+
+  void unwatchIssue(String issueKey, ApplicationUser user)
+      throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;;
 }

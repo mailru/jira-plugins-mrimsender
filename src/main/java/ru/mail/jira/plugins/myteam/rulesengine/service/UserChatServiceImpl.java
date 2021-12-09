@@ -69,6 +69,11 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
+  public String getText(Locale locale, String key, String param) {
+    return i18nResolver.getText(locale, key, param);
+  }
+
+  @Override
   public HttpResponse<MessageResponse> sendMessageText(
       String chatId, String message, List<List<InlineKeyboardMarkupButton>> buttons)
       throws MyteamServerErrorException, IOException {

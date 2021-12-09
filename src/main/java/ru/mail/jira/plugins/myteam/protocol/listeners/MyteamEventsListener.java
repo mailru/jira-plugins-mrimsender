@@ -164,6 +164,8 @@ public class MyteamEventsListener implements InitializingBean {
     myteamRulesEngine.registerRule(new AssignedIssuesCommandRule(userChatService));
     myteamRulesEngine.registerRule(new CreatedIssuesCommandRule(userChatService));
     myteamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
+    myteamRulesEngine.registerRule(new WatchIssueCommandRule(userChatService, issueService));
+    myteamRulesEngine.registerRule(new UnwatchIssueCommandRule(userChatService, issueService));
 
     // Services
     myteamRulesEngine.registerRule(new SearchByJqlIssuesRule(userChatService, issueService));
@@ -224,12 +226,13 @@ public class MyteamEventsListener implements InitializingBean {
       if (command.startsWith("link") && isGroupChatEvent) {
         asyncEventBus.post(new LinkIssueWithChatEvent(chatMessageEvent));
       }
-      if (command.startsWith("watch")) {
-        asyncEventBus.post(new IssueWatchEvent(chatMessageEvent));
-      }
-      if (command.startsWith("unwatch")) {
-        asyncEventBus.post(new IssueUnwatchEvent(chatMessageEvent));
-      }
+      //      if (command.startsWith("watch")) {
+      //        asyncEventBus.post(new IssueWatchEvent(chatMessageEvent));
+      //      }
+      //      if (command.startsWith("unwatch")) {
+      //        asyncEventBus.post(new IssueUnwatchEvent(chatMessageEvent));
+      //      }
+      return;
     }
     handleStateAction(chatMessageEvent);
   }
@@ -385,9 +388,6 @@ public class MyteamEventsListener implements InitializingBean {
 
     // if chat isn't in some state then just process new command
     switch (buttonPrefix) {
-        //      case "view":
-        //        asyncEventBus.post(new ViewIssueClickEvent(buttonClickEvent));
-        //        break;
       case "comment":
         asyncEventBus.post(new CommentIssueClickEvent(buttonClickEvent));
         break;
@@ -397,9 +397,9 @@ public class MyteamEventsListener implements InitializingBean {
         //      case "showIssue":
         //        asyncEventBus.post(new ShowIssueClickEvent(buttonClickEvent));
         //        break;
-      case "watch":
-        asyncEventBus.post(new IssueWatchEvent(buttonClickEvent));
-        break;
+        //      case "watch":
+        //        asyncEventBus.post(new IssueWatchEvent(buttonClickEvent));
+        //        break;
       case "unwatch":
         asyncEventBus.post(new IssueUnwatchEvent(buttonClickEvent));
         break;

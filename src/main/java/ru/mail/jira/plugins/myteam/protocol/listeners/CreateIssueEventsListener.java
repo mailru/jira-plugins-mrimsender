@@ -724,7 +724,7 @@ public class CreateIssueEventsListener {
       if (issueValidationResult.isValid()) {
         MutableIssue createdIssue =
             issueService.create(currentUser, issueValidationResult).getIssue();
-        String createdIssueLink = messageFormatter.createIssueLink(createdIssue);
+        String createdIssueLink = messageFormatter.createIssueLink(createdIssue.getKey());
         myteamApiClient.sendMessageText(
             chatId,
             i18nResolver.getText(

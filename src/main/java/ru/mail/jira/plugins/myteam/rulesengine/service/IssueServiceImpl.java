@@ -21,6 +21,7 @@ import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
 import org.springframework.stereotype.Service;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 
 @Service
 public class IssueServiceImpl implements IssueService {
@@ -94,5 +95,43 @@ public class IssueServiceImpl implements IssueService {
       JiraThreadLocalUtils.postCall();
       throw new ParseException("Incorrect jql expression");
     }
+  }
+
+  @Override
+  public void watchIssue(String issueKey, ApplicationUser user)
+      throws IssuePermissionException, IssueNotFoundException, IssueWatchingException {
+    Issue issue = getIssue(issueKey, user);
+    if (watcherManager.isWatching(user, issue)) {
+      throw new IssueWatchingException(
+          String.format("Issue with key %s already unwatched", issueKey));
+    } else {
+      watcherManager.startWatching(user, issue);
+    }
+  }
+
+  @Override
+  public void unwatchIssue(String issueKey, ApplicationUser user)
+      throws IssuePermissionException, IssueNotFoundException, IssueWatchingException {
+    Issue issue = getIssue(issueKey, user);
+    if (!watcherManager.isWatching(user, issue)) {
+      throw new IssueWatchingException(
+          String.format("Issue with key %s already unwatched", issueKey));
+    } else {
+      watcherManager.stopWatching(user, issue);
+    }
+  }
+
+  private Issue getIssue(String issueKey, ApplicationUser user)
+      throws IssuePermissionException, IssueNotFoundException {
+    Issue issue = issueManager.getIssueByKeyIgnoreCase(issueKey);
+    if (issue != null) {
+      if (!permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issue, user)) {
+        throw new IssuePermissionException(
+            String.format("User has no permissions to watch issue %s", issueKey));
+      }
+    } else {
+      throw new IssueNotFoundException(String.format("Issue with key %s was not found", issueKey));
+    }
+    return issue;
   }
 }

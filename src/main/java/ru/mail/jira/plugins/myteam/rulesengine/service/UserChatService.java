@@ -5,6 +5,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import javax.annotation.Nullable;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
@@ -19,11 +20,14 @@ public interface UserChatService {
 
   // Utils
 
+  @Nullable
   ApplicationUser getJiraUserFromUserChatId(String id);
 
   Locale getUserLocale(ApplicationUser user);
 
   String getRawText(Locale locale, String key);
+
+  String getText(Locale locale, String s, String issueLink);
 
   MessageFormatter getMessageFormatter();
 

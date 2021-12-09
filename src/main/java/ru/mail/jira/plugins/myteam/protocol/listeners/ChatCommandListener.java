@@ -84,14 +84,14 @@ public class ChatCommandListener {
             i18nResolver.getText(
                 localeManager.getLocaleFor(user),
                 "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueLinkedToChat",
-                messageFormatter.createIssueLink(issue)));
+                messageFormatter.createIssueLink(issue.getKey())));
       } else {
         myteamApiClient.sendMessageText(
             chatId,
             i18nResolver.getText(
                 localeManager.getLocaleFor(user),
                 "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueLinkedToChat.error",
-                messageFormatter.createIssueLink(issue)));
+                messageFormatter.createIssueLink(issue.getKey())));
       }
     } else {
       myteamApiClient.sendMessageText(
@@ -116,7 +116,7 @@ public class ChatCommandListener {
             i18nResolver.getText(
                 localeManager.getLocaleFor(user),
                 "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyWatching",
-                messageFormatter.createIssueLink(issue)));
+                messageFormatter.createIssueLink(issue.getKey())));
       } else {
         watcherManager.startWatching(user, issue);
         myteamApiClient.sendMessageText(
@@ -124,7 +124,7 @@ public class ChatCommandListener {
             i18nResolver.getText(
                 localeManager.getLocaleFor(user),
                 "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyWatch",
-                messageFormatter.createIssueLink(issue)));
+                messageFormatter.createIssueLink(issue.getKey())));
       }
     } else {
       myteamApiClient.sendMessageText(
@@ -152,7 +152,7 @@ public class ChatCommandListener {
             i18nResolver.getText(
                 localeManager.getLocaleFor(user),
                 "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyUnwatching",
-                messageFormatter.createIssueLink(issue)));
+                messageFormatter.createIssueLink(issue.getKey())));
       } else {
         watcherManager.stopWatching(user, issue);
         myteamApiClient.sendMessageText(
@@ -160,7 +160,7 @@ public class ChatCommandListener {
             i18nResolver.getText(
                 localeManager.getLocaleFor(user),
                 "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyUnwatch",
-                messageFormatter.createIssueLink(issue)));
+                messageFormatter.createIssueLink(issue.getKey())));
       }
     } else {
       myteamApiClient.sendMessageText(

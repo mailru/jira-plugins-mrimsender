@@ -645,9 +645,9 @@ public class MessageFormatter {
     return sb.toString();
   }
 
-  public String createIssueLink(Issue issue) {
+  public String createIssueLink(String issueKey) {
     return String.format(
-        "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
+        "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
 
   public String formatBitbucketEvent(ApplicationUser recipient, BitbucketEventDto bitbucketEvent)
@@ -1526,7 +1526,7 @@ public class MessageFormatter {
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
     Issue issue = issueEvent.getIssue();
     ApplicationUser user = issueEvent.getUser();
-    String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue));
+    String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue.getKey()));
     Locale recipientLocale = localeManager.getLocaleFor(recipient);
     StringBuilder sb = new StringBuilder();
 
@@ -1763,7 +1763,7 @@ public class MessageFormatter {
         i18nResolver.getRawText(
             recipientLocale,
             "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.text"));
-    issueInfo.setCallbackData(String.join("-", "view", issueKey));
+    issueInfo.setCallbackData(String.join("-", CommandRuleType.Issue.getName(), issueKey));
     buttonsRow.add(issueInfo);
 
     InlineKeyboardMarkupButton comment = new InlineKeyboardMarkupButton();
@@ -2038,7 +2038,7 @@ public class MessageFormatter {
         issueList.stream()
             .map(
                 issue ->
-                    markdownTextLink(issue.getKey(), createIssueLink(issue))
+                    markdownTextLink(issue.getKey(), createIssueLink(issue.getKey()))
                         + ' '
                         + issue.getSummary())
             .collect(Collectors.toList()),

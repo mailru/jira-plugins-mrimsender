@@ -4,13 +4,9 @@ package ru.mail.jira.plugins.myteam.protocol.listeners;
 import static ru.mail.jira.plugins.myteam.protocol.MessageFormatter.COMMENT_LIST_PAGE_SIZE;
 
 import com.atlassian.jira.config.LocaleManager;
-import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.comments.CommentManager;
-import com.atlassian.jira.issue.watchers.WatcherManager;
-import com.atlassian.jira.permission.ProjectPermissions;
-import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
@@ -43,9 +39,7 @@ public class ButtonClickListener {
   private final I18nResolver i18nResolver;
   private final LocaleManager localeManager;
   private final IssueManager issueManager;
-  private final PermissionManager permissionManager;
   private final CommentManager commentManager;
-  private final WatcherManager watcherManager;
 
   @Autowired
   public ButtonClickListener(
@@ -56,9 +50,7 @@ public class ButtonClickListener {
       @ComponentImport I18nResolver i18nResolver,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport IssueManager issueManager,
-      @ComponentImport PermissionManager permissionManager,
-      @ComponentImport CommentManager commentManager,
-      @ComponentImport WatcherManager watcherManager) {
+      @ComponentImport CommentManager commentManager) {
     this.chatsStateMap = chatStateMapping.getChatsStateMap();
     this.myteamApiClient = myteamApiClient;
     this.userData = userData;
@@ -66,38 +58,7 @@ public class ButtonClickListener {
     this.i18nResolver = i18nResolver;
     this.localeManager = localeManager;
     this.issueManager = issueManager;
-    this.permissionManager = permissionManager;
     this.commentManager = commentManager;
-    this.watcherManager = watcherManager;
-  }
-
-  @Subscribe
-  public void onViewIssueButtonClick(ViewIssueClickEvent viewIssueClickEvent)
-      throws UnirestException, IOException, MyteamServerErrorException {
-    myteamApiClient.answerCallbackQuery(viewIssueClickEvent.getQueryId());
-    Issue currentIssue = issueManager.getIssueByCurrentKey(viewIssueClickEvent.getIssueKey());
-    ApplicationUser currentUser = userData.getUserByMrimLogin(viewIssueClickEvent.getUserId());
-    if (currentUser != null && currentIssue != null) {
-      if (permissionManager.hasPermission(
-          ProjectPermissions.BROWSE_PROJECTS, currentIssue, currentUser)) {
-        myteamApiClient.sendMessageText(
-            viewIssueClickEvent.getChatId(),
-            messageFormatter.createIssueSummary(currentIssue, currentUser),
-            messageFormatter.getIssueButtons(
-                viewIssueClickEvent.getIssueKey(),
-                currentUser,
-                watcherManager.isWatching(currentUser, currentIssue)));
-        log.debug("ViewIssueCommand message sent...");
-      } else {
-        myteamApiClient.sendMessageText(
-            viewIssueClickEvent.getChatId(),
-            i18nResolver.getRawText(
-                localeManager.getLocaleFor(currentUser),
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
-        log.debug("ViewIssueCommand no permissions message sent...");
-      }
-    }
-    log.debug("ViewIssueCommand execution finished...");
   }
 
   @Subscribe
