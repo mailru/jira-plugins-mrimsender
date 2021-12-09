@@ -17,6 +17,7 @@ import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
@@ -63,19 +64,9 @@ public class UnwatchIssueCommandRule extends BaseRule {
                 "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyUnwatching",
                 messageFormatter.createIssueLink(issueKey)));
       } catch (IssuePermissionException e) {
-        log.error(e.getLocalizedMessage());
-        userChatService.sendMessageText(
-            chatId,
-            userChatService.getRawText(
-                locale,
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
+        rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e.getLocalizedMessage());
       } catch (IssueNotFoundException e) {
-        log.error(e.getLocalizedMessage());
-        userChatService.sendMessageText(
-            chatId,
-            userChatService.getRawText(
-                locale,
-                "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
+        rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e.getLocalizedMessage());
       }
     }
     if (event instanceof ButtonClickEvent) {

@@ -9,12 +9,15 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.MyteamRulesEngine;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.NextPageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.PrevPageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.SearchIssueByJqlInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.SearchIssueByKeyInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.*;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNoPermissionErrorRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNotFoundErrorRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuesearch.IssueKeyInputRule;
@@ -70,6 +73,11 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));
 
     stateActionsRuleEngine.registerRule(new IssueKeyInputRule(userChatService, this));
+
+    // Errors
+
+    errorsRuleEngine.registerRule(new IssueNotFoundErrorRule(userChatService, this));
+    errorsRuleEngine.registerRule(new IssueNoPermissionErrorRule(userChatService, this));
   }
 
   @Override
@@ -97,7 +105,11 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
   }
 
   @Override
-  public void fireError(Facts facts) {
+  public void fireError(ErrorRuleType errorType, MyteamEvent event, String exceptionMessage) {
+    Facts facts = new Facts();
+    facts.add(new Fact<>("error", errorType));
+    facts.add(new Fact<>("event", event));
+    facts.add(new Fact<>("message", exceptionMessage));
     errorsRuleEngine.fire(facts);
   }
 

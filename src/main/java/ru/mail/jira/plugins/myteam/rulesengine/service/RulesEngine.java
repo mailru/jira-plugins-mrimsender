@@ -1,8 +1,8 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.service;
 
-import org.jeasy.rules.api.Facts;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
@@ -16,5 +16,5 @@ public interface RulesEngine {
 
   void fireStateAction(BotState state, MyteamEvent event, String args);
 
-  void fireError(Facts facts);
+  void fireError(ErrorRuleType errorType, MyteamEvent event, String exceptionMessage);
 }

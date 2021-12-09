@@ -6,7 +6,6 @@ import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.util.Locale;
 import kong.unirest.HttpResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
@@ -18,6 +17,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
@@ -52,7 +52,6 @@ public class ViewIssueCommandRule extends BaseRule {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     if (issueKey.length() > 0 && user != null) {
       String chatId = event.getChatId();
-      Locale locale = userChatService.getUserLocale(user);
       try {
         Issue issue =
             issueService.getIssueByUser(
@@ -79,20 +78,13 @@ public class ViewIssueCommandRule extends BaseRule {
               response.getBody().toString());
         }
       } catch (IssuePermissionException e) {
-        userChatService.sendMessageText(
-            chatId,
-            userChatService.getRawText(
-                locale,
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
+        rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e.getLocalizedMessage());
+
         if (!isGroup) log.error("sendIssueViewToUser({}, {}, {})", issueKey, user, chatId, e);
         userChatService.deleteState(chatId);
 
       } catch (IssueNotFoundException e) {
-        userChatService.sendMessageText(
-            chatId,
-            userChatService.getRawText(
-                locale,
-                "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
+        rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e.getLocalizedMessage());
         if (!isGroup) log.error("sendIssueViewToUser({}, {}, {})", issueKey, user, chatId, e);
         userChatService.deleteState(chatId);
       }

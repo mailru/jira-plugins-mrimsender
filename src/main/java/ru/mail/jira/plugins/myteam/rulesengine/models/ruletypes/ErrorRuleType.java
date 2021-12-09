@@ -4,7 +4,8 @@ package ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes;
 import lombok.Getter;
 
 public enum ErrorRuleType implements RuleType {
-  IssueNotFound("issueNotFound");
+  IssueNotFound("issueNotFound"),
+  IssueNoPermission("issueNoPermission");
 
   @Getter(onMethod_ = {@Override})
   private final String name;
