@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine;
+package ru.mail.jira.plugins.myteam.rulesengine.core;
 
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.Rules;

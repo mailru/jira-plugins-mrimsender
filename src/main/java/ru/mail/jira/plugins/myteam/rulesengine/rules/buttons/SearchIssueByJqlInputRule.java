@@ -8,8 +8,8 @@ import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ButtonRuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 

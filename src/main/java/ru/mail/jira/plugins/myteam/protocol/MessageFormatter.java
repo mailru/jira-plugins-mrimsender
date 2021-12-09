@@ -64,8 +64,8 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.*;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ButtonRuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 
 @Slf4j
 @Component

@@ -3,7 +3,7 @@ package ru.mail.jira.plugins.myteam.rulesengine.service;
 
 import org.jeasy.rules.api.Facts;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 public interface RulesEngine {

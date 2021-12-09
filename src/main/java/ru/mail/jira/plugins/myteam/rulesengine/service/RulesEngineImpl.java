@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.core.MyteamRulesEngine;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.NextPageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.PrevPageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.SearchIssueByJqlInputRule;
@@ -84,26 +84,28 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
 
   @Override
   public void fireCommand(String command, MyteamEvent event, String args) {
-    Facts facts = new Facts();
+    Facts facts = formBasicFacts(event, args);
     facts.put("command", command);
-    facts.add(new Fact<>("event", event));
-    facts.add(new Fact<>("isGroup", event.getChatType().equals(ChatType.GROUP)));
-    facts.put("args", args);
     commandsRuleEngine.fire(facts);
   }
 
   @Override
   public void fireStateAction(BotState state, MyteamEvent event, String args) {
-    Facts facts = new Facts();
-    facts.put("args", args);
+    Facts facts = formBasicFacts(event, args);
     facts.add(new Fact<>("state", state));
-    facts.add(new Fact<>("event", event));
-    facts.add(new Fact<>("isGroup", event.getChatType().equals(ChatType.GROUP)));
     stateActionsRuleEngine.fire(facts);
   }
 
   @Override
   public void fireError(Facts facts) {
     errorsRuleEngine.fire(facts);
+  }
+
+  private Facts formBasicFacts(MyteamEvent event, String args) {
+    Facts facts = new Facts();
+    facts.put("args", args);
+    facts.add(new Fact<>("event", event));
+    facts.add(new Fact<>("isGroup", event.getChatType().equals(ChatType.GROUP)));
+    return facts;
   }
 }
