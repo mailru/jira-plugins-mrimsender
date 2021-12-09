@@ -7,6 +7,7 @@ public enum CommandRuleType implements RuleType {
   Help("help"),
   Menu("menu"),
   Issue("issue"),
+  SearchByJql("jql"),
   WatchingIssues("watching"),
   AssignedIssues("assigned"),
   CreatedIssues("created"),

@@ -13,14 +13,15 @@ import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(name = "/menu", description = "Shows menu")
 public class MenuCommandRule extends BaseRule {
   static final RuleType NAME = CommandRuleType.Menu;
 
-  public MenuCommandRule(UserChatService userChatService) {
-    super(userChatService);
+  public MenuCommandRule(UserChatService userChatService, RulesEngine rulesEngine) {
+    super(userChatService, rulesEngine);
   }
 
   @Condition

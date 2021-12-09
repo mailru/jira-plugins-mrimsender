@@ -30,7 +30,6 @@ import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.commons.Utils;
@@ -48,22 +47,12 @@ import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
-import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.NextPageRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.PrevPageRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.SearchIssueByJqlInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.SearchIssueByKeyInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.*;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.service.DefaultMessageRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuesearch.IssueKeyInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
-import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
+import ru.mail.jira.plugins.myteam.rulesengine.service.StateManager;
 
 @Slf4j
 @Component
-public class MyteamEventsListener implements InitializingBean {
+public class MyteamEventsListener {
   private static final String THREAD_NAME_PREFIX = "icq-events-listener-thread-pool";
   private static final String CHAT_COMMAND_PREFIX = "/";
 
@@ -81,9 +70,8 @@ public class MyteamEventsListener implements InitializingBean {
   private final CommentManager commentManager;
   private final AttachmentManager attachmentManager;
   private final ChatCommandListener chatCommandListener;
-  private final MyteamRulesEngine myteamRulesEngine;
-  private final UserChatService userChatService;
-  private final IssueService issueService;
+  private final RulesEngine rulesEngine;
+  private final StateManager stateManager;
 
   @Autowired
   public MyteamEventsListener(
@@ -93,9 +81,8 @@ public class MyteamEventsListener implements InitializingBean {
       ChatCommandListener chatCommandListener,
       ButtonClickListener buttonClickListener,
       CreateIssueEventsListener createIssueEventsListener,
-      MyteamRulesEngine myteamRulesEngine,
-      UserChatService userChatService,
-      IssueService issueService,
+      StateManager stateManager,
+      RulesEngine rulesEngine,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport I18nResolver i18nResolver,
       @ComponentImport IssueManager issueManager,
@@ -104,9 +91,8 @@ public class MyteamEventsListener implements InitializingBean {
       @ComponentImport AttachmentManager attachmentManager) {
     this.chatsStateMap = chatStateMapping.getChatsStateMap();
     this.attachmentManager = attachmentManager;
-    this.myteamRulesEngine = myteamRulesEngine;
-    this.userChatService = userChatService;
-    this.issueService = issueService;
+    this.rulesEngine = rulesEngine;
+    this.stateManager = stateManager;
     this.asyncEventBus =
         new AsyncEventBus(
             executorService,
@@ -127,36 +113,6 @@ public class MyteamEventsListener implements InitializingBean {
     this.permissionManager = permissionManager;
     this.commentManager = commentManager;
     this.chatCommandListener = chatCommandListener;
-  }
-
-  @Override
-  public void afterPropertiesSet() {
-    // Defaults
-    myteamRulesEngine.registerRule(new DefaultMessageRule(userChatService));
-
-    // Buttons
-    myteamRulesEngine.registerRule(new SearchIssueByJqlInputRule(userChatService));
-    myteamRulesEngine.registerRule(new SearchIssueByKeyInputRule(userChatService));
-    myteamRulesEngine.registerRule(new NextPageRule(userChatService));
-    myteamRulesEngine.registerRule(new PrevPageRule(userChatService));
-
-    // Commands
-    myteamRulesEngine.registerRule(new HelpCommandRule(userChatService));
-    myteamRulesEngine.registerRule(new MenuCommandRule(userChatService));
-    myteamRulesEngine.registerRule(new WatchingIssuesCommandRule(userChatService));
-    myteamRulesEngine.registerRule(new AssignedIssuesCommandRule(userChatService));
-    myteamRulesEngine.registerRule(new CreatedIssuesCommandRule(userChatService));
-    myteamRulesEngine.registerRule(new ViewIssueCommandRule(userChatService, issueService));
-    myteamRulesEngine.registerRule(new WatchIssueCommandRule(userChatService, issueService));
-    myteamRulesEngine.registerRule(new UnwatchIssueCommandRule(userChatService, issueService));
-
-    // Services
-    myteamRulesEngine.registerRule(new SearchByJqlIssuesRule(userChatService, issueService));
-
-    // States
-    myteamRulesEngine.registerRule(new JqlInputRule(userChatService));
-
-    myteamRulesEngine.registerRule(new IssueKeyInputRule(userChatService));
   }
 
   public void publishEvent(MyteamEvent event) {
@@ -220,19 +176,18 @@ public class MyteamEventsListener implements InitializingBean {
     String command = split[0];
     String args = String.join("", Arrays.asList(split).subList(1, split.length));
 
-    myteamRulesEngine.fire(MyteamRulesEngine.formCommandFacts(command, event, args));
+    rulesEngine.fireCommand(command, event, args);
   }
 
   private void handleButtonClick(ButtonClickEvent event) {
     String buttonPrefix = StringUtils.substringBefore(event.getCallbackData(), "-");
     String data = StringUtils.substringAfter(event.getCallbackData(), "-");
-    myteamRulesEngine.fire(MyteamRulesEngine.formCommandFacts(buttonPrefix, event, data));
+    rulesEngine.fireCommand(buttonPrefix, event, data);
   }
 
   private void handleStateAction(ChatMessageEvent event) {
-    myteamRulesEngine.fire(
-        MyteamRulesEngine.formStateActionFacts(
-            userChatService.getState(event.getChatId()), event.getMessage(), event));
+    rulesEngine.fireStateAction(
+        stateManager.getState(event.getChatId()), event, event.getMessage());
   }
 
   @Subscribe

@@ -12,7 +12,7 @@ import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import lombok.Getter;
-import org.jeasy.rules.api.Facts;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
@@ -20,15 +20,14 @@ import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
-import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Service
+@Scope("chatService")
 public class UserChatServiceImpl implements UserChatService {
 
   private final UserData userData;
   private final LocaleManager localeManager;
-  private final MyteamRulesEngine myTeamRulesEngine;
   private final MyteamApiClient myteamClient;
   private final I18nResolver i18nResolver;
   private final StateManager stateManager;
@@ -39,14 +38,12 @@ public class UserChatServiceImpl implements UserChatService {
   public UserChatServiceImpl(
       MyteamApiClient myteamApiClient,
       UserData userData,
-      MyteamRulesEngine myTeamRulesEngine,
       MessageFormatter messageFormatter,
       StateManager stateManager,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport I18nResolver i18nResolver) {
     this.myteamClient = myteamApiClient;
     this.userData = userData;
-    this.myTeamRulesEngine = myTeamRulesEngine;
     this.localeManager = localeManager;
     this.i18nResolver = i18nResolver;
     this.messageFormatter = messageFormatter;
@@ -116,10 +113,5 @@ public class UserChatServiceImpl implements UserChatService {
   public HttpResponse<JsonNode> answerCallbackQuery(String queryId)
       throws UnirestException, MyteamServerErrorException {
     return myteamClient.answerCallbackQuery(queryId);
-  }
-
-  @Override
-  public void fireRule(Facts facts) {
-    myTeamRulesEngine.fire(facts);
   }
 }

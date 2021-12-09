@@ -20,6 +20,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
+import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.ViewingIssueState;
@@ -31,8 +32,9 @@ public class ViewIssueCommandRule extends BaseRule {
   static final RuleType NAME = CommandRuleType.Issue;
   private final IssueService issueService;
 
-  public ViewIssueCommandRule(UserChatService userChatService, IssueService issueService) {
-    super(userChatService);
+  public ViewIssueCommandRule(
+      UserChatService userChatService, RulesEngine rulesEngine, IssueService issueService) {
+    super(userChatService, rulesEngine);
     this.issueService = issueService;
   }
 

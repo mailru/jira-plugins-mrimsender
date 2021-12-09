@@ -16,9 +16,9 @@ import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.MyteamRulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
@@ -27,17 +27,13 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
     description = "Shows issue if message contains Issue key otherwise shows menu")
 public class DefaultMessageRule extends BaseRule {
 
-  public DefaultMessageRule(UserChatService userChatService) {
-    super(userChatService);
+  public DefaultMessageRule(UserChatService userChatService, RulesEngine rulesEngine) {
+    super(userChatService, rulesEngine);
   }
 
   @Condition
-  public boolean isValid(
-      @Fact("state") BotState state,
-      @Fact("event") MyteamEvent event,
-      @Fact("command") String command) {
+  public boolean isValid(@Fact("state") BotState state, @Fact("event") MyteamEvent event) {
     return !state.isWaiting()
-        && command.length() == 0
         && event.getChatType() != ChatType.GROUP
         && event instanceof ChatMessageEvent;
   }
@@ -71,8 +67,7 @@ public class DefaultMessageRule extends BaseRule {
 
   private boolean fireViewIssueResult(@Fact("event") MyteamEvent event, String issueKey) {
     if (issueKey != null) {
-      userChatService.fireRule(
-          MyteamRulesEngine.formCommandFacts(CommandRuleType.Issue.getName(), event, issueKey));
+      rulesEngine.fireCommand(CommandRuleType.Issue.getName(), event, issueKey);
       return true;
     }
     return false;

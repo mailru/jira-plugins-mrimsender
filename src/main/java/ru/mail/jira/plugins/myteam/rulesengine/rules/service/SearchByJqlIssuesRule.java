@@ -13,20 +13,22 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
+import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ServiceRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
+import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.JqlSearchState;
 
 @Slf4j
 @Rule(name = "jql search", description = "Shows issues by JQL")
 public class SearchByJqlIssuesRule extends BaseRule {
-  static final RuleType NAME = ServiceRuleType.SearchByJql;
+  static final RuleType NAME = CommandRuleType.SearchByJql;
   private final IssueService issueService;
 
-  public SearchByJqlIssuesRule(UserChatService userChatService, IssueService issueService) {
-    super(userChatService);
+  public SearchByJqlIssuesRule(
+      UserChatService userChatService, RulesEngine rulesEngine, IssueService issueService) {
+    super(userChatService, rulesEngine);
     this.issueService = issueService;
   }
 

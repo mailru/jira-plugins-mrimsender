@@ -9,7 +9,6 @@ import javax.annotation.Nullable;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
-import org.jeasy.rules.api.Facts;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
@@ -57,8 +56,4 @@ public interface UserChatService {
   void deleteState(String chatId);
 
   void setState(String chatId, BotState state);
-
-  // Rules Engine
-
-  void fireRule(Facts facts);
 }

@@ -19,6 +19,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
+import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Slf4j
@@ -27,8 +28,9 @@ public class UnwatchIssueCommandRule extends BaseRule {
   static final RuleType NAME = CommandRuleType.UnwatchIssue;
   private final IssueService issueService;
 
-  public UnwatchIssueCommandRule(UserChatService userChatService, IssueService issueService) {
-    super(userChatService);
+  public UnwatchIssueCommandRule(
+      UserChatService userChatService, RulesEngine rulesEngine, IssueService issueService) {
+    super(userChatService, rulesEngine);
     this.issueService = issueService;
   }
 

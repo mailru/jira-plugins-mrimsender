@@ -13,6 +13,7 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.ViewingIssueState;
 
@@ -22,8 +23,8 @@ public class SearchIssueByKeyInputRule extends BaseRule {
 
   static final ButtonRuleType NAME = ButtonRuleType.SearchIssueByKeyInput;
 
-  public SearchIssueByKeyInputRule(UserChatService userChatService) {
-    super(userChatService);
+  public SearchIssueByKeyInputRule(UserChatService userChatService, RulesEngine rulesEngine) {
+    super(userChatService, rulesEngine);
   }
 
   @Condition

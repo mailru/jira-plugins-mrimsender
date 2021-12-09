@@ -13,6 +13,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.CommandRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(name = "/help", description = "Shows help")
@@ -20,8 +21,8 @@ public class HelpCommandRule extends BaseRule {
 
   static final CommandRuleType NAME = CommandRuleType.Help;
 
-  public HelpCommandRule(UserChatService userChatService) {
-    super(userChatService);
+  public HelpCommandRule(UserChatService userChatService, RulesEngine rulesEngine) {
+    super(userChatService, rulesEngine);
   }
 
   @Condition
