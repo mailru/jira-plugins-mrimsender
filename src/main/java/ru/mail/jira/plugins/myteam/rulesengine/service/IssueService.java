@@ -5,9 +5,11 @@ import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.exception.ParseException;
 import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.user.ApplicationUser;
+import java.util.List;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 
 public interface IssueService {
@@ -16,6 +18,9 @@ public interface IssueService {
       throws IssuePermissionException, IssueNotFoundException;
 
   Issue getIssue(String issueKey) throws IssueNotFoundException;
+
+  List<Comment> getIssueComments(String issueKey, ApplicationUser user)
+      throws IssuePermissionException, IssueNotFoundException;
 
   boolean isUserWatching(Issue issue, ApplicationUser user);
 

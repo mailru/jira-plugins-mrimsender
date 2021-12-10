@@ -7,7 +7,8 @@ public enum ButtonRuleType implements RuleType {
   NextPage("next"),
   PrevPage("previous"),
   SearchIssueByJqlInput("searchIssueByJqlInput"),
-  SearchIssueByKeyInput("searchIssueByKeyInput");
+  SearchIssueByKeyInput("searchIssueByKeyInput"),
+  ViewComments("viewComments");
 
   @Getter(onMethod_ = {@Override})
   private final String name;

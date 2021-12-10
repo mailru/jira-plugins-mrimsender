@@ -9,6 +9,8 @@ import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.exception.ParseException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
+import com.atlassian.jira.issue.comments.Comment;
+import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.issue.watchers.WatcherManager;
@@ -20,6 +22,7 @@ import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
 import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 
@@ -30,6 +33,7 @@ public class IssueServiceImpl implements IssueService {
   private final PermissionManager permissionManager;
   private final WatcherManager watcherManager;
   private final SearchService searchService;
+  private final CommentManager commentManager;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final String JIRA_BASE_URL;
 
@@ -38,12 +42,14 @@ public class IssueServiceImpl implements IssueService {
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport WatcherManager watcherManager,
       @ComponentImport SearchService searchService,
+      @ComponentImport CommentManager commentManager,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport ApplicationProperties applicationProperties) {
     this.issueManager = issueManager;
     this.permissionManager = permissionManager;
     this.watcherManager = watcherManager;
     this.searchService = searchService;
+    this.commentManager = commentManager;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
   }
@@ -128,5 +134,16 @@ public class IssueServiceImpl implements IssueService {
       throw new IssueNotFoundException(String.format("Issue with key %s was not found", issueKey));
     }
     return issue;
+  }
+
+  @Override
+  public List<Comment> getIssueComments(String issueKey, ApplicationUser user)
+      throws IssuePermissionException, IssueNotFoundException {
+    JiraThreadLocalUtils.preCall();
+    try {
+      return commentManager.getComments(getIssueByUser(issueKey, user));
+    } finally {
+      JiraThreadLocalUtils.postCall();
+    }
   }
 }

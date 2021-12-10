@@ -4,17 +4,13 @@ package ru.mail.jira.plugins.myteam.rulesengine.service;
 import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.MyteamRulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.NextPageRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.PrevPageRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.SearchIssueByJqlInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.SearchIssueByKeyInputRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNoPermissionErrorRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNotFoundErrorRule;
@@ -25,7 +21,6 @@ import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRul
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Component
-@Scope("chatService")
 public class RulesEngineImpl implements RulesEngine, InitializingBean {
 
   private final MyteamRulesEngine commandsRuleEngine;
@@ -53,6 +48,7 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(new SearchIssueByKeyInputRule(userChatService, this));
     commandsRuleEngine.registerRule(new NextPageRule(userChatService, this));
     commandsRuleEngine.registerRule(new PrevPageRule(userChatService, this));
+    commandsRuleEngine.registerRule(new ViewCommentsRule(userChatService, this, issueService));
 
     // Commands
     commandsRuleEngine.registerRule(new HelpCommandRule(userChatService, this));
@@ -70,13 +66,10 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(new SearchByJqlIssuesRule(userChatService, this, issueService));
 
     // States
-
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));
-
     stateActionsRuleEngine.registerRule(new IssueKeyInputRule(userChatService, this));
 
     // Errors
-
     errorsRuleEngine.registerRule(new IssueNotFoundErrorRule(userChatService, this));
     errorsRuleEngine.registerRule(new IssueNoPermissionErrorRule(userChatService, this));
   }

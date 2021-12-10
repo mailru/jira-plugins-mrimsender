@@ -14,7 +14,6 @@ import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import lombok.Getter;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
@@ -27,7 +26,6 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.LinkIssueWithCh
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Service
-@Scope("chatService")
 public class UserChatServiceImpl implements UserChatService {
 
   private final UserData userData;

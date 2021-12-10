@@ -1802,7 +1802,7 @@ public class MessageFormatter {
             i18nResolver.getText(
                 localeManager.getLocaleFor(recipient),
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"),
-            String.join("-", "showComments", issueKey)));
+            String.join("-", ButtonRuleType.ViewComments.getName(), issueKey)));
 
     ArrayList<InlineKeyboardMarkupButton> watchButtonRow = new ArrayList<>();
 
@@ -2151,7 +2151,11 @@ public class MessageFormatter {
   public List<List<InlineKeyboardMarkupButton>> getViewCommentsButtons(
       Locale locale, boolean withPrev, boolean withNext) {
     return getListButtons(
-        locale, withPrev, withNext, "prevIssueCommentsListPage", "nextIssueCommentsListPage");
+        locale,
+        withPrev,
+        withNext,
+        ButtonRuleType.PrevPage.getName(),
+        ButtonRuleType.NextPage.getName());
   }
 
   public String getSelectIssueTypeMessage(Locale locale) {
