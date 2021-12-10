@@ -155,12 +155,7 @@ public class MyteamEventsListener {
     String message = chatMessageEvent.getMessage();
 
     if (message != null && message.startsWith(CHAT_COMMAND_PREFIX)) {
-      String command = StringUtils.substringAfter(message, CHAT_COMMAND_PREFIX).toLowerCase();
       handleCommand(chatMessageEvent);
-
-      if (command.startsWith("link") && isGroupChatEvent) {
-        asyncEventBus.post(new LinkIssueWithChatEvent(chatMessageEvent));
-      }
       return;
     }
     handleStateAction(chatMessageEvent);

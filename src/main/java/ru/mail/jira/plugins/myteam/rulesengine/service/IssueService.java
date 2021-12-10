@@ -15,6 +15,8 @@ public interface IssueService {
   Issue getIssueByUser(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException;
 
+  Issue getIssue(String issueKey) throws IssueNotFoundException;
+
   boolean isUserWatching(Issue issue, ApplicationUser user);
 
   String getJiraBaseUrl();
@@ -26,5 +28,5 @@ public interface IssueService {
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
 
   void unwatchIssue(String issueKey, ApplicationUser user)
-      throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;;
+      throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
 }

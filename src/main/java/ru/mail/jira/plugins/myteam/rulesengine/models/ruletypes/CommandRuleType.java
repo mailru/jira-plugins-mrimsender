@@ -12,6 +12,7 @@ public enum CommandRuleType implements RuleType {
   AssignedIssues("assigned"),
   CreatedIssues("created"),
   WatchIssue("watch"),
+  LinkIssueWithChat("link"),
   UnwatchIssue("unwatch");
 
   @Getter(onMethod_ = {@Override})

@@ -2,6 +2,8 @@
 package ru.mail.jira.plugins.myteam.rulesengine.service;
 
 import com.atlassian.jira.config.LocaleManager;
+import com.atlassian.jira.exception.IssueNotFoundException;
+import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
@@ -16,10 +18,12 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.model.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.LinkIssueWithChatException;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Service
@@ -31,6 +35,8 @@ public class UserChatServiceImpl implements UserChatService {
   private final MyteamApiClient myteamClient;
   private final I18nResolver i18nResolver;
   private final StateManager stateManager;
+  private final IssueService issueService;
+  private final MyteamChatRepository myteamChatRepository;
 
   @Getter(onMethod_ = {@Override})
   private final MessageFormatter messageFormatter;
@@ -40,6 +46,8 @@ public class UserChatServiceImpl implements UserChatService {
       UserData userData,
       MessageFormatter messageFormatter,
       StateManager stateManager,
+      IssueService issueService,
+      MyteamChatRepository myteamChatRepository,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport I18nResolver i18nResolver) {
     this.myteamClient = myteamApiClient;
@@ -48,6 +56,8 @@ public class UserChatServiceImpl implements UserChatService {
     this.i18nResolver = i18nResolver;
     this.messageFormatter = messageFormatter;
     this.stateManager = stateManager;
+    this.issueService = issueService;
+    this.myteamChatRepository = myteamChatRepository;
   }
 
   @Override
@@ -113,5 +123,18 @@ public class UserChatServiceImpl implements UserChatService {
   public HttpResponse<JsonNode> answerCallbackQuery(String queryId)
       throws UnirestException, MyteamServerErrorException {
     return myteamClient.answerCallbackQuery(queryId);
+  }
+
+  @Override
+  public void linkChat(String chatId, String issueKey)
+      throws IssueNotFoundException, LinkIssueWithChatException {
+    Issue issue = issueService.getIssue(issueKey);
+    if (issue != null) {
+      if (myteamChatRepository.findChatByIssueKey(issueKey) == null) {
+        myteamChatRepository.persistChat(chatId, issueKey);
+      } else {
+        throw new LinkIssueWithChatException("Issue already linked to the chat");
+      }
+    }
   }
 }

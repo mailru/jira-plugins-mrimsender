@@ -60,6 +60,7 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(new WatchingIssuesCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new AssignedIssuesCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new CreatedIssuesCommandRule(userChatService, this));
+    commandsRuleEngine.registerRule(new LinkIssueWithChatCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new ViewIssueCommandRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(new WatchIssueCommandRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(

@@ -100,10 +100,10 @@ public class IssueServiceImpl implements IssueService {
   @Override
   public void watchIssue(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException {
-    Issue issue = getIssue(issueKey, user);
+    Issue issue = getIssueByUser(issueKey, user);
     if (watcherManager.isWatching(user, issue)) {
       throw new IssueWatchingException(
-          String.format("Issue with key %s already unwatched", issueKey));
+          String.format("Issue with key %s already watched", issueKey));
     } else {
       watcherManager.startWatching(user, issue);
     }
@@ -112,7 +112,7 @@ public class IssueServiceImpl implements IssueService {
   @Override
   public void unwatchIssue(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException {
-    Issue issue = getIssue(issueKey, user);
+    Issue issue = getIssueByUser(issueKey, user);
     if (!watcherManager.isWatching(user, issue)) {
       throw new IssueWatchingException(
           String.format("Issue with key %s already unwatched", issueKey));
@@ -121,15 +121,10 @@ public class IssueServiceImpl implements IssueService {
     }
   }
 
-  private Issue getIssue(String issueKey, ApplicationUser user)
-      throws IssuePermissionException, IssueNotFoundException {
+  @Override
+  public Issue getIssue(String issueKey) throws IssueNotFoundException {
     Issue issue = issueManager.getIssueByKeyIgnoreCase(issueKey);
-    if (issue != null) {
-      if (!permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issue, user)) {
-        throw new IssuePermissionException(
-            String.format("User has no permissions to watch issue %s", issueKey));
-      }
-    } else {
+    if (issue == null) {
       throw new IssueNotFoundException(String.format("Issue with key %s was not found", issueKey));
     }
     return issue;

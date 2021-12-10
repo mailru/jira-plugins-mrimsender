@@ -13,6 +13,7 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.LinkIssueWithChatException;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 public interface UserChatService {
@@ -48,6 +49,8 @@ public interface UserChatService {
 
   HttpResponse<JsonNode> answerCallbackQuery(String queryId)
       throws UnirestException, MyteamServerErrorException;
+
+  void linkChat(String chatId, String issueKey) throws LinkIssueWithChatException;
 
   // State Manager
 
