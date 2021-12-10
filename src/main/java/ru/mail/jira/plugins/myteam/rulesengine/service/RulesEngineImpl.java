@@ -16,6 +16,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNoPermissionErr
 import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNotFoundErrorRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment.IssueCommentInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuesearch.IssueKeyInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
@@ -48,6 +49,7 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(new SearchIssueByKeyInputRule(userChatService, this));
     commandsRuleEngine.registerRule(new NextPageRule(userChatService, this));
     commandsRuleEngine.registerRule(new PrevPageRule(userChatService, this));
+    commandsRuleEngine.registerRule(new CommentIssueRule(userChatService, this));
     commandsRuleEngine.registerRule(new ViewCommentsRule(userChatService, this, issueService));
 
     // Commands
@@ -62,12 +64,14 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(
         new UnwatchIssueCommandRule(userChatService, this, issueService));
 
-    // Services
+    // Service
     commandsRuleEngine.registerRule(new SearchByJqlIssuesRule(userChatService, this, issueService));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));
     stateActionsRuleEngine.registerRule(new IssueKeyInputRule(userChatService, this));
+    stateActionsRuleEngine.registerRule(
+        new IssueCommentInputRule(userChatService, this, issueService));
 
     // Errors
     errorsRuleEngine.registerRule(new IssueNotFoundErrorRule(userChatService, this));

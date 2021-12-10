@@ -2,11 +2,12 @@
 package ru.mail.jira.plugins.myteam.rulesengine.core;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class Pager {
   private int page = 0;
-  private final int total;
+  @Setter private int total;
   private final int perPage;
 
   public Pager(int total, int perPage) {

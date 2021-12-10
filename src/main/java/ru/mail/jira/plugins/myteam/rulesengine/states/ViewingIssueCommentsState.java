@@ -26,14 +26,14 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 @Slf4j
 public class ViewingIssueCommentsState extends BotState implements PageableState {
 
-  private static final int COMMENT_LIST_PAGE_SIZE = 2;
+  private static final int COMMENT_LIST_PAGE_SIZE = 5;
 
   @Getter @Setter private String issueKey;
   private final IssueService issueService;
   private final UserChatService userChatService;
   private final RulesEngine rulesEngine;
   private final MessageFormatter messageFormatter;
-  private Pager pager;
+  private final Pager pager;
 
   public ViewingIssueCommentsState(
       String issueKey,
@@ -46,6 +46,7 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
     this.userChatService = userChatService;
     this.rulesEngine = rulesEngine;
     this.messageFormatter = userChatService.getMessageFormatter();
+    pager = new Pager(0, COMMENT_LIST_PAGE_SIZE);
   }
 
   @Override
@@ -84,9 +85,7 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
                   locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.showComments.empty"));
 
         } else {
-          if (pager == null) {
-            pager = new Pager(totalComments.size(), COMMENT_LIST_PAGE_SIZE);
-          }
+          pager.setTotal(totalComments.size());
 
           List<Comment> comments =
               totalComments.stream()

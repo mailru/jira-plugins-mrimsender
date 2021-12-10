@@ -1795,7 +1795,7 @@ public class MessageFormatter {
             i18nResolver.getText(
                 localeManager.getLocaleFor(recipient),
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"),
-            String.join("-", "comment", issueKey)));
+            String.join("-", ButtonRuleType.CommentIssue.getName(), issueKey)));
 
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
@@ -1813,7 +1813,12 @@ public class MessageFormatter {
                 isWatching
                     ? "ru.mail.jira.plugins.myteam.mrimsenderEventListener.unwatchButton.text"
                     : "ru.mail.jira.plugins.myteam.mrimsenderEventListener.watchButton.text"),
-            String.join("-", isWatching ? "unwatch" : "watch", issueKey)));
+            String.join(
+                "-",
+                isWatching
+                    ? CommandRuleType.UnwatchIssue.getName()
+                    : CommandRuleType.WatchIssue.getName(),
+                issueKey)));
 
     buttons.add(watchButtonRow);
 

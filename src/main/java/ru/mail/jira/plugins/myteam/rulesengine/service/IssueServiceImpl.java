@@ -23,7 +23,10 @@ import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
 import java.util.List;
+import javax.naming.NoPermissionException;
 import org.springframework.stereotype.Service;
+import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 
 @Service
@@ -35,9 +38,11 @@ public class IssueServiceImpl implements IssueService {
   private final SearchService searchService;
   private final CommentManager commentManager;
   private final JiraAuthenticationContext jiraAuthenticationContext;
+  private final Utils utils;
   private final String JIRA_BASE_URL;
 
   public IssueServiceImpl(
+      Utils utils,
       @ComponentImport IssueManager issueManager,
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport WatcherManager watcherManager,
@@ -51,6 +56,7 @@ public class IssueServiceImpl implements IssueService {
     this.searchService = searchService;
     this.commentManager = commentManager;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
+    this.utils = utils;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
   }
 
@@ -124,6 +130,29 @@ public class IssueServiceImpl implements IssueService {
           String.format("Issue with key %s already unwatched", issueKey));
     } else {
       watcherManager.stopWatching(user, issue);
+    }
+  }
+
+  @Override
+  public void commentIssue(String issueKey, ApplicationUser user, ChatMessageEvent event)
+      throws NoPermissionException {
+    JiraThreadLocalUtils.preCall();
+    try {
+      Issue commentedIssue = issueManager.getIssueByCurrentKey(issueKey);
+      if (user != null && commentedIssue != null) {
+        if (permissionManager.hasPermission(
+            ProjectPermissions.ADD_COMMENTS, commentedIssue, user)) {
+          commentManager.create(
+              commentedIssue,
+              user,
+              utils.convertToJiraCommentStyle(event, user, commentedIssue),
+              true);
+        } else {
+          throw new NoPermissionException();
+        }
+      }
+    } finally {
+      JiraThreadLocalUtils.postCall();
     }
   }
 

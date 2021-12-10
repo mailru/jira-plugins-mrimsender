@@ -10,6 +10,8 @@ import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.user.ApplicationUser;
 import java.util.List;
+import javax.naming.NoPermissionException;
+import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 
 public interface IssueService {
@@ -34,4 +36,7 @@ public interface IssueService {
 
   void unwatchIssue(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
+
+  void commentIssue(String issueKey, ApplicationUser user, ChatMessageEvent event)
+      throws NoPermissionException;
 }
