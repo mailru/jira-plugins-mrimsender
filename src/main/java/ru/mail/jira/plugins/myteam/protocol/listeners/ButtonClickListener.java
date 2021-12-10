@@ -19,7 +19,6 @@ import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.CancelClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.CommentIssueClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ShowIssueClickEvent;
 
 @Slf4j
@@ -46,29 +45,6 @@ public class ButtonClickListener {
     this.messageFormatter = messageFormatter;
     this.i18nResolver = i18nResolver;
     this.localeManager = localeManager;
-  }
-
-  @Subscribe
-  public void onCommentIssueButtonClick(CommentIssueClickEvent commentIssueClickEvent)
-      throws UnirestException, IOException, MyteamServerErrorException {
-    log.debug("CreateCommentCommand execution started...");
-    ApplicationUser commentedUser = userData.getUserByMrimLogin(commentIssueClickEvent.getUserId());
-    if (commentedUser != null) {
-      String message =
-          i18nResolver.getText(
-              localeManager.getLocaleFor(commentedUser),
-              "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.insertComment.message",
-              commentIssueClickEvent.getIssueKey());
-      myteamApiClient.answerCallbackQuery(commentIssueClickEvent.getQueryId());
-      myteamApiClient.sendMessageText(
-          commentIssueClickEvent.getChatId(),
-          message,
-          messageFormatter.getCancelButton(localeManager.getLocaleFor(commentedUser)));
-      chatsStateMap.put(
-          commentIssueClickEvent.getChatId(),
-          ChatState.buildCommentWaitingState(commentIssueClickEvent.getIssueKey()));
-    }
-    log.debug("JiraMessageQueueProcessor answerCommentButtonClick queue offer finished...");
   }
 
   @Subscribe

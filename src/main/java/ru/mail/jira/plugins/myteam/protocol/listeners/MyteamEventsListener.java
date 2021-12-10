@@ -1,47 +1,22 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol.listeners;
 
-import com.atlassian.jira.config.LocaleManager;
-import com.atlassian.jira.issue.AttachmentManager;
-import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.issue.IssueManager;
-import com.atlassian.jira.issue.attachment.ConvertTemporaryAttachmentParams;
-import com.atlassian.jira.issue.attachment.TemporaryAttachmentId;
-import com.atlassian.jira.issue.comments.CommentManager;
-import com.atlassian.jira.permission.ProjectPermissions;
-import com.atlassian.jira.security.PermissionManager;
-import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
-import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.regex.Pattern;
-import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.mail.jira.plugins.myteam.commons.Utils;
-import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
-import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.CommentaryParts;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.File;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
@@ -62,13 +37,6 @@ public class MyteamEventsListener {
           2, new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX).build());
   private final AsyncEventBus asyncEventBus;
   private final MyteamApiClient myteamApiClient;
-  private final UserData userData;
-  private final I18nResolver i18nResolver;
-  private final LocaleManager localeManager;
-  private final IssueManager issueManager;
-  private final PermissionManager permissionManager;
-  private final CommentManager commentManager;
-  private final AttachmentManager attachmentManager;
   private final ChatCommandListener chatCommandListener;
   private final RulesEngine rulesEngine;
   private final StateManager stateManager;
@@ -77,20 +45,12 @@ public class MyteamEventsListener {
   public MyteamEventsListener(
       ChatStateMapping chatStateMapping,
       MyteamApiClient myteamApiClient,
-      UserData userData,
       ChatCommandListener chatCommandListener,
       ButtonClickListener buttonClickListener,
       CreateIssueEventsListener createIssueEventsListener,
       StateManager stateManager,
-      RulesEngine rulesEngine,
-      @ComponentImport LocaleManager localeManager,
-      @ComponentImport I18nResolver i18nResolver,
-      @ComponentImport IssueManager issueManager,
-      @ComponentImport PermissionManager permissionManager,
-      @ComponentImport CommentManager commentManager,
-      @ComponentImport AttachmentManager attachmentManager) {
+      RulesEngine rulesEngine) {
     this.chatsStateMap = chatStateMapping.getChatsStateMap();
-    this.attachmentManager = attachmentManager;
     this.rulesEngine = rulesEngine;
     this.stateManager = stateManager;
     this.asyncEventBus =
@@ -106,12 +66,6 @@ public class MyteamEventsListener {
     this.asyncEventBus.register(buttonClickListener);
     this.asyncEventBus.register(createIssueEventsListener);
     this.myteamApiClient = myteamApiClient;
-    this.userData = userData;
-    this.i18nResolver = i18nResolver;
-    this.localeManager = localeManager;
-    this.issueManager = issueManager;
-    this.permissionManager = permissionManager;
-    this.commentManager = commentManager;
     this.chatCommandListener = chatCommandListener;
   }
 
@@ -127,10 +81,6 @@ public class MyteamEventsListener {
     // if chat is in some state then use our state processing logic
     if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
       ChatState chatState = chatsStateMap.remove(chatId);
-      if (chatState.isWaitingForComment()) {
-        asyncEventBus.post(new NewCommentMessageEvent(chatMessageEvent, chatState.getIssueKey()));
-        return;
-      }
       if (chatState.isWaitingForProjectSelect()) {
         asyncEventBus.post(
             new SelectedProjectMessageEvent(chatMessageEvent, chatState.getIssueCreationDto()));
@@ -297,9 +247,6 @@ public class MyteamEventsListener {
 
     // if chat isn't in some state then just process new command
     switch (buttonPrefix) {
-      case "comment":
-        asyncEventBus.post(new CommentIssueClickEvent(buttonClickEvent));
-        break;
       case "createIssue":
         asyncEventBus.post(new CreateIssueClickEvent(buttonClickEvent));
         break;
@@ -339,116 +286,5 @@ public class MyteamEventsListener {
           jiraIssueViewEvent.getIssueKey(),
           jiraIssueViewEvent.getInitiator(),
           jiraIssueViewEvent.getChatId());
-  }
-
-  @Subscribe
-  public void handleNewCommentMessageEvent(NewCommentMessageEvent newCommentMessageEvent)
-      throws IOException, UnirestException, MyteamServerErrorException {
-    JiraThreadLocalUtils.preCall();
-    try {
-      log.debug("CreateCommentCommand execution started...");
-      ApplicationUser commentedUser =
-          userData.getUserByMrimLogin(newCommentMessageEvent.getUserId());
-      Issue commentedIssue =
-          issueManager.getIssueByCurrentKey(newCommentMessageEvent.getCommentingIssueKey());
-      if (commentedUser != null && commentedIssue != null) {
-        if (permissionManager.hasPermission(
-            ProjectPermissions.ADD_COMMENTS, commentedIssue, commentedUser)) {
-          commentManager.create(
-              commentedIssue,
-              commentedUser,
-              convertToJiraCommentStyle(newCommentMessageEvent, commentedUser, commentedIssue),
-              true);
-          log.debug("CreateCommentCommand comment created...");
-          myteamApiClient.sendMessageText(
-              newCommentMessageEvent.getChatId(),
-              i18nResolver.getText(
-                  localeManager.getLocaleFor(commentedUser),
-                  "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.commentCreated"));
-          log.debug("CreateCommentCommand new comment created message sent...");
-        } else {
-          log.debug("CreateCommentCommand permissions violation occurred...");
-          myteamApiClient.sendMessageText(
-              newCommentMessageEvent.getChatId(),
-              i18nResolver.getText(
-                  localeManager.getLocaleFor(commentedUser),
-                  "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.noPermissions"));
-          log.debug("CreateCommentCommand not enough permissions message sent...");
-        }
-      }
-      log.debug("CreateCommentCommand execution finished...");
-    } finally {
-      JiraThreadLocalUtils.postCall();
-    }
-  }
-
-  public String convertToJiraCommentStyle(
-      NewCommentMessageEvent event, ApplicationUser commentedUser, Issue commentedIssue) {
-    List<Part> parts = event.getMessageParts();
-    if (parts == null || parts.size() == 0) return event.getMessage();
-    else {
-      StringBuilder outPutStrings = new StringBuilder(event.getMessage());
-      parts.forEach(
-          part -> {
-            CommentaryParts currentPartClass =
-                CommentaryParts.valueOf(part.getClass().getSimpleName());
-            switch (currentPartClass) {
-              case File:
-                File file = (File) part;
-                try {
-                  HttpResponse<FileResponse> response = myteamApiClient.getFile(file.getFileId());
-                  FileResponse fileInfo = response.getBody();
-                  try (InputStream attachment = Utils.loadUrlFile(fileInfo.getUrl())) {
-                    TemporaryAttachmentId tmpAttachmentId =
-                        attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
-                    ConvertTemporaryAttachmentParams params =
-                        ConvertTemporaryAttachmentParams.builder()
-                            .setTemporaryAttachmentId(tmpAttachmentId)
-                            .setAuthor(commentedUser)
-                            .setIssue(commentedIssue)
-                            .setFilename(fileInfo.getFilename())
-                            .setContentType(fileInfo.getType())
-                            .setCreatedTime(DateTime.now())
-                            .setFileSize(fileInfo.getSize())
-                            .build();
-                    attachmentManager.convertTemporaryAttachment(params);
-                    if (fileInfo.getType().equals("image")) {
-                      outPutStrings.append(String.format("!%s!\n", fileInfo.getFilename()));
-                    } else {
-                      outPutStrings.append(String.format("[%s]\n", fileInfo.getFilename()));
-                    }
-                    if (file.getCaption() != null) {
-                      outPutStrings.append(String.format("%s\n", file.getCaption()));
-                    }
-                  }
-                } catch (UnirestException | IOException | MyteamServerErrorException e) {
-                  log.error(
-                      "Unable to create attachment for comment on Issue {}",
-                      commentedIssue.getKey(),
-                      e);
-                }
-                break;
-              case Mention:
-                Mention mention = (Mention) part;
-                ApplicationUser user = userData.getUserByMrimLogin(mention.getUserId());
-                if (user != null) {
-                  String temp =
-                      Pattern.compile("@\\[" + mention.getUserId() + "]")
-                          .matcher(outPutStrings)
-                          .replaceAll("[~" + user.getName() + "]");
-                  outPutStrings.setLength(0);
-                  outPutStrings.append(temp);
-                } else {
-                  log.error(
-                      "Unable change Myteam mention to Jira's mention, because Can't find user with id:{}",
-                      mention.getUserId());
-                }
-                break;
-              default:
-                break;
-            }
-          });
-      return outPutStrings.toString();
-    }
   }
 }
