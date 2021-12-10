@@ -197,20 +197,6 @@ public class MyteamEventsListener {
     // if chat is in some state then use our state processing logic
     if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
       ChatState chatState = chatsStateMap.remove(chatId);
-      if (chatState.isIssueCommentsShowing()) {
-        if (buttonPrefix.equals("nextIssueCommentsListPage")) {
-          asyncEventBus.post(
-              new NextIssueCommentsPageClickEvent(
-                  buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getIssueKey()));
-          return;
-        }
-        if (buttonPrefix.equals("prevIssueCommentsListPage")) {
-          asyncEventBus.post(
-              new PrevIssueCommentsPageClickEvent(
-                  buttonClickEvent, chatState.getCurrentSelectListPage(), chatState.getIssueKey()));
-          return;
-        }
-      }
       if (chatState.isWaitingForProjectSelect()) {
         if (buttonPrefix.equals("nextProjectListPage")) {
           asyncEventBus.post(
@@ -313,9 +299,6 @@ public class MyteamEventsListener {
     switch (buttonPrefix) {
       case "comment":
         asyncEventBus.post(new CommentIssueClickEvent(buttonClickEvent));
-        break;
-      case "showComments":
-        asyncEventBus.post(new ViewIssueCommentsClickEvent(buttonClickEvent));
         break;
       case "createIssue":
         asyncEventBus.post(new CreateIssueClickEvent(buttonClickEvent));
