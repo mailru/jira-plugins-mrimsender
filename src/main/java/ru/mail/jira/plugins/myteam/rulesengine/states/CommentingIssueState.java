@@ -7,7 +7,6 @@ public class CommentingIssueState extends BotState {
   @Getter private final String issueKey;
 
   public CommentingIssueState(String issueKey) {
-    super();
     this.issueKey = issueKey;
   }
 }

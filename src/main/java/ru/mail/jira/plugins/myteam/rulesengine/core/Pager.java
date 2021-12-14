@@ -34,7 +34,7 @@ public class Pager {
   }
 
   public boolean hasNext() {
-    return (total / perPage > page);
+    return (total / perPage > page + 1);
   }
 
   public boolean hasPrev() {

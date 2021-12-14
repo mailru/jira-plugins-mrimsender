@@ -132,7 +132,10 @@ public class MyteamEventsListener {
 
   private void handleStateAction(ChatMessageEvent event) {
     rulesEngine.fireStateAction(
-        stateManager.getState(event.getChatId()), event, event.getMessage());
+        stateManager.getLastState(event.getChatId()),
+        stateManager.getPrevState(event.getChatId()),
+        event,
+        event.getMessage());
   }
 
   @Subscribe
@@ -246,16 +249,16 @@ public class MyteamEventsListener {
     }
 
     // if chat isn't in some state then just process new command
-    switch (buttonPrefix) {
-      case "createIssue":
-        asyncEventBus.post(new CreateIssueClickEvent(buttonClickEvent));
-        break;
-      default:
-        // fix infinite spinners situations for not recognized button clicks
-        // for example next or prev button click when chat state was cleared
-        myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
-        break;
-    }
+    //    switch (buttonPrefix) {
+    //      case "createIssue":
+    //        asyncEventBus.post(new CreateIssueClickEvent(buttonClickEvent));
+    //        break;
+    //      default:
+    // fix infinite spinners situations for not recognized button clicks
+    // for example next or prev button click when chat state was cleared
+    //    myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
+    //        break;
+    //    }
   }
 
   @Subscribe

@@ -1,34 +1,67 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import javax.validation.constraints.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
-import ru.mail.jira.plugins.myteam.rulesengine.states.EmptyState;
 
 @Component
 public class StateManagerImpl implements StateManager {
 
-  private final Map<String, BotState> states = new HashMap<>();
+  private final Map<String, List<BotState>> statesMap = new HashMap<>();
 
   @Override
   public void setState(String chatId, BotState state) {
-    states.put(chatId, state);
+    List<BotState> states = getStates(chatId);
+    if (states == null) {
+      ArrayList<BotState> newStates = new ArrayList<>();
+      newStates.add(state);
+      statesMap.put(chatId, newStates);
+    } else {
+      states.add(state);
+    }
   }
 
   @Override
-  @NotNull
-  public BotState getState(String chatId) {
-    BotState state = states.get(chatId);
-    return state == null
-        ? new EmptyState()
-        : state; // as we use state as rules engine Facts ==> Fact cannot be nullable
+  public BotState getLastState(String chatId) {
+    List<BotState> states = getStates(chatId);
+
+    if (states == null || states.size() == 0) {
+      return null;
+    }
+
+    return states.get(states.size() - 1);
+  }
+
+  @Nullable
+  @Override
+  public BotState getPrevState(String chatId) {
+    List<BotState> states = getStates(chatId);
+
+    if (states == null || states.size() < 2) {
+      return null;
+    }
+
+    return states.get(states.size() - 2);
   }
 
   @Override
-  public void deleteState(String chatId) {
-    states.remove(chatId);
+  public void deleteStates(String chatId) {
+    statesMap.remove(chatId);
+  }
+
+  @Override
+  public void deleteState(String chatId, BotState botState) {
+    List<BotState> states = getStates(chatId);
+    if (states != null) states.remove(botState);
+  }
+
+  @Nullable
+  private List<BotState> getStates(String chatId) {
+    return statesMap.get(chatId);
   }
 }

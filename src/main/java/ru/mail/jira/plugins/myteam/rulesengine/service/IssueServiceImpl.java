@@ -7,6 +7,7 @@ import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.exception.ParseException;
+import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.comments.Comment;
@@ -15,6 +16,8 @@ import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.issue.watchers.WatcherManager;
 import com.atlassian.jira.permission.ProjectPermissions;
+import com.atlassian.jira.project.Project;
+import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
@@ -23,11 +26,14 @@ import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
 import org.springframework.stereotype.Service;
+import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 
 @Service
 public class IssueServiceImpl implements IssueService {
@@ -37,8 +43,10 @@ public class IssueServiceImpl implements IssueService {
   private final WatcherManager watcherManager;
   private final SearchService searchService;
   private final CommentManager commentManager;
+  private final ProjectManager projectManager;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final Utils utils;
+  private final PluginData pluginData;
   private final String JIRA_BASE_URL;
 
   public IssueServiceImpl(
@@ -48,15 +56,19 @@ public class IssueServiceImpl implements IssueService {
       @ComponentImport WatcherManager watcherManager,
       @ComponentImport SearchService searchService,
       @ComponentImport CommentManager commentManager,
+      @ComponentImport ProjectManager projectManager,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+      PluginData pluginData,
       @ComponentImport ApplicationProperties applicationProperties) {
     this.issueManager = issueManager;
     this.permissionManager = permissionManager;
     this.watcherManager = watcherManager;
     this.searchService = searchService;
     this.commentManager = commentManager;
+    this.projectManager = projectManager;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.utils = utils;
+    this.pluginData = pluginData;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
   }
 
@@ -157,6 +169,30 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
+  public List<Project> getAllowedProjects() {
+    return projectManager.getProjects().stream()
+        .filter(proj -> !isProjectExcluded(proj.getId()))
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public Project getProject(String projectKey, ApplicationUser user)
+      throws PermissionException, ProjectBannedException {
+    Project selectedProject = projectManager.getProjectByCurrentKeyIgnoreCase(projectKey);
+    if (selectedProject == null) {
+      return null;
+    }
+    if (isProjectExcluded(selectedProject.getId())) {
+      throw new ProjectBannedException(String.format("Project with key %s is banned", projectKey));
+    }
+
+    if (!permissionManager.hasPermission(ProjectPermissions.CREATE_ISSUES, selectedProject, user)) {
+      throw new PermissionException();
+    }
+    return selectedProject;
+  }
+
+  @Override
   public Issue getIssue(String issueKey) throws IssueNotFoundException {
     Issue issue = issueManager.getIssueByKeyIgnoreCase(issueKey);
     if (issue == null) {
@@ -174,5 +210,9 @@ public class IssueServiceImpl implements IssueService {
     } finally {
       JiraThreadLocalUtils.postCall();
     }
+  }
+
+  private boolean isProjectExcluded(Long projectId) {
+    return pluginData.getExcludingProjectIds().contains(projectId);
   }
 }

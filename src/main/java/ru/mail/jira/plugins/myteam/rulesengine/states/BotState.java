@@ -3,7 +3,7 @@ package ru.mail.jira.plugins.myteam.rulesengine.states;
 
 public abstract class BotState {
 
-  private boolean isWaiting = false;
+  protected boolean isWaiting = false;
 
   public void setWaiting(boolean isWaiting) {
     this.isWaiting = isWaiting;

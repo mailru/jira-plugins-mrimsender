@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.rulesengine.service;
 
 import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
@@ -17,9 +18,10 @@ import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNotFoundErrorRu
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment.IssueCommentInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuesearch.IssueKeyInputRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.ProjectKeyInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.EmptyState;
 
 @Component
 public class RulesEngineImpl implements RulesEngine, InitializingBean {
@@ -49,7 +51,7 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(new SearchIssueByKeyInputRule(userChatService, this));
     commandsRuleEngine.registerRule(new NextPageRule(userChatService, this));
     commandsRuleEngine.registerRule(new PrevPageRule(userChatService, this));
-    commandsRuleEngine.registerRule(new CommentIssueRule(userChatService, this));
+    commandsRuleEngine.registerRule(new CreateIssueRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(new ViewCommentsRule(userChatService, this, issueService));
 
     // Commands
@@ -69,7 +71,8 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));
-    stateActionsRuleEngine.registerRule(new IssueKeyInputRule(userChatService, this));
+    stateActionsRuleEngine.registerRule(
+        new ProjectKeyInputRule(userChatService, this, issueService));
     stateActionsRuleEngine.registerRule(
         new IssueCommentInputRule(userChatService, this, issueService));
 
@@ -96,9 +99,11 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
   }
 
   @Override
-  public void fireStateAction(BotState state, MyteamEvent event, String args) {
+  public void fireStateAction(
+      @Nullable BotState state, @Nullable BotState prevState, MyteamEvent event, String args) {
     Facts facts = formBasicFacts(event, args);
-    facts.add(new Fact<>("state", state));
+    facts.add(new Fact<>("state", state == null ? new EmptyState() : state));
+    facts.add(new Fact<>("prevState", prevState == null ? new EmptyState() : prevState));
     stateActionsRuleEngine.fire(facts);
   }
 

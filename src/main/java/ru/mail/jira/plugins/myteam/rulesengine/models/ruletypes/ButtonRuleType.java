@@ -9,7 +9,8 @@ public enum ButtonRuleType implements RuleType {
   SearchIssueByJqlInput("searchIssueByJqlInput"),
   SearchIssueByKeyInput("searchIssueByKeyInput"),
   ViewComments("viewComments"),
-  CommentIssue("issue");
+  CommentIssue("commentIssue"),
+  CreateIssue("createIssue");
 
   @Getter(onMethod_ = {@Override})
   private final String name;

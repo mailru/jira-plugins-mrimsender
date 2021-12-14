@@ -1924,8 +1924,33 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.createIssueButton.text"),
-            "createIssue");
+            ButtonRuleType.CreateIssue.getName());
     addRowWithButton(buttons, createIssueButton);
+    return buttons;
+  }
+
+  public List<List<InlineKeyboardMarkupButton>> getListButtons(
+      Locale locale, boolean withPrev, boolean withNext) {
+    if (!withPrev && !withNext) return null;
+    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
+    List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>();
+    if (withPrev) {
+      newButtonsRow.add(
+          InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+              i18nResolver.getRawText(
+                  locale,
+                  "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.prevPageButton.text"),
+              ButtonRuleType.PrevPage.getName()));
+    }
+    if (withNext) {
+      newButtonsRow.add(
+          InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+              i18nResolver.getRawText(
+                  locale,
+                  "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.nextPageButton.text"),
+              ButtonRuleType.NextPage.getName()));
+    }
+    buttons.add(newButtonsRow);
     return buttons;
   }
 
