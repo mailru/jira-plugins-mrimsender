@@ -8,13 +8,12 @@ import com.atlassian.jira.user.ApplicationUser;
 import java.util.*;
 import lombok.Getter;
 import lombok.Setter;
-import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
-public class CreatingIssueState extends BotState {
+public class CreatingIssueState extends BotState implements CancelableState {
   private static final String DELIMITER_STR = "----------";
 
   @Getter @Setter private Project project;
@@ -33,21 +32,19 @@ public class CreatingIssueState extends BotState {
     this.userChatService = userChatService;
     this.issueService = issueService;
   }
-  //  @Getter
-  //  private int currentFieldPosition = 0;
-  //
-  //  public int nextField() {
-  //    if (currentFieldPosition < fieldValues.size())
-  //      currentFieldPosition++;
-  //    return currentFieldPosition;
-  //  }
 
-  //  @Nullable
-  //  public Field getCurrentField() {
-  //    List<Field> fields = new ArrayList<>(fieldValues.keySet());
-  //    if (currentFieldPosition >= fields.size()) return null;
-  //    return fields.get(currentFieldPosition);
-  //  }
+  @Getter private int currentFieldPosition = 0;
+
+  public int nextField() {
+    if (currentFieldPosition < fieldValues.size()) currentFieldPosition++;
+    return currentFieldPosition;
+  }
+
+  public Optional<Field> getCurrentField() {
+    List<Field> fields = new ArrayList<>(fieldValues.keySet());
+    if (currentFieldPosition >= fields.size()) return Optional.empty();
+    return Optional.of(fields.get(currentFieldPosition));
+  }
 
   public void setIssueType(IssueType issueType, ApplicationUser user)
       throws UnsupportedCustomFieldsException, IncorrectIssueTypeException {
@@ -70,31 +67,20 @@ public class CreatingIssueState extends BotState {
     fieldValues.put(field, value);
   }
 
+  public String getFieldValue(Field field) {
+    return fieldValues.get(field);
+  }
+
   public void setCurrentFieldValue(String value) {
-    Optional<Field> field = getFirstUnfilledField();
+    Optional<Field> field = getCurrentField();
     field.ifPresent(f -> fieldValues.put(f, value));
   }
 
-  public String createInsertFieldMessage(Locale locale, Field field) {
-    if (Utils.isArrayLikeField(field)) {
-      return String.join(
-          "\n",
-          userChatService.getText(
-              locale,
-              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.arrayMessage",
-              userChatService.getRawText(locale, field.getNameKey()).toLowerCase(locale)),
-          this.formatIssueCreationDto(locale, fieldValues));
-    }
-    return String.join(
-        "\n",
-        userChatService.getText(
-            locale,
-            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.message",
-            userChatService.getRawText(locale, field.getNameKey()).toLowerCase(locale)),
-        this.formatIssueCreationDto(locale, fieldValues));
+  public String createInsertFieldMessage(Locale locale, String messagePrefix) {
+    return String.join("\n", messagePrefix, this.formatIssueCreationFields(locale, fieldValues));
   }
 
-  private String formatIssueCreationDto(Locale locale, Map<Field, String> fieldValuesMap) {
+  private String formatIssueCreationFields(Locale locale, Map<Field, String> fieldValuesMap) {
     StringJoiner sj = new StringJoiner("\n");
 
     sj.add(DELIMITER_STR);
@@ -116,5 +102,10 @@ public class CreatingIssueState extends BotState {
                     userChatService.getRawText(locale, field.getNameKey()),
                     value.isEmpty() ? "-" : value)));
     return sj.toString();
+  }
+
+  @Override
+  public String getCancelMessage() {
+    return "CANCELED";
   }
 }

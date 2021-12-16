@@ -27,8 +27,9 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
-import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.Checkbox;
-import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueBaseCF;
+import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CheckboxValueHandler;
+import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
+import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.DefaultFieldValueHandler;
 import ru.mail.jira.plugins.myteam.protocol.IssueCreationDto;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 
@@ -53,8 +54,9 @@ public class IssueCreationFieldsServiceImpl
   //  private final ConstantsManager constantsManager;
   private final IssueService issueService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
-  private final HashMap<Class<? extends AbstractCustomFieldType>, CreateIssueBaseCF>
+  private final HashMap<Class<? extends AbstractCustomFieldType>, CreateIssueFieldValueHandler>
       supportedIssueCreationCustomFields;
+  private final CreateIssueFieldValueHandler defaultHandler;
 
   public IssueCreationFieldsServiceImpl(
       //                                        ChatStateMapping chatStateMapping,
@@ -94,11 +96,12 @@ public class IssueCreationFieldsServiceImpl
     this.issueService = issueService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.supportedIssueCreationCustomFields = new HashMap<>();
+    this.defaultHandler = new DefaultFieldValueHandler(i18nResolver);
   }
 
   @Override
   public void afterPropertiesSet() {
-    Checkbox checkbox = new Checkbox(i18nResolver, messageFormatter);
+    CheckboxValueHandler checkbox = new CheckboxValueHandler(i18nResolver);
     supportedIssueCreationCustomFields.put(checkbox.getCFTypeClass(), checkbox);
   }
 
@@ -179,11 +182,11 @@ public class IssueCreationFieldsServiceImpl
                               if (cf != null
                                   && supportedIssueCreationCustomFields.containsKey(
                                       cf.getCustomFieldType().getClass())) {
-                                CreateIssueBaseCF cfConfig =
+                                CreateIssueFieldValueHandler cfConfig =
                                     supportedIssueCreationCustomFields.get(
                                         cf.getCustomFieldType().getClass());
 
-                                return cfConfig.getValue(issueCreationDto, cf);
+                                return cfConfig.getValueAsArray(e.getValue(), cf);
                               }
                             }
                             return messageFormatter.mapUserInputStringToFieldValue(
@@ -200,6 +203,17 @@ public class IssueCreationFieldsServiceImpl
     } finally {
       jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
     }
+  }
+
+  @Override
+  public CreateIssueFieldValueHandler getFieldValueHandler(Field field) {
+    if (fieldManager.isCustomFieldId(field.getId())) {
+      CustomField cf = fieldManager.getCustomField(field.getId());
+      if (cf != null
+          && supportedIssueCreationCustomFields.containsKey(cf.getCustomFieldType().getClass()))
+        return supportedIssueCreationCustomFields.get(cf.getCustomFieldType().getClass());
+    }
+    return defaultHandler;
   }
 
   @Override

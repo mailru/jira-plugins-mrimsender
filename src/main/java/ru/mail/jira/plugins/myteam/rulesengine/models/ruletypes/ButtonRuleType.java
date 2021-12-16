@@ -6,12 +6,15 @@ import lombok.Getter;
 public enum ButtonRuleType implements RuleType {
   NextPage("next"),
   PrevPage("previous"),
+  Cancel("cancel"),
   SearchIssueByJqlInput("searchIssueByJqlInput"),
   SearchIssueByKeyInput("searchIssueByKeyInput"),
   ViewComments("viewComments"),
   CommentIssue("commentIssue"),
   CreateIssue("createIssue"),
-  SelectIssueType("selectIssueType");
+  SelectIssueType("selectIssueType"),
+  SelectIssueCreationValue("selectIssueCreationValue"),
+  EditIssueCreationValue("editIssueCreationValue");
 
   @Getter(onMethod_ = {@Override})
   private final String name;

@@ -18,10 +18,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNotFoundErrorRu
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment.IssueCommentInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.FieldInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.IssueTypeSelectButtonRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.ProjectKeyInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.ShowIssueCreationProgressRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.EmptyState;
@@ -33,10 +30,15 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
   private final MyteamRulesEngine errorsRuleEngine;
   private final MyteamRulesEngine stateActionsRuleEngine;
 
+  private final IssueCreationFieldsService issueCreationFieldsService;
   private final UserChatService userChatService;
   private final IssueService issueService;
 
-  public RulesEngineImpl(UserChatService userChatService, IssueService issueService) {
+  public RulesEngineImpl(
+      IssueCreationFieldsService issueCreationFieldsService,
+      UserChatService userChatService,
+      IssueService issueService) {
+    this.issueCreationFieldsService = issueCreationFieldsService;
     this.userChatService = userChatService;
     this.issueService = issueService;
     this.commandsRuleEngine = new MyteamRulesEngine();
@@ -54,6 +56,7 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(new SearchIssueByKeyInputRule(userChatService, this));
     commandsRuleEngine.registerRule(new NextPageRule(userChatService, this));
     commandsRuleEngine.registerRule(new PrevPageRule(userChatService, this));
+    commandsRuleEngine.registerRule(new CancelRule(userChatService, this));
     commandsRuleEngine.registerRule(new CreateIssueRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(new ViewCommentsRule(userChatService, this, issueService));
 
@@ -68,6 +71,10 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(new WatchIssueCommandRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(
         new UnwatchIssueCommandRule(userChatService, this, issueService));
+    commandsRuleEngine.registerRule(
+        new FieldValueEditRule(userChatService, this, issueCreationFieldsService));
+    commandsRuleEngine.registerRule(
+        new FieldValueSelectRule(userChatService, this, issueCreationFieldsService));
 
     // Service
     commandsRuleEngine.registerRule(new SearchByJqlIssuesRule(userChatService, this, issueService));
@@ -82,7 +89,8 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
 
     commandsRuleEngine.registerRule(
         new IssueTypeSelectButtonRule(userChatService, this, issueService));
-    commandsRuleEngine.registerRule(new ShowIssueCreationProgressRule(userChatService, this));
+    commandsRuleEngine.registerRule(
+        new ShowIssueCreationProgressRule(userChatService, this, issueCreationFieldsService));
 
     // Errors
     errorsRuleEngine.registerRule(new IssueNotFoundErrorRule(userChatService, this));

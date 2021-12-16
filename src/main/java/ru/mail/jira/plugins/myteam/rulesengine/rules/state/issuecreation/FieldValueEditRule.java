@@ -2,9 +2,7 @@
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
 import com.atlassian.jira.issue.fields.Field;
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.util.Locale;
 import java.util.Optional;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -14,6 +12,7 @@ import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.Create
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationFieldsService;
@@ -22,16 +21,14 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.CreatingIssueState;
 
-@Rule(
-    name = "show issue creation message",
-    description = "Calls to show filled and current filling fields")
-public class ShowIssueCreationProgressRule extends BaseRule {
+@Rule(name = "edit issue creation value", description = "Calls when issue field value was edited")
+public class FieldValueEditRule extends BaseRule {
 
-  static final RuleType NAME = StateActionRuleType.ShowCreatingIssueProgressMessage;
+  static final RuleType NAME = ButtonRuleType.EditIssueCreationValue;
 
   private final IssueCreationFieldsService issueCreationFieldsService;
 
-  public ShowIssueCreationProgressRule(
+  public FieldValueEditRule(
       UserChatService userChatService,
       RulesEngine rulesEngine,
       IssueCreationFieldsService issueCreationFieldsService) {
@@ -48,37 +45,17 @@ public class ShowIssueCreationProgressRule extends BaseRule {
   public void execute(
       @Fact("event") MyteamEvent event,
       @Fact("state") CreatingIssueState state,
-      @Fact("args") String messagePrefix)
+      @Fact("args") String value)
       throws MyteamServerErrorException, IOException {
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    String chatId = event.getChatId();
-    if (user != null) {
-      Locale locale = userChatService.getUserLocale(user);
 
-      Optional<Field> field = state.getCurrentField();
+    Optional<Field> field = state.getCurrentField();
+    if (field.isPresent()) {
+      // TODO add field value validation
 
       CreateIssueFieldValueHandler handler =
           issueCreationFieldsService.getFieldValueHandler(field.get());
-
-      if (field.isPresent()) {
-        userChatService.sendMessageText(
-            chatId,
-            state.createInsertFieldMessage(
-                locale,
-                messagePrefix == null || messagePrefix.length() == 0
-                    ? handler.getInsertFieldMessage(field.get(), locale)
-                    : messagePrefix),
-            messageFormatter.buildButtonsWithCancel(
-                handler.getButtons(
-                    field.get(),
-                    state.getFieldValue(field.get()),
-                    userChatService.getUserLocale(user)),
-                userChatService.getRawText(
-                    locale,
-                    "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
-      } else {
-        userChatService.sendMessageText(chatId, "FILLED ALL"); // TODO show issue creation confirm
-      }
+      state.setCurrentFieldValue(handler.updateValue(state.getFieldValue(field.get()), value));
+      rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, state, event);
     }
   }
 }

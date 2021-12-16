@@ -9,7 +9,7 @@ import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
@@ -37,8 +37,6 @@ public class FieldInputRule extends BaseRule {
       @Fact("state") CreatingIssueState state,
       @Fact("args") String value)
       throws MyteamServerErrorException, IOException {
-    // TODO add field value validation
-    state.setCurrentFieldValue(value);
-    rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, state, event);
+    rulesEngine.fireCommand(ButtonRuleType.SelectIssueCreationValue, state, event, value);
   }
 }

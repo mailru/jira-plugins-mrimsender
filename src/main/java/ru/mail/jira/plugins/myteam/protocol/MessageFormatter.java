@@ -2294,7 +2294,8 @@ public class MessageFormatter {
 
   private List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-    buttonsRow.add(InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, "cancel"));
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, ButtonRuleType.Cancel.getName()));
     return buttonsRow;
   }
 

@@ -9,6 +9,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import java.util.LinkedHashMap;
 import java.util.Set;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
+import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
 import ru.mail.jira.plugins.myteam.protocol.IssueCreationDto;
 
 public interface IssueCreationFieldsService {
@@ -36,6 +37,8 @@ public interface IssueCreationFieldsService {
 
   IssueService.CreateValidationResult validateIssueWithGivenFields(
       ApplicationUser currentUser, IssueCreationDto issueCreationDto);
+
+  CreateIssueFieldValueHandler getFieldValueHandler(Field field);
 
   boolean isFieldSupported(String fieldId);
 }
