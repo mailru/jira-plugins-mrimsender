@@ -37,7 +37,8 @@ public class CreateIssueRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") ButtonClickEvent event) throws MyteamServerErrorException {
-    userChatService.setState(event.getChatId(), new CreatingIssueState());
+    userChatService.setState(
+        event.getChatId(), new CreatingIssueState(userChatService, issueService));
 
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
     if (user != null) {

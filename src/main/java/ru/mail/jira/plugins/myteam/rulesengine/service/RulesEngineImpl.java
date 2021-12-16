@@ -18,7 +18,10 @@ import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNotFoundErrorRu
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment.IssueCommentInputRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.FieldInputRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.IssueTypeSelectButtonRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.ProjectKeyInputRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.ShowIssueCreationProgressRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.EmptyState;
@@ -75,6 +78,11 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
         new ProjectKeyInputRule(userChatService, this, issueService));
     stateActionsRuleEngine.registerRule(
         new IssueCommentInputRule(userChatService, this, issueService));
+    stateActionsRuleEngine.registerRule(new FieldInputRule(userChatService, this));
+
+    commandsRuleEngine.registerRule(
+        new IssueTypeSelectButtonRule(userChatService, this, issueService));
+    commandsRuleEngine.registerRule(new ShowIssueCreationProgressRule(userChatService, this));
 
     // Errors
     errorsRuleEngine.registerRule(new IssueNotFoundErrorRule(userChatService, this));
@@ -82,18 +90,20 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
   }
 
   @Override
-  public void fireCommand(RuleType command, MyteamEvent event) {
-    fireCommand(command.getName(), event, "");
+  public void fireCommand(RuleType command, @Nullable BotState state, MyteamEvent event) {
+    fireCommand(command.getName(), state, event, "");
   }
 
   @Override
-  public void fireCommand(RuleType command, MyteamEvent event, String args) {
-    fireCommand(command.getName(), event, args);
+  public void fireCommand(
+      RuleType command, @Nullable BotState state, MyteamEvent event, String args) {
+    fireCommand(command.getName(), state, event, args);
   }
 
   @Override
-  public void fireCommand(String command, MyteamEvent event, String args) {
-    Facts facts = formBasicFacts(event, args);
+  public void fireCommand(
+      String command, @Nullable BotState state, MyteamEvent event, String args) {
+    Facts facts = formBasicFacts(state, event, args);
     facts.put("command", command);
     commandsRuleEngine.fire(facts);
   }
@@ -101,8 +111,7 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
   @Override
   public void fireStateAction(
       @Nullable BotState state, @Nullable BotState prevState, MyteamEvent event, String args) {
-    Facts facts = formBasicFacts(event, args);
-    facts.add(new Fact<>("state", state == null ? new EmptyState() : state));
+    Facts facts = formBasicFacts(state, event, args);
     facts.add(new Fact<>("prevState", prevState == null ? new EmptyState() : prevState));
     stateActionsRuleEngine.fire(facts);
   }
@@ -116,10 +125,11 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     errorsRuleEngine.fire(facts);
   }
 
-  private Facts formBasicFacts(MyteamEvent event, String args) {
+  private Facts formBasicFacts(@Nullable BotState state, MyteamEvent event, String args) {
     Facts facts = new Facts();
     facts.put("args", args);
     facts.add(new Fact<>("event", event));
+    facts.add(new Fact<>("state", state == null ? new EmptyState() : state));
     facts.add(new Fact<>("isGroup", event.getChatType().equals(ChatType.GROUP)));
     return facts;
   }

@@ -159,7 +159,7 @@ public class CreateIssueEventsListener {
                   locale,
                   "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
       chatsStateMap.put(
-          chatId, ChatState.buildProjectSelectWaitingState(0, new IssueCreationDto()));
+          chatId, ChatState.buildProjectSelectWaitingState(0, IssueCreationDto.builder().build()));
     }
     log.debug("CreateIssueClickEvent handling finished");
   }

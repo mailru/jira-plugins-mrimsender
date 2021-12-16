@@ -12,6 +12,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Rule(name = "search by input jql", description = "Shows issues by JQL input")
 public class SearchIssueByJqlInputRule extends BaseRule {
@@ -28,10 +29,10 @@ public class SearchIssueByJqlInputRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") MyteamEvent event) {
+  public void execute(@Fact("event") MyteamEvent event, @Fact("state") BotState state) {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     if (user != null) {
-      rulesEngine.fireCommand(CommandRuleType.SearchByJql, event);
+      rulesEngine.fireCommand(CommandRuleType.SearchByJql, state, event);
     }
   }
 }

@@ -24,6 +24,7 @@ import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.StateManager;
+import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Slf4j
 @Component
@@ -74,44 +75,42 @@ public class MyteamEventsListener {
   }
 
   @Subscribe
-  public void handleNewMessageEvent(ChatMessageEvent chatMessageEvent) {
-    String chatId = chatMessageEvent.getChatId();
-    boolean isGroupChatEvent = chatMessageEvent.getChatType() == ChatType.GROUP;
+  public void handleNewMessageEvent(ChatMessageEvent event) {
+    BotState state = stateManager.getLastState(event.getChatId());
+    String chatId = event.getChatId();
+    boolean isGroupChatEvent = event.getChatType() == ChatType.GROUP;
 
     // if chat is in some state then use our state processing logic
     if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
       ChatState chatState = chatsStateMap.remove(chatId);
       if (chatState.isWaitingForProjectSelect()) {
-        asyncEventBus.post(
-            new SelectedProjectMessageEvent(chatMessageEvent, chatState.getIssueCreationDto()));
+        asyncEventBus.post(new SelectedProjectMessageEvent(event, chatState.getIssueCreationDto()));
         return;
       }
       if (chatState.isWaitingForIssueTypeSelect()) {
         asyncEventBus.post(
-            new SelectedIssueTypeMessageEvent(chatMessageEvent, chatState.getIssueCreationDto()));
+            new SelectedIssueTypeMessageEvent(event, chatState.getIssueCreationDto()));
         return;
       }
       if (chatState.isNewIssueRequiredFieldsFillingState()) {
         asyncEventBus.post(
             new NewIssueFieldValueMessageEvent(
-                chatMessageEvent,
-                chatState.getIssueCreationDto(),
-                chatState.getCurrentFillingFieldNum()));
+                event, chatState.getIssueCreationDto(), chatState.getCurrentFillingFieldNum()));
         return;
       }
     }
 
     // if chat isn't in some state then just process new message
-    String message = chatMessageEvent.getMessage();
+    String message = event.getMessage();
 
     if (message != null && message.startsWith(CHAT_COMMAND_PREFIX)) {
-      handleCommand(chatMessageEvent);
+      handleCommand(state, event);
       return;
     }
-    handleStateAction(chatMessageEvent);
+    handleStateAction(state, event);
   }
 
-  private void handleCommand(ChatMessageEvent event) {
+  private void handleCommand(BotState state, ChatMessageEvent event) {
     String withoutPrefix =
         StringUtils.substringAfter(event.getMessage(), CHAT_COMMAND_PREFIX).toLowerCase();
     String[] split = withoutPrefix.split("\\s+");
@@ -121,26 +120,23 @@ public class MyteamEventsListener {
     String command = split[0];
     String args = String.join("", Arrays.asList(split).subList(1, split.length));
 
-    rulesEngine.fireCommand(command, event, args);
+    rulesEngine.fireCommand(command, state, event, args);
   }
 
   private void handleButtonClick(ButtonClickEvent event) {
+    BotState state = stateManager.getLastState(event.getChatId());
     String buttonPrefix = StringUtils.substringBefore(event.getCallbackData(), "-");
     String data = StringUtils.substringAfter(event.getCallbackData(), "-");
-    rulesEngine.fireCommand(buttonPrefix, event, data);
+    rulesEngine.fireCommand(buttonPrefix, state, event, data);
   }
 
-  private void handleStateAction(ChatMessageEvent event) {
+  private void handleStateAction(BotState state, ChatMessageEvent event) {
     rulesEngine.fireStateAction(
-        stateManager.getLastState(event.getChatId()),
-        stateManager.getPrevState(event.getChatId()),
-        event,
-        event.getMessage());
+        state, stateManager.getPrevState(event.getChatId()), event, event.getMessage());
   }
 
   @Subscribe
-  public void handleButtonClickEvent(ButtonClickEvent buttonClickEvent)
-      throws UnirestException, MyteamServerErrorException {
+  public void handleButtonClickEvent(ButtonClickEvent buttonClickEvent) throws UnirestException {
     String buttonPrefix = StringUtils.substringBefore(buttonClickEvent.getCallbackData(), "-");
     String chatId = buttonClickEvent.getChatId();
     boolean isGroupChatEvent = buttonClickEvent.getChatType() == ChatType.GROUP;
@@ -150,24 +146,6 @@ public class MyteamEventsListener {
     // if chat is in some state then use our state processing logic
     if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
       ChatState chatState = chatsStateMap.remove(chatId);
-      if (chatState.isWaitingForProjectSelect()) {
-        if (buttonPrefix.equals("nextProjectListPage")) {
-          asyncEventBus.post(
-              new NextProjectsPageClickEvent(
-                  buttonClickEvent,
-                  chatState.getCurrentSelectListPage(),
-                  chatState.getIssueCreationDto()));
-          return;
-        }
-        if (buttonPrefix.equals("prevProjectListPage")) {
-          asyncEventBus.post(
-              new PrevProjectsPageClickEvent(
-                  buttonClickEvent,
-                  chatState.getCurrentSelectListPage(),
-                  chatState.getIssueCreationDto()));
-          return;
-        }
-      }
       if (chatState.isWaitingForAdditionalFieldSelect()) {
         if (buttonPrefix.equals("nextAdditionalFieldListPage")) {
           asyncEventBus.post(
@@ -186,13 +164,14 @@ public class MyteamEventsListener {
           return;
         }
       }
-      if (chatState.isWaitingForIssueTypeSelect()) {
-        if (buttonPrefix.equals("selectIssueType")) {
-          asyncEventBus.post(
-              new IssueTypeButtonClickEvent(buttonClickEvent, chatState.getIssueCreationDto()));
-          return;
-        }
-      }
+      //      if (chatState.isWaitingForIssueTypeSelect()) {
+      //        if (buttonPrefix.equals("selectIssueType")) {
+      //          asyncEventBus.post(
+      //              new IssueTypeButtonClickEvent(buttonClickEvent,
+      // chatState.getIssueCreationDto()));
+      //          return;
+      //        }
+      //      }
       if (chatState.isWaitingForNewIssueButtonFillingState()) {
         if (buttonPrefix.equals("selectIssueButtonValue")) {
           asyncEventBus.post(

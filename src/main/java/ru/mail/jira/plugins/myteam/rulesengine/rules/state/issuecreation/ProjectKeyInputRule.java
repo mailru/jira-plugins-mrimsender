@@ -2,9 +2,13 @@
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
 import com.atlassian.jira.exception.PermissionException;
+import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
@@ -12,9 +16,12 @@ import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
@@ -53,7 +60,6 @@ public class ProjectKeyInputRule extends BaseRule {
       @Fact("prevState") CreatingIssueState prevState,
       @Fact("args") String projectKey)
       throws MyteamServerErrorException, IOException {
-    prevState.setProjectKey(projectKey);
     String chatId = event.getChatId();
 
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(chatId);
@@ -62,8 +68,8 @@ public class ProjectKeyInputRule extends BaseRule {
 
       try {
         userChatService.deleteState(chatId);
-        Project selectedProject = issueService.getProject(projectKey, user);
-        if (selectedProject == null) {
+        Project project = issueService.getProject(projectKey, user);
+        if (project == null) {
           userChatService.sendMessageText(
               chatId,
               userChatService.getRawText(
@@ -71,7 +77,19 @@ public class ProjectKeyInputRule extends BaseRule {
                   "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedProjectNotValid"));
         } else {
           userChatService.setState(chatId, prevState);
-//          userChatService.setState();
+          prevState.setProject(project);
+
+          Collection<IssueType> projectIssueTypes =
+              issueService.getProjectIssueTypes(project, user);
+
+          userChatService.sendMessageText(
+              chatId,
+              getSelectIssueTypeMessage(locale),
+              messageFormatter.buildButtonsWithCancel(
+                  buildIssueTypesButtons(projectIssueTypes, locale),
+                  userChatService.getRawText(
+                      locale,
+                      "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
         }
       } catch (PermissionException e) {
         log.error(e.getLocalizedMessage());
@@ -89,5 +107,24 @@ public class ProjectKeyInputRule extends BaseRule {
                 "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedProjectIsBanned"));
       }
     }
+  }
+
+  private String getSelectIssueTypeMessage(Locale locale) {
+    return userChatService.getRawText(
+        locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectIssueType.message");
+  }
+
+  private List<List<InlineKeyboardMarkupButton>> buildIssueTypesButtons(
+      Collection<IssueType> issueTypes, Locale locale) {
+    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+    issueTypes.forEach(
+        issueType -> {
+          InlineKeyboardMarkupButton issueTypeButton =
+              InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+                  issueType.getNameTranslation(locale.getLanguage()),
+                  String.join("-", ButtonRuleType.SelectIssueType.getName(), issueType.getId()));
+          MessageFormatter.addRowWithButton(buttons, issueTypeButton);
+        });
+    return buttons;
   }
 }

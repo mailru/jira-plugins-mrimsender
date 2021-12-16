@@ -12,6 +12,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Rule(name = "/created", description = "Shows user's active created issues")
 public class CreatedIssuesCommandRule extends BaseRule {
@@ -27,11 +28,12 @@ public class CreatedIssuesCommandRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") MyteamEvent event) {
+  public void execute(@Fact("event") MyteamEvent event, @Fact("state") BotState state) {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     if (user != null) {
       rulesEngine.fireCommand(
           CommandRuleType.SearchByJql,
+          state,
           event,
           "reporter = currentUser() AND resolution = Unresolved ORDER BY updated");
     }

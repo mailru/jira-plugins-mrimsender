@@ -3,8 +3,10 @@ package ru.mail.jira.plugins.myteam.rulesengine.core;
 
 import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.attachment.ConvertTemporaryAttachmentParams;
 import com.atlassian.jira.issue.attachment.TemporaryAttachmentId;
+import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.io.InputStream;
@@ -109,5 +111,20 @@ public class Utils {
           });
       return outPutStrings.toString();
     }
+  }
+
+  public static boolean isArrayLikeField(Field field) {
+    switch (field.getId()) {
+      case IssueFieldConstants.FIX_FOR_VERSIONS:
+      case IssueFieldConstants.COMPONENTS:
+      case IssueFieldConstants.AFFECTED_VERSIONS:
+      case IssueFieldConstants.ISSUE_LINKS:
+      case IssueFieldConstants.LABELS:
+      case IssueFieldConstants.VOTES:
+        // never shown on issue creation screen
+      case IssueFieldConstants.WATCHES:
+        return true;
+    }
+    return false;
   }
 }

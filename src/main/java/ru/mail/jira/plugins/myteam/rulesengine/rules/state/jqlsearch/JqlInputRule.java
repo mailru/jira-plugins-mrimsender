@@ -29,7 +29,8 @@ public class JqlInputRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") MyteamEvent event, @Fact("args") String jql) {
-    rulesEngine.fireCommand(CommandRuleType.SearchByJql, event, jql);
+  public void execute(
+      @Fact("event") MyteamEvent event, @Fact("state") BotState state, @Fact("args") String jql) {
+    rulesEngine.fireCommand(CommandRuleType.SearchByJql, state, event, jql);
   }
 }
