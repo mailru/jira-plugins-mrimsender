@@ -2,7 +2,6 @@
 package ru.mail.jira.plugins.myteam.configuration.createissue.customfields;
 
 import com.atlassian.jira.component.ComponentAccessor;
-import com.atlassian.jira.issue.customfields.impl.AbstractCustomFieldType;
 import com.atlassian.jira.issue.customfields.impl.MultiSelectCFType;
 import com.atlassian.jira.issue.customfields.manager.OptionsManager;
 import com.atlassian.jira.issue.customfields.option.Option;
@@ -29,8 +28,8 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public Class<? extends AbstractCustomFieldType> getCFTypeClass() {
-    return MultiSelectCFType.class;
+  public String getClassName() {
+    return MultiSelectCFType.class.getName();
   }
 
   @Override
@@ -97,10 +96,10 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(String value, CustomField field) {
+  public String[] getValueAsArray(String value, Field field) {
     List<String> values = new ArrayList<>(Arrays.asList(value.split(delimiter)));
 
-    Options options = getOptions(field);
+    Options options = getOptions((CustomField) field);
 
     return values.stream()
         .map(v -> String.valueOf(getOption(options, v).getOptionId()))

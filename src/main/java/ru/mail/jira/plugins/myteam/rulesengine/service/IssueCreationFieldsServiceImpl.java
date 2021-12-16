@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.rulesengine.service;
 
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.issue.IssueInputParameters;
-import com.atlassian.jira.issue.customfields.impl.AbstractCustomFieldType;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
@@ -30,8 +29,8 @@ import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CheckboxValueHandler;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.DefaultFieldValueHandler;
+import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.PriorityValueHandler;
 import ru.mail.jira.plugins.myteam.protocol.IssueCreationDto;
-import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 
 @Service
 public class IssueCreationFieldsServiceImpl
@@ -41,7 +40,7 @@ public class IssueCreationFieldsServiceImpl
   //  private final MyteamApiClient myteamApiClient;
   //  private final UserData userData;
   //  private final PluginData pluginData;
-  private final MessageFormatter messageFormatter;
+  //  private final MessageFormatter messageFormatter;
   private final I18nResolver i18nResolver;
   //  private final LocaleManager localeManager;
   //  private final PermissionManager permissionManager;
@@ -54,8 +53,7 @@ public class IssueCreationFieldsServiceImpl
   //  private final ConstantsManager constantsManager;
   private final IssueService issueService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
-  private final HashMap<Class<? extends AbstractCustomFieldType>, CreateIssueFieldValueHandler>
-      supportedIssueCreationCustomFields;
+  private final HashMap<String, CreateIssueFieldValueHandler> supportedIssueCreationCustomFields;
   private final CreateIssueFieldValueHandler defaultHandler;
 
   public IssueCreationFieldsServiceImpl(
@@ -63,7 +61,7 @@ public class IssueCreationFieldsServiceImpl
       //                                        MyteamApiClient myteamApiClient,
       //                                        UserData userData,
       //                                        PluginData pluginData,
-      MessageFormatter messageFormatter,
+      //      MessageFormatter messageFormatter,
       @ComponentImport I18nResolver i18nResolver,
       //                                        @ComponentImport LocaleManager localeManager,
       //                                        @ComponentImport PermissionManager
@@ -82,7 +80,7 @@ public class IssueCreationFieldsServiceImpl
     //    this.myteamApiClient = myteamApiClient;
     //    this.userData = userData;
     //    this.pluginData = pluginData;
-    this.messageFormatter = messageFormatter;
+    //    this.messageFormatter = messageFormatter;
     this.i18nResolver = i18nResolver;
     //    this.localeManager = localeManager;
     //    this.permissionManager = permissionManager;
@@ -102,7 +100,10 @@ public class IssueCreationFieldsServiceImpl
   @Override
   public void afterPropertiesSet() {
     CheckboxValueHandler checkbox = new CheckboxValueHandler(i18nResolver);
-    supportedIssueCreationCustomFields.put(checkbox.getCFTypeClass(), checkbox);
+    supportedIssueCreationCustomFields.put(checkbox.getClassName(), checkbox);
+
+    PriorityValueHandler priority = new PriorityValueHandler(i18nResolver);
+    supportedIssueCreationCustomFields.put(priority.getClassName(), priority);
   }
 
   @Override
@@ -163,7 +164,7 @@ public class IssueCreationFieldsServiceImpl
   @Override
   public IssueService.CreateValidationResult validateIssueWithGivenFields(
       ApplicationUser currentUser, IssueCreationDto issueCreationDto) {
-    Long projectId = issueCreationDto.getProjectId();
+    //    Long projectId = issueCreationDto.getProjectId();
 
     // need here to because issueService use authenticationContext
     ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
@@ -176,21 +177,33 @@ public class IssueCreationFieldsServiceImpl
                       Collectors.toMap(
                           (e) -> e.getKey().getId(),
                           (e) -> {
-                            if (fieldManager.isCustomFieldId(e.getKey().getId())) {
-                              CustomField cf = fieldManager.getCustomField(e.getKey().getId());
-
-                              if (cf != null
-                                  && supportedIssueCreationCustomFields.containsKey(
-                                      cf.getCustomFieldType().getClass())) {
-                                CreateIssueFieldValueHandler cfConfig =
-                                    supportedIssueCreationCustomFields.get(
-                                        cf.getCustomFieldType().getClass());
-
-                                return cfConfig.getValueAsArray(e.getValue(), cf);
-                              }
-                            }
-                            return messageFormatter.mapUserInputStringToFieldValue(
-                                projectId, e.getKey(), e.getValue());
+                            CreateIssueFieldValueHandler cfConfig =
+                                getFieldValueHandler(e.getKey());
+                            return cfConfig.getValueAsArray(e.getValue(), e.getKey());
+                            //                            if
+                            // (fieldManager.isCustomFieldId(e.getKey().getId())) {
+                            //                              CustomField cf =
+                            // fieldManager.getCustomField(e.getKey().getId());
+                            //
+                            //                              if (cf != null
+                            //                                  &&
+                            // supportedIssueCreationCustomFields.containsKey(
+                            //                                  cf.getCustomFieldType().getClass()))
+                            // {
+                            //                                CreateIssueFieldValueHandler cfConfig
+                            // =
+                            //
+                            // supportedIssueCreationCustomFields.get(
+                            //
+                            // cf.getCustomFieldType().getClass());
+                            //
+                            //                                return
+                            // cfConfig.getValueAsArray(e.getValue(), cf);
+                            //                              }
+                            //                            }
+                            //                            return
+                            // messageFormatter.mapUserInputStringToFieldValue(
+                            //                                projectId, e.getKey(), e.getValue());
                           })));
       issueInputParameters.setRetainExistingValuesWhenParameterNotProvided(true, true);
 
@@ -207,21 +220,25 @@ public class IssueCreationFieldsServiceImpl
 
   @Override
   public CreateIssueFieldValueHandler getFieldValueHandler(Field field) {
-    if (fieldManager.isCustomFieldId(field.getId())) {
-      CustomField cf = fieldManager.getCustomField(field.getId());
-      if (cf != null
-          && supportedIssueCreationCustomFields.containsKey(cf.getCustomFieldType().getClass()))
-        return supportedIssueCreationCustomFields.get(cf.getCustomFieldType().getClass());
-    }
+    String className = getFieldClassName(field);
+    if (supportedIssueCreationCustomFields.containsKey(className))
+      return supportedIssueCreationCustomFields.get(className);
     return defaultHandler;
   }
 
   @Override
   public boolean isFieldSupported(String fieldId) {
     CustomField field = fieldManager.getCustomField(fieldId);
+    return field != null && !getFieldValueHandler(field).equals(defaultHandler);
+  }
 
-    return field != null
-        && supportedIssueCreationCustomFields.containsKey(field.getCustomFieldType().getClass());
+  private String getFieldClassName(Field field) {
+    String className = field.getClass().getName();
+    if (fieldManager.isCustomFieldId(field.getId())) {
+      CustomField cf = fieldManager.getCustomField(field.getId());
+      if (cf != null) className = cf.getCustomFieldType().getClass().getName();
+    }
+    return className;
   }
 
   private boolean isCFInScopeOfProjectAndIssueType(

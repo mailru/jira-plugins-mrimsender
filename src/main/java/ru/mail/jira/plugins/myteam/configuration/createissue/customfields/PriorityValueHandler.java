@@ -1,25 +1,30 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.configuration.createissue.customfields;
 
+import com.atlassian.jira.component.ComponentAccessor;
+import com.atlassian.jira.config.ConstantsManager;
 import com.atlassian.jira.issue.fields.Field;
+import com.atlassian.jira.issue.fields.PrioritySystemField;
+import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.sal.api.message.I18nResolver;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 
-public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
-
+public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   private final I18nResolver i18nResolver;
+  private final ConstantsManager constantsManager;
 
-  public DefaultFieldValueHandler(I18nResolver i18nResolver) {
+  public PriorityValueHandler(I18nResolver i18nResolver) {
     this.i18nResolver = i18nResolver;
+    constantsManager = ComponentAccessor.getConstantsManager();
   }
 
   @Override
   public String getClassName() {
-    return null;
+    return PrioritySystemField.class.getName();
   }
 
   @Override
@@ -39,7 +44,19 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
   @Override
   public List<List<InlineKeyboardMarkupButton>> getButtons(
       Field field, String value, Locale locale) {
-    return null;
+
+    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+    Collection<Priority> priorities = constantsManager.getPriorities();
+    priorities.forEach(
+        priority -> {
+          InlineKeyboardMarkupButton issueTypeButton =
+              InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+                  priority.getNameTranslation(locale.getLanguage()),
+                  String.join(
+                      "-", ButtonRuleType.SelectIssueCreationValue.getName(), priority.getName()));
+          MessageFormatter.addRowWithButton(buttons, issueTypeButton);
+        });
+    return buttons;
   }
 
   @Override

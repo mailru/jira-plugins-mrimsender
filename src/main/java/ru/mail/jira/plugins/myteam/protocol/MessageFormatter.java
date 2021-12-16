@@ -2221,7 +2221,7 @@ public class MessageFormatter {
     return buttons;
   }
 
-  public List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(
+  public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(
       List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
     if (buttons == null) {
       List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
@@ -2292,7 +2292,7 @@ public class MessageFormatter {
         this.formatIssueCreationDto(locale, issueCreationDto));
   }
 
-  private List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
+  private static List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, ButtonRuleType.Cancel.getName()));

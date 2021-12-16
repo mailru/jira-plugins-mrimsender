@@ -1,8 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.configuration.createissue.customfields;
 
-import com.atlassian.jira.issue.customfields.impl.AbstractCustomFieldType;
-import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import java.util.List;
 import java.util.Locale;
@@ -14,7 +12,7 @@ public interface CreateIssueFieldValueHandler {
    *
    * @return custom field type from customField.getCustomFieldType()
    */
-  Class<? extends AbstractCustomFieldType> getCFTypeClass();
+  String getClassName();
 
   /**
    * Custom text render for Myteam message
@@ -49,5 +47,5 @@ public interface CreateIssueFieldValueHandler {
    * @param field current custom field
    * @return valid String array for field in IssueInputParameters
    */
-  String[] getValueAsArray(String value, CustomField field);
+  String[] getValueAsArray(String value, Field field);
 }

@@ -3,6 +3,10 @@ package ru.mail.jira.plugins.myteam.rulesengine.states;
 
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -12,11 +16,6 @@ import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Pager;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class SelectingProjectState extends BotState implements PageableState, CancelableState {
@@ -71,7 +70,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
       String msg =
           messagePrefix
               + messageFormatter.createSelectProjectMessage(
-              locale, nextProjectsInterval, pager.getPage(), allowedProjectList.size());
+                  locale, nextProjectsInterval, pager.getPage(), allowedProjectList.size());
 
       List<List<InlineKeyboardMarkupButton>> buttons =
           messageFormatter.buildButtonsWithCancel(
