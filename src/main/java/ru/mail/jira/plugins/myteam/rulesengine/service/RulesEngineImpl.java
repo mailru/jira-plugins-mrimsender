@@ -30,15 +30,15 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
   private final MyteamRulesEngine errorsRuleEngine;
   private final MyteamRulesEngine stateActionsRuleEngine;
 
-  private final IssueCreationFieldsService issueCreationFieldsService;
+  private final IssueCreationService issueCreationService;
   private final UserChatService userChatService;
   private final IssueService issueService;
 
   public RulesEngineImpl(
-      IssueCreationFieldsService issueCreationFieldsService,
+      IssueCreationService issueCreationService,
       UserChatService userChatService,
       IssueService issueService) {
-    this.issueCreationFieldsService = issueCreationFieldsService;
+    this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
     this.issueService = issueService;
     this.commandsRuleEngine = new MyteamRulesEngine();
@@ -57,7 +57,8 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(new NextPageRule(userChatService, this));
     commandsRuleEngine.registerRule(new PrevPageRule(userChatService, this));
     commandsRuleEngine.registerRule(new CancelRule(userChatService, this));
-    commandsRuleEngine.registerRule(new CreateIssueRule(userChatService, this, issueService));
+    commandsRuleEngine.registerRule(
+        new CreateIssueRule(userChatService, this, issueService, issueCreationService));
     commandsRuleEngine.registerRule(new ViewCommentsRule(userChatService, this, issueService));
 
     // Commands
@@ -72,9 +73,9 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(
         new UnwatchIssueCommandRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(
-        new FieldValueEditRule(userChatService, this, issueCreationFieldsService));
+        new FieldValueEditRule(userChatService, this, issueCreationService));
     commandsRuleEngine.registerRule(
-        new FieldValueSelectRule(userChatService, this, issueCreationFieldsService));
+        new FieldValueSelectRule(userChatService, this, issueCreationService));
 
     // Service
     commandsRuleEngine.registerRule(new SearchByJqlIssuesRule(userChatService, this, issueService));
@@ -90,7 +91,9 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(
         new IssueTypeSelectButtonRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(
-        new ShowIssueCreationProgressRule(userChatService, this, issueCreationFieldsService));
+        new ShowIssueCreationProgressRule(userChatService, this, issueCreationService));
+    commandsRuleEngine.registerRule(
+        new ConfirmIssueCreationRule(userChatService, this, issueCreationService));
 
     // Errors
     errorsRuleEngine.registerRule(new IssueNotFoundErrorRule(userChatService, this));

@@ -96,7 +96,7 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(String value, Field field) {
+  public String[] getValueAsArray(String value, Field field, Locale locale) {
     List<String> values = new ArrayList<>(Arrays.asList(value.split(delimiter)));
 
     Options options = getOptions((CustomField) field);

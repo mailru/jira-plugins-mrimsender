@@ -7,7 +7,6 @@ import com.atlassian.jira.exception.ParseException;
 import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.comments.Comment;
-import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
@@ -17,10 +16,8 @@ import java.util.Collection;
 import java.util.List;
 import javax.naming.NoPermissionException;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 
 public interface IssueService {
 
@@ -54,9 +51,6 @@ public interface IssueService {
       throws PermissionException, ProjectBannedException;
 
   Collection<IssueType> getProjectIssueTypes(Project project, ApplicationUser user);
-
-  List<Field> getIssueFields(Project project, ApplicationUser user, String issueTypeId)
-      throws UnsupportedCustomFieldsException, IncorrectIssueTypeException;
 
   IssueType getIssueType(String id);
 }

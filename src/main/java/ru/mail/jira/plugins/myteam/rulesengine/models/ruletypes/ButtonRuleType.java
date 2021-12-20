@@ -14,7 +14,8 @@ public enum ButtonRuleType implements RuleType {
   CreateIssue("createIssue"),
   SelectIssueType("selectIssueType"),
   SelectIssueCreationValue("selectIssueCreationValue"),
-  EditIssueCreationValue("editIssueCreationValue");
+  EditIssueCreationValue("editIssueCreationValue"),
+  ConfirmIssueCreation("confirmIssueCreation");
 
   @Getter(onMethod_ = {@Override})
   private final String name;

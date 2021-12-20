@@ -48,7 +48,7 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(String value, Field field) {
+  public String[] getValueAsArray(String value, Field field, Locale locale) {
     return Collections.singletonList(value).toArray(new String[0]);
   }
 }

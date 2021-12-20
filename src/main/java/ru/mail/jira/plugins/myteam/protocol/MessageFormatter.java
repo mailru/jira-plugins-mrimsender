@@ -1836,7 +1836,7 @@ public class MessageFormatter {
             i18nResolver.getText(
                 localeManager.getLocaleFor(recipient),
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.issueCreationConfirmButton.text"),
-            "confirmIssueCreation"));
+            ButtonRuleType.ConfirmIssueCreation.getName()));
 
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(

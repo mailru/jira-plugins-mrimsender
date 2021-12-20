@@ -45,7 +45,8 @@ public interface CreateIssueFieldValueHandler {
    * Map field value from String in IssueCreationDto to valid String array field value
    *
    * @param field current custom field
+   * @param locale user locale
    * @return valid String array for field in IssueInputParameters
    */
-  String[] getValueAsArray(String value, Field field);
+  String[] getValueAsArray(String value, Field field, Locale locale);
 }

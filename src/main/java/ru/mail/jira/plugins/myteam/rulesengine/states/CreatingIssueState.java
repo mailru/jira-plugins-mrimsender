@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
+import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 public class CreatingIssueState extends BotState implements CancelableState {
@@ -25,12 +25,13 @@ public class CreatingIssueState extends BotState implements CancelableState {
   //  @Getter @Setter private boolean isFillingFields = false;
 
   private final UserChatService userChatService;
-  private final IssueService issueService;
+  private final IssueCreationService issueCreationService;
 
-  public CreatingIssueState(UserChatService userChatService, IssueService issueService) {
+  public CreatingIssueState(
+      UserChatService userChatService, IssueCreationService issueCreationService) {
     setWaiting(true);
     this.userChatService = userChatService;
-    this.issueService = issueService;
+    this.issueCreationService = issueCreationService;
   }
 
   @Getter private int currentFieldPosition = 0;
@@ -49,7 +50,7 @@ public class CreatingIssueState extends BotState implements CancelableState {
   public void setIssueType(IssueType issueType, ApplicationUser user)
       throws UnsupportedCustomFieldsException, IncorrectIssueTypeException {
     this.issueType = issueType;
-    List<Field> fields = issueService.getIssueFields(project, user, issueType.getId());
+    List<Field> fields = issueCreationService.getIssueFields(project, user, issueType.getId());
     fieldValues = new HashMap<>();
     fields.forEach(f -> fieldValues.put(f, ""));
   }

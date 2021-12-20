@@ -11,6 +11,7 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
@@ -23,11 +24,16 @@ public class CreateIssueRule extends BaseRule {
   static final ButtonRuleType NAME = ButtonRuleType.CreateIssue;
 
   private final IssueService issueService;
+  private final IssueCreationService issueCreationService;
 
   public CreateIssueRule(
-      UserChatService userChatService, RulesEngine rulesEngine, IssueService issueService) {
+      UserChatService userChatService,
+      RulesEngine rulesEngine,
+      IssueService issueService,
+      IssueCreationService issueCreationService) {
     super(userChatService, rulesEngine);
     this.issueService = issueService;
+    this.issueCreationService = issueCreationService;
   }
 
   @Condition
@@ -38,7 +44,7 @@ public class CreateIssueRule extends BaseRule {
   @Action
   public void execute(@Fact("event") ButtonClickEvent event) throws MyteamServerErrorException {
     userChatService.setState(
-        event.getChatId(), new CreatingIssueState(userChatService, issueService));
+        event.getChatId(), new CreatingIssueState(userChatService, issueCreationService));
 
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
     if (user != null) {

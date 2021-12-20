@@ -3,11 +3,15 @@ package ru.mail.jira.plugins.myteam.configuration.createissue.customfields;
 
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.ConstantsManager;
+import com.atlassian.jira.issue.IssueConstant;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.PrioritySystemField;
 import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.sal.api.message.I18nResolver;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
@@ -65,7 +69,16 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(String value, Field field) {
-    return Collections.singletonList(value).toArray(new String[0]);
+  public String[] getValueAsArray(String value, Field field, Locale locale) {
+    String selectedPriorityId =
+        constantsManager.getPriorities().stream()
+            .filter(
+                priority ->
+                    priority.getName().equals(value)
+                        || priority.getNameTranslation(locale.getLanguage()).equals(value))
+            .findFirst()
+            .map(IssueConstant::getId)
+            .orElse("");
+    return new String[] {selectedPriorityId};
   }
 }

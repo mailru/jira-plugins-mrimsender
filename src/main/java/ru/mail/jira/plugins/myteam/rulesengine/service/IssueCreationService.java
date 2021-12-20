@@ -1,18 +1,22 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.service;
 
-import com.atlassian.jira.bc.issue.IssueService;
+import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
-import ru.mail.jira.plugins.myteam.protocol.IssueCreationDto;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 
-public interface IssueCreationFieldsService {
+public interface IssueCreationService {
   /**
    * Get a map of required during creation issue fields by selected project and issue type Algo: 1)
    * Getting all fields which shown on CREATE_ISSUE_OPERATION fields screen 2) All fields must be
@@ -35,10 +39,14 @@ public interface IssueCreationFieldsService {
       Set<String> excludedFieldIds,
       IssueFieldsFilter issueFieldsFilter);
 
-  IssueService.CreateValidationResult validateIssueWithGivenFields(
-      ApplicationUser currentUser, IssueCreationDto issueCreationDto);
-
   CreateIssueFieldValueHandler getFieldValueHandler(Field field);
+
+  List<Field> getIssueFields(Project project, ApplicationUser user, String issueTypeId)
+      throws UnsupportedCustomFieldsException, IncorrectIssueTypeException;
+
+  Issue createIssue(
+      Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user)
+      throws IssueCreationValidationException;
 
   boolean isFieldSupported(String fieldId);
 }
