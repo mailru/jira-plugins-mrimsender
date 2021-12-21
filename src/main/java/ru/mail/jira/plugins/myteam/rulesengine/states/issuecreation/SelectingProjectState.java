@@ -6,6 +6,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
@@ -22,6 +23,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.base.PageableState;
 
 @Slf4j
 public class SelectingProjectState extends BotState implements PageableState, CancelableState {
+  public static final String DELIMITER_STR = "----------";
 
   private final IssueService issueService;
   private final UserChatService userChatService;
@@ -73,8 +75,12 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
 
       String msg =
           messagePrefix
-              + messageFormatter.createSelectProjectMessage(
-                  locale, nextProjectsInterval, pager.getPage(), allowedProjectList.size());
+              + createSelectProjectMessage(
+                  locale,
+                  nextProjectsInterval,
+                  pager.getPage(),
+                  allowedProjectList.size(),
+                  pager.getPageSize());
 
       List<List<InlineKeyboardMarkupButton>> buttons =
           MessageFormatter.buildButtonsWithCancel(
@@ -110,5 +116,27 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
     } catch (MyteamServerErrorException | IOException e) {
       log.error(e.getLocalizedMessage());
     }
+  }
+
+  private String createSelectProjectMessage(
+      Locale locale,
+      List<Project> visibleProjects,
+      int pageNumber,
+      int totalProjectsNum,
+      int pageSize) {
+    StringJoiner sj = new StringJoiner("\n");
+    sj.add(
+        userChatService.getRawText(
+            locale,
+            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"));
+    sj.add(DELIMITER_STR);
+    List<String> formattedProjectList =
+        visibleProjects.stream()
+            .map(proj -> String.join("", "[", proj.getKey(), "] ", proj.getName()))
+            .collect(Collectors.toList());
+    sj.add(
+        messageFormatter.stringifyPagedCollection(
+            locale, formattedProjectList, pageNumber, totalProjectsNum, pageSize));
+    return sj.toString();
   }
 }

@@ -6,12 +6,14 @@ import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
@@ -92,10 +94,10 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
                   .collect(Collectors.toList());
 
           List<List<InlineKeyboardMarkupButton>> buttons =
-              messageFormatter.getViewCommentsButtons(locale, pager.hasPrev(), pager.hasNext());
+              messageFormatter.getListButtons(locale, pager.hasPrev(), pager.hasNext());
+
           String msg =
-              messageFormatter.stringifyIssueCommentsList(
-                  locale, comments, pager.getPage(), pager.getTotal());
+              stringifyIssueCommentsList(locale, comments, pager.getPage(), pager.getTotal());
 
           if (event instanceof ButtonClickEvent && editMessage)
             userChatService.editMessageText(
@@ -110,5 +112,28 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
         log.error(e.getLocalizedMessage());
       }
     }
+  }
+
+  private String stringifyIssueCommentsList(
+      Locale locale, List<Comment> commentList, int pageNumber, int total) {
+    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    return messageFormatter.stringifyPagedCollection(
+        locale,
+        commentList.stream()
+            .map(
+                comment ->
+                    String.join(
+                        "",
+                        "\\[",
+                        dateFormatter.format(comment.getCreated()),
+                        "\\] ",
+                        "\\[",
+                        comment.getAuthorFullName(),
+                        "\\] ",
+                        Utils.shieldText(comment.getBody())))
+            .collect(Collectors.toList()),
+        pageNumber,
+        total,
+        COMMENT_LIST_PAGE_SIZE);
   }
 }

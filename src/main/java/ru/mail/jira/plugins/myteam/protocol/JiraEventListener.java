@@ -3,14 +3,11 @@ package ru.mail.jira.plugins.myteam.protocol;
 
 import com.atlassian.event.api.EventListener;
 import com.atlassian.event.api.EventPublisher;
+import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.notification.JiraNotificationReason;
-import com.atlassian.jira.notification.NotificationFilterContext;
-import com.atlassian.jira.notification.NotificationFilterManager;
-import com.atlassian.jira.notification.NotificationRecipient;
-import com.atlassian.jira.notification.NotificationSchemeManager;
+import com.atlassian.jira.notification.*;
 import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.scheme.SchemeEntity;
 import com.atlassian.jira.security.PermissionManager;
@@ -19,12 +16,9 @@ import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.Sets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
@@ -32,8 +26,10 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 
 @Component
 public class JiraEventListener implements InitializingBean, DisposableBean {
@@ -48,6 +44,8 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   private final UserData userData;
   private final MessageFormatter messageFormatter;
   private final MyteamEventsListener myteamEventsListener;
+  private final I18nResolver i18nResolver;
+  private final LocaleManager localeManager;
 
   @Autowired
   public JiraEventListener(
@@ -57,6 +55,8 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
       @ComponentImport NotificationSchemeManager notificationSchemeManager,
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport ProjectRoleManager projectRoleManager,
+      @ComponentImport I18nResolver i18nResolver,
+      @ComponentImport LocaleManager localeManager,
       UserData userData,
       MessageFormatter messageFormatter,
       MyteamEventsListener myteamEventsListener) {
@@ -69,6 +69,8 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     this.userData = userData;
     this.messageFormatter = messageFormatter;
     this.myteamEventsListener = myteamEventsListener;
+    this.i18nResolver = i18nResolver;
+    this.localeManager = localeManager;
   }
 
   @Override
@@ -171,12 +173,44 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
           if (message != null) {
             myteamEventsListener.publishEvent(
                 new JiraNotifyEvent(
-                    mrimLogin, message, messageFormatter.getAllIssueButtons(issueKey, recipient)));
+                    mrimLogin,
+                    message,
+                    getAllIssueButtons(issueKey, localeManager.getLocaleFor(recipient))));
           } else {
             myteamEventsListener.publishEvent(new JiraNotifyEvent(mrimLogin, message, null));
           }
         }
       }
     }
+  }
+
+  private List<List<InlineKeyboardMarkupButton>> getAllIssueButtons(
+      String issueKey, Locale locale) {
+    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+    buttons.add(buttonsRow);
+
+    InlineKeyboardMarkupButton issueInfo = new InlineKeyboardMarkupButton();
+    issueInfo.setText(
+        i18nResolver.getRawText(
+            locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.text"));
+    issueInfo.setCallbackData(String.join("-", CommandRuleType.Issue.getName(), issueKey));
+    buttonsRow.add(issueInfo);
+
+    InlineKeyboardMarkupButton comment = new InlineKeyboardMarkupButton();
+    comment.setText(
+        i18nResolver.getRawText(
+            locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"));
+    comment.setCallbackData(String.join("-", "comment", issueKey));
+    buttonsRow.add(comment);
+
+    InlineKeyboardMarkupButton showMenuButton =
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getText(
+                locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
+            CommandRuleType.Menu.getName());
+    MessageFormatter.addRowWithButton(buttons, showMenuButton);
+
+    return buttons;
   }
 }

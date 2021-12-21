@@ -16,7 +16,6 @@ import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.attachment.Attachment;
-import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
@@ -25,24 +24,20 @@ import com.atlassian.jira.issue.fields.screen.FieldScreen;
 import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager;
-import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.label.Label;
 import com.atlassian.jira.issue.operation.IssueOperations;
 import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.jira.issue.resolution.Resolution;
 import com.atlassian.jira.issue.security.IssueSecurityLevel;
 import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
-import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectConstant;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
-import com.atlassian.jira.util.MessageSet;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -61,16 +56,12 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 
 @Slf4j
 @Component
 public class MessageFormatter {
   public static final int LIST_PAGE_SIZE = 15;
   public static final int COMMENT_LIST_PAGE_SIZE = 10;
-  public static final int ADDITIONAL_FIELD_LIST_PAGE_SIZE = 30;
-  public static final int ADDITIONAL_FIELD_ONE_COLUMN_MAX_COUNT = 5;
-  public static final int ADDITIONAL_FIELD_TWO_COLUMN_MAX_COUNT = 15;
   public static final String DELIMITER_STR = "----------";
 
   private final ApplicationProperties applicationProperties;
@@ -484,72 +475,6 @@ public class MessageFormatter {
     return inputText;
   }
 
-  public String shieldText(String inputDescription) {
-    if (inputDescription == null) {
-      return null;
-    }
-    StringBuilder result = new StringBuilder();
-    char[] arrayFromInput = inputDescription.toCharArray();
-    for (char c : arrayFromInput) {
-      switch (c) {
-        case '*':
-          result.append("\\*");
-          break;
-        case '_':
-          result.append("\\_");
-          break;
-        case '~':
-          result.append("\\~");
-          break;
-        case '`':
-          result.append("\\`");
-          break;
-        case '-':
-          result.append("\\-");
-          break;
-        case '>':
-          result.append("\\>");
-          break;
-        case '\\':
-          result.append("\\\\");
-          break;
-        case '{':
-          result.append("\\{");
-          break;
-        case '}':
-          result.append("\\}");
-          break;
-        case '[':
-          result.append("\\[");
-          break;
-        case ']':
-          result.append("\\]");
-          break;
-        case '(':
-          result.append("\\(");
-          break;
-        case ')':
-          result.append("\\)");
-          break;
-        case '#':
-          result.append("\\#");
-          break;
-        case '+':
-          result.append("\\+");
-          break;
-        case '.':
-          result.append("\\.");
-          break;
-        case '!':
-          result.append("\\!");
-          break;
-        default:
-          result.append(c);
-      }
-    }
-    return result.toString();
-  }
-
   private String formatChangeLog(
       GenericValue changeLog,
       boolean ignoreAssigneeField,
@@ -634,7 +559,8 @@ public class MessageFormatter {
         "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
 
-  public String formatBitbucketEvent(ApplicationUser recipient, BitbucketEventDto bitbucketEvent)
+  public String formatBitbucketEvent(
+      ApplicationUser recipient, BitbucketEventDto bitbucketEvent) // TODO move to separate service
       throws UnsupportedEncodingException {
     StringBuilder sb = new StringBuilder();
     boolean useMentionFormat = true;
@@ -1734,40 +1660,6 @@ public class MessageFormatter {
     return sb.toString();
   }
 
-  public List<List<InlineKeyboardMarkupButton>> getAllIssueButtons(
-      String issueKey, ApplicationUser recipient) {
-    Locale recipientLocale = localeManager.getLocaleFor(recipient);
-
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-    buttons.add(buttonsRow);
-
-    InlineKeyboardMarkupButton issueInfo = new InlineKeyboardMarkupButton();
-    issueInfo.setText(
-        i18nResolver.getRawText(
-            recipientLocale,
-            "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.text"));
-    issueInfo.setCallbackData(String.join("-", CommandRuleType.Issue.getName(), issueKey));
-    buttonsRow.add(issueInfo);
-
-    InlineKeyboardMarkupButton comment = new InlineKeyboardMarkupButton();
-    comment.setText(
-        i18nResolver.getRawText(
-            recipientLocale,
-            "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"));
-    comment.setCallbackData(String.join("-", "comment", issueKey));
-    buttonsRow.add(comment);
-
-    InlineKeyboardMarkupButton showMenuButton =
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                recipientLocale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
-            CommandRuleType.Menu.getName());
-    addRowWithButton(buttons, showMenuButton);
-
-    return buttons;
-  }
-
   public List<List<InlineKeyboardMarkupButton>> getIssueButtons(
       String issueKey, ApplicationUser recipient, boolean isWatching) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
@@ -1809,32 +1701,6 @@ public class MessageFormatter {
     return buttons;
   }
 
-  public List<List<InlineKeyboardMarkupButton>> getIssueCreationConfirmButtons(
-      ApplicationUser recipient) {
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-    buttons.add(buttonsRow);
-
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                localeManager.getLocaleFor(recipient),
-                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.issueCreationConfirmButton.text"),
-            StateActionRuleType.ConfirmIssueCreation.getName()));
-
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                localeManager.getLocaleFor(recipient),
-                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.issueAddExtraFieldsButton.text"),
-            "addExtraIssueFields"));
-    return buildButtonsWithCancel(
-        buttons,
-        i18nResolver.getText(
-            localeManager.getLocaleFor(recipient),
-            "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text"));
-  }
-
   public List<List<InlineKeyboardMarkupButton>> getCancelButton(Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
 
@@ -1844,13 +1710,6 @@ public class MessageFormatter {
                 locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text")));
 
     return buttons;
-  }
-
-  public static void addRowWithButton(
-      List<List<InlineKeyboardMarkupButton>> buttons, InlineKeyboardMarkupButton button) {
-    List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
-    newButtonsRow.add(button);
-    buttons.add(newButtonsRow);
   }
 
   public List<List<InlineKeyboardMarkupButton>> getMenuButtons(ApplicationUser currentUser) {
@@ -1938,85 +1797,6 @@ public class MessageFormatter {
     return buttons;
   }
 
-  private List<List<InlineKeyboardMarkupButton>> getListButtons(
-      Locale locale,
-      boolean withPrev,
-      boolean withNext,
-      String prevButtonData,
-      String nextButtonData) {
-    if (!withPrev && !withNext) return null;
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
-    List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>();
-    if (withPrev) {
-      newButtonsRow.add(
-          InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-              i18nResolver.getRawText(
-                  locale,
-                  "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.prevPageButton.text"),
-              prevButtonData));
-    }
-    if (withNext) {
-      newButtonsRow.add(
-          InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-              i18nResolver.getRawText(
-                  locale,
-                  "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.nextPageButton.text"),
-              nextButtonData));
-    }
-    buttons.add(newButtonsRow);
-    return buttons;
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> getPagerButtons(
-      Locale locale, boolean withPrev, boolean withNext) {
-    if (!withPrev && !withNext) return null;
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
-    List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>();
-    if (withPrev) {
-      newButtonsRow.add(
-          InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-              i18nResolver.getRawText(
-                  locale,
-                  "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.prevPageButton.text"),
-              ButtonRuleType.PrevPage.getName()));
-    }
-    if (withNext) {
-      newButtonsRow.add(
-          InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-              i18nResolver.getRawText(
-                  locale,
-                  "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.nextPageButton.text"),
-              ButtonRuleType.NextPage.getName()));
-    }
-    buttons.add(newButtonsRow);
-    return buttons;
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> getIssueListButtons(
-      Locale locale, boolean withPrev, boolean withNext) {
-    return getListButtons(
-        locale,
-        withPrev,
-        withNext,
-        ButtonRuleType.PrevPage.getName(),
-        ButtonRuleType.NextPage.getName());
-  }
-
-  public String stringifyMap(Map<?, ?> map) {
-    if (map == null) return "";
-    return map.entrySet().stream()
-        .map((entry) -> String.join(" : ", entry.getKey().toString(), entry.getValue().toString()))
-        .collect(joining("\n"));
-  }
-
-  public String stringifyCollection(Locale locale, Collection<?> collection) {
-    StringJoiner sj = new StringJoiner("\n");
-
-    // stringify collection
-    collection.forEach(obj -> sj.add(obj.toString()));
-    return sj.toString();
-  }
-
   public String stringifyPagedCollection(
       Locale locale, Collection<?> collection, int pageNumber, int total, int pageSize) {
     if (collection.size() == 0) return "";
@@ -2061,148 +1841,26 @@ public class MessageFormatter {
         LIST_PAGE_SIZE);
   }
 
-  public String stringifyIssueCommentsList(
-      Locale locale, List<Comment> commentList, int pageNumber, int total) {
-    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-    return stringifyPagedCollection(
-        locale,
-        commentList.stream()
-            .map(
-                comment ->
-                    String.join(
-                        "",
-                        "\\[",
-                        dateFormatter.format(comment.getCreated()),
-                        "\\] ",
-                        "\\[",
-                        comment.getAuthorFullName(),
-                        "\\] ",
-                        shieldText(comment.getBody())))
-            .collect(Collectors.toList()),
-        pageNumber,
-        total,
-        COMMENT_LIST_PAGE_SIZE);
+  public String stringifyFieldsCollection(Locale locale, Collection<? extends Field> fields) {
+    return String.join(
+        "\n",
+        fields.stream()
+            .map(field -> i18nResolver.getRawText(locale, field.getNameKey()))
+            .collect(Collectors.toList()));
   }
 
-  public String stringifyJqlClauseErrorsMap(MessageSet messageSet, Locale locale) {
-    StringJoiner joiner = new StringJoiner("\n");
-    String errorsTitle = i18nResolver.getRawText(locale, "common.words.errors") + ":";
-    joiner.add(errorsTitle);
-    messageSet.getErrorMessages().forEach(joiner::add);
-    return joiner.toString();
+  public static void addRowWithButton(
+      List<List<InlineKeyboardMarkupButton>> buttons, InlineKeyboardMarkupButton button) {
+    List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
+    newButtonsRow.add(button);
+    buttons.add(newButtonsRow);
   }
 
-  public String createSelectProjectMessage(
-      Locale locale, List<Project> visibleProjects, int pageNumber, int totalProjectsNum) {
-    StringJoiner sj = new StringJoiner("\n");
-    sj.add(
-        i18nResolver.getRawText(
-            locale,
-            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"));
-    sj.add(DELIMITER_STR);
-    List<String> formattedProjectList =
-        visibleProjects.stream()
-            .map(proj -> String.join("", "[", proj.getKey(), "] ", proj.getName()))
-            .collect(Collectors.toList());
-    sj.add(
-        stringifyPagedCollection(
-            locale, formattedProjectList, pageNumber, totalProjectsNum, LIST_PAGE_SIZE));
-    return sj.toString();
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> getSelectProjectMessageButtons(
-      Locale locale, boolean withPrev, boolean withNext) {
-    return getListButtons(locale, withPrev, withNext, "prevProjectListPage", "nextProjectListPage");
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> getSelectAdditionalFieldMessageButtons(
-      Locale locale, boolean withPrev, boolean withNext, List<Field> fields) {
-    List<List<InlineKeyboardMarkupButton>> buttons =
-        getListButtons(
-            locale,
-            withPrev,
-            withNext,
-            "prevAdditionalFieldListPage",
-            "nextAdditionalFieldListPage");
-
-    int colCount =
-        fields.size() <= ADDITIONAL_FIELD_ONE_COLUMN_MAX_COUNT
-            ? 1
-            : (fields.size() <= ADDITIONAL_FIELD_TWO_COLUMN_MAX_COUNT ? 2 : 3);
-
-    List<List<InlineKeyboardMarkupButton>> fieldButtons = new ArrayList<>();
-    List<InlineKeyboardMarkupButton> fieldButtonRow = new ArrayList<>();
-
-    int i = 0;
-    while (i < fields.size()) {
-      Field field = fields.get(i);
-      fieldButtonRow.add(
-          InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-              field.getName(), String.join("-", "selectAdditionalField", field.getId())));
-
-      if (i % colCount == 0) {
-        fieldButtons.add(fieldButtonRow);
-        fieldButtonRow = new ArrayList<>();
-      }
-      i++;
-    }
-
-    String cancelTitle =
-        i18nResolver.getRawText(
-            locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text");
-
-    if (buttons == null || buttons.size() == 0) { // if no pager buttons
-      fieldButtons.add(getCancelButtonRow(cancelTitle));
-      return fieldButtons;
-    } else {
-      buttons.get(0).add(InlineKeyboardMarkupButton.buildButtonWithoutUrl(cancelTitle, "cancel"));
-      buttons.addAll(0, fieldButtons);
-    }
-
-    return buttons;
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> getViewCommentsButtons(
-      Locale locale, boolean withPrev, boolean withNext) {
-    return getListButtons(
-        locale,
-        withPrev,
-        withNext,
-        ButtonRuleType.PrevPage.getName(),
-        ButtonRuleType.NextPage.getName());
-  }
-
-  public String getSelectIssueTypeMessage(Locale locale) {
-    return i18nResolver.getRawText(
-        locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectIssueType.message");
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> buildIssueTypesButtons(
-      Collection<IssueType> issueTypes) {
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    issueTypes.forEach(
-        issueType -> {
-          InlineKeyboardMarkupButton issueTypeButton =
-              InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-                  issueType.getNameTranslation(i18nHelper),
-                  String.join("-", "selectIssueType", issueType.getId()));
-          addRowWithButton(buttons, issueTypeButton);
-        });
-    return buttons;
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> buildPrioritiesButtons(
-      Collection<Priority> priorities) {
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    priorities.forEach(
-        priority -> {
-          InlineKeyboardMarkupButton issueTypeButton =
-              InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-                  priority.getNameTranslation(i18nHelper),
-                  String.join("-", "selectIssueButtonValue", priority.getName()));
-          addRowWithButton(buttons, issueTypeButton);
-        });
-    return buttons;
+  public static List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
+    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, ButtonRuleType.Cancel.getName()));
+    return buttonsRow;
   }
 
   public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(
@@ -2216,18 +1874,69 @@ public class MessageFormatter {
     return buttons;
   }
 
-  public String stringifyFieldsCollection(Locale locale, Collection<? extends Field> fields) {
-    return String.join(
-        "\n",
-        fields.stream()
-            .map(field -> i18nResolver.getRawText(locale, field.getNameKey()))
-            .collect(Collectors.toList()));
-  }
-
-  public static List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
-    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, ButtonRuleType.Cancel.getName()));
-    return buttonsRow;
+  public static String shieldText(String inputDescription) {
+    if (inputDescription == null) {
+      return null;
+    }
+    StringBuilder result = new StringBuilder();
+    char[] arrayFromInput = inputDescription.toCharArray();
+    for (char c : arrayFromInput) {
+      switch (c) {
+        case '*':
+          result.append("\\*");
+          break;
+        case '_':
+          result.append("\\_");
+          break;
+        case '~':
+          result.append("\\~");
+          break;
+        case '`':
+          result.append("\\`");
+          break;
+        case '-':
+          result.append("\\-");
+          break;
+        case '>':
+          result.append("\\>");
+          break;
+        case '\\':
+          result.append("\\\\");
+          break;
+        case '{':
+          result.append("\\{");
+          break;
+        case '}':
+          result.append("\\}");
+          break;
+        case '[':
+          result.append("\\[");
+          break;
+        case ']':
+          result.append("\\]");
+          break;
+        case '(':
+          result.append("\\(");
+          break;
+        case ')':
+          result.append("\\)");
+          break;
+        case '#':
+          result.append("\\#");
+          break;
+        case '+':
+          result.append("\\+");
+          break;
+        case '.':
+          result.append("\\.");
+          break;
+        case '!':
+          result.append("\\!");
+          break;
+        default:
+          result.append(c);
+      }
+    }
+    return result.toString();
   }
 }

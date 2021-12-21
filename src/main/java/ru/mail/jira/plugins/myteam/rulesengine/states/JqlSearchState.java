@@ -71,7 +71,7 @@ public class JqlSearchState extends BotState implements PageableState {
         List<List<InlineKeyboardMarkupButton>> buttons =
             userChatService
                 .getMessageFormatter()
-                .getPagerButtons(
+                .getListButtons(
                     locale, page != 0, parseResult.getTotal() > (page + 1) * LIST_PAGE_SIZE);
         if (event instanceof ButtonClickEvent && editMessage)
           userChatService.editMessageText(
