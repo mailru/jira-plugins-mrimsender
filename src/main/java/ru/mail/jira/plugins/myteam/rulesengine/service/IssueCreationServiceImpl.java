@@ -417,6 +417,11 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     return field != null && !getFieldValueHandler(field).equals(defaultHandler);
   }
 
+  @Override
+  public Field getField(String fieldId) {
+    return fieldManager.getField(fieldId);
+  }
+
   private String getFieldClassName(Field field) {
     String className = field.getClass().getName();
     if (fieldManager.isCustomFieldId(field.getId())) {

@@ -8,4 +8,6 @@ public interface PageableState {
   void nextPage(MyteamEvent event);
 
   void prevPage(MyteamEvent event);
+
+  void updatePage(MyteamEvent event, boolean editMessage);
 }

@@ -52,31 +52,27 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
   @Override
   public void nextPage(MyteamEvent event) {
     pager.nextPage();
-    try {
-      updateMessage(event, true);
-    } catch (MyteamServerErrorException | IOException e) {
-      log.error(e.getLocalizedMessage());
-    }
+    updatePage(event, true);
   }
 
   @Override
   public void prevPage(MyteamEvent event) {
     pager.prevPage();
-    try {
-      updateMessage(event, true);
-    } catch (MyteamServerErrorException | IOException e) {
-      log.error(e.getLocalizedMessage());
-    }
+    updatePage(event, true);
   }
 
-  public void updateMessage(MyteamEvent event, boolean editMessage)
-      throws MyteamServerErrorException, IOException {
+  @Override
+  public void updatePage(MyteamEvent event, boolean editMessage) {
 
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     if (user != null) {
       try {
         Locale locale = userChatService.getUserLocale(user);
         List<Comment> totalComments = issueService.getIssueComments(issueKey, user);
+
+        if (event instanceof ButtonClickEvent)
+          userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
+
         if (totalComments == null || totalComments.size() == 0) {
 
           userChatService.sendMessageText(
@@ -89,8 +85,8 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
 
           List<Comment> comments =
               totalComments.stream()
-                  .skip((long) pager.getPage() * pager.getPerPage())
-                  .limit(pager.getPerPage())
+                  .skip((long) pager.getPage() * pager.getPageSize())
+                  .limit(pager.getPageSize())
                   .collect(Collectors.toList());
 
           List<List<InlineKeyboardMarkupButton>> buttons =
@@ -108,10 +104,9 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
         rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e.getLocalizedMessage());
       } catch (IssueNotFoundException e) {
         rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e.getLocalizedMessage());
+      } catch (MyteamServerErrorException | IOException e) {
+        log.error(e.getLocalizedMessage());
       }
     }
-
-    if (event instanceof ButtonClickEvent)
-      userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
   }
 }

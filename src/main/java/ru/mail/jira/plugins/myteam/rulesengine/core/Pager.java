@@ -8,11 +8,11 @@ import lombok.Setter;
 public class Pager {
   private int page = 0;
   @Setter private int total;
-  private final int perPage;
+  private final int pageSize;
 
   public Pager(int total, int perPage) {
     this.total = total;
-    this.perPage = perPage;
+    this.pageSize = perPage;
   }
 
   public void nextPage() {
@@ -26,15 +26,16 @@ public class Pager {
   }
 
   public String getPagerStatus() {
-    if (total < perPage) {
+    if (total < pageSize) {
       return "";
     }
     return String.format(
-        "%s-%s/%s", getPage() * getPerPage() + 1, (getPage() + 1) * getPerPage(), getTotal());
+        "%s-%s/%s",
+        getPage() * this.getPageSize() + 1, (getPage() + 1) * this.getPageSize(), getTotal());
   }
 
   public boolean hasNext() {
-    return (total / perPage > page + 1);
+    return (total / pageSize > page);
   }
 
   public boolean hasPrev() {
@@ -42,6 +43,6 @@ public class Pager {
   }
 
   public boolean hasPages() {
-    return total / perPage > 0;
+    return total / pageSize > 0;
   }
 }

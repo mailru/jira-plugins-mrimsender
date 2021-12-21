@@ -1,8 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.buttons;
 
-import java.io.IOException;
-import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -16,7 +14,6 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.ViewingIssueCommentsState;
 
-@Slf4j
 @Rule(name = "view issue comments", description = "View issue comments by issue key")
 public class ViewCommentsRule extends BaseRule {
 
@@ -39,11 +36,7 @@ public class ViewCommentsRule extends BaseRule {
       throws MyteamServerErrorException {
     ViewingIssueCommentsState newState =
         new ViewingIssueCommentsState(issueKey, issueService, userChatService, rulesEngine);
-    try {
-      userChatService.setState(event.getChatId(), newState);
-      newState.updateMessage(event, false);
-    } catch (IOException e) {
-      log.error(e.getLocalizedMessage());
-    }
+    userChatService.setState(event.getChatId(), newState);
+    newState.updatePage(event, false);
   }
 }

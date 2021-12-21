@@ -14,7 +14,7 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 
 public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
 
@@ -54,7 +54,9 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
                   String.format(
                       "%s %s", option.getValue(), values.contains(option.getValue()) ? "☑️" : "️"),
                   String.join(
-                      "-", ButtonRuleType.EditIssueCreationValue.getName(), option.getValue()));
+                      "-",
+                      StateActionRuleType.EditIssueCreationValue.getName(),
+                      option.getValue()));
           List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
           newButtonsRow.add(optionButton);
           buttons.add(newButtonsRow);
@@ -66,7 +68,7 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
                 locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.add"),
             String.join(
                 "-",
-                ButtonRuleType.SelectIssueCreationValue.getName(),
+                StateActionRuleType.SelectIssueCreationValue.getName(),
                 String.format("%s", String.join(delimiter, values))));
 
     List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);

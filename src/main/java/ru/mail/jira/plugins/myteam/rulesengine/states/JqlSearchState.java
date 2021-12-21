@@ -39,25 +39,17 @@ public class JqlSearchState extends BotState implements PageableState {
   @Override
   public void nextPage(MyteamEvent event) {
     page++;
-    try {
-      updateMessage(event, true);
-    } catch (MyteamServerErrorException | IOException e) {
-      log.error(e.getLocalizedMessage());
-    }
+    updatePage(event, true);
   }
 
   @Override
   public void prevPage(MyteamEvent event) {
     page--;
-    try {
-      updateMessage(event, true);
-    } catch (MyteamServerErrorException | IOException e) {
-      log.error(e.getLocalizedMessage());
-    }
+    updatePage(event, true);
   }
 
-  public void updateMessage(MyteamEvent event, boolean editMessage)
-      throws MyteamServerErrorException, IOException {
+  @Override
+  public void updatePage(MyteamEvent event, boolean editMessage) {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     Locale locale = userChatService.getUserLocale(user);
     try {
@@ -88,14 +80,20 @@ public class JqlSearchState extends BotState implements PageableState {
         userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
 
     } catch (SearchException | ParseException e) {
-      if (event instanceof ButtonClickEvent)
-        userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
-
-      userChatService.sendMessageText(
-          event.getChatId(),
-          userChatService.getRawText(
-              locale,
-              "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.jqlParseError.text"));
+      if (event instanceof ButtonClickEvent) {
+        try {
+          userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
+          userChatService.sendMessageText(
+              event.getChatId(),
+              userChatService.getRawText(
+                  locale,
+                  "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.jqlParseError.text"));
+        } catch (MyteamServerErrorException | IOException ex) {
+          log.error(e.getLocalizedMessage());
+        }
+      }
+    } catch (MyteamServerErrorException | IOException e) {
+      log.error(e.getLocalizedMessage());
     }
   }
 }

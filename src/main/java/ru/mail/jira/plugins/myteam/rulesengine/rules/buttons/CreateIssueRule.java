@@ -59,7 +59,7 @@ public class CreateIssueRule extends BaseRule {
                   "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"));
       newState.setWaiting(true);
 
-      newState.updateMessage(event, false);
+      newState.updatePage(event, false);
 
       userChatService.setState(event.getChatId(), newState);
     }

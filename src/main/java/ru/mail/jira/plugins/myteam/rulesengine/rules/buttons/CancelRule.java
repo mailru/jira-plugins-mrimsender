@@ -8,7 +8,6 @@ import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
@@ -34,13 +33,6 @@ public class CancelRule extends BaseRule {
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("state") CancelableState state)
       throws MyteamServerErrorException, IOException {
-    userChatService.deleteState(event.getChatId());
-    if (event instanceof ButtonClickEvent) {
-      userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
-      userChatService.editMessageText(
-          event.getChatId(), ((ButtonClickEvent) event).getMsgId(), state.getCancelMessage(), null);
-    } else {
-      userChatService.sendMessageText(event.getChatId(), state.getCancelMessage());
-    }
+    state.cancel(event);
   }
 }

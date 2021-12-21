@@ -13,7 +13,6 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
@@ -27,7 +26,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.CreatingIssueState;
     description = "Calls when issue field value was selected")
 public class FieldValueSelectRule extends BaseRule {
 
-  static final RuleType NAME = ButtonRuleType.SelectIssueCreationValue;
+  static final RuleType NAME = StateActionRuleType.SelectIssueCreationValue;
 
   private final IssueCreationService issueCreationService;
 
@@ -56,8 +55,8 @@ public class FieldValueSelectRule extends BaseRule {
     if (field.isPresent()) {
       CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field.get());
       state.setCurrentFieldValue(handler.updateValue(state.getFieldValue(field.get()), value));
-      state.nextField();
-      rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, state, event);
+      state.nextField(true);
+      rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
     }
   }
 }

@@ -15,7 +15,7 @@ import java.util.Locale;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 
 public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   private final I18nResolver i18nResolver;
@@ -57,7 +57,9 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
               InlineKeyboardMarkupButton.buildButtonWithoutUrl(
                   priority.getNameTranslation(locale.getLanguage()),
                   String.join(
-                      "-", ButtonRuleType.SelectIssueCreationValue.getName(), priority.getName()));
+                      "-",
+                      StateActionRuleType.SelectIssueCreationValue.getName(),
+                      priority.getName()));
           MessageFormatter.addRowWithButton(buttons, issueTypeButton);
         });
     return buttons;

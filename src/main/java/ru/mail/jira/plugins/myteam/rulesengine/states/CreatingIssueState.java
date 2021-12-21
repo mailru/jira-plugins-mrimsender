@@ -5,14 +5,20 @@ import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
+import java.io.IOException;
 import java.util.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
+@Slf4j
 public class CreatingIssueState extends BotState implements CancelableState {
   private static final String DELIMITER_STR = "----------";
 
@@ -36,9 +42,17 @@ public class CreatingIssueState extends BotState implements CancelableState {
 
   @Getter private int currentFieldPosition = 0;
 
-  public int nextField() {
+  public void nextField(boolean skipFilled) {
     if (currentFieldPosition < fieldValues.size()) currentFieldPosition++;
-    return currentFieldPosition;
+
+    if (skipFilled) {
+      getCurrentField()
+          .ifPresent(
+              field -> {
+                String value = fieldValues.get(field);
+                if (!value.isEmpty()) nextField(true);
+              });
+    }
   }
 
   public Optional<Field> getCurrentField() {
@@ -53,11 +67,6 @@ public class CreatingIssueState extends BotState implements CancelableState {
     List<Field> fields = issueCreationService.getIssueFields(project, user, issueType.getId());
     fieldValues = new HashMap<>();
     fields.forEach(f -> fieldValues.put(f, ""));
-  }
-
-  public Optional<Field> getFirstUnfilledField() {
-    List<Field> fields = new ArrayList<>(fieldValues.keySet());
-    return fields.stream().filter(f -> fieldValues.get(f).isEmpty()).findFirst();
   }
 
   public boolean hasUnfilledFields() {
@@ -77,8 +86,28 @@ public class CreatingIssueState extends BotState implements CancelableState {
     field.ifPresent(f -> fieldValues.put(f, value));
   }
 
+  public void addField(Field field) {
+    if (fieldValues.containsKey(field)) {
+      fieldValues.remove(field);
+    }
+    fieldValues.put(field, "");
+    currentFieldPosition = getFirstUnfilledFieldPosition();
+  }
+
   public String createInsertFieldMessage(Locale locale, String messagePrefix) {
     return String.join("\n", messagePrefix, this.formatIssueCreationFields(locale, fieldValues));
+  }
+
+  private Optional<Field> getFirstUnfilledField() {
+    List<Field> fields = new ArrayList<>(fieldValues.keySet());
+    return fields.stream().filter(f -> fieldValues.get(f).isEmpty()).findFirst();
+  }
+
+  private int getFirstUnfilledFieldPosition() {
+    Optional<Field> field = getFirstUnfilledField();
+    return field
+        .map(value -> new ArrayList<>(fieldValues.keySet()).indexOf(value))
+        .orElseGet(() -> fieldValues.size() - 1);
   }
 
   private String formatIssueCreationFields(Locale locale, Map<Field, String> fieldValuesMap) {
@@ -106,7 +135,21 @@ public class CreatingIssueState extends BotState implements CancelableState {
   }
 
   @Override
-  public String getCancelMessage() {
-    return "CANCELED";
+  public void cancel(MyteamEvent event) {
+    userChatService.deleteState(event.getChatId());
+    try {
+      if (event instanceof ButtonClickEvent) {
+        userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
+        userChatService.editMessageText(
+            event.getChatId(),
+            ((ButtonClickEvent) event).getMsgId(),
+            "ISSUE CREATION CANCELED",
+            null);
+      } else {
+        userChatService.sendMessageText(event.getChatId(), "ISSUE CREATION CANCELED");
+      }
+    } catch (MyteamServerErrorException | IOException e) {
+      log.error(e.getLocalizedMessage());
+    }
   }
 }

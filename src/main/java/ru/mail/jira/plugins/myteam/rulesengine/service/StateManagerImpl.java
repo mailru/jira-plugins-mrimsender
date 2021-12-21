@@ -60,6 +60,20 @@ public class StateManagerImpl implements StateManager {
     if (states != null) states.remove(botState);
   }
 
+  @Override
+  public void setState(String chatId, BotState state, boolean deletePrevious) {
+    if (deletePrevious) deleteStates(chatId);
+    setState(chatId, state);
+  }
+
+  @Override
+  public void revertState(String chatId) {
+    @Nullable List<BotState> states = getStates(chatId);
+    if (states == null || states.size() < 2) return;
+
+    states.remove(states.size() - 1);
+  }
+
   @Nullable
   private List<BotState> getStates(String chatId) {
     return statesMap.get(chatId);

@@ -66,6 +66,7 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 
 @Slf4j
 @Component
@@ -1836,7 +1837,7 @@ public class MessageFormatter {
             i18nResolver.getText(
                 localeManager.getLocaleFor(recipient),
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.issueCreationConfirmButton.text"),
-            ButtonRuleType.ConfirmIssueCreation.getName()));
+            StateActionRuleType.ConfirmIssueCreation.getName()));
 
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
@@ -2292,7 +2293,7 @@ public class MessageFormatter {
         this.formatIssueCreationDto(locale, issueCreationDto));
   }
 
-  private static List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
+  public static List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, ButtonRuleType.Cancel.getName()));

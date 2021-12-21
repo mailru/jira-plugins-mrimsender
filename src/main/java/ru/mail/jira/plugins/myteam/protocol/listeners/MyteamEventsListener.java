@@ -20,11 +20,12 @@ import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.ChatState;
 import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.*;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.CancelClickEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.NewIssueFieldValueButtonClickEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.buttons.NewIssueFieldValueUpdateButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.service.StateManager;
-import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Slf4j
 @Component
@@ -40,7 +41,6 @@ public class MyteamEventsListener {
   private final MyteamApiClient myteamApiClient;
   private final ChatCommandListener chatCommandListener;
   private final RulesEngine rulesEngine;
-  private final StateManager stateManager;
 
   @Autowired
   public MyteamEventsListener(
@@ -49,11 +49,9 @@ public class MyteamEventsListener {
       ChatCommandListener chatCommandListener,
       ButtonClickListener buttonClickListener,
       CreateIssueEventsListener createIssueEventsListener,
-      StateManager stateManager,
       RulesEngine rulesEngine) {
     this.chatsStateMap = chatStateMapping.getChatsStateMap();
     this.rulesEngine = rulesEngine;
-    this.stateManager = stateManager;
     this.asyncEventBus =
         new AsyncEventBus(
             executorService,
@@ -76,7 +74,6 @@ public class MyteamEventsListener {
 
   @Subscribe
   public void handleNewMessageEvent(ChatMessageEvent event) {
-    BotState state = stateManager.getLastState(event.getChatId());
     String chatId = event.getChatId();
     boolean isGroupChatEvent = event.getChatType() == ChatType.GROUP;
 
@@ -104,13 +101,13 @@ public class MyteamEventsListener {
     String message = event.getMessage();
 
     if (message != null && message.startsWith(CHAT_COMMAND_PREFIX)) {
-      handleCommand(state, event);
+      handleCommand(event);
       return;
     }
-    handleStateAction(state, event);
+    handleStateAction(event);
   }
 
-  private void handleCommand(BotState state, ChatMessageEvent event) {
+  private void handleCommand(ChatMessageEvent event) {
     String withoutPrefix =
         StringUtils.substringAfter(event.getMessage(), CHAT_COMMAND_PREFIX).toLowerCase();
     String[] split = withoutPrefix.split("\\s+");
@@ -120,19 +117,17 @@ public class MyteamEventsListener {
     String command = split[0];
     String args = String.join("", Arrays.asList(split).subList(1, split.length));
 
-    rulesEngine.fireCommand(command, state, event, args);
+    rulesEngine.fireCommand(command, event, args);
   }
 
   private void handleButtonClick(ButtonClickEvent event) {
-    BotState state = stateManager.getLastState(event.getChatId());
     String buttonPrefix = StringUtils.substringBefore(event.getCallbackData(), "-");
     String data = StringUtils.substringAfter(event.getCallbackData(), "-");
-    rulesEngine.fireCommand(buttonPrefix, state, event, data);
+    rulesEngine.fireCommand(buttonPrefix, event, data);
   }
 
-  private void handleStateAction(BotState state, ChatMessageEvent event) {
-    rulesEngine.fireStateAction(
-        state, stateManager.getPrevState(event.getChatId()), event, event.getMessage());
+  private void handleStateAction(ChatMessageEvent event) {
+    rulesEngine.fireStateAction(event, event.getMessage());
   }
 
   @Subscribe

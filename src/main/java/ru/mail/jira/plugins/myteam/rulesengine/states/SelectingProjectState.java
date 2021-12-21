@@ -39,16 +39,17 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
   @Override
   public void nextPage(MyteamEvent event) {
     pager.nextPage();
-    updateMessage(event, true);
+    updatePage(event, true);
   }
 
   @Override
   public void prevPage(MyteamEvent event) {
     pager.prevPage();
-    updateMessage(event, true);
+    updatePage(event, true);
   }
 
-  public void updateMessage(MyteamEvent event, boolean editMessage) {
+  @Override
+  public void updatePage(MyteamEvent event, boolean editMessage) {
 
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
     Locale locale = userChatService.getUserLocale(user);
@@ -59,8 +60,8 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
 
     List<Project> nextProjectsInterval =
         allowedProjectList.stream()
-            .skip((long) pager.getPage() * pager.getPerPage())
-            .limit(pager.getPerPage())
+            .skip((long) pager.getPage() * pager.getPageSize())
+            .limit(pager.getPageSize())
             .collect(Collectors.toList());
     try {
       if (event instanceof ButtonClickEvent) {
@@ -73,7 +74,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
                   locale, nextProjectsInterval, pager.getPage(), allowedProjectList.size());
 
       List<List<InlineKeyboardMarkupButton>> buttons =
-          messageFormatter.buildButtonsWithCancel(
+          MessageFormatter.buildButtonsWithCancel(
               messageFormatter.getListButtons(locale, pager.hasPrev(), pager.hasNext()),
               userChatService.getRawText(
                   locale,
@@ -91,7 +92,20 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
   }
 
   @Override
-  public String getCancelMessage() {
-    return "CANCELED";
+  public void cancel(MyteamEvent event) {
+    try {
+      if (event instanceof ButtonClickEvent) {
+        userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
+        userChatService.editMessageText(
+            event.getChatId(),
+            ((ButtonClickEvent) event).getMsgId(),
+            "ISSUE CREATION CANCELED",
+            null);
+      } else {
+        userChatService.sendMessageText(event.getChatId(), "ISSUE CREATION CANCELED");
+      }
+    } catch (MyteamServerErrorException | IOException e) {
+      log.error(e.getLocalizedMessage());
+    }
   }
 }

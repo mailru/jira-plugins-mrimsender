@@ -23,15 +23,12 @@ public class PrevPageRule extends BaseRule {
   }
 
   @Condition
-  public boolean isValid(@Fact("command") String command, @Fact("event") MyteamEvent event) {
-    BotState state = userChatService.getState(event.getChatId());
+  public boolean isValid(@Fact("command") String command, @Fact("state") BotState state) {
     return NAME.equalsName(command) && state instanceof PageableState;
   }
 
   @Action
-  public void execute(@Fact("event") MyteamEvent event) {
-    PageableState state = (PageableState) userChatService.getState(event.getChatId());
-
+  public void execute(@Fact("event") MyteamEvent event, @Fact("state") PageableState state) {
     if (state != null) {
       state.prevPage(event);
     }

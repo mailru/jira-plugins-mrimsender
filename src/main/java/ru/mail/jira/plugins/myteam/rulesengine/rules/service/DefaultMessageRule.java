@@ -39,7 +39,7 @@ public class DefaultMessageRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") MyteamEvent event, @Fact("state") BotState state)
+  public void execute(@Fact("event") MyteamEvent event)
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     if (user != null) {
@@ -52,11 +52,11 @@ public class DefaultMessageRule extends BaseRule {
         Forward forward = forwards.get(0);
         String forwardMessageText = forward.getMessage().getText();
         String issueKey = Utils.findIssueKeyInStr(forwardMessageText);
-        if (fireViewIssueResult(event, issueKey, state)) return;
+        if (fireViewIssueResult(event, issueKey)) return;
       }
 
       String issueKey = Utils.findIssueKeyInStr(((ChatMessageEvent) event).getMessage());
-      if (fireViewIssueResult(event, issueKey, state)) return;
+      if (fireViewIssueResult(event, issueKey)) return;
       userChatService.sendMessageText(
           chatId,
           userChatService.getRawText(
@@ -65,9 +65,9 @@ public class DefaultMessageRule extends BaseRule {
     }
   }
 
-  private boolean fireViewIssueResult(MyteamEvent event, String issueKey, BotState state) {
+  private boolean fireViewIssueResult(MyteamEvent event, String issueKey) {
     if (issueKey != null) {
-      rulesEngine.fireCommand(CommandRuleType.Issue.getName(), state, event, issueKey);
+      rulesEngine.fireCommand(CommandRuleType.Issue.getName(), event, issueKey);
       return true;
     }
     return false;

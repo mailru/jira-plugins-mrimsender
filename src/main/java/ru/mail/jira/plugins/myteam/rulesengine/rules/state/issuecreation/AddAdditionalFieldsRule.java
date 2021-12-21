@@ -1,16 +1,12 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
-import com.atlassian.jira.issue.fields.Field;
 import java.io.IOException;
-import java.util.Optional;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
-import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
@@ -20,15 +16,18 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.CreatingIssueState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.SelectingIssueAdditionalFieldsState;
 
-@Rule(name = "edit issue creation value", description = "Calls when issue field value was edited")
-public class FieldValueEditRule extends BaseRule {
+@Rule(
+    name = "additional fields",
+    description = "Calls when issue additional field button was clicked")
+public class AddAdditionalFieldsRule extends BaseRule {
 
-  static final RuleType NAME = StateActionRuleType.EditIssueCreationValue;
+  static final RuleType NAME = StateActionRuleType.AddAdditionalFields;
 
   private final IssueCreationService issueCreationService;
 
-  public FieldValueEditRule(
+  public AddAdditionalFieldsRule(
       UserChatService userChatService,
       RulesEngine rulesEngine,
       IssueCreationService issueCreationService) {
@@ -43,20 +42,20 @@ public class FieldValueEditRule extends BaseRule {
 
   @Action
   public void execute(
-      @Fact("event") MyteamEvent event,
-      @Fact("state") CreatingIssueState state,
-      @Fact("args") String value)
+      @Fact("event") ButtonClickEvent event, @Fact("state") CreatingIssueState state)
       throws MyteamServerErrorException, IOException {
+    SelectingIssueAdditionalFieldsState newState =
+        new SelectingIssueAdditionalFieldsState(
+            state.getProject(),
+            state.getIssueType(),
+            userChatService,
+            issueCreationService,
+            rulesEngine);
 
-    Optional<Field> field = state.getCurrentField();
-    if (event instanceof ButtonClickEvent)
-      userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
-    if (field.isPresent()) {
-      // TODO add field value validation
+    userChatService.answerCallbackQuery(event.getQueryId());
 
-      CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field.get());
-      state.setCurrentFieldValue(handler.updateValue(state.getFieldValue(field.get()), value));
-      rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
-    }
+    newState.updatePage(event, false);
+
+    userChatService.setState(event.getChatId(), newState);
   }
 }

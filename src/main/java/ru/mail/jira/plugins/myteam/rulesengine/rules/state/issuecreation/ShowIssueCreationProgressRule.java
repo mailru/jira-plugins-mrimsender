@@ -18,7 +18,6 @@ import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
@@ -101,14 +100,14 @@ public class ShowIssueCreationProgressRule extends BaseRule {
             userChatService.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.issueCreationConfirmButton.text"),
-            ButtonRuleType.ConfirmIssueCreation.getName()));
+            StateActionRuleType.ConfirmIssueCreation.getName()));
 
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             userChatService.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.issueAddExtraFieldsButton.text"),
-            "addExtraIssueFields"));
+            StateActionRuleType.AddAdditionalFields.getName()));
     return MessageFormatter.buildButtonsWithCancel(
         buttons,
         userChatService.getRawText(

@@ -3,6 +3,8 @@ package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
+import java.io.IOException;
+import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -13,21 +15,19 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.CreatingIssueState;
 
-import java.io.IOException;
-import java.util.Locale;
-
 @Slf4j
 @Rule(name = "confirm issue creation", description = "Creates issue by inserted fields from state")
 public class ConfirmIssueCreationRule extends BaseRule {
 
-  static final ButtonRuleType NAME = ButtonRuleType.ConfirmIssueCreation;
+  static final RuleType NAME = StateActionRuleType.ConfirmIssueCreation;
   private final IssueCreationService issueCreationService;
 
   public ConfirmIssueCreationRule(

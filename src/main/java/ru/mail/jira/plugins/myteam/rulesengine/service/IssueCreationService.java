@@ -49,4 +49,6 @@ public interface IssueCreationService {
       throws IssueCreationValidationException;
 
   boolean isFieldSupported(String fieldId);
+
+  Field getField(String fieldId);
 }

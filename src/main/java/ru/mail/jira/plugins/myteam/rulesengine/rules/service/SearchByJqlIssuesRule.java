@@ -10,6 +10,7 @@ import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
@@ -54,7 +55,7 @@ public class SearchByJqlIssuesRule extends BaseRule {
               userChatService.getRawText(
                   locale,
                   "ru.mail.jira.plugins.myteam.myteamEventsListener.searchByJqlClauseButton.insertJqlClause.message"),
-              messageFormatter.buildButtonsWithCancel(
+              MessageFormatter.buildButtonsWithCancel(
                   null,
                   userChatService.getRawText(
                       locale,
@@ -66,12 +67,8 @@ public class SearchByJqlIssuesRule extends BaseRule {
         }
       }
     } else {
-      try {
-        newState.setWaiting(false);
-        newState.updateMessage(event, false);
-      } catch (MyteamServerErrorException | IOException e) {
-        log.error(e.getLocalizedMessage());
-      }
+      newState.setWaiting(false);
+      newState.updatePage(event, false);
     }
     userChatService.setState(event.getChatId(), newState);
   }

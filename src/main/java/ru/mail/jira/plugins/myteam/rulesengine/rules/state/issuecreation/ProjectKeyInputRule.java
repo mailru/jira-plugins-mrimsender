@@ -21,7 +21,7 @@ import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
@@ -67,7 +67,7 @@ public class ProjectKeyInputRule extends BaseRule {
       Locale locale = userChatService.getUserLocale(user);
 
       try {
-        userChatService.deleteState(chatId);
+
         Project project = issueService.getProject(projectKey, user);
         if (project == null) {
           userChatService.sendMessageText(
@@ -76,8 +76,10 @@ public class ProjectKeyInputRule extends BaseRule {
                   locale,
                   "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedProjectNotValid"));
         } else {
-          userChatService.setState(chatId, prevState);
           prevState.setProject(project);
+          userChatService.revertState(chatId);
+          //          userChatService.deleteState(chatId);
+          //          userChatService.setState(chatId, prevState);
 
           Collection<IssueType> projectIssueTypes =
               issueService.getProjectIssueTypes(project, user);
@@ -85,7 +87,7 @@ public class ProjectKeyInputRule extends BaseRule {
           userChatService.sendMessageText(
               chatId,
               getSelectIssueTypeMessage(locale),
-              messageFormatter.buildButtonsWithCancel(
+              MessageFormatter.buildButtonsWithCancel(
                   buildIssueTypesButtons(projectIssueTypes, locale),
                   userChatService.getRawText(
                       locale,
@@ -122,7 +124,8 @@ public class ProjectKeyInputRule extends BaseRule {
           InlineKeyboardMarkupButton issueTypeButton =
               InlineKeyboardMarkupButton.buildButtonWithoutUrl(
                   issueType.getNameTranslation(locale.getLanguage()),
-                  String.join("-", ButtonRuleType.SelectIssueType.getName(), issueType.getId()));
+                  String.join(
+                      "-", StateActionRuleType.SelectIssueType.getName(), issueType.getId()));
           MessageFormatter.addRowWithButton(buttons, issueTypeButton);
         });
     return buttons;

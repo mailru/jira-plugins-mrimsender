@@ -4,7 +4,13 @@ package ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes;
 import lombok.Getter;
 
 public enum StateActionRuleType implements RuleType {
-  ShowCreatingIssueProgressMessage("showCreatingIssueProgressMessage");
+  ShowCreatingIssueProgressMessage("showCreatingIssueProgressMessage"),
+  SelectAdditionalField("selectAdditionalField"),
+  SelectIssueType("selectIssueType"),
+  SelectIssueCreationValue("selectIssueCreationValue"),
+  EditIssueCreationValue("editIssueCreationValue"),
+  ConfirmIssueCreation("confirmIssueCreation"),
+  AddAdditionalFields("addAdditionalFields");
 
   @Getter(onMethod_ = {@Override})
   private final String name;

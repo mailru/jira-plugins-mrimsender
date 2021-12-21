@@ -98,6 +98,11 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
+  public BotState getPrevState(String chatId) {
+    return stateManager.getPrevState(chatId);
+  }
+
+  @Override
   public void deleteState(String chatId) {
     stateManager.deleteStates(chatId);
   }
@@ -105,6 +110,16 @@ public class UserChatServiceImpl implements UserChatService {
   @Override
   public void setState(String chatId, BotState state) {
     stateManager.setState(chatId, state);
+  }
+
+  @Override
+  public void setState(String chatId, BotState state, boolean deletePrevious) {
+    stateManager.setState(chatId, state, deletePrevious);
+  }
+
+  @Override
+  public void revertState(String chatId) {
+    stateManager.revertState(chatId);
   }
 
   @Override

@@ -30,10 +30,7 @@ public class IssueKeyInputRule extends BaseRule {
   }
 
   @Action
-  public void execute(
-      @Fact("event") MyteamEvent event,
-      @Fact("state") BotState state,
-      @Fact("args") String issueKey) {
-    rulesEngine.fireCommand(CommandRuleType.Issue, state, event, issueKey);
+  public void execute(@Fact("event") MyteamEvent event, @Fact("args") String issueKey) {
+    rulesEngine.fireCommand(CommandRuleType.Issue, event, issueKey);
   }
 }

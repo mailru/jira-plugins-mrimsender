@@ -12,7 +12,6 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
-import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
 
 @Rule(name = "/assigned", description = "Shows user's active assigned issues")
 public class AssignedIssuesCommandRule extends BaseRule {
@@ -28,12 +27,11 @@ public class AssignedIssuesCommandRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") MyteamEvent event, @Fact("state") BotState state) {
+  public void execute(@Fact("event") MyteamEvent event) {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     if (user != null) {
       rulesEngine.fireCommand(
           CommandRuleType.SearchByJql,
-          state,
           event,
           "assignee = currentUser() AND resolution = Unresolved ORDER BY updated");
     }

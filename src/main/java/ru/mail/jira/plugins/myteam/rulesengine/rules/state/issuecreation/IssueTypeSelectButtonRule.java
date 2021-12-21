@@ -14,7 +14,7 @@ import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
@@ -26,7 +26,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.CreatingIssueState;
 @Rule(name = "select issue type", description = "Selects issue type while creating new issue")
 public class IssueTypeSelectButtonRule extends BaseRule {
 
-  static final ButtonRuleType NAME = ButtonRuleType.SelectIssueType;
+  static final RuleType NAME = StateActionRuleType.SelectIssueType;
   private final IssueService issueService;
 
   public IssueTypeSelectButtonRule(
@@ -53,8 +53,7 @@ public class IssueTypeSelectButtonRule extends BaseRule {
       Locale locale = userChatService.getUserLocale(user);
       try {
         state.setIssueType(issueService.getIssueType(issueTypeId), user);
-        //        state.setFillingFields(true);
-        rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, state, event);
+        rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
       } catch (UnsupportedCustomFieldsException e) {
         log.error(e.getLocalizedMessage());
         userChatService.sendMessageText(

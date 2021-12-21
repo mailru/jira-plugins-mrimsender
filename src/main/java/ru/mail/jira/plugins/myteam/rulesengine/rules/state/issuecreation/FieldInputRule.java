@@ -9,7 +9,7 @@ import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
@@ -32,11 +32,8 @@ public class FieldInputRule extends BaseRule {
   }
 
   @Action
-  public void execute(
-      @Fact("event") ChatMessageEvent event,
-      @Fact("state") CreatingIssueState state,
-      @Fact("args") String value)
+  public void execute(@Fact("event") ChatMessageEvent event, @Fact("args") String value)
       throws MyteamServerErrorException, IOException {
-    rulesEngine.fireCommand(ButtonRuleType.SelectIssueCreationValue, state, event, value);
+    rulesEngine.fireCommand(StateActionRuleType.SelectIssueCreationValue, event, value);
   }
 }
