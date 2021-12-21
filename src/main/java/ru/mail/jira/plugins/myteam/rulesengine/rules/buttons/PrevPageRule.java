@@ -10,8 +10,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
-import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
-import ru.mail.jira.plugins.myteam.rulesengine.states.PageableState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.PageableState;
 
 @Rule(name = "prev page", description = "Update page to previous one")
 public class PrevPageRule extends BaseRule {

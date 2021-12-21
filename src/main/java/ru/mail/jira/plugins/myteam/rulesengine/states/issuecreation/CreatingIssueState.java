@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.states;
+package ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation;
 
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;
@@ -17,6 +17,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueT
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.CancelableState;
 
 @Slf4j
 public class CreatingIssueState extends BotState implements CancelableState {

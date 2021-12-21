@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.states;
+package ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation;
 
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
@@ -16,6 +16,9 @@ import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Pager;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.CancelableState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.PageableState;
 
 @Slf4j
 public class SelectingProjectState extends BotState implements PageableState, CancelableState {

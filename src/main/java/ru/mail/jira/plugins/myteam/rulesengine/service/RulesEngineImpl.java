@@ -19,8 +19,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRu
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment.IssueCommentInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
-import ru.mail.jira.plugins.myteam.rulesengine.states.EmptyState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.EmptyState;
 
 @Component
 public class RulesEngineImpl implements RulesEngine, InitializingBean {

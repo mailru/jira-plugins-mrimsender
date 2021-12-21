@@ -20,8 +20,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleT
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
-import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
-import ru.mail.jira.plugins.myteam.rulesengine.states.CreatingIssueState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.CreatingIssueState;
 
 @Slf4j
 @Rule(name = "confirm issue creation", description = "Creates issue by inserted fields from state")

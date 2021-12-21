@@ -23,7 +23,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.LinkIssueWithChatException;
-import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 
 @Service
 public class UserChatServiceImpl implements UserChatService {

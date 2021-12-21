@@ -15,8 +15,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
-import ru.mail.jira.plugins.myteam.rulesengine.states.CreatingIssueState;
-import ru.mail.jira.plugins.myteam.rulesengine.states.SelectingProjectState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.CreatingIssueState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.SelectingProjectState;
 
 @Rule(name = "create issue", description = "start issue creation")
 public class CreateIssueRule extends BaseRule {

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
-import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 
 @Component
 public class StateManagerImpl implements StateManager {

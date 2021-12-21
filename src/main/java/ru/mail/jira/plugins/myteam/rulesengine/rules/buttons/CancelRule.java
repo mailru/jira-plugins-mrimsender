@@ -12,8 +12,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
-import ru.mail.jira.plugins.myteam.rulesengine.states.BotState;
-import ru.mail.jira.plugins.myteam.rulesengine.states.CancelableState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.CancelableState;
 
 @Rule(name = "cancel", description = "Clear state and send cancel message")
 public class CancelRule extends BaseRule {

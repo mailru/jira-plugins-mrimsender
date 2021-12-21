@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.states;
+package ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation;
 
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;
@@ -24,6 +24,9 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleT
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.CancelableState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.PageableState;
 
 @Slf4j
 public class SelectingIssueAdditionalFieldsState extends BotState
