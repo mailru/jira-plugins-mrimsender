@@ -6,7 +6,6 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import kong.unirest.UnirestException;
@@ -16,15 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
-import ru.mail.jira.plugins.myteam.protocol.ChatState;
-import ru.mail.jira.plugins.myteam.protocol.ChatStateMapping;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.CancelClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.NewIssueFieldValueButtonClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.NewIssueFieldValueUpdateButtonClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.additionalfields.*;
+import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 
 @Slf4j
@@ -33,7 +25,6 @@ public class MyteamEventsListener {
   private static final String THREAD_NAME_PREFIX = "icq-events-listener-thread-pool";
   private static final String CHAT_COMMAND_PREFIX = "/";
 
-  private final ConcurrentHashMap<String, ChatState> chatsStateMap;
   private final ExecutorService executorService =
       Executors.newFixedThreadPool(
           2, new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX).build());
@@ -44,13 +35,9 @@ public class MyteamEventsListener {
 
   @Autowired
   public MyteamEventsListener(
-      ChatStateMapping chatStateMapping,
       MyteamApiClient myteamApiClient,
       ChatCommandListener chatCommandListener,
-      ButtonClickListener buttonClickListener,
-      CreateIssueEventsListener createIssueEventsListener,
       RulesEngine rulesEngine) {
-    this.chatsStateMap = chatStateMapping.getChatsStateMap();
     this.rulesEngine = rulesEngine;
     this.asyncEventBus =
         new AsyncEventBus(
@@ -62,8 +49,6 @@ public class MyteamEventsListener {
                     exception));
     this.asyncEventBus.register(this);
     this.asyncEventBus.register(chatCommandListener);
-    this.asyncEventBus.register(buttonClickListener);
-    this.asyncEventBus.register(createIssueEventsListener);
     this.myteamApiClient = myteamApiClient;
     this.chatCommandListener = chatCommandListener;
   }
@@ -74,32 +59,7 @@ public class MyteamEventsListener {
 
   @Subscribe
   public void handleNewMessageEvent(ChatMessageEvent event) {
-    String chatId = event.getChatId();
-    boolean isGroupChatEvent = event.getChatType() == ChatType.GROUP;
-
-    // if chat is in some state then use our state processing logic
-    if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
-      ChatState chatState = chatsStateMap.remove(chatId);
-      if (chatState.isWaitingForProjectSelect()) {
-        asyncEventBus.post(new SelectedProjectMessageEvent(event, chatState.getIssueCreationDto()));
-        return;
-      }
-      if (chatState.isWaitingForIssueTypeSelect()) {
-        asyncEventBus.post(
-            new SelectedIssueTypeMessageEvent(event, chatState.getIssueCreationDto()));
-        return;
-      }
-      if (chatState.isNewIssueRequiredFieldsFillingState()) {
-        asyncEventBus.post(
-            new NewIssueFieldValueMessageEvent(
-                event, chatState.getIssueCreationDto(), chatState.getCurrentFillingFieldNum()));
-        return;
-      }
-    }
-
-    // if chat isn't in some state then just process new message
     String message = event.getMessage();
-
     if (message != null && message.startsWith(CHAT_COMMAND_PREFIX)) {
       handleCommand(event);
       return;
@@ -120,119 +80,15 @@ public class MyteamEventsListener {
     rulesEngine.fireCommand(command, event, args);
   }
 
-  private void handleButtonClick(ButtonClickEvent event) {
-    String buttonPrefix = StringUtils.substringBefore(event.getCallbackData(), "-");
-    String data = StringUtils.substringAfter(event.getCallbackData(), "-");
-    rulesEngine.fireCommand(buttonPrefix, event, data);
-  }
-
   private void handleStateAction(ChatMessageEvent event) {
     rulesEngine.fireStateAction(event, event.getMessage());
   }
 
   @Subscribe
-  public void handleButtonClickEvent(ButtonClickEvent buttonClickEvent) throws UnirestException {
-    String buttonPrefix = StringUtils.substringBefore(buttonClickEvent.getCallbackData(), "-");
-    String chatId = buttonClickEvent.getChatId();
-    boolean isGroupChatEvent = buttonClickEvent.getChatType() == ChatType.GROUP;
-
-    handleButtonClick(buttonClickEvent);
-
-    // if chat is in some state then use our state processing logic
-    if (!isGroupChatEvent && chatsStateMap.containsKey(chatId)) {
-      ChatState chatState = chatsStateMap.remove(chatId);
-      if (chatState.isWaitingForAdditionalFieldSelect()) {
-        if (buttonPrefix.equals("nextAdditionalFieldListPage")) {
-          asyncEventBus.post(
-              new NextAdditionalFieldPageClickEvent(
-                  buttonClickEvent,
-                  chatState.getCurrentSelectListPage(),
-                  chatState.getIssueCreationDto()));
-          return;
-        }
-        if (buttonPrefix.equals("prevAdditionalFieldListPage")) {
-          asyncEventBus.post(
-              new PrevAdditionalFieldPageClickEvent(
-                  buttonClickEvent,
-                  chatState.getCurrentSelectListPage(),
-                  chatState.getIssueCreationDto()));
-          return;
-        }
-      }
-      //      if (chatState.isWaitingForIssueTypeSelect()) {
-      //        if (buttonPrefix.equals("selectIssueType")) {
-      //          asyncEventBus.post(
-      //              new IssueTypeButtonClickEvent(buttonClickEvent,
-      // chatState.getIssueCreationDto()));
-      //          return;
-      //        }
-      //      }
-      if (chatState.isWaitingForNewIssueButtonFillingState()) {
-        if (buttonPrefix.equals("selectIssueButtonValue")) {
-          asyncEventBus.post(
-              new NewIssueFieldValueButtonClickEvent(
-                  buttonClickEvent,
-                  chatState.getIssueCreationDto(),
-                  chatState.getCurrentFillingFieldNum()));
-          return;
-        }
-      }
-      if (chatState.isWaitingForNewIssueButtonFillingState()) {
-        if (buttonPrefix.equals("updateIssueButtonValue")) {
-          asyncEventBus.post(
-              new NewIssueFieldValueUpdateButtonClickEvent(
-                  buttonClickEvent,
-                  chatState.getIssueCreationDto(),
-                  chatState.getCurrentFillingFieldNum()));
-          return;
-        }
-      }
-      if (chatState.isWaitingForIssueCreationConfirm()) {
-        if (buttonPrefix.equals("addExtraIssueFields")) {
-          asyncEventBus.post(
-              new AddAdditionalIssueFieldClickEvent(
-                  buttonClickEvent, chatState.getIssueCreationDto()));
-          return;
-        }
-        if (buttonPrefix.equals("confirmIssueCreation")) {
-          asyncEventBus.post(
-              new CreateIssueConfirmClickEvent(buttonClickEvent, chatState.getIssueCreationDto()));
-          return;
-        }
-      }
-
-      if (chatState.isWaitingForAdditionalFieldSelect()) {
-        if (buttonPrefix.equals("selectAdditionalField")) {
-          asyncEventBus.post(
-              new SelectAdditionalIssueFieldClickEvent(
-                  buttonClickEvent,
-                  chatState.getIssueCreationDto(),
-                  StringUtils.substringAfter(buttonClickEvent.getCallbackData(), "-")));
-        }
-        if (buttonPrefix.equals("cancel")) {
-          asyncEventBus.post(
-              new CancelAdditionalFieldClickEvent(
-                  buttonClickEvent, chatState.getIssueCreationDto()));
-          return;
-        }
-      }
-      if (chatState.isWaiting() && buttonPrefix.equals("cancel")) {
-        asyncEventBus.post(new CancelClickEvent(buttonClickEvent));
-        return;
-      }
-    }
-
-    // if chat isn't in some state then just process new command
-    //    switch (buttonPrefix) {
-    //      case "createIssue":
-    //        asyncEventBus.post(new CreateIssueClickEvent(buttonClickEvent));
-    //        break;
-    //      default:
-    // fix infinite spinners situations for not recognized button clicks
-    // for example next or prev button click when chat state was cleared
-    //    myteamApiClient.answerCallbackQuery(buttonClickEvent.getQueryId());
-    //        break;
-    //    }
+  public void handleButtonClickEvent(ButtonClickEvent event) throws UnirestException {
+    String buttonPrefix = StringUtils.substringBefore(event.getCallbackData(), "-");
+    String data = StringUtils.substringAfter(event.getCallbackData(), "-");
+    rulesEngine.fireCommand(buttonPrefix, event, data);
   }
 
   @Subscribe

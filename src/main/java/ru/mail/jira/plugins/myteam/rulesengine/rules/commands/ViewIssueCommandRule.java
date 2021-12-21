@@ -22,8 +22,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
-import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.ViewingIssueState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 
 @Slf4j
 @Rule(name = "/issue", description = "View issue by key")

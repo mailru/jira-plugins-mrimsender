@@ -188,7 +188,10 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
                             CreateIssueFieldValueHandler cfConfig =
                                 getFieldValueHandler(e.getKey());
                             return cfConfig.getValueAsArray(
-                                e.getValue(), e.getKey(), localeManager.getLocaleFor(user));
+                                e.getValue(),
+                                e.getKey(),
+                                project,
+                                localeManager.getLocaleFor(user));
                             //                            if
                             // (fieldManager.isCustomFieldId(e.getKey().getId())) {
                             //                              CustomField cf =

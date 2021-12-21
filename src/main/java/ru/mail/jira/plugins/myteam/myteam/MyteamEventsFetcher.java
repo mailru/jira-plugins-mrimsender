@@ -19,7 +19,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
-import ru.mail.jira.plugins.myteam.protocol.events.buttons.ButtonClickEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
 
 @Component

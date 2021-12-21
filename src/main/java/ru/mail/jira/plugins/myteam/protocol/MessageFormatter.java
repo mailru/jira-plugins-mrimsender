@@ -3,9 +3,7 @@ package ru.mail.jira.plugins.myteam.protocol;
 
 import static java.util.stream.Collectors.joining;
 
-import com.atlassian.jira.bc.project.component.ProjectComponentManager;
 import com.atlassian.jira.config.ConstantsManager;
-import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
@@ -16,7 +14,6 @@ import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.event.type.EventType;
 import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.issue.IssueConstant;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.attachment.Attachment;
 import com.atlassian.jira.issue.comments.Comment;
@@ -37,8 +34,6 @@ import com.atlassian.jira.issue.security.IssueSecurityLevel;
 import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectConstant;
-import com.atlassian.jira.project.ProjectManager;
-import com.atlassian.jira.project.version.VersionManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
@@ -89,10 +84,6 @@ public class MessageFormatter {
   private final I18nResolver i18nResolver;
   private final LocaleManager localeManager;
   private final String jiraBaseUrl;
-  private final ProjectManager projectManager;
-  private final IssueTypeManager issueTypeManager;
-  private final ProjectComponentManager projectComponentManager;
-  private final VersionManager versionManager;
   private final UserManager userManager;
   private final AttachmentManager attachmentManager;
 
@@ -108,10 +99,6 @@ public class MessageFormatter {
       @ComponentImport FieldScreenManager fieldScreenManager,
       @ComponentImport I18nResolver i18nResolver,
       @ComponentImport LocaleManager localeManager,
-      @ComponentImport ProjectManager projectManager,
-      @ComponentImport IssueTypeManager issueTypeManager,
-      @ComponentImport ProjectComponentManager projectComponentManager,
-      @ComponentImport VersionManager versionManager,
       @ComponentImport UserManager userManager,
       @ComponentImport AttachmentManager attachmentManager) {
     this.applicationProperties = applicationProperties;
@@ -125,10 +112,6 @@ public class MessageFormatter {
     this.i18nResolver = i18nResolver;
     this.localeManager = localeManager;
     this.jiraBaseUrl = applicationProperties.getString(APKeys.JIRA_BASEURL);
-    this.projectManager = projectManager;
-    this.issueTypeManager = issueTypeManager;
-    this.projectComponentManager = projectComponentManager;
-    this.versionManager = versionManager;
     this.userManager = userManager;
     this.attachmentManager = attachmentManager;
   }
@@ -2233,38 +2216,6 @@ public class MessageFormatter {
     return buttons;
   }
 
-  public String formatIssueCreationDto(Locale locale, IssueCreationDto issueCreationDto) {
-    StringJoiner sj = new StringJoiner("\n");
-
-    sj.add(DELIMITER_STR);
-    sj.add(
-        i18nResolver.getRawText(
-            locale,
-            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.currentIssueCreationDtoState"));
-    sj.add(
-        String.join(
-            " ",
-            i18nResolver.getRawText(locale, "Project:"),
-            projectManager.getProjectObj(issueCreationDto.getProjectId()).getName()));
-    sj.add(
-        String.join(
-            " ",
-            i18nResolver.getRawText(locale, "IssueType:"),
-            issueTypeManager
-                .getIssueType(issueCreationDto.getIssueTypeId())
-                .getNameTranslation(locale.toString())));
-    issueCreationDto
-        .getRequiredIssueCreationFieldValues()
-        .forEach(
-            (field, value) ->
-                sj.add(
-                    String.join(
-                        " : ",
-                        i18nResolver.getRawText(locale, field.getNameKey()),
-                        value.isEmpty() ? "-" : value)));
-    return sj.toString();
-  }
-
   public String stringifyFieldsCollection(Locale locale, Collection<? extends Field> fields) {
     return String.join(
         "\n",
@@ -2273,174 +2224,10 @@ public class MessageFormatter {
             .collect(Collectors.toList()));
   }
 
-  public String createInsertFieldMessage(
-      Locale locale, Field field, IssueCreationDto issueCreationDto) {
-    if (isArrayLikeField(field)) {
-      return String.join(
-          "\n",
-          i18nResolver.getText(
-              locale,
-              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.arrayMessage",
-              i18nResolver.getRawText(locale, field.getNameKey()).toLowerCase(locale)),
-          this.formatIssueCreationDto(locale, issueCreationDto));
-    }
-    return String.join(
-        "\n",
-        i18nResolver.getText(
-            locale,
-            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.message",
-            i18nResolver.getRawText(locale, field.getNameKey()).toLowerCase(locale)),
-        this.formatIssueCreationDto(locale, issueCreationDto));
-  }
-
   public static List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, ButtonRuleType.Cancel.getName()));
     return buttonsRow;
-  }
-
-  private boolean isArrayLikeField(Field field) {
-    switch (field.getId()) {
-      case IssueFieldConstants.FIX_FOR_VERSIONS:
-      case IssueFieldConstants.COMPONENTS:
-      case IssueFieldConstants.AFFECTED_VERSIONS:
-      case IssueFieldConstants.ISSUE_LINKS:
-      case IssueFieldConstants.LABELS:
-      case IssueFieldConstants.VOTES:
-        // never shown on issue creation screen
-      case IssueFieldConstants.WATCHES:
-        return true;
-    }
-    return false;
-  }
-
-  private String[] mapStringToArrayFieldValue(Long projectId, Field field, String fieldValue) {
-    List<String> fieldValues =
-        Arrays.stream(fieldValue.split(",")).map(String::trim).collect(Collectors.toList());
-
-    switch (field.getId()) {
-      case IssueFieldConstants.FIX_FOR_VERSIONS:
-      case IssueFieldConstants.AFFECTED_VERSIONS:
-        return fieldValues.stream()
-            .map(strValue -> versionManager.getVersion(projectId, strValue))
-            .filter(Objects::nonNull)
-            .map(version -> version.getId().toString())
-            .toArray(String[]::new);
-      case IssueFieldConstants.COMPONENTS:
-        return fieldValues.stream()
-            .map(
-                strValue ->
-                    Optional.ofNullable(
-                            projectComponentManager.findByComponentName(projectId, strValue))
-                        .map(projectComponent -> projectComponent.getId().toString())
-                        .orElse(null))
-            .toArray(String[]::new);
-
-      case IssueFieldConstants.ISSUE_LINKS:
-        //                IssueLinksSystemField issueLinksSystemField = (IssueLinksSystemField)
-        // field;
-        // hmmm....  well to parse input strings to IssueLinksSystemField.IssueFieldValue we should
-        // strict user input format
-        break;
-      case IssueFieldConstants.LABELS:
-        // TODO find existing labels via some labelManager or labelSearchers,
-        //  right now label search methods, without issue parameter, don't exist
-        /*return fieldValues.stream()
-        .map(strValue -> labelManager.getSuggestedLabels())
-        .filter(Objects::nonNull)
-        .map(label -> label.getId().toString())
-        .toArray(String[]::new);*/
-        return fieldValues.toArray(new String[0]);
-    }
-    return fieldValues.toArray(new String[0]);
-  }
-
-  private String[] mapStringToSingleFieldValue(Field field, String fieldValue) {
-    // no preprocessing for description field needed
-    if (field.getId().equals(IssueFieldConstants.DESCRIPTION)) return new String[] {fieldValue};
-
-    List<String> fieldValues =
-        Arrays.stream(fieldValue.split(",")).map(String::trim).collect(Collectors.toList());
-
-    // this field list was made based on information of which fields implements
-    // AbstractOrderableField.getRelevantParams method
-    switch (field.getId()) {
-      case IssueFieldConstants.ASSIGNEE:
-        // no additional mapping needed
-        break;
-      case IssueFieldConstants.ATTACHMENT:
-        // not supported right now
-        return new String[0];
-      case IssueFieldConstants.COMMENT:
-        // TODO internally uses some additional map keys for mapping comment level
-        //  and comment editing/creating/removing
-        break;
-      case IssueFieldConstants.DUE_DATE:
-        // no additional mapping needed ???
-        // TODO maybe inserted user input should be mapped additionally to jira internal date format
-        break;
-      case IssueFieldConstants.PRIORITY:
-        if (!fieldValues.isEmpty()) {
-          String priorityStrValue = fieldValues.get(0);
-          String selectedPriorityId =
-              constantsManager.getPriorities().stream()
-                  .filter(
-                      priority ->
-                          priority.getName().equals(priorityStrValue)
-                              || priority.getNameTranslation(i18nHelper).equals(priorityStrValue))
-                  .findFirst()
-                  .map(IssueConstant::getId)
-                  .orElse("");
-          return new String[] {selectedPriorityId};
-        }
-        break;
-      case IssueFieldConstants.REPORTER:
-        // no additional mapping needed
-        break;
-      case IssueFieldConstants.RESOLUTION:
-        if (!fieldValues.isEmpty()) {
-          String resolutionStrValue = fieldValues.get(0);
-          String selectedResolutionId =
-              constantsManager.getResolutions().stream()
-                  .filter(
-                      resolution ->
-                          resolution.getName().equals(resolutionStrValue)
-                              || resolution
-                                  .getNameTranslation(i18nHelper)
-                                  .equals(resolutionStrValue))
-                  .findFirst()
-                  .map(IssueConstant::getId)
-                  .orElse("");
-          return new String[] {selectedResolutionId};
-        }
-        break;
-      case IssueFieldConstants.SECURITY:
-        if (!fieldValues.isEmpty()) {
-          String issueSecurityLevelName = fieldValues.get(0);
-          String selectedResolutionId =
-              issueSecurityLevelManager.getIssueSecurityLevelsByName(issueSecurityLevelName)
-                  .stream()
-                  .findFirst()
-                  .map(securityLevel -> Long.toString(securityLevel.getId()))
-                  .orElse("");
-          return new String[] {selectedResolutionId};
-        }
-        break;
-      case IssueFieldConstants.TIMETRACKING:
-        // TODO internally uses some additional map keys for mapping timetracking
-        break;
-      case IssueFieldConstants.WORKLOG:
-        // TODO should we map this ???
-        break;
-    }
-    return fieldValues.toArray(new String[0]);
-  }
-
-  public String[] mapUserInputStringToFieldValue(Long projectId, Field field, String fieldValue) {
-    if (isArrayLikeField(field)) {
-      return mapStringToArrayFieldValue(projectId, field, fieldValue);
-    }
-    return mapStringToSingleFieldValue(field, fieldValue);
   }
 }

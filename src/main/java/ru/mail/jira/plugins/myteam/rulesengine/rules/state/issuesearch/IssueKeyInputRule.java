@@ -10,8 +10,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
-import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.ViewingIssueState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 
 @Rule(name = "issue key input result", description = "Fired when waiting for issue key on input")
 public class IssueKeyInputRule extends BaseRule {

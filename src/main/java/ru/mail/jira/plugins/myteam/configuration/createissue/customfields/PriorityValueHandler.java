@@ -7,6 +7,7 @@ import com.atlassian.jira.issue.IssueConstant;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.PrioritySystemField;
 import com.atlassian.jira.issue.priority.Priority;
+import com.atlassian.jira.project.Project;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -71,7 +72,7 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(String value, Field field, Locale locale) {
+  public String[] getValueAsArray(String value, Field field, Project project, Locale locale) {
     String selectedPriorityId =
         constantsManager.getPriorities().stream()
             .filter(

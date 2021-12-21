@@ -5,9 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.atlassian.jira.bc.project.component.ProjectComponentManager;
 import com.atlassian.jira.config.ConstantsManager;
-import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.datetime.DateTimeFormatter;
@@ -18,8 +16,6 @@ import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager;
 import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
-import com.atlassian.jira.project.ProjectManager;
-import com.atlassian.jira.project.version.VersionManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
@@ -53,10 +49,11 @@ public class MessageFormatterTest {
     FieldScreenManager fieldScreenManager = Mockito.mock(FieldScreenManager.class);
     I18nResolver i18nResolver = Mockito.mock(I18nResolver.class);
     LocaleManager localeManager = Mockito.mock(LocaleManager.class);
-    ProjectManager projectManager = Mockito.mock(ProjectManager.class);
-    IssueTypeManager issueTypeManager = Mockito.mock(IssueTypeManager.class);
-    ProjectComponentManager projectComponentManager = Mockito.mock(ProjectComponentManager.class);
-    VersionManager versionManager = Mockito.mock(VersionManager.class);
+    //    ProjectManager projectManager = Mockito.mock(ProjectManager.class);
+    //    IssueTypeManager issueTypeManager = Mockito.mock(IssueTypeManager.class);
+    //    ProjectComponentManager projectComponentManager =
+    // Mockito.mock(ProjectComponentManager.class);
+    //    VersionManager versionManager = Mockito.mock(VersionManager.class);
     UserManager userManager = Mockito.mock(UserManager.class);
     AttachmentManager attachmentManager = Mockito.mock(AttachmentManager.class);
     this.messageFormatter =
@@ -71,10 +68,6 @@ public class MessageFormatterTest {
             fieldScreenManager,
             i18nResolver,
             localeManager,
-            projectManager,
-            issueTypeManager,
-            projectComponentManager,
-            versionManager,
             userManager,
             attachmentManager);
     IssueEvent event = Mockito.mock(IssueEvent.class);
