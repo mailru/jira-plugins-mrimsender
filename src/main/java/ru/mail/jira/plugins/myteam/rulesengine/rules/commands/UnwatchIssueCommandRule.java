@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.commands;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.user.ApplicationUser;
@@ -42,33 +43,32 @@ public class UnwatchIssueCommandRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("args") String issueKey)
-      throws MyteamServerErrorException, IOException {
+      throws MyteamServerErrorException, IOException, UserNotFoundException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();
-    if (user != null) {
-      Locale locale = userChatService.getUserLocale(user);
-      try {
-        issueService.unwatchIssue(issueKey, user);
-        userChatService.sendMessageText(
-            chatId,
-            userChatService.getText(
-                locale,
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyUnwatch",
-                messageFormatter.createIssueLink(issueKey)));
-      } catch (IssueWatchingException e) {
-        log.error(e.getLocalizedMessage());
-        userChatService.sendMessageText(
-            chatId,
-            userChatService.getText(
-                locale,
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyUnwatching",
-                messageFormatter.createIssueLink(issueKey)));
-      } catch (IssuePermissionException e) {
-        rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e.getLocalizedMessage());
-      } catch (IssueNotFoundException e) {
-        rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e.getLocalizedMessage());
-      }
+    Locale locale = userChatService.getUserLocale(user);
+    try {
+      issueService.unwatchIssue(issueKey, user);
+      userChatService.sendMessageText(
+          chatId,
+          userChatService.getText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyUnwatch",
+              messageFormatter.createIssueLink(issueKey)));
+    } catch (IssueWatchingException e) {
+      log.error(e.getLocalizedMessage());
+      userChatService.sendMessageText(
+          chatId,
+          userChatService.getText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyUnwatching",
+              messageFormatter.createIssueLink(issueKey)));
+    } catch (IssuePermissionException e) {
+      rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e.getLocalizedMessage());
+    } catch (IssueNotFoundException e) {
+      rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e.getLocalizedMessage());
     }
+
     if (event instanceof ButtonClickEvent) {
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
     }

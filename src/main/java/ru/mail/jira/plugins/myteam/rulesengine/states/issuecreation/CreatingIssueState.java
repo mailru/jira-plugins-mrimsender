@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
@@ -29,8 +30,6 @@ public class CreatingIssueState extends BotState implements CancelableState {
   @Getter private IssueType issueType;
 
   @Getter private Map<Field, String> fieldValues;
-
-  //  @Getter @Setter private boolean isFillingFields = false;
 
   private final UserChatService userChatService;
   private final IssueCreationService issueCreationService;
@@ -139,16 +138,26 @@ public class CreatingIssueState extends BotState implements CancelableState {
   @Override
   public void cancel(MyteamEvent event) {
     userChatService.deleteState(event.getChatId());
+
+    ApplicationUser user;
+    try {
+      user = userChatService.getJiraUserFromUserChatId(event.getChatId());
+    } catch (UserNotFoundException e) {
+      log.error(e.getLocalizedMessage());
+      return;
+    }
+    Locale locale = userChatService.getUserLocale(user);
+
+    String msg =
+        userChatService.getRawText(
+            locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.canceled");
     try {
       if (event instanceof ButtonClickEvent) {
         userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
         userChatService.editMessageText(
-            event.getChatId(),
-            ((ButtonClickEvent) event).getMsgId(),
-            "ISSUE CREATION CANCELED",
-            null);
+            event.getChatId(), ((ButtonClickEvent) event).getMsgId(), msg, null);
       } else {
-        userChatService.sendMessageText(event.getChatId(), "ISSUE CREATION CANCELED");
+        userChatService.sendMessageText(event.getChatId(), msg);
       }
     } catch (MyteamServerErrorException | IOException e) {
       log.error(e.getLocalizedMessage());

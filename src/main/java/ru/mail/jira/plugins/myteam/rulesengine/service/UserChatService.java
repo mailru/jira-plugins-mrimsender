@@ -1,11 +1,11 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.service;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
-import javax.annotation.Nullable;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
@@ -20,8 +20,7 @@ public interface UserChatService {
 
   // Utils
 
-  @Nullable
-  ApplicationUser getJiraUserFromUserChatId(String id);
+  ApplicationUser getJiraUserFromUserChatId(String id) throws UserNotFoundException;
 
   Locale getUserLocale(ApplicationUser user);
 

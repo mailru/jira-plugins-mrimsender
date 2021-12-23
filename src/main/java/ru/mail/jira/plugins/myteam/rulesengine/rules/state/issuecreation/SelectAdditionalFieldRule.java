@@ -51,17 +51,12 @@ public class SelectAdditionalFieldRule extends BaseRule {
       @Fact("prevState") CreatingIssueState prevState,
       @Fact("args") String fieldId)
       throws MyteamServerErrorException, IOException {
-
     userChatService.answerCallbackQuery(event.getQueryId());
-
-    userChatService.deleteState(event.getChatId());
 
     prevState.addField(issueCreationService.getField(fieldId));
 
-    userChatService.setState(event.getChatId(), prevState);
+    userChatService.revertState(event.getChatId());
 
     rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
-    //    userChatService.sendMessageText(
-    //        event.getChatId(), fieldId + issueCreationService.isFieldSupported(fieldId));
   }
 }

@@ -1,7 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.buttons;
 
-import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.crowd.exception.UserNotFoundException;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -29,10 +29,7 @@ public class SearchIssueByJqlInputRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") MyteamEvent event) {
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    if (user != null) {
-      rulesEngine.fireCommand(CommandRuleType.SearchByJql, event);
-    }
+  public void execute(@Fact("event") MyteamEvent event) throws UserNotFoundException {
+    rulesEngine.fireCommand(CommandRuleType.SearchByJql, event);
   }
 }

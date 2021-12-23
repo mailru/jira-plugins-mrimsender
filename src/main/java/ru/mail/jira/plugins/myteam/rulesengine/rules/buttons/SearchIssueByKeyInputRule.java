@@ -1,10 +1,10 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.buttons;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
-import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -18,7 +18,6 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.ViewingIssueState;
 
-@Slf4j
 @Rule(name = "search issue by key input", description = "Shows issue by key input")
 public class SearchIssueByKeyInputRule extends BaseRule {
 
@@ -34,25 +33,22 @@ public class SearchIssueByKeyInputRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") ButtonClickEvent event) {
+  public void execute(@Fact("event") ButtonClickEvent event)
+      throws UserNotFoundException, MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    if (user != null) {
-      Locale locale = userChatService.getUserLocale(user);
-      String message =
-          userChatService.getRawText(
-              locale,
-              "ru.mail.jira.plugins.myteam.messageQueueProcessor.searchButton.insertIssueKey.message");
-      try {
-        userChatService.answerCallbackQuery(event.getQueryId());
-        userChatService.sendMessageText(
-            event.getChatId(), message, messageFormatter.getCancelButton(locale));
+    Locale locale = userChatService.getUserLocale(user);
 
-        ViewingIssueState newState = new ViewingIssueState();
-        newState.setWaiting(true);
-        userChatService.setState(event.getChatId(), newState);
-      } catch (MyteamServerErrorException | IOException e) {
-        log.error(e.getLocalizedMessage());
-      }
-    }
+    String message =
+        userChatService.getRawText(
+            locale,
+            "ru.mail.jira.plugins.myteam.messageQueueProcessor.searchButton.insertIssueKey.message");
+
+    userChatService.answerCallbackQuery(event.getQueryId());
+    userChatService.sendMessageText(
+        event.getChatId(), message, messageFormatter.getCancelButton(locale));
+
+    ViewingIssueState newState = new ViewingIssueState();
+    newState.setWaiting(true);
+    userChatService.setState(event.getChatId(), newState);
   }
 }

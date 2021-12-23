@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.errors;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
@@ -31,19 +32,15 @@ public class IssueNoPermissionErrorRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") MyteamEvent event, @Fact("message") String message) {
+  public void execute(@Fact("event") MyteamEvent event, @Fact("message") String message)
+      throws UserNotFoundException, MyteamServerErrorException, IOException {
     log.error(message);
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    if (user != null) {
-      try {
-        userChatService.sendMessageText(
-            event.getChatId(),
-            userChatService.getRawText(
-                userChatService.getUserLocale(user),
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
-      } catch (MyteamServerErrorException | IOException e) {
-        log.error(e.getLocalizedMessage());
-      }
-    }
+
+    userChatService.sendMessageText(
+        event.getChatId(),
+        userChatService.getRawText(
+            userChatService.getUserLocale(user),
+            "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
   }
 }

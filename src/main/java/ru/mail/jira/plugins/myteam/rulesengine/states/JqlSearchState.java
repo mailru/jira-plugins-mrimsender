@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.rulesengine.states;
 
 import static ru.mail.jira.plugins.myteam.protocol.MessageFormatter.LIST_PAGE_SIZE;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.ParseException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.search.SearchException;
@@ -52,9 +53,20 @@ public class JqlSearchState extends BotState implements PageableState {
 
   @Override
   public void updatePage(MyteamEvent event, boolean editMessage) {
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    Locale locale = userChatService.getUserLocale(user);
+    ApplicationUser user;
     try {
+      user = userChatService.getJiraUserFromUserChatId(event.getUserId());
+    } catch (UserNotFoundException e) {
+      log.error(e.getLocalizedMessage());
+      return;
+    }
+    Locale locale = userChatService.getUserLocale(user);
+
+    try {
+      if (event instanceof ButtonClickEvent) {
+        userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
+      }
+
       SearchResults<Issue> parseResult =
           issueService.SearchByJql(jql, user, page, JQL_SEARCH_PAGE_SIZE);
       if (parseResult.getTotal() == 0) {
@@ -78,21 +90,17 @@ public class JqlSearchState extends BotState implements PageableState {
               event.getChatId(), ((ButtonClickEvent) event).getMsgId(), msg, buttons);
         else userChatService.sendMessageText(event.getChatId(), msg, buttons);
       }
-      if (event instanceof ButtonClickEvent)
-        userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
 
     } catch (SearchException | ParseException e) {
-      if (event instanceof ButtonClickEvent) {
-        try {
-          userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
-          userChatService.sendMessageText(
-              event.getChatId(),
-              userChatService.getRawText(
-                  locale,
-                  "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.jqlParseError.text"));
-        } catch (MyteamServerErrorException | IOException ex) {
-          log.error(e.getLocalizedMessage());
-        }
+
+      try {
+        userChatService.sendMessageText(
+            event.getChatId(),
+            userChatService.getRawText(
+                locale,
+                "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.jqlParseError.text"));
+      } catch (MyteamServerErrorException | IOException ex) {
+        log.error(e.getLocalizedMessage());
       }
     } catch (MyteamServerErrorException | IOException e) {
       log.error(e.getLocalizedMessage());

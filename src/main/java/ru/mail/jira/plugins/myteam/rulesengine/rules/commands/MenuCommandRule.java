@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.commands;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
@@ -31,15 +32,13 @@ public class MenuCommandRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") MyteamEvent event)
-      throws MyteamServerErrorException, IOException {
+      throws MyteamServerErrorException, IOException, UserNotFoundException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    if (user != null) {
-      Locale locale = userChatService.getUserLocale(user);
-      userChatService.sendMessageText(
-          event.getChatId(),
-          userChatService.getRawText(
-              locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
-          messageFormatter.getMenuButtons(user));
-    }
+    Locale locale = userChatService.getUserLocale(user);
+    userChatService.sendMessageText(
+        event.getChatId(),
+        userChatService.getRawText(
+            locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
+        messageFormatter.getMenuButtons(user));
   }
 }

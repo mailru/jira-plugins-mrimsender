@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
@@ -53,40 +54,37 @@ public class ShowIssueCreationProgressRule extends BaseRule {
       @Fact("event") MyteamEvent event,
       @Fact("state") CreatingIssueState state,
       @Fact("args") String messagePrefix)
-      throws MyteamServerErrorException, IOException {
+      throws MyteamServerErrorException, IOException, UserNotFoundException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();
-    if (user != null) {
-      Locale locale = userChatService.getUserLocale(user);
+    Locale locale = userChatService.getUserLocale(user);
 
-      Optional<Field> field = state.getCurrentField();
+    Optional<Field> field = state.getCurrentField();
 
-      if (field.isPresent()) {
-        CreateIssueFieldValueHandler handler =
-            issueCreationService.getFieldValueHandler(field.get());
-        userChatService.sendMessageText(
-            chatId,
-            state.createInsertFieldMessage(
-                locale,
-                messagePrefix == null || messagePrefix.length() == 0
-                    ? handler.getInsertFieldMessage(field.get(), locale)
-                    : messagePrefix),
-            MessageFormatter.buildButtonsWithCancel(
-                handler.getButtons(
-                    field.get(),
-                    state.getFieldValue(field.get()),
-                    userChatService.getUserLocale(user)),
-                userChatService.getRawText(
-                    locale,
-                    "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
-      } else {
-        userChatService.sendMessageText(
-            event.getChatId(),
-            userChatService.getRawText(
-                locale,
-                "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreationConfirmation"),
-            getIssueCreationConfirmButtons(locale));
-      }
+    if (field.isPresent()) {
+      CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field.get());
+      userChatService.sendMessageText(
+          chatId,
+          state.createInsertFieldMessage(
+              locale,
+              messagePrefix == null || messagePrefix.length() == 0
+                  ? handler.getInsertFieldMessage(field.get(), locale)
+                  : messagePrefix),
+          MessageFormatter.buildButtonsWithCancel(
+              handler.getButtons(
+                  field.get(),
+                  state.getFieldValue(field.get()),
+                  userChatService.getUserLocale(user)),
+              userChatService.getRawText(
+                  locale,
+                  "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
+    } else {
+      userChatService.sendMessageText(
+          event.getChatId(),
+          userChatService.getRawText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreationConfirmation"),
+          getIssueCreationConfirmButtons(locale));
     }
   }
 

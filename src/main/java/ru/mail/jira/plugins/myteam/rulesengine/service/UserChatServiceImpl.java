@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.service;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.issue.Issue;
@@ -59,8 +60,10 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
-  public ApplicationUser getJiraUserFromUserChatId(String id) {
-    return userData.getUserByMrimLogin(id);
+  public ApplicationUser getJiraUserFromUserChatId(String id) throws UserNotFoundException {
+    ApplicationUser user = userData.getUserByMrimLogin(id);
+    if (user == null) throw new UserNotFoundException("Unable to get user from myteam chat id");
+    return user;
   }
 
   @Override

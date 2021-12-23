@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
@@ -45,34 +46,33 @@ public class IssueTypeSelectButtonRule extends BaseRule {
       @Fact("event") ButtonClickEvent event,
       @Fact("state") CreatingIssueState state,
       @Fact("args") String issueTypeId)
-      throws MyteamServerErrorException, IOException {
+      throws MyteamServerErrorException, IOException, UserNotFoundException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();
     userChatService.answerCallbackQuery(event.getQueryId());
-    if (user != null) {
-      Locale locale = userChatService.getUserLocale(user);
-      try {
-        state.setIssueType(issueService.getIssueType(issueTypeId), user);
-        rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
-      } catch (UnsupportedCustomFieldsException e) {
-        log.error(e.getLocalizedMessage());
-        userChatService.sendMessageText(
-            chatId,
-            String.join(
-                "\n",
-                userChatService.getRawText(
-                    locale,
-                    "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.requiredCFError"),
-                messageFormatter.stringifyFieldsCollection(locale, e.getRequiredCustomFields())));
 
-      } catch (IncorrectIssueTypeException e) {
-        log.error(e.getLocalizedMessage());
-        userChatService.sendMessageText(
-            chatId,
-            userChatService.getRawText(
-                locale,
-                "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedIssueTypeNotValid"));
-      }
+    Locale locale = userChatService.getUserLocale(user);
+    try {
+      state.setIssueType(issueService.getIssueType(issueTypeId), user);
+      rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
+    } catch (UnsupportedCustomFieldsException e) {
+      log.error(e.getLocalizedMessage());
+      userChatService.sendMessageText(
+          chatId,
+          String.join(
+              "\n",
+              userChatService.getRawText(
+                  locale,
+                  "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.requiredCFError"),
+              messageFormatter.stringifyFieldsCollection(locale, e.getRequiredCustomFields())));
+
+    } catch (IncorrectIssueTypeException e) {
+      log.error(e.getLocalizedMessage());
+      userChatService.sendMessageText(
+          chatId,
+          userChatService.getRawText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedIssueTypeNotValid"));
     }
   }
 }

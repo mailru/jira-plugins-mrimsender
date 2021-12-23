@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.commands;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
@@ -37,9 +38,9 @@ public class LinkIssueWithChatCommandRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("args") String issueKey)
-      throws MyteamServerErrorException, IOException {
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
+      throws MyteamServerErrorException, IOException, UserNotFoundException {
 
+    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     Locale locale = userChatService.getUserLocale(user);
     String chatId = event.getChatId();
     try {

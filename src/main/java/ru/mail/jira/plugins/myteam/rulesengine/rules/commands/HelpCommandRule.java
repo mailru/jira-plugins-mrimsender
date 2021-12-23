@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.commands;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
@@ -33,7 +34,7 @@ public class HelpCommandRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") MyteamEvent event)
-      throws MyteamServerErrorException, IOException {
+      throws MyteamServerErrorException, IOException, UserNotFoundException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
 
     Locale locale = userChatService.getUserLocale(user);

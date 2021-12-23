@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.buttons;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
@@ -35,24 +36,24 @@ public class CommentIssueRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") ButtonClickEvent event, @Fact("args") String issueKey)
-      throws MyteamServerErrorException {
+      throws MyteamServerErrorException, IOException {
     CommentingIssueState newState = new CommentingIssueState(issueKey);
     newState.setWaiting(true);
     try {
       userChatService.setState(event.getChatId(), newState);
-      ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-      if (user != null) {
-        Locale locale = userChatService.getUserLocale(user);
-        String message =
-            userChatService.getText(
-                locale,
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.insertComment.message",
-                issueKey);
+      ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
 
-        userChatService.sendMessageText(
-            event.getChatId(), message, messageFormatter.getCancelButton(locale));
-      }
-    } catch (IOException e) {
+      Locale locale = userChatService.getUserLocale(user);
+      String message =
+          userChatService.getText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.insertComment.message",
+              issueKey);
+
+      userChatService.sendMessageText(
+          event.getChatId(), message, messageFormatter.getCancelButton(locale));
+
+    } catch (UserNotFoundException e) {
       log.error(e.getLocalizedMessage());
     }
     userChatService.answerCallbackQuery(event.getQueryId());

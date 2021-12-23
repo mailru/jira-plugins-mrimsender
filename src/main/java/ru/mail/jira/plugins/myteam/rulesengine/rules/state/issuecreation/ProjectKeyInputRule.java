@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
@@ -59,55 +60,49 @@ public class ProjectKeyInputRule extends BaseRule {
       @Fact("event") MyteamEvent event,
       @Fact("prevState") CreatingIssueState prevState,
       @Fact("args") String projectKey)
-      throws MyteamServerErrorException, IOException {
+      throws MyteamServerErrorException, IOException, UserNotFoundException {
     String chatId = event.getChatId();
-
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(chatId);
-    if (user != null) {
-      Locale locale = userChatService.getUserLocale(user);
+    Locale locale = userChatService.getUserLocale(user);
 
-      try {
+    try {
 
-        Project project = issueService.getProject(projectKey, user);
-        if (project == null) {
-          userChatService.sendMessageText(
-              chatId,
-              userChatService.getRawText(
-                  locale,
-                  "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedProjectNotValid"));
-        } else {
-          prevState.setProject(project);
-          userChatService.revertState(chatId);
-          //          userChatService.deleteState(chatId);
-          //          userChatService.setState(chatId, prevState);
-
-          Collection<IssueType> projectIssueTypes =
-              issueService.getProjectIssueTypes(project, user);
-
-          userChatService.sendMessageText(
-              chatId,
-              getSelectIssueTypeMessage(locale),
-              MessageFormatter.buildButtonsWithCancel(
-                  buildIssueTypesButtons(projectIssueTypes, locale),
-                  userChatService.getRawText(
-                      locale,
-                      "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
-        }
-      } catch (PermissionException e) {
-        log.error(e.getLocalizedMessage());
+      Project project = issueService.getProject(projectKey, user);
+      if (project == null) {
         userChatService.sendMessageText(
             chatId,
             userChatService.getRawText(
                 locale,
-                "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.notEnoughPermissions"));
-      } catch (ProjectBannedException e) {
-        log.error(e.getLocalizedMessage());
+                "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedProjectNotValid"));
+      } else {
+        prevState.setProject(project);
+        userChatService.revertState(chatId);
+
+        Collection<IssueType> projectIssueTypes = issueService.getProjectIssueTypes(project, user);
+
         userChatService.sendMessageText(
             chatId,
-            userChatService.getRawText(
-                locale,
-                "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedProjectIsBanned"));
+            getSelectIssueTypeMessage(locale),
+            MessageFormatter.buildButtonsWithCancel(
+                buildIssueTypesButtons(projectIssueTypes, locale),
+                userChatService.getRawText(
+                    locale,
+                    "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
       }
+    } catch (PermissionException e) {
+      log.error(e.getLocalizedMessage());
+      userChatService.sendMessageText(
+          chatId,
+          userChatService.getRawText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.notEnoughPermissions"));
+    } catch (ProjectBannedException e) {
+      log.error(e.getLocalizedMessage());
+      userChatService.sendMessageText(
+          chatId,
+          userChatService.getRawText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedProjectIsBanned"));
     }
   }
 

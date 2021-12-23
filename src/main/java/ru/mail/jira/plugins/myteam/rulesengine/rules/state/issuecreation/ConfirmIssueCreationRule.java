@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
@@ -46,7 +48,7 @@ public class ConfirmIssueCreationRule extends BaseRule {
   @Action
   public void execute(
       @Fact("event") ButtonClickEvent event, @Fact("state") CreatingIssueState state)
-      throws MyteamServerErrorException, IOException {
+      throws MyteamServerErrorException, IOException, UserNotFoundException {
 
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
     Locale locale = userChatService.getUserLocale(user);
@@ -71,7 +73,7 @@ public class ConfirmIssueCreationRule extends BaseRule {
       log.error(e.getLocalizedMessage());
       userChatService.sendMessageText(
           event.getChatId(),
-          messageFormatter.shieldText(
+          MessageFormatter.shieldText(
               String.join(
                   "\n",
                   userChatService.getRawText(

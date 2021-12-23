@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.states;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.issue.comments.Comment;
@@ -67,50 +68,47 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
 
   @Override
   public void updatePage(MyteamEvent event, boolean editMessage) {
+    try {
+      ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
+      Locale locale = userChatService.getUserLocale(user);
+      List<Comment> totalComments = issueService.getIssueComments(issueKey, user);
 
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    if (user != null) {
-      try {
-        Locale locale = userChatService.getUserLocale(user);
-        List<Comment> totalComments = issueService.getIssueComments(issueKey, user);
+      if (event instanceof ButtonClickEvent)
+        userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
 
-        if (event instanceof ButtonClickEvent)
-          userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
+      if (totalComments == null || totalComments.size() == 0) {
 
-        if (totalComments == null || totalComments.size() == 0) {
+        userChatService.sendMessageText(
+            event.getChatId(),
+            userChatService.getRawText(
+                locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.showComments.empty"));
 
-          userChatService.sendMessageText(
-              event.getChatId(),
-              userChatService.getRawText(
-                  locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.showComments.empty"));
+      } else {
+        pager.setTotal(totalComments.size());
 
-        } else {
-          pager.setTotal(totalComments.size());
+        List<Comment> comments =
+            totalComments.stream()
+                .skip((long) pager.getPage() * pager.getPageSize())
+                .limit(pager.getPageSize())
+                .collect(Collectors.toList());
 
-          List<Comment> comments =
-              totalComments.stream()
-                  .skip((long) pager.getPage() * pager.getPageSize())
-                  .limit(pager.getPageSize())
-                  .collect(Collectors.toList());
+        List<List<InlineKeyboardMarkupButton>> buttons =
+            messageFormatter.getListButtons(locale, pager.hasPrev(), pager.hasNext());
 
-          List<List<InlineKeyboardMarkupButton>> buttons =
-              messageFormatter.getListButtons(locale, pager.hasPrev(), pager.hasNext());
+        String msg =
+            stringifyIssueCommentsList(locale, comments, pager.getPage(), pager.getTotal());
 
-          String msg =
-              stringifyIssueCommentsList(locale, comments, pager.getPage(), pager.getTotal());
-
-          if (event instanceof ButtonClickEvent && editMessage)
-            userChatService.editMessageText(
-                event.getChatId(), ((ButtonClickEvent) event).getMsgId(), msg, buttons);
-          else userChatService.sendMessageText(event.getChatId(), msg, buttons);
-        }
-      } catch (IssuePermissionException e) {
-        rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e.getLocalizedMessage());
-      } catch (IssueNotFoundException e) {
-        rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e.getLocalizedMessage());
-      } catch (MyteamServerErrorException | IOException e) {
-        log.error(e.getLocalizedMessage());
+        if (event instanceof ButtonClickEvent && editMessage)
+          userChatService.editMessageText(
+              event.getChatId(), ((ButtonClickEvent) event).getMsgId(), msg, buttons);
+        else userChatService.sendMessageText(event.getChatId(), msg, buttons);
       }
+    } catch (IssuePermissionException e) {
+      rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e.getLocalizedMessage());
+    } catch (IssueNotFoundException e) {
+      rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e.getLocalizedMessage());
+    } catch (MyteamServerErrorException | IOException | UserNotFoundException e) {
+      log.error(e.getLocalizedMessage());
     }
   }
 

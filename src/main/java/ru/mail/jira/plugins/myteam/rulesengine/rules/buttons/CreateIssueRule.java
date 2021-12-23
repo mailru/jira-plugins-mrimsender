@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.buttons;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
@@ -43,27 +44,27 @@ public class CreateIssueRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") ButtonClickEvent event) throws MyteamServerErrorException {
+  public void execute(@Fact("event") ButtonClickEvent event)
+      throws MyteamServerErrorException, UserNotFoundException {
+    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
+    Locale locale = userChatService.getUserLocale(user);
+
     userChatService.setState(
         event.getChatId(), new CreatingIssueState(userChatService, issueCreationService));
 
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-    if (user != null) {
-      Locale locale = userChatService.getUserLocale(user);
+    SelectingProjectState newState =
+        new SelectingProjectState(
+            issueService,
+            userChatService,
+            userChatService.getRawText(
+                locale,
+                "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"));
+    newState.setWaiting(true);
 
-      SelectingProjectState newState =
-          new SelectingProjectState(
-              issueService,
-              userChatService,
-              userChatService.getRawText(
-                  locale,
-                  "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"));
-      newState.setWaiting(true);
+    newState.updatePage(event, false);
 
-      newState.updatePage(event, false);
+    userChatService.setState(event.getChatId(), newState);
 
-      userChatService.setState(event.getChatId(), newState);
-    }
     userChatService.answerCallbackQuery(event.getQueryId());
   }
 }

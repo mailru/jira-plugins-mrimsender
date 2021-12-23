@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.service;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.List;
@@ -40,29 +41,28 @@ public class DefaultMessageRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") MyteamEvent event)
-      throws MyteamServerErrorException, IOException {
+      throws MyteamServerErrorException, IOException, UserNotFoundException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    if (user != null) {
-      Locale locale = userChatService.getUserLocale(user);
-      String chatId = event.getChatId();
+    Locale locale = userChatService.getUserLocale(user);
 
-      List<Forward> forwards = getForwardList((ChatMessageEvent) event);
+    String chatId = event.getChatId();
 
-      if (forwards != null) {
-        Forward forward = forwards.get(0);
-        String forwardMessageText = forward.getMessage().getText();
-        String issueKey = Utils.findIssueKeyInStr(forwardMessageText);
-        if (fireViewIssueResult(event, issueKey)) return;
-      }
+    List<Forward> forwards = getForwardList((ChatMessageEvent) event);
 
-      String issueKey = Utils.findIssueKeyInStr(((ChatMessageEvent) event).getMessage());
+    if (forwards != null) {
+      Forward forward = forwards.get(0);
+      String forwardMessageText = forward.getMessage().getText();
+      String issueKey = Utils.findIssueKeyInStr(forwardMessageText);
       if (fireViewIssueResult(event, issueKey)) return;
-      userChatService.sendMessageText(
-          chatId,
-          userChatService.getRawText(
-              locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.defaultMessage.text"),
-          messageFormatter.getMenuButtons(user));
     }
+
+    String issueKey = Utils.findIssueKeyInStr(((ChatMessageEvent) event).getMessage());
+    if (fireViewIssueResult(event, issueKey)) return;
+    userChatService.sendMessageText(
+        chatId,
+        userChatService.getRawText(
+            locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.defaultMessage.text"),
+        messageFormatter.getMenuButtons(user));
   }
 
   private boolean fireViewIssueResult(MyteamEvent event, String issueKey) {

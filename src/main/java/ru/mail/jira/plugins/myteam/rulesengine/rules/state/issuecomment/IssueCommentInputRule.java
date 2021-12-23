@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
@@ -41,28 +42,27 @@ public class IssueCommentInputRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") ChatMessageEvent event)
-      throws MyteamServerErrorException, IOException {
+      throws MyteamServerErrorException, IOException, UserNotFoundException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
 
     CommentingIssueState state = (CommentingIssueState) userChatService.getState(event.getChatId());
     String issueKey = state.getIssueKey();
-    if (user != null) {
-      Locale locale = userChatService.getUserLocale(user);
-      try {
-        issueService.commentIssue(issueKey, user, event);
-        userChatService.sendMessageText(
-            event.getChatId(),
-            userChatService.getRawText(
-                locale,
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.commentCreated"));
-      } catch (NoPermissionException e) {
-        userChatService.sendMessageText(
-            event.getChatId(),
-            userChatService.getRawText(
-                locale,
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.noPermissions"));
-      }
-      userChatService.deleteState(event.getChatId());
+
+    Locale locale = userChatService.getUserLocale(user);
+    try {
+      issueService.commentIssue(issueKey, user, event);
+      userChatService.sendMessageText(
+          event.getChatId(),
+          userChatService.getRawText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.commentCreated"));
+    } catch (NoPermissionException e) {
+      userChatService.sendMessageText(
+          event.getChatId(),
+          userChatService.getRawText(
+              locale,
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.noPermissions"));
     }
+    userChatService.deleteState(event.getChatId());
   }
 }

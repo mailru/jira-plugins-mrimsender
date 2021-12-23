@@ -18,6 +18,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment.IssueCommentInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.*;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuesearch.IssueKeyInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.EmptyState;
@@ -87,6 +88,7 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     stateActionsRuleEngine.registerRule(
         new IssueCommentInputRule(userChatService, this, issueService));
     stateActionsRuleEngine.registerRule(new FieldInputRule(userChatService, this));
+    stateActionsRuleEngine.registerRule(new IssueKeyInputRule(userChatService, this));
 
     commandsRuleEngine.registerRule(
         new IssueTypeSelectButtonRule(userChatService, this, issueService));
