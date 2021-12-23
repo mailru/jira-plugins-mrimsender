@@ -8,6 +8,7 @@ import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
@@ -16,7 +17,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.base.PageableState;
 @Rule(name = "next page", description = "Update page to next one")
 public class NextPageRule extends BaseRule {
 
-  static final ButtonRuleType NAME = ButtonRuleType.NextPage;
+  static final RuleType NAME = ButtonRuleType.NextPage;
 
   public NextPageRule(UserChatService userChatService, RulesEngine rulesEngine) {
     super(userChatService, rulesEngine);

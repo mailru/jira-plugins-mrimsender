@@ -13,6 +13,7 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.CommentingIssueState;
@@ -21,7 +22,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.CommentingIssueState;
 @Rule(name = "comment issue", description = "start waiting for comment input")
 public class CommentIssueRule extends BaseRule {
 
-  static final ButtonRuleType NAME = ButtonRuleType.CommentIssue;
+  static final RuleType NAME = ButtonRuleType.CommentIssue;
 
   public CommentIssueRule(UserChatService userChatService, RulesEngine rulesEngine) {
     super(userChatService, rulesEngine);

@@ -16,6 +16,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.LinkIssueWithChatException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
@@ -23,7 +24,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 @Rule(name = "/link", description = "Link issue with chats")
 public class LinkIssueWithChatCommandRule extends BaseRule {
 
-  static final CommandRuleType NAME = CommandRuleType.LinkIssueWithChat;
+  static final RuleType NAME = CommandRuleType.LinkIssueWithChat;
 
   public LinkIssueWithChatCommandRule(UserChatService userChatService, RulesEngine rulesEngine) {
     super(userChatService, rulesEngine);

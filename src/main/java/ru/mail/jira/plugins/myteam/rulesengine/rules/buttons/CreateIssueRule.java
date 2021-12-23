@@ -11,6 +11,7 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
@@ -21,7 +22,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.SelectingPro
 @Rule(name = "create issue", description = "start issue creation")
 public class CreateIssueRule extends BaseRule {
 
-  static final ButtonRuleType NAME = ButtonRuleType.CreateIssue;
+  static final RuleType NAME = ButtonRuleType.CreateIssue;
 
   private final IssueService issueService;
   private final IssueCreationService issueCreationService;

@@ -9,6 +9,7 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
@@ -17,7 +18,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.ViewingIssueCommentsState;
 @Rule(name = "view issue comments", description = "View issue comments by issue key")
 public class ViewCommentsRule extends BaseRule {
 
-  static final ButtonRuleType NAME = ButtonRuleType.ViewComments;
+  static final RuleType NAME = ButtonRuleType.ViewComments;
   private final IssueService issueService;
 
   public ViewCommentsRule(

@@ -10,13 +10,14 @@ import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Rule(name = "search by input jql", description = "Shows issues by JQL input")
 public class SearchIssueByJqlInputRule extends BaseRule {
 
-  static final ButtonRuleType NAME = ButtonRuleType.SearchIssueByJqlInput;
+  static final RuleType NAME = ButtonRuleType.SearchIssueByJqlInput;
 
   public SearchIssueByJqlInputRule(UserChatService userChatService, RulesEngine rulesEngine) {
     super(userChatService, rulesEngine);
