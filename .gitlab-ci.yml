@@ -1,4 +1,4 @@
 include:
   project: 'ATL-TEAM/gitlab'
-  ref: master
+  ref: '8.20.2'
   file: '/ci/templates/Plugin.gitlab-ci.yml'

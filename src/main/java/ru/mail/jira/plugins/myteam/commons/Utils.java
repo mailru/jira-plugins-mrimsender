@@ -20,7 +20,7 @@ import ru.mail.jira.plugins.commons.HttpClient;
 public class Utils {
 
   private static final Pattern pattern =
-      Pattern.compile("[\\w\\d]+-[\\d]+", Pattern.CASE_INSENSITIVE);
+      Pattern.compile("[A-Z][A-Z\\d]+-[\\d]+", Pattern.CASE_INSENSITIVE);
 
   /**
    * Finding URL in string

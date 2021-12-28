@@ -251,11 +251,9 @@ public class ChatCreationRestService {
                 })
             .collect(Collectors.toList());
     // localhost tests stubbing
-    /* return Response.ok(
-        ChatMetaDto.buildChatInfo(
-            new GroupChatInfo(
-                "title", "about", "rules", "http:/myteam/inite/link", false, false)))
-    .build();*/
+    /*return ChatMetaDto.buildChatInfo(
+    new GroupChatInfo("title", "about", "rules", "http:/myteam/inite/link", false, false),
+    chatMemberDtos);*/
     try {
       Locale recipientLocale = localeManager.getLocaleFor(loggedInUser);
       HttpResponse<CreateChatResponse> createChatResponse =
