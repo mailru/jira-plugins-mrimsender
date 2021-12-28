@@ -3,11 +3,12 @@ package ru.mail.jira.plugins.myteam.rulesengine.service;
 
 import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
+import org.jeasy.rules.api.RulesEngineParameters;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.core.MyteamRulesEngine;
+import ru.mail.jira.plugins.myteam.rulesengine.core.MyRulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.*;
@@ -26,9 +27,9 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.base.EmptyState;
 @Component
 public class RulesEngineImpl implements RulesEngine, InitializingBean {
 
-  private final MyteamRulesEngine commandsRuleEngine;
-  private final MyteamRulesEngine errorsRuleEngine;
-  private final MyteamRulesEngine stateActionsRuleEngine;
+  private final MyRulesEngine commandsRuleEngine;
+  private final MyRulesEngine errorsRuleEngine;
+  private final MyRulesEngine stateActionsRuleEngine;
 
   private final IssueCreationService issueCreationService;
   private final UserChatService userChatService;
@@ -41,9 +42,13 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
     this.issueService = issueService;
-    this.commandsRuleEngine = new MyteamRulesEngine();
-    this.errorsRuleEngine = new MyteamRulesEngine();
-    this.stateActionsRuleEngine = new MyteamRulesEngine();
+
+    RulesEngineParameters engineParams =
+        new RulesEngineParameters(
+            true, false, false, RulesEngineParameters.DEFAULT_RULE_PRIORITY_THRESHOLD);
+    this.commandsRuleEngine = new MyRulesEngine(engineParams);
+    this.errorsRuleEngine = new MyRulesEngine(engineParams);
+    this.stateActionsRuleEngine = new MyRulesEngine(engineParams);
   }
 
   @Override

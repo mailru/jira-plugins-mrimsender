@@ -16,8 +16,8 @@ public class Pager {
   }
 
   public void nextPage() {
+    if (total / page < page) return;
     page++;
-    //    if (total / perPage < page) return;
   }
 
   public void prevPage() {
