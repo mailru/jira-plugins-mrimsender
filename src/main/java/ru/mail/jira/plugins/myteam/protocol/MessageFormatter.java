@@ -3,9 +3,7 @@ package ru.mail.jira.plugins.myteam.protocol;
 
 import static java.util.stream.Collectors.joining;
 
-import com.atlassian.jira.bc.project.component.ProjectComponentManager;
 import com.atlassian.jira.config.ConstantsManager;
-import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
@@ -16,10 +14,8 @@ import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.event.type.EventType;
 import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.issue.IssueConstant;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.attachment.Attachment;
-import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
@@ -28,26 +24,20 @@ import com.atlassian.jira.issue.fields.screen.FieldScreen;
 import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager;
-import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.label.Label;
 import com.atlassian.jira.issue.operation.IssueOperations;
 import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.jira.issue.resolution.Resolution;
 import com.atlassian.jira.issue.security.IssueSecurityLevel;
 import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
-import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectConstant;
-import com.atlassian.jira.project.ProjectManager;
-import com.atlassian.jira.project.version.VersionManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
-import com.atlassian.jira.util.MessageSet;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -64,15 +54,14 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.*;
 import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 
 @Slf4j
 @Component
 public class MessageFormatter {
   public static final int LIST_PAGE_SIZE = 15;
   public static final int COMMENT_LIST_PAGE_SIZE = 10;
-  public static final int ADDITIONAL_FIELD_LIST_PAGE_SIZE = 30;
-  public static final int ADDITIONAL_FIELD_ONE_COLUMN_MAX_COUNT = 5;
-  public static final int ADDITIONAL_FIELD_TWO_COLUMN_MAX_COUNT = 15;
   public static final String DELIMITER_STR = "----------";
 
   private final ApplicationProperties applicationProperties;
@@ -86,10 +75,6 @@ public class MessageFormatter {
   private final I18nResolver i18nResolver;
   private final LocaleManager localeManager;
   private final String jiraBaseUrl;
-  private final ProjectManager projectManager;
-  private final IssueTypeManager issueTypeManager;
-  private final ProjectComponentManager projectComponentManager;
-  private final VersionManager versionManager;
   private final UserManager userManager;
   private final AttachmentManager attachmentManager;
 
@@ -105,10 +90,6 @@ public class MessageFormatter {
       @ComponentImport FieldScreenManager fieldScreenManager,
       @ComponentImport I18nResolver i18nResolver,
       @ComponentImport LocaleManager localeManager,
-      @ComponentImport ProjectManager projectManager,
-      @ComponentImport IssueTypeManager issueTypeManager,
-      @ComponentImport ProjectComponentManager projectComponentManager,
-      @ComponentImport VersionManager versionManager,
       @ComponentImport UserManager userManager,
       @ComponentImport AttachmentManager attachmentManager) {
     this.applicationProperties = applicationProperties;
@@ -122,10 +103,6 @@ public class MessageFormatter {
     this.i18nResolver = i18nResolver;
     this.localeManager = localeManager;
     this.jiraBaseUrl = applicationProperties.getString(APKeys.JIRA_BASEURL);
-    this.projectManager = projectManager;
-    this.issueTypeManager = issueTypeManager;
-    this.projectComponentManager = projectComponentManager;
-    this.versionManager = versionManager;
     this.userManager = userManager;
     this.attachmentManager = attachmentManager;
   }
@@ -498,72 +475,6 @@ public class MessageFormatter {
     return inputText;
   }
 
-  public String shieldText(String inputDescription) {
-    if (inputDescription == null) {
-      return null;
-    }
-    StringBuilder result = new StringBuilder();
-    char[] arrayFromInput = inputDescription.toCharArray();
-    for (char c : arrayFromInput) {
-      switch (c) {
-        case '*':
-          result.append("\\*");
-          break;
-        case '_':
-          result.append("\\_");
-          break;
-        case '~':
-          result.append("\\~");
-          break;
-        case '`':
-          result.append("\\`");
-          break;
-        case '-':
-          result.append("\\-");
-          break;
-        case '>':
-          result.append("\\>");
-          break;
-        case '\\':
-          result.append("\\\\");
-          break;
-        case '{':
-          result.append("\\{");
-          break;
-        case '}':
-          result.append("\\}");
-          break;
-        case '[':
-          result.append("\\[");
-          break;
-        case ']':
-          result.append("\\]");
-          break;
-        case '(':
-          result.append("\\(");
-          break;
-        case ')':
-          result.append("\\)");
-          break;
-        case '#':
-          result.append("\\#");
-          break;
-        case '+':
-          result.append("\\+");
-          break;
-        case '.':
-          result.append("\\.");
-          break;
-        case '!':
-          result.append("\\!");
-          break;
-        default:
-          result.append(c);
-      }
-    }
-    return result.toString();
-  }
-
   private String formatChangeLog(
       GenericValue changeLog,
       boolean ignoreAssigneeField,
@@ -643,12 +554,13 @@ public class MessageFormatter {
     return sb.toString();
   }
 
-  public String createIssueLink(Issue issue) {
+  public String createIssueLink(String issueKey) {
     return String.format(
-        "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey());
+        "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
 
-  public String formatBitbucketEvent(ApplicationUser recipient, BitbucketEventDto bitbucketEvent)
+  public String formatBitbucketEvent(
+      ApplicationUser recipient, BitbucketEventDto bitbucketEvent) // TODO move to separate service
       throws UnsupportedEncodingException {
     StringBuilder sb = new StringBuilder();
     boolean useMentionFormat = true;
@@ -1524,7 +1436,7 @@ public class MessageFormatter {
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
     Issue issue = issueEvent.getIssue();
     ApplicationUser user = issueEvent.getUser();
-    String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue));
+    String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue.getKey()));
     Locale recipientLocale = localeManager.getLocaleFor(recipient);
     StringBuilder sb = new StringBuilder();
 
@@ -1748,40 +1660,6 @@ public class MessageFormatter {
     return sb.toString();
   }
 
-  public List<List<InlineKeyboardMarkupButton>> getAllIssueButtons(
-      String issueKey, ApplicationUser recipient) {
-    Locale recipientLocale = localeManager.getLocaleFor(recipient);
-
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-    buttons.add(buttonsRow);
-
-    InlineKeyboardMarkupButton issueInfo = new InlineKeyboardMarkupButton();
-    issueInfo.setText(
-        i18nResolver.getRawText(
-            recipientLocale,
-            "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.text"));
-    issueInfo.setCallbackData(String.join("-", "view", issueKey));
-    buttonsRow.add(issueInfo);
-
-    InlineKeyboardMarkupButton comment = new InlineKeyboardMarkupButton();
-    comment.setText(
-        i18nResolver.getRawText(
-            recipientLocale,
-            "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"));
-    comment.setCallbackData(String.join("-", "comment", issueKey));
-    buttonsRow.add(comment);
-
-    InlineKeyboardMarkupButton showMenuButton =
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                recipientLocale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
-            "showMenu");
-    addRowWithButton(buttons, showMenuButton);
-
-    return buttons;
-  }
-
   public List<List<InlineKeyboardMarkupButton>> getIssueButtons(
       String issueKey, ApplicationUser recipient, boolean isWatching) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
@@ -1793,14 +1671,14 @@ public class MessageFormatter {
             i18nResolver.getText(
                 localeManager.getLocaleFor(recipient),
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"),
-            String.join("-", "comment", issueKey)));
+            String.join("-", ButtonRuleType.CommentIssue.getName(), issueKey)));
 
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getText(
                 localeManager.getLocaleFor(recipient),
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"),
-            String.join("-", "showComments", issueKey)));
+            String.join("-", ButtonRuleType.ViewComments.getName(), issueKey)));
 
     ArrayList<InlineKeyboardMarkupButton> watchButtonRow = new ArrayList<>();
 
@@ -1811,37 +1689,16 @@ public class MessageFormatter {
                 isWatching
                     ? "ru.mail.jira.plugins.myteam.mrimsenderEventListener.unwatchButton.text"
                     : "ru.mail.jira.plugins.myteam.mrimsenderEventListener.watchButton.text"),
-            String.join("-", isWatching ? "unwatch" : "watch", issueKey)));
+            String.join(
+                "-",
+                isWatching
+                    ? CommandRuleType.UnwatchIssue.getName()
+                    : CommandRuleType.WatchIssue.getName(),
+                issueKey)));
 
     buttons.add(watchButtonRow);
 
     return buttons;
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> getIssueCreationConfirmButtons(
-      ApplicationUser recipient) {
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-    buttons.add(buttonsRow);
-
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                localeManager.getLocaleFor(recipient),
-                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.issueCreationConfirmButton.text"),
-            "confirmIssueCreation"));
-
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                localeManager.getLocaleFor(recipient),
-                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.issueAddExtraFieldsButton.text"),
-            "addExtraIssueFields"));
-    return buildButtonsWithCancel(
-        buttons,
-        i18nResolver.getText(
-            localeManager.getLocaleFor(recipient),
-            "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text"));
   }
 
   public List<List<InlineKeyboardMarkupButton>> getCancelButton(Locale locale) {
@@ -1855,13 +1712,6 @@ public class MessageFormatter {
     return buttons;
   }
 
-  public static void addRowWithButton(
-      List<List<InlineKeyboardMarkupButton>> buttons, InlineKeyboardMarkupButton button) {
-    List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
-    newButtonsRow.add(button);
-    buttons.add(newButtonsRow);
-  }
-
   public List<List<InlineKeyboardMarkupButton>> getMenuButtons(ApplicationUser currentUser) {
     Locale locale = localeManager.getLocaleFor(currentUser);
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
@@ -1872,7 +1722,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.showIssueButton.text"),
-            "showIssue");
+            ButtonRuleType.SearchIssueByKeyInput.getName());
     addRowWithButton(buttons, showIssueButton);
 
     // create 'Active issues assigned to me' button
@@ -1881,7 +1731,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.activeIssuesAssignedToMeButton.text"),
-            "activeIssuesAssigned");
+            CommandRuleType.AssignedIssues.getName());
     addRowWithButton(buttons, activeAssignedIssuesButton);
 
     // create 'Active issues i watching' button
@@ -1890,7 +1740,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.activeIssuesWatchingByMeButton.text"),
-            "activeIssuesWatching");
+            CommandRuleType.WatchingIssues.getName());
     addRowWithButton(buttons, activeWatchingIssuesButton);
 
     // create 'Active issues crated by me' button
@@ -1899,7 +1749,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.activeIssuesCreatedByMeButton.text"),
-            "activeIssuesCreated");
+            CommandRuleType.CreatedIssues.getName());
     addRowWithButton(buttons, activeCreatedIssuesButton);
 
     // create 'Search issue by JQL' button
@@ -1908,7 +1758,7 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.searchIssueByJqlButton.text"),
-            "searchByJql");
+            ButtonRuleType.SearchIssueByJqlInput.getName());
     addRowWithButton(buttons, searchIssueByJqlButton);
 
     // create 'create issue' button
@@ -1917,17 +1767,13 @@ public class MessageFormatter {
             i18nResolver.getRawText(
                 locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.createIssueButton.text"),
-            "createIssue");
+            ButtonRuleType.CreateIssue.getName());
     addRowWithButton(buttons, createIssueButton);
     return buttons;
   }
 
-  private List<List<InlineKeyboardMarkupButton>> getListButtons(
-      Locale locale,
-      boolean withPrev,
-      boolean withNext,
-      String prevButtonData,
-      String nextButtonData) {
+  public List<List<InlineKeyboardMarkupButton>> getListButtons(
+      Locale locale, boolean withPrev, boolean withNext) {
     if (!withPrev && !withNext) return null;
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
     List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>();
@@ -1937,7 +1783,7 @@ public class MessageFormatter {
               i18nResolver.getRawText(
                   locale,
                   "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.prevPageButton.text"),
-              prevButtonData));
+              ButtonRuleType.PrevPage.getName()));
     }
     if (withNext) {
       newButtonsRow.add(
@@ -1945,30 +1791,10 @@ public class MessageFormatter {
               i18nResolver.getRawText(
                   locale,
                   "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.nextPageButton.text"),
-              nextButtonData));
+              ButtonRuleType.NextPage.getName()));
     }
     buttons.add(newButtonsRow);
     return buttons;
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> getIssueListButtons(
-      Locale locale, boolean withPrev, boolean withNext) {
-    return getListButtons(locale, withPrev, withNext, "prevIssueListPage", "nextIssueListPage");
-  }
-
-  public String stringifyMap(Map<?, ?> map) {
-    if (map == null) return "";
-    return map.entrySet().stream()
-        .map((entry) -> String.join(" : ", entry.getKey().toString(), entry.getValue().toString()))
-        .collect(joining("\n"));
-  }
-
-  public String stringifyCollection(Locale locale, Collection<?> collection) {
-    StringJoiner sj = new StringJoiner("\n");
-
-    // stringify collection
-    collection.forEach(obj -> sj.add(obj.toString()));
-    return sj.toString();
   }
 
   public String stringifyPagedCollection(
@@ -2006,196 +1832,13 @@ public class MessageFormatter {
         issueList.stream()
             .map(
                 issue ->
-                    markdownTextLink(issue.getKey(), createIssueLink(issue))
+                    markdownTextLink(issue.getKey(), createIssueLink(issue.getKey()))
                         + ' '
                         + issue.getSummary())
             .collect(Collectors.toList()),
         pageNumber,
         total,
         LIST_PAGE_SIZE);
-  }
-
-  public String stringifyIssueCommentsList(
-      Locale locale, List<Comment> commentList, int pageNumber, int total) {
-    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-    return stringifyPagedCollection(
-        locale,
-        commentList.stream()
-            .map(
-                comment ->
-                    String.join(
-                        "",
-                        "\\[",
-                        dateFormatter.format(comment.getCreated()),
-                        "\\] ",
-                        "\\[",
-                        comment.getAuthorFullName(),
-                        "\\] ",
-                        shieldText(comment.getBody())))
-            .collect(Collectors.toList()),
-        pageNumber,
-        total,
-        COMMENT_LIST_PAGE_SIZE);
-  }
-
-  public String stringifyJqlClauseErrorsMap(MessageSet messageSet, Locale locale) {
-    StringJoiner joiner = new StringJoiner("\n");
-    String errorsTitle = i18nResolver.getRawText(locale, "common.words.errors") + ":";
-    joiner.add(errorsTitle);
-    messageSet.getErrorMessages().forEach(joiner::add);
-    return joiner.toString();
-  }
-
-  public String createSelectProjectMessage(
-      Locale locale, List<Project> visibleProjects, int pageNumber, int totalProjectsNum) {
-    StringJoiner sj = new StringJoiner("\n");
-    sj.add(
-        i18nResolver.getRawText(
-            locale,
-            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"));
-    sj.add(DELIMITER_STR);
-    List<String> formattedProjectList =
-        visibleProjects.stream()
-            .map(proj -> String.join("", "[", proj.getKey(), "] ", proj.getName()))
-            .collect(Collectors.toList());
-    sj.add(
-        stringifyPagedCollection(
-            locale, formattedProjectList, pageNumber, totalProjectsNum, LIST_PAGE_SIZE));
-    return sj.toString();
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> getSelectProjectMessageButtons(
-      Locale locale, boolean withPrev, boolean withNext) {
-    return getListButtons(locale, withPrev, withNext, "prevProjectListPage", "nextProjectListPage");
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> getSelectAdditionalFieldMessageButtons(
-      Locale locale, boolean withPrev, boolean withNext, List<Field> fields) {
-    List<List<InlineKeyboardMarkupButton>> buttons =
-        getListButtons(
-            locale,
-            withPrev,
-            withNext,
-            "prevAdditionalFieldListPage",
-            "nextAdditionalFieldListPage");
-
-    int colCount =
-        fields.size() <= ADDITIONAL_FIELD_ONE_COLUMN_MAX_COUNT
-            ? 1
-            : (fields.size() <= ADDITIONAL_FIELD_TWO_COLUMN_MAX_COUNT ? 2 : 3);
-
-    List<List<InlineKeyboardMarkupButton>> fieldButtons = new ArrayList<>();
-    List<InlineKeyboardMarkupButton> fieldButtonRow = new ArrayList<>();
-
-    int i = 0;
-    while (i < fields.size()) {
-      Field field = fields.get(i);
-      fieldButtonRow.add(
-          InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-              field.getName(), String.join("-", "selectAdditionalField", field.getId())));
-
-      if (i % colCount == 0) {
-        fieldButtons.add(fieldButtonRow);
-        fieldButtonRow = new ArrayList<>();
-      }
-      i++;
-    }
-
-    String cancelTitle =
-        i18nResolver.getRawText(
-            locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text");
-
-    if (buttons == null || buttons.size() == 0) { // if no pager buttons
-      fieldButtons.add(getCancelButtonRow(cancelTitle));
-      return fieldButtons;
-    } else {
-      buttons.get(0).add(InlineKeyboardMarkupButton.buildButtonWithoutUrl(cancelTitle, "cancel"));
-      buttons.addAll(0, fieldButtons);
-    }
-
-    return buttons;
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> getViewCommentsButtons(
-      Locale locale, boolean withPrev, boolean withNext) {
-    return getListButtons(
-        locale, withPrev, withNext, "prevIssueCommentsListPage", "nextIssueCommentsListPage");
-  }
-
-  public String getSelectIssueTypeMessage(Locale locale) {
-    return i18nResolver.getRawText(
-        locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectIssueType.message");
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> buildIssueTypesButtons(
-      Collection<IssueType> issueTypes) {
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    issueTypes.forEach(
-        issueType -> {
-          InlineKeyboardMarkupButton issueTypeButton =
-              InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-                  issueType.getNameTranslation(i18nHelper),
-                  String.join("-", "selectIssueType", issueType.getId()));
-          addRowWithButton(buttons, issueTypeButton);
-        });
-    return buttons;
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> buildPrioritiesButtons(
-      Collection<Priority> priorities) {
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    priorities.forEach(
-        priority -> {
-          InlineKeyboardMarkupButton issueTypeButton =
-              InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-                  priority.getNameTranslation(i18nHelper),
-                  String.join("-", "selectIssueButtonValue", priority.getName()));
-          addRowWithButton(buttons, issueTypeButton);
-        });
-    return buttons;
-  }
-
-  public List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(
-      List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
-    if (buttons == null) {
-      List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
-      newButtons.add(getCancelButtonRow(cancelButtonText));
-      return newButtons;
-    }
-    buttons.add(getCancelButtonRow(cancelButtonText));
-    return buttons;
-  }
-
-  public String formatIssueCreationDto(Locale locale, IssueCreationDto issueCreationDto) {
-    StringJoiner sj = new StringJoiner("\n");
-
-    sj.add(DELIMITER_STR);
-    sj.add(
-        i18nResolver.getRawText(
-            locale,
-            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.currentIssueCreationDtoState"));
-    sj.add(
-        String.join(
-            " ",
-            i18nResolver.getRawText(locale, "Project:"),
-            projectManager.getProjectObj(issueCreationDto.getProjectId()).getName()));
-    sj.add(
-        String.join(
-            " ",
-            i18nResolver.getRawText(locale, "IssueType:"),
-            issueTypeManager
-                .getIssueType(issueCreationDto.getIssueTypeId())
-                .getNameTranslation(locale.toString())));
-    issueCreationDto
-        .getRequiredIssueCreationFieldValues()
-        .forEach(
-            (field, value) ->
-                sj.add(
-                    String.join(
-                        " : ",
-                        i18nResolver.getRawText(locale, field.getNameKey()),
-                        value.isEmpty() ? "-" : value)));
-    return sj.toString();
   }
 
   public String stringifyFieldsCollection(Locale locale, Collection<? extends Field> fields) {
@@ -2206,173 +1849,94 @@ public class MessageFormatter {
             .collect(Collectors.toList()));
   }
 
-  public String createInsertFieldMessage(
-      Locale locale, Field field, IssueCreationDto issueCreationDto) {
-    if (isArrayLikeField(field)) {
-      return String.join(
-          "\n",
-          i18nResolver.getText(
-              locale,
-              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.arrayMessage",
-              i18nResolver.getRawText(locale, field.getNameKey()).toLowerCase(locale)),
-          this.formatIssueCreationDto(locale, issueCreationDto));
-    }
-    return String.join(
-        "\n",
-        i18nResolver.getText(
-            locale,
-            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.message",
-            i18nResolver.getRawText(locale, field.getNameKey()).toLowerCase(locale)),
-        this.formatIssueCreationDto(locale, issueCreationDto));
+  public static void addRowWithButton(
+      List<List<InlineKeyboardMarkupButton>> buttons, InlineKeyboardMarkupButton button) {
+    List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
+    newButtonsRow.add(button);
+    buttons.add(newButtonsRow);
   }
 
-  private List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
+  public static List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-    buttonsRow.add(InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, "cancel"));
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, ButtonRuleType.Cancel.getName()));
     return buttonsRow;
   }
 
-  private boolean isArrayLikeField(Field field) {
-    switch (field.getId()) {
-      case IssueFieldConstants.FIX_FOR_VERSIONS:
-      case IssueFieldConstants.COMPONENTS:
-      case IssueFieldConstants.AFFECTED_VERSIONS:
-      case IssueFieldConstants.ISSUE_LINKS:
-      case IssueFieldConstants.LABELS:
-      case IssueFieldConstants.VOTES:
-        // never shown on issue creation screen
-      case IssueFieldConstants.WATCHES:
-        return true;
+  public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(
+      List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
+    if (buttons == null) {
+      List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
+      newButtons.add(getCancelButtonRow(cancelButtonText));
+      return newButtons;
     }
-    return false;
+    buttons.add(getCancelButtonRow(cancelButtonText));
+    return buttons;
   }
 
-  private String[] mapStringToArrayFieldValue(Long projectId, Field field, String fieldValue) {
-    List<String> fieldValues =
-        Arrays.stream(fieldValue.split(",")).map(String::trim).collect(Collectors.toList());
-
-    switch (field.getId()) {
-      case IssueFieldConstants.FIX_FOR_VERSIONS:
-      case IssueFieldConstants.AFFECTED_VERSIONS:
-        return fieldValues.stream()
-            .map(strValue -> versionManager.getVersion(projectId, strValue))
-            .filter(Objects::nonNull)
-            .map(version -> version.getId().toString())
-            .toArray(String[]::new);
-      case IssueFieldConstants.COMPONENTS:
-        return fieldValues.stream()
-            .map(
-                strValue ->
-                    Optional.ofNullable(
-                            projectComponentManager.findByComponentName(projectId, strValue))
-                        .map(projectComponent -> projectComponent.getId().toString())
-                        .orElse(null))
-            .toArray(String[]::new);
-
-      case IssueFieldConstants.ISSUE_LINKS:
-        //                IssueLinksSystemField issueLinksSystemField = (IssueLinksSystemField)
-        // field;
-        // hmmm....  well to parse input strings to IssueLinksSystemField.IssueFieldValue we should
-        // strict user input format
-        break;
-      case IssueFieldConstants.LABELS:
-        // TODO find existing labels via some labelManager or labelSearchers,
-        //  right now label search methods, without issue parameter, don't exist
-        /*return fieldValues.stream()
-        .map(strValue -> labelManager.getSuggestedLabels())
-        .filter(Objects::nonNull)
-        .map(label -> label.getId().toString())
-        .toArray(String[]::new);*/
-        return fieldValues.toArray(new String[0]);
+  public static String shieldText(String inputDescription) {
+    if (inputDescription == null) {
+      return null;
     }
-    return fieldValues.toArray(new String[0]);
-  }
-
-  private String[] mapStringToSingleFieldValue(Field field, String fieldValue) {
-    // no preprocessing for description field needed
-    if (field.getId().equals(IssueFieldConstants.DESCRIPTION)) return new String[] {fieldValue};
-
-    List<String> fieldValues =
-        Arrays.stream(fieldValue.split(",")).map(String::trim).collect(Collectors.toList());
-
-    // this field list was made based on information of which fields implements
-    // AbstractOrderableField.getRelevantParams method
-    switch (field.getId()) {
-      case IssueFieldConstants.ASSIGNEE:
-        // no additional mapping needed
-        break;
-      case IssueFieldConstants.ATTACHMENT:
-        // not supported right now
-        return new String[0];
-      case IssueFieldConstants.COMMENT:
-        // TODO internally uses some additional map keys for mapping comment level
-        //  and comment editing/creating/removing
-        break;
-      case IssueFieldConstants.DUE_DATE:
-        // no additional mapping needed ???
-        // TODO maybe inserted user input should be mapped additionally to jira internal date format
-        break;
-      case IssueFieldConstants.PRIORITY:
-        if (!fieldValues.isEmpty()) {
-          String priorityStrValue = fieldValues.get(0);
-          String selectedPriorityId =
-              constantsManager.getPriorities().stream()
-                  .filter(
-                      priority ->
-                          priority.getName().equals(priorityStrValue)
-                              || priority.getNameTranslation(i18nHelper).equals(priorityStrValue))
-                  .findFirst()
-                  .map(IssueConstant::getId)
-                  .orElse("");
-          return new String[] {selectedPriorityId};
-        }
-        break;
-      case IssueFieldConstants.REPORTER:
-        // no additional mapping needed
-        break;
-      case IssueFieldConstants.RESOLUTION:
-        if (!fieldValues.isEmpty()) {
-          String resolutionStrValue = fieldValues.get(0);
-          String selectedResolutionId =
-              constantsManager.getResolutions().stream()
-                  .filter(
-                      resolution ->
-                          resolution.getName().equals(resolutionStrValue)
-                              || resolution
-                                  .getNameTranslation(i18nHelper)
-                                  .equals(resolutionStrValue))
-                  .findFirst()
-                  .map(IssueConstant::getId)
-                  .orElse("");
-          return new String[] {selectedResolutionId};
-        }
-        break;
-      case IssueFieldConstants.SECURITY:
-        if (!fieldValues.isEmpty()) {
-          String issueSecurityLevelName = fieldValues.get(0);
-          String selectedResolutionId =
-              issueSecurityLevelManager.getIssueSecurityLevelsByName(issueSecurityLevelName)
-                  .stream()
-                  .findFirst()
-                  .map(securityLevel -> Long.toString(securityLevel.getId()))
-                  .orElse("");
-          return new String[] {selectedResolutionId};
-        }
-        break;
-      case IssueFieldConstants.TIMETRACKING:
-        // TODO internally uses some additional map keys for mapping timetracking
-        break;
-      case IssueFieldConstants.WORKLOG:
-        // TODO should we map this ???
-        break;
+    StringBuilder result = new StringBuilder();
+    char[] arrayFromInput = inputDescription.toCharArray();
+    for (char c : arrayFromInput) {
+      switch (c) {
+        case '*':
+          result.append("\\*");
+          break;
+        case '_':
+          result.append("\\_");
+          break;
+        case '~':
+          result.append("\\~");
+          break;
+        case '`':
+          result.append("\\`");
+          break;
+        case '-':
+          result.append("\\-");
+          break;
+        case '>':
+          result.append("\\>");
+          break;
+        case '\\':
+          result.append("\\\\");
+          break;
+        case '{':
+          result.append("\\{");
+          break;
+        case '}':
+          result.append("\\}");
+          break;
+        case '[':
+          result.append("\\[");
+          break;
+        case ']':
+          result.append("\\]");
+          break;
+        case '(':
+          result.append("\\(");
+          break;
+        case ')':
+          result.append("\\)");
+          break;
+        case '#':
+          result.append("\\#");
+          break;
+        case '+':
+          result.append("\\+");
+          break;
+        case '.':
+          result.append("\\.");
+          break;
+        case '!':
+          result.append("\\!");
+          break;
+        default:
+          result.append(c);
+      }
     }
-    return fieldValues.toArray(new String[0]);
-  }
-
-  public String[] mapUserInputStringToFieldValue(Long projectId, Field field, String fieldValue) {
-    if (isArrayLikeField(field)) {
-      return mapStringToArrayFieldValue(projectId, field, fieldValue);
-    }
-    return mapStringToSingleFieldValue(field, fieldValue);
+    return result.toString();
   }
 }
