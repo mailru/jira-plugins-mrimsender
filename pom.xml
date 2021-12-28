@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.github.atlascommunity</groupId>
         <artifactId>parent</artifactId>
-        <version>3.0.3</version>
+        <version>3.0.4</version>
     </parent>
     <groupId>ru.mail.jira.plugins</groupId>
     <artifactId>myteam</artifactId>
