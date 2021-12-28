@@ -21,10 +21,11 @@ import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.CancelableState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.PageableState;
 
 @Slf4j
-public class JqlSearchState extends BotState implements PageableState {
+public class JqlSearchState extends BotState implements PageableState, CancelableState {
 
   public static final int JQL_SEARCH_PAGE_SIZE = 15;
 
@@ -104,6 +105,27 @@ public class JqlSearchState extends BotState implements PageableState {
       }
     } catch (MyteamServerErrorException | IOException e) {
       log.error(e.getLocalizedMessage(), e);
+    }
+  }
+
+  @Override
+  public void cancel(MyteamEvent event) {
+    userChatService.deleteState(event.getChatId());
+
+    if (event instanceof ButtonClickEvent) {
+      try {
+        ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
+        Locale locale = userChatService.getUserLocale(user);
+        userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
+        userChatService.editMessageText(
+            event.getChatId(),
+            ((ButtonClickEvent) event).getMsgId(),
+            userChatService.getRawText(
+                locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.actionCanceled"),
+            null);
+      } catch (MyteamServerErrorException | UserNotFoundException | IOException e) {
+        log.error(e.getLocalizedMessage(), e);
+      }
     }
   }
 }

@@ -47,7 +47,7 @@ public class SearchIssueByKeyInputRule extends BaseRule {
     userChatService.sendMessageText(
         event.getChatId(), message, messageFormatter.getCancelButton(locale));
 
-    ViewingIssueState newState = new ViewingIssueState();
+    ViewingIssueState newState = new ViewingIssueState(userChatService, null);
     newState.setWaiting(true);
     userChatService.setState(event.getChatId(), newState);
   }
