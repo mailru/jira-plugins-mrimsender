@@ -71,7 +71,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .field("parseMode", "MarkdownV2")
               .field("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
               .asObject(MessageResponse.class);
-    checkMyteamServerErrorException(response, "sendMessageText");
+    checkMyteamSendTextErrorException(response, text);
     return response;
   }
 
@@ -162,7 +162,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .field("parseMode", "MarkdownV2")
               .field("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
               .asObject(MessageResponse.class);
-    checkMyteamServerErrorException(response, "editMessageText");
+    checkMyteamSendTextErrorException(response, text);
     return response;
   }
 
@@ -217,6 +217,20 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               response.getStatus(),
               response.getParsingError().map(UnirestParsingException::getOriginalBody).orElse(""));
       log.error("Myteam server error while {}()", methodName, newException);
+      throw newException;
+    }
+  }
+
+  void checkMyteamSendTextErrorException(HttpResponse<MessageResponse> response, String text)
+      throws MyteamServerErrorException {
+    if (response.getStatus() >= 500 || response.getBody() == null || !response.getBody().isOk()) {
+      MyteamServerErrorException newException =
+          new MyteamServerErrorException(response.getStatus(), response.getBody().getDescription());
+      log.error(
+          "Error: {} while sending the message:\n{}",
+          response.getBody().getDescription(),
+          text,
+          newException);
       throw newException;
     }
   }

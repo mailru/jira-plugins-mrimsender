@@ -1621,14 +1621,14 @@ public class MessageFormatter {
                     "%s/browse/%s",
                     applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey())))
         .append("   ")
-        .append(shieldText(issue.getSummary()))
+        .append(issue.getSummary())
         .append("\n");
 
     // append status field because it doesn't exist in formatSystemFields string
     appendField(
         sb,
         i18nHelper.getText(fieldManager.getField(IssueFieldConstants.STATUS).getNameKey()),
-        shieldText(issue.getStatus().getNameTranslation(i18nHelper)),
+        issue.getStatus().getNameTranslation(i18nHelper),
         false);
 
     sb.append(formatSystemFields(user, issue, true));
@@ -1651,8 +1651,8 @@ public class MessageFormatter {
                             if (customField.isShown(issue))
                               appendField(
                                   sb,
-                                  shieldText(customField.getFieldName()),
-                                  shieldText(customField.getValueFromIssue(issue)),
+                                  customField.getFieldName(),
+                                  customField.getValueFromIssue(issue),
                                   false);
                           }
                         }));
@@ -1842,11 +1842,9 @@ public class MessageFormatter {
   }
 
   public String stringifyFieldsCollection(Locale locale, Collection<? extends Field> fields) {
-    return String.join(
-        "\n",
-        fields.stream()
-            .map(field -> i18nResolver.getRawText(locale, field.getNameKey()))
-            .collect(Collectors.toList()));
+    return fields.stream()
+        .map(field -> i18nResolver.getRawText(locale, field.getNameKey()))
+        .collect(joining("\n"));
   }
 
   public static void addRowWithButton(

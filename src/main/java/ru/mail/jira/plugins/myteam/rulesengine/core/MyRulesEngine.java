@@ -101,7 +101,6 @@ public final class MyRulesEngine implements RulesEngine {
           try {
             evaluationResult = rule.evaluate(facts);
           } catch (RuntimeException e) {
-            log.error("Rule '" + name + "' evaluated with error", e);
             this.triggerListenersOnEvaluationError(rule, facts, e);
             if (this.parameters.isSkipOnFirstNonTriggeredRule()) {
               log.debug(
@@ -125,7 +124,6 @@ public final class MyRulesEngine implements RulesEngine {
                 break;
               }
             } catch (Exception e) {
-              log.error("Rule '" + name + "' performed with error", e);
               this.triggerListenersOnFailure(rule, e, facts);
               if (this.parameters.isSkipOnFirstFailedRule()) {
                 log.debug(
