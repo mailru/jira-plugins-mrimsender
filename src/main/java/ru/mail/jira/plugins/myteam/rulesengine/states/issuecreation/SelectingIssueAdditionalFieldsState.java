@@ -82,7 +82,7 @@ public class SelectingIssueAdditionalFieldsState extends BotState
     try {
       user = userChatService.getJiraUserFromUserChatId(event.getChatId());
     } catch (UserNotFoundException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
       return;
     }
     Locale locale = userChatService.getUserLocale(user);
@@ -117,7 +117,7 @@ public class SelectingIssueAdditionalFieldsState extends BotState
       }
 
     } catch (MyteamServerErrorException | IOException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
     }
   }
 
@@ -129,7 +129,7 @@ public class SelectingIssueAdditionalFieldsState extends BotState
       try {
         userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
       } catch (MyteamServerErrorException e) {
-        log.error(e.getLocalizedMessage());
+        log.error(e.getLocalizedMessage(), e);
       }
     }
   }

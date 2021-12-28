@@ -61,7 +61,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
     try {
       user = userChatService.getJiraUserFromUserChatId(event.getChatId());
     } catch (UserNotFoundException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
       return;
     }
     Locale locale = userChatService.getUserLocale(user);
@@ -103,7 +103,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
         userChatService.sendMessageText(event.getChatId(), msg, buttons);
       }
     } catch (IOException | MyteamServerErrorException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
     }
   }
 
@@ -125,7 +125,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
       }
       userChatService.deleteState(event.getChatId());
     } catch (MyteamServerErrorException | IOException | UserNotFoundException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
     }
   }
 

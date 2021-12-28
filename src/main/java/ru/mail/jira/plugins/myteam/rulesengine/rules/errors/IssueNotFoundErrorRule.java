@@ -32,9 +32,10 @@ public class IssueNotFoundErrorRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") MyteamEvent event, @Fact("message") String message)
+  public void execute(@Fact("event") MyteamEvent event, @Fact("exception") Exception e)
       throws UserNotFoundException, MyteamServerErrorException, IOException {
-    log.error(message);
+    log.error(e.getLocalizedMessage(), e);
+
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
 
     userChatService.sendMessageText(

@@ -56,7 +56,7 @@ public class IssueTypeSelectButtonRule extends BaseRule {
       state.setIssueType(issueService.getIssueType(issueTypeId), user);
       rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
     } catch (UnsupportedCustomFieldsException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
       userChatService.sendMessageText(
           chatId,
           String.join(
@@ -67,7 +67,7 @@ public class IssueTypeSelectButtonRule extends BaseRule {
               messageFormatter.stringifyFieldsCollection(locale, e.getRequiredCustomFields())));
 
     } catch (IncorrectIssueTypeException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
       userChatService.sendMessageText(
           chatId,
           userChatService.getRawText(

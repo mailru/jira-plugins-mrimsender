@@ -57,7 +57,7 @@ public class WatchIssueCommandRule extends BaseRule {
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyWatch",
               messageFormatter.createIssueLink(issueKey)));
     } catch (IssueWatchingException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(
@@ -65,9 +65,9 @@ public class WatchIssueCommandRule extends BaseRule {
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyWatching",
               messageFormatter.createIssueLink(issueKey)));
     } catch (IssuePermissionException e) {
-      rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e.getLocalizedMessage());
+      rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e);
     } catch (IssueNotFoundException e) {
-      rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e.getLocalizedMessage());
+      rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e);
     }
     if (event instanceof ButtonClickEvent) {
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());

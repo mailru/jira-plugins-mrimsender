@@ -143,7 +143,7 @@ public class CreatingIssueState extends BotState implements CancelableState {
     try {
       user = userChatService.getJiraUserFromUserChatId(event.getChatId());
     } catch (UserNotFoundException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
       return;
     }
     Locale locale = userChatService.getUserLocale(user);
@@ -160,7 +160,7 @@ public class CreatingIssueState extends BotState implements CancelableState {
         userChatService.sendMessageText(event.getChatId(), msg);
       }
     } catch (MyteamServerErrorException | IOException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
     }
   }
 }

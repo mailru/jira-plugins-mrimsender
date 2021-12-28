@@ -52,7 +52,7 @@ public class LinkIssueWithChatCommandRule extends BaseRule {
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueLinkedToChat",
               messageFormatter.createIssueLink(issueKey)));
     } catch (LinkIssueWithChatException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(
@@ -60,7 +60,7 @@ public class LinkIssueWithChatCommandRule extends BaseRule {
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueLinkedToChat.error",
               messageFormatter.createIssueLink(issueKey)));
     } catch (IssueNotFoundException e) {
-      rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e.getLocalizedMessage());
+      rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e);
     }
   }
 }

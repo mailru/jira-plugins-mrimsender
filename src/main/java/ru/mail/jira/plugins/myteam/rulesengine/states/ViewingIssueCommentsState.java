@@ -104,11 +104,11 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
         else userChatService.sendMessageText(event.getChatId(), msg, buttons);
       }
     } catch (IssuePermissionException e) {
-      rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e.getLocalizedMessage());
+      rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e);
     } catch (IssueNotFoundException e) {
-      rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e.getLocalizedMessage());
+      rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e);
     } catch (MyteamServerErrorException | IOException | UserNotFoundException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
     }
   }
 

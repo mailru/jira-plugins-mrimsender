@@ -79,13 +79,13 @@ public class ViewIssueCommandRule extends BaseRule {
               response.getBody().toString());
         }
       } catch (IssuePermissionException e) {
-        rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e.getLocalizedMessage());
+        rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e);
 
         if (!isGroup) log.error("sendIssueViewToUser({}, {}, {})", issueKey, user, chatId, e);
         userChatService.deleteState(chatId);
 
       } catch (IssueNotFoundException e) {
-        rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e.getLocalizedMessage());
+        rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e);
         if (!isGroup) log.error("sendIssueViewToUser({}, {}, {})", issueKey, user, chatId, e);
         userChatService.deleteState(chatId);
       }

@@ -54,7 +54,7 @@ public class CommentIssueRule extends BaseRule {
           event.getChatId(), message, messageFormatter.getCancelButton(locale));
 
     } catch (UserNotFoundException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
     }
     userChatService.answerCallbackQuery(event.getQueryId());
   }

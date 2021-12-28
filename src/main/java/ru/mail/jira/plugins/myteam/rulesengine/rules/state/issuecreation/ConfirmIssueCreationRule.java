@@ -70,7 +70,7 @@ public class ConfirmIssueCreationRule extends BaseRule {
       }
       userChatService.deleteState(event.getChatId());
     } catch (IssueCreationValidationException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
       userChatService.sendMessageText(
           event.getChatId(),
           MessageFormatter.shieldText(

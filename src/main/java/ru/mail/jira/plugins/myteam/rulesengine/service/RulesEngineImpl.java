@@ -130,11 +130,11 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
   }
 
   @Override
-  public void fireError(ErrorRuleType errorType, MyteamEvent event, String exceptionMessage) {
+  public void fireError(ErrorRuleType errorType, MyteamEvent event, Exception e) {
     Facts facts = new Facts();
     facts.add(new Fact<>("error", errorType));
     facts.add(new Fact<>("event", event));
-    facts.add(new Fact<>("message", exceptionMessage));
+    facts.add(new Fact<>("exception", e));
     errorsRuleEngine.fire(facts);
   }
 

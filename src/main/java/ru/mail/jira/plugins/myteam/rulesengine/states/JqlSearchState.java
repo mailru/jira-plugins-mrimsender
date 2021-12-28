@@ -57,7 +57,7 @@ public class JqlSearchState extends BotState implements PageableState {
     try {
       user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     } catch (UserNotFoundException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
       return;
     }
     Locale locale = userChatService.getUserLocale(user);
@@ -100,10 +100,10 @@ public class JqlSearchState extends BotState implements PageableState {
                 locale,
                 "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.jqlParseError.text"));
       } catch (MyteamServerErrorException | IOException ex) {
-        log.error(e.getLocalizedMessage());
+        log.error(e.getLocalizedMessage(), e);
       }
     } catch (MyteamServerErrorException | IOException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
     }
   }
 }

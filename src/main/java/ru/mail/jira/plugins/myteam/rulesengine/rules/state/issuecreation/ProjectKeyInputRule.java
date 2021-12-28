@@ -90,14 +90,14 @@ public class ProjectKeyInputRule extends BaseRule {
                     "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
       }
     } catch (PermissionException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
       userChatService.sendMessageText(
           chatId,
           userChatService.getRawText(
               locale,
               "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.notEnoughPermissions"));
     } catch (ProjectBannedException e) {
-      log.error(e.getLocalizedMessage());
+      log.error(e.getLocalizedMessage(), e);
       userChatService.sendMessageText(
           chatId,
           userChatService.getRawText(

@@ -15,5 +15,5 @@ public interface RulesEngine {
 
   void fireStateAction(MyteamEvent event, String args);
 
-  void fireError(ErrorRuleType errorType, MyteamEvent event, String exceptionMessage);
+  void fireError(ErrorRuleType errorType, MyteamEvent event, Exception e);
 }
