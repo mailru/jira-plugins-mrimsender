@@ -80,7 +80,7 @@ public class ViewIssueCommandRule extends BaseRule {
       ((ViewingIssueState) state).setIssueKey(issueKey);
       state.setWaiting(false);
     } else {
-      userChatService.setState(chatId, new ViewingIssueState(issueKey));
+      userChatService.setState(chatId, new ViewingIssueState(userChatService, issueKey));
     }
   }
 }

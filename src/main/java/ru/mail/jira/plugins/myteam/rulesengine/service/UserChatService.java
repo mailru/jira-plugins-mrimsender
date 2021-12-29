@@ -26,7 +26,7 @@ public interface UserChatService {
 
   String getRawText(Locale locale, String key);
 
-  String getText(Locale locale, String s, String issueLink);
+  String getText(Locale locale, String s, String data);
 
   MessageFormatter getMessageFormatter();
 
