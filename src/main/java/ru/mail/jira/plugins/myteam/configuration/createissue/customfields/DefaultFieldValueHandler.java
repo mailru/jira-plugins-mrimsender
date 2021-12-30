@@ -7,6 +7,7 @@ import com.atlassian.jira.config.ConstantsManager;
 import com.atlassian.jira.issue.IssueConstant;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.fields.Field;
+import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.version.VersionManager;
@@ -53,7 +54,7 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
 
   @Override
   public List<List<InlineKeyboardMarkupButton>> getButtons(
-      Field field, String value, Locale locale) {
+      Field field, Project project, IssueType issueType, String value, Locale locale) {
     return null;
   }
 
@@ -63,7 +64,8 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(String value, Field field, Project project, Locale locale) {
+  public String[] getValueAsArray(
+      String value, Field field, Project project, IssueType issueType, Locale locale) {
     return mapUserInputStringToFieldValue(project.getId(), field, value, locale);
   }
 

@@ -73,6 +73,8 @@ public class ShowIssueCreationProgressRule extends BaseRule {
           MessageFormatter.buildButtonsWithCancel(
               handler.getButtons(
                   field.get(),
+                  state.getProject(),
+                  state.getIssueType(),
                   state.getFieldValue(field.get()),
                   userChatService.getUserLocale(user)),
               userChatService.getRawText(

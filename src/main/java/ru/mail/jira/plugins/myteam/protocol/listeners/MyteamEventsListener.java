@@ -4,7 +4,6 @@ package ru.mail.jira.plugins.myteam.protocol.listeners;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -13,10 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
-import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 
 @Slf4j
@@ -30,14 +28,10 @@ public class MyteamEventsListener {
           2, new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX).build());
   private final AsyncEventBus asyncEventBus;
   private final MyteamApiClient myteamApiClient;
-  private final ChatCommandListener chatCommandListener;
   private final RulesEngine rulesEngine;
 
   @Autowired
-  public MyteamEventsListener(
-      MyteamApiClient myteamApiClient,
-      ChatCommandListener chatCommandListener,
-      RulesEngine rulesEngine) {
+  public MyteamEventsListener(MyteamApiClient myteamApiClient, RulesEngine rulesEngine) {
     this.rulesEngine = rulesEngine;
     this.asyncEventBus =
         new AsyncEventBus(
@@ -48,9 +42,7 @@ public class MyteamEventsListener {
                     context.getSubscriber().toString(),
                     exception));
     this.asyncEventBus.register(this);
-    this.asyncEventBus.register(chatCommandListener);
     this.myteamApiClient = myteamApiClient;
-    this.chatCommandListener = chatCommandListener;
   }
 
   public void publishEvent(MyteamEvent event) {
@@ -107,17 +99,10 @@ public class MyteamEventsListener {
   }
 
   @Subscribe
-  public void handleJiraIssueViewEvent(JiraIssueViewEvent jiraIssueViewEvent)
-      throws IOException, UnirestException, MyteamServerErrorException {
-    if (jiraIssueViewEvent.isGroupChat())
-      chatCommandListener.sendIssueViewToGroup(
-          jiraIssueViewEvent.getIssueKey(),
-          jiraIssueViewEvent.getInitiator(),
-          jiraIssueViewEvent.getChatId());
-    else
-      chatCommandListener.sendIssueViewToUser(
-          jiraIssueViewEvent.getIssueKey(),
-          jiraIssueViewEvent.getInitiator(),
-          jiraIssueViewEvent.getChatId());
+  public void handleJiraIssueViewEvent(JiraIssueViewEvent event) {
+    rulesEngine.fireCommand(
+        CommandRuleType.Issue,
+        new SyntheticEvent(event.getChatId(), event.getUserId(), event.getChatType()),
+        event.getIssueKey());
   }
 }
