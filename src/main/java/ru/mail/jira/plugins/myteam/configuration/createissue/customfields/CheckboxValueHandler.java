@@ -10,6 +10,7 @@ import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.config.FieldConfig;
 import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
+import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
@@ -41,7 +42,7 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
 
   @Override
   public List<List<InlineKeyboardMarkupButton>> getButtons(
-      Field field, String value, Locale locale) {
+      Field field, Project project, IssueType issueType, String value, Locale locale) {
 
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     Options options = getOptions((CustomField) field);

@@ -4,8 +4,11 @@ package ru.mail.jira.plugins.myteam.configuration.createissue.customfields;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.ConstantsManager;
 import com.atlassian.jira.issue.IssueConstant;
+import com.atlassian.jira.issue.context.IssueContextImpl;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.PrioritySystemField;
+import com.atlassian.jira.issue.fields.config.manager.PrioritySchemeManager;
+import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.jira.project.Project;
 import com.atlassian.sal.api.message.I18nResolver;
@@ -22,9 +25,12 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   private final I18nResolver i18nResolver;
   private final ConstantsManager constantsManager;
 
+  private final PrioritySchemeManager prioritySchemeManager;
+
   public PriorityValueHandler(I18nResolver i18nResolver) {
     this.i18nResolver = i18nResolver;
     constantsManager = ComponentAccessor.getConstantsManager();
+    prioritySchemeManager = ComponentAccessor.getComponent(PrioritySchemeManager.class);
   }
 
   @Override
@@ -40,6 +46,7 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
           "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.arrayMessage",
           i18nResolver.getRawText(locale, field.getNameKey()).toLowerCase(locale));
     }
+
     return i18nResolver.getText(
         locale,
         "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.message",
@@ -48,10 +55,13 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
 
   @Override
   public List<List<InlineKeyboardMarkupButton>> getButtons(
-      Field field, String value, Locale locale) {
+      Field field, Project project, IssueType issueType, String value, Locale locale) {
 
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    Collection<Priority> priorities = constantsManager.getPriorities();
+    Collection<Priority> priorities =
+        prioritySchemeManager.getPrioritiesFromIds(
+            prioritySchemeManager.getOptions(
+                new IssueContextImpl(project.getId(), issueType.getId())));
     priorities.forEach(
         priority -> {
           InlineKeyboardMarkupButton issueTypeButton =

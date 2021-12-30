@@ -2,6 +2,7 @@
 package ru.mail.jira.plugins.myteam.configuration.createissue.customfields;
 
 import com.atlassian.jira.issue.fields.Field;
+import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import java.util.List;
 import java.util.Locale;
@@ -32,7 +33,8 @@ public interface CreateIssueFieldValueHandler {
    * @param locale user locale
    * @return Buttons to shown in Myteam
    */
-  List<List<InlineKeyboardMarkupButton>> getButtons(Field field, String value, Locale locale);
+  List<List<InlineKeyboardMarkupButton>> getButtons(
+      Field field, Project project, IssueType issueType, String value, Locale locale);
 
   /**
    * Map field value from String in IssueCreationDto to valid String array field value
