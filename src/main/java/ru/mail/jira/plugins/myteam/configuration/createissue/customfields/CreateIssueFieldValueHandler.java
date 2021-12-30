@@ -51,5 +51,6 @@ public interface CreateIssueFieldValueHandler {
    * @param locale user locale
    * @return valid String array for field in IssueInputParameters
    */
-  String[] getValueAsArray(String value, Field field, Project project, Locale locale);
+  String[] getValueAsArray(
+      String value, Field field, Project project, IssueType issueType, Locale locale);
 }

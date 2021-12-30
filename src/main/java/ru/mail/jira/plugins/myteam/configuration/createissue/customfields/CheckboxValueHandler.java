@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.configuration.createissue.customfields;
 
-import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.issue.customfields.impl.MultiSelectCFType;
 import com.atlassian.jira.issue.customfields.manager.OptionsManager;
 import com.atlassian.jira.issue.customfields.option.Option;
@@ -12,7 +11,6 @@ import com.atlassian.jira.issue.fields.config.FieldConfig;
 import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
-import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -24,9 +22,9 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   private final I18nResolver i18nResolver;
   private static final String delimiter = ", ";
 
-  public CheckboxValueHandler(@ComponentImport I18nResolver i18nResolver) {
+  public CheckboxValueHandler(OptionsManager optionsManager, I18nResolver i18nResolver) {
+    this.optionsManager = optionsManager;
     this.i18nResolver = i18nResolver;
-    optionsManager = ComponentAccessor.getOptionsManager();
   }
 
   @Override
@@ -100,7 +98,8 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(String value, Field field, Project project, Locale locale) {
+  public String[] getValueAsArray(
+      String value, Field field, Project project, IssueType issueType, Locale locale) {
     List<String> values = new ArrayList<>(Arrays.asList(value.split(delimiter)));
 
     Options options = getOptions((CustomField) field);

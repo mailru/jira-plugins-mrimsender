@@ -64,7 +64,8 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(String value, Field field, Project project, Locale locale) {
+  public String[] getValueAsArray(
+      String value, Field field, Project project, IssueType issueType, Locale locale) {
     return mapUserInputStringToFieldValue(project.getId(), field, value, locale);
   }
 

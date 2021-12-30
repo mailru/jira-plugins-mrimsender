@@ -7,9 +7,11 @@ import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.IssueInputParameters;
+import com.atlassian.jira.issue.customfields.manager.OptionsManager;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.fields.FieldManager;
+import com.atlassian.jira.issue.fields.config.manager.PrioritySchemeManager;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayout;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutItem;
 import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
@@ -50,6 +52,8 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   private final LocaleManager localeManager;
   private final IssueService issueService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
+  private final OptionsManager optionsManager;
+  private final PrioritySchemeManager prioritySchemeManager;
   private final HashMap<String, CreateIssueFieldValueHandler> supportedIssueCreationCustomFields;
   private final CreateIssueFieldValueHandler defaultHandler;
 
@@ -61,7 +65,9 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       @ComponentImport FieldManager fieldManager,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport IssueService issueService,
-      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
+      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+      @ComponentImport OptionsManager optionsManager,
+      @ComponentImport PrioritySchemeManager prioritySchemeManager) {
     this.i18nResolver = i18nResolver;
     this.issueTypeScreenSchemeManager = issueTypeScreenSchemeManager;
     this.issueTypeManager = issueTypeManager;
@@ -70,16 +76,18 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     this.localeManager = localeManager;
     this.issueService = issueService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
+    this.optionsManager = optionsManager;
+    this.prioritySchemeManager = prioritySchemeManager;
     this.supportedIssueCreationCustomFields = new HashMap<>();
     this.defaultHandler = new DefaultFieldValueHandler(i18nResolver);
   }
 
   @Override
   public void afterPropertiesSet() {
-    CheckboxValueHandler checkbox = new CheckboxValueHandler(i18nResolver);
+    CheckboxValueHandler checkbox = new CheckboxValueHandler(optionsManager, i18nResolver);
     supportedIssueCreationCustomFields.put(checkbox.getClassName(), checkbox);
 
-    PriorityValueHandler priority = new PriorityValueHandler(i18nResolver);
+    PriorityValueHandler priority = new PriorityValueHandler(i18nResolver, prioritySchemeManager);
     supportedIssueCreationCustomFields.put(priority.getClassName(), priority);
   }
 
@@ -158,6 +166,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
                                 e.getValue(),
                                 e.getKey(),
                                 project,
+                                issueType,
                                 localeManager.getLocaleFor(user));
                           })));
       issueInputParameters.setRetainExistingValuesWhenParameterNotProvided(true, true);
