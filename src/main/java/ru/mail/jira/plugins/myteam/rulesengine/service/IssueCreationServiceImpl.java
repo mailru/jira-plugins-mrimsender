@@ -42,64 +42,32 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCust
 @Service
 public class IssueCreationServiceImpl implements IssueCreationService, InitializingBean {
 
-  //  private final ConcurrentHashMap<String, ChatState> chatsStateMap;
-  //  private final MyteamApiClient myteamApiClient;
-  //  private final UserData userData;
-  //  private final PluginData pluginData;
-  //  private final MessageFormatter messageFormatter;
   private final I18nResolver i18nResolver;
-  //  private final LocaleManager localeManager;
-  //  private final PermissionManager permissionManager;
-  //  private final ProjectManager projectManager;
-  //  private final IssueTypeSchemeManager issueTypeSchemeManager;
   private final IssueTypeScreenSchemeManager issueTypeScreenSchemeManager;
   private final IssueTypeManager issueTypeManager;
   private final FieldLayoutManager fieldLayoutManager;
   private final FieldManager fieldManager;
   private final LocaleManager localeManager;
-  //  private final ConstantsManager constantsManager;
   private final IssueService issueService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final HashMap<String, CreateIssueFieldValueHandler> supportedIssueCreationCustomFields;
   private final CreateIssueFieldValueHandler defaultHandler;
 
   public IssueCreationServiceImpl(
-      //                                        ChatStateMapping chatStateMapping,
-      //                                        MyteamApiClient myteamApiClient,
-      //                                        UserData userData,
-      //                                        PluginData pluginData,
-      //      MessageFormatter messageFormatter,
       @ComponentImport I18nResolver i18nResolver,
-      //                                        @ComponentImport LocaleManager localeManager,
-      //                                        @ComponentImport PermissionManager
-      // permissionManager,
-      //                                        @ComponentImport ProjectManager projectManager,
-      //                                        @ComponentImport IssueTypeSchemeManager
-      // issueTypeSchemeManager,
       @ComponentImport IssueTypeScreenSchemeManager issueTypeScreenSchemeManager,
       @ComponentImport IssueTypeManager issueTypeManager,
       @ComponentImport FieldLayoutManager fieldLayoutManager,
       @ComponentImport FieldManager fieldManager,
-      //                                        @ComponentImport ConstantsManager constantsManager,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport IssueService issueService,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
-    //    this.chatsStateMap = chatStateMapping.getChatsStateMap();
-    //    this.myteamApiClient = myteamApiClient;
-    //    this.userData = userData;
-    //    this.pluginData = pluginData;
-    //    this.messageFormatter = messageFormatter;
     this.i18nResolver = i18nResolver;
-    //    this.localeManager = localeManager;
-    //    this.permissionManager = permissionManager;
-    //    this.projectManager = projectManager;
-    //    this.issueTypeSchemeManager = issueTypeSchemeManager;
     this.issueTypeScreenSchemeManager = issueTypeScreenSchemeManager;
     this.issueTypeManager = issueTypeManager;
     this.fieldLayoutManager = fieldLayoutManager;
     this.fieldManager = fieldManager;
     this.localeManager = localeManager;
-    //    this.constantsManager = constantsManager;
     this.issueService = issueService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.supportedIssueCreationCustomFields = new HashMap<>();
@@ -172,7 +140,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
 
   private IssueService.CreateValidationResult validateIssueWithGivenFields(
       Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user) {
-    //    Long projectId = issueCreationDto.getProjectId();
 
     // need here to because issueService use authenticationContext
     ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
@@ -192,30 +159,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
                                 e.getKey(),
                                 project,
                                 localeManager.getLocaleFor(user));
-                            //                            if
-                            // (fieldManager.isCustomFieldId(e.getKey().getId())) {
-                            //                              CustomField cf =
-                            // fieldManager.getCustomField(e.getKey().getId());
-                            //
-                            //                              if (cf != null
-                            //                                  &&
-                            // supportedIssueCreationCustomFields.containsKey(
-                            //                                  cf.getCustomFieldType().getClass()))
-                            // {
-                            //                                CreateIssueFieldValueHandler cfConfig
-                            // =
-                            //
-                            // supportedIssueCreationCustomFields.get(
-                            //
-                            // cf.getCustomFieldType().getClass());
-                            //
-                            //                                return
-                            // cfConfig.getValueAsArray(e.getValue(), cf);
-                            //                              }
-                            //                            }
-                            //                            return
-                            // messageFormatter.mapUserInputStringToFieldValue(
-                            //                                projectId, e.getKey(), e.getValue());
                           })));
       issueInputParameters.setRetainExistingValuesWhenParameterNotProvided(true, true);
 
@@ -244,18 +187,11 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
 
     Optional<IssueType> maybeCorrectIssueType =
         Optional.ofNullable(issueTypeManager.getIssueType(issueTypeId));
+
     if (!maybeCorrectIssueType.isPresent()) {
       throw new IncorrectIssueTypeException(
           String.format(
               "inserted issue type isn't correct for project with key %s", project.getKey()));
-      // inserted issue type position isn't correct
-      //      myteamApiClient.answerCallbackQuery(queryId);
-      //      myteamApiClient.sendMessageText(
-      //          chatId,
-      //          i18nResolver.getRawText(
-      //              locale,
-      //
-      // "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedIssueTypeNotValid"));
     }
     IssueType issueType = maybeCorrectIssueType.get();
 
@@ -265,10 +201,12 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
                 fieldManager.getField(IssueFieldConstants.DESCRIPTION).getId(),
                 fieldManager.getField(IssueFieldConstants.PRIORITY).getId())
             .collect(Collectors.toSet());
+
     // project and issueType fields should be excluded no matter required them or not
     Set<String> excludedFieldIds =
         Stream.of(fieldManager.getProjectField().getId(), fieldManager.getIssueTypeField().getId())
             .collect(Collectors.toSet());
+
     LinkedHashMap<Field, String> issueCreationRequiredFieldsValues =
         getIssueCreationFieldsValues(
             project, issueType, includedFieldIds, excludedFieldIds, IssueFieldsFilter.REQUIRED);
@@ -276,11 +214,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     // We don't need allow user to fill reporter field
     issueCreationRequiredFieldsValues.remove(
         fieldManager.getOrderableField(SystemSearchConstants.forReporter().getFieldId()));
-
-    // setting selected IssueType and mapped requiredIssueCreationFields
-    //    currentIssueCreationDto.setIssueTypeId(selectedIssueType.getId());
-    //
-    // currentIssueCreationDto.setRequiredIssueCreationFieldValues(issueCreationRequiredFieldsValues);
 
     // order saved here because LinkedHashMap keySet() method  in reality returns LinkedHashSet
     List<Field> requiredFields = new ArrayList<>(issueCreationRequiredFieldsValues.keySet());
@@ -299,74 +232,8 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
               "Issue type %s in project with key %s has unsupported required custom field",
               issueType.getNameTranslation(), project.getKey()),
           requiredCustomFieldsInScope);
-      // send user message that we can't create issue with required customFields
-      //      myteamApiClient.answerCallbackQuery(queryId);
-      //      myteamApiClient.sendMessageText(
-      //          chatId,
-      //          String.join(
-      //              "\n",
-      //              i18nResolver.getRawText(
-      //                  locale,
-      //
-      // "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.requiredCFError"),
-      //              messageFormatter.stringifyFieldsCollection(locale,
-      // requiredCustomFieldsInScope)));
-      //      return requiredFields;
     }
 
-    //    if (!requiredFields.isEmpty()) {
-    //      return requiredFields;
-    //      // here sending new issue filling fields message to user
-    //      //      Field currentField = requiredFields.get(0);
-    //      //      myteamApiClient.answerCallbackQuery(queryId);
-    //      //      myteamApiClient.sendMessageText(
-    //      //          chatId,
-    //      //          messageFormatter.createInsertFieldMessage(locale, currentField,
-    //      // currentIssueCreationDto),
-    //      //          messageFormatter.buildButtonsWithCancel(
-    //      //              null,
-    //      //              i18nResolver.getRawText(
-    //      //                  locale,
-    //      //
-    //      // "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
-    //    } else {
-    //      // well, all required issue fields are filled, then just create issue
-    //      com.atlassian.jira.bc.issue.IssueService.CreateValidationResult issueValidationResult =
-    //          issueCreationFieldsService.validateIssueWithGivenFields(
-    //              user,
-    //              IssueCreationDto.builder()
-    //                  .issueTypeId(issueTypeId)
-    //                  .projectId(project.getId())
-    //                  .requiredIssueCreationFieldValues(issueCreationRequiredFieldsValues)
-    //                  .build());
-    //      if (issueValidationResult.isValid()) {
-    //        JiraThreadLocalUtils.preCall();
-    //        try {
-    //          issueService.create(user, issueValidationResult);
-    //          //          myteamApiClient.answerCallbackQuery(queryId);
-    //          //          myteamApiClient.sendMessageText(chatId, "Congratulations, issue was
-    // created
-    //          // =)");
-    //        } finally {
-    //          JiraThreadLocalUtils.postCall();
-    //        }
-    //      } else {
-    //        //        myteamApiClient.answerCallbackQuery(queryId);
-    //        //        myteamApiClient.sendMessageText(
-    //        //            chatId,
-    //        //            String.join(
-    //        //                "\n",
-    //        //                i18nResolver.getText(
-    //        //                    locale,
-    //        //
-    //        // "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.validationError"),
-    //        //                messageFormatter.stringifyMap(
-    //        //                    issueValidationResult.getErrorCollection().getErrors()),
-    //        //                messageFormatter.stringifyCollection(
-    //        //                    locale,
-    //        // issueValidationResult.getErrorCollection().getErrorMessages())));
-    //      }
-    //    }
     return requiredFields;
   }
 
@@ -376,38 +243,14 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       throws IssueCreationValidationException {
     JiraThreadLocalUtils.preCall();
     try {
-      // then user filled all new issue fields which are required
-
       IssueService.CreateValidationResult issueValidationResult =
           validateIssueWithGivenFields(project, issueType, fields, user);
-      //      myteamApiClient.answerCallbackQuery(event.getQueryId());
       if (issueValidationResult.isValid()) {
         return issueService.create(user, issueValidationResult).getIssue();
-        //        String createdIssueLink = messageFormatter.createIssueLink(createdIssue.getKey());
-        //        myteamApiClient.sendMessageText(
-        //            chatId,
-        //            i18nResolver.getText(
-        //                locale,
-        //                "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreated",
-        //                createdIssueLink));
       } else {
         throw new IssueCreationValidationException(
             "Unable to create issue with provided fields",
             issueValidationResult.getErrorCollection());
-        //        myteamApiClient.sendMessageText(
-        //            chatId,
-        //            messageFormatter.shieldText(
-        //                String.join(
-        //                    "\n",
-        //                    i18nResolver.getText(
-        //                        locale,
-        //
-        // "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.validationError"),
-        //                    messageFormatter.stringifyMap(
-        //                        issueValidationResult.getErrorCollection().getErrors()),
-        //                    messageFormatter.stringifyCollection(
-        //                        locale,
-        // issueValidationResult.getErrorCollection().getErrorMessages()))));
       }
     } finally {
       JiraThreadLocalUtils.postCall();
@@ -436,7 +279,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
 
   private boolean isCFInScopeOfProjectAndIssueType(
       CustomField customField, Long projectId, String issueTypeId) {
-    // if any of configuration scheme of
     return customField.getConfigurationSchemes().stream()
         .anyMatch(
             scheme -> {

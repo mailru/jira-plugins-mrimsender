@@ -38,7 +38,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
     this.userChatService = userChatService;
     this.messageFormatter = userChatService.getMessageFormatter();
     this.messagePrefix = messagePrefix;
-    int PROJECT_LIST_PAGE_SIZE = 1;
+    int PROJECT_LIST_PAGE_SIZE = 10;
     pager = new Pager(0, PROJECT_LIST_PAGE_SIZE);
   }
 
