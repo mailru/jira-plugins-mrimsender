@@ -149,7 +149,7 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     BotState state = userChatService.getState(event.getChatId());
     BotState prevState = userChatService.getPrevState(event.getChatId());
 
-    facts.put("args", args);
+    facts.put("args", args == null ? "" : args);
     facts.add(new Fact<>("event", event));
     facts.add(new Fact<>("state", state == null ? new EmptyState() : state));
     facts.add(new Fact<>("prevState", prevState == null ? new EmptyState() : prevState));
