@@ -62,7 +62,7 @@ public class UserChatServiceImpl implements UserChatService {
   @Override
   public ApplicationUser getJiraUserFromUserChatId(String id) throws UserNotFoundException {
     ApplicationUser user = userData.getUserByMrimLogin(id);
-    if (user == null) throw new UserNotFoundException("Unable to get user from myteam chat id");
+    if (user == null) throw new UserNotFoundException(id);
     return user;
   }
 
