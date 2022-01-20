@@ -25,6 +25,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.events.JiraNotifyEvent;
@@ -119,6 +120,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
         sendMessage(recipients, issueEvent, issueEvent.getIssue().getKey());
       }
     } catch (Exception e) {
+      SentryClient.capture(e);
       log.error(e.getMessage(), e);
     }
   }
@@ -133,6 +135,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
           recipients.add(user);
       sendMessage(recipients, mentionIssueEvent, mentionIssueEvent.getIssue().getKey());
     } catch (Exception e) {
+      SentryClient.capture(e);
       log.error(e.getMessage(), e);
     }
   }

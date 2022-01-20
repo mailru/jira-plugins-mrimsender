@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
@@ -36,11 +37,13 @@ public class MyteamEventsListener {
     this.asyncEventBus =
         new AsyncEventBus(
             executorService,
-            (exception, context) ->
-                log.error(
-                    "Exception occurred in subscriber = {}",
-                    context.getSubscriber().toString(),
-                    exception));
+            (exception, context) -> {
+              log.error(
+                  "Exception occurred in subscriber = {}",
+                  context.getSubscriber().toString(),
+                  exception);
+              SentryClient.capture(exception);
+            });
     this.asyncEventBus.register(this);
     this.myteamApiClient = myteamApiClient;
   }
@@ -69,7 +72,7 @@ public class MyteamEventsListener {
     String command = split[0];
     String args = String.join("", Arrays.asList(split).subList(1, split.length));
 
-    rulesEngine.fireCommand(command, event, args);
+    rulesEngine.fireCommand(command == null ? "" : command, event, args);
   }
 
   private void handleStateAction(ChatMessageEvent event) {
