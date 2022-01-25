@@ -71,7 +71,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .field("parseMode", "MarkdownV2")
               .field("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
               .asObject(MessageResponse.class);
-    checkMyteamSendTextErrorException(response, text);
+    checkMyteamSendTextErrorException(response, chatId, text);
     return response;
   }
 
@@ -162,7 +162,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .field("parseMode", "MarkdownV2")
               .field("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
               .asObject(MessageResponse.class);
-    checkMyteamSendTextErrorException(response, text);
+    checkMyteamSendTextErrorException(response, chatId, text);
     return response;
   }
 
@@ -215,17 +215,29 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       MyteamServerErrorException newException =
           new MyteamServerErrorException(
               response.getStatus(),
-              response.getParsingError().map(UnirestParsingException::getOriginalBody).orElse(""));
+              String.format(
+                  "Caused exception due executing method \"%s\"\n%s error\n\n",
+                  methodName,
+                  response
+                      .getParsingError()
+                      .map(UnirestParsingException::getOriginalBody)
+                      .orElse("")));
+
       log.error("Myteam server error while {}()", methodName, newException);
       throw newException;
     }
   }
 
-  void checkMyteamSendTextErrorException(HttpResponse<MessageResponse> response, String text)
+  void checkMyteamSendTextErrorException(
+      HttpResponse<MessageResponse> response, String chatId, String text)
       throws MyteamServerErrorException {
     if (response.getStatus() >= 500 || response.getBody() == null || !response.getBody().isOk()) {
       MyteamServerErrorException newException =
-          new MyteamServerErrorException(response.getStatus(), response.getBody().getDescription());
+          new MyteamServerErrorException(
+              response.getStatus(),
+              String.format(
+                  "Caused exception due sending message\n\nchatId: %s\nerror: %s\n%s message\n\n",
+                  chatId, response.getBody().getDescription(), text));
       log.error(
           "Error: {} while sending the message:\n{}",
           response.getBody().getDescription(),
