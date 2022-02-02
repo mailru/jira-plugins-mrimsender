@@ -14,5 +14,6 @@
     <!-- Active Objects -->
     <ao key="ao-entities">
         <entity>ru.mail.jira.plugins.myteam.model.MyteamChatMetaEntity</entity>
+        <entity>ru.mail.jira.plugins.myteam.model.IssueCreationSettingsEntity</entity>
     </ao>
 </atlassian-plugin>

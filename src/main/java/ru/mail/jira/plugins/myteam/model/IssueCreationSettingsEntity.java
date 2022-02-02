@@ -14,6 +14,10 @@ public interface IssueCreationSettingsEntity extends Entity {
 
   void setEnabled(boolean enabled);
 
+  void setTag(String tag);
+
+  String getTag();
+
   String getProjectKey();
 
   void setProjectKey(String key);
@@ -21,5 +25,9 @@ public interface IssueCreationSettingsEntity extends Entity {
   String getIssueTypeId();
 
   void setIssueTypeId(String id);
+
+  void setLabels(String labels);
+
+  String getLabels();
 
 }

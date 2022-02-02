@@ -22,9 +22,11 @@ public class IssueCreationSettingsRepository extends PagingAndSortingRepository<
 
   @Override
   public void updateEntityFromDto(@NotNull IssueCreationSettingsDto dto, @NotNull IssueCreationSettingsEntity entity) {
+    entity.setTag(dto.getTag());
     entity.setIssueTypeId(dto.getIssueTypeId());
     entity.setProjectKey(dto.getProjectKey());
     entity.setEnabled(dto.isEnabled());
+    entity.setLabels(String.join(";", dto.getLabels()));
   }
 
   @Override
