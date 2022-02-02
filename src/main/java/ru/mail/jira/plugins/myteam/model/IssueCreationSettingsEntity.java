@@ -1,3 +1,4 @@
+/* (C)2022 */
 package ru.mail.jira.plugins.myteam.model;
 
 import net.java.ao.Entity;
@@ -29,5 +30,4 @@ public interface IssueCreationSettingsEntity extends Entity {
   void setLabels(String labels);
 
   String getLabels();
-
 }

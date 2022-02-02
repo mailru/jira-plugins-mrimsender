@@ -34,8 +34,6 @@ import org.springframework.stereotype.Controller;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.MyteamChatMetaEntity;
-import ru.mail.jira.plugins.myteam.repository.MyteamChatRepository;
-import ru.mail.jira.plugins.myteam.service.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
@@ -43,9 +41,11 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.JiraIssueViewEvent;
 import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
+import ru.mail.jira.plugins.myteam.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatCreationDataDto;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatMemberDto;
 import ru.mail.jira.plugins.myteam.rest.dto.ChatMetaDto;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Controller
 @Path("/chats")

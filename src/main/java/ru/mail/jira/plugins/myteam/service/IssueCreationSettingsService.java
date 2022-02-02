@@ -1,8 +1,8 @@
+/* (C)2022 */
 package ru.mail.jira.plugins.myteam.service;
 
-import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
-
 import java.util.List;
+import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
 
 public interface IssueCreationSettingsService {
 
@@ -13,5 +13,4 @@ public interface IssueCreationSettingsService {
   IssueCreationSettingsDto addSettings(IssueCreationSettingsDto settings);
 
   IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings);
-
 }

@@ -1,3 +1,4 @@
+/* (C)2022 */
 package ru.mail.jira.plugins.myteam.repository;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
@@ -9,7 +10,8 @@ import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.model.IssueCreationSettingsEntity;
 
 @Repository
-public class IssueCreationSettingsRepository extends PagingAndSortingRepository<IssueCreationSettingsEntity, IssueCreationSettingsDto> {
+public class IssueCreationSettingsRepository
+    extends PagingAndSortingRepository<IssueCreationSettingsEntity, IssueCreationSettingsDto> {
 
   public IssueCreationSettingsRepository(ActiveObjects ao) {
     super(ao);
@@ -21,7 +23,8 @@ public class IssueCreationSettingsRepository extends PagingAndSortingRepository<
   }
 
   @Override
-  public void updateEntityFromDto(@NotNull IssueCreationSettingsDto dto, @NotNull IssueCreationSettingsEntity entity) {
+  public void updateEntityFromDto(
+      @NotNull IssueCreationSettingsDto dto, @NotNull IssueCreationSettingsEntity entity) {
     entity.setTag(dto.getTag());
     entity.setIssueTypeId(dto.getIssueTypeId());
     entity.setProjectKey(dto.getProjectKey());

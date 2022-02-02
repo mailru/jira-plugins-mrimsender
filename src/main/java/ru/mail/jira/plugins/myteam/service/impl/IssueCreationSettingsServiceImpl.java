@@ -1,26 +1,26 @@
+/* (C)2022 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.repository.IssueCreationSettingsRepository;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsService {
 
   private final IssueCreationSettingsRepository issueCreationSettingsRepository;
 
-  public IssueCreationSettingsServiceImpl(IssueCreationSettingsRepository issueCreationSettingsRepository) {
+  public IssueCreationSettingsServiceImpl(
+      IssueCreationSettingsRepository issueCreationSettingsRepository) {
     this.issueCreationSettingsRepository = issueCreationSettingsRepository;
   }
 
   @Override
   public List<IssueCreationSettingsDto> getAllSettings() {
-    return issueCreationSettingsRepository.findAll()
-        .stream()
+    return issueCreationSettingsRepository.findAll().stream()
         .map(IssueCreationSettingsDto::new)
         .collect(Collectors.toList());
   }

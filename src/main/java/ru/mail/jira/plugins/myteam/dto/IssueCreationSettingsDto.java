@@ -1,12 +1,12 @@
+/* (C)2022 */
 package ru.mail.jira.plugins.myteam.dto;
 
+import java.util.Arrays;
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.mail.jira.plugins.myteam.model.IssueCreationSettingsEntity;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Getter
 @Setter
@@ -38,5 +38,4 @@ public class IssueCreationSettingsDto {
     this.issueTypeId = entity.getIssueTypeId();
     this.labels = Arrays.asList(entity.getLabels().split(LABELS_DELIMITER));
   }
-
 }

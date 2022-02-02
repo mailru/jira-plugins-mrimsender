@@ -17,7 +17,6 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.service.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.IcqEvent;
@@ -26,6 +25,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.File;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Ignore
 // todo
