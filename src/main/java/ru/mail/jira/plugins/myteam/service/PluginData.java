@@ -1,5 +1,5 @@
 /* (C)2020 */
-package ru.mail.jira.plugins.myteam.model;
+package ru.mail.jira.plugins.myteam.service;
 
 import java.util.List;
 import java.util.Set;

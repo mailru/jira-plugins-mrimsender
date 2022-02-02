@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
 import org.springframework.stereotype.Service;
-import ru.mail.jira.plugins.myteam.model.PluginData;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;

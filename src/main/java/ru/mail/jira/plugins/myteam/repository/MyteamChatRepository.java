@@ -1,5 +1,5 @@
 /* (C)2020 */
-package ru.mail.jira.plugins.myteam.model;
+package ru.mail.jira.plugins.myteam.repository;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.java.ao.Query;
 import org.springframework.stereotype.Repository;
+import ru.mail.jira.plugins.myteam.model.MyteamChatMetaEntity;
 
 @Repository
 public class MyteamChatRepository {

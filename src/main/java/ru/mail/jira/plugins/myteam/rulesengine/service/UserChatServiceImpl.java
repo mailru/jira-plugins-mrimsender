@@ -18,7 +18,7 @@ import lombok.Getter;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.model.MyteamChatRepository;
+import ru.mail.jira.plugins.myteam.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;

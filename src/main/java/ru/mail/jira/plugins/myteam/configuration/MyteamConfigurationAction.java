@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.commons.CommonUtils;
-import ru.mail.jira.plugins.myteam.model.PluginData;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 import ru.mail.jira.plugins.myteam.protocol.BotsOrchestrationService;
 
 public class MyteamConfigurationAction extends JiraWebActionSupport {

@@ -1,5 +1,5 @@
 /* (C)2020 */
-package ru.mail.jira.plugins.myteam.model;
+package ru.mail.jira.plugins.myteam.service.impl;
 
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.CommonUtils;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Component
 public class PluginDataImpl implements PluginData {
