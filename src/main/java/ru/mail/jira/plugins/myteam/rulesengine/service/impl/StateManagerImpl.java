@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.service;
+package ru.mail.jira.plugins.myteam.rulesengine.service.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.myteam.rulesengine.service.StateManager;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 
 @Component

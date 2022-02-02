@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.rules.commands;
+package ru.mail.jira.plugins.myteam.rulesengine.rules.commands.issue;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.IssueNotFoundException;
@@ -15,7 +15,7 @@ import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
@@ -25,13 +25,12 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 @Slf4j
-@Rule(name = "/watch", description = "Start watching the issue")
-public class WatchIssueCommandRule extends BaseRule {
-  static final RuleType NAME = CommandRuleType.WatchIssue;
-
+@Rule(name = "/unwatch", description = "Stop watching the issue")
+public class UnwatchIssueCommandRule extends BaseRule {
+  static final RuleType NAME = CommandRuleType.UnwatchIssue;
   private final IssueService issueService;
 
-  public WatchIssueCommandRule(
+  public UnwatchIssueCommandRule(
       UserChatService userChatService, RulesEngine rulesEngine, IssueService issueService) {
     super(userChatService, rulesEngine);
     this.issueService = issueService;
@@ -49,12 +48,12 @@ public class WatchIssueCommandRule extends BaseRule {
     String chatId = event.getChatId();
     Locale locale = userChatService.getUserLocale(user);
     try {
-      issueService.watchIssue(issueKey, user);
+      issueService.unwatchIssue(issueKey, user);
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(
               locale,
-              "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyWatch",
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyUnwatch",
               messageFormatter.createIssueLink(issueKey)));
     } catch (IssueWatchingException e) {
       log.error(e.getLocalizedMessage(), e);
@@ -62,13 +61,14 @@ public class WatchIssueCommandRule extends BaseRule {
           chatId,
           userChatService.getText(
               locale,
-              "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyWatching",
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyUnwatching",
               messageFormatter.createIssueLink(issueKey)));
     } catch (IssuePermissionException e) {
       rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e);
     } catch (IssueNotFoundException e) {
       rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e);
     }
+
     if (event instanceof ButtonClickEvent) {
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
     }

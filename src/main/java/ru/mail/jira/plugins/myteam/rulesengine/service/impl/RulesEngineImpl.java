@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.service;
+package ru.mail.jira.plugins.myteam.rulesengine.service.impl;
 
 import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
@@ -13,6 +13,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.*;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.issue.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNoPermissionErrorRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNotFoundErrorRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.DefaultMessageRule;
@@ -21,6 +22,10 @@ import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment.IssueCom
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuesearch.IssueKeyInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRule;
+import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
+import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
+import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
+import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.EmptyState;
 

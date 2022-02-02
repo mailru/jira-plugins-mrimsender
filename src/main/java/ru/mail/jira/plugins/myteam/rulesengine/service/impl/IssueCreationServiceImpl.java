@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.service;
+package ru.mail.jira.plugins.myteam.rulesengine.service.impl;
 
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.config.IssueTypeManager;
@@ -40,6 +40,7 @@ import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.Priori
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
+import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 
 @Service
 public class IssueCreationServiceImpl implements IssueCreationService, InitializingBean {

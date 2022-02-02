@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.models;
+package ru.mail.jira.plugins.myteam.rulesengine.rules;
 
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;

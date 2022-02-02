@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.service;
+package ru.mail.jira.plugins.myteam.rulesengine.service.impl;
 
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.config.IssueTypeManager;
@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
 import org.springframework.stereotype.Service;
+import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
