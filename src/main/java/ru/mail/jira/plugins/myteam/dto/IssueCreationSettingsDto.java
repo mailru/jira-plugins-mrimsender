@@ -12,6 +12,9 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class IssueCreationSettingsDto {
+
+  public static String LABELS_DELIMITER = ";";
+
   private int id;
 
   private String chatId;
@@ -33,7 +36,7 @@ public class IssueCreationSettingsDto {
     this.tag = entity.getTag();
     this.projectKey = entity.getProjectKey();
     this.issueTypeId = entity.getIssueTypeId();
-    this.labels = Arrays.asList(entity.getLabels().split(";"));
+    this.labels = Arrays.asList(entity.getLabels().split(LABELS_DELIMITER));
   }
 
 }

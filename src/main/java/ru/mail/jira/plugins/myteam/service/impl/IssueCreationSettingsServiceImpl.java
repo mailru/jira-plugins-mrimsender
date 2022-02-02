@@ -1,5 +1,6 @@
 package ru.mail.jira.plugins.myteam.service.impl;
 
+import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.repository.IssueCreationSettingsRepository;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
@@ -7,6 +8,7 @@ import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Service
 public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsService {
 
   private final IssueCreationSettingsRepository issueCreationSettingsRepository;
