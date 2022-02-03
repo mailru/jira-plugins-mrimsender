@@ -30,6 +30,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.EmptyState;
+import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
 @Component
 public class RulesEngineImpl implements RulesEngine, InitializingBean {
@@ -41,14 +42,17 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
   private final IssueCreationService issueCreationService;
   private final UserChatService userChatService;
   private final IssueService issueService;
+  private final IssueCreationSettingsService issueCreationSettingsService;
 
   public RulesEngineImpl(
       IssueCreationService issueCreationService,
       UserChatService userChatService,
-      IssueService issueService) {
+      IssueService issueService,
+      IssueCreationSettingsService issueCreationSettingsService) {
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
     this.issueService = issueService;
+    this.issueCreationSettingsService = issueCreationSettingsService;
 
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
@@ -76,7 +80,8 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
 
     // Admin Group Commands
 
-    commandsRuleEngine.registerRule(new IssueCreationSettingsCommand(userChatService, this));
+    commandsRuleEngine.registerRule(
+        new IssueCreationSettingsCommand(userChatService, this, issueCreationSettingsService));
 
     // Commands
     commandsRuleEngine.registerRule(new HelpCommandRule(userChatService, this));

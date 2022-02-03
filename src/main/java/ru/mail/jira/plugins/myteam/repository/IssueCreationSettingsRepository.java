@@ -2,6 +2,8 @@
 package ru.mail.jira.plugins.myteam.repository;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import net.java.ao.Query;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Repository;
@@ -9,11 +11,14 @@ import ru.mail.jira.plugins.commons.dao.PagingAndSortingRepository;
 import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.model.IssueCreationSettingsEntity;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 @Repository
 public class IssueCreationSettingsRepository
     extends PagingAndSortingRepository<IssueCreationSettingsEntity, IssueCreationSettingsDto> {
 
-  public IssueCreationSettingsRepository(ActiveObjects ao) {
+  public IssueCreationSettingsRepository(@ComponentImport ActiveObjects ao) {
     super(ao);
   }
 
@@ -25,6 +30,7 @@ public class IssueCreationSettingsRepository
   @Override
   public void updateEntityFromDto(
       @NotNull IssueCreationSettingsDto dto, @NotNull IssueCreationSettingsEntity entity) {
+    entity.setChatId(dto.getChatId());
     entity.setTag(dto.getTag());
     entity.setIssueTypeId(dto.getIssueTypeId());
     entity.setProjectKey(dto.getProjectKey());
@@ -35,5 +41,19 @@ public class IssueCreationSettingsRepository
   @Override
   public @Nullable String mapDbField(@Nullable String s) {
     return null;
+  }
+
+  public Optional<IssueCreationSettingsEntity> getSettingsByChatId(String chatId) {
+
+    IssueCreationSettingsEntity[] settings =
+        ao.find(IssueCreationSettingsEntity.class, Query.select().where("CHAT_ID = ?", chatId));
+
+    if (settings.length == 0) {
+      return Optional.empty();
+    }
+
+    Arrays.stream(ao.find(IssueCreationSettingsEntity.class)).forEach(ao::delete);
+
+    return Optional.of(settings[0]);
   }
 }

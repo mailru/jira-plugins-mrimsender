@@ -7,6 +7,7 @@ import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
+import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
@@ -16,13 +17,20 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.GroupAdminRule;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
 @Rule(name = "configure_task", description = "Configures issues creation in chat")
 public class IssueCreationSettingsCommand extends GroupAdminRule {
   static final RuleType NAME = CommandRuleType.IssueCreationSettings;
 
-  public IssueCreationSettingsCommand(UserChatService userChatService, RulesEngine rulesEngine) {
+  private final IssueCreationSettingsService issueCreationSettingsService;
+
+  public IssueCreationSettingsCommand(
+      UserChatService userChatService,
+      RulesEngine rulesEngine,
+      IssueCreationSettingsService issueCreationSettingsService) {
     super(userChatService, rulesEngine);
+    this.issueCreationSettingsService = issueCreationSettingsService;
   }
 
   @Condition
@@ -43,6 +51,14 @@ public class IssueCreationSettingsCommand extends GroupAdminRule {
       throws MyteamServerErrorException, IOException {
     userChatService.deleteMessages(
         event.getChatId(), Collections.singletonList(event.getMessageId()));
-    userChatService.sendMessageText(event.getUserId(), "HELLO ADMIN");
+
+    String chatId = event.getChatId();
+
+    IssueCreationSettingsDto settings =
+        issueCreationSettingsService
+            .getSettingsByChatId(chatId)
+            .orElseGet(() -> issueCreationSettingsService.addDefaultSettings(chatId));
+
+    userChatService.sendMessageText(event.getUserId(), "HELLO ADMIN: " + settings);
   }
 }

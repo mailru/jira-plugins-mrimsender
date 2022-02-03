@@ -25,15 +25,15 @@ public class IssueCreationSettingsController {
   }
 
   @GET
-  @Path("/chat/{id}")
-  public IssueCreationSettingsDto getChatSettings(@PathParam("id") final int id) {
-    return issueCreationSettingsService.getSettings(id);
+  @Path("/chat")
+  public IssueCreationSettingsDto getChatSettings(@QueryParam("chatId") final String chatId) {
+    return issueCreationSettingsService.getSettingsByChatId(chatId).orElse(null);
   }
 
   @PUT
-  @Path("/chat/{id}")
+  @Path("/chat")
   public IssueCreationSettingsDto updateChatSettings(
-      @PathParam("id") final int id, final IssueCreationSettingsDto settings) {
-    return issueCreationSettingsService.updateSettings(id, settings);
+      @QueryParam("chatId") final int chatId, final IssueCreationSettingsDto settings) {
+    return issueCreationSettingsService.updateSettings(chatId, settings);
   }
 }

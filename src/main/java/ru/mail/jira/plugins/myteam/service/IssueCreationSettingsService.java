@@ -2,6 +2,7 @@
 package ru.mail.jira.plugins.myteam.service;
 
 import java.util.List;
+import java.util.Optional;
 import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
 
 public interface IssueCreationSettingsService {
@@ -10,7 +11,11 @@ public interface IssueCreationSettingsService {
 
   IssueCreationSettingsDto getSettings(int id);
 
+  Optional<IssueCreationSettingsDto> getSettingsByChatId(String chatId);
+
   IssueCreationSettingsDto addSettings(IssueCreationSettingsDto settings);
+
+  IssueCreationSettingsDto addDefaultSettings(String chatId);
 
   IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings);
 }
