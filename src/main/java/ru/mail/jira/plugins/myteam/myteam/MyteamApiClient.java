@@ -27,7 +27,7 @@ public interface MyteamApiClient {
   HttpResponse<StatusResponse> deleteMessages(String chatId, List<Long> messagesId)
       throws UnirestException, IOException, MyteamServerErrorException;
 
-  HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime)
+  HttpResponse<FetchResponse> getEvents(long lastEventId, long pollTime)
       throws UnirestException, MyteamServerErrorException;
 
   HttpResponse<AdminsResponse> getAdmins(String chatId)

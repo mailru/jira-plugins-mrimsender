@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
+import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
@@ -98,15 +98,15 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   }
 
   @Override
-  public HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime)
+  public HttpResponse<FetchResponse> getEvents(long lastEventId, long pollTime)
       throws UnirestException, MyteamServerErrorException {
-    HttpResponse<FetchResponseDto> response =
+    HttpResponse<FetchResponse> response =
         HttpClient.getPrimaryClient()
             .get(botApiUrl + "/events/get")
             .queryString("token", apiToken)
             .queryString("lastEventId", lastEventId)
             .queryString("pollTime", pollTime)
-            .asObject(FetchResponseDto.class);
+            .asObject(FetchResponse.class);
     checkMyteamServerErrorException(response, "getEvents");
     return response;
   }

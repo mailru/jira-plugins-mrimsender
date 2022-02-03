@@ -12,7 +12,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.events.IcqEvent;
 @Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FetchResponseDto {
+public class FetchResponse {
   private List<IcqEvent> events;
   private boolean ok;
 
