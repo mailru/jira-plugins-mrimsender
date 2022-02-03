@@ -14,6 +14,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.HelpCommandRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.MenuCommandRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.admin.IssueCreationSettingsCommand;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.issue.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNoPermissionErrorRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNotFoundErrorRule;
@@ -72,6 +73,10 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(
         new CreateIssueRule(userChatService, this, issueService, issueCreationService));
     commandsRuleEngine.registerRule(new ViewCommentsRule(userChatService, this, issueService));
+
+    // Admin Group Commands
+
+    commandsRuleEngine.registerRule(new IssueCreationSettingsCommand(userChatService, this));
 
     // Commands
     commandsRuleEngine.registerRule(new HelpCommandRule(userChatService, this));

@@ -22,6 +22,8 @@ public interface UserChatService {
 
   ApplicationUser getJiraUserFromUserChatId(String id) throws UserNotFoundException;
 
+  boolean isChatAdmin(String chatId, String userId);
+
   Locale getUserLocale(ApplicationUser user);
 
   String getRawText(Locale locale, String key);
@@ -37,6 +39,9 @@ public interface UserChatService {
       throws MyteamServerErrorException, IOException;
 
   void sendMessageText(String chatId, String message)
+      throws MyteamServerErrorException, IOException;
+
+  boolean deleteMessages(String chatId, List<Long> messagesId)
       throws MyteamServerErrorException, IOException;
 
   HttpResponse<MessageResponse> editMessageText(

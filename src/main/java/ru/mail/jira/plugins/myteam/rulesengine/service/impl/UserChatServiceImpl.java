@@ -15,12 +15,14 @@ import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.AdminsResponse;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.LinkIssueWithChatException;
@@ -30,6 +32,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 
 @Service
+@Slf4j
 public class UserChatServiceImpl implements UserChatService {
 
   private final UserData userData;
@@ -70,6 +73,17 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
+  public boolean isChatAdmin(String chatId, String userId) {
+    try {
+      AdminsResponse response = myteamClient.getAdmins(chatId).getBody();
+      return response.getAdmins().stream().anyMatch(admin -> admin.getUserId().equals(userId));
+    } catch (MyteamServerErrorException e) {
+      log.error("Unable to get chat admins", e);
+      return false;
+    }
+  }
+
+  @Override
   public Locale getUserLocale(ApplicationUser user) {
     return localeManager.getLocaleFor(user);
   }
@@ -96,6 +110,12 @@ public class UserChatServiceImpl implements UserChatService {
   public void sendMessageText(String chatId, String message)
       throws MyteamServerErrorException, IOException {
     myteamClient.sendMessageText(chatId, message);
+  }
+
+  @Override
+  public boolean deleteMessages(String chatId, List<Long> messagesId)
+      throws MyteamServerErrorException, IOException {
+    return myteamClient.deleteMessages(chatId, messagesId).getBody().isOk();
   }
 
   @Override

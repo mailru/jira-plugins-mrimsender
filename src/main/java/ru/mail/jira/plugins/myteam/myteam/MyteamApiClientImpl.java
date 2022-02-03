@@ -21,6 +21,8 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.AdminsResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.StatusResponse;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Slf4j
@@ -82,6 +84,20 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   }
 
   @Override
+  public HttpResponse<StatusResponse> deleteMessages(String chatId, List<Long> messagesId)
+      throws UnirestException, MyteamServerErrorException {
+    HttpResponse<StatusResponse> response =
+        HttpClient.getPrimaryClient()
+            .get(botApiUrl + "/messages/deleteMessages")
+            .queryString("token", apiToken)
+            .queryString("chatId", chatId)
+            .queryString("msgId", messagesId)
+            .asObject(StatusResponse.class);
+    checkMyteamServerErrorException(response, "deleteMessages");
+    return response;
+  }
+
+  @Override
   public HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<FetchResponseDto> response =
@@ -92,6 +108,19 @@ public class MyteamApiClientImpl implements MyteamApiClient {
             .queryString("pollTime", pollTime)
             .asObject(FetchResponseDto.class);
     checkMyteamServerErrorException(response, "getEvents");
+    return response;
+  }
+
+  @Override
+  public HttpResponse<AdminsResponse> getAdmins(String chatId)
+      throws UnirestException, MyteamServerErrorException {
+    HttpResponse<AdminsResponse> response =
+        HttpClient.getPrimaryClient()
+            .get(botApiUrl + "/chats/getAdmins")
+            .queryString("token", apiToken)
+            .queryString("chatId", chatId)
+            .asObject(AdminsResponse.class);
+    checkMyteamServerErrorException(response, "getAdmins");
     return response;
   }
 

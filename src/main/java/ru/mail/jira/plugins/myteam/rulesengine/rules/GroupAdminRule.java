@@ -1,6 +1,7 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules;
 
+import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
@@ -10,7 +11,8 @@ public class GroupAdminRule extends BaseRule {
     super(userChatService, rulesEngine);
   }
 
-  public void checkAdminRules() throws AdminRulesRequiredException {
-    throw new AdminRulesRequiredException();
+  public void checkAdminRules(MyteamEvent event) throws AdminRulesRequiredException {
+    if (!userChatService.isChatAdmin(event.getChatId(), event.getUserId()))
+      throw new AdminRulesRequiredException();
   }
 }
