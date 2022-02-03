@@ -1,6 +1,6 @@
 Class FetchResponseDto
 ======================
-ru.mail.jira.plugins.myteam.myteam.dto.FetchResponse
+ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse
 Summary
 -------
 #### Constructors

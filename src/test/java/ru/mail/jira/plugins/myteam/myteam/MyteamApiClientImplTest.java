@@ -19,10 +19,10 @@ import org.junit.Ignore;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 public class MyteamApiClientImplTest {

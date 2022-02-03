@@ -13,8 +13,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.response.AdminsResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.response.StatusResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.*;
 
 public interface MyteamApiClient {
   HttpResponse<MessageResponse> sendMessageText(

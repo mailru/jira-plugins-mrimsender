@@ -11,7 +11,7 @@ import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.LinkIssueWithChatException;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;

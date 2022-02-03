@@ -1,5 +1,5 @@
 /* (C)2020 */
-package ru.mail.jira.plugins.myteam.myteam.dto;
+package ru.mail.jira.plugins.myteam.myteam.dto.response;
 
 import java.util.List;
 import lombok.Getter;
