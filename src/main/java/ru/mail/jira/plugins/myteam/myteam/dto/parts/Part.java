@@ -16,7 +16,8 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
 @JsonSubTypes({
   @JsonSubTypes.Type(value = File.class, name = "file"),
   @JsonSubTypes.Type(value = Mention.class, name = "mention"),
-  @JsonSubTypes.Type(value = Forward.class, name = "forward")
+  @JsonSubTypes.Type(value = Forward.class, name = "forward"),
+  @JsonSubTypes.Type(value = Reply.class, name = "reply")
 })
 @Getter
 @Setter
