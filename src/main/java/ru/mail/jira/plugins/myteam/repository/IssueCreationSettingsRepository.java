@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.repository;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import java.util.Arrays;
 import java.util.Optional;
 import net.java.ao.Query;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +53,7 @@ public class IssueCreationSettingsRepository
       return Optional.empty();
     }
 
-    Arrays.stream(ao.find(IssueCreationSettingsEntity.class)).forEach(ao::delete);
+    //    Arrays.stream(ao.find(IssueCreationSettingsEntity.class)).forEach(ao::delete);
 
     return Optional.of(settings[0]);
   }

@@ -18,6 +18,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.admin.IssueCreatio
 import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.issue.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNoPermissionErrorRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNotFoundErrorRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.service.CreateIssueByReplyRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment.IssueCommentInputRule;
@@ -101,6 +102,8 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
 
     // Service
     commandsRuleEngine.registerRule(new SearchByJqlIssuesRule(userChatService, this, issueService));
+    commandsRuleEngine.registerRule(
+        new CreateIssueByReplyRule(userChatService, this, issueCreationSettingsService));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));

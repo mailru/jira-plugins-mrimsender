@@ -21,4 +21,6 @@ public interface IssueCreationSettingsService {
   IssueCreationSettingsDto addDefaultSettings(String chatId);
 
   IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings);
+
+  boolean hasChatSettings(String chatId, String tag);
 }

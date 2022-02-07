@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.rulesengine.rules.commands.admin;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Map;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;

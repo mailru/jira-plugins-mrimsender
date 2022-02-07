@@ -85,6 +85,13 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     return result;
   }
 
+  @Override
+  public boolean hasChatSettings(String chatId, String tag) {
+    checkAndFillCache();
+
+    return issueSettingsCache.containsKey(getSettingsCacheKey(chatId, tag));
+  }
+
   private void checkAndFillCache() {
     if (issueSettingsCache == null) {
       issueSettingsCache = new HashMap<>();
@@ -99,6 +106,10 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   }
 
   private static String getSettingsCacheKey(IssueCreationSettingsDto settings) {
-    return String.format("%s-%s", settings.getChatId(), settings.getTag());
+    return getSettingsCacheKey(settings.getChatId(), settings.getTag());
+  }
+
+  private static String getSettingsCacheKey(String chatId, String tag) {
+    return String.format("%s-%s", chatId, tag);
   }
 }
