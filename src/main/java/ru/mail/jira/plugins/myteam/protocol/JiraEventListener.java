@@ -30,6 +30,7 @@ import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 
 @Component
@@ -92,7 +93,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
         Set<ApplicationUser> recipients = new HashSet<>();
 
         Set<NotificationRecipient> notificationRecipients =
-                Sets.newHashSet(notificationSchemeManager.getRecipients(issueEvent));
+            Sets.newHashSet(notificationSchemeManager.getRecipients(issueEvent));
         NotificationFilterContext context =
             notificationFilterManager.makeContextFrom(
                 JiraNotificationReason.ISSUE_EVENT, issueEvent);
@@ -204,7 +205,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     comment.setText(
         i18nResolver.getRawText(
             locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"));
-    comment.setCallbackData(String.join("-", "comment", issueKey));
+    comment.setCallbackData(String.join("-", ButtonRuleType.CommentIssue.getName(), issueKey));
     buttonsRow.add(comment);
 
     InlineKeyboardMarkupButton showMenuButton =
