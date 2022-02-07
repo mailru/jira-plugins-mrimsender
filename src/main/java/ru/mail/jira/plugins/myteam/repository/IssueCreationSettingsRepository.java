@@ -3,6 +3,8 @@ package ru.mail.jira.plugins.myteam.repository;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import java.util.Arrays;
+import java.util.Optional;
 import net.java.ao.Query;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,9 +12,6 @@ import org.springframework.stereotype.Repository;
 import ru.mail.jira.plugins.commons.dao.PagingAndSortingRepository;
 import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.model.IssueCreationSettingsEntity;
-
-import java.util.Arrays;
-import java.util.Optional;
 
 @Repository
 public class IssueCreationSettingsRepository
@@ -35,7 +34,10 @@ public class IssueCreationSettingsRepository
     entity.setIssueTypeId(dto.getIssueTypeId());
     entity.setProjectKey(dto.getProjectKey());
     entity.setEnabled(dto.isEnabled());
-    entity.setLabels(String.join(IssueCreationSettingsDto.LABELS_DELIMITER, dto.getLabels()));
+    entity.setLabels(
+        (dto.getLabels() == null || dto.getLabels().size() == 0)
+            ? null
+            : String.join(IssueCreationSettingsDto.LABELS_DELIMITER, dto.getLabels()));
   }
 
   @Override

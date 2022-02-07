@@ -2,14 +2,13 @@
 package ru.mail.jira.plugins.myteam.service.impl;
 
 import com.atlassian.jira.exception.NotFoundException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
-import ru.mail.jira.plugins.myteam.model.IssueCreationSettingsEntity;
 import ru.mail.jira.plugins.myteam.repository.IssueCreationSettingsRepository;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
@@ -17,6 +16,10 @@ import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsService {
 
   private final IssueCreationSettingsRepository issueCreationSettingsRepository;
+
+  private Map<String, IssueCreationSettingsDto>
+      issueSettingsCache; // Settings cache. Where key is "{chatId}-{tag}". Example:
+  // 74175@chat.agent-#task
 
   public IssueCreationSettingsServiceImpl(
       IssueCreationSettingsRepository issueCreationSettingsRepository) {
@@ -28,6 +31,12 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     return issueCreationSettingsRepository.findAll().stream()
         .map(IssueCreationSettingsDto::new)
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public Map<String, IssueCreationSettingsDto> getChatSettingsCache() {
+    checkAndFillCache();
+    return issueSettingsCache;
   }
 
   @Override
@@ -44,26 +53,52 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   @Override
   public IssueCreationSettingsDto addSettings(IssueCreationSettingsDto settings) {
-    return new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
+    checkAndFillCache();
+
+    IssueCreationSettingsDto result =
+        new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
+    issueSettingsCache.put(getSettingsCacheKey(result), result);
+    return result;
   }
 
   @Override
   public IssueCreationSettingsDto addDefaultSettings(String chatId) {
+    checkAndFillCache();
+
     IssueCreationSettingsDto settings =
-        IssueCreationSettingsDto.builder()
-            .chatId(chatId)
-            .enabled(false)
-            .tag("task")
-            .projectKey("")
-            .issueTypeId("")
-            .labels(new ArrayList<>())
-            .build(); // TODO FIX NULLABLE
-    @NotNull IssueCreationSettingsEntity res = issueCreationSettingsRepository.create(settings);
-    return new IssueCreationSettingsDto(res);
+        IssueCreationSettingsDto.builder().chatId(chatId).enabled(false).tag("task").build();
+
+    IssueCreationSettingsDto result =
+        new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
+    issueSettingsCache.put(getSettingsCacheKey(result), result);
+    return result;
   }
 
   @Override
   public IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings) {
-    return new IssueCreationSettingsDto(issueCreationSettingsRepository.update(id, settings));
+    checkAndFillCache();
+
+    issueSettingsCache.remove(getSettingsCacheKey(settings));
+    IssueCreationSettingsDto result =
+        new IssueCreationSettingsDto(issueCreationSettingsRepository.update(id, settings));
+    issueSettingsCache.put(getSettingsCacheKey(result), result);
+    return result;
+  }
+
+  private void checkAndFillCache() {
+    if (issueSettingsCache == null) {
+      issueSettingsCache = new HashMap<>();
+      issueCreationSettingsRepository
+          .findAll()
+          .forEach(
+              settings ->
+                  issueSettingsCache.put(
+                      String.format("%s-%s", settings.getChatId(), settings.getTag()),
+                      new IssueCreationSettingsDto(settings)));
+    }
+  }
+
+  private static String getSettingsCacheKey(IssueCreationSettingsDto settings) {
+    return String.format("%s-%s", settings.getChatId(), settings.getTag());
   }
 }
