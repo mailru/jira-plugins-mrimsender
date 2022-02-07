@@ -18,7 +18,8 @@ const config = {
     target: 'web',
     context: FRONTEND_SRC_DIR, // directory where to look for all entries
     entry: {
-        'create-chat-panel': [path.join(FRONTEND_SRC_DIR, 'create-chat-panel' ,'index.tsx')] // build entry point
+        'create-chat-panel': [path.join(FRONTEND_SRC_DIR, 'create-chat-panel', 'index.tsx')], // build entry point
+        'chat-settings-panel': [path.join(FRONTEND_SRC_DIR, 'chat-settings-panel', 'index.tsx')] // build entry point
     },
     module: {
         rules: [
@@ -45,7 +46,8 @@ const config = {
             pluginKey: PLUGIN_KEY, // current plugin key
             providedDependencies: WRM_DEPENDENCIES_CONFIG, // internal jira plugins web-resource dependencies
             contextMap: {
-                'create-chat-panel': ['jira.browse.project', 'jira.navigator.advanced'], // Specify in which web-resource context to include entrypoint resources
+                'chat-settings-panel': [PLUGIN_KEY + '.' + 'chat.settings.panel'], // Specify in which web-resource context to include entrypoint resources
+                'create-chat-panel': ['jira.browse.project', 'jira.navigator.advanced']
             },
             verbose: false,
             xmlDescriptors: path.resolve(MVN_OUTPUT_DIR, 'META-INF', 'plugin-descriptors', 'wr-webpack-bundles.xml'), //An absolute filepath to where the generated XML should be output to
@@ -54,7 +56,7 @@ const config = {
         new WebpackBar() // Elegant ProgressBar and Profiler for Webpack,
     ],
     externals: {
-        JIRA : "JIRA",
+        JIRA: "JIRA",
         'AJS': {
             var: 'AJS',
         },

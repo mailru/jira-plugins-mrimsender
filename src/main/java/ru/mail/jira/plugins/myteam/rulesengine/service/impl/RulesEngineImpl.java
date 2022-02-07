@@ -82,7 +82,8 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     // Admin Group Commands
 
     commandsRuleEngine.registerRule(
-        new IssueCreationSettingsCommand(userChatService, this, issueCreationSettingsService));
+        new IssueCreationSettingsCommand(
+            userChatService, this, issueCreationSettingsService, issueService));
 
     // Commands
     commandsRuleEngine.registerRule(new HelpCommandRule(userChatService, this));

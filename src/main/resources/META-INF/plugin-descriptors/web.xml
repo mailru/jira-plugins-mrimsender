@@ -35,6 +35,21 @@
         <context>atl.userprofile</context>
     </web-resource>
 
+    <webwork1 key="chat-settings-app-action" class="java.lang.Object" roles-required="use">
+        <actions>
+            <action name="ru.mail.jira.plugins.myteam.actions.ChatSettingsAction" alias="ChatSetting">
+                <view name="success">ru/mail/jira/plugins/myteam/configuration/chat-settings.vm</view>
+                <view name="securitybreach">/secure/views/securitybreach.jsp</view>
+            </action>
+        </actions>
+    </webwork1>
+
+    <sitemesh key="myteam-sitemesh-prettyurls" path="/myteam"/>
+    <routing key="myteam-prettyurls" path="/myteam">
+        <route from="/chats/settings" to="/secure/ChatSetting.jspa"/>
+    </routing>
+
+
 
     <web-panel key="myteam-profile-panel" location="webpanels.user.profile.summary.custom" weight="10">
         <condition class="ru.mail.jira.plugins.myteam.configuration.MyteamProfilePanelCondition" />

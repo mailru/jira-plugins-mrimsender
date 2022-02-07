@@ -15,6 +15,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequi
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.GroupAdminRule;
+import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
@@ -24,13 +25,16 @@ public class IssueCreationSettingsCommand extends GroupAdminRule {
   static final RuleType NAME = CommandRuleType.IssueCreationSettings;
 
   private final IssueCreationSettingsService issueCreationSettingsService;
+  private final IssueService issueService;
 
   public IssueCreationSettingsCommand(
       UserChatService userChatService,
       RulesEngine rulesEngine,
-      IssueCreationSettingsService issueCreationSettingsService) {
+      IssueCreationSettingsService issueCreationSettingsService,
+      IssueService issueService) {
     super(userChatService, rulesEngine);
     this.issueCreationSettingsService = issueCreationSettingsService;
+    this.issueService = issueService;
   }
 
   @Condition
@@ -59,6 +63,12 @@ public class IssueCreationSettingsCommand extends GroupAdminRule {
             .getSettingsByChatId(chatId)
             .orElseGet(() -> issueCreationSettingsService.addDefaultSettings(chatId));
 
-    userChatService.sendMessageText(event.getUserId(), "HELLO ADMIN: " + settings);
+    String link =
+        String.format(
+            "%s/myteam/chats/settings?chatId=%s",
+            issueService.getJiraBaseUrl(), settings.getChatId());
+
+    userChatService.sendMessageText(
+        event.getUserId(), "Visit this page to edit chat issue creation settings: \n\n" + link);
   }
 }
