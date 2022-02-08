@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import { CreatableSelect, OptionType, ValueType } from '@atlaskit/select';
 
 const defaultOptions = [
@@ -14,61 +14,45 @@ const createOption = (label: string) => ({
 
 type Option = { label: string; value: string };
 
-type State = {
-  isLoading: boolean;
-  options: Array<Option>;
-  value?: Array<ValueType<OptionType>>;
-};
-
 type Props = {
+  className?: string;
   onChange: (value: Option) => void;
 };
 
-export default class LabelsSelect extends Component<Props, State> {
-  state: State = {
-    isLoading: false,
-    options: defaultOptions,
-    value: undefined,
+const LabelsSelect = ({ className, onChange }: Props) => {
+  const [value, setValue] = useState<Array<ValueType<OptionType>>>();
+  const [options, setOptions] = useState<Array<Option>>(defaultOptions);
+
+  const handleChange = (newValue: any, actionMeta: any) => {
+    setValue(newValue);
+    onChange(newValue);
   };
 
-  handleChange = (newValue: any, actionMeta: any) => {
-    this.setState({ value: newValue });
-    this.props.onChange(newValue);
-  };
-
-  handleCreate = (inputValue: any) => {
-    this.setState({ isLoading: true });
-
-    const { options } = this.state;
+  const handleCreate = (inputValue: any) => {
     const newOption = createOption(inputValue);
 
     const newOptions = options.slice();
     newOptions.push(newOption);
 
-    const newValue = this.state.value ? this.state.value.slice() : [];
+    const newValue = value ? value.slice() : [];
 
     newValue.push(newOption);
-    this.setState({
-      isLoading: false,
-      options: newOptions,
-      value: newValue,
-    });
+    setValue(value);
+    setOptions(options);
   };
 
-  render() {
-    const { isLoading, options, value } = this.state;
-    return (
-      <CreatableSelect
-        inputId="createable-select-example"
-        isClearable
-        isMulti
-        isDisabled={isLoading}
-        isLoading={isLoading}
-        onChange={this.handleChange}
-        onCreateOption={this.handleCreate}
-        options={options}
-        value={value}
-      />
-    );
-  }
-}
+  return (
+    <CreatableSelect
+      className={className}
+      inputId="labels-select"
+      isClearable
+      isMulti
+      onChange={handleChange}
+      onCreateOption={handleCreate}
+      options={options}
+      value={value}
+    />
+  );
+};
+
+export default LabelsSelect;

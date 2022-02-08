@@ -1,11 +1,13 @@
-import React, { Fragment, ReactElement, useLayoutEffect, useState } from 'react';
+import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import contextPath from 'wrm/context-path';
-import { AsyncSelect, OptionType } from '@atlaskit/select';
+import { AsyncSelect, OptionType, SelectProps } from '@atlaskit/select';
 
 type ProjectData = { name: string; key: string };
 
-type Props = {
-  title?: string;
+type Props = SelectProps<OptionType> & {
+  className?: string;
+  defaultProjectKey?: string;
+  id: string;
   onChange: (value: OptionType | null) => void;
 };
 
@@ -38,7 +40,7 @@ const filterOptions = (options: Array<OptionType>) => {
     });
 };
 
-const ProjectSelect = ({ title, onChange }: Props): ReactElement => {
+const ProjectSelect = ({ id, className, onChange }: Props): ReactElement => {
   const [projects, setProjects] = useState<Array<OptionType>>([]);
 
   useLayoutEffect(() => {
@@ -48,16 +50,14 @@ const ProjectSelect = ({ title, onChange }: Props): ReactElement => {
   }, []);
 
   return (
-    <Fragment>
-      <label htmlFor="project-select">{title}</label>
-      <AsyncSelect
-        onChange={onChange}
-        inputId="project-select"
-        cacheOptions
-        defaultOptions={projects}
-        loadOptions={filterOptions(projects)}
-      />
-    </Fragment>
+    <AsyncSelect
+      className={className}
+      onChange={onChange}
+      inputId={id}
+      cacheOptions
+      defaultOptions={projects}
+      loadOptions={filterOptions(projects)}
+    />
   );
 };
 

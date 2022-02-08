@@ -8,7 +8,11 @@ type Props = {
   chatId: string | null;
 };
 
-const Container = styled.div``;
+const Container = styled.div`
+  & > h2 {
+    margin-bottom: 20px;
+  }
+`;
 
 const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
   const [settings, setsettings] = useState<IssueCreationSettings>();
@@ -18,7 +22,12 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
     }
   }, []);
 
-  return <Container>{settings ? <EditIssueCreationSettingsForm settings={settings} /> : null}</Container>;
+  return (
+    <Container>
+      <h2>{`Настройки для чата ${chatId}`}</h2>
+      {settings ? <EditIssueCreationSettingsForm defaultSettings={settings} onSave={console.log} /> : null}
+    </Container>
+  );
 };
 
 export default ChatIssueCreationSettings;

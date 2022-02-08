@@ -19,7 +19,6 @@ export function init(): void {
 
   ReactDOM.render(
     <CacheProvider value={emotionCache}>
-      <div>Тут будут настройки11</div>
       <ChatIssueCreationSettings chatId={chatId} />
     </CacheProvider>,
     root,

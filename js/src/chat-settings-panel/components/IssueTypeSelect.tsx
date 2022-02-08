@@ -1,12 +1,14 @@
-import React, { Fragment, ReactElement, useLayoutEffect, useState } from 'react';
+import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import contextPath from 'wrm/context-path';
 import { AsyncSelect, OptionType } from '@atlaskit/select';
 
 type IssueTypeData = { name: string; id: string };
 
 type Props = {
-  title?: string;
-  projectKey: string;
+  id: string;
+  className?: string;
+  issueTypeId: string;
+  defaultIssueTypeId?: string;
   onChange: (value: OptionType | null) => void;
 };
 
@@ -39,27 +41,35 @@ const filterOptions = (options: Array<OptionType>) => {
     });
 };
 
-const ProjectSelect = ({ projectKey, title, onChange }: Props): ReactElement => {
+const IssueTypeSelect = ({ id, issueTypeId, className, defaultIssueTypeId, onChange }: Props): ReactElement => {
   const [projects, setProjects] = useState<Array<OptionType>>([]);
+  const [defaultValue, setDefaultValue] = useState<OptionType>();
 
   useLayoutEffect(() => {
-    loadProjectOptions(projectKey).then(({ issueTypes }) => {
-      setProjects(mapIssueTypesToOptions(issueTypes));
+    loadProjectOptions(issueTypeId).then(({ issueTypes }) => {
+      const options = mapIssueTypesToOptions(issueTypes);
+      setProjects(options);
+
+      const selectedValues = options.filter((o) => o.value == defaultIssueTypeId);
+      console.log(selectedValues);
+
+      if (selectedValues.length) {
+        setDefaultValue(selectedValues[0]);
+      }
     });
-  }, []);
+  }, [defaultIssueTypeId]);
 
   return (
-    <Fragment>
-      <label htmlFor="issuetype-select">{title}</label>
-      <AsyncSelect
-        onChange={onChange}
-        inputId="issuetype-select"
-        cacheOptions
-        defaultOptions={projects}
-        loadOptions={filterOptions(projects)}
-      />
-    </Fragment>
+    <AsyncSelect
+      className={className}
+      onChange={onChange}
+      inputId={id}
+      cacheOptions
+      defaultValue={defaultValue}
+      defaultOptions={projects}
+      loadOptions={filterOptions(projects)}
+    />
   );
 };
 
-export default ProjectSelect;
+export default IssueTypeSelect;
