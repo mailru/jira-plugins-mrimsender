@@ -8,6 +8,7 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.protocol.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
@@ -58,6 +59,6 @@ public class MyteamServiceImpl implements MyteamService {
 
   @Override
   public void sendMessage(String chatId, String message) {
-    myteamEventsListener.publishEvent(new JiraNotifyEvent(chatId, message, null));
+    myteamEventsListener.publishEvent(new JiraNotifyEvent(chatId, Utils.shieldText(message), null));
   }
 }
