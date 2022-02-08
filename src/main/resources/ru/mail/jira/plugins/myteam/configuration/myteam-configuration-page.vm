@@ -69,6 +69,10 @@
         <input type="text" class="text" id="botLink" name="botLink" value="$!botLink" />
     </div>
     <div class="field-group">
+        <label for="profileLink">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.profileLink" )</label>
+        <input type="text" class="text" id="profileLink" name="profileLink" value="$!profileLink" />
+    </div>
+    <div class="field-group">
         <label for="enabledByDefault">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.enabledByDefault" )</label>
         <select class="select" id="enabledByDefault" name="enabledByDefault">
             <option value="true"#if( $enabledByDefault ) selected="selected"#end>$i18n.getText( "ru.mail.jira.plugins.myteam.profilePanel.notifications.enabled" )</option>

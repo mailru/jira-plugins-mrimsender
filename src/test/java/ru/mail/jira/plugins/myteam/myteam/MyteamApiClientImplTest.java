@@ -99,7 +99,10 @@ public class MyteamApiClientImplTest {
     HttpResponse<SuccessResponse> httpResponse =
         myteamApiClient.setAboutChat(pluginData.getToken(), "111905", "Set About Chat");
     assertEquals(200, httpResponse.getStatus());
-    assertTrue(httpResponse.getBody() != null && httpResponse.getBody().isOk() && httpResponse.getBody().getDescription() == null);
+    assertTrue(
+        httpResponse.getBody() != null
+            && httpResponse.getBody().isOk()
+            && httpResponse.getBody().getDescription() == null);
   }
 
   @Ignore

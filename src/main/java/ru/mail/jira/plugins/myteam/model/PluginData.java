@@ -41,6 +41,10 @@ public interface PluginData {
 
   void setBotLink(String botLink);
 
+  String getProfileLink();
+
+  void setProfileLink(String profileLink);
+
   Set<Long> getExcludingProjectIds();
 
   void setExcludingProjectIds(Set<Long> excludingProjectIds);
