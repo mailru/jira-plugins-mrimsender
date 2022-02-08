@@ -267,7 +267,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   @Override
   public HttpResponse<ChatMember> getMembers(@Nonnull String chatId) throws UnirestException {
     return HttpClient.getPrimaryClient()
-        .post("https://api.internal.myteam.mail.ru/bot/v1" + "/chats/getMembers")
+        .post(botApiUrl + "/chats/getMembers")
         .header("Accept", "application/json")
         .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
         .field("token", apiToken)
