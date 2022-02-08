@@ -92,7 +92,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
         Set<ApplicationUser> recipients = new HashSet<>();
 
         Set<NotificationRecipient> notificationRecipients =
-                Sets.newHashSet(notificationSchemeManager.getRecipients(issueEvent));
+            Sets.newHashSet(notificationSchemeManager.getRecipients(issueEvent));
         NotificationFilterContext context =
             notificationFilterManager.makeContextFrom(
                 JiraNotificationReason.ISSUE_EVENT, issueEvent);
