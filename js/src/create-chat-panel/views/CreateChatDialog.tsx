@@ -26,7 +26,7 @@ const validateChatName = (value?: string) => {
   }
 };
 
-const validateChatMembers = (value: ValueType<OptionData, true>) => {
+const validateChatMembers = (value?: ValueType<OptionData, true>) => {
   if (!value || value.length <= 1) {
     return 'TOO_SHORT';
   }

@@ -18,12 +18,7 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
     }
   }, []);
 
-  return (
-    <Container>
-      <div>123</div>
-      {settings ? <EditIssueCreationSettingsForm settings={settings} /> : null}
-    </Container>
-  );
+  return <Container>{settings ? <EditIssueCreationSettingsForm settings={settings} /> : null}</Container>;
 };
 
 export default ChatIssueCreationSettings;
