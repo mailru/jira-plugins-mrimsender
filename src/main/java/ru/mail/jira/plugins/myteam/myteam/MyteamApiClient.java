@@ -16,6 +16,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.SuccessResponse;
 
 public interface MyteamApiClient {
   HttpResponse<MessageResponse> sendMessageText(
@@ -53,6 +54,10 @@ public interface MyteamApiClient {
       String about,
       @Nonnull List<ChatMemberId> members,
       boolean isPublic)
+      throws IOException, UnirestException, MyteamServerErrorException;
+
+  HttpResponse<SuccessResponse> setAboutChat(
+      @Nonnull String botToken, @Nonnull String chatId, String about)
       throws IOException, UnirestException, MyteamServerErrorException;
 
   HttpResponse<ChatInfoResponse> getChatInfo(@Nonnull String botToken, @Nonnull String chatId)

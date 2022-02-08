@@ -27,6 +27,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -263,6 +264,7 @@ public class ChatCreationRestService {
               i18nResolver.getText(
                   recipientLocale,
                   "ru.mail.jira.plugins.myteam.createChat.about.text",
+                  StringUtils.EMPTY,
                   applicationProperties.getString(APKeys.JIRA_BASEURL) + "/browse/" + issueKey),
               chatMembers,
               false);
@@ -277,7 +279,17 @@ public class ChatCreationRestService {
         HttpResponse<ChatInfoResponse> chatInfoResponse =
             myteamApiClient.getChatInfo(pluginData.getToken(), chatId);
         if (chatInfoResponse.getStatus() == 200 && chatInfoResponse.getBody() != null) {
-          return ChatMetaDto.buildChatInfo(chatInfoResponse.getBody(), chatMemberDtos);
+          ChatMetaDto chatMetaDto =
+              ChatMetaDto.buildChatInfo(chatInfoResponse.getBody(), chatMemberDtos);
+          this.myteamApiClient.setAboutChat(
+              pluginData.getToken(),
+              chatId,
+              i18nResolver.getText(
+                  recipientLocale,
+                  "ru.mail.jira.plugins.myteam.createChat.about.text",
+                  chatMetaDto != null ? chatMetaDto.getLink() : StringUtils.EMPTY,
+                  applicationProperties.getString(APKeys.JIRA_BASEURL) + "/browse/" + issueKey));
+          return chatMetaDto;
         }
       }
       log.error("Exception during chat creation chat sn not found");
