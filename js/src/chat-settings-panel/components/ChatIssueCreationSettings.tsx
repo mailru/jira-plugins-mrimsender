@@ -11,6 +11,8 @@ type Props = {
 };
 
 const Container = styled.div`
+  max-width: 600px;
+
   & > h2 {
     margin-bottom: 20px;
   }
