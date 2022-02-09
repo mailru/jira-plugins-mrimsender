@@ -12,6 +12,7 @@ import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
@@ -70,6 +71,10 @@ public class ViewIssueCommandRule extends BaseRule {
         rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e);
         userChatService.deleteState(chatId);
       }
+    }
+
+    if (event instanceof ButtonClickEvent) {
+      userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
     }
   }
 
