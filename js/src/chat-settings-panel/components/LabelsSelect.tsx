@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { CreatableSelect, OptionType, ValueType } from '@atlaskit/select';
+import React, { ReactElement, useLayoutEffect, useState } from 'react';
+import { CreatableSelect, OptionsType, OptionType } from '@atlaskit/select';
 
 const defaultOptions = [
   { label: 'autocreated', value: 'autocreated' },
@@ -12,23 +12,22 @@ const createOption = (label: string) => ({
   value: label.toLowerCase().replace(/\W/g, ''),
 });
 
-type Option = { label: string; value: string };
-
 type Props = {
   className?: string;
-  onChange: (value: Option) => void;
+  defaultLabels?: Array<string>;
+  onChange: (value: OptionsType<OptionType>) => void;
 };
 
-const LabelsSelect = ({ className, onChange }: Props) => {
-  const [value, setValue] = useState<Array<ValueType<OptionType>>>();
-  const [options, setOptions] = useState<Array<Option>>(defaultOptions);
+const LabelsSelect = ({ className, defaultLabels, onChange }: Props): ReactElement => {
+  const [value, setValue] = useState<OptionsType<OptionType>>();
+  const [options, setOptions] = useState<OptionsType<OptionType>>(defaultOptions);
 
-  const handleChange = (newValue: any, actionMeta: any) => {
+  const handleChange = (newValue: OptionsType<OptionType>) => {
     setValue(newValue);
     onChange(newValue);
   };
 
-  const handleCreate = (inputValue: any) => {
+  const handleCreate = (inputValue: string) => {
     const newOption = createOption(inputValue);
 
     const newOptions = options.slice();
@@ -40,6 +39,20 @@ const LabelsSelect = ({ className, onChange }: Props) => {
     setValue(value);
     setOptions(options);
   };
+
+  useLayoutEffect(() => {
+    console.log(defaultLabels);
+
+    if (defaultLabels) {
+      const newValues = new Set<string>(defaultLabels);
+
+      setValue(Array.from(newValues).map(createOption));
+
+      options.forEach((l) => !newValues.has(String(l.value)) && newValues.add(String(l.value)));
+
+      setOptions(Array.from(newValues).map(createOption));
+    }
+  }, [defaultLabels]);
 
   return (
     <CreatableSelect

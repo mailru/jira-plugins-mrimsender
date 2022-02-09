@@ -8,9 +8,9 @@ import LabelsSelect from './LabelsSelect';
 import ProjectSelect from './ProjectSelect';
 import IssueTypeSelect from './IssueTypeSelect';
 import styled from '@emotion/styled';
-import { ValueType, OptionType } from '@atlaskit/select';
+import { ValueType, OptionType, OptionsType } from '@atlaskit/select';
 
-type EditableSettings = Omit<IssueCreationSettings, 'id' | 'chatId'>;
+type EditableSettings = Partial<Omit<IssueCreationSettings, 'id' | 'chatId'>>;
 
 type Props = {
   defaultSettings: EditableSettings;
@@ -31,16 +31,22 @@ type FormState = {
   labels: ReadonlyArray<OptionType>;
 };
 
-const validateNotNull = (value?: any) => {
+const validateNotNull = (value?: unknown) => {
   if (value) {
     return undefined;
   }
   return 'Необходимо заполнить поле';
 };
 
-const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): ReactElement => {
-  console.log(defaultSettings);
+const createOption = (value?: string) => {
+  if (!value) return null;
+  return {
+    label: value,
+    value,
+  };
+};
 
+const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): ReactElement => {
   return (
     <Container>
       <Form
@@ -53,7 +59,7 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
             labels: labels ? labels.map((l) => String(l.value)) : [],
           });
         }}>
-        {({ formProps }: any) => (
+        {({ formProps }) => (
           <form {...formProps}>
             <CheckboxField name="enabled" label="Статус" defaultIsChecked={defaultSettings.enabled}>
               {({ fieldProps }) => (
@@ -65,10 +71,16 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
               name="projectKey"
               label="Выберите проект"
               isRequired
+              defaultValue={createOption(defaultSettings.projectKey)}
               validate={validateNotNull}>
               {({ fieldProps: { id, ...rest }, error }) => (
                 <>
-                  <ProjectSelect validationState={error ? 'error' : 'default'} id={id} {...rest} />
+                  <ProjectSelect
+                    defaultProjectKey={defaultSettings.projectKey}
+                    validationState={error ? 'error' : 'default'}
+                    id={id}
+                    {...rest}
+                  />
                   {error && <ErrorMessage>{error}</ErrorMessage>}
                 </>
               )}
@@ -77,6 +89,7 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
             <Field<ValueType<OptionType>>
               name="issueTypeId"
               label="Выберите тип задачи"
+              defaultValue={createOption(defaultSettings.issueTypeId)}
               isRequired
               validate={validateNotNull}>
               {({ fieldProps: { id, ...rest }, error }) => (
@@ -107,8 +120,11 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
               )}
             </Field>
 
-            <Field<ValueType<OptionType>> name="labels" label="Выберите метки">
-              {({ fieldProps: { id, ...rest } }) => <LabelsSelect {...rest} />}
+            <Field<OptionsType<OptionType>>
+              name="labels"
+              label="Выберите метки"
+              defaultValue={(defaultSettings.labels || []).map(createOption) as OptionsType<OptionType>}>
+              {({ fieldProps }) => <LabelsSelect defaultLabels={defaultSettings.labels} {...fieldProps} />}
             </Field>
 
             <FormFooter>

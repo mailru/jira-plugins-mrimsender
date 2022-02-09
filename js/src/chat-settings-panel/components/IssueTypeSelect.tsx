@@ -1,11 +1,10 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import contextPath from 'wrm/context-path';
-import { AsyncSelect, OptionType } from '@atlaskit/select';
+import { AsyncSelect, OptionType, SelectProps } from '@atlaskit/select';
 
 type IssueTypeData = { name: string; id: string };
 
-type Props = {
-  id: string;
+type Props = SelectProps<OptionType> & {
   className?: string;
   projectKey: string;
   defaultIssueTypeId?: string;
@@ -42,32 +41,37 @@ const filterOptions = (options: Array<OptionType>) => {
 };
 
 const IssueTypeSelect = ({ id, projectKey, className, defaultIssueTypeId, onChange }: Props): ReactElement => {
-  const [projects, setProjects] = useState<Array<OptionType>>([]);
-  const [defaultValue, setDefaultValue] = useState<OptionType>();
+  const [issueTypes, setIssueTypes] = useState<Array<OptionType>>([]);
+  const [value, setValue] = useState<OptionType | null>();
 
   useLayoutEffect(() => {
     loadProjectOptions(projectKey).then(({ issueTypes }) => {
       const options = mapIssueTypesToOptions(issueTypes);
-      setProjects(options);
+      setIssueTypes(options);
 
       const selectedValues = options.filter((o) => o.value == defaultIssueTypeId);
-      console.log(selectedValues);
+
+      console.log('UPDATE');
 
       if (selectedValues.length) {
-        setDefaultValue(selectedValues[0]);
+        setValue(selectedValues[0]);
+        onChange(selectedValues[0]);
       }
     });
-  }, [defaultIssueTypeId]);
+  }, [defaultIssueTypeId, projectKey]);
 
   return (
     <AsyncSelect
       className={className}
-      onChange={onChange}
+      onChange={(value) => {
+        setValue(value);
+        onChange(value);
+      }}
       inputId={id}
       cacheOptions
-      defaultValue={defaultValue}
-      defaultOptions={projects}
-      loadOptions={filterOptions(projects)}
+      value={value}
+      defaultOptions={issueTypes}
+      loadOptions={filterOptions(issueTypes)}
     />
   );
 };

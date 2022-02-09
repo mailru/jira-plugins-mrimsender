@@ -40,20 +40,34 @@ const filterOptions = (options: Array<OptionType>) => {
     });
 };
 
-const ProjectSelect = ({ id, className, onChange }: Props): ReactElement => {
+const ProjectSelect = ({ id, className, defaultProjectKey, onChange }: Props): ReactElement => {
   const [projects, setProjects] = useState<Array<OptionType>>([]);
+  const [value, setValue] = useState<OptionType | null>();
 
   useLayoutEffect(() => {
     loadProjectOptions().then((data) => {
+      const options = mapProjectsToOptions(data);
+      setProjects(options);
+
+      const selectedValues = options.filter((o) => o.value == defaultProjectKey);
+
+      if (selectedValues.length) {
+        setValue(selectedValues[0]);
+        onChange(selectedValues[0]);
+      }
       setProjects(mapProjectsToOptions(data));
     });
-  }, []);
+  }, [defaultProjectKey]);
 
   return (
     <AsyncSelect
       className={className}
-      onChange={onChange}
+      onChange={(value) => {
+        setValue(value);
+        onChange(value);
+      }}
       inputId={id}
+      value={value}
       cacheOptions
       defaultOptions={projects}
       loadOptions={filterOptions(projects)}
