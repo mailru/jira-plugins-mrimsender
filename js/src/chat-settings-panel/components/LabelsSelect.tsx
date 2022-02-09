@@ -36,15 +36,19 @@ const LabelsSelect = ({ className, defaultLabels, onChange }: Props): ReactEleme
     const newValue = value ? value.slice() : [];
 
     newValue.push(newOption);
-    setValue(value);
+    setValue(newValue);
     setOptions(options);
+    onChange(newValue);
   };
 
   useLayoutEffect(() => {
     if (defaultLabels) {
       const newValues = new Set<string>(defaultLabels);
 
-      setValue(Array.from(newValues).map(createOption));
+      const mappedOptions = Array.from(newValues).map(createOption);
+
+      setValue(mappedOptions);
+      onChange(mappedOptions);
 
       options.forEach((l) => !newValues.has(String(l.value)) && newValues.add(String(l.value)));
 

@@ -58,7 +58,7 @@
     "@babel/runtime" "^7.0.0"
     "@emotion/core" "^10.0.9"
 
-"@atlaskit/button@^15.1.0", "@atlaskit/button@^15.1.4":
+"@atlaskit/button@^15.1.4":
   version "15.1.8"
   resolved "https://registry.yarnpkg.com/@atlaskit/button/-/button-15.1.8.tgz#b612951bcf140f1763081e7c039310261eb1ab9a"
   integrity sha512-PtQW72w/T9R+1RyoEHywv/ZOyQ29A1VgPsK72GXoLSLoYqTVh7m0QSDqXkR/iOnJlL8jkNDwG4xeMu+e5vyVgQ==
@@ -136,7 +136,7 @@
     react-uid "^2.2.0"
     tiny-invariant "^1.2.0"
 
-"@atlaskit/icon@^21.10.0", "@atlaskit/icon@^21.10.2", "@atlaskit/icon@^21.3.0", "@atlaskit/icon@^21.7.0", "@atlaskit/icon@^21.9.0":
+"@atlaskit/icon@^21.10.0", "@atlaskit/icon@^21.10.2", "@atlaskit/icon@^21.7.0", "@atlaskit/icon@^21.9.0":
   version "21.10.2"
   resolved "https://registry.yarnpkg.com/@atlaskit/icon/-/icon-21.10.2.tgz#687fa252bc376f237085b5b8904c7383a8f3bc04"
   integrity sha512-bzGZISz6tKEdNr3F96pAi/Y4YctNq6Mh2Ww1I+uhoWlG6X7TQBRYkl8Rxrrjw8exiiGR4gRtr14W9yEtn4jcrw==
@@ -229,14 +229,16 @@
     "@atlaskit/theme" "^12.0.0"
     "@babel/runtime" "^7.0.0"
 
-"@atlaskit/section-message@^5.0.9":
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/@atlaskit/section-message/-/section-message-5.2.0.tgz#5398cf2a4480e5d967e9d28c6bdf7977a905c02c"
-  integrity sha512-eWKowyPgQT+pwTqn3Q9l/mIo9SQStBQqp9sKw31Aa7JIiEhWIt4/zfBDzlmrMmZoMFOlYj+uPA/dW6GkdQskkA==
+"@atlaskit/section-message@^6.1.7":
+  version "6.1.7"
+  resolved "https://registry.yarnpkg.com/@atlaskit/section-message/-/section-message-6.1.7.tgz#470e8c6da444a8cc46ec1ece08d4319576577cd1"
+  integrity sha512-RR+OSNM6jBJ33K9rBKaGdP07ZlbU9NflzQIkdsgf8z3+7zs8fTt5jUDWncOIx0x0RIpckF1TirQOgemgry41ig==
   dependencies:
-    "@atlaskit/button" "^15.1.0"
-    "@atlaskit/icon" "^21.3.0"
-    "@atlaskit/theme" "^11.1.0"
+    "@atlaskit/button" "^16.1.0"
+    "@atlaskit/codemod-utils" "^3.4.0"
+    "@atlaskit/icon" "^21.10.0"
+    "@atlaskit/theme" "^12.1.0"
+    "@atlaskit/tokens" "^0.6.0"
     "@babel/runtime" "^7.0.0"
     "@emotion/core" "^10.0.9"
 
@@ -284,7 +286,7 @@
     "@babel/runtime" "^7.0.0"
     "@emotion/core" "^10.0.9"
 
-"@atlaskit/theme@^11.1.0", "@atlaskit/theme@^11.3.0", "@atlaskit/theme@^11.4.0":
+"@atlaskit/theme@^11.3.0", "@atlaskit/theme@^11.4.0":
   version "11.5.2"
   resolved "https://registry.yarnpkg.com/@atlaskit/theme/-/theme-11.5.2.tgz#43ac3b3a203241ae83b1d62d15912e6c36f465a9"
   integrity sha512-iycVcMzGaPboTVu0s+DoeV3oZZGIxXca1IjVtlxERA/78dftYoVTjiBnh6XtAQnIgB0O+SaAOQaaHJZgJ4gwpQ==

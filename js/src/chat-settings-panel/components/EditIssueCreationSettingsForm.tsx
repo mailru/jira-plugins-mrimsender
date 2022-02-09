@@ -49,10 +49,6 @@ const createOption = (value?: string) => {
 const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): ReactElement => {
   const [selectedProjectKey, setSelectedProjectKey] = useState(defaultSettings.projectKey);
 
-  // useLayoutEffect(() => {
-  //   setSelectedProjectKey(defaultSettings.projectKey);
-  // }, [defaultSettings]);
-
   return (
     <Container>
       <Form
@@ -82,7 +78,7 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
               {({ fieldProps: { id, onChange, ...rest }, error }) => (
                 <>
                   <ProjectSelect
-                    onChange={(value) => {
+                    onChange={(value: OptionType | null) => {
                       if (value) setSelectedProjectKey(String(value.value));
                       onChange(value);
                     }}

@@ -14,7 +14,7 @@
     "@atlaskit/form": "^8.4.8",
     "@atlaskit/icon": "^21.10.2",
     "@atlaskit/modal-dialog": "^11.2.4",
-    "@atlaskit/section-message": "^5.0.9",
+    "@atlaskit/section-message": "^6.1.7",
     "@atlaskit/select": "^15.2.7",
     "@atlaskit/spinner": "^15.0.6",
     "@atlaskit/textfield": "^5.1.6",
