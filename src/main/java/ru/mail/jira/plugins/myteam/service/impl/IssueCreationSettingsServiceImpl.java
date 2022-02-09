@@ -18,8 +18,8 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   private final IssueCreationSettingsRepository issueCreationSettingsRepository;
 
   private Map<String, IssueCreationSettingsDto>
-      issueSettingsCache; // Settings cache. Where key is "{chatId}-{tag}". Example:
-  // 74175@chat.agent-#task
+      issueSettingsCache; // Settings cache. Where key is "{chatId}-{tag}".
+  // Example: 74175@chat.agent-#task
 
   public IssueCreationSettingsServiceImpl(
       IssueCreationSettingsRepository issueCreationSettingsRepository) {
@@ -65,9 +65,9 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   public IssueCreationSettingsDto addDefaultSettings(String chatId) {
     checkAndFillCache();
 
-    IssueCreationSettingsDto settings =
-        IssueCreationSettingsDto.builder().chatId(chatId).enabled(false).tag("task").build();
-
+    //    IssueCreationSettingsDto settings =
+    //        IssueCreationSettingsDto.builder().chatId(chatId).enabled(false).tag("task").build();
+    IssueCreationSettingsDto settings = new IssueCreationSettingsDto();
     IssueCreationSettingsDto result =
         new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
     issueSettingsCache.put(getSettingsCacheKey(result), result);

@@ -81,7 +81,12 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
               validate={validateNotNull}>
               {({ fieldProps: { id, ...rest }, error }) => (
                 <>
-                  <IssueTypeSelect id={id} issueTypeId="DEV" {...rest} />
+                  <IssueTypeSelect
+                    defaultIssueTypeId={defaultSettings.issueTypeId}
+                    id={id}
+                    projectKey="DEV"
+                    {...rest}
+                  />
                   {error && <ErrorMessage>{error}</ErrorMessage>}
                 </>
               )}

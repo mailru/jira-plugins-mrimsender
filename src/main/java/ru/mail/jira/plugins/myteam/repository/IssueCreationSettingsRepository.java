@@ -32,11 +32,11 @@ public class IssueCreationSettingsRepository
     entity.setTag(dto.getTag());
     entity.setIssueTypeId(dto.getIssueTypeId());
     entity.setProjectKey(dto.getProjectKey());
-    entity.setEnabled(dto.isEnabled());
-    entity.setLabels(
-        (dto.getLabels() == null || dto.getLabels().size() == 0)
-            ? null
-            : String.join(IssueCreationSettingsDto.LABELS_DELIMITER, dto.getLabels()));
+    entity.setEnabled(dto.getEnabled());
+    //    entity.setLabels(
+    //        (dto.getLabels() == null || dto.getLabels().size() == 0)
+    //            ? null
+    //            : String.join(IssueCreationSettingsDto.LABELS_DELIMITER, dto.getLabels()));
   }
 
   @Override

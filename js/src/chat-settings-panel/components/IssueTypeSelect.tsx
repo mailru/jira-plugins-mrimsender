@@ -7,7 +7,7 @@ type IssueTypeData = { name: string; id: string };
 type Props = {
   id: string;
   className?: string;
-  issueTypeId: string;
+  projectKey: string;
   defaultIssueTypeId?: string;
   onChange: (value: OptionType | null) => void;
 };
@@ -41,12 +41,12 @@ const filterOptions = (options: Array<OptionType>) => {
     });
 };
 
-const IssueTypeSelect = ({ id, issueTypeId, className, defaultIssueTypeId, onChange }: Props): ReactElement => {
+const IssueTypeSelect = ({ id, projectKey, className, defaultIssueTypeId, onChange }: Props): ReactElement => {
   const [projects, setProjects] = useState<Array<OptionType>>([]);
   const [defaultValue, setDefaultValue] = useState<OptionType>();
 
   useLayoutEffect(() => {
-    loadProjectOptions(issueTypeId).then(({ issueTypes }) => {
+    loadProjectOptions(projectKey).then(({ issueTypes }) => {
       const options = mapIssueTypesToOptions(issueTypes);
       setProjects(options);
 
