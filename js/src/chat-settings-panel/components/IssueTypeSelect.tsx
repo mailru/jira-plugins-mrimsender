@@ -1,6 +1,7 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import contextPath from 'wrm/context-path';
 import { AsyncSelect, OptionType, SelectProps } from '@atlaskit/select';
+import { usePrevious } from '../shared/hooks';
 
 type IssueTypeData = { name: string; id: string };
 
@@ -44,17 +45,29 @@ const IssueTypeSelect = ({ id, projectKey, className, defaultIssueTypeId, onChan
   const [issueTypes, setIssueTypes] = useState<Array<OptionType>>([]);
   const [value, setValue] = useState<OptionType | null>();
 
+  const prevProps = usePrevious<Pick<Props, 'defaultIssueTypeId' | 'projectKey'>>({
+    defaultIssueTypeId,
+    projectKey,
+  });
+
+  const handleChange = (value: OptionType | null) => {
+    setValue(value);
+    onChange(value);
+  };
+
   useLayoutEffect(() => {
     if (projectKey) {
       loadProjectOptions(projectKey).then(({ issueTypes }) => {
         const options = mapIssueTypesToOptions(issueTypes);
         setIssueTypes(options);
 
-        const selectedValues = options.filter((o) => o.value == defaultIssueTypeId);
-
-        if (selectedValues.length) {
-          setValue(selectedValues[0]);
-          onChange(selectedValues[0]);
+        if (prevProps?.projectKey && prevProps.projectKey != projectKey) {
+          // reset value on project change
+          handleChange(null);
+        } else {
+          // on first init
+          const selectedValues = options.filter((o) => o.value == defaultIssueTypeId);
+          handleChange(selectedValues[0]);
         }
       });
     }
@@ -63,10 +76,7 @@ const IssueTypeSelect = ({ id, projectKey, className, defaultIssueTypeId, onChan
   return (
     <AsyncSelect
       className={className}
-      onChange={(value) => {
-        setValue(value);
-        onChange(value);
-      }}
+      onChange={handleChange}
       inputId={id}
       cacheOptions
       value={value}

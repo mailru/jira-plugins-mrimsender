@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export const useTimeoutState = <T>(
   defaultState: T,
@@ -20,4 +20,12 @@ export const useTimeoutState = <T>(
     [currentTimeoutId, defaultState],
   );
   return [state, setTimeoutState];
+};
+
+export const usePrevious = <T>(value: T): T | undefined => {
+  const ref = useRef<T>();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
 };
