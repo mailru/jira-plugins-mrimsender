@@ -1,4 +1,4 @@
-import React, { Fragment, ReactElement, useLayoutEffect, useState } from 'react';
+import React, { Fragment, ReactElement, useState } from 'react';
 import { IssueCreationSettings } from '../types';
 import Textfield from '@atlaskit/textfield';
 import { Checkbox } from '@atlaskit/checkbox';
@@ -20,6 +20,16 @@ type Props = {
 const Container = styled.div`
   form > * {
     margin-bottom: 10px;
+  }
+`;
+
+const TagFieldContainer = styled.div`
+  .tag-input:before {
+    content: ${`'#'`};
+    margin-left: 7px;
+    opacity: 0.6;
+    font-size: large;
+    font-weight: 500;
   }
 `;
 
@@ -110,21 +120,22 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
                 </>
               )}
             </Field>
-
-            <Field
-              label="Тег для создания задачи"
-              name="tag"
-              defaultValue={defaultSettings.tag}
-              isRequired
-              validate={validateNotNull}>
-              {({ fieldProps, error }) => (
-                <Fragment>
-                  <Textfield placeholder="Тег" {...fieldProps} />
-                  <HelperMessage>Тег по которому будет создаваться задача. Например: #task</HelperMessage>
-                  {error && <ErrorMessage>{error}</ErrorMessage>}
-                </Fragment>
-              )}
-            </Field>
+            <TagFieldContainer>
+              <Field
+                label="Тег для создания задачи"
+                name="tag"
+                defaultValue={defaultSettings.tag}
+                isRequired
+                validate={validateNotNull}>
+                {({ fieldProps, error }) => (
+                  <Fragment>
+                    <Textfield className="tag-input" placeholder="Тег" {...fieldProps} />
+                    <HelperMessage>Тег по которому будет создаваться задача. Например: #task</HelperMessage>
+                    {error && <ErrorMessage>{error}</ErrorMessage>}
+                  </Fragment>
+                )}
+              </Field>
+            </TagFieldContainer>
 
             <Field<OptionsType<OptionType>>
               name="labels"
