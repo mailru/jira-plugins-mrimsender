@@ -1,4 +1,4 @@
-import React, { Fragment, ReactElement } from 'react';
+import React, { Fragment, ReactElement, useLayoutEffect, useState } from 'react';
 import { IssueCreationSettings } from '../types';
 import Textfield from '@atlaskit/textfield';
 import { Checkbox } from '@atlaskit/checkbox';
@@ -47,6 +47,12 @@ const createOption = (value?: string) => {
 };
 
 const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): ReactElement => {
+  const [selectedProjectKey, setSelectedProjectKey] = useState(defaultSettings.projectKey);
+
+  // useLayoutEffect(() => {
+  //   setSelectedProjectKey(defaultSettings.projectKey);
+  // }, [defaultSettings]);
+
   return (
     <Container>
       <Form
@@ -73,9 +79,13 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
               isRequired
               defaultValue={createOption(defaultSettings.projectKey)}
               validate={validateNotNull}>
-              {({ fieldProps: { id, ...rest }, error }) => (
+              {({ fieldProps: { id, onChange, ...rest }, error }) => (
                 <>
                   <ProjectSelect
+                    onChange={(value) => {
+                      if (value) setSelectedProjectKey(String(value.value));
+                      onChange(value);
+                    }}
                     defaultProjectKey={defaultSettings.projectKey}
                     validationState={error ? 'error' : 'default'}
                     id={id}
@@ -97,7 +107,7 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
                   <IssueTypeSelect
                     defaultIssueTypeId={defaultSettings.issueTypeId}
                     id={id}
-                    projectKey="DEV"
+                    projectKey={selectedProjectKey}
                     {...rest}
                   />
                   {error && <ErrorMessage>{error}</ErrorMessage>}

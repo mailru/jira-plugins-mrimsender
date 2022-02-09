@@ -41,8 +41,6 @@ const LabelsSelect = ({ className, defaultLabels, onChange }: Props): ReactEleme
   };
 
   useLayoutEffect(() => {
-    console.log(defaultLabels);
-
     if (defaultLabels) {
       const newValues = new Set<string>(defaultLabels);
 

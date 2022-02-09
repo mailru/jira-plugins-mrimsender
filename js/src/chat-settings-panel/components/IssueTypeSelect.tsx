@@ -6,7 +6,7 @@ type IssueTypeData = { name: string; id: string };
 
 type Props = SelectProps<OptionType> & {
   className?: string;
-  projectKey: string;
+  projectKey?: string;
   defaultIssueTypeId?: string;
   onChange: (value: OptionType | null) => void;
 };
@@ -45,19 +45,19 @@ const IssueTypeSelect = ({ id, projectKey, className, defaultIssueTypeId, onChan
   const [value, setValue] = useState<OptionType | null>();
 
   useLayoutEffect(() => {
-    loadProjectOptions(projectKey).then(({ issueTypes }) => {
-      const options = mapIssueTypesToOptions(issueTypes);
-      setIssueTypes(options);
+    if (projectKey) {
+      loadProjectOptions(projectKey).then(({ issueTypes }) => {
+        const options = mapIssueTypesToOptions(issueTypes);
+        setIssueTypes(options);
 
-      const selectedValues = options.filter((o) => o.value == defaultIssueTypeId);
+        const selectedValues = options.filter((o) => o.value == defaultIssueTypeId);
 
-      console.log('UPDATE');
-
-      if (selectedValues.length) {
-        setValue(selectedValues[0]);
-        onChange(selectedValues[0]);
-      }
-    });
+        if (selectedValues.length) {
+          setValue(selectedValues[0]);
+          onChange(selectedValues[0]);
+        }
+      });
+    }
   }, [defaultIssueTypeId, projectKey]);
 
   return (
