@@ -81,9 +81,18 @@ public class CreateIssueByReplyRule extends BaseRule {
 
     User reporter = getReporterFromEventParts(event);
 
-    ApplicationUser jiraUser =
-        userChatService.getJiraUserFromUserChatId(
-            reporter != null ? reporter.getUserId() : event.getUserId());
+    ApplicationUser jiraUser = null;
+    try {
+      if (reporter != null) {
+        jiraUser = userChatService.getJiraUserFromUserChatId(reporter.getUserId());
+      }
+    } catch (Exception e) {
+      jiraUser = userChatService.getJiraUserFromUserChatId(event.getUserId());
+    }
+
+    if (jiraUser == null) {
+      return;
+    }
 
     HashMap<Field, String> fieldValues = new HashMap<>();
 
