@@ -9,10 +9,7 @@ import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.*;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.*;
 
 public interface MyteamApiClient {
@@ -57,6 +54,10 @@ public interface MyteamApiClient {
       String about,
       @Nonnull List<ChatMemberId> members,
       boolean isPublic)
+      throws IOException, UnirestException, MyteamServerErrorException;
+
+  HttpResponse<SuccessResponse> setAboutChat(
+      @Nonnull String botToken, @Nonnull String chatId, String about)
       throws IOException, UnirestException, MyteamServerErrorException;
 
   HttpResponse<ChatInfoResponse> getChatInfo(@Nonnull String botToken, @Nonnull String chatId)

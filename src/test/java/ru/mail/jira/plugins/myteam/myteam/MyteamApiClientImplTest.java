@@ -20,6 +20,7 @@ import org.mockito.Mockito;
 import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.SuccessResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
@@ -32,7 +33,6 @@ public class MyteamApiClientImplTest {
 
   @Before
   public void setUp() throws Exception {
-    // Mocking MyteamApiClient object
     try (InputStream resourceAsStream =
         getClass().getClassLoader().getResourceAsStream("env.properties")) {
       Properties properties = new Properties();
@@ -44,6 +44,8 @@ public class MyteamApiClientImplTest {
       this.pluginData = Mockito.mock(PluginData.class);
       when(pluginData.getToken()).thenReturn(properties.getProperty("myteam.test.bot.token"));
       when(pluginData.getBotApiUrl()).thenReturn(properties.getProperty("myteam.test.bot.api"));
+
+      myteamApiClient = new MyteamApiClientImpl(pluginData);
     }
 
     // unirest initialization
@@ -90,6 +92,17 @@ public class MyteamApiClientImplTest {
             "edited message from editMessageText() test",
             buttons);
     assertTrue(editMessageResponse.getBody().isOk());
+  }
+
+  @Ignore
+  public void setAboutChat() throws IOException, UnirestException, MyteamServerErrorException {
+    HttpResponse<SuccessResponse> httpResponse =
+        myteamApiClient.setAboutChat(pluginData.getToken(), "111905", "Set About Chat");
+    assertEquals(200, httpResponse.getStatus());
+    assertTrue(
+        httpResponse.getBody() != null
+            && httpResponse.getBody().isOk()
+            && httpResponse.getBody().getDescription() == null);
   }
 
   @Ignore

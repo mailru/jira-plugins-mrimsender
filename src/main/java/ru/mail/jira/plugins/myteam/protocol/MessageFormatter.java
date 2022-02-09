@@ -56,6 +56,7 @@ import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Slf4j
 @Component
@@ -77,6 +78,7 @@ public class MessageFormatter {
   private final String jiraBaseUrl;
   private final UserManager userManager;
   private final AttachmentManager attachmentManager;
+  private final PluginData pluginData;
 
   @Autowired
   public MessageFormatter(
@@ -91,7 +93,8 @@ public class MessageFormatter {
       @ComponentImport I18nResolver i18nResolver,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport UserManager userManager,
-      @ComponentImport AttachmentManager attachmentManager) {
+      @ComponentImport AttachmentManager attachmentManager,
+      PluginData pluginData) {
     this.applicationProperties = applicationProperties;
     this.constantsManager = constantsManager;
     this.dateTimeFormatter = dateTimeFormatter;
@@ -105,6 +108,7 @@ public class MessageFormatter {
     this.jiraBaseUrl = applicationProperties.getString(APKeys.JIRA_BASEURL);
     this.userManager = userManager;
     this.attachmentManager = attachmentManager;
+    this.pluginData = pluginData;
   }
 
   private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
@@ -116,7 +120,7 @@ public class MessageFormatter {
       return "["
           + shieldText(user.getDisplayName())
           + "]("
-          + shieldText("https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress())
+          + shieldText(pluginData.getProfileLink() + user.getEmailAddress())
           + ")";
     } else return i18nHelper.getText(messageKey);
   }
@@ -128,8 +132,7 @@ public class MessageFormatter {
       }
 
       return markdownTextLink(
-          user.getDisplayName(),
-          "https://u.internal.myteam.mail.ru/profile/" + user.getEmailAddress());
+          user.getDisplayName(), pluginData.getProfileLink() + user.getEmailAddress());
     } else return i18nHelper.getText(messageKey);
   }
 
@@ -362,8 +365,7 @@ public class MessageFormatter {
                     "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.you");
               } else {
                 return markdownTextLink(
-                    reviewer.getName(),
-                    "https://u.internal.myteam.mail.ru/profile/" + reviewer.getEmailAddress());
+                    reviewer.getName(), pluginData.getProfileLink() + reviewer.getEmailAddress());
               }
             })
         .collect(joining(", "));
@@ -419,9 +421,7 @@ public class MessageFormatter {
                 return "±["
                     + shieldText(mentionUser.getDisplayName())
                     + "±]±("
-                    + shieldText(
-                        "https://u.internal.myteam.mail.ru/profile/"
-                            + mentionUser.getEmailAddress())
+                    + shieldText(pluginData.getProfileLink() + mentionUser.getEmailAddress())
                     + "±)";
               } else return i18nHelper.getText("common.words.anonymous");
             });

@@ -41,6 +41,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   private String botApiUrl;
   private String botName;
   private String botLink;
+  private String profileLink;
   private boolean enabledByDefault;
   private String notifiedUsers;
 
@@ -57,6 +58,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     botApiUrl = pluginData.getBotApiUrl();
     botName = pluginData.getBotName();
     botLink = pluginData.getBotLink();
+    profileLink = pluginData.getProfileLink();
     excludingProjectIds = pluginData.getExcludingProjectIds();
     chatCreationNotAllowedProjectIds = pluginData.getChatCreationBannedProjectIds();
     notifiedUsers = CommonUtils.convertUserKeysToJoinedString(pluginData.getNotifiedUserKeys());
@@ -85,6 +87,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     pluginData.setBotApiUrl(botApiUrl);
     pluginData.setBotName(botName);
     pluginData.setBotLink(botLink);
+    pluginData.setProfileLink(profileLink);
     pluginData.setEnabledByDefault(enabledByDefault);
     pluginData.setExcludingProjectIds(excludingProjectIds);
     pluginData.setChatCreationBannedProjectIds(chatCreationNotAllowedProjectIds);
@@ -213,6 +216,16 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   @SuppressWarnings("UnusedDeclaration")
   public void setBotLink(String botLink) {
     this.botLink = botLink;
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public String getProfileLink() {
+    return profileLink;
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public void setProfileLink(String profileLink) {
+    this.profileLink = profileLink;
   }
 
   @SuppressWarnings("UnusedDeclaration")

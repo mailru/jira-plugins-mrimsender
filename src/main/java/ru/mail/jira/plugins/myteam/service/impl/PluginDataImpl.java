@@ -23,6 +23,7 @@ public class PluginDataImpl implements PluginData {
   private static final String BOT_API_URL = PLUGIN_PREFIX + "botApiUrl";
   private static final String BOT_NAME = PLUGIN_PREFIX + "botName";
   private static final String BOT_LINK = PLUGIN_PREFIX + "botLink";
+  private static final String PROFILE_LINK = PLUGIN_PREFIX + "profileLink";
   private static final String EXCLUDING_PROJECT_IDS = PLUGIN_PREFIX + "excludingProjectIds";
   private static final String CHAT_CREATION_BANNED_PROJECT_IDS =
       PLUGIN_PREFIX + "chatCreationBannedProjectIds";
@@ -128,6 +129,16 @@ public class PluginDataImpl implements PluginData {
   @Override
   public void setBotLink(String botLink) {
     pluginSettingsFactory.createGlobalSettings().put(BOT_LINK, botLink);
+  }
+
+  @Override
+  public String getProfileLink() {
+    return (String) pluginSettingsFactory.createGlobalSettings().get(PROFILE_LINK);
+  }
+
+  @Override
+  public void setProfileLink(String botLink) {
+    pluginSettingsFactory.createGlobalSettings().put(PROFILE_LINK, botLink);
   }
 
   @Override

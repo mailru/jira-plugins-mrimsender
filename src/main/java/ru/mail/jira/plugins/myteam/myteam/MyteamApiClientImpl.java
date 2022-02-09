@@ -14,10 +14,7 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.AdminsResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
@@ -203,7 +200,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       @NotNull List<ChatMemberId> members,
       boolean isPublic)
       throws IOException, UnirestException, MyteamServerErrorException {
-    if (members.size() > 1 && members.size() <= 30) {
+    if (members.size() > 0 && members.size() <= 30) {
       MultipartBody postBody =
           HttpClient.getPrimaryClient()
               .post(botApiUrl + "/chats/createChat")
@@ -221,6 +218,22 @@ public class MyteamApiClientImpl implements MyteamApiClient {
           "Error occurred in createChat method: attempt to create chat with not available number of members :"
               + members.size());
     }
+  }
+
+  @Override
+  public HttpResponse<SuccessResponse> setAboutChat(
+      @Nonnull String botToken, @NotNull String chatId, String about)
+      throws UnirestException, MyteamServerErrorException {
+    HttpResponse<SuccessResponse> response =
+        HttpClient.getPrimaryClient()
+            .get(botApiUrl + "/chats/setAbout")
+            .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
+            .queryString("token", botToken)
+            .queryString("chatId", chatId)
+            .queryString("about", about)
+            .asObject(SuccessResponse.class);
+    checkMyteamServerErrorException(response, "setAboutChat");
+    return response;
   }
 
   @Override
@@ -279,7 +292,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   @Override
   public HttpResponse<ChatMember> getMembers(@Nonnull String chatId) throws UnirestException {
     return HttpClient.getPrimaryClient()
-        .post("https://api.internal.myteam.mail.ru/bot/v1" + "/chats/getMembers")
+        .post(botApiUrl + "/chats/getMembers")
         .header("Accept", "application/json")
         .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
         .field("token", apiToken)

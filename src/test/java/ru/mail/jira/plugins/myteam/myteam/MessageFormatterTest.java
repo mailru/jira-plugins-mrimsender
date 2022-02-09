@@ -28,6 +28,7 @@ import org.mockito.Mockito;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 
 public class MessageFormatterTest {
 
@@ -56,6 +57,7 @@ public class MessageFormatterTest {
     //    VersionManager versionManager = Mockito.mock(VersionManager.class);
     UserManager userManager = Mockito.mock(UserManager.class);
     AttachmentManager attachmentManager = Mockito.mock(AttachmentManager.class);
+    PluginData pluginData = Mockito.mock(PluginData.class);
     this.messageFormatter =
         new MessageFormatter(
             applicationProperties,
@@ -69,7 +71,8 @@ public class MessageFormatterTest {
             i18nResolver,
             localeManager,
             userManager,
-            attachmentManager);
+            attachmentManager,
+            pluginData);
     IssueEvent event = Mockito.mock(IssueEvent.class);
     Issue mockedIssue = Mockito.mock(Issue.class);
     ApplicationUser assigneedUser = Mockito.mock(ApplicationUser.class);
