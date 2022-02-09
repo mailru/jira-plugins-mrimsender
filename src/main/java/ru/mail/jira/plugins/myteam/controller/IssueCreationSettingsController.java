@@ -1,16 +1,20 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.controller;
 
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import org.codehaus.jackson.map.ObjectMapper;
 import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.dto.TestDto;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
 @Path("/issueCreation/settings")
-@Produces(MediaType.APPLICATION_JSON)
-// @Consumes(MediaType.APPLICATION_JSON)
+// @Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class IssueCreationSettingsController {
 
   private final IssueCreationSettingsService issueCreationSettingsService;
@@ -52,8 +56,19 @@ public class IssueCreationSettingsController {
 
   @PUT
   @Path("/test")
-  @Consumes(MediaType.APPLICATION_JSON)
-  public TestDto testupdateChatSettings(TestDto settings) {
-    return settings;
+  @Consumes(MediaType.TEXT_PLAIN)
+  public TestDto testupdateChatSettings(String test) throws IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    TestDto res = mapper.readValue(test, TestDto.class);
+    return res;
+  }
+
+  @PUT
+  @Path("/test1")
+  //    @Consumes(MediaType.APPLICATION_JSON)
+  //  @Produces(MediaType.APPLICATION_JSON)
+  public HashMap<String, String> testupdateChatSettings(TestDto test) {
+
+    return new HashMap<>(ImmutableMap.of("field", test.getField()));
   }
 }
