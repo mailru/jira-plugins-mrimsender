@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import { loadChatIssueCreationSettings, testSettings, updateChatIssueCreationSettings } from '../api/SettingsApiClient';
+import { loadChatIssueCreationSettings, updateChatIssueCreationSettings } from '../api/SettingsApiClient';
 import { IssueCreationSettings } from '../types';
 import EditIssueCreationSettingsForm from './EditIssueCreationSettingsForm';
 
@@ -29,10 +29,7 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
         <EditIssueCreationSettingsForm
           defaultSettings={settings}
           onSave={(newSettings) => {
-            const settings1 = { ...settings, ...newSettings } as any;
-            delete settings1.labels;
-            testSettings(settings);
-            updateChatIssueCreationSettings(settings1);
+            updateChatIssueCreationSettings(settings.id, { ...settings, ...newSettings });
           }}
         />
       ) : null}
