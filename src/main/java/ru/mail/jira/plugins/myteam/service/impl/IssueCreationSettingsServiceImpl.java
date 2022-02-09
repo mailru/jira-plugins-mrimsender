@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.repository.IssueCreationSettingsRepository;
@@ -45,6 +46,14 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   }
 
   @Override
+  @Nullable
+  public IssueCreationSettingsDto getSettings(String chatId, String tag) {
+    if (!hasChatSettings(chatId, tag)) return null;
+
+    return issueSettingsCache.get(getSettingsCacheKey(chatId, tag));
+  }
+
+  @Override
   public Optional<IssueCreationSettingsDto> getSettingsByChatId(String chatId) {
     return issueCreationSettingsRepository
         .getSettingsByChatId(chatId)
@@ -77,12 +86,22 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   @Override
   public IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings) {
     checkAndFillCache();
+    IssueCreationSettingsDto oldSettings = getSettings(id);
 
-    issueSettingsCache.remove(getSettingsCacheKey(settings));
+    issueSettingsCache.remove(getSettingsCacheKey(oldSettings));
+
     IssueCreationSettingsDto result =
         new IssueCreationSettingsDto(issueCreationSettingsRepository.update(id, settings));
     issueSettingsCache.put(getSettingsCacheKey(result), result);
     return result;
+  }
+
+  @Override
+  public boolean hasRequiredFields(@Nullable IssueCreationSettingsDto settings) {
+    return settings != null
+        && settings.getEnabled()
+        && settings.getProjectKey() != null
+        && settings.getIssueTypeId() != null;
   }
 
   @Override

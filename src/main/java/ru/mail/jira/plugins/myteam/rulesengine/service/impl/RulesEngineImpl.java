@@ -104,7 +104,8 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     // Service
     commandsRuleEngine.registerRule(new SearchByJqlIssuesRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(
-        new CreateIssueByReplyRule(userChatService, this, issueCreationSettingsService));
+        new CreateIssueByReplyRule(
+            userChatService, this, issueCreationSettingsService, issueCreationService));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));

@@ -4,6 +4,7 @@ package ru.mail.jira.plugins.myteam.rulesengine.service.impl;
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.LocaleManager;
+import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.IssueInputParameters;
@@ -30,6 +31,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
@@ -39,6 +41,7 @@ import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.Defaul
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.PriorityValueHandler;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 
@@ -57,6 +60,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   private final PrioritySchemeManager prioritySchemeManager;
   private final HashMap<String, CreateIssueFieldValueHandler> supportedIssueCreationCustomFields;
   private final CreateIssueFieldValueHandler defaultHandler;
+  private final ru.mail.jira.plugins.myteam.rulesengine.service.IssueService myteamIssueService;
 
   public IssueCreationServiceImpl(
       @ComponentImport I18nResolver i18nResolver,
@@ -68,7 +72,8 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       @ComponentImport IssueService issueService,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport OptionsManager optionsManager,
-      @ComponentImport PrioritySchemeManager prioritySchemeManager) {
+      @ComponentImport PrioritySchemeManager prioritySchemeManager,
+      ru.mail.jira.plugins.myteam.rulesengine.service.IssueService myteamIssueService) {
     this.i18nResolver = i18nResolver;
     this.issueTypeScreenSchemeManager = issueTypeScreenSchemeManager;
     this.issueTypeManager = issueTypeManager;
@@ -76,6 +81,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     this.fieldManager = fieldManager;
     this.localeManager = localeManager;
     this.issueService = issueService;
+    this.myteamIssueService = myteamIssueService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.optionsManager = optionsManager;
     this.prioritySchemeManager = prioritySchemeManager;
@@ -148,7 +154,10 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   }
 
   private IssueService.CreateValidationResult validateIssueWithGivenFields(
-      Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user) {
+      Project project,
+      IssueType issueType,
+      @NotNull Map<Field, String> fields,
+      ApplicationUser user) {
 
     // need here to because issueService use authenticationContext
     ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
@@ -248,8 +257,19 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   }
 
   @Override
+  public LinkedHashMap<Field, String> getRequiredIssueFields(
+      Project project, ApplicationUser user, String issueTypeId) {
+    IssueType issueType = myteamIssueService.getIssueType(issueTypeId);
+    return getIssueCreationFieldsValues(
+        project, issueType, new HashSet<>(), new HashSet<>(), IssueFieldsFilter.REQUIRED);
+  }
+
+  @Override
   public Issue createIssue(
-      Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user)
+      Project project,
+      IssueType issueType,
+      @NotNull Map<Field, String> fields,
+      ApplicationUser user)
       throws IssueCreationValidationException {
     JiraThreadLocalUtils.preCall();
     try {
@@ -265,6 +285,19 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     } finally {
       JiraThreadLocalUtils.postCall();
     }
+  }
+
+  @Override
+  public Issue createIssue(
+      String projectKey,
+      String issueTypeId,
+      @NotNull Map<Field, String> fields,
+      ApplicationUser user)
+      throws IssueCreationValidationException, PermissionException, ProjectBannedException {
+    Project project = myteamIssueService.getProject(projectKey, user);
+    IssueType issueType = myteamIssueService.getIssueType(issueTypeId);
+
+    return createIssue(project, issueType, fields, user);
   }
 
   @Override

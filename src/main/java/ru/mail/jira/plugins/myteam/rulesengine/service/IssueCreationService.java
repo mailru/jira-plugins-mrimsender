@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.service;
 
+import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;
@@ -10,10 +11,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 
 public interface IssueCreationService {
@@ -44,9 +47,22 @@ public interface IssueCreationService {
   List<Field> getIssueFields(Project project, ApplicationUser user, String issueTypeId)
       throws UnsupportedCustomFieldsException, IncorrectIssueTypeException;
 
+  LinkedHashMap<Field, String> getRequiredIssueFields(
+      Project project, ApplicationUser user, String issueTypeId);
+
   Issue createIssue(
-      Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user)
+      Project project,
+      IssueType issueType,
+      @NotNull Map<Field, String> fields,
+      ApplicationUser user)
       throws IssueCreationValidationException;
+
+  Issue createIssue(
+      String projectKey,
+      String issueTypeId,
+      @NotNull Map<Field, String> fields,
+      ApplicationUser user)
+      throws IssueCreationValidationException, PermissionException, ProjectBannedException;
 
   boolean isFieldSupported(String fieldId);
 
