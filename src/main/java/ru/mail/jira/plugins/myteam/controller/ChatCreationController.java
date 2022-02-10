@@ -1,5 +1,5 @@
 /* (C)2020 */
-package ru.mail.jira.plugins.myteam.rest;
+package ru.mail.jira.plugins.myteam.controller;
 
 import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
@@ -27,12 +27,14 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
+import ru.mail.jira.plugins.myteam.controller.dto.ChatCreationDataDto;
+import ru.mail.jira.plugins.myteam.controller.dto.ChatMemberDto;
+import ru.mail.jira.plugins.myteam.controller.dto.ChatMetaDto;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.MyteamChatMeta;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
@@ -43,16 +45,12 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.JiraIssueViewEvent;
 import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
 import ru.mail.jira.plugins.myteam.repository.MyteamChatRepository;
-import ru.mail.jira.plugins.myteam.rest.dto.ChatCreationDataDto;
-import ru.mail.jira.plugins.myteam.rest.dto.ChatMemberDto;
-import ru.mail.jira.plugins.myteam.rest.dto.ChatMetaDto;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Controller
+@Slf4j
 @Path("/chats")
-public class ChatCreationRestService {
-  private static final Logger log = LoggerFactory.getLogger(ChatCreationRestService.class);
-
+public class ChatCreationController {
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final MyteamApiClient myteamApiClient;
   private final IssueManager issueManager;
@@ -69,7 +67,7 @@ public class ChatCreationRestService {
   private final ApplicationProperties applicationProperties;
 
   @Autowired
-  public ChatCreationRestService(
+  public ChatCreationController(
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport IssueManager issueManager,
       @ComponentImport WatcherManager watcherManager,

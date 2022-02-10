@@ -1,6 +1,6 @@
 Class ChatMemberDto
 ===================
-ru.mail.jira.plugins.myteam.rest.dto.ChatMemberDto
+ru.mail.jira.plugins.myteam.controller.dto.ChatMemberDto
 Summary
 -------
 #### Constructors

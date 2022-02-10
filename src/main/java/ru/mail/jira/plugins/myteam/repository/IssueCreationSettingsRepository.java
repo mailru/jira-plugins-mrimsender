@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Repository;
 import ru.mail.jira.plugins.commons.dao.PagingAndSortingRepository;
-import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
+import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.model.IssueCreationSettings;
 
 @Repository

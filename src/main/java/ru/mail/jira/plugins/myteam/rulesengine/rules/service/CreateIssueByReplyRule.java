@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.rulesengine.rules.service;
 
 import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.fields.Field;
@@ -18,7 +19,7 @@ import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
-import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
+import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
@@ -109,13 +110,21 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
             String.join(",", settings.getLabels()));
       }
 
+      ApplicationUser reporterJiraUser;
+
+      try {
+        reporterJiraUser = userChatService.getJiraUserFromUserChatId(reporter.getUserId());
+      } catch (UserNotFoundException e) {
+        reporterJiraUser = creator;
+      }
+
       Issue issue =
           issueCreationService.createIssue(
               settings.getProjectKey(),
               settings.getIssueTypeId(),
               fieldValues,
               creator,
-              userChatService.getJiraUserFromUserChatId(reporter.getUserId()));
+              reporterJiraUser);
 
       userChatService.sendMessageText(
           event.getChatId(),
@@ -124,7 +133,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
               messageFormatter.createMarkdownIssueShortLink(issue.getKey())));
     } catch (Exception e) {
       userChatService.sendMessageText(
-          event.getChatId(),
+          event.getUserId(),
           String.format("Возникла ошибка при создании задачи.\n\n%s", e.getLocalizedMessage()));
     }
   }

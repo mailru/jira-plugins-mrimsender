@@ -1,5 +1,5 @@
 /* (C)2022 */
-package ru.mail.jira.plugins.myteam.dto;
+package ru.mail.jira.plugins.myteam.controller.dto;
 
 import java.util.Arrays;
 import java.util.List;

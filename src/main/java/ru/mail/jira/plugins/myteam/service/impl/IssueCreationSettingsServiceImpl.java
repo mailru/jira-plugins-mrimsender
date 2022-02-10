@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
-import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
+import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.repository.IssueCreationSettingsRepository;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 

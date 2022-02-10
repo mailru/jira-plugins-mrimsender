@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
-import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
+import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 
 public interface IssueCreationSettingsService {
 

@@ -1,6 +1,6 @@
 Class ChatMetaDto
 =================
-ru.mail.jira.plugins.myteam.rest.dto.ChatMetaDto
+ru.mail.jira.plugins.myteam.controller.dto.ChatMetaDto
 Summary
 -------
 #### Constructors
@@ -10,7 +10,7 @@ Summary
 #### Methods
 | Type and modifiers | Method signature                                                                                                                   | Return type |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **public static**  | buildChatInfo(ChatInfoResponse chatInfoResponse,java.util.List<ru.mail.jira.plugins.myteam.rest.dto.ChatMemberDto> chatMemberDtos) | ChatMetaDto |
+| **public static**  | buildChatInfo(ChatInfoResponse chatInfoResponse,java.util.List<ru.mail.jira.plugins.myteam.controller.dto.ChatMemberDto> chatMemberDtos) | ChatMetaDto |
 
 Constructors
 ============
