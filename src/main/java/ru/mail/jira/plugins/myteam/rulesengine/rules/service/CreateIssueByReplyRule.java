@@ -1,12 +1,18 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.service;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
-import com.atlassian.jira.exception.PermissionException;
+import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
+
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
+import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.TimeZone;
 import org.apache.commons.lang3.StringUtils;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -18,29 +24,19 @@ import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.GroupAdminRule;
 import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
-import java.io.IOException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.TimeZone;
-
-import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
-
 @Rule(
     name = "Create issue by reply",
     description = "Create issue by reply if feature has been setup")
-public class CreateIssueByReplyRule extends BaseRule {
+public class CreateIssueByReplyRule extends GroupAdminRule {
 
   static final RuleType NAME = CommandRuleType.CreateIssueByReply;
 
@@ -65,7 +61,9 @@ public class CreateIssueByReplyRule extends BaseRule {
       @Fact("command") String command,
       @Fact("event") ChatMessageEvent event,
       @Fact("isGroup") boolean isGroup,
-      @Fact("args") String tag) {
+      @Fact("args") String tag)
+      throws AdminRulesRequiredException {
+    checkAdminRules(event);
     return isGroup
         && NAME.equalsName(command)
         && issueCreationSettingsService.hasChatSettings(event.getChatId(), tag)
@@ -73,7 +71,8 @@ public class CreateIssueByReplyRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") ChatMessageEvent event, @Fact("args") String tag) throws MyteamServerErrorException, IOException {
+  public void execute(@Fact("event") ChatMessageEvent event, @Fact("args") String tag)
+      throws MyteamServerErrorException, IOException {
     try {
 
       IssueCreationSettingsDto settings =
@@ -102,7 +101,8 @@ public class CreateIssueByReplyRule extends BaseRule {
                   reporter.getLastName() != null ? reporter.getLastName() : ""),
               tag));
       fieldValues.put(
-          issueCreationService.getField(IssueFieldConstants.DESCRIPTION), getIssueDescription(event));
+          issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
+          getIssueDescription(event));
       if (settings.getLabels() != null) {
         fieldValues.put(
             issueCreationService.getField(IssueFieldConstants.LABELS),
@@ -125,9 +125,7 @@ public class CreateIssueByReplyRule extends BaseRule {
     } catch (Exception e) {
       userChatService.sendMessageText(
           event.getChatId(),
-          String.format(
-              "Возникла ошибка при создании задачи.\n\n%s",
-              e.getLocalizedMessage()));
+          String.format("Возникла ошибка при создании задачи.\n\n%s", e.getLocalizedMessage()));
     }
   }
 
