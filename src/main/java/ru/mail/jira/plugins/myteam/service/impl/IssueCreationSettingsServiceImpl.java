@@ -77,6 +77,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     //    IssueCreationSettingsDto settings =
     //        IssueCreationSettingsDto.builder().chatId(chatId).enabled(false).tag("task").build();
     IssueCreationSettingsDto settings = new IssueCreationSettingsDto();
+    settings.setEnabled(false);
     IssueCreationSettingsDto result =
         new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
     issueSettingsCache.put(getSettingsCacheKey(result), result);
