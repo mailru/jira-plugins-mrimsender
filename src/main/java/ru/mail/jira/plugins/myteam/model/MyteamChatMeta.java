@@ -6,7 +6,7 @@ import net.java.ao.schema.Indexed;
 import net.java.ao.schema.Table;
 
 @Table("MYTEAM_CHAT_META")
-public interface MyteamChatMetaEntity extends Entity {
+public interface MyteamChatMeta extends Entity {
   // Chat id of myteam chat
   String getChatId();
 

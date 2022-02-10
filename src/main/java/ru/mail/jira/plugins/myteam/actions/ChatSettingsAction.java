@@ -7,13 +7,10 @@ import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 
 public class ChatSettingsAction extends JiraWebActionSupport {
   private static final String SECURITY_BREACH = "securitybreach";
-  private static final Pattern pattern = Pattern.compile("chatId=([^&]+)");
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final GlobalPermissionManager globalPermissionManager;
   private final UserChatService userChatService;
@@ -34,12 +31,10 @@ public class ChatSettingsAction extends JiraWebActionSupport {
     if (isJiraAdmin(user)) {
       return SUCCESS;
     }
-    String query = this.getHttpRequest().getQueryString();
-    Matcher matcher = pattern.matcher(query);
+    String chatId = this.getHttpRequest().getParameter("chatId");
 
-    if (matcher.find()) {
-      if (!userChatService.isChatAdmin(matcher.group(1), user.getEmailAddress()))
-        return SECURITY_BREACH;
+    if (chatId != null) {
+      if (!userChatService.isChatAdmin(chatId, user.getEmailAddress())) return SECURITY_BREACH;
     }
     return SUCCESS;
   }

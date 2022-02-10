@@ -271,10 +271,23 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       @NotNull Map<Field, String> fields,
       ApplicationUser user)
       throws IssueCreationValidationException {
+    return createIssue(project, issueType, fields, user, user);
+  }
+
+  public Issue createIssue(
+      Project project,
+      IssueType issueType,
+      @NotNull Map<Field, String> fields,
+      ApplicationUser user,
+      ApplicationUser reporter)
+      throws IssueCreationValidationException {
     JiraThreadLocalUtils.preCall();
     try {
+      fields.put(
+          fieldManager.getField(IssueFieldConstants.REPORTER), String.valueOf(reporter.getId()));
       IssueService.CreateValidationResult issueValidationResult =
           validateIssueWithGivenFields(project, issueType, fields, user);
+
       if (issueValidationResult.isValid()) {
         return issueService.create(user, issueValidationResult).getIssue();
       } else {
@@ -292,12 +305,13 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       String projectKey,
       String issueTypeId,
       @NotNull Map<Field, String> fields,
-      ApplicationUser user)
+      ApplicationUser user,
+      ApplicationUser reporter)
       throws IssueCreationValidationException, PermissionException, ProjectBannedException {
     Project project = myteamIssueService.getProject(projectKey, user);
     IssueType issueType = myteamIssueService.getIssueType(issueTypeId);
 
-    return createIssue(project, issueType, fields, user);
+    return createIssue(project, issueType, fields, user, reporter);
   }
 
   @Override

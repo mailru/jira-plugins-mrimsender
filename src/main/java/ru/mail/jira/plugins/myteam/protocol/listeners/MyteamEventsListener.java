@@ -1,6 +1,9 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol.listeners;
 
+import static ru.mail.jira.plugins.myteam.commons.Const.CHAT_COMMAND_PREFIX;
+import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
+
 import com.google.common.base.Splitter;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
@@ -24,8 +27,6 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 @Component
 public class MyteamEventsListener {
   private static final String THREAD_NAME_PREFIX = "icq-events-listener-thread-pool";
-  private static final String CHAT_COMMAND_PREFIX = "/";
-  private static final String ISSUE_CREATION_BY_REPLY_PREFIX = "#";
 
   private final ExecutorService executorService =
       Executors.newFixedThreadPool(

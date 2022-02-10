@@ -6,7 +6,7 @@ import net.java.ao.schema.Table;
 import org.jetbrains.annotations.Nullable;
 
 @Table("MYTEAM_ISSUE_CFG")
-public interface IssueCreationSettingsEntity extends Entity {
+public interface IssueCreationSettings extends Entity {
 
   String getChatId();
 

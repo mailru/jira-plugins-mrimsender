@@ -125,11 +125,11 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     }
   }
 
-  private static String getSettingsCacheKey(IssueCreationSettingsDto settings) {
+  private String getSettingsCacheKey(IssueCreationSettingsDto settings) {
     return getSettingsCacheKey(settings.getChatId(), settings.getTag());
   }
 
-  private static String getSettingsCacheKey(String chatId, String tag) {
+  private String getSettingsCacheKey(String chatId, String tag) {
     return String.format("%s-%s", chatId, tag);
   }
 }

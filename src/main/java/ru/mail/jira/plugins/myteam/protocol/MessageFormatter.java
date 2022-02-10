@@ -49,6 +49,7 @@ import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.service.PluginData;
@@ -297,6 +298,12 @@ public class MessageFormatter {
   public String createIssueLink(String issueKey) {
     return String.format(
         "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
+  }
+
+  public String createMarkdownIssueShortLink(String issueKey) {
+    return String.format(
+        "[%s](%s/browse/%s)",
+        issueKey, applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
 
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
@@ -711,7 +718,19 @@ public class MessageFormatter {
             .collect(Collectors.toList()));
   }
 
-  private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
+  public String formatMyteamUserLink(User user) {
+    StringBuilder str = new StringBuilder();
+
+    str.append("[").append(user.getFirstName()).append(" ");
+
+    if (user.getLastName() != null) {
+      str.append(" ").append(user.getLastName());
+    }
+    str.append("|").append(getMyteamLink(user.getUserId())).append("]");
+    return str.toString();
+  }
+
+  public String formatUser(ApplicationUser user, String messageKey, boolean mention) {
     if (user != null) {
       if (mention) {
         return "@\\[" + shieldText(user.getEmailAddress()) + "\\]";

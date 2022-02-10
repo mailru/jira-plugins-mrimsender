@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.java.ao.Query;
 import org.springframework.stereotype.Repository;
-import ru.mail.jira.plugins.myteam.model.MyteamChatMetaEntity;
+import ru.mail.jira.plugins.myteam.model.MyteamChatMeta;
 
 @Repository
 public class MyteamChatRepository {
@@ -18,9 +18,9 @@ public class MyteamChatRepository {
     this.ao = ao;
   }
 
-  public MyteamChatMetaEntity persistChat(@Nonnull String chatId, @Nonnull String issueKey) {
+  public MyteamChatMeta persistChat(@Nonnull String chatId, @Nonnull String issueKey) {
     // persist new one
-    MyteamChatMetaEntity myteamChatMetaEntity = ao.create(MyteamChatMetaEntity.class);
+    MyteamChatMeta myteamChatMetaEntity = ao.create(MyteamChatMeta.class);
     myteamChatMetaEntity.setChatId(chatId);
     myteamChatMetaEntity.setIssueKey(issueKey.toUpperCase());
     myteamChatMetaEntity.save();
@@ -29,15 +29,14 @@ public class MyteamChatRepository {
 
   public void deleteChatByIssueKey(@Nonnull String issueKey) {
     // delete if already exist
-    ao.deleteWithSQL(MyteamChatMetaEntity.class, "ISSUE_KEY = ?", issueKey.toUpperCase());
+    ao.deleteWithSQL(MyteamChatMeta.class, "ISSUE_KEY = ?", issueKey.toUpperCase());
   }
 
   @Nullable
-  public MyteamChatMetaEntity findChatByIssueKey(@Nonnull String issueKey) {
-    MyteamChatMetaEntity[] myteamChatMetaEntities =
+  public MyteamChatMeta findChatByIssueKey(@Nonnull String issueKey) {
+    MyteamChatMeta[] myteamChatMetaEntities =
         ao.find(
-            MyteamChatMetaEntity.class,
-            Query.select().where("ISSUE_KEY = ?", issueKey.toUpperCase()));
+            MyteamChatMeta.class, Query.select().where("ISSUE_KEY = ?", issueKey.toUpperCase()));
     if (myteamChatMetaEntities != null && myteamChatMetaEntities.length > 0) {
       return myteamChatMetaEntities[0];
     }

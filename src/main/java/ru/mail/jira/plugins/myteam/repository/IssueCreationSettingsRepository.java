@@ -10,24 +10,24 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Repository;
 import ru.mail.jira.plugins.commons.dao.PagingAndSortingRepository;
 import ru.mail.jira.plugins.myteam.dto.IssueCreationSettingsDto;
-import ru.mail.jira.plugins.myteam.model.IssueCreationSettingsEntity;
+import ru.mail.jira.plugins.myteam.model.IssueCreationSettings;
 
 @Repository
 public class IssueCreationSettingsRepository
-    extends PagingAndSortingRepository<IssueCreationSettingsEntity, IssueCreationSettingsDto> {
+    extends PagingAndSortingRepository<IssueCreationSettings, IssueCreationSettingsDto> {
 
   public IssueCreationSettingsRepository(@ComponentImport ActiveObjects ao) {
     super(ao);
   }
 
   @Override
-  public IssueCreationSettingsDto entityToDto(@NotNull IssueCreationSettingsEntity entity) {
+  public IssueCreationSettingsDto entityToDto(@NotNull IssueCreationSettings entity) {
     return new IssueCreationSettingsDto(entity);
   }
 
   @Override
   public void updateEntityFromDto(
-      @NotNull IssueCreationSettingsDto dto, @NotNull IssueCreationSettingsEntity entity) {
+      @NotNull IssueCreationSettingsDto dto, @NotNull IssueCreationSettings entity) {
     entity.setChatId(dto.getChatId());
     entity.setTag(dto.getTag());
     entity.setIssueTypeId(dto.getIssueTypeId());
@@ -44,10 +44,10 @@ public class IssueCreationSettingsRepository
     return null;
   }
 
-  public Optional<IssueCreationSettingsEntity> getSettingsByChatId(String chatId) {
+  public Optional<IssueCreationSettings> getSettingsByChatId(String chatId) {
 
-    IssueCreationSettingsEntity[] settings =
-        ao.find(IssueCreationSettingsEntity.class, Query.select().where("CHAT_ID = ?", chatId));
+    IssueCreationSettings[] settings =
+        ao.find(IssueCreationSettings.class, Query.select().where("CHAT_ID = ?", chatId));
 
     if (settings.length == 0) {
       return Optional.empty();

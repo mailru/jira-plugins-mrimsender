@@ -6,7 +6,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.*;
-import ru.mail.jira.plugins.myteam.model.IssueCreationSettingsEntity;
+import ru.mail.jira.plugins.myteam.model.IssueCreationSettings;
 
 @Getter
 @Setter
@@ -27,7 +27,7 @@ public class IssueCreationSettingsDto {
   @XmlElement private String tag;
   @XmlElement private List<String> labels;
 
-  public IssueCreationSettingsDto(IssueCreationSettingsEntity entity) {
+  public IssueCreationSettingsDto(IssueCreationSettings entity) {
     this.id = entity.getID();
     this.chatId = entity.getChatId();
     this.enabled = entity.isEnabled();

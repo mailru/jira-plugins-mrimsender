@@ -13,9 +13,7 @@ export function init(): void {
 
   const root = document.getElementById(PANEL_CONTAINER_ID_SELECTOR);
 
-  const match = location.search.match(/chatId=([^&]+)/);
-
-  const chatId = match ? match[1] : null;
+  const chatId = new URLSearchParams(location.search).get('chatId');
 
   ReactDOM.render(
     <CacheProvider value={emotionCache}>

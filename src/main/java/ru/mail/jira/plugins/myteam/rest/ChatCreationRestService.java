@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.model.MyteamChatMetaEntity;
+import ru.mail.jira.plugins.myteam.model.MyteamChatMeta;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
@@ -110,7 +110,7 @@ public class ChatCreationRestService {
     if (loggedInUser == null) {
       throw new SecurityException();
     }
-    MyteamChatMetaEntity chatMeta = myteamChatRepository.findChatByIssueKey(issueKey);
+    MyteamChatMeta chatMeta = myteamChatRepository.findChatByIssueKey(issueKey);
     if (chatMeta == null) {
       return null;
     }

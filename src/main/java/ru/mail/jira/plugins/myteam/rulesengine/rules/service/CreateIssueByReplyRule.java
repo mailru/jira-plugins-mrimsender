@@ -4,14 +4,10 @@ package ru.mail.jira.plugins.myteam.rulesengine.rules.service;
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
-import java.io.IOException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.TimeZone;
+import org.apache.commons.lang3.StringUtils;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -31,6 +27,15 @@ import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.TimeZone;
+
+import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
 
 @Rule(
     name = "Create issue by reply",
@@ -68,52 +73,62 @@ public class CreateIssueByReplyRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") ChatMessageEvent event, @Fact("args") String tag)
-      throws UserNotFoundException, PermissionException, IssueCreationValidationException,
-          ProjectBannedException, MyteamServerErrorException, IOException {
-
-    IssueCreationSettingsDto settings =
-        issueCreationSettingsService.getSettings(event.getChatId(), tag);
-
-    if (settings == null || !issueCreationSettingsService.hasRequiredFields(settings)) {
-      return;
-    }
-
-    User reporter = getReporterFromEventParts(event);
-
-    ApplicationUser jiraUser = null;
+  public void execute(@Fact("event") ChatMessageEvent event, @Fact("args") String tag) throws MyteamServerErrorException, IOException {
     try {
-      if (reporter != null) {
-        jiraUser = userChatService.getJiraUserFromUserChatId(reporter.getUserId());
+
+      IssueCreationSettingsDto settings =
+          issueCreationSettingsService.getSettings(event.getChatId(), tag);
+
+      if (settings == null || !issueCreationSettingsService.hasRequiredFields(settings)) {
+        return;
       }
-    } catch (Exception e) {
-      jiraUser = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    }
 
-    if (jiraUser == null) {
-      return;
-    }
+      User reporter = getReporterFromEventParts(event);
 
-    HashMap<Field, String> fieldValues = new HashMap<>();
+      ApplicationUser creator = userChatService.getJiraUserFromUserChatId(event.getUserId());
+      if (creator == null || reporter == null) {
+        return;
+      }
 
-    fieldValues.put(
-        issueCreationService.getField("summary"),
-        String.format("Обращение от %s", jiraUser.getDisplayName()));
-    fieldValues.put(issueCreationService.getField("description"), getIssueDescription(event));
-    if (settings.getLabels() != null) {
+      HashMap<Field, String> fieldValues = new HashMap<>();
+
       fieldValues.put(
-          issueCreationService.getField("labels"), String.join(",", settings.getLabels()));
+          issueCreationService.getField(IssueFieldConstants.SUMMARY),
+          getIssueSummary(
+              event,
+              String.format(
+                  "%s %s",
+                  reporter.getFirstName(),
+                  reporter.getLastName() != null ? reporter.getLastName() : ""),
+              tag));
+      fieldValues.put(
+          issueCreationService.getField(IssueFieldConstants.DESCRIPTION), getIssueDescription(event));
+      if (settings.getLabels() != null) {
+        fieldValues.put(
+            issueCreationService.getField(IssueFieldConstants.LABELS),
+            String.join(",", settings.getLabels()));
+      }
+
+      Issue issue =
+          issueCreationService.createIssue(
+              settings.getProjectKey(),
+              settings.getIssueTypeId(),
+              fieldValues,
+              creator,
+              userChatService.getJiraUserFromUserChatId(reporter.getUserId()));
+
+      userChatService.sendMessageText(
+          event.getChatId(),
+          String.format(
+              "По вашему обращению была создана задача: %s",
+              messageFormatter.createMarkdownIssueShortLink(issue.getKey())));
+    } catch (Exception e) {
+      userChatService.sendMessageText(
+          event.getChatId(),
+          String.format(
+              "Возникла ошибка при создании задачи.\n\n%s",
+              e.getLocalizedMessage()));
     }
-
-    Issue issue =
-        issueCreationService.createIssue(
-            settings.getProjectKey(), settings.getIssueTypeId(), fieldValues, jiraUser);
-
-    userChatService.sendMessageText(
-        event.getChatId(),
-        String.format(
-            "Спасибо. По вашему обращению была создана задача:\n%s",
-            messageFormatter.createIssueLink(issue.getKey())));
   }
 
   private User getReporterFromEventParts(ChatMessageEvent event) {
@@ -122,12 +137,12 @@ public class CreateIssueByReplyRule extends BaseRule {
         return ((Reply) part).getMessage().getFrom();
       }
     }
-
     return null;
   }
 
   private String getIssueDescription(ChatMessageEvent event) {
-    StringBuilder str = new StringBuilder();
+    StringBuilder builder = new StringBuilder();
+
     event.getMessageParts().stream()
         .filter(part -> part instanceof Reply)
         .forEach(
@@ -139,16 +154,25 @@ public class CreateIssueByReplyRule extends BaseRule {
                       Instant.ofEpochSecond(((Reply) p).getMessage().getTimestamp()),
                       TimeZone.getDefault().toZoneId());
 
-              str.append("[").append(user.getFirstName()).append(" ");
-
-              if (user.getLastName() != null) {
-                str.append(" ").append(user.getLastName());
-              }
-              str.append("|").append(messageFormatter.getMyteamLink(user.getUserId())).append("] ");
-              str.append("(").append(formatter.format(dateTime)).append("):\n").append("\n");
-              str.append(((Reply) p).getPayload().getMessage().getText());
-              str.append("\n\n");
+              builder.append(messageFormatter.formatMyteamUserLink(user));
+              builder
+                  .append("(")
+                  .append(formatter.format(dateTime))
+                  .append("):\n")
+                  .append("\n{quote}");
+              builder.append(((Reply) p).getPayload().getMessage().getText());
+              builder.append("{quote}\n\n");
             });
-    return str.toString();
+    return builder.toString();
+  }
+
+  private String getIssueSummary(ChatMessageEvent event, String userName, String tag) {
+
+    String comment =
+        StringUtils.substringAfter(event.getMessage(), ISSUE_CREATION_BY_REPLY_PREFIX + tag).trim();
+    if (comment.length() != 0) {
+      return comment;
+    }
+    return String.format("Обращение от %s", userName);
   }
 }
