@@ -24,6 +24,7 @@
     "@emotion/cache": "^10.0.29",
     "@emotion/core": "^10.1.1",
     "@emotion/styled": "^10.0.27",
+    "axios": "^0.25.0",
     "mobx": "^6.0.1",
     "mobx-react": "^7.0.0",
     "react": "^16.14.0",

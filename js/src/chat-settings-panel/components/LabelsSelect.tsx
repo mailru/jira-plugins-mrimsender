@@ -1,11 +1,7 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import { CreatableSelect, OptionsType, OptionType } from '@atlaskit/select';
-
-const defaultOptions = [
-  { label: 'autocreated', value: 'autocreated' },
-  { label: 'bot', value: 'bot' },
-  { label: 'vkteams', value: 'vkteams' },
-];
+import { AsyncCreatableSelect, OptionsType, OptionType } from '@atlaskit/select';
+import contextPath from 'wrm/context-path';
+import axios, { AxiosResponse } from 'axios';
 
 const createOption = (label: string) => ({
   label,
@@ -13,14 +9,28 @@ const createOption = (label: string) => ({
 });
 
 type Props = {
+  id: string;
   className?: string;
   defaultLabels?: Array<string>;
   onChange: (value: OptionsType<OptionType>) => void;
 };
 
-const LabelsSelect = ({ className, defaultLabels, onChange }: Props): ReactElement => {
+const loadLabels = async (query: string): Promise<Array<OptionType>> => {
+  return new Promise((resolve, reject) => {
+    axios
+      .get(`${contextPath()}/rest/api/1.0/labels/suggest`, {
+        params: { query },
+      })
+      .then((response: AxiosResponse<{ suggestions: ReadonlyArray<{ html: string; label: string }> }>) => {
+        resolve(response.data.suggestions.map((s) => createOption(s.label)));
+      })
+      .catch(reject);
+  });
+};
+
+const LabelsSelect = ({ id, className, defaultLabels, onChange }: Props): ReactElement => {
   const [value, setValue] = useState<OptionsType<OptionType>>();
-  const [options, setOptions] = useState<OptionsType<OptionType>>(defaultOptions);
+  const [options, setOptions] = useState<OptionsType<OptionType>>([]);
 
   const handleChange = (newValue: OptionsType<OptionType>) => {
     setValue(newValue);
@@ -42,30 +52,39 @@ const LabelsSelect = ({ className, defaultLabels, onChange }: Props): ReactEleme
   };
 
   useLayoutEffect(() => {
+    const newValues = new Set<string>(defaultLabels);
     if (defaultLabels) {
-      const newValues = new Set<string>(defaultLabels);
-
       const mappedOptions = Array.from(newValues).map(createOption);
 
       setValue(mappedOptions);
       onChange(mappedOptions);
 
       options.forEach((l) => !newValues.has(String(l.value)) && newValues.add(String(l.value)));
-
-      setOptions(Array.from(newValues).map(createOption));
     }
+
+    loadLabels('')
+      .then((labelOptions) => {
+        labelOptions.forEach((l) => !newValues.has(String(l.value)) && newValues.add(String(l.value)));
+
+        setOptions(Array.from(newValues).map(createOption));
+      })
+      .catch(() => {
+        setOptions(Array.from(newValues).map(createOption));
+      });
   }, [defaultLabels]);
 
   return (
-    <CreatableSelect
+    <AsyncCreatableSelect
       className={className}
-      inputId="labels-select"
-      isClearable
       isMulti
       onChange={handleChange}
       onCreateOption={handleCreate}
       options={options}
+      inputId={id}
       value={value}
+      cacheOptions
+      defaultOptions={options}
+      loadOptions={loadLabels}
     />
   );
 };
