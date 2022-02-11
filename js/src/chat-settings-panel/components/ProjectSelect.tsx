@@ -1,6 +1,7 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import contextPath from 'wrm/context-path';
 import { AsyncSelect, OptionType, SelectProps } from '@atlaskit/select';
+import axios from 'axios';
 
 type ProjectData = { name: string; key: string };
 
@@ -11,12 +12,8 @@ type Props = SelectProps<OptionType> & {
   onChange: (value: OptionType | null) => void;
 };
 
-const loadProjectOptions = async (): Promise<ReadonlyArray<ProjectData>> => {
-  return $.ajax({
-    type: 'GET',
-    context: this,
-    url: `${contextPath()}/rest/api/2/project`,
-  });
+const loadProjectOptions = async () => {
+  return axios.get(`${contextPath()}/rest/api/2/project`);
 };
 
 const mapProjectsToOptions = (projects: ReadonlyArray<ProjectData>): Array<OptionType> => {
@@ -45,7 +42,7 @@ const ProjectSelect = ({ id, className, defaultProjectKey, onChange }: Props): R
   const [value, setValue] = useState<OptionType | null>();
 
   useLayoutEffect(() => {
-    loadProjectOptions().then((data) => {
+    loadProjectOptions().then(({ data }) => {
       const options = mapProjectsToOptions(data);
       setProjects(options);
 

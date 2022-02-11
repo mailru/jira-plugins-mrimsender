@@ -30,7 +30,9 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
 
   useLayoutEffect(() => {
     if (chatId) {
-      loadChatIssueCreationSettings(chatId).then(setSettings).catch(console.error);
+      loadChatIssueCreationSettings(chatId)
+        .then((response) => setSettings(response.data))
+        .catch(console.error);
     }
   }, []);
 

@@ -2,6 +2,7 @@ import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import contextPath from 'wrm/context-path';
 import { AsyncSelect, OptionType, SelectProps } from '@atlaskit/select';
 import { usePrevious } from '../shared/hooks';
+import axios from 'axios';
 
 type IssueTypeData = { name: string; id: string };
 
@@ -12,12 +13,8 @@ type Props = SelectProps<OptionType> & {
   onChange: (value: OptionType | null) => void;
 };
 
-const loadProjectOptions = async (projectKey: string): Promise<{ issueTypes: ReadonlyArray<IssueTypeData> }> => {
-  return $.ajax({
-    type: 'GET',
-    context: this,
-    url: `${contextPath()}/rest/api/2/project/${projectKey}`,
-  });
+const loadProjectOptions = async (projectKey: string) => {
+  return axios.get(`${contextPath()}/rest/api/2/project/${projectKey}`);
 };
 
 const mapIssueTypesToOptions = (projects: ReadonlyArray<IssueTypeData>): Array<OptionType> => {
@@ -57,8 +54,8 @@ const IssueTypeSelect = ({ id, projectKey, className, defaultIssueTypeId, onChan
 
   useLayoutEffect(() => {
     if (projectKey) {
-      loadProjectOptions(projectKey).then(({ issueTypes }) => {
-        const options = mapIssueTypesToOptions(issueTypes);
+      loadProjectOptions(projectKey).then(({ data }) => {
+        const options = mapIssueTypesToOptions(data.issueTypes);
         setIssueTypes(options);
 
         if (prevProps?.projectKey && prevProps.projectKey != projectKey) {

@@ -1,23 +1,14 @@
+import axios, { AxiosResponse } from 'axios';
 import contextPath from 'wrm/context-path';
 import { IssueCreationSettings } from '../types';
 
-export const loadChatIssueCreationSettings = async (chatId: string): Promise<IssueCreationSettings> => {
-  return $.ajax({
-    type: 'GET',
-    context: this,
-    data: { chatId },
-    url: `${contextPath()}/rest/myteam/1.0/issueCreation/settings`,
-  });
+export const loadChatIssueCreationSettings = async (chatId: string): Promise<AxiosResponse<IssueCreationSettings>> => {
+  return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/settings`, { params: { chatId } });
 };
 
 export const updateChatIssueCreationSettings = async (
   id: number,
   settings: IssueCreationSettings,
-): Promise<IssueCreationSettings> => {
-  return $.ajax({
-    type: 'PUT',
-    contentType: 'application/json',
-    data: JSON.stringify(settings),
-    url: `${contextPath()}/rest/myteam/1.0/issueCreation/settings/${id}`,
-  });
+): Promise<AxiosResponse<IssueCreationSettings>> => {
+  return axios.put(`${contextPath()}/rest/myteam/1.0/issueCreation/settings/${id}`, settings);
 };
