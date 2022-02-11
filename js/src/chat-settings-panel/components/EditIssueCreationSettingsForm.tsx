@@ -23,14 +23,11 @@ const Container = styled.div`
   }
 `;
 
-const TagFieldContainer = styled.div`
-  .tag-input:before {
-    content: ${`'#'`};
-    margin-left: 7px;
-    opacity: 0.6;
-    font-size: large;
-    font-weight: 500;
-  }
+const HintBeforeTagInput = styled.span`
+  margin-left: 7px;
+  opacity: 0.6;
+  font-size: large;
+  font-weight: 500;
 `;
 
 type FormState = {
@@ -120,22 +117,24 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
                 </>
               )}
             </Field>
-            <TagFieldContainer>
-              <Field
-                label="Тег для создания задачи"
-                name="tag"
-                defaultValue={defaultSettings.tag}
-                isRequired
-                validate={validateNotNull}>
-                {({ fieldProps, error }) => (
-                  <Fragment>
-                    <Textfield className="tag-input" placeholder="Тег" {...fieldProps} />
-                    <HelperMessage>Тег по которому будет создаваться задача. Например: #task</HelperMessage>
-                    {error && <ErrorMessage>{error}</ErrorMessage>}
-                  </Fragment>
-                )}
-              </Field>
-            </TagFieldContainer>
+            <Field
+              label="Тег для создания задачи"
+              name="tag"
+              defaultValue={defaultSettings.tag}
+              isRequired
+              validate={validateNotNull}>
+              {({ fieldProps, error }) => (
+                <Fragment>
+                  <Textfield
+                    placeholder="Тег"
+                    {...fieldProps}
+                    elemBeforeInput={<HintBeforeTagInput>#</HintBeforeTagInput>}
+                  />
+                  <HelperMessage>Тег по которому будет создаваться задача. Например: #task</HelperMessage>
+                  {error && <ErrorMessage>{error}</ErrorMessage>}
+                </Fragment>
+              )}
+            </Field>
 
             <Field<OptionsType<OptionType>>
               name="labels"

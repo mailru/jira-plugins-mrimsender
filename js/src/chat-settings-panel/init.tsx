@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { CacheProvider } from '@emotion/core';
+import { CacheProvider, css, Global } from '@emotion/core';
 import createCache from '@emotion/cache';
 import ChatIssueCreationSettings from './components/ChatIssueCreationSettings';
 
@@ -17,6 +17,16 @@ export function init(): void {
 
   ReactDOM.render(
     <CacheProvider value={emotionCache}>
+      <Global
+        styles={css`
+          #${PANEL_CONTAINER_ID_SELECTOR} {
+            padding: 40px;
+            background: white;
+            display: flex;
+            justify-content: center;
+          }
+        `}
+      />
       <ChatIssueCreationSettings chatId={chatId} />
     </CacheProvider>,
     root,

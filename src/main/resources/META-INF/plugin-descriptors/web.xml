@@ -50,7 +50,6 @@
     </routing>
 
 
-
     <web-panel key="myteam-profile-panel" location="webpanels.user.profile.summary.custom" weight="10">
         <condition class="ru.mail.jira.plugins.myteam.configuration.MyteamProfilePanelCondition" />
         <context-provider class="ru.mail.jira.plugins.myteam.configuration.MyteamProfilePanel" />
