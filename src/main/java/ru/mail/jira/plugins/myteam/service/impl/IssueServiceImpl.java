@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.service.impl;
+package ru.mail.jira.plugins.myteam.service.impl;
 
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.config.IssueTypeManager;
@@ -37,7 +37,7 @@ import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
+import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Service
@@ -140,6 +140,13 @@ public class IssueServiceImpl implements IssueService {
       throw new IssueWatchingException(
           String.format("Issue with key %s already watched", issueKey));
     } else {
+      watcherManager.startWatching(user, issue);
+    }
+  }
+
+  @Override
+  public void watchIssue(Issue issue, ApplicationUser user) {
+    if (!watcherManager.isWatching(user, issue)) {
       watcherManager.startWatching(user, issue);
     }
   }

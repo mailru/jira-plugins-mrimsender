@@ -13,7 +13,11 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -22,18 +26,19 @@ import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.GroupAdminRule;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
-import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
+import ru.mail.jira.plugins.myteam.service.IssueService;
+import ru.mail.jira.plugins.myteam.service.RulesEngine;
+import ru.mail.jira.plugins.myteam.service.UserChatService;
 
+@Slf4j
 @Rule(
     name = "Create issue by reply",
     description = "Create issue by reply if feature has been setup")
@@ -46,15 +51,18 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
 
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final IssueCreationService issueCreationService;
+  private final IssueService issueService;
 
   public CreateIssueByReplyRule(
       UserChatService userChatService,
       RulesEngine rulesEngine,
       IssueCreationSettingsService issueCreationSettingsService,
-      IssueCreationService issueCreationService) {
+      IssueCreationService issueCreationService,
+      IssueService issueService) {
     super(userChatService, rulesEngine);
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.issueCreationService = issueCreationService;
+    this.issueService = issueService;
   }
 
   @Condition
@@ -83,27 +91,35 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
         return;
       }
 
-      User reporter = getReporterFromEventParts(event);
+      List<User> reporters = getReportersFromEventParts(event);
+
+      User firstMessageReporter = reporters.get(0);
 
       ApplicationUser creator = userChatService.getJiraUserFromUserChatId(event.getUserId());
-      if (creator == null || reporter == null) {
+
+      if (creator == null || firstMessageReporter == null) {
         return;
       }
 
       HashMap<Field, String> fieldValues = new HashMap<>();
 
+      String firstReporterDisplayName =
+          String.format(
+              "%s %s",
+              firstMessageReporter.getFirstName(),
+              firstMessageReporter.getLastName() != null ? firstMessageReporter.getLastName() : "");
+
       fieldValues.put(
           issueCreationService.getField(IssueFieldConstants.SUMMARY),
-          getIssueSummary(
-              event,
-              String.format(
-                  "%s %s",
-                  reporter.getFirstName(),
-                  reporter.getLastName() != null ? reporter.getLastName() : ""),
-              tag));
+          getIssueSummary(event, firstReporterDisplayName, tag));
       fieldValues.put(
           issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
           getIssueDescription(event));
+
+      //      fieldValues.put(
+      //          issueCreationService.getField(IssueFieldConstants.WATCHERS),
+      //          String.join(",", jiraReporterIds));
+
       if (settings.getLabels() != null) {
         fieldValues.put(
             issueCreationService.getField(IssueFieldConstants.LABELS),
@@ -113,7 +129,8 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
       ApplicationUser reporterJiraUser;
 
       try {
-        reporterJiraUser = userChatService.getJiraUserFromUserChatId(reporter.getUserId());
+        reporterJiraUser =
+            userChatService.getJiraUserFromUserChatId(firstMessageReporter.getUserId());
       } catch (UserNotFoundException e) {
         reporterJiraUser = creator;
       }
@@ -126,25 +143,36 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
               creator,
               reporterJiraUser);
 
+      reporters.stream() // add watchers
+          .map(
+              u -> {
+                try {
+                  return userChatService.getJiraUserFromUserChatId(u.getUserId());
+                } catch (UserNotFoundException e) {
+                  return null;
+                }
+              })
+          .filter(Objects::nonNull)
+          .forEach(user -> issueService.watchIssue(issue, user));
+
       userChatService.sendMessageText(
           event.getChatId(),
           String.format(
               "По вашему обращению была создана задача: %s",
               messageFormatter.createMarkdownIssueShortLink(issue.getKey())));
     } catch (Exception e) {
+      log.error(e.getLocalizedMessage(), e);
       userChatService.sendMessageText(
           event.getUserId(),
           String.format("Возникла ошибка при создании задачи.\n\n%s", e.getLocalizedMessage()));
     }
   }
 
-  private User getReporterFromEventParts(ChatMessageEvent event) {
-    for (Part part : event.getMessageParts()) {
-      if (part instanceof Reply) {
-        return ((Reply) part).getMessage().getFrom();
-      }
-    }
-    return null;
+  private List<User> getReportersFromEventParts(ChatMessageEvent event) {
+    return event.getMessageParts().stream()
+        .filter(p -> p instanceof Reply)
+        .map(p -> ((Reply) p).getMessage().getFrom())
+        .collect(Collectors.toList());
   }
 
   private String getIssueDescription(ChatMessageEvent event) {

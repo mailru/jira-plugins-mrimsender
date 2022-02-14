@@ -2,8 +2,8 @@
 package ru.mail.jira.plugins.myteam.rulesengine.rules;
 
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
-import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.service.RulesEngine;
+import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 public class BaseRule {
   protected final MessageFormatter messageFormatter;

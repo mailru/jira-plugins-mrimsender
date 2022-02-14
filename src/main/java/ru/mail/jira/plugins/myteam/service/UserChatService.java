@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.service;
+package ru.mail.jira.plugins.myteam.service;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;

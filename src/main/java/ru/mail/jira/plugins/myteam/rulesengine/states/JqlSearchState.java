@@ -18,11 +18,11 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
-import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.CancelableState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.PageableState;
+import ru.mail.jira.plugins.myteam.service.IssueService;
+import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Slf4j
 public class JqlSearchState extends BotState implements PageableState, CancelableState {

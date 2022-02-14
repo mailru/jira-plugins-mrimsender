@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.service.impl;
+package ru.mail.jira.plugins.myteam.service.impl;
 
 import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
@@ -25,13 +25,13 @@ import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment.IssueCom
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuesearch.IssueKeyInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
-import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.EmptyState;
+import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
+import ru.mail.jira.plugins.myteam.service.IssueService;
+import ru.mail.jira.plugins.myteam.service.RulesEngine;
+import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Component
 public class RulesEngineImpl implements RulesEngine, InitializingBean {
@@ -105,7 +105,11 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     commandsRuleEngine.registerRule(new SearchByJqlIssuesRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(
         new CreateIssueByReplyRule(
-            userChatService, this, issueCreationSettingsService, issueCreationService));
+            userChatService,
+            this,
+            issueCreationSettingsService,
+            issueCreationService,
+            issueService));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));

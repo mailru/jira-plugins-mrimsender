@@ -7,7 +7,7 @@ import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
+import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 public class ChatSettingsAction extends JiraWebActionSupport {
   private static final String SECURITY_BREACH = "securitybreach";

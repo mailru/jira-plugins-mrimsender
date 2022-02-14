@@ -13,12 +13,12 @@ import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
-import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.CreatingIssueState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.SelectingProjectState;
+import ru.mail.jira.plugins.myteam.service.IssueCreationService;
+import ru.mail.jira.plugins.myteam.service.IssueService;
+import ru.mail.jira.plugins.myteam.service.RulesEngine;
+import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Rule(name = "create issue", description = "start issue creation")
 public class CreateIssueRule extends BaseRule {

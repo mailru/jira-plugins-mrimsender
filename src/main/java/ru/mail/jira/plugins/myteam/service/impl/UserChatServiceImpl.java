@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.service.impl;
+package ru.mail.jira.plugins.myteam.service.impl;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.config.LocaleManager;
@@ -26,10 +26,10 @@ import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.LinkIssueWithChatException;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
-import ru.mail.jira.plugins.myteam.rulesengine.service.StateManager;
-import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.service.IssueService;
+import ru.mail.jira.plugins.myteam.service.StateManager;
+import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Service
 @Slf4j

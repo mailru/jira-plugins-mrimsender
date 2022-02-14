@@ -15,9 +15,9 @@ import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
-import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.CommentingIssueState;
+import ru.mail.jira.plugins.myteam.service.RulesEngine;
+import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Slf4j
 @Rule(name = "comment issue", description = "start waiting for comment input")

@@ -15,10 +15,10 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequi
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.GroupAdminRule;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueService;
-import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
+import ru.mail.jira.plugins.myteam.service.IssueService;
+import ru.mail.jira.plugins.myteam.service.RulesEngine;
+import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Rule(name = "configure_task", description = "Configures issues creation in chat")
 public class IssueCreationSettingsCommand extends GroupAdminRule {

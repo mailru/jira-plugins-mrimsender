@@ -22,12 +22,12 @@ import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Pager;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
-import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.service.UserChatService;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.CancelableState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.PageableState;
+import ru.mail.jira.plugins.myteam.service.IssueCreationService;
+import ru.mail.jira.plugins.myteam.service.RulesEngine;
+import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Slf4j
 public class SelectingIssueAdditionalFieldsState extends BotState

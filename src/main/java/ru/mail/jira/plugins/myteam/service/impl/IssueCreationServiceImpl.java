@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.service.impl;
+package ru.mail.jira.plugins.myteam.service.impl;
 
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.config.IssueTypeManager;
@@ -43,7 +43,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueT
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
-import ru.mail.jira.plugins.myteam.rulesengine.service.IssueCreationService;
+import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 
 @Service
 public class IssueCreationServiceImpl implements IssueCreationService, InitializingBean {
@@ -60,7 +60,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   private final PrioritySchemeManager prioritySchemeManager;
   private final HashMap<String, CreateIssueFieldValueHandler> supportedIssueCreationCustomFields;
   private final CreateIssueFieldValueHandler defaultHandler;
-  private final ru.mail.jira.plugins.myteam.rulesengine.service.IssueService myteamIssueService;
+  private final ru.mail.jira.plugins.myteam.service.IssueService myteamIssueService;
 
   public IssueCreationServiceImpl(
       @ComponentImport I18nResolver i18nResolver,
@@ -73,7 +73,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport OptionsManager optionsManager,
       @ComponentImport PrioritySchemeManager prioritySchemeManager,
-      ru.mail.jira.plugins.myteam.rulesengine.service.IssueService myteamIssueService) {
+      ru.mail.jira.plugins.myteam.service.IssueService myteamIssueService) {
     this.i18nResolver = i18nResolver;
     this.issueTypeScreenSchemeManager = issueTypeScreenSchemeManager;
     this.issueTypeManager = issueTypeManager;

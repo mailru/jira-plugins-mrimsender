@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.service;
+package ru.mail.jira.plugins.myteam.service;
 
 import javax.annotation.Nullable;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;

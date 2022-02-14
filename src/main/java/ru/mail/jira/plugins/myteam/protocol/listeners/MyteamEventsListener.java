@@ -21,7 +21,7 @@ import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
+import ru.mail.jira.plugins.myteam.service.RulesEngine;
 
 @Slf4j
 @Component

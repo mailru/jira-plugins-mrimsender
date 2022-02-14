@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.rulesengine.service;
+package ru.mail.jira.plugins.myteam.service;
 
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
@@ -38,6 +38,8 @@ public interface IssueService {
 
   void watchIssue(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
+
+  void watchIssue(Issue issue, ApplicationUser user);
 
   void unwatchIssue(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
