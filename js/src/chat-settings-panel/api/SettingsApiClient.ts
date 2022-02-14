@@ -3,7 +3,7 @@ import contextPath from 'wrm/context-path';
 import { IssueCreationSettings } from '../types';
 
 export const loadChatIssueCreationSettings = async (chatId: string): Promise<AxiosResponse<IssueCreationSettings>> => {
-  return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/settings`, { params: { chatId } });
+  return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/settings/chats/${chatId}`);
 };
 
 export const updateChatIssueCreationSettings = async (

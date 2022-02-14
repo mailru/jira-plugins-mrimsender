@@ -52,8 +52,8 @@ public class IssueCreationSettingsController {
   }
 
   @GET
-  @Path("")
-  public IssueCreationSettingsDto getChatSettings(@QueryParam("chatId") final String chatId)
+  @Path("/chats/{id}")
+  public IssueCreationSettingsDto getChatSettings(@PathParam("id") final String chatId)
       throws PermissionException {
     checkPermissions(chatId);
     return issueCreationSettingsService.getSettingsByChatId(chatId).orElse(null);
