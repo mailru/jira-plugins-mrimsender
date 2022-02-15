@@ -57,4 +57,18 @@ public class IssueCreationSettingsRepository
 
     return Optional.of(settings[0]);
   }
+
+  public Optional<IssueCreationSettings> getSettingsByChatIdAndTag(String chatId, String tag) {
+
+    IssueCreationSettings[] settings =
+        ao.find(
+            IssueCreationSettings.class,
+            Query.select().where("CHAT_ID = ? AND TAG = ?", chatId, tag));
+
+    if (settings.length == 0) {
+      return Optional.empty();
+    }
+
+    return Optional.of(settings[0]);
+  }
 }
