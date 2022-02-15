@@ -5,7 +5,6 @@ import { configure } from 'mobx';
 import { ChatPanel, StyledChatPanelContainer } from './views/ChatPanel';
 import { ChatPanelStore } from './stores/ChatPanelStore';
 import legacyIssueApi from 'jira/issues/search/legacyissue';
-import { IntlProvider } from 'react-intl';
 import EventTypes from 'jira/util/events/types';
 import Events from 'jira/util/events';
 import { ErrorView, makeFaultTolerantComponent } from './views/ErrorView';
@@ -36,9 +35,7 @@ function renderMyteamChatPanel(reactDomRoot: HTMLElement, emotionCache: EmotionC
     <CacheProvider value={emotionCache}>
       <StyledChatPanelContainer>
         <ErrorBoundary>
-          <IntlProvider locale="en">
-            <ChatPanel store={memoizedStore} />
-          </IntlProvider>
+          <ChatPanel store={memoizedStore} />
         </ErrorBoundary>
       </StyledChatPanelContainer>
     </CacheProvider>,
