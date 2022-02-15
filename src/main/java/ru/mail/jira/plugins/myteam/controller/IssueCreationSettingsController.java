@@ -8,6 +8,9 @@ import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import java.util.List;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -16,10 +19,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import java.util.List;
 
 @Controller
 @Path("/issueCreation/settings")
@@ -82,7 +81,8 @@ public class IssueCreationSettingsController {
   private void checkPermissions(@Nullable String chatId) throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
 
-    if (isJiraAdmin(user) || (chatId != null && userChatService.isChatAdmin(chatId, user.getEmailAddress()))) {
+    if (isJiraAdmin(user)
+        || (chatId != null && userChatService.isChatAdmin(chatId, user.getEmailAddress()))) {
       return;
     }
     throw new PermissionException();

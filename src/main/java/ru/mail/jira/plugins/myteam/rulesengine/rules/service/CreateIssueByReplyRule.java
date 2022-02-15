@@ -23,6 +23,7 @@ import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
+import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
@@ -116,10 +117,6 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
           issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
           getIssueDescription(event));
 
-      //      fieldValues.put(
-      //          issueCreationService.getField(IssueFieldConstants.WATCHERS),
-      //          String.join(",", jiraReporterIds));
-
       if (settings.getLabels() != null) {
         fieldValues.put(
             issueCreationService.getField(IssueFieldConstants.LABELS),
@@ -162,6 +159,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
               messageFormatter.createMarkdownIssueShortLink(issue.getKey())));
     } catch (Exception e) {
       log.error(e.getLocalizedMessage(), e);
+      SentryClient.capture(e);
       userChatService.sendMessageText(
           event.getUserId(),
           String.format("Возникла ошибка при создании задачи.\n\n%s", e.getLocalizedMessage()));

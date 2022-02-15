@@ -17,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
-import ru.mail.jira.plugins.myteam.model.IssueCreationSettings;
 import ru.mail.jira.plugins.myteam.repository.IssueCreationSettingsRepository;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
@@ -44,7 +43,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
         cacheManager.getCache(
             CACHE_NAME,
             new IssueSettingsCacheLoader(),
-            new CacheSettingsBuilder().remote().unflushable().build());
+            new CacheSettingsBuilder().remote().build());
   }
 
   @Override
@@ -75,11 +74,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   @Override
   public IssueCreationSettingsDto addSettings(IssueCreationSettingsDto settings) {
-    IssueCreationSettingsDto result =
-        new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
-
-    issueSettingsCache.put(getSettingsCacheKey(result), Optional.of(result));
-    return result;
+    return new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
   }
 
   @Override
@@ -87,10 +82,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     IssueCreationSettingsDto settings =
         IssueCreationSettingsDto.builder().chatId(chatId).enabled(false).tag("task").build();
 
-    IssueCreationSettingsDto result =
-        new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
-    issueSettingsCache.put(getSettingsCacheKey(result), Optional.of(result));
-    return result;
+    return new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
   }
 
   @Override
@@ -98,10 +90,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     IssueCreationSettingsDto oldSettings = getSettings(id);
     issueSettingsCache.remove(getSettingsCacheKey(oldSettings));
 
-    IssueCreationSettingsDto result =
-        new IssueCreationSettingsDto(issueCreationSettingsRepository.update(id, settings));
-    issueSettingsCache.put(getSettingsCacheKey(result), Optional.of(result));
-    return result;
+    return new IssueCreationSettingsDto(issueCreationSettingsRepository.update(id, settings));
   }
 
   @Override
@@ -142,15 +131,10 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     public @NotNull Optional<IssueCreationSettingsDto> load(@Nonnull final String fieldConfigId) {
       Optional<Pair<String, String>> keys = splitSettingsKey(fieldConfigId);
 
-      if (!keys.isPresent()) {
-        return Optional.empty();
-      }
-
-      Optional<IssueCreationSettings> settings =
-          issueCreationSettingsRepository.getSettingsByChatIdAndTag(
-              keys.get().first(), keys.get().second());
-
-      return settings.map(IssueCreationSettingsDto::new);
+      return keys.map(
+              k -> issueCreationSettingsRepository.getSettingsByChatIdAndTag(k.first(), k.second()))
+          .flatMap(s -> s)
+          .map(IssueCreationSettingsDto::new);
     }
   }
 }
