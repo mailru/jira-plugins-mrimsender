@@ -27,8 +27,8 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
-import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 
 public class MessageFormatterTest {
 

@@ -1,8 +1,6 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol;
 
-import static java.util.stream.Collectors.joining;
-
 import com.atlassian.jira.config.ConstantsManager;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.APKeys;
@@ -36,7 +34,6 @@ import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
@@ -51,18 +48,16 @@ import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.mail.jira.plugins.myteam.bitbucket.dto.*;
-import ru.mail.jira.plugins.myteam.bitbucket.dto.utils.*;
-import ru.mail.jira.plugins.myteam.model.PluginData;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Slf4j
 @Component
 public class MessageFormatter {
   public static final int LIST_PAGE_SIZE = 15;
-  public static final int COMMENT_LIST_PAGE_SIZE = 10;
   public static final String DELIMITER_STR = "----------";
 
   private final ApplicationProperties applicationProperties;
@@ -111,75 +106,99 @@ public class MessageFormatter {
     this.pluginData = pluginData;
   }
 
-  private String formatUser(ApplicationUser user, String messageKey, boolean mention) {
-    if (user != null) {
-      if (mention) {
-        return "@\\[" + shieldText(user.getEmailAddress()) + "\\]";
-      }
-
-      return "["
-          + shieldText(user.getDisplayName())
-          + "]("
-          + shieldText(pluginData.getProfileLink() + user.getEmailAddress())
-          + ")";
-    } else return i18nHelper.getText(messageKey);
+  public static void addRowWithButton(
+      List<List<InlineKeyboardMarkupButton>> buttons, InlineKeyboardMarkupButton button) {
+    List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
+    newButtonsRow.add(button);
+    buttons.add(newButtonsRow);
   }
 
-  private String formatBitbucketUser(UserDto user, String messageKey, boolean mention) {
-    if (user != null) {
-      if (mention) {
-        return "@\\[" + shieldText(user.getEmailAddress()) + "\\]";
-      }
-
-      return markdownTextLink(
-          user.getDisplayName(), pluginData.getProfileLink() + user.getEmailAddress());
-    } else return i18nHelper.getText(messageKey);
+  public static List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
+    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, ButtonRuleType.Cancel.getName()));
+    return buttonsRow;
   }
 
-  private String formatPriority(Priority priority) {
-    if (priority != null
-        && !priority.getId().equals(constantsManager.getDefaultPriorityObject().getId()))
-      return priority.getNameTranslation(i18nHelper);
-    else return null;
-  }
-
-  private void appendField(StringBuilder sb, String title, String value, boolean appendEmpty) {
-    if (appendEmpty || !StringUtils.isBlank(value)) {
-      if (sb.length() == 0) sb.append("\n");
-      sb.append("\n").append(title).append(": ").append(StringUtils.defaultString(value));
+  public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(
+      List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
+    if (buttons == null) {
+      List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
+      newButtons.add(getCancelButtonRow(cancelButtonText));
+      return newButtons;
     }
+    buttons.add(getCancelButtonRow(cancelButtonText));
+    return buttons;
   }
 
-  private void appendField(StringBuilder sb, String title, Collection<?> collection) {
-    if (collection != null) {
-      StringBuilder value = new StringBuilder();
-      Iterator<?> iterator = collection.iterator();
-      while (iterator.hasNext()) {
-        Object object = iterator.next();
-        if (object instanceof ProjectConstant)
-          value.append(shieldText(((ProjectConstant) object).getName()));
-        if (object instanceof Attachment) {
-          Attachment attachment = (Attachment) object;
-          String attachmentUrl = "";
-          try {
-            attachmentUrl =
-                new URI(
-                        String.format(
-                            "%s/secure/attachment/%d/%s",
-                            jiraBaseUrl, attachment.getId(), attachment.getFilename()),
-                        false,
-                        StandardCharsets.UTF_8.toString())
-                    .getEscapedURI();
-          } catch (URIException e) {
-            log.error("Unable to create attachment link for file: {}", attachment.getFilename());
-          }
-          value.append(markdownTextLink(attachment.getFilename(), attachmentUrl));
-        }
-        if (object instanceof Label) value.append(shieldText(((Label) object).getLabel()));
-        if (iterator.hasNext()) value.append(", ");
-      }
-      appendField(sb, title, value.toString(), false);
+  public static String shieldText(String inputDescription) {
+    if (inputDescription == null) {
+      return null;
     }
+    StringBuilder result = new StringBuilder();
+    char[] arrayFromInput = inputDescription.toCharArray();
+    for (char c : arrayFromInput) {
+      switch (c) {
+        case '*':
+          result.append("\\*");
+          break;
+        case '_':
+          result.append("\\_");
+          break;
+        case '~':
+          result.append("\\~");
+          break;
+        case '`':
+          result.append("\\`");
+          break;
+        case '-':
+          result.append("\\-");
+          break;
+        case '>':
+          result.append("\\>");
+          break;
+        case '\\':
+          result.append("\\\\");
+          break;
+        case '{':
+          result.append("\\{");
+          break;
+        case '}':
+          result.append("\\}");
+          break;
+        case '[':
+          result.append("\\[");
+          break;
+        case ']':
+          result.append("\\]");
+          break;
+        case '(':
+          result.append("\\(");
+          break;
+        case ')':
+          result.append("\\)");
+          break;
+        case '#':
+          result.append("\\#");
+          break;
+        case '+':
+          result.append("\\+");
+          break;
+        case '.':
+          result.append("\\.");
+          break;
+        case '!':
+          result.append("\\!");
+          break;
+        default:
+          result.append(c);
+      }
+    }
+    return result.toString();
+  }
+
+  public String getMyteamLink(String email) {
+    return pluginData.getProfileLink() + email;
   }
 
   public String formatSystemFields(
@@ -276,1161 +295,15 @@ public class MessageFormatter {
     return sb.toString();
   }
 
-  private String markdownTextLink(String text, String url) {
-    if (text != null) {
-      try {
-        return "["
-            + shieldText(text)
-            + "]("
-            + shieldText(new URI(url, false, StandardCharsets.UTF_8.toString()).getEscapedURI())
-            + ")";
-      } catch (URIException e) {
-        log.error("Unable to create text link for issueKey: {}, url:{}", text, url);
-      }
-    }
-    return url;
-  }
-
-  private String getHostLink(LinksDto linksDto) {
-    List<LinkDto> selfLinkDto = linksDto.getSelf();
-    if (selfLinkDto != null && selfLinkDto.size() > 0 && selfLinkDto.get(0).getHref() != null) {
-      String[] selfLinkDtoParts = StringUtils.split(selfLinkDto.get(0).getHref(), "/");
-      if (selfLinkDtoParts.length >= 3)
-        return String.join("/", selfLinkDtoParts[0], selfLinkDtoParts[1], selfLinkDtoParts[2]);
-    }
-    return null;
-  }
-
-  private String makePullRequestLink(
-      String hostLink, String projectKey, String repoName, long pullRequestId) {
-    return hostLink
-        + "/projects/"
-        + projectKey
-        + "/repos/"
-        + repoName
-        + "/pull-requests/"
-        + pullRequestId
-        + "/overview";
-  }
-
-  private String makeCommitLink(
-      String hostLink, String projectKey, String repoName, String CommitHash) {
-    return hostLink + "/projects/" + projectKey + "/repos/" + repoName + "/commits/" + CommitHash;
-  }
-
-  private String makeRepoLink(String hostLink, String projectKey, String projectName) {
-    return hostLink + "/projects/" + projectKey + "/repos/" + projectName + "/browse";
-  }
-
-  private String makeBranchLink(
-      String hostLink, String projectKey, String projectName, String branchId) {
-    return hostLink
-        + "/projects/"
-        + projectKey
-        + "/repos/"
-        + projectName
-        + "/browse?at="
-        + branchId;
-  }
-
-  private String makeReviewersText(
-      List<PullRequestParticipantDto> reviewers,
-      String recipientEmailAddress,
-      Locale recipientLocale) {
-    return reviewers.stream()
-        .map(
-            reviewer -> {
-              if (reviewer.getUser().getEmailAddress().equals(recipientEmailAddress)) {
-                return i18nResolver.getText(
-                    recipientLocale,
-                    "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.you");
-              } else {
-                return formatBitbucketUser(reviewer.getUser(), "common.words.anonymous", true);
-              }
-            })
-        .collect(joining(","));
-  }
-
-  private String makeChangedReviewersText(
-      List<PullRequestParticipantDto> reviewers,
-      String recipientEmailAddress,
-      Locale recipientLocale) {
-
-    return reviewers.stream()
-        .map(
-            reviewer -> {
-              if (reviewer.getEmailAddress().equals(recipientEmailAddress)) {
-                return i18nResolver.getText(
-                    recipientLocale,
-                    "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.you");
-              } else {
-                return markdownTextLink(
-                    reviewer.getName(), pluginData.getProfileLink() + reviewer.getEmailAddress());
-              }
-            })
-        .collect(joining(", "));
-  }
-
-  private String convertToMarkdown(
-      String inputText, Pattern pattern, Function<Matcher, String> converter) {
-    int lastIndex = 0;
-    StringBuilder output = new StringBuilder();
-    Matcher matcher = pattern.matcher(inputText);
-    while (matcher.find()) {
-      output.append(inputText, lastIndex, matcher.start()).append(converter.apply(matcher));
-      lastIndex = matcher.end();
-    }
-    if (lastIndex < inputText.length()) {
-      output.append(inputText, lastIndex, inputText.length());
-    }
-    return output.toString();
-  }
-
-  private String makeMyteamMarkdownFromJira(String inputText, boolean useMentionFormat) {
-    if (inputText == null) {
-      return null;
-    }
-    // codeBlockPattern
-    inputText =
-        convertToMarkdown(
-            inputText,
-            Pattern.compile("\\{[Cc]ode}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
-            (input) -> "±`±`±`" + input.group(1) + "±`±`±`");
-    inputText =
-        convertToMarkdown(
-            inputText,
-            Pattern.compile("\\{[Cc]ode:([a-z]+?)}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
-            (input) -> "±`±`±`" + input.group(1) + " " + input.group(2) + "±`±`±`");
-    // inlineCodePattern
-    inputText =
-        convertToMarkdown(
-            inputText,
-            Pattern.compile("\\{\\{([^}?\\n]+)}}"),
-            (input) -> "±`" + input.group(1) + "±`");
-    // mentionPattern
-    inputText =
-        convertToMarkdown(
-            inputText,
-            Pattern.compile("\\[~(.*?)]"),
-            (input) -> {
-              ApplicationUser mentionUser = userManager.getUserByName(input.group(1));
-              if (mentionUser != null) {
-                if (useMentionFormat) {
-                  return "±@±[" + shieldText(mentionUser.getEmailAddress()) + "±]";
-                }
-                return "±["
-                    + shieldText(mentionUser.getDisplayName())
-                    + "±]±("
-                    + shieldText(pluginData.getProfileLink() + mentionUser.getEmailAddress())
-                    + "±)";
-              } else return i18nHelper.getText("common.words.anonymous");
-            });
-    // strikethroughtPattern
-    inputText =
-        convertToMarkdown(
-            inputText,
-            Pattern.compile("(^|\\s)-([^- \\n].*?[^- \\n])-($|\\s|\\.)"),
-            (input) -> input.group(1) + "±~" + input.group(2) + "±~" + input.group(3));
-    // multi level numbered list
-    inputText =
-        convertToMarkdown(
-            inputText,
-            Pattern.compile("^((?:#|-|\\+|\\*)+) (.*)$", Pattern.MULTILINE),
-            (input) -> "±- " + input.group(2));
-    // bold Pattern
-    inputText =
-        convertToMarkdown(
-            inputText,
-            Pattern.compile("(^|\\s)\\*([^* \\n].*?[^* \\n])\\*($|\\s|\\.)"),
-            (input) -> input.group(1) + "±*" + input.group(2) + "±*" + input.group(3));
-    // underLinePattern
-    inputText =
-        convertToMarkdown(
-            inputText,
-            Pattern.compile("(^|\\s)\\+([^+ \\n].*?[^+ \\n])\\+($|\\s|\\.)"),
-            (input) -> input.group(1) + "±_±_" + input.group(2) + "±_±_" + input.group(3));
-    // linkPattern
-    inputText =
-        convertToMarkdown(
-            inputText,
-            Pattern.compile("\\[([^|?\n]+)\\|(.+?)]"),
-            (input) -> "±[" + input.group(1) + "±]±(" + input.group(2) + "±)");
-    // Italic
-    inputText =
-        convertToMarkdown(
-            inputText,
-            Pattern.compile("(^|\\s)_([^_ \\n].*?[^_ \\n])_($|\\s|\\.)"),
-            (input) -> input.group(1) + "±_" + input.group(2) + "±_" + input.group(3));
-    // Single characters
-    inputText =
-        convertToMarkdown(
-            inputText,
-            Pattern.compile("(?<!±)([`{}+|@\\[\\]()~\\-*_])"),
-            input -> "\\" + input.group(1));
-    // Marked characters
-    inputText =
-        convertToMarkdown(
-            inputText, Pattern.compile("±([`{}+|@\\[\\]()~\\-*_])"), input -> input.group(1));
-
-    return inputText;
-  }
-
-  private String formatChangeLog(
-      GenericValue changeLog,
-      boolean ignoreAssigneeField,
-      Locale recipientLocale,
-      boolean useMentionFormat) {
-    StringBuilder sb = new StringBuilder();
-    if (changeLog != null)
-      try {
-        String changedDescription = null;
-
-        for (GenericValue changeItem : changeLog.getRelated("ChildChangeItem")) {
-          String field = StringUtils.defaultString(changeItem.getString("field"));
-          String newString = StringUtils.defaultString(changeItem.getString("newstring"));
-
-          if ("description".equals(field)) {
-            changedDescription = newString;
-            continue;
-          }
-          if ("WorklogTimeSpent".equals(field)
-              || "WorklogId".equals(field)
-              || ("assignee".equals(field) && ignoreAssigneeField)) continue;
-
-          String title = field;
-          if ("Attachment".equals(field)) {
-            Attachment attachment =
-                attachmentManager.getAttachment(Long.valueOf(changeItem.getString("newvalue")));
-            try {
-              sb.append("\n\n")
-                  .append(
-                      markdownTextLink(
-                          attachment.getFilename(),
-                          new URI(
-                                  String.format(
-                                      "%s/secure/attachment/%d/%s",
-                                      jiraBaseUrl, attachment.getId(), attachment.getFilename()),
-                                  false,
-                                  StandardCharsets.UTF_8.toString())
-                              .getEscapedURI()));
-            } catch (URIException e) {
-              log.error(
-                  "Can't find attachment id:{} name:{}",
-                  changeItem.getString("newvalue"),
-                  changeItem.getString("newstring"),
-                  e);
-            }
-            continue;
-          }
-          if (!"custom".equalsIgnoreCase(changeItem.getString("fieldtype")))
-            title =
-                i18nResolver.getText(
-                    recipientLocale, "issue.field." + field.replaceAll(" ", "").toLowerCase());
-
-          if (("Fix Version".equals(field) || "Component".equals(field) || "Version".equals(field))
-              && changeItem.get("oldvalue") != null
-              && changeItem.get("newvalue") == null) {
-            newString = changeItem.getString("oldstring");
-            title =
-                i18nResolver.getText(
-                    recipientLocale, "ru.mail.jira.plugins.myteam.notification.deleted", title);
-          }
-
-          if (fieldManager.isNavigableField(field)) {
-            final NavigableField navigableField = fieldManager.getNavigableField(field);
-            if (navigableField != null)
-              newString = navigableField.prettyPrintChangeHistory(newString, i18nHelper);
-          }
-
-          appendField(sb, title, shieldText(newString), true);
-        }
-
-        if (!StringUtils.isBlank(changedDescription))
-          sb.append("\n\n")
-              .append(makeMyteamMarkdownFromJira(changedDescription, useMentionFormat));
-      } catch (GenericEntityException ignored) {
-        // ignore
-      }
-    return sb.toString();
-  }
-
   public String createIssueLink(String issueKey) {
     return String.format(
         "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
 
-  public String formatBitbucketEvent(
-      ApplicationUser recipient, BitbucketEventDto bitbucketEvent) // TODO move to separate service
-      throws UnsupportedEncodingException {
-    StringBuilder sb = new StringBuilder();
-    boolean useMentionFormat = true;
-    // TODO Вернуть когда починят меншены
-    // = !recipient.getEmailAddress().toLowerCase().equals(actor.getEmailAddress().toLowerCase())
-    Locale recipientLocale = localeManager.getLocaleFor(recipient);
-    // Repository events тут
-    if (bitbucketEvent instanceof RepositoryPush) {
-      RepositoryPush repositoryPush = (RepositoryPush) bitbucketEvent;
-      UserDto actor = repositoryPush.getActor();
-
-      RepositoryDto repositoryDto = repositoryPush.getRepository();
-      String hostLink = getHostLink(repositoryDto.getLinks());
-      List<ChangeDto> changesDTOs = repositoryPush.getChanges();
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pushed",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    repositoryDto.getName(),
-                    makeRepoLink(
-                        hostLink, repositoryDto.getProject().getKey(), repositoryDto.getName())),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.commit"),
-                    makeCommitLink(
-                        hostLink,
-                        repositoryDto.getProject().getKey(),
-                        repositoryDto.getName(),
-                        changesDTOs.get(0).getToHash()))));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about RepositoryPush.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof RepositoryModified) {
-      RepositoryModified repositoryModified = (RepositoryModified) bitbucketEvent;
-      UserDto actor = repositoryModified.getActor();
-      RepositoryDto newRepo = repositoryModified.getNewRepo();
-      String hostLink = getHostLink(newRepo.getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.modified",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                repositoryModified.getOldRepo().getName(),
-                markdownTextLink(
-                    repositoryModified.getNewRepo().getName(),
-                    makeRepoLink(
-                        hostLink,
-                        repositoryModified.getNewRepo().getProject().getKey(),
-                        repositoryModified.getNewRepo().getName()))));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about RepositoryModified.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof RepositoryForked) {
-      RepositoryForked repositoryForked = (RepositoryForked) bitbucketEvent;
-      UserDto actor = repositoryForked.getActor();
-      String hostLink = getHostLink(repositoryForked.getRepository().getLinks());
-
-      try {
-
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.forked",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    repositoryForked.getRepository().getOrigin().getName(),
-                    makeRepoLink(
-                        hostLink,
-                        repositoryForked.getRepository().getOrigin().getProject().getKey(),
-                        repositoryForked.getRepository().getOrigin().getName())),
-                markdownTextLink(
-                    repositoryForked.getRepository().getName(),
-                    makeRepoLink(
-                        hostLink,
-                        repositoryForked.getRepository().getProject().getKey(),
-                        repositoryForked.getRepository().getName()))));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about RepositoryForked.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof RepositoryMirrorSynchronized) {
-      RepositoryMirrorSynchronized repositoryMirrorSynchronized =
-          (RepositoryMirrorSynchronized) bitbucketEvent;
-      List<LinkDto> linkDtos = repositoryMirrorSynchronized.getRepository().getLinks().getSelf();
-
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.mirror",
-                repositoryMirrorSynchronized.getMirrorServer().getName(),
-                repositoryMirrorSynchronized.getMirrorServer().getId(),
-                markdownTextLink(
-                    repositoryMirrorSynchronized.getRepository().getName(),
-                    makeRepoLink(
-                        linkDtos.get(0).getHref(),
-                        repositoryMirrorSynchronized.getProjectKey(),
-                        repositoryMirrorSynchronized.getRepository().getName())),
-                repositoryMirrorSynchronized.getSyncType()));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about RepositoryMirrorSynchronized.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof RepositoryCommitCommentCreated) {
-      RepositoryCommitCommentCreated repositoryCommitCommentCreated =
-          (RepositoryCommitCommentCreated) bitbucketEvent;
-      UserDto actor = repositoryCommitCommentCreated.getActor();
-      String hostLink = getHostLink(repositoryCommitCommentCreated.getRepository().getLinks());
-
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.create",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.commit"),
-                    makeCommitLink(
-                        hostLink,
-                        repositoryCommitCommentCreated.getProjectKey(),
-                        repositoryCommitCommentCreated.getRepository().getName(),
-                        repositoryCommitCommentCreated.getCommitHash())),
-                shieldText(repositoryCommitCommentCreated.getComment().getText())));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about RepositoryCommitCommentCreated.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof RepositoryCommitCommentEdited) {
-      RepositoryCommitCommentEdited repositoryCommitCommentEdited =
-          (RepositoryCommitCommentEdited) bitbucketEvent;
-      UserDto actor = repositoryCommitCommentEdited.getActor();
-      String hostLink = getHostLink(repositoryCommitCommentEdited.getRepository().getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.edit",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.commite"),
-                    makeCommitLink(
-                        hostLink,
-                        repositoryCommitCommentEdited.getProjectKey(),
-                        repositoryCommitCommentEdited.getRepository().getName(),
-                        repositoryCommitCommentEdited.getCommitHash())),
-                shieldText(repositoryCommitCommentEdited.getPreviousComment()),
-                shieldText(repositoryCommitCommentEdited.getComment().getText())));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about RepositoryCommitCommentEdited.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof RepositoryCommitCommentDeleted) {
-      RepositoryCommitCommentDeleted repositoryCommitCommentDeleted =
-          (RepositoryCommitCommentDeleted) bitbucketEvent;
-      UserDto actor = repositoryCommitCommentDeleted.getActor();
-      String hostLink = getHostLink(repositoryCommitCommentDeleted.getRepository().getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.comment.delete",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.commite"),
-                    makeCommitLink(
-                        hostLink,
-                        repositoryCommitCommentDeleted.getProjectKey(),
-                        repositoryCommitCommentDeleted.getRepository().getName(),
-                        repositoryCommitCommentDeleted.getCommitHash())),
-                shieldText(repositoryCommitCommentDeleted.getComment().getText())));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about RepositoryCommitCommentDeleted.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-
-    // PR events
-    if (bitbucketEvent instanceof PullRequestOpened) {
-      PullRequestOpened pullRequestOpened = (PullRequestOpened) bitbucketEvent;
-      UserDto actor = pullRequestOpened.getActor();
-      String hostLink = getHostLink(pullRequestOpened.getPullRequest().getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.opened",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
-                    makePullRequestLink(
-                        hostLink,
-                        pullRequestOpened.getProjectKey(),
-                        pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
-                        pullRequestOpened.getPullRequest().getId())),
-                markdownTextLink(
-                    pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
-                    makeRepoLink(
-                        hostLink,
-                        pullRequestOpened
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestOpened.getPullRequest().getToRef().getRepository().getName())),
-                markdownTextLink(
-                    pullRequestOpened.getPullRequest().getFromRef().getId(),
-                    makeBranchLink(
-                        hostLink,
-                        pullRequestOpened
-                            .getPullRequest()
-                            .getFromRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestOpened.getPullRequest().getFromRef().getRepository().getName(),
-                        pullRequestOpened.getPullRequest().getFromRef().getId())),
-                markdownTextLink(
-                    pullRequestOpened.getPullRequest().getToRef().getId(),
-                    makeBranchLink(
-                        hostLink,
-                        pullRequestOpened
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestOpened.getPullRequest().getToRef().getRepository().getName(),
-                        pullRequestOpened.getPullRequest().getToRef().getId())),
-                pullRequestOpened.getPullRequest().getTitle(),
-                shieldText(pullRequestOpened.getPullRequest().getDescription()),
-                makeReviewersText(
-                    pullRequestOpened.getPullRequest().getReviewers(),
-                    recipient.getEmailAddress(),
-                    recipientLocale)));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about opened pull request.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof PullRequestModified) {
-      PullRequestModified pullRequestModified = (PullRequestModified) bitbucketEvent;
-      UserDto actor = pullRequestModified.getActor();
-      String hostLink = getHostLink(pullRequestModified.getPullRequest().getLinks());
-
-      byte counter = 1;
-      StringBuilder changes = new StringBuilder();
-
-      if (pullRequestModified.getPreviousTitle() != null
-          && pullRequestModified.getPullRequest() != null
-          && pullRequestModified.getPullRequest().getTitle() != null
-          && !pullRequestModified
-              .getPullRequest()
-              .getTitle()
-              .equals(pullRequestModified.getPreviousTitle())) {
-        changes.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified.title",
-                String.valueOf(counter) + '.',
-                pullRequestModified.getPreviousTitle(),
-                pullRequestModified.getPullRequest().getTitle()));
-        counter++;
-      }
-      if (pullRequestModified.getPreviousDescription() != null
-          && pullRequestModified.getPullRequest() != null
-          && pullRequestModified.getPullRequest().getDescription() != null
-          && !pullRequestModified
-              .getPullRequest()
-              .getDescription()
-              .equals(pullRequestModified.getPreviousDescription())) {
-        changes.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified.description",
-                String.valueOf(counter) + '.',
-                shieldText(pullRequestModified.getPreviousDescription()),
-                shieldText(pullRequestModified.getPullRequest().getDescription())));
-        counter++;
-      }
-      if (pullRequestModified.getPreviousTarget() != null
-          && pullRequestModified.getPreviousTarget().getId() != null
-          && pullRequestModified.getPullRequest() != null
-          && pullRequestModified.getPullRequest().getToRef() != null
-          && pullRequestModified.getPullRequest().getToRef().getId() != null
-          && !pullRequestModified
-              .getPreviousTarget()
-              .getId()
-              .equals(pullRequestModified.getPullRequest().getToRef().getId())) {
-        changes.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified.target",
-                String.valueOf(counter) + '.',
-                markdownTextLink(
-                    pullRequestModified.getPreviousTarget().getId(),
-                    makeBranchLink(
-                        hostLink,
-                        pullRequestModified.getProjectKey(),
-                        pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
-                        pullRequestModified.getPreviousTarget().getId())),
-                markdownTextLink(
-                    pullRequestModified.getPullRequest().getToRef().getId(),
-                    makeBranchLink(
-                        hostLink,
-                        pullRequestModified.getProjectKey(),
-                        pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
-                        pullRequestModified.getPullRequest().getToRef().getId()))));
-        counter++;
-      }
-      if (counter == 1) return "Empty PullRequestModified event";
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.modified",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
-                    makePullRequestLink(
-                        hostLink,
-                        pullRequestModified.getProjectKey(),
-                        pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
-                        pullRequestModified.getPullRequest().getId())),
-                markdownTextLink(
-                    pullRequestModified.getPullRequest().getToRef().getRepository().getName(),
-                    makeRepoLink(
-                        hostLink,
-                        pullRequestModified
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestModified.getPullRequest().getToRef().getRepository().getName())),
-                pullRequestModified.getPullRequest().getTitle(),
-                changes.toString()));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about modified pull request.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof PullRequestReviewersUpdated) {
-      PullRequestReviewersUpdated pullRequestReviewersUpdated =
-          (PullRequestReviewersUpdated) bitbucketEvent;
-      UserDto actor = pullRequestReviewersUpdated.getActor();
-      String hostLink = getHostLink(pullRequestReviewersUpdated.getPullRequest().getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewers.updated",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pre"),
-                    makePullRequestLink(
-                        hostLink,
-                        pullRequestReviewersUpdated.getProjectKey(),
-                        pullRequestReviewersUpdated
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName(),
-                        pullRequestReviewersUpdated.getPullRequest().getId())),
-                markdownTextLink(
-                    pullRequestReviewersUpdated
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName(),
-                    makeRepoLink(
-                        hostLink,
-                        pullRequestReviewersUpdated
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestReviewersUpdated
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName())),
-                pullRequestReviewersUpdated.getPullRequest().getTitle()));
-
-        if (pullRequestReviewersUpdated.getAddedReviewers() != null
-            && pullRequestReviewersUpdated.getAddedReviewers().size() > 0) {
-          sb.append(
-              i18nResolver.getText(
-                  recipientLocale,
-                  "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewersupdated.added",
-                  makeChangedReviewersText(
-                      pullRequestReviewersUpdated.getAddedReviewers(),
-                      recipient.getEmailAddress(),
-                      recipientLocale)));
-        }
-        if (pullRequestReviewersUpdated.getRemovedReviewers() != null
-            && pullRequestReviewersUpdated.getRemovedReviewers().size() > 0) {
-          sb.append(
-              i18nResolver.getText(
-                  recipientLocale,
-                  "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.reviewersupdated.removed",
-                  makeChangedReviewersText(
-                      pullRequestReviewersUpdated.getRemovedReviewers(),
-                      recipient.getEmailAddress(),
-                      recipientLocale)));
-        }
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about PullRequestReviewersUpdated.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof PullRequestApprovedByReviewer) {
-      PullRequestApprovedByReviewer pullRequestApprovedByReviewer =
-          (PullRequestApprovedByReviewer) bitbucketEvent;
-      UserDto actor = pullRequestApprovedByReviewer.getActor();
-      String hostLink = getHostLink(pullRequestApprovedByReviewer.getPullRequest().getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.approved",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
-                    makePullRequestLink(
-                        hostLink,
-                        pullRequestApprovedByReviewer.getProjectKey(),
-                        pullRequestApprovedByReviewer
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName(),
-                        pullRequestApprovedByReviewer.getPullRequest().getId())),
-                pullRequestApprovedByReviewer.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestApprovedByReviewer
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName(),
-                    makeRepoLink(
-                        hostLink,
-                        pullRequestApprovedByReviewer
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestApprovedByReviewer
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName())),
-                shieldText(pullRequestApprovedByReviewer.getPullRequest().getDescription())));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about PullRequestApprovedByReviewer.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof PullRequestUnapprovedByReviewer) {
-      PullRequestUnapprovedByReviewer pullRequestUnapprovedByReviewer =
-          (PullRequestUnapprovedByReviewer) bitbucketEvent;
-      UserDto actor = pullRequestUnapprovedByReviewer.getActor();
-      String hostLink = getHostLink(pullRequestUnapprovedByReviewer.getPullRequest().getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.unapproved",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pra"),
-                    makePullRequestLink(
-                        hostLink,
-                        pullRequestUnapprovedByReviewer.getProjectKey(),
-                        pullRequestUnapprovedByReviewer
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName(),
-                        pullRequestUnapprovedByReviewer.getPullRequest().getId())),
-                pullRequestUnapprovedByReviewer.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestUnapprovedByReviewer
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName(),
-                    makeRepoLink(
-                        hostLink,
-                        pullRequestUnapprovedByReviewer
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestUnapprovedByReviewer
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName())),
-                shieldText(pullRequestUnapprovedByReviewer.getPullRequest().getDescription())));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about PullRequestUnapprovedByReviewer.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof PullRequestNeedsWorkByReviewer) {
-      PullRequestNeedsWorkByReviewer pullRequestNeedsWorkByReviewer =
-          (PullRequestNeedsWorkByReviewer) bitbucketEvent;
-      UserDto actor = pullRequestNeedsWorkByReviewer.getActor();
-      String hostLink = getHostLink(pullRequestNeedsWorkByReviewer.getPullRequest().getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.needswork",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
-                    makePullRequestLink(
-                        hostLink,
-                        pullRequestNeedsWorkByReviewer.getProjectKey(),
-                        pullRequestNeedsWorkByReviewer
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName(),
-                        pullRequestNeedsWorkByReviewer.getPullRequest().getId())),
-                pullRequestNeedsWorkByReviewer.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestNeedsWorkByReviewer
-                        .getPullRequest()
-                        .getToRef()
-                        .getRepository()
-                        .getName(),
-                    makeRepoLink(
-                        hostLink,
-                        pullRequestNeedsWorkByReviewer
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestNeedsWorkByReviewer
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName()))));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about PullRequestNeedsWorkByReviewer.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof PullRequestMerged) {
-      PullRequestMerged pullRequestMerged = (PullRequestMerged) bitbucketEvent;
-      UserDto actor = pullRequestMerged.getActor();
-      String hostLink = getHostLink(pullRequestMerged.getPullRequest().getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.merged",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
-                    makePullRequestLink(
-                        hostLink,
-                        pullRequestMerged.getProjectKey(),
-                        pullRequestMerged.getPullRequest().getToRef().getRepository().getName(),
-                        pullRequestMerged.getPullRequest().getId())),
-                pullRequestMerged.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestMerged.getPullRequest().getToRef().getRepository().getName(),
-                    makeRepoLink(
-                        hostLink,
-                        pullRequestMerged
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestMerged.getPullRequest().getToRef().getRepository().getName()))));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about PullRequestMerged.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof PullRequestDeclined) {
-      PullRequestDeclined pullRequestDeclined = (PullRequestDeclined) bitbucketEvent;
-      UserDto actor = pullRequestDeclined.getActor();
-      String hostLink = getHostLink(pullRequestDeclined.getPullRequest().getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.declined",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
-                    makePullRequestLink(
-                        hostLink,
-                        pullRequestDeclined.getProjectKey(),
-                        pullRequestDeclined.getPullRequest().getToRef().getRepository().getName(),
-                        pullRequestDeclined.getPullRequest().getId())),
-                pullRequestDeclined.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestDeclined.getPullRequest().getToRef().getRepository().getName(),
-                    makeRepoLink(
-                        hostLink,
-                        pullRequestDeclined
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestDeclined
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName()))));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about PullRequestDeclined.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof PullRequestDeleted) {
-      PullRequestDeleted pullRequestDeleted = (PullRequestDeleted) bitbucketEvent;
-      UserDto actor = pullRequestDeleted.getActor();
-      String hostLink = getHostLink(pullRequestDeleted.getPullRequest().getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.deleted",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
-                    makePullRequestLink(
-                        hostLink,
-                        pullRequestDeleted.getProjectKey(),
-                        pullRequestDeleted.getPullRequest().getToRef().getRepository().getName(),
-                        pullRequestDeleted.getPullRequest().getId())),
-                pullRequestDeleted.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestDeleted.getPullRequest().getToRef().getRepository().getName(),
-                    makeRepoLink(
-                        hostLink,
-                        pullRequestDeleted
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestDeleted
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName()))));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about PullRequestDeleted.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof PullRequestCommentAdded) {
-      PullRequestCommentAdded pullRequestCommentAdded = (PullRequestCommentAdded) bitbucketEvent;
-      UserDto actor = pullRequestCommentAdded.getActor();
-      String hostLink =
-          getHostLink(
-              pullRequestCommentAdded.getPullRequest().getToRef().getRepository().getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.comment.added",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pr"),
-                    makePullRequestLink(
-                        hostLink,
-                        pullRequestCommentAdded.getProjectKey(),
-                        pullRequestCommentAdded
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName(),
-                        pullRequestCommentAdded.getPullRequest().getId())),
-                pullRequestCommentAdded.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestCommentAdded.getPullRequest().getToRef().getRepository().getName(),
-                    makeRepoLink(
-                        hostLink,
-                        pullRequestCommentAdded
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestCommentAdded
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName())),
-                pullRequestCommentAdded.getComment().getText()));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about PullRequestCommentAdded.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof PullRequestCommentEdited) {
-      PullRequestCommentEdited pullRequestCommentEdited = (PullRequestCommentEdited) bitbucketEvent;
-      UserDto actor = pullRequestCommentEdited.getActor();
-      String hostLink =
-          getHostLink(
-              pullRequestCommentEdited.getPullRequest().getToRef().getRepository().getLinks());
-
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.comment.edited",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pry"),
-                    makePullRequestLink(
-                        hostLink,
-                        pullRequestCommentEdited.getProjectKey(),
-                        pullRequestCommentEdited
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName(),
-                        pullRequestCommentEdited.getPullRequest().getId())),
-                pullRequestCommentEdited.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestCommentEdited.getPullRequest().getToRef().getRepository().getName(),
-                    makeRepoLink(
-                        hostLink,
-                        pullRequestCommentEdited
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestCommentEdited
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName())),
-                pullRequestCommentEdited.getPreviousCommentText(),
-                pullRequestCommentEdited.getComment().getText()));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about PullRequestCommentEdited.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    if (bitbucketEvent instanceof PullRequestCommentDeleted) {
-      PullRequestCommentDeleted pullRequestCommentDeleted =
-          (PullRequestCommentDeleted) bitbucketEvent;
-      UserDto actor = pullRequestCommentDeleted.getActor();
-      String hostLink =
-          getHostLink(
-              pullRequestCommentDeleted.getPullRequest().getToRef().getRepository().getLinks());
-      try {
-        sb.append(
-            i18nResolver.getText(
-                recipientLocale,
-                "ru.mail.jira.plugins.myteam.bitbucket.notification.pr.comment.deleted",
-                formatBitbucketUser(actor, "common.words.anonymous", useMentionFormat),
-                markdownTextLink(
-                    i18nResolver.getText(
-                        recipientLocale, "ru.mail.jira.plugins.myteam.bitbucket.pry"),
-                    makePullRequestLink(
-                        hostLink,
-                        pullRequestCommentDeleted.getProjectKey(),
-                        pullRequestCommentDeleted
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName(),
-                        pullRequestCommentDeleted.getPullRequest().getId())),
-                pullRequestCommentDeleted.getPullRequest().getTitle(),
-                markdownTextLink(
-                    pullRequestCommentDeleted.getPullRequest().getToRef().getRepository().getName(),
-                    makeRepoLink(
-                        hostLink,
-                        pullRequestCommentDeleted
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getProject()
-                            .getKey(),
-                        pullRequestCommentDeleted
-                            .getPullRequest()
-                            .getToRef()
-                            .getRepository()
-                            .getName())),
-                pullRequestCommentDeleted.getComment().getText()));
-      } catch (NullPointerException exception) {
-        log.error(
-            "Error: Can't notify user {} about PullRequestCommentEdited.",
-            recipient.getEmailAddress(),
-            exception);
-      }
-    }
-    sb.append("\n");
-    return sb.toString();
+  public String createMarkdownIssueShortLink(String issueKey) {
+    return String.format(
+        "[%s](%s/browse/%s)",
+        issueKey, applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
 
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
@@ -1591,12 +464,7 @@ public class MessageFormatter {
   public String formatEvent(MentionIssueEvent mentionIssueEvent) {
     Issue issue = mentionIssueEvent.getIssue();
     ApplicationUser user = mentionIssueEvent.getFromUser();
-    String issueLink =
-        markdownTextLink(
-            issue.getKey(),
-            String.format(
-                "%s/browse/%s",
-                applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey()));
+    String issueLink = getIssueLink(issue.getKey());
 
     StringBuilder sb = new StringBuilder();
     sb.append(
@@ -1614,12 +482,7 @@ public class MessageFormatter {
 
   public String createIssueSummary(Issue issue, ApplicationUser user) {
     StringBuilder sb = new StringBuilder();
-    sb.append(
-            markdownTextLink(
-                issue.getKey(),
-                String.format(
-                    "%s/browse/%s",
-                    applicationProperties.getString(APKeys.JIRA_BASEURL), issue.getKey())))
+    sb.append(getIssueLink(issue.getKey()))
         .append("   ")
         .append(shieldText(issue.getSummary()))
         .append("\n");
@@ -1658,6 +521,12 @@ public class MessageFormatter {
                         }));
 
     return sb.toString();
+  }
+
+  private String getIssueLink(String key) {
+    return markdownTextLink(
+        key,
+        String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), key));
   }
 
   public List<List<InlineKeyboardMarkupButton>> getIssueButtons(
@@ -1849,94 +718,273 @@ public class MessageFormatter {
             .collect(Collectors.toList()));
   }
 
-  public static void addRowWithButton(
-      List<List<InlineKeyboardMarkupButton>> buttons, InlineKeyboardMarkupButton button) {
-    List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
-    newButtonsRow.add(button);
-    buttons.add(newButtonsRow);
-  }
+  public String formatMyteamUserLink(User user) {
+    StringBuilder str = new StringBuilder();
 
-  public static List<InlineKeyboardMarkupButton> getCancelButtonRow(String title) {
-    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, ButtonRuleType.Cancel.getName()));
-    return buttonsRow;
-  }
+    str.append("[").append(user.getFirstName()).append(" ");
 
-  public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(
-      List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
-    if (buttons == null) {
-      List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
-      newButtons.add(getCancelButtonRow(cancelButtonText));
-      return newButtons;
+    if (user.getLastName() != null) {
+      str.append(" ").append(user.getLastName());
     }
-    buttons.add(getCancelButtonRow(cancelButtonText));
-    return buttons;
+    str.append("|").append(getMyteamLink(user.getUserId())).append("]");
+    return str.toString();
   }
 
-  public static String shieldText(String inputDescription) {
-    if (inputDescription == null) {
-      return null;
+  public String formatUser(ApplicationUser user, String messageKey, boolean mention) {
+    if (user != null) {
+      if (mention) {
+        return "@\\[" + shieldText(user.getEmailAddress()) + "\\]";
+      }
+
+      return "["
+          + shieldText(user.getDisplayName())
+          + "]("
+          + shieldText(pluginData.getProfileLink() + user.getEmailAddress())
+          + ")";
+    } else return i18nHelper.getText(messageKey);
+  }
+
+  private String formatPriority(Priority priority) {
+    if (priority != null
+        && !priority.getId().equals(constantsManager.getDefaultPriorityObject().getId()))
+      return priority.getNameTranslation(i18nHelper);
+    else return null;
+  }
+
+  private void appendField(StringBuilder sb, String title, String value, boolean appendEmpty) {
+    if (appendEmpty || !StringUtils.isBlank(value)) {
+      if (sb.length() == 0) sb.append("\n");
+      sb.append("\n").append(title).append(": ").append(StringUtils.defaultString(value));
     }
-    StringBuilder result = new StringBuilder();
-    char[] arrayFromInput = inputDescription.toCharArray();
-    for (char c : arrayFromInput) {
-      switch (c) {
-        case '*':
-          result.append("\\*");
-          break;
-        case '_':
-          result.append("\\_");
-          break;
-        case '~':
-          result.append("\\~");
-          break;
-        case '`':
-          result.append("\\`");
-          break;
-        case '-':
-          result.append("\\-");
-          break;
-        case '>':
-          result.append("\\>");
-          break;
-        case '\\':
-          result.append("\\\\");
-          break;
-        case '{':
-          result.append("\\{");
-          break;
-        case '}':
-          result.append("\\}");
-          break;
-        case '[':
-          result.append("\\[");
-          break;
-        case ']':
-          result.append("\\]");
-          break;
-        case '(':
-          result.append("\\(");
-          break;
-        case ')':
-          result.append("\\)");
-          break;
-        case '#':
-          result.append("\\#");
-          break;
-        case '+':
-          result.append("\\+");
-          break;
-        case '.':
-          result.append("\\.");
-          break;
-        case '!':
-          result.append("\\!");
-          break;
-        default:
-          result.append(c);
+  }
+
+  private void appendField(StringBuilder sb, String title, Collection<?> collection) {
+    if (collection != null) {
+      StringBuilder value = new StringBuilder();
+      Iterator<?> iterator = collection.iterator();
+      while (iterator.hasNext()) {
+        Object object = iterator.next();
+        if (object instanceof ProjectConstant)
+          value.append(shieldText(((ProjectConstant) object).getName()));
+        if (object instanceof Attachment) {
+          Attachment attachment = (Attachment) object;
+          String attachmentUrl = "";
+          try {
+            attachmentUrl =
+                new URI(
+                        String.format(
+                            "%s/secure/attachment/%d/%s",
+                            jiraBaseUrl, attachment.getId(), attachment.getFilename()),
+                        false,
+                        StandardCharsets.UTF_8.toString())
+                    .getEscapedURI();
+          } catch (URIException e) {
+            log.error("Unable to create attachment link for file: {}", attachment.getFilename());
+          }
+          value.append(markdownTextLink(attachment.getFilename(), attachmentUrl));
+        }
+        if (object instanceof Label) value.append(shieldText(((Label) object).getLabel()));
+        if (iterator.hasNext()) value.append(", ");
+      }
+      appendField(sb, title, value.toString(), false);
+    }
+  }
+
+  private String markdownTextLink(String text, String url) {
+    if (text != null) {
+      try {
+        return "["
+            + shieldText(text)
+            + "]("
+            + shieldText(new URI(url, false, StandardCharsets.UTF_8.toString()).getEscapedURI())
+            + ")";
+      } catch (URIException e) {
+        log.error("Unable to create text link for issueKey: {}, url:{}", text, url);
       }
     }
-    return result.toString();
+    return url;
+  }
+
+  private String convertToMarkdown(
+      String inputText, Pattern pattern, Function<Matcher, String> converter) {
+    int lastIndex = 0;
+    StringBuilder output = new StringBuilder();
+    Matcher matcher = pattern.matcher(inputText);
+    while (matcher.find()) {
+      output.append(inputText, lastIndex, matcher.start()).append(converter.apply(matcher));
+      lastIndex = matcher.end();
+    }
+    if (lastIndex < inputText.length()) {
+      output.append(inputText, lastIndex, inputText.length());
+    }
+    return output.toString();
+  }
+
+  private String makeMyteamMarkdownFromJira(String inputText, boolean useMentionFormat) {
+    if (inputText == null) {
+      return null;
+    }
+    // codeBlockPattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\{[Cc]ode}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
+            (input) -> "±`±`±`" + input.group(1) + "±`±`±`");
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\{[Cc]ode:([a-z]+?)}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
+            (input) -> "±`±`±`" + input.group(1) + " " + input.group(2) + "±`±`±`");
+    // inlineCodePattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\{\\{([^}?\\n]+)}}"),
+            (input) -> "±`" + input.group(1) + "±`");
+    // mentionPattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\[~(.*?)]"),
+            (input) -> {
+              ApplicationUser mentionUser = userManager.getUserByName(input.group(1));
+              if (mentionUser != null) {
+                if (useMentionFormat) {
+                  return "±@±[" + shieldText(mentionUser.getEmailAddress()) + "±]";
+                }
+                return "±["
+                    + shieldText(mentionUser.getDisplayName())
+                    + "±]±("
+                    + shieldText(pluginData.getProfileLink() + mentionUser.getEmailAddress())
+                    + "±)";
+              } else return i18nHelper.getText("common.words.anonymous");
+            });
+    // strikethroughtPattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("(^|\\s)-([^- \\n].*?[^- \\n])-($|\\s|\\.)"),
+            (input) -> input.group(1) + "±~" + input.group(2) + "±~" + input.group(3));
+    // multi level numbered list
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("^((?:#|-|\\+|\\*)+) (.*)$", Pattern.MULTILINE),
+            (input) -> "±- " + input.group(2));
+    // bold Pattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("(^|\\s)\\*([^* \\n].*?[^* \\n])\\*($|\\s|\\.)"),
+            (input) -> input.group(1) + "±*" + input.group(2) + "±*" + input.group(3));
+    // underLinePattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("(^|\\s)\\+([^+ \\n].*?[^+ \\n])\\+($|\\s|\\.)"),
+            (input) -> input.group(1) + "±_±_" + input.group(2) + "±_±_" + input.group(3));
+    // linkPattern
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\[([^|?\n]+)\\|(.+?)]"),
+            (input) -> "±[" + input.group(1) + "±]±(" + input.group(2) + "±)");
+    // Italic
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("(^|\\s)_([^_ \\n].*?[^_ \\n])_($|\\s|\\.)"),
+            (input) -> input.group(1) + "±_" + input.group(2) + "±_" + input.group(3));
+    // Single characters
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("(?<!±)([`{}+|@\\[\\]()~\\-*_])"),
+            input -> "\\" + input.group(1));
+    // Marked characters
+    inputText =
+        convertToMarkdown(
+            inputText, Pattern.compile("±([`{}+|@\\[\\]()~\\-*_])"), input -> input.group(1));
+
+    return inputText;
+  }
+
+  private String formatChangeLog(
+      GenericValue changeLog,
+      boolean ignoreAssigneeField,
+      Locale recipientLocale,
+      boolean useMentionFormat) {
+    StringBuilder sb = new StringBuilder();
+    if (changeLog != null)
+      try {
+        String changedDescription = null;
+
+        for (GenericValue changeItem : changeLog.getRelated("ChildChangeItem")) {
+          String field = StringUtils.defaultString(changeItem.getString("field"));
+          String newString = StringUtils.defaultString(changeItem.getString("newstring"));
+
+          if ("description".equals(field)) {
+            changedDescription = newString;
+            continue;
+          }
+          if ("WorklogTimeSpent".equals(field)
+              || "WorklogId".equals(field)
+              || ("assignee".equals(field) && ignoreAssigneeField)) continue;
+
+          String title = field;
+          if ("Attachment".equals(field)) {
+            Attachment attachment =
+                attachmentManager.getAttachment(Long.valueOf(changeItem.getString("newvalue")));
+            try {
+              sb.append("\n\n")
+                  .append(
+                      markdownTextLink(
+                          attachment.getFilename(),
+                          new URI(
+                                  String.format(
+                                      "%s/secure/attachment/%d/%s",
+                                      jiraBaseUrl, attachment.getId(), attachment.getFilename()),
+                                  false,
+                                  StandardCharsets.UTF_8.toString())
+                              .getEscapedURI()));
+            } catch (URIException e) {
+              log.error(
+                  "Can't find attachment id:{} name:{}",
+                  changeItem.getString("newvalue"),
+                  changeItem.getString("newstring"),
+                  e);
+            }
+            continue;
+          }
+          if (!"custom".equalsIgnoreCase(changeItem.getString("fieldtype")))
+            title =
+                i18nResolver.getText(
+                    recipientLocale, "issue.field." + field.replaceAll(" ", "").toLowerCase());
+
+          if (("Fix Version".equals(field) || "Component".equals(field) || "Version".equals(field))
+              && changeItem.get("oldvalue") != null
+              && changeItem.get("newvalue") == null) {
+            newString = changeItem.getString("oldstring");
+            title =
+                i18nResolver.getText(
+                    recipientLocale, "ru.mail.jira.plugins.myteam.notification.deleted", title);
+          }
+
+          if (fieldManager.isNavigableField(field)) {
+            final NavigableField navigableField = fieldManager.getNavigableField(field);
+            if (navigableField != null)
+              newString = navigableField.prettyPrintChangeHistory(newString, i18nHelper);
+          }
+
+          appendField(sb, title, shieldText(newString), true);
+        }
+
+        if (!StringUtils.isBlank(changedDescription))
+          sb.append("\n\n")
+              .append(makeMyteamMarkdownFromJira(changedDescription, useMentionFormat));
+      } catch (GenericEntityException ignored) {
+        // ignore
+      }
+    return sb.toString();
   }
 }

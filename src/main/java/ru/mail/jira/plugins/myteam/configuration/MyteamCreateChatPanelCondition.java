@@ -10,7 +10,7 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.plugin.web.Condition;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
-import ru.mail.jira.plugins.myteam.model.PluginData;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 
 public class MyteamCreateChatPanelCondition implements Condition {
   private final PermissionManager permissionManager;

@@ -13,7 +13,9 @@ public enum CommandRuleType implements RuleType {
   CreatedIssues("created"),
   WatchIssue("watch"),
   LinkIssueWithChat("link"),
-  UnwatchIssue("unwatch");
+  UnwatchIssue("unwatch"),
+  IssueCreationSettings("configure_task"),
+  CreateIssueByReply("createIssueByReply");
 
   @Getter(onMethod_ = {@Override})
   private final String name;

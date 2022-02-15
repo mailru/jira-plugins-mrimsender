@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <title>Chat settings page</title>
+        <meta name="decorator" content="atl.general" />
+        $webResourceManager.requireResourcesForContext("ru.mail.jira.plugins.myteam.chat.settings.panel")
+    </head>
+    <body>
+        <div id="myteam-chat-settings-container"></div>
+    </body>
+</html>

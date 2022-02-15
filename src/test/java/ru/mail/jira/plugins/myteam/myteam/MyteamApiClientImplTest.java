@@ -19,12 +19,12 @@ import org.junit.Ignore;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.model.PluginData;
-import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.SuccessResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 
 public class MyteamApiClientImplTest {
 
@@ -107,13 +107,13 @@ public class MyteamApiClientImplTest {
 
   @Ignore
   public void getEvents() throws UnirestException, MyteamServerErrorException {
-    HttpResponse<FetchResponseDto> httpResponse = myteamApiClient.getEvents(0, 5);
+    HttpResponse<FetchResponse> httpResponse = myteamApiClient.getEvents(0, 5);
     assertEquals(200, httpResponse.getStatus());
   }
 
   @Ignore
   public void answerCallbackQuery() throws UnirestException, MyteamServerErrorException {
-    HttpResponse<FetchResponseDto> httpResponse = myteamApiClient.getEvents(0, 5);
+    HttpResponse<FetchResponse> httpResponse = myteamApiClient.getEvents(0, 5);
     List<CallbackQueryEvent> callbackQueryEventList =
         httpResponse.getBody().getEvents().stream()
             .filter(event -> event instanceof CallbackQueryEvent)

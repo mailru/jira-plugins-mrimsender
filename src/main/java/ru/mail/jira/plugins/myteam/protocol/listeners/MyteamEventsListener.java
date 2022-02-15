@@ -1,10 +1,15 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol.listeners;
 
+import static ru.mail.jira.plugins.myteam.commons.Const.CHAT_COMMAND_PREFIX;
+import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
+
+import com.google.common.base.Splitter;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import kong.unirest.UnirestException;
@@ -16,13 +21,12 @@ import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.service.RulesEngine;
+import ru.mail.jira.plugins.myteam.service.RulesEngine;
 
 @Slf4j
 @Component
 public class MyteamEventsListener {
   private static final String THREAD_NAME_PREFIX = "icq-events-listener-thread-pool";
-  private static final String CHAT_COMMAND_PREFIX = "/";
 
   private final ExecutorService executorService =
       Executors.newFixedThreadPool(
@@ -55,6 +59,12 @@ public class MyteamEventsListener {
   @Subscribe
   public void handleNewMessageEvent(ChatMessageEvent event) {
     String message = event.getMessage();
+
+    if (message != null && message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
+      handleIssueCreationTag(event);
+      return;
+    }
+
     if (message != null && message.startsWith(CHAT_COMMAND_PREFIX)) {
       handleCommand(event);
       return;
@@ -75,6 +85,19 @@ public class MyteamEventsListener {
     rulesEngine.fireCommand(command == null ? "" : command, event, args);
   }
 
+  private void handleIssueCreationTag(ChatMessageEvent event) {
+    String withoutPrefix =
+        StringUtils.substringAfter(event.getMessage(), ISSUE_CREATION_BY_REPLY_PREFIX)
+            .toLowerCase();
+    List<String> split = Splitter.onPattern("\\s+").splitToList(withoutPrefix);
+
+    if (split.size() == 0) return;
+
+    String tag = split.get(0);
+
+    rulesEngine.fireCommand(CommandRuleType.CreateIssueByReply, event, tag);
+  }
+
   private void handleStateAction(ChatMessageEvent event) {
     rulesEngine.fireStateAction(event, event.getMessage());
   }
@@ -90,15 +113,6 @@ public class MyteamEventsListener {
   public void handleJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) throws Exception {
     myteamApiClient.sendMessageText(
         jiraNotifyEvent.getChatId(), jiraNotifyEvent.getMessage(), jiraNotifyEvent.getButtons());
-  }
-
-  @Subscribe
-  public void handleBitbucketNotifyEvent(BitbucketNotifyEvent bitbucketNotifyEvent)
-      throws Exception {
-    myteamApiClient.sendMessageText(
-        bitbucketNotifyEvent.getChatId(),
-        bitbucketNotifyEvent.getMessage(),
-        bitbucketNotifyEvent.getButtons());
   }
 
   @Subscribe

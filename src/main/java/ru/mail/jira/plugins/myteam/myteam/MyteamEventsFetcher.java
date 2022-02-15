@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
@@ -66,7 +66,7 @@ public class MyteamEventsFetcher {
   public void fetchIcqEvents() {
     try {
       log.debug("IcqEventsFetcher fetch icq events started  lastEventId={}...", lastEventId);
-      HttpResponse<FetchResponseDto> httpResponse = myteamApiClient.getEvents(lastEventId, 15);
+      HttpResponse<FetchResponse> httpResponse = myteamApiClient.getEvents(lastEventId, 15);
       if (httpResponse.getStatus() == 200) {
         log.debug("IcqEventsFetcher handle icq events started ...");
         // TODO зачем тут атомик ? forEach же не параллельный ...

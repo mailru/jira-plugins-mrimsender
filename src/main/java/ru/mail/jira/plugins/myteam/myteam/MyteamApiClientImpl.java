@@ -13,16 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.model.PluginData;
-import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
-import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.SuccessResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.*;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.AdminsResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.StatusResponse;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Slf4j
 @Component
@@ -83,16 +81,43 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   }
 
   @Override
-  public HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime)
+  public HttpResponse<StatusResponse> deleteMessages(String chatId, List<Long> messagesId)
       throws UnirestException, MyteamServerErrorException {
-    HttpResponse<FetchResponseDto> response =
+    HttpResponse<StatusResponse> response =
+        HttpClient.getPrimaryClient()
+            .get(botApiUrl + "/messages/deleteMessages")
+            .queryString("token", apiToken)
+            .queryString("chatId", chatId)
+            .queryString("msgId", messagesId)
+            .asObject(StatusResponse.class);
+    checkMyteamServerErrorException(response, "deleteMessages");
+    return response;
+  }
+
+  @Override
+  public HttpResponse<FetchResponse> getEvents(long lastEventId, long pollTime)
+      throws UnirestException, MyteamServerErrorException {
+    HttpResponse<FetchResponse> response =
         HttpClient.getPrimaryClient()
             .get(botApiUrl + "/events/get")
             .queryString("token", apiToken)
             .queryString("lastEventId", lastEventId)
             .queryString("pollTime", pollTime)
-            .asObject(FetchResponseDto.class);
+            .asObject(FetchResponse.class);
     checkMyteamServerErrorException(response, "getEvents");
+    return response;
+  }
+
+  @Override
+  public HttpResponse<AdminsResponse> getAdmins(String chatId)
+      throws UnirestException, MyteamServerErrorException {
+    HttpResponse<AdminsResponse> response =
+        HttpClient.getPrimaryClient()
+            .get(botApiUrl + "/chats/getAdmins")
+            .queryString("token", apiToken)
+            .queryString("chatId", chatId)
+            .asObject(AdminsResponse.class);
+    checkMyteamServerErrorException(response, "getAdmins");
     return response;
   }
 

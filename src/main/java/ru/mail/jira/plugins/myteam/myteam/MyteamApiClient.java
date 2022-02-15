@@ -8,15 +8,9 @@ import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.myteam.dto.FetchResponseDto;
-import ru.mail.jira.plugins.myteam.myteam.dto.FileResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.myteam.dto.MessageResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.SuccessResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.*;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.*;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.*;
 
 public interface MyteamApiClient {
   HttpResponse<MessageResponse> sendMessageText(
@@ -26,7 +20,13 @@ public interface MyteamApiClient {
   HttpResponse<MessageResponse> sendMessageText(String chatId, String text)
       throws UnirestException, IOException, MyteamServerErrorException;
 
-  HttpResponse<FetchResponseDto> getEvents(long lastEventId, long pollTime)
+  HttpResponse<StatusResponse> deleteMessages(String chatId, List<Long> messagesId)
+      throws UnirestException, IOException, MyteamServerErrorException;
+
+  HttpResponse<FetchResponse> getEvents(long lastEventId, long pollTime)
+      throws UnirestException, MyteamServerErrorException;
+
+  HttpResponse<AdminsResponse> getAdmins(String chatId)
       throws UnirestException, MyteamServerErrorException;
 
   HttpResponse<JsonNode> answerCallbackQuery(

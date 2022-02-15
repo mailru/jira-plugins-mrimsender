@@ -73,7 +73,7 @@ export class ChatPanelStore {
       if (chatCreationData != null) {
         this.dialogData = chatCreationData;
       }
-    } catch (e) {
+    } catch (e: any) {
       this.error = new Error(`An error in loadDialogData status=${e.status} statusText=${e.statusText}`);
     }
   };
