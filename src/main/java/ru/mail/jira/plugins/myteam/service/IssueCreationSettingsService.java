@@ -17,8 +17,6 @@ public interface IssueCreationSettingsService {
 
   Optional<IssueCreationSettingsDto> getSettingsByChatId(String chatId);
 
-  IssueCreationSettingsDto addSettings(IssueCreationSettingsDto settings);
-
   IssueCreationSettingsDto addDefaultSettings(String chatId);
 
   IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings);
