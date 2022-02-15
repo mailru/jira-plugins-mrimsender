@@ -74,7 +74,11 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   @Override
   public IssueCreationSettingsDto addSettings(IssueCreationSettingsDto settings) {
-    return new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
+    issueCreationSettingsRepository.create(settings);
+
+    return issueSettingsCache
+        .get(getSettingsCacheKey(settings.getChatId(), settings.getTag()))
+        .orElse(null); // NotNull
   }
 
   @Override
@@ -82,15 +86,21 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     IssueCreationSettingsDto settings =
         IssueCreationSettingsDto.builder().chatId(chatId).enabled(false).tag("task").build();
 
-    return new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
+    issueCreationSettingsRepository.create(settings);
+
+    return issueSettingsCache.get(getSettingsCacheKey(chatId, "task")).orElse(null); // NotNull
   }
 
   @Override
   public IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings) {
     IssueCreationSettingsDto oldSettings = getSettings(id);
-    issueSettingsCache.remove(getSettingsCacheKey(oldSettings));
 
-    return new IssueCreationSettingsDto(issueCreationSettingsRepository.update(id, settings));
+    issueSettingsCache.remove(getSettingsCacheKey(oldSettings));
+    issueCreationSettingsRepository.update(id, settings);
+
+    return issueSettingsCache
+        .get(getSettingsCacheKey(settings.getChatId(), settings.getTag()))
+        .orElse(null); // NotNull
   }
 
   @Override
@@ -103,7 +113,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   @Override
   public boolean hasChatSettings(String chatId, String tag) {
-    return issueSettingsCache.get(getSettingsCacheKey(chatId, tag)).isPresent();
+    return issueSettingsCache.get(getSettingsCacheKey(chatId, tag)).isPresent(); // NotNull
   }
 
   private String getSettingsCacheKey(IssueCreationSettingsDto settings) {
