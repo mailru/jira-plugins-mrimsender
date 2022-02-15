@@ -5,11 +5,10 @@ import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
+import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import java.util.List;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,6 +16,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Controller
 @Path("/issueCreation/settings")
@@ -47,7 +50,8 @@ public class IssueCreationSettingsController {
 
   @GET
   @Path("/all")
-  public List<IssueCreationSettingsDto> getAllChatsSettings() {
+  public List<IssueCreationSettingsDto> getAllChatsSettings() throws PermissionException {
+    checkPermissions();
     return issueCreationSettingsService.getAllSettings();
   }
 
@@ -60,6 +64,7 @@ public class IssueCreationSettingsController {
   }
 
   @PUT
+  @RequiresXsrfCheck
   @Path("/{id}")
   @Consumes(MediaType.APPLICATION_JSON)
   public IssueCreationSettingsDto updateChatSettings(
@@ -70,10 +75,14 @@ public class IssueCreationSettingsController {
     return issueCreationSettingsService.updateSettings(id, settings);
   }
 
-  private void checkPermissions(String chatId) throws PermissionException {
+  private void checkPermissions() throws PermissionException {
+    checkPermissions(null);
+  }
+
+  private void checkPermissions(@Nullable String chatId) throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
 
-    if (isJiraAdmin(user) || userChatService.isChatAdmin(chatId, user.getEmailAddress())) {
+    if (isJiraAdmin(user) || (chatId != null && userChatService.isChatAdmin(chatId, user.getEmailAddress()))) {
       return;
     }
     throw new PermissionException();
