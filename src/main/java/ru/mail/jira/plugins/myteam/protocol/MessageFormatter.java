@@ -121,11 +121,10 @@ public class MessageFormatter {
 
     if (args != null) {
       builder.append("Args:\n{\n");
-
       args.forEach((key, value) -> builder.append(key).append(": ").append(value).append(";\n"));
+      builder.append("}");
     }
-    builder.append("}");
-
+    
     return builder.toString();
   }
 
