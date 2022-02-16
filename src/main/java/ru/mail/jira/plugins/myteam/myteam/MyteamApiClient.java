@@ -64,4 +64,8 @@ public interface MyteamApiClient {
       throws UnirestException, MyteamServerErrorException;
 
   HttpResponse<ChatMember> getMembers(@Nonnull String chatId) throws UnirestException;
+
+  HttpResponse<BotMetaInfo> getSelfInfo() throws UnirestException, MyteamServerErrorException;
+
+  String getBotId();
 }

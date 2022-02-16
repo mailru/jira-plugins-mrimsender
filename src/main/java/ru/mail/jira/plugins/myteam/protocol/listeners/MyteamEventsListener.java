@@ -2,20 +2,17 @@
 package ru.mail.jira.plugins.myteam.protocol.listeners;
 
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
-import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
@@ -65,26 +62,15 @@ public class MyteamEventsListener {
   public void handleNewMessageEvent(ChatMessageEvent event) {
     String message = event.getMessage();
 
-    log.error(
-        MessageFormatter.formLogMessage(
-            "handleNewMessageEvent(ChatMessageEvent event)",
-            "New message",
-            ImmutableMap.of(
-                "message",
-                event.getMessage(),
-                "chatId",
-                event.getChatId(),
-                "userId",
-                event.getChatId(),
-                "chatType",
-                String.valueOf(event.getChatType()),
-                "hasReply",
-                String.valueOf(event.isHasReply()))));
+    if (message != null && myteamApiClient.getBotId() != null) {
+      String botMention = String.format("@\\[%s\\]", myteamApiClient.getBotId());
+      message = message.replaceAll(botMention, "").trim();
+    }
 
     if (message != null
         && event.isHasReply()
         && event.getChatType() == ChatType.GROUP
-        && StringUtils.contains(message, ISSUE_CREATION_BY_REPLY_PREFIX)) {
+        && message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
       handleIssueCreationTag(event);
       return;
     }
@@ -94,44 +80,6 @@ public class MyteamEventsListener {
       return;
     }
     handleStateAction(event);
-  }
-
-  private void handleCommand(ChatMessageEvent event) {
-    String withoutPrefix =
-        StringUtils.substringAfter(event.getMessage(), CHAT_COMMAND_PREFIX).toLowerCase();
-    String[] split = withoutPrefix.split("\\s+");
-
-    if (split.length == 0) return;
-
-    String command = split[0];
-    String args = String.join("", Arrays.asList(split).subList(1, split.length));
-
-    rulesEngine.fireCommand(command == null ? "" : command, event, args);
-  }
-
-  private void handleIssueCreationTag(ChatMessageEvent event) {
-    String removedMentions = RegExUtils.removeAll(event.getMessage(), "@\\[[^\\[\\]]+\\]").trim();
-
-    String withoutPrefix =
-        StringUtils.substringAfter(removedMentions, ISSUE_CREATION_BY_REPLY_PREFIX).toLowerCase();
-    List<String> split = Splitter.onPattern("\\s+").splitToList(withoutPrefix);
-
-    if (split.size() == 0) return;
-
-    String tag = split.get(0);
-
-    log.error(
-        MessageFormatter.formLogMessage(
-            "handleIssueCreationTag",
-            "Before fire rule",
-            ImmutableMap.of(
-                "message", event.getMessage(), "chatId", event.getChatId(), "tag", tag)));
-
-    rulesEngine.fireCommand(CommandRuleType.CreateIssueByReply, event, tag);
-  }
-
-  private void handleStateAction(ChatMessageEvent event) {
-    rulesEngine.fireStateAction(event, event.getMessage());
   }
 
   @Subscribe
@@ -153,5 +101,35 @@ public class MyteamEventsListener {
         CommandRuleType.Issue,
         new SyntheticEvent(event.getChatId(), event.getUserId(), event.getChatType()),
         event.getIssueKey());
+  }
+
+  private void handleCommand(ChatMessageEvent event) {
+    String withoutPrefix =
+        StringUtils.substringAfter(event.getMessage(), CHAT_COMMAND_PREFIX).toLowerCase();
+    String[] split = withoutPrefix.split("\\s+");
+
+    if (split.length == 0) return;
+
+    String command = split[0];
+    String args = String.join("", Arrays.asList(split).subList(1, split.length));
+
+    rulesEngine.fireCommand(command == null ? "" : command, event, args);
+  }
+
+  private void handleIssueCreationTag(ChatMessageEvent event) {
+    String withoutPrefix =
+        StringUtils.substringAfter(event.getMessage(), ISSUE_CREATION_BY_REPLY_PREFIX)
+            .toLowerCase();
+    List<String> split = Splitter.onPattern("\\s+").splitToList(withoutPrefix);
+
+    if (split.size() == 0) return;
+
+    String tag = split.get(0);
+
+    rulesEngine.fireCommand(CommandRuleType.CreateIssueByReply, event, tag);
+  }
+
+  private void handleStateAction(ChatMessageEvent event) {
+    rulesEngine.fireStateAction(event, event.getMessage());
   }
 }
