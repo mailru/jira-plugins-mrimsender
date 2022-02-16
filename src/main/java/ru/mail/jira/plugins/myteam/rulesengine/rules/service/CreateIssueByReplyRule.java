@@ -8,7 +8,6 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -29,7 +28,6 @@ import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
-import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
@@ -71,71 +69,19 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
       @Fact("isGroup") boolean isGroup,
       @Fact("args") String tag)
       throws AdminRulesRequiredException {
-    log.error(
-        MessageFormatter.formLogMessage(
-            "isValid",
-            "START Validate",
-            ImmutableMap.of(
-                "command",
-                command,
-                "chatId",
-                event.getChatId(),
-                "tag",
-                tag,
-                "isGroup",
-                String.valueOf(isGroup))));
     checkAdminRules(event);
-
-    log.error(MessageFormatter.formLogMessage("isValid", "ADMIN RULES VALIDATED"));
 
     boolean hasSettings = issueCreationSettingsService.hasChatSettings(event.getChatId(), tag);
 
-    log.error(
-        MessageFormatter.formLogMessage(
-            "isValid - issueCreationSettingsService.hasChatSettings",
-            "Check in cache",
-            ImmutableMap.of("hasSettings", String.valueOf(hasSettings))));
-
-    boolean result = isGroup && NAME.equalsName(command) && event.isHasReply() && hasSettings;
-
-    log.error(
-        MessageFormatter.formLogMessage(
-            "isValid - result", "result", ImmutableMap.of("result", String.valueOf(result))));
-
-    return result;
+    return isGroup && NAME.equalsName(command) && event.isHasReply() && hasSettings;
   }
 
   @Action
   public void execute(@Fact("event") ChatMessageEvent event, @Fact("args") String tag)
       throws MyteamServerErrorException, IOException {
     try {
-
-      log.error(MessageFormatter.formLogMessage("execute", "START execute"));
-
       IssueCreationSettingsDto settings =
           issueCreationSettingsService.getSettings(event.getChatId(), tag);
-
-      if (settings == null) {
-        log.error(
-            MessageFormatter.formLogMessage(
-                "execute", " issueCreationSettingsService.getSettings returned null"));
-      } else {
-        log.error(
-            MessageFormatter.formLogMessage(
-                "execute",
-                "Got settings from cache",
-                ImmutableMap.of(
-                    "id",
-                    String.valueOf(settings.getId()),
-                    "enabled",
-                    String.valueOf(settings.getEnabled()),
-                    "tag",
-                    settings.getTag(),
-                    "project",
-                    settings.getProjectKey(),
-                    "issueType",
-                    settings.getIssueTypeId())));
-      }
 
       if (settings == null || !issueCreationSettingsService.hasRequiredFields(settings)) {
         return;
@@ -173,13 +119,6 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
       }
 
       ApplicationUser reporterJiraUser;
-
-      log.error(
-          MessageFormatter.formLogMessage(
-              "execute",
-              "Filled fields for issue",
-              ImmutableMap.of("fieldsCount", String.valueOf(fieldValues.size()))));
-
       try {
         reporterJiraUser =
             userChatService.getJiraUserFromUserChatId(firstMessageReporter.getUserId());
@@ -212,11 +151,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
           String.format(
               "По вашему обращению была создана задача: %s",
               messageFormatter.createMarkdownIssueShortLink(issue.getKey())));
-
-      log.error(MessageFormatter.formLogMessage("execute", "Issue has been crated"));
     } catch (Exception e) {
-      log.error(MessageFormatter.formLogMessage("execute", "Error while creating Issue"));
-
       log.error(e.getLocalizedMessage(), e);
       SentryClient.capture(e);
       userChatService.sendMessageText(

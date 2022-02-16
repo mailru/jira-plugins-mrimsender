@@ -106,27 +106,6 @@ public class MessageFormatter {
     this.pluginData = pluginData;
   }
 
-  public static String formLogMessage(String methodName, String comment) {
-    return formLogMessage(methodName, comment, null);
-  }
-
-  public static String formLogMessage(String methodName, String comment, Map<String, String> args) {
-    StringBuilder builder = new StringBuilder();
-
-    builder.append("MYTEAMCACHE\n");
-
-    builder.append("\nMethod: ").append(methodName).append("\n");
-    builder.append("Comment: ").append(comment).append("\n");
-
-    if (args != null) {
-      builder.append("Args:\n{\n");
-      args.forEach((key, value) -> builder.append(key).append(": ").append(value).append(";\n"));
-      builder.append("}");
-    }
-
-    return builder.toString();
-  }
-
   public static void addRowWithButton(
       List<List<InlineKeyboardMarkupButton>> buttons, InlineKeyboardMarkupButton button) {
     List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
