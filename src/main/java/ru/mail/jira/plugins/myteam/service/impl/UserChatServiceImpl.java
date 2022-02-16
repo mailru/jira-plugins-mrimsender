@@ -8,9 +8,6 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
@@ -30,6 +27,10 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.StateManager;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 @Service
 @Slf4j
@@ -74,9 +75,12 @@ public class UserChatServiceImpl implements UserChatService {
 
   @Override
   public boolean isChatAdmin(String chatId, String userId) {
+    if (userId == null) {
+      return false;
+    }
     try {
       AdminsResponse response = myteamClient.getAdmins(chatId).getBody();
-      return response.getAdmins().stream().anyMatch(admin -> admin.getUserId().equals(userId));
+      return response.getAdmins().stream().anyMatch(admin -> userId.equals(admin.getUserId()));
     } catch (MyteamServerErrorException e) {
       log.error("Unable to get chat admins", e);
       return false;
