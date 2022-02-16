@@ -88,7 +88,7 @@ public class MyteamEventsFetcher {
                   } catch (Exception e) {
                     log.error(
                         "Exception inside fetchIcqEvents occurred with event = {}",
-                        event.toString(),
+                        event,
                         e);
                   } finally {
                     eventId.set(event.getEventId());
