@@ -1,6 +1,7 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.myteam;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,6 +19,7 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
+import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
@@ -78,6 +80,17 @@ public class MyteamEventsFetcher {
                 event -> {
                   try {
                     if (event instanceof NewMessageEvent) {
+                      log.error(
+                          MessageFormatter.formLogMessage(
+                              " myteamEventsListener.publishEvent",
+                              "Myteam raw event catch",
+                              ImmutableMap.of(
+                                  "message",
+                                  ((NewMessageEvent) event).getText(),
+                                  "chatId",
+                                  ((NewMessageEvent) event).getChat().getChatId(),
+                                  "userId",
+                                  ((NewMessageEvent) event).getFrom().getUserId())));
                       myteamEventsListener.publishEvent(
                           new ChatMessageEvent((NewMessageEvent) event));
                     }

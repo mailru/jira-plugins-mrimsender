@@ -58,7 +58,7 @@ public class Utils {
 
   @Nullable
   public static String findIssueKeyInStr(@Nullable String str) {
-    if(str == null) {
+    if (str == null) {
       return null;
     }
     Matcher result = pattern.matcher(str);
