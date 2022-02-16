@@ -15,17 +15,19 @@ import java.util.concurrent.Executors;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
+import ru.mail.jira.plugins.myteam.myteam.dto.BotMetaInfo;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 
 @Slf4j
 @Component
-public class MyteamEventsListener {
+public class MyteamEventsListener implements InitializingBean {
   private static final String THREAD_NAME_PREFIX = "icq-events-listener-thread-pool";
 
   private final ExecutorService executorService =
@@ -34,6 +36,14 @@ public class MyteamEventsListener {
   private final AsyncEventBus asyncEventBus;
   private final MyteamApiClient myteamApiClient;
   private final RulesEngine rulesEngine;
+
+  private String botMention = "";
+
+  @Override
+  public void afterPropertiesSet() throws Exception {
+    BotMetaInfo botMetaInfo = myteamApiClient.getSelfInfo().getBody();
+    botMention = String.format("@[%s]", botMetaInfo.getUserId());
+  }
 
   @Autowired
   public MyteamEventsListener(MyteamApiClient myteamApiClient, RulesEngine rulesEngine) {
@@ -60,6 +70,10 @@ public class MyteamEventsListener {
   public void handleNewMessageEvent(ChatMessageEvent event) {
     String message = event.getMessage();
 
+    if (message.contains(botMention)) {
+      message = message.replace(botMention, "").trim();
+    }
+
     if (message != null
         && event.isHasReply()
         && message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
@@ -72,6 +86,27 @@ public class MyteamEventsListener {
       return;
     }
     handleStateAction(event);
+  }
+
+  @Subscribe
+  public void handleButtonClickEvent(ButtonClickEvent event) throws UnirestException {
+    String buttonPrefix = StringUtils.substringBefore(event.getCallbackData(), "-");
+    String data = StringUtils.substringAfter(event.getCallbackData(), "-");
+    rulesEngine.fireCommand(buttonPrefix, event, data);
+  }
+
+  @Subscribe
+  public void handleJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) throws Exception {
+    myteamApiClient.sendMessageText(
+        jiraNotifyEvent.getChatId(), jiraNotifyEvent.getMessage(), jiraNotifyEvent.getButtons());
+  }
+
+  @Subscribe
+  public void handleJiraIssueViewEvent(JiraIssueViewEvent event) {
+    rulesEngine.fireCommand(
+        CommandRuleType.Issue,
+        new SyntheticEvent(event.getChatId(), event.getUserId(), event.getChatType()),
+        event.getIssueKey());
   }
 
   private void handleCommand(ChatMessageEvent event) {
@@ -102,26 +137,5 @@ public class MyteamEventsListener {
 
   private void handleStateAction(ChatMessageEvent event) {
     rulesEngine.fireStateAction(event, event.getMessage());
-  }
-
-  @Subscribe
-  public void handleButtonClickEvent(ButtonClickEvent event) throws UnirestException {
-    String buttonPrefix = StringUtils.substringBefore(event.getCallbackData(), "-");
-    String data = StringUtils.substringAfter(event.getCallbackData(), "-");
-    rulesEngine.fireCommand(buttonPrefix, event, data);
-  }
-
-  @Subscribe
-  public void handleJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) throws Exception {
-    myteamApiClient.sendMessageText(
-        jiraNotifyEvent.getChatId(), jiraNotifyEvent.getMessage(), jiraNotifyEvent.getButtons());
-  }
-
-  @Subscribe
-  public void handleJiraIssueViewEvent(JiraIssueViewEvent event) {
-    rulesEngine.fireCommand(
-        CommandRuleType.Issue,
-        new SyntheticEvent(event.getChatId(), event.getUserId(), event.getChatType()),
-        event.getIssueKey());
   }
 }

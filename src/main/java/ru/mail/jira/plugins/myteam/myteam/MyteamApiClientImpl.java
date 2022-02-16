@@ -13,13 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.myteam.dto.BotMetaInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.*;
-import ru.mail.jira.plugins.myteam.myteam.dto.response.AdminsResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.response.StatusResponse;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Slf4j
@@ -298,5 +296,16 @@ public class MyteamApiClientImpl implements MyteamApiClient {
         .field("token", apiToken)
         .field("chatId", chatId)
         .asObject(ChatMember.class);
+  }
+
+  @Override
+  public HttpResponse<BotMetaInfo> getSelfInfo()
+      throws UnirestException, MyteamServerErrorException {
+    return HttpClient.getPrimaryClient()
+        .post(botApiUrl + "/self/get")
+        .header("Accept", "application/json")
+        .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
+        .field("token", apiToken)
+        .asObject(BotMetaInfo.class);
   }
 }

@@ -8,6 +8,9 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
@@ -27,10 +30,6 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.StateManager;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
 
 @Service
 @Slf4j
