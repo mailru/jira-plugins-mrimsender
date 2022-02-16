@@ -5,6 +5,7 @@ import static ru.mail.jira.plugins.myteam.commons.Const.CHAT_COMMAND_PREFIX;
 import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
+import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
@@ -96,6 +98,13 @@ public class MyteamEventsListener {
     if (split.size() == 0) return;
 
     String tag = split.get(0);
+
+    log.error(
+        MessageFormatter.formLogMessage(
+            "handleIssueCreationTag",
+            "Before fire rule",
+            ImmutableMap.of(
+                "message", event.getMessage(), "chatId", event.getChatId(), "tag", tag)));
 
     rulesEngine.fireCommand(CommandRuleType.CreateIssueByReply, event, tag);
   }
