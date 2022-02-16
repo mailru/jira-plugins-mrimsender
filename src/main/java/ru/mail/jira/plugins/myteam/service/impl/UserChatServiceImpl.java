@@ -80,7 +80,8 @@ public class UserChatServiceImpl implements UserChatService {
     }
     try {
       AdminsResponse response = myteamClient.getAdmins(chatId).getBody();
-      return response.getAdmins().stream().anyMatch(admin -> userId.equals(admin.getUserId()));
+      return response.getAdmins() != null
+          && response.getAdmins().stream().anyMatch(admin -> userId.equals(admin.getUserId()));
     } catch (MyteamServerErrorException e) {
       log.error("Unable to get chat admins", e);
       return false;
