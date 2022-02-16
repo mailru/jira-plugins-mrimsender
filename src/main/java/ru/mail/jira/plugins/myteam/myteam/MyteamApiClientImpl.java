@@ -27,6 +27,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   private final PluginData pluginData;
   private String apiToken;
   private String botApiUrl;
+  private String botId;
 
   @Autowired
   public MyteamApiClientImpl(PluginData pluginData) {
@@ -40,6 +41,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   public void updateSettings() {
     this.apiToken = pluginData.getToken();
     this.botApiUrl = pluginData.getBotApiUrl();
+    updateBotMetaInfo();
   }
 
   @Override
@@ -307,5 +309,22 @@ public class MyteamApiClientImpl implements MyteamApiClient {
         .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
         .field("token", apiToken)
         .asObject(BotMetaInfo.class);
+  }
+
+  @Override
+  public String getBotId() {
+    if (botId == null) {
+      updateBotMetaInfo();
+    }
+    return botId;
+  }
+
+  private void updateBotMetaInfo() {
+    try {
+      BotMetaInfo botMetaInfo = getSelfInfo().getBody();
+      botId = botMetaInfo.getUserId();
+    } catch (MyteamServerErrorException e) {
+      log.error("Unable to get bot self meta data", e);
+    }
   }
 }

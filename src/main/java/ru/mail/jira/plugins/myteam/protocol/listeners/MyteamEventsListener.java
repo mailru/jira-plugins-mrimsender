@@ -15,19 +15,17 @@ import java.util.concurrent.Executors;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.myteam.dto.BotMetaInfo;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 
 @Slf4j
 @Component
-public class MyteamEventsListener implements InitializingBean {
+public class MyteamEventsListener {
   private static final String THREAD_NAME_PREFIX = "icq-events-listener-thread-pool";
 
   private final ExecutorService executorService =
@@ -36,14 +34,6 @@ public class MyteamEventsListener implements InitializingBean {
   private final AsyncEventBus asyncEventBus;
   private final MyteamApiClient myteamApiClient;
   private final RulesEngine rulesEngine;
-
-  private String botMention = "";
-
-  @Override
-  public void afterPropertiesSet() throws Exception {
-    BotMetaInfo botMetaInfo = myteamApiClient.getSelfInfo().getBody();
-    botMention = String.format("@[%s]", botMetaInfo.getUserId());
-  }
 
   @Autowired
   public MyteamEventsListener(MyteamApiClient myteamApiClient, RulesEngine rulesEngine) {
@@ -70,8 +60,9 @@ public class MyteamEventsListener implements InitializingBean {
   public void handleNewMessageEvent(ChatMessageEvent event) {
     String message = event.getMessage();
 
-    if (message.contains(botMention)) {
-      message = message.replace(botMention, "").trim();
+    if (message != null && myteamApiClient.getBotId() != null) {
+      String botMention = String.format("@\\[%s\\]", myteamApiClient.getBotId());
+      message = message.replaceAll(botMention, "").trim();
     }
 
     if (message != null
