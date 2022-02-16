@@ -829,12 +829,12 @@ public class MessageFormatter {
         convertToMarkdown(
             inputText,
             Pattern.compile("\\{[Cc]ode}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
-            (input) -> "±`±`±`" + input.group(1) + "±`±`±`");
+            (input) -> "\n±`±`±`" + input.group(1) + "±`±`±`");
     inputText =
         convertToMarkdown(
             inputText,
             Pattern.compile("\\{[Cc]ode:([a-z]+?)}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
-            (input) -> "±`±`±`" + input.group(1) + " " + input.group(2) + "±`±`±`");
+            (input) -> "\n±`±`±`" + input.group(1) + " " + input.group(2) + "±`±`±`");
     // inlineCodePattern
     inputText =
         convertToMarkdown(
