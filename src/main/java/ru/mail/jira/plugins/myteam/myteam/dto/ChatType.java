@@ -14,17 +14,20 @@ public enum ChatType {
     this.apiValue = apiValue;
   }
 
-  public String getApiValue() {
-    return apiValue;
-  }
-
   @Nullable
   public static ChatType fromApiValue(final String value) {
-    for (ChatType type : values()) {
-      if (type.apiValue.equals(value)) {
-        return type;
-      }
+    if (PRIVATE.apiValue.equalsIgnoreCase(value)) {
+      return PRIVATE;
+    } else if (GROUP.apiValue.equalsIgnoreCase(value)) {
+      return GROUP;
+    } else if (CHANNEL.apiValue.equalsIgnoreCase(value)) {
+      return CHANNEL;
+    } else {
+      return null;
     }
-    return null;
+  }
+
+  public String getApiValue() {
+    return apiValue;
   }
 }
