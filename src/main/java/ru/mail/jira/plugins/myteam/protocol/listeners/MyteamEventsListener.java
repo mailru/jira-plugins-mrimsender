@@ -1,29 +1,32 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol.listeners;
 
-import static ru.mail.jira.plugins.myteam.commons.Const.CHAT_COMMAND_PREFIX;
-import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
-
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
+import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static ru.mail.jira.plugins.myteam.commons.Const.CHAT_COMMAND_PREFIX;
+import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
 
 @Slf4j
 @Component
@@ -64,7 +67,8 @@ public class MyteamEventsListener {
 
     if (message != null
         && event.isHasReply()
-        && message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
+        && event.getChatType() == ChatType.GROUP
+        && StringUtils.contains(message, ISSUE_CREATION_BY_REPLY_PREFIX)) {
       handleIssueCreationTag(event);
       return;
     }
@@ -90,9 +94,10 @@ public class MyteamEventsListener {
   }
 
   private void handleIssueCreationTag(ChatMessageEvent event) {
+    String removedMentions = RegExUtils.removeAll(event.getMessage(), "@\\[[^\\[\\]]+\\]").trim();
+
     String withoutPrefix =
-        StringUtils.substringAfter(event.getMessage(), ISSUE_CREATION_BY_REPLY_PREFIX)
-            .toLowerCase();
+        StringUtils.substringAfter(removedMentions, ISSUE_CREATION_BY_REPLY_PREFIX).toLowerCase();
     List<String> split = Splitter.onPattern("\\s+").splitToList(withoutPrefix);
 
     if (split.size() == 0) return;
