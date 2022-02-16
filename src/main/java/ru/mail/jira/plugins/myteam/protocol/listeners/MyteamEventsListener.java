@@ -65,6 +65,22 @@ public class MyteamEventsListener {
   public void handleNewMessageEvent(ChatMessageEvent event) {
     String message = event.getMessage();
 
+    log.error(
+        MessageFormatter.formLogMessage(
+            "handleNewMessageEvent(ChatMessageEvent event)",
+            "New message",
+            ImmutableMap.of(
+                "message",
+                event.getMessage(),
+                "chatId",
+                event.getChatId(),
+                "userId",
+                event.getChatId(),
+                "chatType",
+                String.valueOf(event.getChatType()),
+                "hasReply",
+                String.valueOf(event.isHasReply()))));
+
     if (message != null
         && event.isHasReply()
         && event.getChatType() == ChatType.GROUP

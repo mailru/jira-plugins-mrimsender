@@ -34,6 +34,12 @@ import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
@@ -47,13 +53,6 @@ import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.service.PluginData;
-
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -124,7 +123,7 @@ public class MessageFormatter {
       args.forEach((key, value) -> builder.append(key).append(": ").append(value).append(";\n"));
       builder.append("}");
     }
-    
+
     return builder.toString();
   }
 
