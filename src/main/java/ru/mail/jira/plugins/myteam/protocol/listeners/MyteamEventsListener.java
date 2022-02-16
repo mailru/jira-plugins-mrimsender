@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
+import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.*;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
@@ -60,7 +61,15 @@ public class MyteamEventsListener {
   public void handleNewMessageEvent(ChatMessageEvent event) {
     String message = event.getMessage();
 
-    if (message != null && message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
+    if (message != null && myteamApiClient.getBotId() != null) {
+      String botMention = String.format("@\\[%s\\]", myteamApiClient.getBotId());
+      message = message.replaceAll(botMention, "").trim();
+    }
+
+    if (message != null
+        && event.isHasReply()
+        && event.getChatType() == ChatType.GROUP
+        && message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
       handleIssueCreationTag(event);
       return;
     }
@@ -70,6 +79,27 @@ public class MyteamEventsListener {
       return;
     }
     handleStateAction(event);
+  }
+
+  @Subscribe
+  public void handleButtonClickEvent(ButtonClickEvent event) throws UnirestException {
+    String buttonPrefix = StringUtils.substringBefore(event.getCallbackData(), "-");
+    String data = StringUtils.substringAfter(event.getCallbackData(), "-");
+    rulesEngine.fireCommand(buttonPrefix, event, data);
+  }
+
+  @Subscribe
+  public void handleJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) throws Exception {
+    myteamApiClient.sendMessageText(
+        jiraNotifyEvent.getChatId(), jiraNotifyEvent.getMessage(), jiraNotifyEvent.getButtons());
+  }
+
+  @Subscribe
+  public void handleJiraIssueViewEvent(JiraIssueViewEvent event) {
+    rulesEngine.fireCommand(
+        CommandRuleType.Issue,
+        new SyntheticEvent(event.getChatId(), event.getUserId(), event.getChatType()),
+        event.getIssueKey());
   }
 
   private void handleCommand(ChatMessageEvent event) {
@@ -100,26 +130,5 @@ public class MyteamEventsListener {
 
   private void handleStateAction(ChatMessageEvent event) {
     rulesEngine.fireStateAction(event, event.getMessage());
-  }
-
-  @Subscribe
-  public void handleButtonClickEvent(ButtonClickEvent event) throws UnirestException {
-    String buttonPrefix = StringUtils.substringBefore(event.getCallbackData(), "-");
-    String data = StringUtils.substringAfter(event.getCallbackData(), "-");
-    rulesEngine.fireCommand(buttonPrefix, event, data);
-  }
-
-  @Subscribe
-  public void handleJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) throws Exception {
-    myteamApiClient.sendMessageText(
-        jiraNotifyEvent.getChatId(), jiraNotifyEvent.getMessage(), jiraNotifyEvent.getButtons());
-  }
-
-  @Subscribe
-  public void handleJiraIssueViewEvent(JiraIssueViewEvent event) {
-    rulesEngine.fireCommand(
-        CommandRuleType.Issue,
-        new SyntheticEvent(event.getChatId(), event.getUserId(), event.getChatType()),
-        event.getIssueKey());
   }
 }

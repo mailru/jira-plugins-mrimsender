@@ -74,9 +74,13 @@ public class UserChatServiceImpl implements UserChatService {
 
   @Override
   public boolean isChatAdmin(String chatId, String userId) {
+    if (userId == null) {
+      return false;
+    }
     try {
       AdminsResponse response = myteamClient.getAdmins(chatId).getBody();
-      return response.getAdmins().stream().anyMatch(admin -> admin.getUserId().equals(userId));
+      return response.getAdmins() != null
+          && response.getAdmins().stream().anyMatch(admin -> userId.equals(admin.getUserId()));
     } catch (MyteamServerErrorException e) {
       log.error("Unable to get chat admins", e);
       return false;

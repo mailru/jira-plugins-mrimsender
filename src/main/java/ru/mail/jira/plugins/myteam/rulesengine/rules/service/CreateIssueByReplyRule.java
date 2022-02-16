@@ -33,11 +33,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequi
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.GroupAdminRule;
-import ru.mail.jira.plugins.myteam.service.IssueCreationService;
-import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
-import ru.mail.jira.plugins.myteam.service.IssueService;
-import ru.mail.jira.plugins.myteam.service.RulesEngine;
-import ru.mail.jira.plugins.myteam.service.UserChatService;
+import ru.mail.jira.plugins.myteam.service.*;
 
 @Slf4j
 @Rule(
@@ -74,17 +70,16 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
       @Fact("args") String tag)
       throws AdminRulesRequiredException {
     checkAdminRules(event);
-    return isGroup
-        && NAME.equalsName(command)
-        && issueCreationSettingsService.hasChatSettings(event.getChatId(), tag)
-        && event.getMessageParts().size() > 0;
+
+    boolean hasSettings = issueCreationSettingsService.hasChatSettings(event.getChatId(), tag);
+
+    return isGroup && NAME.equalsName(command) && event.isHasReply() && hasSettings;
   }
 
   @Action
   public void execute(@Fact("event") ChatMessageEvent event, @Fact("args") String tag)
       throws MyteamServerErrorException, IOException {
     try {
-
       IssueCreationSettingsDto settings =
           issueCreationSettingsService.getSettings(event.getChatId(), tag);
 
@@ -124,7 +119,6 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
       }
 
       ApplicationUser reporterJiraUser;
-
       try {
         reporterJiraUser =
             userChatService.getJiraUserFromUserChatId(firstMessageReporter.getUserId());
