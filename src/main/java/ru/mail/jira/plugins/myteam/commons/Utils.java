@@ -12,9 +12,9 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 import kong.unirest.UnirestException;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.commons.HttpClient;
 
 public class Utils {
@@ -57,7 +57,10 @@ public class Utils {
   }
 
   @Nullable
-  public static String findIssueKeyInStr(String str) {
+  public static String findIssueKeyInStr(@Nullable String str) {
+    if(str == null) {
+      return null;
+    }
     Matcher result = pattern.matcher(str);
     return result.find() ? result.group(0) : null;
   }

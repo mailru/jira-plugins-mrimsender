@@ -34,12 +34,6 @@ import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
@@ -53,6 +47,13 @@ import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.service.PluginData;
+
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -933,26 +934,35 @@ public class MessageFormatter {
 
           String title = field;
           if ("Attachment".equals(field)) {
-            Attachment attachment =
-                attachmentManager.getAttachment(Long.valueOf(changeItem.getString("newvalue")));
-            try {
+            String attachmentId = changeItem.getString("newvalue");
+            if (StringUtils.isNotEmpty(attachmentId)) {
+              Attachment attachment = attachmentManager.getAttachment(Long.valueOf(attachmentId));
+              try {
+                sb.append("\n\n")
+                    .append(
+                        markdownTextLink(
+                            attachment.getFilename(),
+                            new URI(
+                                    String.format(
+                                        "%s/secure/attachment/%d/%s",
+                                        jiraBaseUrl, attachment.getId(), attachment.getFilename()),
+                                    false,
+                                    StandardCharsets.UTF_8.toString())
+                                .getEscapedURI()));
+              } catch (URIException e) {
+                log.error(
+                    "Can't find attachment id:{} name:{}",
+                    changeItem.getString("newvalue"),
+                    changeItem.getString("newstring"),
+                    e);
+              }
+            } else {
               sb.append("\n\n")
                   .append(
-                      markdownTextLink(
-                          attachment.getFilename(),
-                          new URI(
-                                  String.format(
-                                      "%s/secure/attachment/%d/%s",
-                                      jiraBaseUrl, attachment.getId(), attachment.getFilename()),
-                                  false,
-                                  StandardCharsets.UTF_8.toString())
-                              .getEscapedURI()));
-            } catch (URIException e) {
-              log.error(
-                  "Can't find attachment id:{} name:{}",
-                  changeItem.getString("newvalue"),
-                  changeItem.getString("newstring"),
-                  e);
+                      i18nResolver.getText(
+                          recipientLocale,
+                          "ru.mail.jira.plugins.myteam.notification.attachmentDeleted",
+                          changeItem.getString("oldstring")));
             }
             continue;
           }
