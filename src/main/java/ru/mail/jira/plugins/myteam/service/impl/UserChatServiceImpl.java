@@ -180,4 +180,9 @@ public class UserChatServiceImpl implements UserChatService {
       }
     }
   }
+
+  @Override
+  public String getBotId() {
+    return myteamClient.getBotId();
+  }
 }

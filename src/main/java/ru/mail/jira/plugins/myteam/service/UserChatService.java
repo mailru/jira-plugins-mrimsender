@@ -56,6 +56,8 @@ public interface UserChatService {
 
   void linkChat(String chatId, String issueKey) throws LinkIssueWithChatException;
 
+  String getBotId();
+
   // State Manager
 
   BotState getState(String chatId);
