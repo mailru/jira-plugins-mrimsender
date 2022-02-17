@@ -1,20 +1,13 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import contextPath from 'wrm/context-path';
 import { AsyncSelect, OptionType, SelectProps } from '@atlaskit/select';
 import { usePrevious } from '../shared/hooks';
-import axios from 'axios';
-
-type IssueTypeData = { name: string; id: string };
+import { IssueTypeData, loadProjectData } from '../api/CommonApiClient';
 
 type Props = SelectProps<OptionType> & {
   className?: string;
   projectKey?: string;
   defaultIssueTypeId?: string;
   onChange: (value: OptionType | null) => void;
-};
-
-const loadProjectOptions = async (projectKey: string) => {
-  return axios.get(`${contextPath()}/rest/api/2/project/${projectKey}`);
 };
 
 const mapIssueTypesToOptions = (projects: ReadonlyArray<IssueTypeData>): Array<OptionType> => {
@@ -54,7 +47,7 @@ const IssueTypeSelect = ({ id, projectKey, className, defaultIssueTypeId, onChan
 
   useLayoutEffect(() => {
     if (projectKey) {
-      loadProjectOptions(projectKey).then(({ data }) => {
+      loadProjectData(projectKey).then(({ data }) => {
         const options = mapIssueTypesToOptions(data.issueTypes);
         setIssueTypes(options);
 
