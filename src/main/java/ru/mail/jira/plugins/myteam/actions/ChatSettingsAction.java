@@ -33,9 +33,12 @@ public class ChatSettingsAction extends JiraWebActionSupport {
     }
     String chatId = this.getHttpRequest().getParameter("chatId");
 
-    if (chatId != null) {
-      if (!userChatService.isChatAdmin(chatId, user.getEmailAddress())) return SECURITY_BREACH;
+    if (chatId == null
+        || user == null
+        || !userChatService.isChatAdmin(chatId, user.getEmailAddress())) {
+      return SECURITY_BREACH;
     }
+
     return SUCCESS;
   }
 

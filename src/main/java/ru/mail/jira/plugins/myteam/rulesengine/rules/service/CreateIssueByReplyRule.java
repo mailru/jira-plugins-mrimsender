@@ -195,8 +195,13 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
 
   private String getIssueSummary(ChatMessageEvent event, String userName, String tag) {
 
+    String message = event.getMessage();
+
+    String botMention = String.format("@\\[%s\\]", userChatService.getBotId());
+    message = message.replaceAll(botMention, "").trim();
+
     String comment =
-        StringUtils.substringAfter(event.getMessage(), ISSUE_CREATION_BY_REPLY_PREFIX + tag).trim();
+        StringUtils.substringAfter(message, ISSUE_CREATION_BY_REPLY_PREFIX + tag).trim();
     if (comment.length() != 0) {
       return comment;
     }
