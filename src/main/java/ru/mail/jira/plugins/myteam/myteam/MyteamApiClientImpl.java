@@ -1,9 +1,6 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.myteam;
 
-import java.io.IOException;
-import java.util.List;
-import javax.annotation.Nonnull;
 import kong.unirest.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
@@ -16,9 +13,13 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.BotMetaInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.*;
-import ru.mail.jira.plugins.myteam.myteam.dto.response.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.*;
 import ru.mail.jira.plugins.myteam.service.PluginData;
+
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -279,10 +280,18 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               response.getStatus(),
               String.format(
                   "Caused exception due sending message\n\nchatId: %s\nerror: %s\n%s message\n\n",
-                  chatId, response.getBody().getDescription(), text));
+                  chatId,
+                  response.getBody() != null ? response.getBody().getDescription() : "",
+                  text),
+              response.getParsingError().orElse(null));
       log.error(
           "Error: {} while sending the message:\n{}",
-          response.getBody().getDescription(),
+          response.getBody() != null
+              ? response.getBody().getDescription()
+              : response
+                  .getParsingError()
+                  .map(UnirestParsingException::getOriginalBody)
+                  .orElse(null),
           text,
           newException);
       throw newException;
