@@ -475,7 +475,7 @@ public class MessageFormatter {
     sb.append("\n").append(shieldText(issue.getSummary()));
 
     if (!StringUtils.isBlank(mentionIssueEvent.getMentionText()))
-      sb.append("\n\n").append(shieldText(mentionIssueEvent.getMentionText()));
+      sb.append("\n\n").append(makeMyteamMarkdownFromJira(mentionIssueEvent.getMentionText(), true));
 
     return sb.toString();
   }
@@ -850,7 +850,7 @@ public class MessageFormatter {
               ApplicationUser mentionUser = userManager.getUserByName(input.group(1));
               if (mentionUser != null) {
                 if (useMentionFormat) {
-                  return "±@±[" + shieldText(mentionUser.getEmailAddress()) + "±]";
+                  return "±@\\±[" + shieldText(mentionUser.getEmailAddress()) + "\\±]";
                 }
                 return "±["
                     + shieldText(mentionUser.getDisplayName())
