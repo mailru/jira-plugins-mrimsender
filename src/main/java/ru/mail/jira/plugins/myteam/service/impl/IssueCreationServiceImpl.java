@@ -27,12 +27,6 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
-import com.vdurmont.emoji.EmojiParser;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
@@ -46,6 +40,12 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationVa
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
+
+import javax.validation.constraints.NotNull;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class IssueCreationServiceImpl implements IssueCreationService, InitializingBean {
