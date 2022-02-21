@@ -8,13 +8,10 @@ import com.atlassian.jira.issue.attachment.ConvertTemporaryAttachmentParams;
 import com.atlassian.jira.issue.attachment.TemporaryAttachmentId;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.regex.Pattern;
 import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
@@ -26,6 +23,12 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
@@ -42,12 +45,27 @@ public class Utils {
     this.attachmentManager = attachmentManager;
   }
 
+  public static boolean isArrayLikeField(Field field) {
+    switch (field.getId()) {
+      case IssueFieldConstants.FIX_FOR_VERSIONS:
+      case IssueFieldConstants.COMPONENTS:
+      case IssueFieldConstants.AFFECTED_VERSIONS:
+      case IssueFieldConstants.ISSUE_LINKS:
+      case IssueFieldConstants.LABELS:
+      case IssueFieldConstants.VOTES:
+        // never shown on issue creation screen
+      case IssueFieldConstants.WATCHES:
+        return true;
+    }
+    return false;
+  }
+
   public String convertToJiraCommentStyle(
       ChatMessageEvent event, ApplicationUser commentedUser, Issue commentedIssue) {
     List<Part> parts = event.getMessageParts();
-    if (parts == null || parts.size() == 0) return event.getMessage();
-    else {
-      StringBuilder outPutStrings = new StringBuilder(event.getMessage());
+    StringBuilder outPutStrings =
+        new StringBuilder(Objects.requireNonNullElse(event.getMessage(), ""));
+    if (parts != null) {
       parts.forEach(
           part -> {
             CommentaryParts currentPartClass =
@@ -109,22 +127,16 @@ public class Utils {
                 break;
             }
           });
-      return outPutStrings.toString();
     }
+
+    return removeAllEmojis(outPutStrings.toString());
   }
 
-  public static boolean isArrayLikeField(Field field) {
-    switch (field.getId()) {
-      case IssueFieldConstants.FIX_FOR_VERSIONS:
-      case IssueFieldConstants.COMPONENTS:
-      case IssueFieldConstants.AFFECTED_VERSIONS:
-      case IssueFieldConstants.ISSUE_LINKS:
-      case IssueFieldConstants.LABELS:
-      case IssueFieldConstants.VOTES:
-        // never shown on issue creation screen
-      case IssueFieldConstants.WATCHES:
-        return true;
+  public @Nullable String removeAllEmojis(@Nullable String str) {
+    if (str == null) {
+      return null;
+    } else {
+      return str.replaceAll("[\ud83c\udf00-\ud83d\ude4f]|[\ud83d\ude80-\ud83d\udeff]", "");
     }
-    return false;
   }
 }
