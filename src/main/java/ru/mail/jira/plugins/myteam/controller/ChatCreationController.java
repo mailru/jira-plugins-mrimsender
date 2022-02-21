@@ -16,6 +16,16 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
@@ -37,17 +47,6 @@ import ru.mail.jira.plugins.myteam.protocol.events.JiraIssueViewEvent;
 import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
 import ru.mail.jira.plugins.myteam.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.service.PluginData;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 @Controller
 @Slf4j
@@ -315,8 +314,7 @@ public class ChatCreationController {
       throw new SecurityException();
     }
     return userSearchService
-        .findUsersAllowEmptyQuery(new JiraServiceContextImpl(loggedInUser), searchText)
-        .stream()
+        .findUsersAllowEmptyQuery(new JiraServiceContextImpl(loggedInUser), searchText).stream()
         .map(
             user ->
                 new ChatMemberDto(

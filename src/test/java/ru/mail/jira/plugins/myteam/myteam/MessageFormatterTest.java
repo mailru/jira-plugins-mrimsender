@@ -56,6 +56,10 @@ public class MessageFormatterTest {
     // Mockito.mock(ProjectComponentManager.class);
     //    VersionManager versionManager = Mockito.mock(VersionManager.class);
     UserManager userManager = Mockito.mock(UserManager.class);
+    ApplicationUser mentionUser = Mockito.mock(ApplicationUser.class);
+    when(mentionUser.getEmailAddress()).thenReturn("i.pupkin@domain");
+    when(mentionUser.getDisplayName()).thenReturn("Pupkin");
+    when(userManager.getUserByName("i.pupkin@domain")).thenReturn(mentionUser);
     AttachmentManager attachmentManager = Mockito.mock(AttachmentManager.class);
     PluginData pluginData = Mockito.mock(PluginData.class);
     this.messageFormatter =
@@ -169,7 +173,7 @@ public class MessageFormatterTest {
     when(descriptionField.getString("field")).thenReturn("description");
     when(descriptionField.getString("newstring"))
         .thenReturn(
-            "* -Lorem- ipsum dolor sit amet, -consectetur adipiscing- elit, sed* do eiusmod tempor incididunt ut *labore* -et [dolore|http://example.com] magna aliqua-. Ut enim ad minim veniam, *quis* +nostrud exercitation ullamco+ labo-ris *nisi ut aliquip* ex ea commodo * +consequat. Duis+ aute iru-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, -sunt in culpa qui officia- *deserunt mollit* anim id est -laborum-.\n"
+            "* -Lorem- ipsum dolor sit amet, -consectetur adipiscing- elit, sed* do eiusmod tempor [~i.pupkin@domain] incididunt ut *labore* -et [dolore|http://example.com] magna aliqua-. Ut enim ad minim veniam, *quis* +nostrud exercitation ullamco+ labo-ris *nisi ut aliquip* ex ea commodo * +consequat. Duis+ aute iru-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, -sunt in culpa qui officia- *deserunt mollit* anim id est -laborum-.\n"
                 + "\n"
                 + "\n"
                 + "[asdf asdf asdf\n"
@@ -182,7 +186,7 @@ public class MessageFormatterTest {
     when(this.mockedIssueEvent.getChangeLog()).thenReturn(changeLog);
     String testedHeader = "null\nSummary\n\n";
     String testedContent =
-        "- ~Lorem~ ipsum dolor sit amet, ~consectetur adipiscing~ elit, sed\\* do eiusmod tempor incididunt ut *labore* ~et [dolore](http://example.com) magna aliqua~. Ut enim ad minim veniam, *quis* __nostrud exercitation ullamco__ labo\\-ris *nisi ut aliquip* ex ea commodo \\* __consequat. Duis__ aute iru\\-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, ~sunt in culpa qui officia~ *deserunt mollit* anim id est ~laborum~.\n"
+        "- ~Lorem~ ipsum dolor sit amet, ~consectetur adipiscing~ elit, sed\\* do eiusmod tempor @\\[i\\.pupkin\\@domain\\] incididunt ut *labore* ~et [dolore](http://example.com) magna aliqua~. Ut enim ad minim veniam, *quis* __nostrud exercitation ullamco__ labo\\-ris *nisi ut aliquip* ex ea commodo \\* __consequat. Duis__ aute iru\\-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, ~sunt in culpa qui officia~ *deserunt mollit* anim id est ~laborum~.\n"
             + "\n"
             + "\n"
             + "\\[asdf asdf asdf\n"

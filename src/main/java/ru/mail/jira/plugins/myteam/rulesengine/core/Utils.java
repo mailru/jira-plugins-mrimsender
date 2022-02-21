@@ -8,10 +8,15 @@ import com.atlassian.jira.issue.attachment.ConvertTemporaryAttachmentParams;
 import com.atlassian.jira.issue.attachment.TemporaryAttachmentId;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
+import com.vdurmont.emoji.EmojiParser;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Pattern;
 import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
@@ -23,12 +28,6 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Objects;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Component
@@ -129,14 +128,6 @@ public class Utils {
           });
     }
 
-    return removeAllEmojis(outPutStrings.toString());
-  }
-
-  public @Nullable String removeAllEmojis(@Nullable String str) {
-    if (str == null) {
-      return null;
-    } else {
-      return str.replaceAll("[\ud83c\udf00-\ud83d\ude4f]|[\ud83d\ude80-\ud83d\udeff]", "");
-    }
+    return EmojiParser.removeAllEmojis(outPutStrings.toString());
   }
 }

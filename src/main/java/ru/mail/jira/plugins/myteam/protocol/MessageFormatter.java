@@ -475,7 +475,8 @@ public class MessageFormatter {
     sb.append("\n").append(shieldText(issue.getSummary()));
 
     if (!StringUtils.isBlank(mentionIssueEvent.getMentionText()))
-      sb.append("\n\n").append(makeMyteamMarkdownFromJira(mentionIssueEvent.getMentionText(), true));
+      sb.append("\n\n")
+          .append(makeMyteamMarkdownFromJira(mentionIssueEvent.getMentionText(), true));
 
     return sb.toString();
   }
@@ -887,7 +888,7 @@ public class MessageFormatter {
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("\\[([^|?\n]+)\\|(.+?)]"),
+            Pattern.compile("\\[([^~|?\n]+)\\|(.+?)]"),
             (input) -> "±[" + input.group(1) + "±]±(" + input.group(2) + "±)");
     // Italic
     inputText =

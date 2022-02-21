@@ -27,6 +27,12 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import com.vdurmont.emoji.EmojiParser;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
@@ -34,18 +40,11 @@ import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.Checkb
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.DefaultFieldValueHandler;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.PriorityValueHandler;
-import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
-
-import javax.validation.constraints.NotNull;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class IssueCreationServiceImpl implements IssueCreationService, InitializingBean {
@@ -63,7 +62,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   private final HashMap<String, CreateIssueFieldValueHandler> supportedIssueCreationCustomFields;
   private final CreateIssueFieldValueHandler defaultHandler;
   private final ru.mail.jira.plugins.myteam.service.IssueService myteamIssueService;
-  private final Utils utils;
 
   public IssueCreationServiceImpl(
       @ComponentImport I18nResolver i18nResolver,
@@ -76,8 +74,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport OptionsManager optionsManager,
       @ComponentImport PrioritySchemeManager prioritySchemeManager,
-      ru.mail.jira.plugins.myteam.service.IssueService myteamIssueService,
-      Utils utils) {
+      ru.mail.jira.plugins.myteam.service.IssueService myteamIssueService) {
     this.i18nResolver = i18nResolver;
     this.issueTypeScreenSchemeManager = issueTypeScreenSchemeManager;
     this.issueTypeManager = issueTypeManager;
@@ -89,7 +86,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.optionsManager = optionsManager;
     this.prioritySchemeManager = prioritySchemeManager;
-    this.utils = utils;
     this.supportedIssueCreationCustomFields = new HashMap<>();
     this.defaultHandler = new DefaultFieldValueHandler(i18nResolver);
   }
@@ -112,12 +108,9 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       IssueFieldsFilter issueFieldsFilter) {
     FieldLayout fieldLayout = fieldLayoutManager.getFieldLayout(project, issueType.getId());
     // getting (selectedProject, selectedIssueType, selectedIssueOperation) fields screen
-    return issueTypeScreenSchemeManager
-        .getIssueTypeScreenScheme(project)
+    return issueTypeScreenSchemeManager.getIssueTypeScreenScheme(project)
         .getEffectiveFieldScreenScheme(issueType)
-        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION)
-        .getTabs()
-        .stream()
+        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION).getTabs().stream()
         .flatMap(
             tab ->
                 tab.getFieldScreenLayoutItems().stream()
@@ -181,7 +174,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
                             CreateIssueFieldValueHandler cfConfig =
                                 getFieldValueHandler(e.getKey());
                             return cfConfig.getValueAsArray(
-                                utils.removeAllEmojis(e.getValue()),
+                                EmojiParser.removeAllEmojis(e.getValue()),
                                 e.getKey(),
                                 project,
                                 issueType,

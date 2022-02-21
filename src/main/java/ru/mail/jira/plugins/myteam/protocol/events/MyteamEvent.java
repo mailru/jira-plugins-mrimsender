@@ -14,6 +14,5 @@ import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 public abstract class MyteamEvent {
   protected String chatId;
   protected String userId;
-  @Nullable
-  protected ChatType chatType;
+  @Nullable protected ChatType chatType;
 }

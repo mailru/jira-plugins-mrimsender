@@ -1,6 +1,9 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.myteam;
 
+import java.io.IOException;
+import java.util.List;
+import javax.annotation.Nonnull;
 import kong.unirest.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
@@ -13,13 +16,9 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.BotMetaInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.*;
-import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.*;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
 import ru.mail.jira.plugins.myteam.service.PluginData;
-
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 @Component
