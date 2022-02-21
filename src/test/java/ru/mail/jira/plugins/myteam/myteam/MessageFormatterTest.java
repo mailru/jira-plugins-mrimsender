@@ -22,6 +22,8 @@ import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.vdurmont.emoji.EmojiParser;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -57,7 +59,7 @@ public class MessageFormatterTest {
     //    VersionManager versionManager = Mockito.mock(VersionManager.class);
     UserManager userManager = Mockito.mock(UserManager.class);
     ApplicationUser mentionUser = Mockito.mock(ApplicationUser.class);
-    when(mentionUser.getEmailAddress()).thenReturn("i.pupkin@domain");
+    when(mentionUser.getEmailAddress()).thenReturn("i.pupkin@domain.ru");
     when(mentionUser.getDisplayName()).thenReturn("Pupkin");
     when(userManager.getUserByName("i.pupkin@domain")).thenReturn(mentionUser);
     AttachmentManager attachmentManager = Mockito.mock(AttachmentManager.class);

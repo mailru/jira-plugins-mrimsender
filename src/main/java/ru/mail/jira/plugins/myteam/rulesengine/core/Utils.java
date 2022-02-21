@@ -128,6 +128,6 @@ public class Utils {
           });
     }
 
-    return EmojiParser.removeAllEmojis(outPutStrings.toString());
+    return ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis(outPutStrings.toString());
   }
 }

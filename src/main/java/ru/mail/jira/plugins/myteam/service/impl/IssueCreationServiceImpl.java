@@ -36,6 +36,7 @@ import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CheckboxValueHandler;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.DefaultFieldValueHandler;
@@ -174,7 +175,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
                             CreateIssueFieldValueHandler cfConfig =
                                 getFieldValueHandler(e.getKey());
                             return cfConfig.getValueAsArray(
-                                EmojiParser.removeAllEmojis(e.getValue()),
+                                Utils.removeAllEmojis(e.getValue()),
                                 e.getKey(),
                                 project,
                                 issueType,
