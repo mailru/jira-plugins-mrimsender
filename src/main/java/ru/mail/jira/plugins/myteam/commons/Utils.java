@@ -149,7 +149,7 @@ public class Utils {
     if(str == null) {
       return null;
     } else {
-      return str.replaceAll("[^\\p{L}\\p{M}\\p{N}\\p{P}\\p{Z}\\p{Cf}\\p{Cs}\\s]", "");
+      return str.replaceAll("[^\\p{L}\\p{M}\\p{N}\\p{P}\\p{Z}\\p{Cf}\\p{Cs}\\s\\|$^+=~±><]", "");
     }
   }
 }
