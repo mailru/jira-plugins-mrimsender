@@ -13,6 +13,7 @@ import Events from 'jira/util/events';
 import Types from 'jira/util/events/types';
 import Reasons from 'jira/util/events/reasons';
 import { loadIssueForm } from '../api/CommonApiClient';
+import LoadableComponent from './LoadableComponent';
 
 type EditableSettings = Partial<Omit<IssueCreationSettings, 'id' | 'chatId'>>;
 
@@ -29,7 +30,7 @@ type FormState = {
   labels: ReadonlyArray<OptionType>;
 };
 
-const FORM_ID = 'issue-create';
+const FORM_ID = 'issue-create-chat-settings';
 
 const HintBeforeTagInput = styled.span`
   margin-left: 7px;
@@ -37,6 +38,8 @@ const HintBeforeTagInput = styled.span`
   font-size: large;
   font-weight: 500;
 `;
+
+const RequiredField = styled.div``;
 
 const Container = styled.div`
   form > * {
@@ -73,22 +76,41 @@ const isIgnoredField = (id: string): boolean => {
 };
 
 const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): ReactElement => {
-  const [selectedProjectKey, setSelectedProjectKey] = useState(defaultSettings.projectKey);
-  const [selectedIssueTypeId, setSelectedIssueTypeId] = useState(defaultSettings.issueTypeId);
+  const [selectedMainData, setSelectedMainData] = useState<{ projectKey?: string; issueTypeId?: string }>({
+    projectKey: defaultSettings.projectKey,
+    issueTypeId: defaultSettings.issueTypeId,
+  });
 
-  const [requiredFields, setRequiredFields] = useState<ReadonlyArray<FieldHtml>>([]);
+  const [requiredFieldsState, setRequiredFieldsState] = useState<{
+    isLoading: boolean;
+    data?: ReadonlyArray<FieldHtml>;
+    error?: string;
+  }>({
+    isLoading: false,
+  });
 
   useEffect(() => {
-    if (selectedIssueTypeId && selectedProjectKey) {
-      loadIssueForm(selectedIssueTypeId, '10000').then(({ data }) => {
-        setRequiredFields(data.fields.filter((f) => f.required && !isIgnoredField(f.id)));
-        Events.trigger(Types.NEW_CONTENT_ADDED, [$('form.aui'), Reasons.dialogReady]);
-      });
+    if (selectedMainData.issueTypeId && selectedMainData.projectKey) {
+      setRequiredFieldsState({ isLoading: true });
+      loadIssueForm(selectedMainData.issueTypeId, selectedMainData.projectKey)
+        .then(({ data }) => {
+          setRequiredFieldsState({
+            isLoading: false,
+            data: data.fields.filter((f) => f.required && !isIgnoredField(f.id)),
+          });
+          Events.trigger(Types.NEW_CONTENT_ADDED, [$('form.aui'), Reasons.dialogReady]);
+        })
+        .catch((e) => {
+          setRequiredFieldsState({
+            isLoading: false,
+            error: JSON.stringify(e),
+          });
+        });
     }
-  }, [selectedIssueTypeId, selectedProjectKey]);
+  }, [selectedMainData]);
 
   return (
-    <Container id="create-issue-dialog">
+    <Container>
       <Form
         onSubmit={({ enabled, issueTypeId, projectKey, tag, labels }: FormState) => {
           getFormValues();
@@ -119,7 +141,7 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
                   <>
                     <ProjectSelect
                       onChange={(value: OptionType | null) => {
-                        if (value) setSelectedProjectKey(String(value.value));
+                        if (value) setSelectedMainData({ projectKey: String(value.value) });
                         onChange(value);
                       }}
                       defaultProjectKey={defaultSettings.projectKey}
@@ -143,10 +165,10 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
                     <IssueTypeSelect
                       defaultIssueTypeId={defaultSettings.issueTypeId}
                       id={id}
-                      projectKey={selectedProjectKey}
+                      projectKey={selectedMainData.projectKey}
                       {...rest}
                       onChange={(value: OptionType | null) => {
-                        if (value) setSelectedIssueTypeId(String(value.value));
+                        if (value) setSelectedMainData({ ...selectedMainData, issueTypeId: String(value.value) });
                         onChange(value);
                       }}
                     />
@@ -180,14 +202,23 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
                 {({ fieldProps }) => <LabelsSelect defaultLabels={defaultSettings.labels} {...fieldProps} />}
               </Field>
 
-              {requiredFields && requiredFields.length > 0 ? (
-                <>
-                  <h3>Обязательные поля</h3>
-                  {requiredFields.map((f) => {
-                    return <div className="field-group" key={f.id} dangerouslySetInnerHTML={{ __html: f.editHtml }} />;
-                  })}
-                </>
+              {(requiredFieldsState.data && requiredFieldsState.data.length > 0) || requiredFieldsState.isLoading ? (
+                <h3>Обязательные поля</h3>
               ) : null}
+
+              <LoadableComponent isLoading={requiredFieldsState.isLoading}>
+                {requiredFieldsState.data && requiredFieldsState.data.length > 0
+                  ? requiredFieldsState.data.map((f) => {
+                      return (
+                        <RequiredField
+                          className="field-group"
+                          key={f.id}
+                          dangerouslySetInnerHTML={{ __html: f.editHtml }}
+                        />
+                      );
+                    })
+                  : null}
+              </LoadableComponent>
 
               <FormFooter>
                 <Button type="submit" appearance="primary">

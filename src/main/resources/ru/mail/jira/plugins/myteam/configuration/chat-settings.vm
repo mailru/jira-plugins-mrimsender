@@ -3,6 +3,7 @@
     <head>
         <title>Chat settings page</title>
         <meta name="decorator" content="atl.general" />
+        <meta name="ajs-jira-logo" content="$jiraLogo"/>
 
         $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
         $webResourceManager.requireResource("com.atlassian.auiplugin:aui-date-picker")
