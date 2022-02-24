@@ -7,3 +7,10 @@ export type IssueCreationSettings = {
   tag: string;
   labels: Array<string>;
 };
+
+export type FieldHtml = {
+  id: string;
+  label: string;
+  editHtml: string;
+  required: boolean;
+};

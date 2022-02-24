@@ -54,14 +54,14 @@ public class IssueCreationSettingsController {
   }
 
   @GET
-  @Path("/fields")
+  @Path("/fields/required")
   public List<FieldDto> getRequiredFields(
-      //      @QueryParam("projectKey") final String projectKey,
-      //      @QueryParam("issueTypeId") final String issueTypeId
-      ) throws PermissionException, ProjectBannedException {
+      @QueryParam("projectKey") final String projectKey,
+      @QueryParam("issueTypeId") final String issueTypeId)
+      throws PermissionException, ProjectBannedException {
     ApplicationUser user = checkPermissions();
-    //    return issueCreationService.getRequiredFields(projectKey, issueTypeId, user);
-    return issueCreationService.getRequiredFields("DEV", "10100", user);
+    //    FieldHtmlFactoryImpl
+    return issueCreationService.getRequiredFields(projectKey, issueTypeId, user);
   }
 
   @GET

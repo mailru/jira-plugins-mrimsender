@@ -3,6 +3,20 @@
     <head>
         <title>Chat settings page</title>
         <meta name="decorator" content="atl.general" />
+
+        $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+        $webResourceManager.requireResource("com.atlassian.auiplugin:aui-date-picker")
+        $webResourceManager.requireResource("jira.webresources:autocomplete") ## User picker
+
+
+        $webResourceManager.requireResource("jira.webresources:jira-fields") ## Group picker
+        $webResourceManager.requireResource("com.atlassian.auiplugin:aui-select2")
+        $webResourceManager.requireResourcesForContext("jira.edit.issue")
+        $webResourceManager.requireResourcesForContext("jira.view.issue")
+        $webResourceManager.requireResource("jira.webresources:calendar")
+        $webResourceManager.requireResource("jira.webresources:calendar-en")
+        $webResourceManager.requireResource("jira.webresources:calendar-localisation-moment")
+
         $webResourceManager.requireResourcesForContext("ru.mail.jira.plugins.myteam.chat.settings.panel")
     </head>
     <body>
