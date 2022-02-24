@@ -1,13 +1,13 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
-import static com.atlassian.jira.issue.operation.IssueOperations.CREATE_ISSUE_OPERATION;
-
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.exception.PermissionException;
-import com.atlassian.jira.issue.*;
+import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.IssueFieldConstants;
+import com.atlassian.jira.issue.IssueInputParameters;
 import com.atlassian.jira.issue.customfields.manager.OptionsManager;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
@@ -19,6 +19,7 @@ import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenLayoutItem;
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
+import com.atlassian.jira.issue.operation.IssueOperations;
 import com.atlassian.jira.issue.search.constants.SystemSearchConstants;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.security.JiraAuthenticationContext;
@@ -42,7 +43,6 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueT
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
-import ru.mail.jira.plugins.myteam.service.HtmlFieldFactory;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.dto.FieldDto;
 
@@ -56,8 +56,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   private final FieldManager fieldManager;
   private final LocaleManager localeManager;
   private final IssueService issueService;
-  private final HtmlFieldFactory htmlFieldFactory;
-  private final IssueFactory issueFactory;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final OptionsManager optionsManager;
   private final PrioritySchemeManager prioritySchemeManager;
@@ -73,8 +71,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       @ComponentImport FieldManager fieldManager,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport IssueService issueService,
-      @ComponentImport IssueFactory issueFactory,
-      HtmlFieldFactory jiraService,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport OptionsManager optionsManager,
       @ComponentImport PrioritySchemeManager prioritySchemeManager,
@@ -86,8 +82,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     this.fieldManager = fieldManager;
     this.localeManager = localeManager;
     this.issueService = issueService;
-    this.htmlFieldFactory = jiraService;
-    this.issueFactory = issueFactory;
     this.myteamIssueService = myteamIssueService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.optionsManager = optionsManager;
@@ -115,8 +109,8 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     FieldLayout fieldLayout = fieldLayoutManager.getFieldLayout(project, issueType.getId());
     // getting (selectedProject, selectedIssueType, selectedIssueOperation) fields screen
     return issueTypeScreenSchemeManager.getIssueTypeScreenScheme(project)
-        .getEffectiveFieldScreenScheme(issueType).getFieldScreen(CREATE_ISSUE_OPERATION).getTabs()
-        .stream()
+        .getEffectiveFieldScreenScheme(issueType)
+        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION).getTabs().stream()
         .flatMap(
             tab ->
                 tab.getFieldScreenLayoutItems().stream()
@@ -295,13 +289,13 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     Project project = myteamIssueService.getProject(projectKey, user);
     IssueType issueType = myteamIssueService.getIssueType(issueTypeId);
 
-    MutableIssue issue = issueFactory.getIssue();
+    LinkedHashMap<Field, String> fields =
+        getIssueCreationFieldsValues(
+            project, issueType, new HashSet<>(), new HashSet<>(), IssueFieldsFilter.REQUIRED);
 
-    issue.setIssueTypeId(issueTypeId);
-    issue.setIssueType(issueType);
-    issue.setProjectObject(project);
-
-    return htmlFieldFactory.getFields(issue, true);
+    return fields.keySet().stream()
+        .map(field -> new FieldDto(field.getName(), "", field.getName()))
+        .collect(Collectors.toList());
   }
 
   @Override

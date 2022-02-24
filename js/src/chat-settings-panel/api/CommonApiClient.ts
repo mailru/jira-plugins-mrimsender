@@ -1,22 +1,10 @@
 import axios, { AxiosResponse } from 'axios';
-import qs from 'qs';
 import contextPath from 'wrm/context-path';
 import { FieldHtml } from '../types';
 
 export type IssueTypeData = { name: string; id: string };
 
 export type ProjectData = { name: string; key: string };
-
-export type FormParams = {
-  projectId: number;
-  atlToken: string;
-  formToken: string;
-};
-
-export type ServiceFieldParam = {
-  field: string;
-  value: string;
-};
 
 export const loadProjects = (): Promise<AxiosResponse<ReadonlyArray<ProjectData>>> => {
   return axios.get(`${contextPath()}/rest/api/2/project`);

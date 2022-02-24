@@ -9,7 +9,6 @@ import ProjectSelect from './ProjectSelect';
 import IssueTypeSelect from './IssueTypeSelect';
 import styled from '@emotion/styled';
 import { ValueType, OptionType, OptionsType } from '@atlaskit/select';
-import { getIssueCreationRequiredFields } from '../api/SettingsApiClient';
 import Events from 'jira/util/events';
 import Types from 'jira/util/events/types';
 import Reasons from 'jira/util/events/reasons';
