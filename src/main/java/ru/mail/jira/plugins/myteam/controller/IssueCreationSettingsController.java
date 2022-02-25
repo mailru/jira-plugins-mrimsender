@@ -18,10 +18,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
-import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
-import ru.mail.jira.plugins.myteam.service.dto.FieldDto;
 
 @Controller
 @Path("/issueCreation")
@@ -29,7 +27,6 @@ import ru.mail.jira.plugins.myteam.service.dto.FieldDto;
 public class IssueCreationSettingsController {
 
   private final UserChatService userChatService;
-  private final IssueCreationService issueCreationService;
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final GlobalPermissionManager globalPermissionManager;
@@ -43,33 +40,20 @@ public class IssueCreationSettingsController {
   public IssueCreationSettingsController(
       IssueCreationSettingsService issueCreationSettingsService,
       UserChatService userChatService,
-      IssueCreationService issueCreationService,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport GlobalPermissionManager globalPermissionManager) {
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.userChatService = userChatService;
-    this.issueCreationService = issueCreationService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.globalPermissionManager = globalPermissionManager;
   }
 
   @GET
-  @Path("/fields")
-  public List<FieldDto> getRequiredFields(
-      //      @QueryParam("projectKey") final String projectKey,
-      //      @QueryParam("issueTypeId") final String issueTypeId
-      ) throws PermissionException, ProjectBannedException {
-    ApplicationUser user = checkPermissions();
-    //    return issueCreationService.getRequiredFields(projectKey, issueTypeId, user);
-    return issueCreationService.getRequiredFields("DEV", "10100", user);
-  }
-
-  @GET
   @Path("/settings/all")
-  public List<FieldDto> getAllChatsSettings() throws PermissionException, ProjectBannedException {
-    ApplicationUser user = checkPermissions();
-    //    return issueCreationSettingsService.getAllSettings();
-    return issueCreationService.getRequiredFields("DEV", "10100", user);
+  public List<IssueCreationSettingsDto> getAllChatsSettings()
+      throws PermissionException, ProjectBannedException {
+    checkPermissions();
+    return issueCreationSettingsService.getAllSettings();
   }
 
   @GET

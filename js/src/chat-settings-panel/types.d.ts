@@ -6,6 +6,7 @@ export type IssueCreationSettings = {
   issueTypeId: string;
   tag: string;
   labels: Array<string>;
+  additionalFields: Array<FieldParam>;
 };
 
 export type FieldHtml = {
@@ -13,4 +14,9 @@ export type FieldHtml = {
   label: string;
   editHtml: string;
   required: boolean;
+};
+
+export type FieldParam = {
+  field: string;
+  value: string;
 };

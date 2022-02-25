@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.controller.dto;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.*;
@@ -26,6 +27,7 @@ public class IssueCreationSettingsDto {
   @XmlElement private String issueTypeId;
   @XmlElement private String tag;
   @XmlElement private List<String> labels;
+  @XmlElement private List<AdditionalIssueFieldDto> additionalFields;
 
   public IssueCreationSettingsDto(IssueCreationSettings entity) {
     this.id = entity.getID();
@@ -38,5 +40,9 @@ public class IssueCreationSettingsDto {
         entity.getLabels() != null
             ? Arrays.asList(entity.getLabels().split(LABELS_DELIMITER))
             : null;
+    this.additionalFields =
+        Arrays.stream(entity.getAdditionalFields())
+            .map(AdditionalIssueFieldDto::new)
+            .collect(Collectors.toList());
   }
 }

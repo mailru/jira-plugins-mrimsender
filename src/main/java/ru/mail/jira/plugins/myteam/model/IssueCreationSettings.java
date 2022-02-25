@@ -2,6 +2,7 @@
 package ru.mail.jira.plugins.myteam.model;
 
 import net.java.ao.Entity;
+import net.java.ao.OneToMany;
 import net.java.ao.schema.Table;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,4 +35,7 @@ public interface IssueCreationSettings extends Entity {
   String getLabels();
 
   void setLabels(String labels);
+
+  @OneToMany
+  AdditionalIssueField[] getAdditionalFields();
 }

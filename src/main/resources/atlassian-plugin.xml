@@ -15,5 +15,6 @@
     <ao key="ao-entities">
         <entity>ru.mail.jira.plugins.myteam.model.MyteamChatMeta</entity>
         <entity>ru.mail.jira.plugins.myteam.model.IssueCreationSettings</entity>
+        <entity>ru.mail.jira.plugins.myteam.model.AdditionalIssueField</entity>
     </ao>
 </atlassian-plugin>

@@ -1,5 +1,5 @@
 import React, { Fragment, ReactElement, useEffect, useState } from 'react';
-import { FieldHtml, IssueCreationSettings } from '../types';
+import { FieldHtml, FieldParam, IssueCreationSettings } from '../types';
 import Textfield from '@atlaskit/textfield';
 import { Checkbox } from '@atlaskit/checkbox';
 import Form, { CheckboxField, ErrorMessage, Field, FormFooter, HelperMessage } from '@atlaskit/form';
@@ -14,6 +14,7 @@ import Types from 'jira/util/events/types';
 import Reasons from 'jira/util/events/reasons';
 import { loadIssueForm } from '../api/CommonApiClient';
 import LoadableComponent from './LoadableComponent';
+import { collectFieldsData } from '../shared/utils';
 
 type EditableSettings = Partial<Omit<IssueCreationSettings, 'id' | 'chatId'>>;
 
@@ -62,13 +63,15 @@ const createOption = (value?: string) => {
   };
 };
 
-const getFormValues = (): Map<string, string> => {
-  const res = new Map();
-
+const getFormValues = (): Array<FieldParam> => {
   const values = $(`#${FORM_ID}`).serialize();
-  console.log(values);
-
-  return res;
+  const queryPairs = values.split('&');
+  return queryPairs
+    .map((q) => {
+      const split = q.split('=');
+      return { field: split[0], value: split[1] };
+    })
+    .filter((f) => f.value.length > 0 && !['enabled', 'tag'].includes(f.field));
 };
 
 const isIgnoredField = (id: string): boolean => {
@@ -92,7 +95,7 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
   useEffect(() => {
     if (selectedMainData.issueTypeId && selectedMainData.projectKey) {
       setRequiredFieldsState({ isLoading: true });
-      loadIssueForm(selectedMainData.issueTypeId, selectedMainData.projectKey)
+      loadIssueForm(selectedMainData.issueTypeId, selectedMainData.projectKey, defaultSettings.additionalFields || [])
         .then(({ data }) => {
           setRequiredFieldsState({
             isLoading: false,
@@ -113,13 +116,13 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
     <Container>
       <Form
         onSubmit={({ enabled, issueTypeId, projectKey, tag, labels }: FormState) => {
-          getFormValues();
           onSave({
             enabled,
             tag,
             projectKey: String(projectKey.value),
             issueTypeId: String(issueTypeId.value),
             labels: labels ? labels.map((l) => String(l.value)) : [],
+            additionalFields: getFormValues(),
           });
         }}>
         {({ formProps }) => (

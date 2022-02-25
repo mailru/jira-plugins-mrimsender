@@ -16,7 +16,6 @@ const Container = styled.div`
 `;
 
 const LoadableComponent = ({ className, children, isLoading, error }: Props): ReactElement => {
-
   return (
     <Container className={className}>
       {isLoading ? <Spinner size="large" /> : children}
