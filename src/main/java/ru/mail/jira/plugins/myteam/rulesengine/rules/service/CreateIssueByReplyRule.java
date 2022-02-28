@@ -28,6 +28,7 @@ import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
+import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
@@ -108,6 +109,21 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
       fieldValues.put(
           issueCreationService.getField(IssueFieldConstants.SUMMARY),
           getIssueSummary(event, firstReporterDisplayName, tag));
+
+      settings
+          .getAdditionalFields()
+          .forEach(
+              f -> {
+                Field field = issueCreationService.getField(f.getField());
+                if (field != null) {
+                  if (fieldValues.containsKey(field)) {
+                    fieldValues.put(
+                        field, String.format("%s,%s", fieldValues.get(field), f.getValue()));
+                  }
+                  fieldValues.put(field, f.getValue());
+                }
+              });
+
       fieldValues.put(
           issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
           getIssueDescription(event));
@@ -153,10 +169,13 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
               messageFormatter.createMarkdownIssueShortLink(issue.getKey())));
     } catch (Exception e) {
       log.error(e.getLocalizedMessage(), e);
+      log.error(e.getClass().getName());
       SentryClient.capture(e);
       userChatService.sendMessageText(
           event.getUserId(),
-          String.format("Возникла ошибка при создании задачи.\n\n%s", e.getLocalizedMessage()));
+          MessageFormatter.shieldText(
+              String.format(
+                  "Возникла ошибка при создании задачи.\n\n%s", e.getLocalizedMessage())));
     }
   }
 

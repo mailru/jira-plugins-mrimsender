@@ -3,10 +3,6 @@ package ru.mail.jira.plugins.myteam.repository;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 import net.java.ao.Query;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,6 +11,14 @@ import ru.mail.jira.plugins.commons.dao.PagingAndSortingRepository;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.model.AdditionalIssueField;
 import ru.mail.jira.plugins.myteam.model.IssueCreationSettings;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @Repository
 public class IssueCreationSettingsRepository
@@ -44,37 +48,51 @@ public class IssueCreationSettingsRepository
                   ? null
                   : String.join(IssueCreationSettingsDto.LABELS_DELIMITER, dto.getLabels()));
 
-          Map<String, AdditionalIssueField> entityAdditionalFields = new HashMap<>();
+          Arrays.stream(entity.getAdditionalFields()).forEach(ao::delete);
 
-          Arrays.stream(entity.getAdditionalFields())
-              .forEach(
-                  f -> {
-                    if (entityAdditionalFields.containsKey(
-                        f.getFieldId())) { // delete duplicates such as checkbox group
-                      ao.delete(f);
-                    } else {
-                      entityAdditionalFields.put(f.getFieldId(), f);
-                    }
-                  });
+          if (dto.getAdditionalFields() != null) {
+            Map<String, AdditionalIssueField> entityAdditionalFields = new HashMap<>();
 
-          dto.getAdditionalFields()
-              .forEach(
-                  f -> {
-                    if (entityAdditionalFields.containsKey(f.getField())) {
-                      AdditionalIssueField field = entityAdditionalFields.get(f.getField());
-                      field.setValue(f.getValue());
-                      field.save();
-                      entityAdditionalFields.remove(f.getField());
-                    } else {
-                      AdditionalIssueField field = ao.create(AdditionalIssueField.class);
-                      field.setIssueCreationSettings(entity);
-                      field.setFieldId(f.getField());
-                      field.setValue(f.getValue());
-                      field.save();
-                    }
-                  });
+            Arrays.stream(entity.getAdditionalFields())
+                .forEach(
+                    f -> {
+                      if (entityAdditionalFields.containsKey(
+                          f.getFieldId())) { // delete duplicates such as checkbox group
+                        ao.delete(f);
+                      } else {
+                        entityAdditionalFields.put(f.getFieldId(), f);
+                      }
+                    });
 
-          entityAdditionalFields.values().forEach(ao::delete);
+            dto.getAdditionalFields()
+                .forEach(
+                    f -> {
+                      if (entityAdditionalFields.containsKey(f.getField())) {
+                        AdditionalIssueField field = entityAdditionalFields.get(f.getField());
+                        try {
+                          field.setValue(
+                              URLDecoder.decode(f.getValue(), StandardCharsets.UTF_8.name()));
+                        } catch (UnsupportedEncodingException e) {
+                          field.setValue(f.getValue());
+                        }
+                        field.save();
+                        entityAdditionalFields.remove(f.getField());
+                      } else {
+                        AdditionalIssueField field = ao.create(AdditionalIssueField.class);
+                        field.setIssueCreationSettings(entity);
+                        field.setFieldId(f.getField());
+                        try {
+                          field.setValue(
+                              URLDecoder.decode(f.getValue(), StandardCharsets.UTF_8.name()));
+                        } catch (UnsupportedEncodingException e) {
+                          field.setValue(f.getValue());
+                        }
+                        field.save();
+                      }
+                    });
+
+            entityAdditionalFields.values().forEach(ao::delete);
+          }
           return entity;
         });
   }

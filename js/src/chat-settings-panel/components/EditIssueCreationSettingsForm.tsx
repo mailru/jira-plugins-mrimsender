@@ -75,7 +75,21 @@ const getFormValues = (): Array<FieldParam> => {
 };
 
 const isIgnoredField = (id: string): boolean => {
-  return ['project', 'issuetype', 'summary', 'reporter'].includes(id);
+  return [
+    'project',
+    'issuetype',
+    'summary',
+    'labels',
+    'reporter',
+    'description',
+    'attachment',
+    'duedate',
+    'priority',
+    'components',
+    'assignee',
+    'labels-textarea',
+    'security', // TODO fix unknown error: For input string: ""
+  ].includes(id);
 };
 
 const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): ReactElement => {
@@ -99,7 +113,7 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
         .then(({ data }) => {
           setRequiredFieldsState({
             isLoading: false,
-            data: data.fields.filter((f) => f.required && !isIgnoredField(f.id)),
+            data: data.fields.filter((f) => !isIgnoredField(f.id)),
           });
           Events.trigger(Types.NEW_CONTENT_ADDED, [$('form.aui'), Reasons.dialogReady]);
         })
@@ -206,7 +220,7 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
               </Field>
 
               {(requiredFieldsState.data && requiredFieldsState.data.length > 0) || requiredFieldsState.isLoading ? (
-                <h3>Обязательные поля</h3>
+                <h3>Дополнительные поля</h3>
               ) : null}
 
               <LoadableComponent isLoading={requiredFieldsState.isLoading}>

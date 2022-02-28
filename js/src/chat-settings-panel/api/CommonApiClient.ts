@@ -48,7 +48,7 @@ export const loadIssueForm = (
               fieldsToRetain: fieldParams.map((fieldParam) => fieldParam.field),
               ...collectFieldsData(fieldParams),
             },
-            { indices: false, encode: false },
+            { indices: false },
           ),
           {
             cancelToken: cancelTokenHandler('loadIssueForm').token,
