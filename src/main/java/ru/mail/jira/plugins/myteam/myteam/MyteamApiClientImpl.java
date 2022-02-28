@@ -280,7 +280,12 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               String.format(
                   "Caused exception due sending message\n\nchatId: %s\nerror: %s\n%s message\n\n",
                   chatId,
-                  response.getBody() != null ? response.getBody().getDescription() : response.getParsingError().map(UnirestParsingException::getOriginalBody).orElse(""),
+                  response.getBody() != null
+                      ? response.getBody().getDescription()
+                      : response
+                          .getParsingError()
+                          .map(UnirestParsingException::getOriginalBody)
+                          .orElse(""),
                   text),
               response.getParsingError().orElse(null));
       log.error(

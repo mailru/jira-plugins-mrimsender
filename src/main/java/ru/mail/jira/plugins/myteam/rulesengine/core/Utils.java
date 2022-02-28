@@ -8,6 +8,11 @@ import com.atlassian.jira.issue.attachment.ConvertTemporaryAttachmentParams;
 import com.atlassian.jira.issue.attachment.TemporaryAttachmentId;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Pattern;
 import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +27,6 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Objects;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Component
