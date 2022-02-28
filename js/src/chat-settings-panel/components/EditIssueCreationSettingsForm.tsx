@@ -84,8 +84,8 @@ const isIgnoredField = (id: string): boolean => {
     'description',
     'attachment',
     'duedate',
-    'priority',
-    'components',
+    // 'priority',
+    // 'components',
     'assignee',
     'labels-textarea',
     'security', // TODO fix unknown error: For input string: ""
