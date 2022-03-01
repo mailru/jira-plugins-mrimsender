@@ -97,6 +97,10 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
 
     PriorityValueHandler priority = new PriorityValueHandler(i18nResolver, prioritySchemeManager);
     supportedIssueCreationCustomFields.put(priority.getClassName(), priority);
+
+    //    ComponentsValueHandler components =
+    //        new ComponentsValueHandler(projectComponentManager, i18nResolver);
+    //    supportedIssueCreationCustomFields.put(components.getClassName(), components);
   }
 
   @Override

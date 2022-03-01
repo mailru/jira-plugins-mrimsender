@@ -119,8 +119,9 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
                   if (fieldValues.containsKey(field)) {
                     fieldValues.put(
                         field, String.format("%s,%s", fieldValues.get(field), f.getValue()));
+                  } else {
+                    fieldValues.put(field, f.getValue());
                   }
-                  fieldValues.put(field, f.getValue());
                 }
               });
 

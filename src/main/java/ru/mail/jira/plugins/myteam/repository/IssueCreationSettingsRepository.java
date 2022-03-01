@@ -47,8 +47,6 @@ public class IssueCreationSettingsRepository
                   ? null
                   : String.join(IssueCreationSettingsDto.LABELS_DELIMITER, dto.getLabels()));
 
-          Arrays.stream(entity.getAdditionalFields()).forEach(ao::delete);
-
           if (dto.getAdditionalFields() != null) {
             Map<String, AdditionalIssueField> entityAdditionalFields = new HashMap<>();
 

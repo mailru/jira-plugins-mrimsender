@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.configuration.createissue.customfields;
 
+import com.atlassian.jira.bc.project.component.ProjectComponent;
 import com.atlassian.jira.bc.project.component.ProjectComponentManager;
 import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.config.ConstantsManager;
@@ -93,11 +94,16 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
       case IssueFieldConstants.COMPONENTS:
         return fieldValues.stream()
             .map(
-                strValue ->
-                    Optional.ofNullable(
-                            projectComponentManager.findByComponentName(projectId, strValue))
-                        .map(projectComponent -> projectComponent.getId().toString())
-                        .orElse(null))
+                (strValue) -> {
+                  ProjectComponent component =
+                      projectComponentManager.getProjectComponent(Long.valueOf(strValue));
+                  if (component == null) {
+                    component = projectComponentManager.findByComponentName(projectId, strValue);
+                  }
+                  return Optional.ofNullable(component);
+                })
+            .filter(Optional::isPresent)
+            .map(projectComponent -> projectComponent.get().getId().toString())
             .toArray(String[]::new);
 
       case IssueFieldConstants.ISSUE_LINKS:
