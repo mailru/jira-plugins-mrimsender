@@ -60,6 +60,38 @@ public class Utils {
     return false;
   }
 
+  private void uploadAttachment(
+      InputStream attachment, FileResponse fileInfo, ApplicationUser user, Issue issue) {
+    TemporaryAttachmentId tmpAttachmentId =
+        attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
+    ConvertTemporaryAttachmentParams params =
+        ConvertTemporaryAttachmentParams.builder()
+            .setTemporaryAttachmentId(tmpAttachmentId)
+            .setAuthor(user)
+            .setIssue(issue)
+            .setFilename(fileInfo.getFilename())
+            .setContentType(fileInfo.getType())
+            .setCreatedTime(DateTime.now())
+            .setFileSize(fileInfo.getSize())
+            .build();
+    attachmentManager.convertTemporaryAttachment(params);
+  }
+
+  private String replaceMention(CharSequence text, String userId, String userName) {
+    return Pattern.compile("@\\[" + userId + "]").matcher(text).replaceAll("[~" + userName + "]");
+  }
+
+  private String buildAttachmentLink(String fileId, String fileType, String fileName, String text) {
+    String linkFormat = fileType.equals("image") ? "!%s!\n" : "[^%s]\n";
+    if (text == null) {
+      return String.format(linkFormat, fileName);
+    } else {
+      return Pattern.compile("https?://.*/get/" + fileId)
+          .matcher(text)
+          .replaceAll(String.format(linkFormat, fileName));
+    }
+  }
+
   public String convertToJiraCommentStyle(
       ChatMessageEvent event, ApplicationUser commentedUser, Issue commentedIssue) {
     List<Part> parts = event.getMessageParts();
@@ -78,24 +110,11 @@ public class Utils {
                   FileResponse fileInfo = response.getBody();
                   try (InputStream attachment =
                       ru.mail.jira.plugins.myteam.commons.Utils.loadUrlFile(fileInfo.getUrl())) {
-                    TemporaryAttachmentId tmpAttachmentId =
-                        attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
-                    ConvertTemporaryAttachmentParams params =
-                        ConvertTemporaryAttachmentParams.builder()
-                            .setTemporaryAttachmentId(tmpAttachmentId)
-                            .setAuthor(commentedUser)
-                            .setIssue(commentedIssue)
-                            .setFilename(fileInfo.getFilename())
-                            .setContentType(fileInfo.getType())
-                            .setCreatedTime(DateTime.now())
-                            .setFileSize(fileInfo.getSize())
-                            .build();
-                    attachmentManager.convertTemporaryAttachment(params);
-                    if (fileInfo.getType().equals("image")) {
-                      outPutStrings.append(String.format("!%s!\n", fileInfo.getFilename()));
-                    } else {
-                      outPutStrings.append(String.format("[%s]\n", fileInfo.getFilename()));
-                    }
+                    uploadAttachment(attachment, fileInfo, commentedUser, commentedIssue);
+                    outPutStrings.setLength(0);
+                    outPutStrings.append(
+                        buildAttachmentLink(
+                            file.getFileId(), fileInfo.getType(), fileInfo.getFilename(), null));
                     if (file.getCaption() != null) {
                       outPutStrings.append(String.format("%s\n", file.getCaption()));
                     }
@@ -111,12 +130,10 @@ public class Utils {
                 Mention mention = (Mention) part;
                 ApplicationUser user = userData.getUserByMrimLogin(mention.getUserId());
                 if (user != null) {
-                  String temp =
-                      Pattern.compile("@\\[" + mention.getUserId() + "]")
-                          .matcher(outPutStrings)
-                          .replaceAll("[~" + user.getName() + "]");
+                  String replacedMention =
+                      replaceMention(outPutStrings, mention.getUserId(), user.getName());
                   outPutStrings.setLength(0);
-                  outPutStrings.append(temp);
+                  outPutStrings.append(replacedMention);
                 } else {
                   log.error(
                       "Unable change Myteam mention to Jira's mention, because Can't find user with id:{}",
@@ -155,32 +172,10 @@ public class Utils {
                   FileResponse fileInfo = response.getBody();
                   try (InputStream attachment =
                       ru.mail.jira.plugins.myteam.commons.Utils.loadUrlFile(fileInfo.getUrl())) {
-                    TemporaryAttachmentId tmpAttachmentId =
-                        attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
-                    ConvertTemporaryAttachmentParams params =
-                        ConvertTemporaryAttachmentParams.builder()
-                            .setTemporaryAttachmentId(tmpAttachmentId)
-                            .setAuthor(issue.getReporter())
-                            .setIssue(issue)
-                            .setFilename(fileInfo.getFilename())
-                            .setContentType(fileInfo.getType())
-                            .setCreatedTime(DateTime.now())
-                            .setFileSize(fileInfo.getSize())
-                            .build();
-                    attachmentManager.convertTemporaryAttachment(params);
-                    if (fileInfo.getType().equals("image")) {
-                      String temp =
-                          Pattern.compile("https?://.*/get/" + file.getFileId())
-                              .matcher(text)
-                              .replaceAll(String.format("!%s!\n", fileInfo.getFilename()));
-                      outPutStrings.append(temp);
-                    } else {
-                      String temp =
-                          Pattern.compile("https?://.*/get/" + file.getFileId())
-                              .matcher(text)
-                              .replaceAll(String.format("[^%s]\n", fileInfo.getFilename()));
-                      outPutStrings.append(temp);
-                    }
+                    uploadAttachment(attachment, fileInfo, issue.getReporterUser(), issue);
+                    outPutStrings.append(
+                        buildAttachmentLink(
+                            file.getFileId(), fileInfo.getType(), fileInfo.getFilename(), text));
                   }
                 } catch (UnirestException | IOException | MyteamServerErrorException e) {
                   log.error("Unable to add attachment to Issue {}", issue.getKey(), e);
@@ -190,17 +185,10 @@ public class Utils {
                 Mention mention = (Mention) messagePart;
                 ApplicationUser user = userData.getUserByMrimLogin(mention.getUserId());
                 if (user != null) {
-                  String temp =
-                      Pattern.compile("@\\[" + mention.getUserId() + "]")
-                          .matcher(text)
-                          .replaceAll("[~" + user.getName() + "]");
-                  outPutStrings.append(temp);
+                  outPutStrings.append(replaceMention(text, mention.getUserId(), user.getName()));
                 } else {
-                  String temp =
-                      Pattern.compile("@\\[" + mention.getUserId() + "]")
-                          .matcher(text)
-                          .replaceAll(mention.getFirstName());
-                  outPutStrings.append(temp);
+                  outPutStrings.append(
+                      replaceMention(text, mention.getUserId(), mention.getFirstName()));
                   log.error(
                       "Unable change Myteam mention to Jira's mention, because Can't find user with id:{}",
                       mention.getUserId());
