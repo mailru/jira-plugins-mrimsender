@@ -7,6 +7,7 @@ export type IssueCreationSettings = {
   tag: string;
   labels: Array<string>;
   additionalFields: Array<FieldParam>;
+  reporter: 'INITIATOR' | 'MESSAGE_AUTHOR';
 };
 
 export type FieldHtml = {

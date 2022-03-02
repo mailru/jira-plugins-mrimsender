@@ -62,8 +62,7 @@ public interface IssueCreationService {
       String projectKey,
       String issueTypeId,
       @NotNull Map<Field, String> fields,
-      ApplicationUser user,
-      ApplicationUser reporter)
+      ApplicationUser user)
       throws IssueCreationValidationException, PermissionException, ProjectBannedException;
 
   boolean isFieldSupported(String fieldId);

@@ -14,7 +14,7 @@ import Types from 'jira/util/events/types';
 import Reasons from 'jira/util/events/reasons';
 import { loadIssueForm } from '../api/CommonApiClient';
 import LoadableComponent from './LoadableComponent';
-import { collectFieldsData } from '../shared/utils';
+import Select from '@atlaskit/select';
 
 type EditableSettings = Partial<Omit<IssueCreationSettings, 'id' | 'chatId'>>;
 
@@ -29,6 +29,7 @@ type FormState = {
   projectKey: OptionType;
   tag: string;
   labels: ReadonlyArray<OptionType>;
+  reporter: 'INITIATOR' | 'MESSAGE_AUTHOR';
 };
 
 const FORM_ID = 'issue-create-chat-settings';
@@ -98,7 +99,7 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
 
   const [requiredFieldsState, setRequiredFieldsState] = useState<{
     isLoading: boolean;
-    data?: ReadonlyArray<FieldHtml>;
+    data?: Array<FieldHtml>;
     error?: string;
   }>({
     isLoading: false,
@@ -124,13 +125,21 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
     }
   }, [selectedMainData]);
 
+  console.log(
+    [
+      { label: 'Автор оригинального сообщения', value: 'MESSAGE_AUTHOR' },
+      { label: 'Инициатор создания задачи', value: 'INITIATOR' },
+    ].find((value) => value.value === (defaultSettings.reporter || 'INITIATOR')),
+  );
+
   return (
     <Container>
       <Form
-        onSubmit={({ enabled, issueTypeId, projectKey, tag, labels }: FormState) => {
+        onSubmit={({ enabled, issueTypeId, projectKey, tag, labels, reporter }: FormState) => {
           onSave({
             enabled,
             tag,
+            reporter,
             projectKey: String(projectKey.value),
             issueTypeId: String(issueTypeId.value),
             labels: labels ? labels.map((l) => String(l.value)) : [],
@@ -210,6 +219,32 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
                 )}
               </Field>
 
+              <Field
+                label="Автор задачи"
+                name="reporter"
+                defaultValue={defaultSettings.reporter || 'INITIATOR'}
+                isRequired
+                validate={validateNotNull}>
+                {({ fieldProps: { id, onChange }, error }) => (
+                  <Fragment>
+                    <Select
+                      inputId={id}
+                      defaultValue={[
+                        { label: 'Автор оригинального сообщения', value: 'MESSAGE_AUTHOR' },
+                        { label: 'Инициатор создания задачи', value: 'INITIATOR' },
+                      ].find((value) => value.value === (defaultSettings.reporter || 'INITIATOR'))}
+                      options={[
+                        { label: 'Автор оригинального сообщения', value: 'MESSAGE_AUTHOR' },
+                        { label: 'Инициатор создания задачи', value: 'INITIATOR' },
+                      ]}
+                      placeholder="Автор задачи"
+                      onChange={(value: any) => value && onChange(value.value)}
+                    />
+                    {error && <ErrorMessage>{error}</ErrorMessage>}
+                  </Fragment>
+                )}
+              </Field>
+
               <Field<OptionsType<OptionType>>
                 name="labels"
                 label="Выберите метки"
@@ -223,15 +258,19 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
 
               <LoadableComponent isLoading={requiredFieldsState.isLoading}>
                 {requiredFieldsState.data && requiredFieldsState.data.length > 0
-                  ? requiredFieldsState.data.map((f) => {
-                      return (
-                        <RequiredField
-                          className="field-group"
-                          key={f.id}
-                          dangerouslySetInnerHTML={{ __html: f.editHtml }}
-                        />
-                      );
-                    })
+                  ? requiredFieldsState.data
+                      .sort((a, b) => {
+                        return a.required ? -1 : 1;
+                      })
+                      .map((f) => {
+                        return (
+                          <RequiredField
+                            className="field-group"
+                            key={f.id}
+                            dangerouslySetInnerHTML={{ __html: f.editHtml }}
+                          />
+                        );
+                      })
                   : null}
               </LoadableComponent>
 

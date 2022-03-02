@@ -24,6 +24,7 @@ import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.commons.SentryClient;
+import ru.mail.jira.plugins.myteam.commons.IssueReporter;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
@@ -148,8 +149,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
               settings.getProjectKey(),
               settings.getIssueTypeId(),
               fieldValues,
-              creator,
-              reporterJiraUser);
+              settings.getReporter() == IssueReporter.MESSAGE_AUTHOR ? reporterJiraUser : creator);
 
       reporters.stream() // add watchers
           .map(
