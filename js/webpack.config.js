@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
+const webpack = require('webpack');
 const path = require('path');
 const WrmPlugin = require('atlassian-webresource-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -56,6 +57,9 @@ const config = {
       locationPrefix: PLUGIN_KEY.split('.').join('/') + '/' + BUNDLE_OUTPUT_DIR_NAME, // Adds given prefix value to location attribute of resource node
     }),
     new WebpackBar(), // Elegant ProgressBar and Profiler for Webpack,
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+    }),
   ],
   externals: {
     JIRA: 'JIRA',
@@ -70,6 +74,7 @@ const config = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
     alias: {
+      process: 'process/browser',
       // All i18n calls really invokes via @atlassian/wrm-react-i18n plugin
       // @atlassian/wrm-react-i18n configuration could be found here: https://www.npmjs.com/package/@atlassian/i18n-properties-loader
       i18n: '@atlassian/wrm-react-i18n',
