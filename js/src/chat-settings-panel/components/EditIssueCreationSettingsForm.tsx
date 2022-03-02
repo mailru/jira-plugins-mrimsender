@@ -87,6 +87,8 @@ const isIgnoredField = (id: string): boolean => {
     'duedate',
     'assignee',
     'labels-textarea',
+    'timetracking', // unsupported
+    'issuelinks', // unsupported
     'security', // TODO fix unknown error: For input string: ""
   ].includes(id);
 };
@@ -124,13 +126,6 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
         });
     }
   }, [selectedMainData]);
-
-  console.log(
-    [
-      { label: 'Автор оригинального сообщения', value: 'MESSAGE_AUTHOR' },
-      { label: 'Инициатор создания задачи', value: 'INITIATOR' },
-    ].find((value) => value.value === (defaultSettings.reporter || 'INITIATOR')),
-  );
 
   return (
     <Container>
