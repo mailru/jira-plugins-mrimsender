@@ -1,6 +1,7 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.service;
 
+import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
 import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
@@ -12,10 +13,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -165,9 +163,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
 
       userChatService.sendMessageText(
           event.getChatId(),
-          String.format(
-              "По вашему обращению была создана задача: %s",
-              messageFormatter.createMarkdownIssueShortLink(issue.getKey())));
+          getCreationSuccessMessage(settings.getCreationSuccessTemplate(), issue));
     } catch (Exception e) {
       log.error(e.getLocalizedMessage(), e);
       log.error(e.getClass().getName());
@@ -178,6 +174,24 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
               String.format(
                   "Возникла ошибка при создании задачи.\n\n%s", e.getLocalizedMessage())));
     }
+  }
+
+  private String getCreationSuccessMessage(String template, Issue issue) {
+    String result = template;
+    if (result == null) {
+      result = DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
+    }
+
+    Map<String, String> keyMap = new HashMap<>();
+
+    keyMap.put("issueKey", messageFormatter.createMarkdownIssueShortLink(issue.getKey()));
+    keyMap.put("issueLink", messageFormatter.createIssueLink(issue.getKey()));
+
+    for (Map.Entry<String, String> entry : keyMap.entrySet()) {
+      result = result.replaceAll(String.format("\\{\\{%s\\}\\}", entry.getKey()), entry.getValue());
+    }
+
+    return result;
   }
 
   private List<User> getReportersFromEventParts(ChatMessageEvent event) {

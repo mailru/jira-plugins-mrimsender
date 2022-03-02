@@ -27,6 +27,7 @@ public class IssueCreationSettingsDto {
   @XmlElement private String projectKey;
   @XmlElement private String issueTypeId;
   @XmlElement private String tag;
+  @XmlElement private String creationSuccessTemplate;
   @XmlElement private IssueReporter reporter;
   @XmlElement private List<String> labels;
   @XmlElement private List<AdditionalIssueFieldDto> additionalFields;
@@ -39,6 +40,7 @@ public class IssueCreationSettingsDto {
     this.reporter = entity.getReporter();
     this.projectKey = entity.getProjectKey();
     this.issueTypeId = entity.getIssueTypeId();
+    this.creationSuccessTemplate = entity.getCreationSuccessTemplate();
     this.labels =
         entity.getLabels() != null
             ? Arrays.asList(entity.getLabels().split(LABELS_DELIMITER))

@@ -1,6 +1,8 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
+import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
+
 import com.atlassian.cache.Cache;
 import com.atlassian.cache.CacheManager;
 import com.atlassian.cache.CacheSettingsBuilder;
@@ -70,7 +72,12 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   @Override
   public IssueCreationSettingsDto addDefaultSettings(String chatId) {
     IssueCreationSettingsDto settings =
-        IssueCreationSettingsDto.builder().chatId(chatId).enabled(false).tag("task").build();
+        IssueCreationSettingsDto.builder()
+            .chatId(chatId)
+            .enabled(false)
+            .tag("task")
+            .creationSuccessTemplate(DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE)
+            .build();
 
     issueCreationSettingsRepository.create(settings);
     issueSettingsCache.remove(chatId);

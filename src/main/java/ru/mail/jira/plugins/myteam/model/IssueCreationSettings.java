@@ -42,6 +42,10 @@ public interface IssueCreationSettings extends Entity {
 
   void setReporter(IssueReporter issueReporter);
 
+  String getCreationSuccessTemplate();
+
+  void setCreationSuccessTemplate(String template);
+
   @OneToMany
   AdditionalIssueField[] getAdditionalFields();
 }

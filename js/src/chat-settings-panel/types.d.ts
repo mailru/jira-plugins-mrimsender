@@ -5,6 +5,7 @@ export type IssueCreationSettings = {
   projectKey: string;
   issueTypeId: string;
   tag: string;
+  creationSuccessTemplate: string;
   labels: Array<string>;
   additionalFields: Array<FieldParam>;
   reporter: 'INITIATOR' | 'MESSAGE_AUTHOR';

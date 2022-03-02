@@ -43,6 +43,7 @@ public class IssueCreationSettingsRepository
           entity.setProjectKey(dto.getProjectKey());
           entity.setEnabled(dto.getEnabled());
           entity.setReporter(dto.getReporter());
+          entity.setCreationSuccessTemplate(dto.getCreationSuccessTemplate());
           entity.setLabels(
               (dto.getLabels() == null || dto.getLabels().size() == 0)
                   ? null
