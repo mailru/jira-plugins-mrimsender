@@ -4,10 +4,13 @@ package ru.mail.jira.plugins.myteam.service.impl;
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.LocaleManager;
+import com.atlassian.jira.event.type.EventDispatchOption;
 import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.IssueInputParameters;
+import com.atlassian.jira.issue.IssueManager;
+import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.customfields.manager.OptionsManager;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
@@ -27,6 +30,11 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
@@ -41,12 +49,6 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedEx
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 
-import javax.validation.constraints.NotNull;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 @Service
 public class IssueCreationServiceImpl implements IssueCreationService, InitializingBean {
 
@@ -56,6 +58,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   private final FieldLayoutManager fieldLayoutManager;
   private final FieldManager fieldManager;
   private final LocaleManager localeManager;
+  private final IssueManager issueManager;
   private final IssueService issueService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final OptionsManager optionsManager;
@@ -71,6 +74,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       @ComponentImport FieldLayoutManager fieldLayoutManager,
       @ComponentImport FieldManager fieldManager,
       @ComponentImport LocaleManager localeManager,
+      @ComponentImport IssueManager issueManager,
       @ComponentImport IssueService issueService,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport OptionsManager optionsManager,
@@ -82,6 +86,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     this.fieldLayoutManager = fieldLayoutManager;
     this.fieldManager = fieldManager;
     this.localeManager = localeManager;
+    this.issueManager = issueManager;
     this.issueService = issueService;
     this.myteamIssueService = myteamIssueService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
@@ -267,7 +272,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   }
 
   @Override
-  public Issue createIssue(
+  public MutableIssue createIssue(
       Project project,
       IssueType issueType,
       @NotNull Map<Field, String> fields,
@@ -276,7 +281,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     return createIssue(project, issueType, fields, user, user);
   }
 
-  public Issue createIssue(
+  public MutableIssue createIssue(
       Project project,
       IssueType issueType,
       @NotNull Map<Field, String> fields,
@@ -303,7 +308,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   }
 
   @Override
-  public Issue createIssue(
+  public MutableIssue createIssue(
       String projectKey,
       String issueTypeId,
       @NotNull Map<Field, String> fields,
@@ -314,6 +319,13 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     IssueType issueType = myteamIssueService.getIssueType(issueTypeId);
 
     return createIssue(project, issueType, fields, user, reporter);
+  }
+
+  @Override
+  public Issue updateIssueDescription(
+      String description, MutableIssue issue, ApplicationUser user) {
+    issue.setDescription(description);
+    return issueManager.updateIssue(user, issue, EventDispatchOption.DO_NOT_DISPATCH, false);
   }
 
   @Override

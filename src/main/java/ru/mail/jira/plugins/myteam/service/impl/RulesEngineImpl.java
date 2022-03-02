@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.MyRulesEngine;
+import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.*;
@@ -44,16 +45,19 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
   private final UserChatService userChatService;
   private final IssueService issueService;
   private final IssueCreationSettingsService issueCreationSettingsService;
+  private final Utils utils;
 
   public RulesEngineImpl(
       IssueCreationService issueCreationService,
       UserChatService userChatService,
       IssueService issueService,
-      IssueCreationSettingsService issueCreationSettingsService) {
+      IssueCreationSettingsService issueCreationSettingsService,
+      Utils utils) {
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
     this.issueService = issueService;
     this.issueCreationSettingsService = issueCreationSettingsService;
+    this.utils = utils;
 
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
@@ -109,7 +113,8 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
             this,
             issueCreationSettingsService,
             issueCreationService,
-            issueService));
+            issueService,
+            utils));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));

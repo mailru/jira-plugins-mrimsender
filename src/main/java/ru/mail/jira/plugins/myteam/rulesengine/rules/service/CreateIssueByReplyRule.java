@@ -6,6 +6,7 @@ import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
+import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
@@ -49,17 +51,20 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final IssueCreationService issueCreationService;
   private final IssueService issueService;
+  private final Utils utils;
 
   public CreateIssueByReplyRule(
       UserChatService userChatService,
       RulesEngine rulesEngine,
       IssueCreationSettingsService issueCreationSettingsService,
       IssueCreationService issueCreationService,
-      IssueService issueService) {
+      IssueService issueService,
+      Utils utils) {
     super(userChatService, rulesEngine);
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.issueCreationService = issueCreationService;
     this.issueService = issueService;
+    this.utils = utils;
   }
 
   @Condition
@@ -110,7 +115,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
           getIssueSummary(event, firstReporterDisplayName, tag));
       fieldValues.put(
           issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
-          getIssueDescription(event));
+          getIssueDescription(event, null));
 
       if (settings.getLabels() != null) {
         fieldValues.put(
@@ -126,13 +131,16 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
         reporterJiraUser = creator;
       }
 
-      Issue issue =
+      MutableIssue issue =
           issueCreationService.createIssue(
               settings.getProjectKey(),
               settings.getIssueTypeId(),
               fieldValues,
               creator,
               reporterJiraUser);
+
+      issueCreationService.updateIssueDescription(
+          getIssueDescription(event, issue), issue, reporterJiraUser);
 
       reporters.stream() // add watchers
           .map(
@@ -167,7 +175,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
         .collect(Collectors.toList());
   }
 
-  private String getIssueDescription(ChatMessageEvent event) {
+  private String getIssueDescription(ChatMessageEvent event, Issue issue) {
     StringBuilder builder = new StringBuilder();
 
     event.getMessageParts().stream()
@@ -181,13 +189,18 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
                       Instant.ofEpochSecond(((Reply) p).getMessage().getTimestamp()),
                       TimeZone.getDefault().toZoneId());
 
+              String text =
+                  issue != null
+                      ? utils.convertToJiraDescriptionStyle(p, issue)
+                      : ((Reply) p).getPayload().getMessage().getText();
+
               builder.append(messageFormatter.formatMyteamUserLink(user));
               builder
                   .append("(")
                   .append(formatter.format(dateTime))
                   .append("):\n")
                   .append("\n{quote}");
-              builder.append(((Reply) p).getPayload().getMessage().getText());
+              builder.append(text);
               builder.append("{quote}\n\n");
             });
     return builder.toString();

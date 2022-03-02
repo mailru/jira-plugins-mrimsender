@@ -18,8 +18,10 @@ import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.CommentaryParts;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.File;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 
@@ -129,5 +131,87 @@ public class Utils {
     }
 
     return ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis(outPutStrings.toString());
+  }
+
+  public String convertToJiraDescriptionStyle(Part part, Issue issue) {
+    List<Part> messageParts =
+        part instanceof Reply
+            ? ((Reply) part).getMessage().getParts()
+            : ((Forward) part).getMessage().getParts();
+    StringBuilder outPutStrings = new StringBuilder();
+    if (messageParts != null) {
+      messageParts.forEach(
+          messagePart -> {
+            String text =
+                part instanceof Reply
+                    ? ((Reply) part).getMessage().getText()
+                    : ((Forward) part).getMessage().getText();
+            CommentaryParts currentPartClass =
+                CommentaryParts.valueOf(messagePart.getClass().getSimpleName());
+            switch (currentPartClass) {
+              case File:
+                File file = (File) messagePart;
+                try {
+                  HttpResponse<FileResponse> response = myteamApiClient.getFile(file.getFileId());
+                  FileResponse fileInfo = response.getBody();
+                  try (InputStream attachment =
+                      ru.mail.jira.plugins.myteam.commons.Utils.loadUrlFile(fileInfo.getUrl())) {
+                    TemporaryAttachmentId tmpAttachmentId =
+                        attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
+                    ConvertTemporaryAttachmentParams params =
+                        ConvertTemporaryAttachmentParams.builder()
+                            .setTemporaryAttachmentId(tmpAttachmentId)
+                            .setAuthor(issue.getReporter())
+                            .setIssue(issue)
+                            .setFilename(fileInfo.getFilename())
+                            .setContentType(fileInfo.getType())
+                            .setCreatedTime(DateTime.now())
+                            .setFileSize(fileInfo.getSize())
+                            .build();
+                    attachmentManager.convertTemporaryAttachment(params);
+                    if (fileInfo.getType().equals("image")) {
+                      String temp =
+                          Pattern.compile("https?://.*/get/" + file.getFileId())
+                              .matcher(text)
+                              .replaceAll(String.format("!%s!\n", fileInfo.getFilename()));
+                      outPutStrings.append(temp);
+                    } else {
+                      String temp =
+                          Pattern.compile("https?://.*/get/" + file.getFileId())
+                              .matcher(text)
+                              .replaceAll(String.format("[^%s]\n", fileInfo.getFilename()));
+                      outPutStrings.append(temp);
+                    }
+                  }
+                } catch (UnirestException | IOException | MyteamServerErrorException e) {
+                  log.error("Unable to add attachment to Issue {}", issue.getKey(), e);
+                }
+                break;
+              case Mention:
+                Mention mention = (Mention) messagePart;
+                ApplicationUser user = userData.getUserByMrimLogin(mention.getUserId());
+                if (user != null) {
+                  String temp =
+                      Pattern.compile("@\\[" + mention.getUserId() + "]")
+                          .matcher(text)
+                          .replaceAll("[~" + user.getName() + "]");
+                  outPutStrings.append(temp);
+                } else {
+                  String temp =
+                      Pattern.compile("@\\[" + mention.getUserId() + "]")
+                          .matcher(text)
+                          .replaceAll(mention.getFirstName());
+                  outPutStrings.append(temp);
+                  log.error(
+                      "Unable change Myteam mention to Jira's mention, because Can't find user with id:{}",
+                      mention.getUserId());
+                }
+                break;
+              default:
+                break;
+            }
+          });
+    }
+    return outPutStrings.toString();
   }
 }
