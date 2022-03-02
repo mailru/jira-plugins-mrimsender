@@ -203,10 +203,9 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
                 text = ((Forward) p).getPayload().getMessage().getText();
               }
 
-              String text =
-                  issue != null
-                      ? utils.convertToJiraDescriptionStyle(p, issue)
-                      : ((Reply) p).getPayload().getMessage().getText();
+              if (issue != null) {
+                text = utils.convertToJiraDescriptionStyle(p, issue);
+              }
 
               builder.append(messageFormatter.formatMyteamUserLink(user));
               builder
