@@ -1,10 +1,7 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.commons;
 
-import kong.unirest.UnirestException;
-import org.apache.commons.lang.StringUtils;
-import org.jetbrains.annotations.Nullable;
-import ru.mail.jira.plugins.commons.HttpClient;
+import static java.util.stream.Collectors.joining;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -15,8 +12,10 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static java.util.stream.Collectors.joining;
+import kong.unirest.UnirestException;
+import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.Nullable;
+import ru.mail.jira.plugins.commons.HttpClient;
 
 public class Utils {
 
@@ -146,7 +145,7 @@ public class Utils {
   }
 
   public static String removeAllEmojis(String str) {
-    if(str == null) {
+    if (str == null) {
       return null;
     } else {
       return str.replaceAll("[^\\p{L}\\p{M}\\p{N}\\p{P}\\p{Z}\\p{Cf}\\p{Cs}\\s\\|$^+=~±><]", "");

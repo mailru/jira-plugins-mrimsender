@@ -28,6 +28,7 @@ import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
@@ -78,7 +79,10 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
 
     boolean hasSettings = issueCreationSettingsService.hasChatSettings(event.getChatId(), tag);
 
-    return isGroup && NAME.equalsName(command) && event.isHasReply() && hasSettings;
+    return isGroup
+        && NAME.equalsName(command)
+        && (event.isHasReply() || event.isHasForwards())
+        && hasSettings;
   }
 
   @Action
@@ -170,8 +174,12 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
 
   private List<User> getReportersFromEventParts(ChatMessageEvent event) {
     return event.getMessageParts().stream()
-        .filter(p -> p instanceof Reply)
-        .map(p -> ((Reply) p).getMessage().getFrom())
+        .filter(p -> (p instanceof Reply || p instanceof Forward))
+        .map(
+            p ->
+                (p instanceof Reply)
+                    ? ((Reply) p).getMessage().getFrom()
+                    : ((Forward) p).getMessage().getFrom())
         .collect(Collectors.toList());
   }
 
@@ -179,15 +187,21 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
     StringBuilder builder = new StringBuilder();
 
     event.getMessageParts().stream()
-        .filter(part -> part instanceof Reply)
+        .filter(part -> (part instanceof Reply || part instanceof Forward))
         .forEach(
             p -> {
-              User user = ((Reply) p).getMessage().getFrom();
-
-              LocalDateTime dateTime =
-                  LocalDateTime.ofInstant(
-                      Instant.ofEpochSecond(((Reply) p).getMessage().getTimestamp()),
-                      TimeZone.getDefault().toZoneId());
+              User user;
+              long timestamp;
+              String text;
+              if (p instanceof Reply) {
+                user = ((Reply) p).getMessage().getFrom();
+                timestamp = ((Reply) p).getMessage().getTimestamp();
+                text = ((Reply) p).getPayload().getMessage().getText();
+              } else {
+                user = ((Forward) p).getMessage().getFrom();
+                timestamp = ((Forward) p).getMessage().getTimestamp();
+                text = ((Forward) p).getPayload().getMessage().getText();
+              }
 
               String text =
                   issue != null
@@ -197,7 +211,10 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
               builder.append(messageFormatter.formatMyteamUserLink(user));
               builder
                   .append("(")
-                  .append(formatter.format(dateTime))
+                  .append(
+                      formatter.format(
+                          LocalDateTime.ofInstant(
+                              Instant.ofEpochSecond(timestamp), TimeZone.getDefault().toZoneId())))
                   .append("):\n")
                   .append("\n{quote}");
               builder.append(text);
