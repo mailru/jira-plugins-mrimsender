@@ -67,7 +67,7 @@ public class MyteamEventsListener {
     }
 
     if (message != null
-        && event.isHasReply()
+        && (event.isHasReply() || event.isHasForwards())
         && event.getChatType() == ChatType.GROUP
         && message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
       handleIssueCreationTag(event);
