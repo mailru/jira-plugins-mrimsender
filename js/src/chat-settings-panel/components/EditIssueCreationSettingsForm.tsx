@@ -232,6 +232,8 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
           </Fragment>
         )}
       </Field>
+      <h3>Шаблоны</h3>
+      <LineHelperMessage>{`Текст шаблона может содержать ключи для автоподстановки, где {{key}} будет заменен на соответствующее значение.`}</LineHelperMessage>
       <Field
         label="Шаблон сообщения о созданной задаче"
         name="creationSuccessTemplate"
@@ -240,7 +242,7 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
         {({ fieldProps, error }) => (
           <Fragment>
             <TextArea defaultValue={settings.creationSuccessTemplate} {...(fieldProps as any)} resize="auto" />
-            <LineHelperMessage>{`Текст шаблона может содержать ключи для автоподстановки, где {{key}} будет заменен на соответствующее значение. Возможные значения:
+            <LineHelperMessage>{`Возможные значения ключей:
             issueKey - ключ задачи со ссылкой;
             issueLink - полная ссылка на задачу.`}</LineHelperMessage>
             {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -251,7 +253,7 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
         {({ fieldProps, error }) => (
           <Fragment>
             <TextArea defaultValue={settings.issueSummaryTemplate} {...(fieldProps as any)} resize="auto" />
-            <LineHelperMessage>{`Текст шаблона может содержать ключи для автоподстановки, где {{key}} будет заменен на соответствующее значение. Возможные значения:
+            <LineHelperMessage>{`Возможные значения ключей:
             author - автор оригинального сообщения;
             initiator - инициатор создания задачи.`}</LineHelperMessage>
             {error && <ErrorMessage>{error}</ErrorMessage>}
