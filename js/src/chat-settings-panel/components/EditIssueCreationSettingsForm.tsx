@@ -1,4 +1,4 @@
-import React, { Fragment, ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, useEffect, useState } from 'react';
 import { FieldHtml, FieldParam, IssueCreationSettings } from '../types';
 import Textfield from '@atlaskit/textfield';
 import { Checkbox } from '@atlaskit/checkbox';
@@ -185,11 +185,11 @@ const renderMainFields = (
         isRequired
         validate={validateNotNull}>
         {({ fieldProps, error }) => (
-          <Fragment>
+          <>
             <Textfield placeholder="Тег" {...fieldProps} elemBeforeInput={<HintBeforeTagInput>#</HintBeforeTagInput>} />
             <HelperMessage>Тег по которому будет создаваться задача. Например: #task</HelperMessage>
             {error && <ErrorMessage>{error}</ErrorMessage>}
-          </Fragment>
+          </>
         )}
       </Field>
 
@@ -214,7 +214,7 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
         isRequired
         validate={validateNotNull}>
         {({ fieldProps: { id, onChange }, error }) => (
-          <Fragment>
+          <>
             <Select
               inputId={id}
               defaultValue={[
@@ -229,7 +229,7 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
               onChange={(value: any) => value && onChange(value.value)}
             />
             {error && <ErrorMessage>{error}</ErrorMessage>}
-          </Fragment>
+          </>
         )}
       </Field>
       <h3>Шаблоны</h3>
@@ -237,27 +237,27 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
       <Field
         label="Шаблон сообщения о созданной задаче"
         name="creationSuccessTemplate"
-        isRequired
-        validate={validateNotNull}>
+        defaultValue={settings.creationSuccessTemplate}>
         {({ fieldProps, error }) => (
-          <Fragment>
-            <TextArea defaultValue={settings.creationSuccessTemplate} {...(fieldProps as any)} resize="auto" />
-            <LineHelperMessage>{`Возможные значения ключей:
-            issueKey - ключ задачи со ссылкой;
+          <>
+            <TextArea {...(fieldProps as any)} resize="auto" />
+            <LineHelperMessage>{`issueKey - ключ задачи со ссылкой;
             issueLink - полная ссылка на задачу.`}</LineHelperMessage>
             {error && <ErrorMessage>{error}</ErrorMessage>}
-          </Fragment>
+          </>
         )}
       </Field>
-      <Field label="Шаблон темы созданной задачи" name="issueSummaryTemplate" isRequired validate={validateNotNull}>
+      <Field
+        label="Шаблон темы созданной задачи"
+        name="issueSummaryTemplate"
+        defaultValue={settings.issueSummaryTemplate}>
         {({ fieldProps, error }) => (
-          <Fragment>
-            <TextArea defaultValue={settings.issueSummaryTemplate} {...(fieldProps as any)} resize="auto" />
-            <LineHelperMessage>{`Возможные значения ключей:
-            author - автор оригинального сообщения;
+          <>
+            <TextArea {...(fieldProps as any)} resize="auto" />
+            <LineHelperMessage>{`author - автор оригинального сообщения;
             initiator - инициатор создания задачи.`}</LineHelperMessage>
             {error && <ErrorMessage>{error}</ErrorMessage>}
-          </Fragment>
+          </>
         )}
       </Field>
     </>
@@ -271,7 +271,7 @@ const renderAdditionalFields = (state: RequiredFieldsState) => {
 
       <LoadableComponent isLoading={state.isLoading}>
         {state.data && state.data.length > 0
-          ? state.data
+          ? [...state.data]
               .sort((a, b) => {
                 const isRequired = a.required ? -1 : 1;
                 if (a.label < b.label) {
@@ -280,7 +280,7 @@ const renderAdditionalFields = (state: RequiredFieldsState) => {
                 if (a.label > b.label) {
                   return isRequired || 1;
                 }
-                return isRequired;
+                return a.label > b.label ? -1 : 1;
               })
               .map((f) => {
                 return <div className="field-group" key={f.id} dangerouslySetInnerHTML={{ __html: f.editHtml }} />;
@@ -339,7 +339,7 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
             tag,
             reporter,
             creationSuccessTemplate,
-            issueSummaryTemplate,
+            issueSummaryTemplate: issueSummaryTemplate ? issueSummaryTemplate.replace('\n', '') : undefined,
             projectKey: String(projectKey.value),
             issueTypeId: String(issueTypeId.value),
             labels: labels ? labels.map((l) => String(l.value)) : [],
