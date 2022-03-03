@@ -12,10 +12,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
@@ -60,21 +62,26 @@ public class Utils {
     return false;
   }
 
-  private void uploadAttachment(
-      InputStream attachment, FileResponse fileInfo, ApplicationUser user, Issue issue) {
-    TemporaryAttachmentId tmpAttachmentId =
-        attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
-    ConvertTemporaryAttachmentParams params =
-        ConvertTemporaryAttachmentParams.builder()
-            .setTemporaryAttachmentId(tmpAttachmentId)
-            .setAuthor(user)
-            .setIssue(issue)
-            .setFilename(fileInfo.getFilename())
-            .setContentType(fileInfo.getType())
-            .setCreatedTime(DateTime.now())
-            .setFileSize(fileInfo.getSize())
-            .build();
-    attachmentManager.convertTemporaryAttachment(params);
+  private boolean uploadAttachment(InputStream attachment, FileResponse fileInfo, ApplicationUser user, Issue issue) {
+    try {
+      TemporaryAttachmentId tmpAttachmentId =
+          attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
+      ConvertTemporaryAttachmentParams params =
+          ConvertTemporaryAttachmentParams.builder()
+              .setTemporaryAttachmentId(tmpAttachmentId)
+              .setAuthor(user)
+              .setIssue(issue)
+              .setFilename(fileInfo.getFilename())
+              .setContentType(fileInfo.getType())
+              .setCreatedTime(DateTime.now())
+              .setFileSize(fileInfo.getSize())
+              .build();
+      attachmentManager.convertTemporaryAttachment(params);
+      return true;
+    } catch (Exception e) {
+      log.error(e.getLocalizedMessage(), e);
+      return false;
+    }
   }
 
   private String replaceMention(CharSequence text, String userId, String userName) {
@@ -86,9 +93,13 @@ public class Utils {
     if (text == null) {
       return String.format(linkFormat, fileName);
     } else {
-      return Pattern.compile("https?://.*/get/" + fileId)
-          .matcher(text)
-          .replaceAll(String.format(linkFormat, fileName));
+      Matcher matcher = Pattern.compile("(https?://.*/get/" + fileId + ").*").matcher(text);
+      String myteamFileUrl = StringUtils.EMPTY;
+      while (matcher.find()) {
+        myteamFileUrl = matcher.group(1);
+      }
+      return String.format(
+          "%s\n%s", matcher.replaceAll(String.format(linkFormat, fileName)), myteamFileUrl);
     }
   }
 
@@ -110,11 +121,21 @@ public class Utils {
                   FileResponse fileInfo = response.getBody();
                   try (InputStream attachment =
                       ru.mail.jira.plugins.myteam.commons.Utils.loadUrlFile(fileInfo.getUrl())) {
-                    uploadAttachment(attachment, fileInfo, commentedUser, commentedIssue);
-                    outPutStrings.setLength(0);
-                    outPutStrings.append(
-                        buildAttachmentLink(
-                            file.getFileId(), fileInfo.getType(), fileInfo.getFilename(), null));
+                    boolean isUploaded =
+                        uploadAttachment(attachment, fileInfo, commentedUser, commentedIssue);
+                    if (isUploaded) {
+                      outPutStrings.setLength(0);
+                      outPutStrings.append(
+                          buildAttachmentLink(
+                              file.getFileId(), fileInfo.getType(), fileInfo.getFilename(), null));
+                      outPutStrings.append(event.getMessage());
+                    }
+                    if (fileInfo.getType().equals("image")) {
+                      outPutStrings.append(
+                          String.format(
+                              "https://files-n.internal.myteam.mail.ru/get/%s\n",
+                              file.getFileId()));
+                    }
                     if (file.getCaption() != null) {
                       outPutStrings.append(String.format("%s\n", file.getCaption()));
                     }
@@ -172,10 +193,15 @@ public class Utils {
                   FileResponse fileInfo = response.getBody();
                   try (InputStream attachment =
                       ru.mail.jira.plugins.myteam.commons.Utils.loadUrlFile(fileInfo.getUrl())) {
-                    uploadAttachment(attachment, fileInfo, issue.getReporterUser(), issue);
-                    outPutStrings.append(
-                        buildAttachmentLink(
-                            file.getFileId(), fileInfo.getType(), fileInfo.getFilename(), text));
+                    boolean isUploaded =
+                        uploadAttachment(attachment, fileInfo, issue.getReporterUser(), issue);
+                    if (isUploaded) {
+                      outPutStrings.append(
+                          buildAttachmentLink(
+                              file.getFileId(), fileInfo.getType(), fileInfo.getFilename(), text));
+                    } else {
+                      outPutStrings.append(text);
+                    }
                   }
                 } catch (UnirestException | IOException | MyteamServerErrorException e) {
                   log.error("Unable to add attachment to Issue {}", issue.getKey(), e);

@@ -215,9 +215,9 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
                           LocalDateTime.ofInstant(
                               Instant.ofEpochSecond(timestamp), TimeZone.getDefault().toZoneId())))
                   .append("):\n")
-                  .append("\n{quote}");
+                  .append("\n{quote} ");
               builder.append(text);
-              builder.append("{quote}\n\n");
+              builder.append(" {quote}\n\n");
             });
     return builder.toString();
   }
