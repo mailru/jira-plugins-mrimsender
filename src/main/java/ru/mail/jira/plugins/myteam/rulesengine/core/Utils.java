@@ -62,7 +62,8 @@ public class Utils {
     return false;
   }
 
-  private boolean uploadAttachment(InputStream attachment, FileResponse fileInfo, ApplicationUser user, Issue issue) {
+  private boolean uploadAttachment(
+      InputStream attachment, FileResponse fileInfo, ApplicationUser user, Issue issue) {
     try {
       TemporaryAttachmentId tmpAttachmentId =
           attachmentManager.createTemporaryAttachment(attachment, fileInfo.getSize());
@@ -175,14 +176,14 @@ public class Utils {
         part instanceof Reply
             ? ((Reply) part).getMessage().getParts()
             : ((Forward) part).getMessage().getParts();
+    String text =
+        part instanceof Reply
+            ? ((Reply) part).getMessage().getText()
+            : ((Forward) part).getMessage().getText();
     StringBuilder outPutStrings = new StringBuilder();
     if (messageParts != null) {
       messageParts.forEach(
           messagePart -> {
-            String text =
-                part instanceof Reply
-                    ? ((Reply) part).getMessage().getText()
-                    : ((Forward) part).getMessage().getText();
             CommentaryParts currentPartClass =
                 CommentaryParts.valueOf(messagePart.getClass().getSimpleName());
             switch (currentPartClass) {
@@ -224,6 +225,8 @@ public class Utils {
                 break;
             }
           });
+    } else {
+      outPutStrings.append(Objects.requireNonNullElse(text, ""));
     }
     return outPutStrings.toString();
   }
