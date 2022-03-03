@@ -833,10 +833,10 @@ public class MessageFormatter {
     }
     // codeBlockPattern
     inputText =
-            convertToMarkdown(
-                    inputText,
-                    Pattern.compile("\\{[Cc]ode:([a-z]+?)}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
-                    (input) -> "\n±`±`±`" + input.group(1) + " " + input.group(2) + "±`±`±`");
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\{[Cc]ode:([a-z]+?)}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
+            (input) -> "\n±`±`±`" + input.group(1) + " " + input.group(2) + "±`±`±`");
     inputText =
         convertToMarkdown(
             inputText,

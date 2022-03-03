@@ -255,11 +255,6 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
     String botMention = String.format("@\\[%s\\]", userChatService.getBotId());
     message = message.replaceAll(botMention, "").trim();
 
-    String message = event.getMessage();
-
-    String botMention = String.format("@\\[%s\\]", userChatService.getBotId());
-    message = message.replaceAll(botMention, "").trim();
-
     String comment =
         StringUtils.substringAfter(message, ISSUE_CREATION_BY_REPLY_PREFIX + tag).trim();
     if (comment.length() != 0) {

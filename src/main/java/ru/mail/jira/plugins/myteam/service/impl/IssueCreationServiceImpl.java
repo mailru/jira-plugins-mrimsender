@@ -343,45 +343,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     return className;
   }
 
-  private IssueService.CreateValidationResult validateIssueWithGivenFields(
-      Project project,
-      IssueType issueType,
-      @NotNull Map<Field, String> fields,
-      ApplicationUser user) {
-
-    // need here to because issueService use authenticationContext
-    ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
-    try {
-      jiraAuthenticationContext.setLoggedInUser(user);
-      IssueInputParameters issueInputParameters =
-          issueService.newIssueInputParameters(
-              fields.entrySet().stream()
-                  .collect(
-                      Collectors.toMap(
-                          (e) -> e.getKey().getId(),
-                          (e) -> {
-                            CreateIssueFieldValueHandler cfConfig =
-                                getFieldValueHandler(e.getKey());
-                            return cfConfig.getValueAsArray(
-                                e.getValue(),
-                                e.getKey(),
-                                project,
-                                issueType,
-                                localeManager.getLocaleFor(user));
-                          })));
-      issueInputParameters.setRetainExistingValuesWhenParameterNotProvided(true, true);
-
-      // manually setting current user as issue reporter and selected ProjectId and IssueTypeId
-      issueInputParameters.setProjectId(project.getId());
-      issueInputParameters.setIssueTypeId(issueType.getId());
-      issueInputParameters.setReporterId(user.getName());
-
-      return issueService.validateCreate(user, issueInputParameters);
-    } finally {
-      jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
-    }
-  }
-
   private boolean isCFInScopeOfProjectAndIssueType(
       CustomField customField, Long projectId, String issueTypeId) {
     return customField.getConfigurationSchemes().stream()
