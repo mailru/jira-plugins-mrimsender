@@ -115,7 +115,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
                 if (field != null) {
                   if (fieldValues.containsKey(field)) {
                     fieldValues.put(
-                        field, String.format("%s,%s", fieldValues.get(field), f.getValue()));
+                        field, String.format("%s, %s", fieldValues.get(field), f.getValue()));
                   } else {
                     fieldValues.put(field, f.getValue());
                   }
@@ -166,7 +166,6 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
           getCreationSuccessMessage(settings.getCreationSuccessTemplate(), issue));
     } catch (Exception e) {
       log.error(e.getLocalizedMessage(), e);
-      log.error(e.getClass().getName());
       SentryClient.capture(e);
       userChatService.sendMessageText(
           event.getUserId(),
