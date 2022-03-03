@@ -44,6 +44,7 @@ public class IssueCreationSettingsRepository
           entity.setEnabled(dto.getEnabled());
           entity.setReporter(dto.getReporter());
           entity.setCreationSuccessTemplate(dto.getCreationSuccessTemplate());
+          entity.setIssueSummaryTemplate(dto.getIssueSummaryTemplate());
           entity.setLabels(
               (dto.getLabels() == null || dto.getLabels().size() == 0)
                   ? null

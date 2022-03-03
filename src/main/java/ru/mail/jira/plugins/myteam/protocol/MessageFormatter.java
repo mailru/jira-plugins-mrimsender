@@ -197,6 +197,12 @@ public class MessageFormatter {
     return result.toString();
   }
 
+  public static String getUserDisplayName(User user) {
+    return String.format(
+            "%s %s", user.getFirstName(), user.getLastName() != null ? user.getLastName() : "")
+        .trim();
+  }
+
   public String getMyteamLink(String email) {
     return pluginData.getProfileLink() + email;
   }

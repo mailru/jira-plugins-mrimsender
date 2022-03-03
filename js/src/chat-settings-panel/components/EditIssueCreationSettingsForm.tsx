@@ -32,14 +32,10 @@ type RequiredFieldsState = {
 
 type MainState = { projectKey?: string; issueTypeId?: string };
 
-type FormState = {
-  enabled: boolean;
+type FormState = Omit<EditableSettings, 'labels' | 'issueTypeId' | 'projectKey'> & {
   issueTypeId: OptionType;
   projectKey: OptionType;
-  tag: string;
-  creationSuccessTemplate: string;
   labels: ReadonlyArray<OptionType>;
-  reporter: 'INITIATOR' | 'MESSAGE_AUTHOR';
 };
 
 const FORM_ID = 'issue-create-chat-settings';
@@ -239,20 +235,25 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
       <Field
         label="Шаблон сообщения о созданной задаче"
         name="creationSuccessTemplate"
-        // defaultValue={settings.creationSuccessTemplate}
         isRequired
         validate={validateNotNull}>
         {({ fieldProps, error }) => (
           <Fragment>
-            <TextArea
-              defaultValue={settings.creationSuccessTemplate}
-              placeholder="Шаблон сообщения о созданной задаче"
-              {...(fieldProps as any)}
-              resize="auto"
-            />
+            <TextArea defaultValue={settings.creationSuccessTemplate} {...(fieldProps as any)} resize="auto" />
             <LineHelperMessage>{`Текст шаблона может содержать ключи для автоподстановки, где {{key}} будет заменен на соответствующее значение. Возможные значения:
             issueKey - ключ задачи со ссылкой;
             issueLink - полная ссылка на задачу.`}</LineHelperMessage>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+          </Fragment>
+        )}
+      </Field>
+      <Field label="Шаблон темы созданной задачи" name="issueSummaryTemplate" isRequired validate={validateNotNull}>
+        {({ fieldProps, error }) => (
+          <Fragment>
+            <TextArea defaultValue={settings.issueSummaryTemplate} {...(fieldProps as any)} resize="auto" />
+            <LineHelperMessage>{`Текст шаблона может содержать ключи для автоподстановки, где {{key}} будет заменен на соответствующее значение. Возможные значения:
+            author - автор оригинального сообщения;
+            initiator - инициатор создания задачи.`}</LineHelperMessage>
             {error && <ErrorMessage>{error}</ErrorMessage>}
           </Fragment>
         )}
@@ -321,16 +322,26 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
   return (
     <Container>
       <Form
-        onSubmit={({ enabled, issueTypeId, projectKey, tag, labels, reporter, creationSuccessTemplate }: FormState) => {
+        onSubmit={({
+          enabled,
+          issueTypeId,
+          projectKey,
+          tag,
+          labels,
+          reporter,
+          creationSuccessTemplate,
+          issueSummaryTemplate,
+        }: FormState) => {
           onSave({
             enabled,
             tag,
             reporter,
+            creationSuccessTemplate,
+            issueSummaryTemplate,
             projectKey: String(projectKey.value),
             issueTypeId: String(issueTypeId.value),
             labels: labels ? labels.map((l) => String(l.value)) : [],
             additionalFields: getFormValues(),
-            creationSuccessTemplate: creationSuccessTemplate,
           });
         }}>
         {({ formProps }) => (

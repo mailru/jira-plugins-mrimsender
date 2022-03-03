@@ -1,8 +1,7 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.service;
 
-import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
-import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
+import static ru.mail.jira.plugins.myteam.commons.Const.*;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.Issue;
@@ -91,23 +90,22 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
 
       User firstMessageReporter = reporters.get(0);
 
-      ApplicationUser creator = userChatService.getJiraUserFromUserChatId(event.getUserId());
+      ApplicationUser initiator = userChatService.getJiraUserFromUserChatId(event.getUserId());
 
-      if (creator == null || firstMessageReporter == null) {
+      if (initiator == null || firstMessageReporter == null) {
         return;
       }
 
       HashMap<Field, String> fieldValues = new HashMap<>();
 
-      String firstReporterDisplayName =
-          String.format(
-              "%s %s",
-              firstMessageReporter.getFirstName(),
-              firstMessageReporter.getLastName() != null ? firstMessageReporter.getLastName() : "");
-
       fieldValues.put(
           issueCreationService.getField(IssueFieldConstants.SUMMARY),
-          getIssueSummary(event, firstReporterDisplayName, tag));
+          getIssueSummary(
+              event,
+              settings.getIssueSummaryTemplate(),
+              firstMessageReporter,
+              event.getFrom(),
+              tag));
 
       settings
           .getAdditionalFields()
@@ -139,7 +137,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
         reporterJiraUser =
             userChatService.getJiraUserFromUserChatId(firstMessageReporter.getUserId());
       } catch (UserNotFoundException e) {
-        reporterJiraUser = creator;
+        reporterJiraUser = initiator;
       }
 
       Issue issue =
@@ -147,7 +145,9 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
               settings.getProjectKey(),
               settings.getIssueTypeId(),
               fieldValues,
-              settings.getReporter() == IssueReporter.MESSAGE_AUTHOR ? reporterJiraUser : creator);
+              settings.getReporter() == IssueReporter.MESSAGE_AUTHOR
+                  ? reporterJiraUser
+                  : initiator);
 
       reporters.stream() // add watchers
           .map(
@@ -227,7 +227,12 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
     return builder.toString();
   }
 
-  private String getIssueSummary(ChatMessageEvent event, String userName, String tag) {
+  private String getIssueSummary(
+      ChatMessageEvent event,
+      String template,
+      User firstMessageReporter,
+      User initiator,
+      String tag) {
 
     String message = event.getMessage();
 
@@ -239,6 +244,21 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
     if (comment.length() != 0) {
       return comment;
     }
-    return String.format("Обращение от %s", userName);
+
+    String result = template;
+    if (result == null) {
+      result = DEFAULT_ISSUE_SUMMARY_TEMPLATE;
+    }
+
+    Map<String, String> keyMap = new HashMap<>();
+
+    keyMap.put("author", MessageFormatter.getUserDisplayName(firstMessageReporter));
+    keyMap.put("initiator", MessageFormatter.getUserDisplayName(initiator));
+
+    for (Map.Entry<String, String> entry : keyMap.entrySet()) {
+      result = result.replaceAll(String.format("\\{\\{%s\\}\\}", entry.getKey()), entry.getValue());
+    }
+
+    return result;
   }
 }

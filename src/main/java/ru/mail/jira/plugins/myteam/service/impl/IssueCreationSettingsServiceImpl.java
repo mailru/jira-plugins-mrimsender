@@ -2,6 +2,7 @@
 package ru.mail.jira.plugins.myteam.service.impl;
 
 import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
+import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_SUMMARY_TEMPLATE;
 
 import com.atlassian.cache.Cache;
 import com.atlassian.cache.CacheManager;
@@ -77,6 +78,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
             .enabled(false)
             .tag("task")
             .creationSuccessTemplate(DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE)
+            .issueSummaryTemplate(DEFAULT_ISSUE_SUMMARY_TEMPLATE)
             .build();
 
     issueCreationSettingsRepository.create(settings);
