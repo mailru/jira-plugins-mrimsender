@@ -279,10 +279,23 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               response.getStatus(),
               String.format(
                   "Caused exception due sending message\n\nchatId: %s\nerror: %s\n%s message\n\n",
-                  chatId, response.getBody().getDescription(), text));
+                  chatId,
+                  response.getBody() != null
+                      ? response.getBody().getDescription()
+                      : response
+                          .getParsingError()
+                          .map(UnirestParsingException::getOriginalBody)
+                          .orElse(""),
+                  text),
+              response.getParsingError().orElse(null));
       log.error(
           "Error: {} while sending the message:\n{}",
-          response.getBody().getDescription(),
+          response.getBody() != null
+              ? response.getBody().getDescription()
+              : response
+                  .getParsingError()
+                  .map(UnirestParsingException::getOriginalBody)
+                  .orElse(null),
           text,
           newException);
       throw newException;

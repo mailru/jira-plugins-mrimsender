@@ -11,6 +11,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
@@ -42,12 +43,27 @@ public class Utils {
     this.attachmentManager = attachmentManager;
   }
 
+  public static boolean isArrayLikeField(Field field) {
+    switch (field.getId()) {
+      case IssueFieldConstants.FIX_FOR_VERSIONS:
+      case IssueFieldConstants.COMPONENTS:
+      case IssueFieldConstants.AFFECTED_VERSIONS:
+      case IssueFieldConstants.ISSUE_LINKS:
+      case IssueFieldConstants.LABELS:
+      case IssueFieldConstants.VOTES:
+        // never shown on issue creation screen
+      case IssueFieldConstants.WATCHES:
+        return true;
+    }
+    return false;
+  }
+
   public String convertToJiraCommentStyle(
       ChatMessageEvent event, ApplicationUser commentedUser, Issue commentedIssue) {
     List<Part> parts = event.getMessageParts();
-    if (parts == null || parts.size() == 0) return event.getMessage();
-    else {
-      StringBuilder outPutStrings = new StringBuilder(event.getMessage());
+    StringBuilder outPutStrings =
+        new StringBuilder(Objects.requireNonNullElse(event.getMessage(), ""));
+    if (parts != null) {
       parts.forEach(
           part -> {
             CommentaryParts currentPartClass =
@@ -109,22 +125,8 @@ public class Utils {
                 break;
             }
           });
-      return outPutStrings.toString();
     }
-  }
 
-  public static boolean isArrayLikeField(Field field) {
-    switch (field.getId()) {
-      case IssueFieldConstants.FIX_FOR_VERSIONS:
-      case IssueFieldConstants.COMPONENTS:
-      case IssueFieldConstants.AFFECTED_VERSIONS:
-      case IssueFieldConstants.ISSUE_LINKS:
-      case IssueFieldConstants.LABELS:
-      case IssueFieldConstants.VOTES:
-        // never shown on issue creation screen
-      case IssueFieldConstants.WATCHES:
-        return true;
-    }
-    return false;
+    return ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis(outPutStrings.toString());
   }
 }

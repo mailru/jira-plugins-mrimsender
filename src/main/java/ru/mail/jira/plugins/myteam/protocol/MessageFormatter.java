@@ -481,7 +481,8 @@ public class MessageFormatter {
     sb.append("\n").append(shieldText(issue.getSummary()));
 
     if (!StringUtils.isBlank(mentionIssueEvent.getMentionText()))
-      sb.append("\n\n").append(shieldText(mentionIssueEvent.getMentionText()));
+      sb.append("\n\n")
+          .append(makeMyteamMarkdownFromJira(mentionIssueEvent.getMentionText(), true));
 
     return sb.toString();
   }
@@ -832,15 +833,15 @@ public class MessageFormatter {
     }
     // codeBlockPattern
     inputText =
-        convertToMarkdown(
-            inputText,
-            Pattern.compile("\\{[Cc]ode}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
-            (input) -> "±`±`±`" + input.group(1) + "±`±`±`");
+            convertToMarkdown(
+                    inputText,
+                    Pattern.compile("\\{[Cc]ode:([a-z]+?)}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
+                    (input) -> "\n±`±`±`" + input.group(1) + " " + input.group(2) + "±`±`±`");
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("\\{[Cc]ode:([a-z]+?)}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
-            (input) -> "±`±`±`" + input.group(1) + " " + input.group(2) + "±`±`±`");
+            Pattern.compile("\\{[Cc]ode}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE),
+            (input) -> "\n±`±`±`" + input.group(1) + "±`±`±`");
     // inlineCodePattern
     inputText =
         convertToMarkdown(
@@ -856,7 +857,7 @@ public class MessageFormatter {
               ApplicationUser mentionUser = userManager.getUserByName(input.group(1));
               if (mentionUser != null) {
                 if (useMentionFormat) {
-                  return "±@±[" + shieldText(mentionUser.getEmailAddress()) + "±]";
+                  return "±@\\±[" + shieldText(mentionUser.getEmailAddress()) + "\\±]";
                 }
                 return "±["
                     + shieldText(mentionUser.getDisplayName())
@@ -893,7 +894,7 @@ public class MessageFormatter {
     inputText =
         convertToMarkdown(
             inputText,
-            Pattern.compile("\\[([^|?\n]+)\\|(.+?)]"),
+            Pattern.compile("\\[([^~|?\n]+)\\|(.+?)]"),
             (input) -> "±[" + input.group(1) + "±]±(" + input.group(2) + "±)");
     // Italic
     inputText =

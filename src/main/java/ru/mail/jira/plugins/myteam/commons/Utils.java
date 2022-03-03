@@ -143,4 +143,12 @@ public class Utils {
     collection.forEach(obj -> sj.add(obj.toString()));
     return sj.toString();
   }
+
+  public static String removeAllEmojis(String str) {
+    if (str == null) {
+      return null;
+    } else {
+      return str.replaceAll("[^\\p{L}\\p{M}\\p{N}\\p{P}\\p{Z}\\p{Cf}\\p{Cs}\\s\\|$^+=~±><]", "");
+    }
+  }
 }

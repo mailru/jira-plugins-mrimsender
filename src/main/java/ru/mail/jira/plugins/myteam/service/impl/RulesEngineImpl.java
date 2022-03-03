@@ -178,7 +178,7 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     facts.add(new Fact<>("event", event));
     facts.add(new Fact<>("state", state == null ? new EmptyState() : state));
     facts.add(new Fact<>("prevState", prevState == null ? new EmptyState() : prevState));
-    facts.add(new Fact<>("isGroup", event.getChatType().equals(ChatType.GROUP)));
+    facts.add(new Fact<>("isGroup", event.getChatType() == ChatType.GROUP));
     return facts;
   }
 }
