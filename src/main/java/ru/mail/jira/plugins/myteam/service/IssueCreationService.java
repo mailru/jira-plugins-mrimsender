@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.service;
 
 import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
@@ -51,19 +52,21 @@ public interface IssueCreationService {
   LinkedHashMap<Field, String> getRequiredIssueFields(
       Project project, ApplicationUser user, String issueTypeId);
 
-  Issue createIssue(
+  MutableIssue createIssue(
       Project project,
       IssueType issueType,
       @NotNull Map<Field, String> fields,
       ApplicationUser user)
       throws IssueCreationValidationException;
 
-  Issue createIssue(
+  MutableIssue createIssue(
       String projectKey,
       String issueTypeId,
       @NotNull Map<Field, String> fields,
       ApplicationUser user)
       throws IssueCreationValidationException, PermissionException, ProjectBannedException;
+
+  Issue updateIssueDescription(String description, MutableIssue issue, ApplicationUser user);
 
   boolean isFieldSupported(String fieldId);
 

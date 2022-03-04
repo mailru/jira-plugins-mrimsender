@@ -6,6 +6,7 @@ import static ru.mail.jira.plugins.myteam.commons.Const.*;
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
+import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
@@ -49,17 +51,20 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final IssueCreationService issueCreationService;
   private final IssueService issueService;
+  private final Utils utils;
 
   public CreateIssueByReplyRule(
       UserChatService userChatService,
       RulesEngine rulesEngine,
       IssueCreationSettingsService issueCreationSettingsService,
       IssueCreationService issueCreationService,
-      IssueService issueService) {
+      IssueService issueService,
+      Utils utils) {
     super(userChatService, rulesEngine);
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.issueCreationService = issueCreationService;
     this.issueService = issueService;
+    this.utils = utils;
   }
 
   @Condition
@@ -128,7 +133,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
 
       fieldValues.put(
           issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
-          getIssueDescription(event));
+          getIssueDescription(event, null));
 
       if (settings.getLabels() != null) {
         fieldValues.put(
@@ -144,7 +149,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
         reporterJiraUser = initiator;
       }
 
-      Issue issue =
+      MutableIssue issue =
           issueCreationService.createIssue(
               settings.getProjectKey(),
               settings.getIssueTypeId(),
@@ -152,6 +157,9 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
               settings.getReporter() == IssueReporter.MESSAGE_AUTHOR
                   ? reporterJiraUser
                   : initiator);
+
+      issueCreationService.updateIssueDescription(
+          getIssueDescription(event, issue), issue, reporterJiraUser);
 
       reporters.stream() // add watchers
           .map(
@@ -208,7 +216,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
         .collect(Collectors.toList());
   }
 
-  private String getIssueDescription(ChatMessageEvent event) {
+  private String getIssueDescription(ChatMessageEvent event, Issue issue) {
     StringBuilder builder = new StringBuilder();
 
     event.getMessageParts().stream()
@@ -228,6 +236,10 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
                 text = ((Forward) p).getPayload().getMessage().getText();
               }
 
+              if (issue != null) {
+                text = utils.convertToJiraDescriptionStyle(p, issue);
+              }
+
               builder.append(messageFormatter.formatMyteamUserLink(user));
               builder
                   .append("(")
@@ -236,9 +248,9 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
                           LocalDateTime.ofInstant(
                               Instant.ofEpochSecond(timestamp), TimeZone.getDefault().toZoneId())))
                   .append("):\n")
-                  .append("\n{quote}");
+                  .append("\n{quote} ");
               builder.append(text);
-              builder.append("{quote}\n\n");
+              builder.append(" {quote}\n\n");
             });
     return builder.toString();
   }
