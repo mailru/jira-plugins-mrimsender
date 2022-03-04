@@ -1,6 +1,7 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.myteam.dto.parts;
 
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -29,5 +30,6 @@ public class Reply extends Part<Reply.Data> {
     private long msgId;
     private String text;
     private long timestamp;
+    private List<Part> parts;
   }
 }
