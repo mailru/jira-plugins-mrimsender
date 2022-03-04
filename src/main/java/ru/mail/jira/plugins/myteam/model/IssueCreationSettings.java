@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.model;
 
 import net.java.ao.Entity;
 import net.java.ao.OneToMany;
+import net.java.ao.schema.StringLength;
 import net.java.ao.schema.Table;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.commons.IssueReporter;
@@ -43,8 +44,10 @@ public interface IssueCreationSettings extends Entity {
   void setReporter(IssueReporter issueReporter);
 
   @Nullable
+  @StringLength(value = StringLength.UNLIMITED)
   String getCreationSuccessTemplate();
 
+  @StringLength(value = StringLength.UNLIMITED)
   void setCreationSuccessTemplate(String template);
 
   @Nullable

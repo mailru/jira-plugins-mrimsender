@@ -57,21 +57,12 @@ const LineHelperMessage = styled.div`
   font-size: 0.8571428571428571em;
   font-style: inherit;
   line-height: 1.3333333333333333;
-  color: var(--ds-text-subtlest, var(--ds-text-subtlest, #6b778c));
   font-weight: 600;
   margin-top: 16px;
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
   display: flex;
-  margin-top: 4px;
-  -webkit-box-pack: baseline;
-  -webkit-justify-content: baseline;
-  -ms-flex-pack: baseline;
   justify-content: baseline;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Fira Sans', 'Droid Sans',
     'Helvetica Neue', sans-serif;
-  font-weight: normal;
   color: var(--ds-text-subtlest, #6b778c);
   white-space: pre-line;
 `;

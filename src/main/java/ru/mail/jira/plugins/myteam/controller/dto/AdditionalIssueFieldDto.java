@@ -12,6 +12,7 @@ import ru.mail.jira.plugins.myteam.model.AdditionalIssueField;
 @NoArgsConstructor
 public class AdditionalIssueFieldDto {
   @XmlElement private String field;
+
   @XmlElement private String value;
 
   public AdditionalIssueFieldDto(AdditionalIssueField additionalIssueField) {

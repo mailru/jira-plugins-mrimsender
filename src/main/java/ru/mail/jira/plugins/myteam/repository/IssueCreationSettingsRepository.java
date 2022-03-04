@@ -3,9 +3,6 @@ package ru.mail.jira.plugins.myteam.repository;
 
 import com.atlassian.activeobjects.external.ActiveObjects;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,24 +66,14 @@ public class IssueCreationSettingsRepository
                     f -> {
                       if (entityAdditionalFields.containsKey(f.getField())) {
                         AdditionalIssueField field = entityAdditionalFields.get(f.getField());
-                        try {
-                          field.setValue(
-                              URLDecoder.decode(f.getValue(), StandardCharsets.UTF_8.name()));
-                        } catch (UnsupportedEncodingException e) {
-                          field.setValue(f.getValue());
-                        }
+                        field.setValue(f.getValue());
                         field.save();
                         entityAdditionalFields.remove(f.getField());
                       } else {
                         AdditionalIssueField field = ao.create(AdditionalIssueField.class);
                         field.setIssueCreationSettings(entity);
                         field.setFieldId(f.getField());
-                        try {
-                          field.setValue(
-                              URLDecoder.decode(f.getValue(), StandardCharsets.UTF_8.name()));
-                        } catch (UnsupportedEncodingException e) {
-                          field.setValue(f.getValue());
-                        }
+                        field.setValue(f.getValue());
                         field.save();
                       }
                     });
