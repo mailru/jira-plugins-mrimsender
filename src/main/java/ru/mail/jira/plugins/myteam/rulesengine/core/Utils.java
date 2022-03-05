@@ -11,7 +11,6 @@ import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import kong.unirest.HttpResponse;
@@ -23,12 +22,7 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.CommentaryParts;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.File;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 
@@ -225,7 +219,7 @@ public class Utils {
             }
           });
     } else {
-      outPutStrings.append(Objects.requireNonNullElse(text, ""));
+      outPutStrings.append(text);
     }
     return outPutStrings.toString();
   }

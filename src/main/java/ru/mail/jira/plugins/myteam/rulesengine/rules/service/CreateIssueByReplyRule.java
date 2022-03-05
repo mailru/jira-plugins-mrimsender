@@ -34,14 +34,14 @@ import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.GroupAdminRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.ChatAdminRule;
 import ru.mail.jira.plugins.myteam.service.*;
 
 @Slf4j
 @Rule(
     name = "Create issue by reply",
     description = "Create issue by reply if feature has been setup")
-public class CreateIssueByReplyRule extends GroupAdminRule {
+public class CreateIssueByReplyRule extends ChatAdminRule {
 
   static final RuleType NAME = CommandRuleType.CreateIssueByReply;
 

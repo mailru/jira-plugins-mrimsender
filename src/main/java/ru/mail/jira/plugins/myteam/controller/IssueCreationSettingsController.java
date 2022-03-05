@@ -17,7 +17,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
@@ -50,8 +49,7 @@ public class IssueCreationSettingsController {
 
   @GET
   @Path("/settings/all")
-  public List<IssueCreationSettingsDto> getAllChatsSettings()
-      throws PermissionException, ProjectBannedException {
+  public List<IssueCreationSettingsDto> getAllChatsSettings() throws PermissionException {
     checkPermissions();
     return issueCreationSettingsService.getAllSettings();
   }

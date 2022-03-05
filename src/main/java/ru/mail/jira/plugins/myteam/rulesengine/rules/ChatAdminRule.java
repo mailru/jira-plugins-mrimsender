@@ -6,8 +6,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequi
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
-public class GroupAdminRule extends BaseRule {
-  public GroupAdminRule(UserChatService userChatService, RulesEngine rulesEngine) {
+public class ChatAdminRule extends BaseRule {
+  public ChatAdminRule(UserChatService userChatService, RulesEngine rulesEngine) {
     super(userChatService, rulesEngine);
   }
 

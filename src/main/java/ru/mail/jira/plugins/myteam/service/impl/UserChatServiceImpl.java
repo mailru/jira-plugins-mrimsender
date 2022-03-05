@@ -5,8 +5,6 @@ import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.permission.GlobalPermissionKey;
-import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
@@ -17,13 +15,12 @@ import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.mail.jira.plugins.myteam.commons.PermissionHelper;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.myteam.dto.response.AdminsResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.repository.MyteamChatRepository;
@@ -34,13 +31,12 @@ import ru.mail.jira.plugins.myteam.service.StateManager;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Service
-@Slf4j
 public class UserChatServiceImpl implements UserChatService {
 
   private final UserData userData;
   private final LocaleManager localeManager;
-  private final GlobalPermissionManager globalPermissionManager;
   private final MyteamApiClient myteamClient;
+  private final PermissionHelper permissionHelper;
   private final I18nResolver i18nResolver;
   private final StateManager stateManager;
   private final IssueService issueService;
@@ -52,16 +48,16 @@ public class UserChatServiceImpl implements UserChatService {
   public UserChatServiceImpl(
       MyteamApiClient myteamApiClient,
       UserData userData,
+      PermissionHelper permissionHelper,
       MessageFormatter messageFormatter,
       StateManager stateManager,
       IssueService issueService,
       MyteamChatRepository myteamChatRepository,
-      @ComponentImport GlobalPermissionManager globalPermissionManager,
       @ComponentImport LocaleManager localeManager,
       @ComponentImport I18nResolver i18nResolver) {
     this.myteamClient = myteamApiClient;
     this.userData = userData;
-    this.globalPermissionManager = globalPermissionManager;
+    this.permissionHelper = permissionHelper;
     this.localeManager = localeManager;
     this.i18nResolver = i18nResolver;
     this.messageFormatter = messageFormatter;
@@ -79,20 +75,7 @@ public class UserChatServiceImpl implements UserChatService {
 
   @Override
   public boolean isChatAdmin(String chatId, String userId) {
-    if (userId == null) {
-      return false;
-    }
-    if (isJiraAdmin(userData.getUserByMrimLogin(chatId))) {
-      return true;
-    }
-    try {
-      AdminsResponse response = myteamClient.getAdmins(chatId).getBody();
-      return response.getAdmins() != null
-          && response.getAdmins().stream().anyMatch(admin -> userId.equals(admin.getUserId()));
-    } catch (MyteamServerErrorException e) {
-      log.error("Unable to get chat admins", e);
-      return false;
-    }
+    return permissionHelper.isChatAdminOrJiraAdmin(chatId, userId);
   }
 
   @Override
@@ -192,9 +175,5 @@ public class UserChatServiceImpl implements UserChatService {
   @Override
   public String getBotId() {
     return myteamClient.getBotId();
-  }
-
-  private boolean isJiraAdmin(ApplicationUser user) {
-    return globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, user);
   }
 }

@@ -22,7 +22,8 @@ const config = {
   context: FRONTEND_SRC_DIR, // directory where to look for all entries
   entry: {
     'create-chat-panel': [path.join(FRONTEND_SRC_DIR, 'create-chat-panel', 'index.tsx')], // build entry point
-    'chat-settings-panel': [path.join(FRONTEND_SRC_DIR, 'chat-settings-panel', 'index.tsx')], // build entry point
+    'chat-settings-panel': [path.join(FRONTEND_SRC_DIR, 'chat-settings-panel', 'index.tsx')],
+    'project-chat-settings-panel': [path.join(FRONTEND_SRC_DIR, 'project-chat-settings-panel', 'index.tsx')],
   },
   module: {
     rules: [
@@ -50,6 +51,7 @@ const config = {
       providedDependencies: WRM_DEPENDENCIES_CONFIG, // internal jira plugins web-resource dependencies
       contextMap: {
         'chat-settings-panel': [PLUGIN_KEY + '.' + 'chat.settings.panel'], // Specify in which web-resource context to include entrypoint resources
+        'project-chat-settings-panel': [PLUGIN_KEY + '.' + 'project.chat.settings.panel'],
         'create-chat-panel': ['jira.browse.project', 'jira.navigator.advanced'],
       },
       verbose: false,
