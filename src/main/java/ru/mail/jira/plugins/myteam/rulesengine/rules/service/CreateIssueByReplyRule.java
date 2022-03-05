@@ -107,14 +107,14 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
 
       HashMap<Field, String> fieldValues = new HashMap<>();
 
-      fieldValues.put(
-          issueCreationService.getField(IssueFieldConstants.SUMMARY),
+      String summary =
           getIssueSummary(
               event,
               settings.getIssueSummaryTemplate(),
               firstMessageReporter,
               event.getFrom(),
-              tag));
+              tag);
+      fieldValues.put(issueCreationService.getField(IssueFieldConstants.SUMMARY), summary);
 
       settings
           .getAdditionalFields()
@@ -175,7 +175,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
 
       userChatService.sendMessageText(
           event.getChatId(),
-          getCreationSuccessMessage(settings.getCreationSuccessTemplate(), issue));
+          getCreationSuccessMessage(settings.getCreationSuccessTemplate(), issue, summary));
     } catch (Exception e) {
       log.error(e.getLocalizedMessage(), e);
       SentryClient.capture(e);
@@ -187,7 +187,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
     }
   }
 
-  private String getCreationSuccessMessage(String template, Issue issue) {
+  private String getCreationSuccessMessage(String template, Issue issue, String summary) {
     String result = template;
     if (result == null) {
       result = DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
@@ -197,6 +197,7 @@ public class CreateIssueByReplyRule extends GroupAdminRule {
 
     keyMap.put("issueKey", messageFormatter.createMarkdownIssueShortLink(issue.getKey()));
     keyMap.put("issueLink", messageFormatter.createIssueLink(issue.getKey()));
+    keyMap.put("summary", summary);
 
     for (Map.Entry<String, String> entry : keyMap.entrySet()) {
       result = result.replaceAll(String.format("\\{\\{%s\\}\\}", entry.getKey()), entry.getValue());

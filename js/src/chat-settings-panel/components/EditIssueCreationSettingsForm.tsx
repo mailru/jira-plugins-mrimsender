@@ -233,7 +233,8 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
           <>
             <TextArea {...(fieldProps as any)} resize="auto" />
             <LineHelperMessage>{`issueKey - ключ задачи со ссылкой;
-            issueLink - полная ссылка на задачу.`}</LineHelperMessage>
+            issueLink - полная ссылка на задачу;
+            summary - тема задачи.`}</LineHelperMessage>
             {error && <ErrorMessage>{error}</ErrorMessage>}
           </>
         )}
