@@ -1,7 +1,6 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import { AsyncCreatableSelect, OptionsType, OptionType } from '@atlaskit/select';
-import contextPath from 'wrm/context-path';
-import axios, { AxiosResponse } from 'axios';
+import { loadLabelsSugestions } from '../api/CommonApiClient';
 
 const createOption = (label: string) => ({
   label,
@@ -17,11 +16,8 @@ type Props = {
 
 const loadLabels = async (query: string): Promise<Array<OptionType>> => {
   return new Promise((resolve, reject) => {
-    axios
-      .get(`${contextPath()}/rest/api/1.0/labels/suggest`, {
-        params: { query },
-      })
-      .then((response: AxiosResponse<{ suggestions: ReadonlyArray<{ html: string; label: string }> }>) => {
+    loadLabelsSugestions(query)
+      .then((response) => {
         resolve(response.data.suggestions.map((s) => createOption(s.label)));
       })
       .catch(reject);

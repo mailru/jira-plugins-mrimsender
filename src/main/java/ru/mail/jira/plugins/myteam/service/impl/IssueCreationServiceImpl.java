@@ -48,6 +48,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationVa
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
+import ru.mail.jira.plugins.myteam.service.dto.FieldDto;
 
 @Service
 public class IssueCreationServiceImpl implements IssueCreationService, InitializingBean {
@@ -103,6 +104,10 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
 
     PriorityValueHandler priority = new PriorityValueHandler(i18nResolver, prioritySchemeManager);
     supportedIssueCreationCustomFields.put(priority.getClassName(), priority);
+
+    //    ComponentsValueHandler components =
+    //        new ComponentsValueHandler(projectComponentManager, i18nResolver);
+    //    supportedIssueCreationCustomFields.put(components.getClassName(), components);
   }
 
   @Override
@@ -290,8 +295,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       throws IssueCreationValidationException {
     JiraThreadLocalUtils.preCall();
     try {
-      fields.put(
-          fieldManager.getField(IssueFieldConstants.REPORTER), String.valueOf(reporter.getId()));
       IssueService.CreateValidationResult issueValidationResult =
           validateIssueWithGivenFields(project, issueType, fields, user);
 
@@ -312,13 +315,12 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       String projectKey,
       String issueTypeId,
       @NotNull Map<Field, String> fields,
-      ApplicationUser user,
-      ApplicationUser reporter)
+      ApplicationUser user)
       throws IssueCreationValidationException, PermissionException, ProjectBannedException {
     Project project = myteamIssueService.getProject(projectKey, user);
     IssueType issueType = myteamIssueService.getIssueType(issueTypeId);
 
-    return createIssue(project, issueType, fields, user, reporter);
+    return createIssue(project, issueType, fields, user);
   }
 
   @Override
@@ -332,6 +334,22 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   public boolean isFieldSupported(String fieldId) {
     CustomField field = fieldManager.getCustomField(fieldId);
     return field != null && !getFieldValueHandler(field).equals(defaultHandler);
+  }
+
+  @Override
+  public List<FieldDto> getRequiredFields(
+      String projectKey, String issueTypeId, ApplicationUser user)
+      throws PermissionException, ProjectBannedException {
+    Project project = myteamIssueService.getProject(projectKey, user);
+    IssueType issueType = myteamIssueService.getIssueType(issueTypeId);
+
+    LinkedHashMap<Field, String> fields =
+        getIssueCreationFieldsValues(
+            project, issueType, new HashSet<>(), new HashSet<>(), IssueFieldsFilter.REQUIRED);
+
+    return fields.keySet().stream()
+        .map(field -> new FieldDto(field.getName(), "", field.getName()))
+        .collect(Collectors.toList());
   }
 
   @Override

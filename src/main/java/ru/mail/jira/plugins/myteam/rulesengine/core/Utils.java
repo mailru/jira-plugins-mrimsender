@@ -107,8 +107,7 @@ public class Utils {
   public String convertToJiraCommentStyle(
       ChatMessageEvent event, ApplicationUser commentedUser, Issue commentedIssue) {
     List<Part> parts = event.getMessageParts();
-    StringBuilder outPutStrings =
-        new StringBuilder(Objects.requireNonNullElse(event.getMessage(), ""));
+    StringBuilder outPutStrings = new StringBuilder(event.getMessage());
     if (parts != null) {
       parts.forEach(
           part -> {

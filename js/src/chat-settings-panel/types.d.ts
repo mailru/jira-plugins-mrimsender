@@ -5,5 +5,21 @@ export type IssueCreationSettings = {
   projectKey: string;
   issueTypeId: string;
   tag: string;
+  creationSuccessTemplate: string;
+  issueSummaryTemplate: string;
   labels: Array<string>;
+  additionalFields: Array<FieldParam>;
+  reporter: 'INITIATOR' | 'MESSAGE_AUTHOR';
+};
+
+export type FieldHtml = {
+  id: string;
+  label: string;
+  editHtml: string;
+  required: boolean;
+};
+
+export type FieldParam = {
+  field: string;
+  value: string;
 };

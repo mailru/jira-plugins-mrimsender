@@ -50,7 +50,10 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
           defaultSettings={settings}
           onSave={(newSettings) => {
             updateChatIssueCreationSettings(settings.id, { ...settings, ...newSettings })
-              .then(() => setStatus(Status.Success, 3000))
+              .then(() => {
+                window.scrollTo({ top: 0 });
+                setStatus(Status.Success, 3000);
+              })
               .catch(() => setStatus(Status.Error, 3000));
           }}
         />

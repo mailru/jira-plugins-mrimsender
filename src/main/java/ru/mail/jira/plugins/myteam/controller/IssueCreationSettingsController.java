@@ -17,16 +17,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Controller
-@Path("/issueCreation/settings")
+@Path("/issueCreation")
 @Produces(MediaType.APPLICATION_JSON)
 public class IssueCreationSettingsController {
 
-  private final IssueCreationSettingsService issueCreationSettingsService;
   private final UserChatService userChatService;
+  private final IssueCreationSettingsService issueCreationSettingsService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final GlobalPermissionManager globalPermissionManager;
 
@@ -48,14 +49,15 @@ public class IssueCreationSettingsController {
   }
 
   @GET
-  @Path("/all")
-  public List<IssueCreationSettingsDto> getAllChatsSettings() throws PermissionException {
+  @Path("/settings/all")
+  public List<IssueCreationSettingsDto> getAllChatsSettings()
+      throws PermissionException, ProjectBannedException {
     checkPermissions();
     return issueCreationSettingsService.getAllSettings();
   }
 
   @GET
-  @Path("/chats/{id}")
+  @Path("/settings/chats/{id}")
   public IssueCreationSettingsDto getChatSettings(@PathParam("id") final String chatId)
       throws PermissionException {
     checkPermissions(chatId);
@@ -64,7 +66,7 @@ public class IssueCreationSettingsController {
 
   @PUT
   @RequiresXsrfCheck
-  @Path("/{id}")
+  @Path("/settings/{id}")
   @Consumes(MediaType.APPLICATION_JSON)
   public IssueCreationSettingsDto updateChatSettings(
       @PathParam("id") final int id, final IssueCreationSettingsDto settings)
@@ -74,16 +76,16 @@ public class IssueCreationSettingsController {
     return issueCreationSettingsService.updateSettings(id, settings);
   }
 
-  private void checkPermissions() throws PermissionException {
-    checkPermissions(null);
+  private ApplicationUser checkPermissions() throws PermissionException {
+    return checkPermissions(null);
   }
 
-  private void checkPermissions(@Nullable String chatId) throws PermissionException {
+  private ApplicationUser checkPermissions(@Nullable String chatId) throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
 
     if (isJiraAdmin(user)
         || (chatId != null && userChatService.isChatAdmin(chatId, user.getEmailAddress()))) {
-      return;
+      return user;
     }
     throw new PermissionException();
   }

@@ -13,6 +13,7 @@ import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 
@@ -105,7 +106,12 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
     Options options = getOptions((CustomField) field);
 
     return values.stream()
-        .map(v -> String.valueOf(getOption(options, v).getOptionId()))
+        .map(
+            v -> {
+              @Nullable Option opt = getOption(options, v.trim());
+              return opt == null ? null : String.valueOf(opt.getOptionId());
+            })
+        .filter(Objects::nonNull)
         .toArray(String[]::new);
   }
 
@@ -126,16 +132,14 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
     return options;
   }
 
+  @Nullable
   public Option getOption(Options options, String value) {
-    Option result = null;
-    Option opt;
-    for (Option object : options) {
-      opt = object;
-      if (opt.getValue().equals(value)) {
-        result = object;
-        break;
+
+    for (Option opt : options) {
+      if (opt.getValue().equals(value) || String.valueOf(opt.getOptionId()).equals(value)) {
+        return opt;
       }
     }
-    return result;
+    return null;
   }
 }

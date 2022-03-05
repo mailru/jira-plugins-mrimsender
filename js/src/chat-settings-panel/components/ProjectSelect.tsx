@@ -1,19 +1,12 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import contextPath from 'wrm/context-path';
 import { AsyncSelect, OptionType, SelectProps } from '@atlaskit/select';
-import axios from 'axios';
-
-type ProjectData = { name: string; key: string };
+import { loadProjects, ProjectData } from '../api/CommonApiClient';
 
 type Props = SelectProps<OptionType> & {
   className?: string;
   defaultProjectKey?: string;
   id: string;
   onChange: (value: OptionType | null) => void;
-};
-
-const loadProjectOptions = async () => {
-  return axios.get(`${contextPath()}/rest/api/2/project`);
 };
 
 const mapProjectsToOptions = (projects: ReadonlyArray<ProjectData>): Array<OptionType> => {
@@ -41,17 +34,22 @@ const ProjectSelect = ({ id, className, defaultProjectKey, onChange }: Props): R
   const [projects, setProjects] = useState<Array<OptionType>>([]);
   const [value, setValue] = useState<OptionType | null>();
 
+  const updateValue = (value: OptionType | null): void => {
+    setValue(value);
+    onChange(value);
+  };
+
   useLayoutEffect(() => {
-    loadProjectOptions().then(({ data }) => {
+    loadProjects().then(({ data }) => {
       const options = mapProjectsToOptions(data);
       setProjects(options);
 
       const selectedValues = options.filter((o) => o.value == defaultProjectKey);
 
       if (selectedValues.length) {
-        setValue(selectedValues[0]);
-        onChange(selectedValues[0]);
+        updateValue(selectedValues[0]);
       }
+
       setProjects(mapProjectsToOptions(data));
     });
   }, [defaultProjectKey]);
@@ -59,10 +57,7 @@ const ProjectSelect = ({ id, className, defaultProjectKey, onChange }: Props): R
   return (
     <AsyncSelect
       className={className}
-      onChange={(value) => {
-        setValue(value);
-        onChange(value);
-      }}
+      onChange={updateValue}
       inputId={id}
       value={value}
       cacheOptions

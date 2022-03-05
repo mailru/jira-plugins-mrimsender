@@ -2,8 +2,10 @@
 package ru.mail.jira.plugins.myteam.model;
 
 import net.java.ao.Entity;
+import net.java.ao.OneToMany;
 import net.java.ao.schema.Table;
 import org.jetbrains.annotations.Nullable;
+import ru.mail.jira.plugins.myteam.commons.IssueReporter;
 
 @Table("MYTEAM_ISSUE_CFG")
 public interface IssueCreationSettings extends Entity {
@@ -34,4 +36,22 @@ public interface IssueCreationSettings extends Entity {
   String getLabels();
 
   void setLabels(String labels);
+
+  @Nullable
+  IssueReporter getReporter();
+
+  void setReporter(IssueReporter issueReporter);
+
+  @Nullable
+  String getCreationSuccessTemplate();
+
+  void setCreationSuccessTemplate(String template);
+
+  @Nullable
+  String getIssueSummaryTemplate();
+
+  void setIssueSummaryTemplate(String template);
+
+  @OneToMany
+  AdditionalIssueField[] getAdditionalFields();
 }

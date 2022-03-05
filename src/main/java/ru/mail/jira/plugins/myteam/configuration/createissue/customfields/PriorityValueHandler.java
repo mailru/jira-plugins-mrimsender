@@ -82,7 +82,8 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
         getPriorities(project, issueType).stream()
             .filter(
                 priority ->
-                    priority.getName().equals(value)
+                    priority.getId().equals(value)
+                        || priority.getName().equals(value)
                         || priority.getNameTranslation(locale.getLanguage()).equals(value))
             .findFirst()
             .map(IssueConstant::getId)
