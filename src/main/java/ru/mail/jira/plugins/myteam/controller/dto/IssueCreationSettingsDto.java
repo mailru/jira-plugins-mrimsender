@@ -31,6 +31,7 @@ public class IssueCreationSettingsDto {
   @XmlElement private String creationSuccessTemplate;
   @XmlElement private String issueSummaryTemplate;
   @Nullable @XmlElement private String chatLink;
+  @Nullable @XmlElement private String issueTypeName;
   @XmlElement private Boolean canEdit;
   @XmlElement private IssueReporter reporter;
   @XmlElement private List<String> labels;

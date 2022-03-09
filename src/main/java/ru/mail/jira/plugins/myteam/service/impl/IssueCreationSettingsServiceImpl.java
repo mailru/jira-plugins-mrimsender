@@ -8,7 +8,9 @@ import com.atlassian.cache.Cache;
 import com.atlassian.cache.CacheManager;
 import com.atlassian.cache.CacheSettingsBuilder;
 import com.atlassian.jira.bc.project.ProjectService;
+import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.exception.NotFoundException;
+import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import java.util.ArrayList;
@@ -31,6 +33,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
       IssueCreationSettingsServiceImpl.class.getName() + ".issueSettingsCache";
 
   private final IssueCreationSettingsRepository issueCreationSettingsRepository;
+  private final IssueTypeManager issueTypeManager;
   private final ProjectService projectService;
   private final MessageFormatter messageFormatter;
 
@@ -38,10 +41,12 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   public IssueCreationSettingsServiceImpl(
       IssueCreationSettingsRepository issueCreationSettingsRepository,
-      @ComponentImport ProjectService projectService,
       MessageFormatter messageFormatter,
+      @ComponentImport IssueTypeManager issueTypeManager,
+      @ComponentImport ProjectService projectService,
       @ComponentImport CacheManager cacheManager) {
     this.issueCreationSettingsRepository = issueCreationSettingsRepository;
+    this.issueTypeManager = issueTypeManager;
     this.projectService = projectService;
     this.messageFormatter = messageFormatter;
 
@@ -81,9 +86,16 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     }
     return issueCreationSettingsRepository.getSettingsByProjectId(project.getKey()).stream()
         .map(
-            settings ->
-                new IssueCreationSettingsDto(
-                    settings, messageFormatter.getMyteamLink(settings.getChatId())))
+            settings -> {
+              IssueCreationSettingsDto settingsDto =
+                  new IssueCreationSettingsDto(
+                      settings, messageFormatter.getMyteamLink(settings.getChatId()));
+              IssueType issueType = issueTypeManager.getIssueType(settings.getIssueTypeId());
+              if (issueType != null) {
+                settingsDto.setIssueTypeName(issueType.getNameTranslation());
+              }
+              return settingsDto;
+            })
         .collect(Collectors.toList());
   }
 

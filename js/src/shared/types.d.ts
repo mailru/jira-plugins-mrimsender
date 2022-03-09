@@ -6,6 +6,7 @@ export type IssueCreationSettings = {
   enabled: boolean;
   projectKey: string;
   issueTypeId: string;
+  issueTypeName?: string;
   tag: string;
   creationSuccessTemplate: string;
   issueSummaryTemplate: string;

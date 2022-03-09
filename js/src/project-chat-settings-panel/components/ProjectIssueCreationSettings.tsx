@@ -92,7 +92,7 @@ const renderSettingsElement = (settings: IssueCreationSettings, onEdit: (setting
       </Field>
       <Field>
         <label>Тип задачи:</label>
-        <span>{settings.issueTypeId}</span>
+        <span>{settings.issueTypeName}</span>
       </Field>
       <SpaceBetweenRow>
         <Field>
