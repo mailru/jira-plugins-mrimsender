@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
+import ru.mail.jira.plugins.myteam.model.IssueCreationSettings;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.repository.IssueCreationSettingsRepository;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
@@ -133,5 +134,12 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
         .get(chatId)
         .filter(settingsDto -> tag.equals(settingsDto.getTag()))
         .isPresent(); // NotNull
+  }
+
+  @Override
+  public IssueCreationSettingsDto getSettingsById(int id) {
+    @NotNull IssueCreationSettings settings = issueCreationSettingsRepository.get(id);
+    return new IssueCreationSettingsDto(
+        settings, messageFormatter.getMyteamLink(settings.getChatId()));
   }
 }

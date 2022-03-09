@@ -4,7 +4,7 @@ import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import { useTimeoutState } from '../../shared/hooks';
 import { loadChatIssueCreationSettings, updateChatIssueCreationSettings } from '../../shared/api/SettingsApiClient';
 import { IssueCreationSettings } from '../../shared/types';
-import EditIssueCreationSettingsForm from './EditIssueCreationSettingsForm';
+import EditIssueCreationSettingsForm from '../../shared/components/EditIssueCreationSettingsForm';
 
 type Props = {
   chatId: string | null;

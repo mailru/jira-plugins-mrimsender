@@ -58,10 +58,11 @@ export const ChatPanel = observer((props: CreateChatPanelProps) => {
         </LoadingButton>
       </StyledCreateChatButtonContainer>
       <ModalTransition>
-        {store.isCreateChatDialogOpen && store.dialogData && (
+        {store.dialogData && (
           <CreateChatDialog
+            isOpen={Boolean(store.isCreateChatDialogOpen)}
             chatCreationData={store.dialogData}
-            closeDialog={store.closeCreateChatDialog}
+            onClose={store.closeCreateChatDialog}
             createChat={store.createChat}
             loadUsers={store.loadingService.loadUsers}
           />

@@ -1,18 +1,18 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-import { FieldHtml, FieldParam, IssueCreationSettings } from '../../shared/types';
+import { FieldHtml, FieldParam, IssueCreationSettings, LoadableDataState } from '../types';
 import Textfield from '@atlaskit/textfield';
 import { Checkbox } from '@atlaskit/checkbox';
 import Form, { CheckboxField, ErrorMessage, Field, FormFooter, HelperMessage } from '@atlaskit/form';
-import Button from '@atlaskit/button';
-import LabelsSelect from './LabelsSelect';
-import ProjectSelect from './ProjectSelect';
-import IssueTypeSelect from './IssueTypeSelect';
+import Button, { ButtonGroup } from '@atlaskit/button';
+import LabelsSelect from '../../chat-settings-panel/components/LabelsSelect';
+import ProjectSelect from '../../chat-settings-panel/components/ProjectSelect';
+import IssueTypeSelect from '../../chat-settings-panel/components/IssueTypeSelect';
 import styled from '@emotion/styled';
 import { ValueType, OptionType, OptionsType } from '@atlaskit/select';
 import Events from 'jira/util/events';
 import Types from 'jira/util/events/types';
 import Reasons from 'jira/util/events/reasons';
-import { loadIssueForm } from '../../shared/api/CommonApiClient';
+import { loadIssueForm } from '../api/CommonApiClient';
 import LoadableComponent from './LoadableComponent';
 import Select from '@atlaskit/select';
 import TextArea from '@atlaskit/textarea';
@@ -22,12 +22,7 @@ type EditableSettings = Partial<Omit<IssueCreationSettings, 'id' | 'chatId'>>;
 type Props = {
   defaultSettings: EditableSettings;
   onSave: (settings: EditableSettings) => void;
-};
-
-type RequiredFieldsState = {
-  isLoading: boolean;
-  data?: Array<FieldHtml>;
-  error?: string;
+  onCancel?: () => void;
 };
 
 type MainState = { projectKey?: string; issueTypeId?: string };
@@ -256,7 +251,7 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
   );
 };
 
-const renderAdditionalFields = (state: RequiredFieldsState) => {
+const renderAdditionalFields = (state: LoadableDataState<Array<FieldHtml>>) => {
   return (
     <>
       {(state.data && state.data.length > 0) || state.isLoading ? <h3>Дополнительные поля</h3> : null}
@@ -283,13 +278,13 @@ const renderAdditionalFields = (state: RequiredFieldsState) => {
   );
 };
 
-const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): ReactElement => {
+const EditIssueCreationSettingsForm = ({ defaultSettings, onSave, onCancel }: Props): ReactElement => {
   const [selectedMainData, setSelectedMainData] = useState<MainState>({
     projectKey: defaultSettings.projectKey,
     issueTypeId: defaultSettings.issueTypeId,
   });
 
-  const [requiredFieldsState, setRequiredFieldsState] = useState<RequiredFieldsState>({
+  const [requiredFieldsState, setRequiredFieldsState] = useState<LoadableDataState<Array<FieldHtml>>>({
     isLoading: false,
   });
 
@@ -348,9 +343,12 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave }: Props): Reac
               {renderAdditionalFields(requiredFieldsState)}
 
               <FormFooter>
-                <Button type="submit" appearance="primary">
-                  Сохранить
-                </Button>
+                <ButtonGroup>
+                  <Button type="submit" appearance="primary">
+                    Сохранить
+                  </Button>
+                  {onCancel ? <Button onClick={onCancel}>Отмена</Button> : null}
+                </ButtonGroup>
               </FormFooter>
             </div>
           </form>

@@ -1,6 +1,7 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.commons;
 
+import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.project.Project;
@@ -10,6 +11,7 @@ import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.RestFieldException;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
@@ -95,5 +97,27 @@ public final class PermissionHelper {
       throw new RestFieldException("Project doesn't exist");
     }
     return project;
+  }
+
+  public ApplicationUser checkChatAdminPermissions(ApplicationUser user)
+      throws PermissionException {
+    return checkChatAdminPermissions(user, null);
+  }
+
+  public ApplicationUser checkChatAdminPermissions(ApplicationUser user, @Nullable String chatId)
+      throws PermissionException {
+    if (isChatAdminOrJiraAdmin(chatId, user)) {
+      return user;
+    }
+    throw new PermissionException();
+  }
+
+  public ApplicationUser checkProjectPermissions(ApplicationUser user, Long projectId)
+      throws PermissionException {
+
+    if (isProjectAdmin(user, projectId)) {
+      return user;
+    }
+    throw new PermissionException();
   }
 }

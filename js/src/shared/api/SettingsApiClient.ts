@@ -6,6 +6,10 @@ export const loadChatIssueCreationSettings = async (chatId: string): Promise<Axi
   return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/settings/chats/${chatId}`);
 };
 
+export const loadChatIssueCreationSettingsById = async (id: number): Promise<AxiosResponse<IssueCreationSettings>> => {
+  return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/settings/${id}`);
+};
+
 export const updateChatIssueCreationSettings = async (
   id: number,
   settings: IssueCreationSettings,
@@ -16,5 +20,5 @@ export const updateChatIssueCreationSettings = async (
 export const loadProjectChatIssueCreationSettings = async (
   projectId: string,
 ): Promise<AxiosResponse<Array<IssueCreationSettings>>> => {
-  return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/projects/${projectId}/settings/chats`);
+  return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/projects/${projectId}/settings`);
 };

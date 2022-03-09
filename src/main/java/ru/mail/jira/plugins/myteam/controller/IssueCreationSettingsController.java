@@ -9,7 +9,6 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import java.util.List;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -45,23 +44,32 @@ public class IssueCreationSettingsController {
   @GET
   @Path("/settings/all")
   public List<IssueCreationSettingsDto> getAllChatsSettings() throws PermissionException {
-    checkChatPermissions();
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+    permissionHelper.checkChatAdminPermissions(user);
     return issueCreationSettingsService.getAllSettings();
   }
 
   @GET
-  @Path("/settings/chats/{id}")
-  public IssueCreationSettingsDto getChatSettings(@PathParam("id") final String chatId)
-      throws PermissionException {
-    checkChatPermissions(chatId);
-    return issueCreationSettingsService.getSettingsByChatId(chatId).orElse(null);
+  @Path("/settings/{id}")
+  public IssueCreationSettingsDto getChatSettingsById(@PathParam("id") final Integer id) {
+    return issueCreationSettingsService.getSettingsById(id);
   }
 
   @GET
-  @Path("/projects/{id}/settings/chats")
+  @Path("/settings/chats/{id}")
+  public IssueCreationSettingsDto getChatSettings(@PathParam("id") final String id)
+      throws PermissionException {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+    permissionHelper.checkChatAdminPermissions(user, id);
+    return issueCreationSettingsService.getSettingsByChatId(id).orElse(null);
+  }
+
+  @GET
+  @Path("/projects/{id}/settings")
   public List<IssueCreationSettingsDto> getProjectChatSettings(
       @PathParam("id") final Long projectId) throws PermissionException {
-    checkProjectPermissions(projectId);
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+    permissionHelper.checkProjectPermissions(user, projectId);
     return issueCreationSettingsService.getSettingsByProjectId(projectId);
   }
 
@@ -73,29 +81,8 @@ public class IssueCreationSettingsController {
       @PathParam("id") final int id, final IssueCreationSettingsDto settings)
       throws PermissionException {
     IssueCreationSettingsDto originalSettings = issueCreationSettingsService.getSettings(id);
-    checkChatPermissions(originalSettings.getChatId());
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+    permissionHelper.checkChatAdminPermissions(user, originalSettings.getChatId());
     return issueCreationSettingsService.updateSettings(id, settings);
-  }
-
-  private ApplicationUser checkChatPermissions() throws PermissionException {
-    return checkChatPermissions(null);
-  }
-
-  private ApplicationUser checkChatPermissions(@Nullable String chatId) throws PermissionException {
-    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-
-    if (permissionHelper.isChatAdminOrJiraAdmin(chatId, user)) {
-      return user;
-    }
-    throw new PermissionException();
-  }
-
-  private ApplicationUser checkProjectPermissions(Long projectId) throws PermissionException {
-    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-
-    if (permissionHelper.isProjectAdmin(user, projectId)) {
-      return user;
-    }
-    throw new PermissionException();
   }
 }

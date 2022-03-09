@@ -24,3 +24,9 @@ export type FieldParam = {
   field: string;
   value: string;
 };
+
+export type LoadableDataState<T> = {
+  isLoading: boolean;
+  data?: T;
+  error?: string;
+};

@@ -1,8 +1,10 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import { loadProjectChatIssueCreationSettings } from '../../shared/api/SettingsApiClient';
 import styled from 'styled-components';
-import { IssueCreationSettings } from 'src/shared/types';
+import { IssueCreationSettings } from '../../shared/types';
 import EditIcon from '@atlaskit/icon/glyph/edit';
+import EditIssueCreationSettingsDialog from '../../shared/components/EditIssueCreationSettingsDialog';
+import contextPath from 'wrm/context-path';
 
 const Container = styled.div`
   h2 {
@@ -22,22 +24,25 @@ const Settings = styled.div`
   }
 `;
 
-const ChatLink = styled.a`
-  margin-bottom: 10px;
+const TitleLink = styled.a`
   font-weight: 700;
   font-size: 16px;
+`;
+
+const ChatLink = styled.a`
+  font-weight: 700;
+  font-size: 14px;
 `;
 
 const ClickableIconContainer = styled.div`
   cursor: pointer;
   &:hover * {
-    color: #0747a6;
+    color: #005be6;
   }
 `;
 
-const TitleRow = styled.div`
+const SpaceBetweenRow = styled.div`
   justify-content: space-between;
-  padding-left: 10px;
   display: flex;
 `;
 
@@ -49,17 +54,20 @@ const Field = styled.div`
   }
 `;
 
-const renderSettingsElement = (settings: IssueCreationSettings) => {
+const renderSettingsElement = (settings: IssueCreationSettings, onEdit: (settingsId: number) => void) => {
   return (
     <Settings>
-      <TitleRow>
-        <ChatLink target="_blank" href={settings.chatLink} rel="noreferrer">
+      <SpaceBetweenRow>
+        <TitleLink
+          target="_blank"
+          href={`${contextPath()}/myteam/chats/settings?chatId=${settings.chatId}`}
+          rel="noreferrer">
           {settings.chatId}
-        </ChatLink>
-        <ClickableIconContainer>
+        </TitleLink>
+        <ClickableIconContainer onClick={() => onEdit(settings.id)}>
           <EditIcon size="medium" label="" />
         </ClickableIconContainer>
-      </TitleRow>
+      </SpaceBetweenRow>
 
       <Field>
         <label>Включен:</label>
@@ -77,15 +85,25 @@ const renderSettingsElement = (settings: IssueCreationSettings) => {
         <label>Тип задачи:</label>
         <span>{settings.issueTypeId}</span>
       </Field>
-      <Field>
-        <label>Метки:</label>
-        <span>{settings.labels.join(', ')}</span>
-      </Field>
+      <SpaceBetweenRow>
+        <Field>
+          <label>Метки:</label>
+          <span>{settings.labels ? settings.labels.join(', ') : ''}</span>
+        </Field>
+        <ChatLink target="_blank" href={settings.chatLink} rel="noreferrer">
+          Открыть в VK Teams
+        </ChatLink>
+      </SpaceBetweenRow>
     </Settings>
   );
 };
 
 const ProjectIssueCreationSettings = (): ReactElement => {
+  const [settings, setSettings] = useState<Array<IssueCreationSettings>>([]);
+  const [editSettingsDialogState, setEditSettingsDialogState] = useState<{ isOpen: boolean; settingsId?: number }>({
+    isOpen: false,
+  });
+
   useLayoutEffect(() => {
     const match = location.pathname.match(/myteam\/projects\/(\d+)\/settings\/chats/);
     if (match) {
@@ -93,13 +111,20 @@ const ProjectIssueCreationSettings = (): ReactElement => {
     }
   }, []);
 
-  const [settings, setSettings] = useState<Array<IssueCreationSettings>>([]);
-
   return (
     <Container>
       <h2>Настройки создания задач</h2>
 
-      {settings.map(renderSettingsElement)}
+      {settings.map((s) =>
+        renderSettingsElement(s, (settingsId) => setEditSettingsDialogState({ isOpen: true, settingsId })),
+      )}
+      {editSettingsDialogState && editSettingsDialogState.settingsId ? (
+        <EditIssueCreationSettingsDialog
+          settingsId={editSettingsDialogState.settingsId}
+          isOpen={editSettingsDialogState.isOpen}
+          onClose={() => setEditSettingsDialogState({ isOpen: false })}
+        />
+      ) : null}
     </Container>
   );
 };

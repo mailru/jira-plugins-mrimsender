@@ -26,4 +26,6 @@ public interface IssueCreationSettingsService {
   boolean hasRequiredFields(@Nullable IssueCreationSettingsDto settings);
 
   boolean hasChatSettings(String chatId, String tag);
+
+  IssueCreationSettingsDto getSettingsById(int id);
 }
