@@ -70,6 +70,10 @@ public class IssueCreationSettingsController {
       @PathParam("id") final Long projectId) throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     permissionHelper.checkProjectPermissions(user, projectId);
+    List<IssueCreationSettingsDto> settings =
+        issueCreationSettingsService.getSettingsByProjectId(projectId);
+    settings.forEach(
+        s -> s.setCanEdit(permissionHelper.isChatAdminOrJiraAdmin(s.getChatId(), user)));
     return issueCreationSettingsService.getSettingsByProjectId(projectId);
   }
 

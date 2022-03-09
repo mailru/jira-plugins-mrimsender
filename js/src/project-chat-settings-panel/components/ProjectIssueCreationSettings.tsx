@@ -27,6 +27,12 @@ const Settings = styled.div`
 const TitleLink = styled.a`
   font-weight: 700;
   font-size: 16px;
+
+  &.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    text-decoration: none;
+  }
 `;
 
 const ChatLink = styled.a`
@@ -59,14 +65,17 @@ const renderSettingsElement = (settings: IssueCreationSettings, onEdit: (setting
     <Settings>
       <SpaceBetweenRow>
         <TitleLink
+          className={settings.canEdit ? '' : 'disabled'}
           target="_blank"
-          href={`${contextPath()}/myteam/chats/settings?chatId=${settings.chatId}`}
+          href={settings.canEdit ? `${contextPath()}/myteam/chats/settings?chatId=${settings.chatId}` : undefined}
           rel="noreferrer">
           {settings.chatId}
         </TitleLink>
-        <ClickableIconContainer onClick={() => onEdit(settings.id)}>
-          <EditIcon size="medium" label="" />
-        </ClickableIconContainer>
+        {settings.canEdit ? (
+          <ClickableIconContainer onClick={() => onEdit(settings.id)}>
+            <EditIcon size="medium" label="" />
+          </ClickableIconContainer>
+        ) : null}
       </SpaceBetweenRow>
 
       <Field>

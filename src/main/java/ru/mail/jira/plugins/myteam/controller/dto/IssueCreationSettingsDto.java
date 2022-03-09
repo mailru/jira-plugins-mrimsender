@@ -31,6 +31,7 @@ public class IssueCreationSettingsDto {
   @XmlElement private String creationSuccessTemplate;
   @XmlElement private String issueSummaryTemplate;
   @Nullable @XmlElement private String chatLink;
+  @XmlElement private Boolean canEdit;
   @XmlElement private IssueReporter reporter;
   @XmlElement private List<String> labels;
   @XmlElement private List<AdditionalIssueFieldDto> additionalFields;
@@ -56,6 +57,7 @@ public class IssueCreationSettingsDto {
   }
 
   public IssueCreationSettingsDto(IssueCreationSettings entity, @Nullable String chatLink) {
+    this.canEdit = true;
     this.id = entity.getID();
     this.chatId = entity.getChatId();
     this.enabled = entity.isEnabled();
