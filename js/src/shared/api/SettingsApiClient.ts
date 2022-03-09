@@ -12,3 +12,9 @@ export const updateChatIssueCreationSettings = async (
 ): Promise<AxiosResponse<IssueCreationSettings>> => {
   return axios.put(`${contextPath()}/rest/myteam/1.0/issueCreation/settings/${id}`, settings);
 };
+
+export const loadProjectChatIssueCreationSettings = async (
+  projectId: string,
+): Promise<AxiosResponse<Array<IssueCreationSettings>>> => {
+  return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/projects/${projectId}/settings/chats`);
+};

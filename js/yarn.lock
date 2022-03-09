@@ -143,13 +143,23 @@
     react-uid "^2.2.0"
     tiny-invariant "^1.2.0"
 
-"@atlaskit/icon@^21.10.0", "@atlaskit/icon@^21.10.2":
+"@atlaskit/icon@^21.10.0":
   version "21.10.3"
   resolved "https://registry.yarnpkg.com/@atlaskit/icon/-/icon-21.10.3.tgz#3d0bd46793d954163548b0f94b39efb628acfe06"
   integrity sha512-kLwIOQwNmPx0OXGv0RYbQNcdGOYXUE6Y1EbgDxEfqCQ8409ey4LUzIiDZg177C1mOcD9Ziiiny4KbfPBvOkS0g==
   dependencies:
     "@atlaskit/theme" "^12.1.0"
     "@atlaskit/tokens" "^0.6.0"
+    "@babel/runtime" "^7.0.0"
+    "@emotion/core" "^10.0.9"
+
+"@atlaskit/icon@^21.10.4":
+  version "21.10.4"
+  resolved "https://registry.yarnpkg.com/@atlaskit/icon/-/icon-21.10.4.tgz#49766fca43bd9e66efa97077d9bf3f3db7971339"
+  integrity sha512-uRxhez7cBFF7HlfKbkFeUQ6gXPRmfufnU1385SNG5qzufJpFmH/f/Uq3rZZmVyKysBqyGzxg+OlEnEa+UEXCig==
+  dependencies:
+    "@atlaskit/theme" "^12.1.0"
+    "@atlaskit/tokens" "^0.7.0"
     "@babel/runtime" "^7.0.0"
     "@emotion/core" "^10.0.9"
 
@@ -356,6 +366,16 @@
   version "0.6.3"
   resolved "https://registry.yarnpkg.com/@atlaskit/tokens/-/tokens-0.6.3.tgz#365e3d23a810115007f31c9068a374df30a2b106"
   integrity sha512-lUYTej7rfy+CdIJaBQRTq6EiyTcGI23B7ZnSTYj8SGwdxlFyZtnKnAFRhcsPzvGJKYNtKwkmeMn1xUsaK06avw==
+  dependencies:
+    "@atlaskit/ds-lib" "^1.4.0"
+    "@babel/runtime" "^7.0.0"
+    "@babel/traverse" "^7.15.0"
+    "@babel/types" "^7.15.0"
+
+"@atlaskit/tokens@^0.7.0":
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/@atlaskit/tokens/-/tokens-0.7.1.tgz#e483eaa4456102114cc8f707df8d5960f9bb023a"
+  integrity sha512-QJEH/bR1+1OssE3gZu7QeQ9XpJEWorLY9Fi0+AiCWozPLoGIAe2vsHN74BL36gAShNZipHhyh/Uz54p/Nt502w==
   dependencies:
     "@atlaskit/ds-lib" "^1.4.0"
     "@babel/runtime" "^7.0.0"

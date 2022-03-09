@@ -1,5 +1,6 @@
 export type IssueCreationSettings = {
   id: number;
+  chatLink?: string;
   chatId: string;
   enabled: boolean;
   projectKey: string;

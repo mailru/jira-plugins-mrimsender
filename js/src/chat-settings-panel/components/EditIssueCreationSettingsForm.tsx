@@ -1,5 +1,5 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-import { FieldHtml, FieldParam, IssueCreationSettings } from '../types';
+import { FieldHtml, FieldParam, IssueCreationSettings } from '../../shared/types';
 import Textfield from '@atlaskit/textfield';
 import { Checkbox } from '@atlaskit/checkbox';
 import Form, { CheckboxField, ErrorMessage, Field, FormFooter, HelperMessage } from '@atlaskit/form';
@@ -12,7 +12,7 @@ import { ValueType, OptionType, OptionsType } from '@atlaskit/select';
 import Events from 'jira/util/events';
 import Types from 'jira/util/events/types';
 import Reasons from 'jira/util/events/reasons';
-import { loadIssueForm } from '../api/CommonApiClient';
+import { loadIssueForm } from '../../shared/api/CommonApiClient';
 import LoadableComponent from './LoadableComponent';
 import Select from '@atlaskit/select';
 import TextArea from '@atlaskit/textarea';

@@ -7,8 +7,11 @@ import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_SUMMARY_TE
 import com.atlassian.cache.Cache;
 import com.atlassian.cache.CacheManager;
 import com.atlassian.cache.CacheSettingsBuilder;
+import com.atlassian.jira.bc.project.ProjectService;
 import com.atlassian.jira.exception.NotFoundException;
+import com.atlassian.jira.project.Project;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -16,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
+import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.repository.IssueCreationSettingsRepository;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
@@ -26,13 +30,19 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
       IssueCreationSettingsServiceImpl.class.getName() + ".issueSettingsCache";
 
   private final IssueCreationSettingsRepository issueCreationSettingsRepository;
+  private final ProjectService projectService;
+  private final MessageFormatter messageFormatter;
 
   private final Cache<String, Optional<IssueCreationSettingsDto>> issueSettingsCache;
 
   public IssueCreationSettingsServiceImpl(
       IssueCreationSettingsRepository issueCreationSettingsRepository,
+      @ComponentImport ProjectService projectService,
+      MessageFormatter messageFormatter,
       @ComponentImport CacheManager cacheManager) {
     this.issueCreationSettingsRepository = issueCreationSettingsRepository;
+    this.projectService = projectService;
+    this.messageFormatter = messageFormatter;
 
     issueSettingsCache =
         cacheManager.getCache(
@@ -60,6 +70,20 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
         .get(chatId)
         .filter(settingsDto -> tag.equals(settingsDto.getTag()))
         .orElse(null);
+  }
+
+  @Override
+  public List<IssueCreationSettingsDto> getSettingsByProjectId(long projectId) {
+    Project project = projectService.getProjectById(projectId).getProject();
+    if (project == null) {
+      return new ArrayList<>();
+    }
+    return issueCreationSettingsRepository.getSettingsByProjectId(project.getKey()).stream()
+        .map(
+            settings ->
+                new IssueCreationSettingsDto(
+                    settings, messageFormatter.getMyteamLink(settings.getChatId())))
+        .collect(Collectors.toList());
   }
 
   @NotNull

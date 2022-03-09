@@ -1,7 +1,7 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import { AsyncSelect, OptionType, SelectProps } from '@atlaskit/select';
-import { usePrevious } from '../shared/hooks';
-import { IssueTypeData, loadProjectData } from '../api/CommonApiClient';
+import { usePrevious } from '../../shared/hooks';
+import { IssueTypeData, loadProjectData } from '../../shared/api/CommonApiClient';
 
 type Props = SelectProps<OptionType> & {
   className?: string;

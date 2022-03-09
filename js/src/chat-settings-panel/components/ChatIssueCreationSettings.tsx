@@ -1,9 +1,9 @@
 import SectionMessage from '@atlaskit/section-message';
 import styled from '@emotion/styled';
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import { useTimeoutState } from '../shared/hooks';
-import { loadChatIssueCreationSettings, updateChatIssueCreationSettings } from '../api/SettingsApiClient';
-import { IssueCreationSettings } from '../types';
+import { useTimeoutState } from '../../shared/hooks';
+import { loadChatIssueCreationSettings, updateChatIssueCreationSettings } from '../../shared/api/SettingsApiClient';
+import { IssueCreationSettings } from '../../shared/types';
 import EditIssueCreationSettingsForm from './EditIssueCreationSettingsForm';
 
 type Props = {

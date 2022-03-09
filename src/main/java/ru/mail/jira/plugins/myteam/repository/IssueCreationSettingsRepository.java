@@ -6,10 +6,7 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import net.java.ao.Query;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -126,5 +123,12 @@ public class IssueCreationSettingsRepository
     }
 
     return Optional.of(settings[0]);
+  }
+
+  public List<IssueCreationSettings> getSettingsByProjectId(String projectKey) {
+    IssueCreationSettings[] settings =
+        ao.find(IssueCreationSettings.class, Query.select().where("PROJECT_KEY = ?", projectKey));
+
+    return Arrays.asList(settings);
   }
 }

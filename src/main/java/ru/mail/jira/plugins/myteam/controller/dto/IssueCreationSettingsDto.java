@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import lombok.*;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.commons.IssueReporter;
 import ru.mail.jira.plugins.myteam.model.IssueCreationSettings;
 
@@ -29,6 +30,7 @@ public class IssueCreationSettingsDto {
   @XmlElement private String tag;
   @XmlElement private String creationSuccessTemplate;
   @XmlElement private String issueSummaryTemplate;
+  @Nullable @XmlElement private String chatLink;
   @XmlElement private IssueReporter reporter;
   @XmlElement private List<String> labels;
   @XmlElement private List<AdditionalIssueFieldDto> additionalFields;
@@ -51,5 +53,26 @@ public class IssueCreationSettingsDto {
         Arrays.stream(entity.getAdditionalFields())
             .map(AdditionalIssueFieldDto::new)
             .collect(Collectors.toList());
+  }
+
+  public IssueCreationSettingsDto(IssueCreationSettings entity, @Nullable String chatLink) {
+    this.id = entity.getID();
+    this.chatId = entity.getChatId();
+    this.enabled = entity.isEnabled();
+    this.tag = entity.getTag();
+    this.reporter = entity.getReporter();
+    this.projectKey = entity.getProjectKey();
+    this.issueTypeId = entity.getIssueTypeId();
+    this.creationSuccessTemplate = entity.getCreationSuccessTemplate();
+    this.issueSummaryTemplate = entity.getIssueSummaryTemplate();
+    this.labels =
+        entity.getLabels() != null
+            ? Arrays.asList(entity.getLabels().split(LABELS_DELIMITER))
+            : null;
+    this.additionalFields =
+        Arrays.stream(entity.getAdditionalFields())
+            .map(AdditionalIssueFieldDto::new)
+            .collect(Collectors.toList());
+    this.chatLink = chatLink;
   }
 }
