@@ -124,8 +124,12 @@ const ProjectIssueCreationSettings = (): ReactElement => {
     <Container>
       <h2>Настройки создания задач</h2>
 
-      {settings.map((s) =>
-        renderSettingsElement(s, (settingsId) => setEditSettingsDialogState({ isOpen: true, settingsId })),
+      {settings && settings.length > 0 ? (
+        settings.map((s) =>
+          renderSettingsElement(s, (settingsId) => setEditSettingsDialogState({ isOpen: true, settingsId })),
+        )
+      ) : (
+        <h4>Нет настроек для данного проекта</h4>
       )}
       {editSettingsDialogState && editSettingsDialogState.settingsId ? (
         <EditIssueCreationSettingsDialog
