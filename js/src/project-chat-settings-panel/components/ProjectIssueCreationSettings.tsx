@@ -1,11 +1,12 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import { loadProjectChatIssueCreationSettings } from '../../shared/api/SettingsApiClient';
 import styled from 'styled-components';
-import { IssueCreationSettings } from '../../shared/types';
+import { IssueCreationSettings, LoadableDataState } from '../../shared/types';
 import EditIcon from '@atlaskit/icon/glyph/edit';
 import EditIssueCreationSettingsDialog from '../../shared/components/EditIssueCreationSettingsDialog';
 import contextPath from 'wrm/context-path';
 import { ChatName } from '../../shared/components/ChatName';
+import LoadableComponent from '../../shared/components/LoadableComponent';
 
 const Container = styled.div`
   h2 {
@@ -16,8 +17,9 @@ const Container = styled.div`
 const Settings = styled.div`
   background-color: var(--aui-item-selected-bg);
   padding: 10px;
-  margin: 15px;
+  margin: 10px 25px;
   border-radius: 10px;
+  width: 100%;
 
   h3 {
     margin-bottom: 10px;
@@ -96,36 +98,49 @@ const renderSettingsElement = (settings: IssueCreationSettings, onEdit: (setting
 };
 
 const ProjectIssueCreationSettings = (): ReactElement => {
-  const [settings, setSettings] = useState<Array<IssueCreationSettings>>([]);
+  const [settings, setSettings] = useState<LoadableDataState<Array<IssueCreationSettings>>>({
+    isLoading: false,
+  });
   const [editSettingsDialogState, setEditSettingsDialogState] = useState<{ isOpen: boolean; settingsId?: number }>({
     isOpen: false,
   });
 
-  useLayoutEffect(() => {
+  const loadSettings = () => {
     const match = location.pathname.match(/myteam\/projects\/(\d+)\/settings\/chats/);
+    setSettings({ isLoading: true });
     if (match) {
-      loadProjectChatIssueCreationSettings(match[1]).then((response) => setSettings(response.data));
+      loadProjectChatIssueCreationSettings(match[1])
+        .then((response) => setSettings({ data: response.data, isLoading: false }))
+        .catch((e) => {
+          console.error(e);
+          setSettings({ isLoading: false, error: JSON.stringify(e) });
+        });
     }
-  }, []);
+  };
+
+  useLayoutEffect(loadSettings, []);
 
   return (
     <Container>
       <h2>Настройки создания задач</h2>
 
-      {settings && settings.length > 0 ? (
-        settings.map((s) =>
-          renderSettingsElement(s, (settingsId) => setEditSettingsDialogState({ isOpen: true, settingsId })),
-        )
-      ) : (
-        <h4>Нет настроек для данного проекта</h4>
-      )}
-      {editSettingsDialogState && editSettingsDialogState.settingsId ? (
-        <EditIssueCreationSettingsDialog
-          settingsId={editSettingsDialogState.settingsId}
-          isOpen={editSettingsDialogState.isOpen}
-          onClose={() => setEditSettingsDialogState({ isOpen: false })}
-        />
-      ) : null}
+      <LoadableComponent isLoading={settings.isLoading}>
+        {settings.data && settings.data.length > 0 ? (
+          settings.data.map((s) =>
+            renderSettingsElement(s, (settingsId) => setEditSettingsDialogState({ isOpen: true, settingsId })),
+          )
+        ) : (
+          <h4>Нет настроек для данного проекта</h4>
+        )}
+        {editSettingsDialogState && editSettingsDialogState.settingsId ? (
+          <EditIssueCreationSettingsDialog
+            settingsId={editSettingsDialogState.settingsId}
+            isOpen={editSettingsDialogState.isOpen}
+            onClose={() => setEditSettingsDialogState({ isOpen: false })}
+            onSaveSuccess={loadSettings}
+          />
+        ) : null}
+      </LoadableComponent>
     </Container>
   );
 };

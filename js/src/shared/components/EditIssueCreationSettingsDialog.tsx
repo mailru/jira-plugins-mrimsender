@@ -13,6 +13,7 @@ type Props = {
 
   isOpen: boolean;
   onClose: () => void;
+  onSaveSuccess?: () => void;
 };
 
 enum Status {
@@ -20,7 +21,7 @@ enum Status {
   Error,
 }
 
-const EditIssueCreationSettingsDialog = ({ settingsId, isOpen, onClose }: Props): ReactElement => {
+const EditIssueCreationSettingsDialog = ({ settingsId, isOpen, onClose, onSaveSuccess }: Props): ReactElement => {
   const [settings, setSettings] = useState<LoadableDataState<IssueCreationSettings>>({ isLoading: false });
   const [status, setStatus] = useState<Status | null>(null);
   useLayoutEffect(() => {
@@ -74,6 +75,7 @@ const EditIssueCreationSettingsDialog = ({ settingsId, isOpen, onClose }: Props)
                 autoFocus
                 onClick={() => {
                   onClose();
+                  onSaveSuccess && onSaveSuccess();
                   setStatus(null);
                 }}>
                 Ок
