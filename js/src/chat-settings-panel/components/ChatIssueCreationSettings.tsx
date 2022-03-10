@@ -76,6 +76,3 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
 };
 
 export default ChatIssueCreationSettings;
-function contextPath() {
-  throw new Error('Function not implemented.');
-}
