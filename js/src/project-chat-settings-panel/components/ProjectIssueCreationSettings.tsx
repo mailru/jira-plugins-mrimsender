@@ -18,6 +18,7 @@ const Settings = styled.div`
   background-color: var(--aui-item-selected-bg);
   padding: 10px;
   margin: 10px 25px;
+  box-sizing: border-box;
   border-radius: 10px;
   width: 100%;
 
