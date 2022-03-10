@@ -55,7 +55,6 @@ const renderSettingsElement = (settings: IssueCreationSettings, onEdit: (setting
     <Settings>
       <SpaceBetweenRow>
         <ChatName
-          chatId={settings.chatId}
           chatTitle={settings.chatTitle || 'Неизвестно'}
           href={`${contextPath()}/myteam/chats/settings?chatId=${settings.chatId}`}
           disabled={!settings.canEdit}

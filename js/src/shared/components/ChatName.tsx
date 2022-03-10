@@ -3,7 +3,6 @@ import React, { ReactElement } from 'react';
 
 type Props = {
   className?: string;
-  chatId: string;
   chatTitle: string;
   href?: string;
   disabled?: boolean;
@@ -20,16 +19,9 @@ const TitleLink = styled.span`
     opacity: 0.6;
     text-decoration: none;
   }
-
-  span {
-    font-size: 10px;
-    opacity: 0.5;
-    vertical-align: top;
-    margin-left: 5px;
-  }
 `;
 
-export const ChatName = ({ className, chatId, chatTitle, href, target, rel, disabled }: Props): ReactElement => {
+export const ChatName = ({ className, chatTitle, href, target, rel, disabled }: Props): ReactElement => {
   return (
     <TitleLink className={className}>
       <a
@@ -39,7 +31,6 @@ export const ChatName = ({ className, chatId, chatTitle, href, target, rel, disa
         rel={rel || 'noreferrer'}>
         {chatTitle}
       </a>
-      <span>{chatId}</span>
     </TitleLink>
   );
 };

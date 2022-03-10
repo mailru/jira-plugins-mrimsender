@@ -40,16 +40,15 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
   return (
     <Container>
       <h2>
-        {`Настройки для чата `}{' '}
+        {`Настройки для чата `}
         {settings ? (
           <ChatName
-            chatId={settings.chatId}
             chatTitle={settings.chatTitle || 'Неизвестно'}
             href={settings.chatLink}
             disabled={!settings.canEdit}
           />
         ) : (
-          'Неизвестно'
+          ''
         )}
       </h2>
 
