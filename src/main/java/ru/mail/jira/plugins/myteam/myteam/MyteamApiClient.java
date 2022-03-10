@@ -60,7 +60,7 @@ public interface MyteamApiClient {
       @Nonnull String botToken, @Nonnull String chatId, String about)
       throws IOException, UnirestException, MyteamServerErrorException;
 
-  HttpResponse<ChatInfoResponse> getChatInfo(@Nonnull String botToken, @Nonnull String chatId)
+  HttpResponse<ChatInfoResponse> getChatInfo(@Nonnull String chatId)
       throws UnirestException, MyteamServerErrorException;
 
   HttpResponse<ChatMember> getMembers(@Nonnull String chatId) throws UnirestException;

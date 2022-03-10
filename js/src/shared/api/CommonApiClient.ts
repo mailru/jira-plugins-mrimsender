@@ -1,8 +1,8 @@
 import axios, { AxiosResponse } from 'axios';
 import qs from 'qs';
 import contextPath from 'wrm/context-path';
-import { collectFieldsData } from '../shared/utils';
 import { FieldHtml, FieldParam } from '../types';
+import { collectFieldsData } from '../utils';
 import { getCancelTokenHandler } from './AxiosUtils';
 
 export type IssueTypeData = { name: string; id: string };

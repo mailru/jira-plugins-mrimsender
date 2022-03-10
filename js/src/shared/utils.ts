@@ -1,5 +1,5 @@
 import dompurify from 'dompurify';
-import { FieldParam } from '../types';
+import { FieldParam } from './types';
 
 export const sanitizer = dompurify.sanitize;
 

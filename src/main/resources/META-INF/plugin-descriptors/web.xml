@@ -37,8 +37,13 @@
 
     <webwork1 key="chat-settings-app-action" class="java.lang.Object" roles-required="use">
         <actions>
-            <action name="ru.mail.jira.plugins.myteam.actions.ChatSettingsAction" alias="ChatSetting">
+            <action name="ru.mail.jira.plugins.myteam.actions.ChatAdminAction" alias="ChatSetting">
                 <view name="success">ru/mail/jira/plugins/myteam/configuration/chat-settings.vm</view>
+                <view name="securitybreach">/secure/views/securitybreach.jsp</view>
+            </action>
+
+            <action name="ru.mail.jira.plugins.myteam.actions.ProjectAdminAction" alias="ProjectChatSetting">
+                <view name="success">ru/mail/jira/plugins/myteam/configuration/project-chat-settings.vm</view>
                 <view name="securitybreach">/secure/views/securitybreach.jsp</view>
             </action>
         </actions>
@@ -47,6 +52,7 @@
     <sitemesh key="myteam-sitemesh-prettyurls" path="/myteam"/>
     <routing key="myteam-prettyurls" path="/myteam">
         <route from="/chats/settings" to="/secure/ChatSetting.jspa"/>
+        <route from="/projects/{id}/settings/chats" to="/secure/ProjectChatSetting.jspa?project={id}"/>
     </routing>
 
 
@@ -62,4 +68,15 @@
         <resource name="view" type="static"><![CDATA[<div id="myteam-chat-creation-panel-container">MyTeam chat creation panel container here</div>]]></resource>
         <resource type="download" name="icon" location="/ru/mail/jira/plugins/myteam/images/myteam.ico"/>
     </web-panel>
+
+    <web-section key="chat-settings-project-section" location="atl.jira.proj.config">
+        <label key="ru.mail.jira.plugins.myteam.project.section.title"/>
+        <condition class="com.atlassian.jira.plugin.webfragment.conditions.CanAdministerProjectCondition"/>
+    </web-section>
+
+    <web-item key="chat-settings-project-configuration" section="atl.jira.proj.config/chat-settings-project-section">
+        <label key="ru.mail.jira.plugins.myteam.project.section.chatSettings.title"/>
+        <condition class="com.atlassian.jira.plugin.webfragment.conditions.CanAdministerProjectCondition"/>
+        <link linkId="service-portal-project-configuration-link">/myteam/projects/$project.id/settings/chats</link>
+    </web-item>
 </web>

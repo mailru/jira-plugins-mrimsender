@@ -14,14 +14,14 @@ import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.GroupAdminRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.ChatAdminRule;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Rule(name = "configure_task", description = "Configures issues creation in chat")
-public class IssueCreationSettingsCommand extends GroupAdminRule {
+public class IssueCreationSettingsCommand extends ChatAdminRule {
   static final RuleType NAME = CommandRuleType.IssueCreationSettings;
 
   private final IssueCreationSettingsService issueCreationSettingsService;

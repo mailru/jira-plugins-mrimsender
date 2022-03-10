@@ -150,7 +150,7 @@ public class ChatCreationController {
       }
 
       HttpResponse<ChatInfoResponse> chatInfoResponse =
-          myteamApiClient.getChatInfo(pluginData.getToken(), chatMeta.getChatId());
+          myteamApiClient.getChatInfo(chatMeta.getChatId());
       if (chatInfoResponse.getStatus() == 200 && chatInfoResponse.getBody() != null) {
         ChatInfoResponse chatInfo = chatInfoResponse.getBody();
         return ChatMetaDto.buildChatInfo(chatInfo, chatMemberDtos);
@@ -280,8 +280,7 @@ public class ChatCreationController {
         myteamEventsListener.publishEvent(
             new JiraIssueViewEvent(chatId, issueKey, loggedInUser, true));
 
-        HttpResponse<ChatInfoResponse> chatInfoResponse =
-            myteamApiClient.getChatInfo(pluginData.getToken(), chatId);
+        HttpResponse<ChatInfoResponse> chatInfoResponse = myteamApiClient.getChatInfo(chatId);
         if (chatInfoResponse.getStatus() == 200 && chatInfoResponse.getBody() != null) {
           ChatMetaDto chatMetaDto =
               ChatMetaDto.buildChatInfo(chatInfoResponse.getBody(), chatMemberDtos);

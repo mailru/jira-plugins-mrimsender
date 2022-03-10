@@ -1,6 +1,6 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import { AsyncCreatableSelect, OptionsType, OptionType } from '@atlaskit/select';
-import { loadLabelsSugestions } from '../api/CommonApiClient';
+import { loadLabelsSugestions } from '../../shared/api/CommonApiClient';
 
 const createOption = (label: string) => ({
   label,

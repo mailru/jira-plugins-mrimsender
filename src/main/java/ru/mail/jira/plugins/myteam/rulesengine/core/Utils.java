@@ -23,12 +23,7 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.CommentaryParts;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.File;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 

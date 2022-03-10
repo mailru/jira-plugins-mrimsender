@@ -2,34 +2,30 @@
 package ru.mail.jira.plugins.myteam.controller;
 
 import com.atlassian.jira.exception.PermissionException;
-import com.atlassian.jira.permission.GlobalPermissionKey;
-import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import ru.mail.jira.plugins.myteam.commons.PermissionHelper;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
-import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Controller
 @Path("/issueCreation")
 @Produces(MediaType.APPLICATION_JSON)
 public class IssueCreationSettingsController {
 
-  private final UserChatService userChatService;
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
-  private final GlobalPermissionManager globalPermissionManager;
+  private final PermissionHelper permissionHelper;
 
   @ResponseStatus(value = HttpStatus.FORBIDDEN)
   @ExceptionHandler(PermissionException.class)
@@ -39,29 +35,49 @@ public class IssueCreationSettingsController {
 
   public IssueCreationSettingsController(
       IssueCreationSettingsService issueCreationSettingsService,
-      UserChatService userChatService,
-      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-      @ComponentImport GlobalPermissionManager globalPermissionManager) {
+      PermissionHelper permissionHelper,
+      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
     this.issueCreationSettingsService = issueCreationSettingsService;
-    this.userChatService = userChatService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
-    this.globalPermissionManager = globalPermissionManager;
+    this.permissionHelper = permissionHelper;
   }
 
   @GET
   @Path("/settings/all")
-  public List<IssueCreationSettingsDto> getAllChatsSettings()
-      throws PermissionException, ProjectBannedException {
-    checkPermissions();
+  public List<IssueCreationSettingsDto> getAllChatsSettings() throws PermissionException {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+    permissionHelper.checkChatAdminPermissions(user);
     return issueCreationSettingsService.getAllSettings();
   }
 
   @GET
-  @Path("/settings/chats/{id}")
-  public IssueCreationSettingsDto getChatSettings(@PathParam("id") final String chatId)
+  @Path("/settings/{id}")
+  public IssueCreationSettingsDto getChatSettingsById(@PathParam("id") final Integer id)
       throws PermissionException {
-    checkPermissions(chatId);
-    return issueCreationSettingsService.getSettingsByChatId(chatId).orElse(null);
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+    IssueCreationSettingsDto settings = issueCreationSettingsService.getSettingsById(id);
+    permissionHelper.checkChatAdminPermissions(user, settings.getChatId());
+    return issueCreationSettingsService.getSettingsById(id);
+  }
+
+  @GET
+  @Path("/settings/chats/{id}")
+  public IssueCreationSettingsDto getChatSettings(@PathParam("id") final String id)
+      throws PermissionException {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+    permissionHelper.checkChatAdminPermissions(user, id);
+    return issueCreationSettingsService.getSettingsByChatId(id).orElse(null);
+  }
+
+  @GET
+  @Path("/projects/{id}/settings")
+  public List<IssueCreationSettingsDto> getProjectChatSettings(
+      @PathParam("id") final Long projectId) throws PermissionException {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+    permissionHelper.checkProjectPermissions(user, projectId);
+    return issueCreationSettingsService.getSettingsByProjectId(projectId).stream()
+        .peek(s -> s.setCanEdit(permissionHelper.isChatAdminOrJiraAdmin(s.getChatId(), user)))
+        .collect(Collectors.toList());
   }
 
   @PUT
@@ -72,25 +88,8 @@ public class IssueCreationSettingsController {
       @PathParam("id") final int id, final IssueCreationSettingsDto settings)
       throws PermissionException {
     IssueCreationSettingsDto originalSettings = issueCreationSettingsService.getSettings(id);
-    checkPermissions(originalSettings.getChatId());
-    return issueCreationSettingsService.updateSettings(id, settings);
-  }
-
-  private ApplicationUser checkPermissions() throws PermissionException {
-    return checkPermissions(null);
-  }
-
-  private ApplicationUser checkPermissions(@Nullable String chatId) throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-
-    if (isJiraAdmin(user)
-        || (chatId != null && userChatService.isChatAdmin(chatId, user.getEmailAddress()))) {
-      return user;
-    }
-    throw new PermissionException();
-  }
-
-  private boolean isJiraAdmin(ApplicationUser user) {
-    return globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, user);
+    permissionHelper.checkChatAdminPermissions(user, originalSettings.getChatId());
+    return issueCreationSettingsService.updateSettings(id, settings);
   }
 }
