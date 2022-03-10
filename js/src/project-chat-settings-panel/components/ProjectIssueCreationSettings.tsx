@@ -53,7 +53,7 @@ const SpaceBetweenRow = styled.div`
 `;
 
 const Field = styled.div`
-  margin-top: 5px;
+  margin: 5px 0 0 5px;
   label {
     font-weight: 600;
     padding-right: 5px;
