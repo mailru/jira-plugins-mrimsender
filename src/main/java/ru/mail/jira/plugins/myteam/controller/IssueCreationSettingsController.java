@@ -51,7 +51,11 @@ public class IssueCreationSettingsController {
 
   @GET
   @Path("/settings/{id}")
-  public IssueCreationSettingsDto getChatSettingsById(@PathParam("id") final Integer id) {
+  public IssueCreationSettingsDto getChatSettingsById(@PathParam("id") final Integer id)
+      throws PermissionException {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+    IssueCreationSettingsDto settings = issueCreationSettingsService.getSettingsById(id);
+    permissionHelper.checkChatAdminPermissions(user, settings.getChatId());
     return issueCreationSettingsService.getSettingsById(id);
   }
 
