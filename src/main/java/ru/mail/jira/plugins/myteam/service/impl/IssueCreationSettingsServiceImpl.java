@@ -17,16 +17,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
+import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.model.IssueCreationSettings;
+import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.GroupChatInfo;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.repository.IssueCreationSettingsRepository;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
 @Service
+@Slf4j
 public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsService {
 
   private static final String CACHE_NAME =
@@ -35,6 +41,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   private final IssueCreationSettingsRepository issueCreationSettingsRepository;
   private final IssueTypeManager issueTypeManager;
   private final ProjectService projectService;
+  private final MyteamApiClient myteamApiClient;
   private final MessageFormatter messageFormatter;
 
   private final Cache<String, Optional<IssueCreationSettingsDto>> issueSettingsCache;
@@ -42,6 +49,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   public IssueCreationSettingsServiceImpl(
       IssueCreationSettingsRepository issueCreationSettingsRepository,
       MessageFormatter messageFormatter,
+      MyteamApiClient myteamApiClient,
       @ComponentImport IssueTypeManager issueTypeManager,
       @ComponentImport ProjectService projectService,
       @ComponentImport CacheManager cacheManager) {
@@ -49,6 +57,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     this.issueTypeManager = issueTypeManager;
     this.projectService = projectService;
     this.messageFormatter = messageFormatter;
+    this.myteamApiClient = myteamApiClient;
 
     issueSettingsCache =
         cacheManager.getCache(
@@ -59,9 +68,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   @Override
   public List<IssueCreationSettingsDto> getAllSettings() {
-    return issueCreationSettingsRepository.findAll().stream()
-        .map(IssueCreationSettingsDto::new)
-        .collect(Collectors.toList());
+    return mapAdditionalSettingsInfos(issueCreationSettingsRepository.findAll());
   }
 
   @Override
@@ -84,19 +91,8 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     if (project == null) {
       return new ArrayList<>();
     }
-    return issueCreationSettingsRepository.getSettingsByProjectId(project.getKey()).stream()
-        .map(
-            settings -> {
-              IssueCreationSettingsDto settingsDto =
-                  new IssueCreationSettingsDto(
-                      settings, messageFormatter.getMyteamLink(settings.getChatId()));
-              IssueType issueType = issueTypeManager.getIssueType(settings.getIssueTypeId());
-              if (issueType != null) {
-                settingsDto.setIssueTypeName(issueType.getNameTranslation());
-              }
-              return settingsDto;
-            })
-        .collect(Collectors.toList());
+    return mapAdditionalSettingsInfos(
+        issueCreationSettingsRepository.getSettingsByProjectId(project.getKey()));
   }
 
   @NotNull
@@ -104,7 +100,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   public Optional<IssueCreationSettingsDto> getSettingsByChatId(String chatId) {
     return issueCreationSettingsRepository
         .getSettingsByChatId(chatId)
-        .map(IssueCreationSettingsDto::new);
+        .map(this::mapAdditionalSettingsInfo);
   }
 
   @Override
@@ -153,5 +149,31 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     @NotNull IssueCreationSettings settings = issueCreationSettingsRepository.get(id);
     return new IssueCreationSettingsDto(
         settings, messageFormatter.getMyteamLink(settings.getChatId()));
+  }
+
+  private List<IssueCreationSettingsDto> mapAdditionalSettingsInfos(
+      List<IssueCreationSettings> settings) {
+    return settings.stream().map(this::mapAdditionalSettingsInfo).collect(Collectors.toList());
+  }
+
+  private IssueCreationSettingsDto mapAdditionalSettingsInfo(IssueCreationSettings settings) {
+
+    IssueCreationSettingsDto settingsDto =
+        new IssueCreationSettingsDto(
+            settings, messageFormatter.getMyteamLink(settings.getChatId()));
+    IssueType issueType = issueTypeManager.getIssueType(settings.getIssueTypeId());
+
+    try {
+      ChatInfoResponse chatInfo = myteamApiClient.getChatInfo(settings.getChatId()).getBody();
+      if (chatInfo instanceof GroupChatInfo) {
+        settingsDto.setChatTitle(((GroupChatInfo) chatInfo).getTitle());
+      }
+    } catch (MyteamServerErrorException e) {
+      log.error(e.getLocalizedMessage(), e);
+    }
+    if (issueType != null) {
+      settingsDto.setIssueTypeName(issueType.getNameTranslation());
+    }
+    return settingsDto;
   }
 }

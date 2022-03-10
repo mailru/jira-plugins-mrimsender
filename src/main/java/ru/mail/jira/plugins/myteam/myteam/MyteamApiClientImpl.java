@@ -237,8 +237,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   }
 
   @Override
-  public HttpResponse<ChatInfoResponse> getChatInfo(
-      @Nonnull String botToken, @Nonnull String chatId)
+  public HttpResponse<ChatInfoResponse> getChatInfo(@Nonnull String chatId)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<ChatInfoResponse> response =
         HttpClient.getPrimaryClient()

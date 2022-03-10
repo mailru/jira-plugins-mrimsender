@@ -5,6 +5,7 @@ import { IssueCreationSettings } from '../../shared/types';
 import EditIcon from '@atlaskit/icon/glyph/edit';
 import EditIssueCreationSettingsDialog from '../../shared/components/EditIssueCreationSettingsDialog';
 import contextPath from 'wrm/context-path';
+import { ChatName } from '../../shared/components/ChatName';
 
 const Container = styled.div`
   h2 {
@@ -21,17 +22,6 @@ const Settings = styled.div`
   h3 {
     margin-bottom: 10px;
     font-weight: 700;
-  }
-`;
-
-const TitleLink = styled.a`
-  font-weight: 700;
-  font-size: 16px;
-
-  &.disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-    text-decoration: none;
   }
 `;
 
@@ -64,13 +54,12 @@ const renderSettingsElement = (settings: IssueCreationSettings, onEdit: (setting
   return (
     <Settings>
       <SpaceBetweenRow>
-        <TitleLink
-          className={settings.canEdit ? '' : 'disabled'}
-          target="_blank"
-          href={settings.canEdit ? `${contextPath()}/myteam/chats/settings?chatId=${settings.chatId}` : undefined}
-          rel="noreferrer">
-          {settings.chatId}
-        </TitleLink>
+        <ChatName
+          chatId={settings.chatId}
+          chatTitle={settings.chatTitle || 'Неизвестно'}
+          href={`${contextPath()}/myteam/chats/settings?chatId=${settings.chatId}`}
+          disabled={!settings.canEdit}
+        />
         {settings.canEdit ? (
           <ClickableIconContainer onClick={() => onEdit(settings.id)}>
             <EditIcon size="medium" label="" />

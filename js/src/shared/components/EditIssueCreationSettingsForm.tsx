@@ -56,8 +56,6 @@ const LineHelperMessage = styled.div`
   margin-top: 16px;
   display: flex;
   justify-content: baseline;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Fira Sans', 'Droid Sans',
-    'Helvetica Neue', sans-serif;
   color: var(--ds-text-subtlest, #6b778c);
   white-space: pre-line;
 `;

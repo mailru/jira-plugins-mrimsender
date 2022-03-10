@@ -6,6 +6,10 @@ import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,11 +17,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import ru.mail.jira.plugins.myteam.commons.PermissionHelper;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 @Path("/issueCreation")
@@ -76,10 +75,9 @@ public class IssueCreationSettingsController {
       @PathParam("id") final Long projectId) throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     permissionHelper.checkProjectPermissions(user, projectId);
-    return
-        issueCreationSettingsService.getSettingsByProjectId(projectId).stream()
-            .peek(s -> s.setCanEdit(permissionHelper.isChatAdminOrJiraAdmin(s.getChatId(), user)))
-            .collect(Collectors.toList());
+    return issueCreationSettingsService.getSettingsByProjectId(projectId).stream()
+        .peek(s -> s.setCanEdit(permissionHelper.isChatAdminOrJiraAdmin(s.getChatId(), user)))
+        .collect(Collectors.toList());
   }
 
   @PUT
