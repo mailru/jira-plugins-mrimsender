@@ -16,7 +16,7 @@ import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
-import ru.mail.jira.plugins.myteam.commons.PermissionHelper;
+import ru.mail.jira.plugins.myteam.commons.PermissionHelperService;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
@@ -36,7 +36,7 @@ public class UserChatServiceImpl implements UserChatService {
   private final UserData userData;
   private final LocaleManager localeManager;
   private final MyteamApiClient myteamClient;
-  private final PermissionHelper permissionHelper;
+  private final PermissionHelperService permissionHelperService;
   private final I18nResolver i18nResolver;
   private final StateManager stateManager;
   private final IssueService issueService;
@@ -48,7 +48,7 @@ public class UserChatServiceImpl implements UserChatService {
   public UserChatServiceImpl(
       MyteamApiClient myteamApiClient,
       UserData userData,
-      PermissionHelper permissionHelper,
+      PermissionHelperService permissionHelperService,
       MessageFormatter messageFormatter,
       StateManager stateManager,
       IssueService issueService,
@@ -57,7 +57,7 @@ public class UserChatServiceImpl implements UserChatService {
       @ComponentImport I18nResolver i18nResolver) {
     this.myteamClient = myteamApiClient;
     this.userData = userData;
-    this.permissionHelper = permissionHelper;
+    this.permissionHelperService = permissionHelperService;
     this.localeManager = localeManager;
     this.i18nResolver = i18nResolver;
     this.messageFormatter = messageFormatter;
@@ -75,7 +75,7 @@ public class UserChatServiceImpl implements UserChatService {
 
   @Override
   public boolean isChatAdmin(String chatId, String userId) {
-    return permissionHelper.isChatAdminOrJiraAdmin(chatId, userId);
+    return permissionHelperService.isChatAdminOrJiraAdmin(chatId, userId);
   }
 
   @Override

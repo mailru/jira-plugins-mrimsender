@@ -5,25 +5,25 @@ import com.atlassian.jira.bc.project.ProjectService;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import ru.mail.jira.plugins.myteam.commons.PermissionHelper;
+import ru.mail.jira.plugins.myteam.commons.PermissionHelperService;
 
 public class ProjectAdminAction extends JiraWebActionSupport {
   private static final String SECURITY_BREACH = "securitybreach";
 
   private final ProjectService projectService;
-  private final PermissionHelper permissionHelper;
+  private final PermissionHelperService permissionHelperService;
 
   public ProjectAdminAction(
-      @ComponentImport ProjectService projectService, PermissionHelper permissionHelper) {
+      @ComponentImport ProjectService projectService, PermissionHelperService permissionHelperService) {
     this.projectService = projectService;
-    this.permissionHelper = permissionHelper;
+    this.permissionHelperService = permissionHelperService;
   }
 
   @Override
   public String execute() {
     Project project = getProject();
 
-    if (project == null || !permissionHelper.isProjectAdmin(getLoggedInUser(), project)) {
+    if (project == null || !permissionHelperService.isProjectAdmin(getLoggedInUser(), project)) {
       return SECURITY_BREACH;
     }
     return SUCCESS;

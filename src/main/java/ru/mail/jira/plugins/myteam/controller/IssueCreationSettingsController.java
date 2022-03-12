@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import ru.mail.jira.plugins.myteam.commons.PermissionHelper;
+import ru.mail.jira.plugins.myteam.commons.PermissionHelperService;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
@@ -25,7 +25,7 @@ public class IssueCreationSettingsController {
 
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
-  private final PermissionHelper permissionHelper;
+  private final PermissionHelperService permissionHelperService;
 
   @ResponseStatus(value = HttpStatus.FORBIDDEN)
   @ExceptionHandler(PermissionException.class)
@@ -35,18 +35,18 @@ public class IssueCreationSettingsController {
 
   public IssueCreationSettingsController(
       IssueCreationSettingsService issueCreationSettingsService,
-      PermissionHelper permissionHelper,
+      PermissionHelperService permissionHelperService,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
-    this.permissionHelper = permissionHelper;
+    this.permissionHelperService = permissionHelperService;
   }
 
   @GET
   @Path("/settings/all")
   public List<IssueCreationSettingsDto> getAllChatsSettings() throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-    permissionHelper.checkChatAdminPermissions(user);
+    permissionHelperService.checkChatAdminPermissions(user);
     return issueCreationSettingsService.getAllSettings();
   }
 
@@ -56,7 +56,7 @@ public class IssueCreationSettingsController {
       throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     IssueCreationSettingsDto settings = issueCreationSettingsService.getSettingsById(id);
-    permissionHelper.checkChatAdminPermissions(user, settings.getChatId());
+    permissionHelperService.checkChatAdminPermissions(user, settings.getChatId());
     return issueCreationSettingsService.getSettingsById(id);
   }
 
@@ -65,7 +65,7 @@ public class IssueCreationSettingsController {
   public IssueCreationSettingsDto getChatSettings(@PathParam("id") final String id)
       throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-    permissionHelper.checkChatAdminPermissions(user, id);
+    permissionHelperService.checkChatAdminPermissions(user, id);
     return issueCreationSettingsService.getSettingsByChatId(id).orElse(null);
   }
 
@@ -74,9 +74,9 @@ public class IssueCreationSettingsController {
   public List<IssueCreationSettingsDto> getProjectChatSettings(
       @PathParam("id") final Long projectId) throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-    permissionHelper.checkProjectPermissions(user, projectId);
+    permissionHelperService.checkProjectPermissions(user, projectId);
     return issueCreationSettingsService.getSettingsByProjectId(projectId).stream()
-        .peek(s -> s.setCanEdit(permissionHelper.isChatAdminOrJiraAdmin(s.getChatId(), user)))
+        .peek(s -> s.setCanEdit(permissionHelperService.isChatAdminOrJiraAdmin(s.getChatId(), user)))
         .collect(Collectors.toList());
   }
 
@@ -89,7 +89,7 @@ public class IssueCreationSettingsController {
       throws PermissionException {
     IssueCreationSettingsDto originalSettings = issueCreationSettingsService.getSettings(id);
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-    permissionHelper.checkChatAdminPermissions(user, originalSettings.getChatId());
+    permissionHelperService.checkChatAdminPermissions(user, originalSettings.getChatId());
     return issueCreationSettingsService.updateSettings(id, settings);
   }
 }

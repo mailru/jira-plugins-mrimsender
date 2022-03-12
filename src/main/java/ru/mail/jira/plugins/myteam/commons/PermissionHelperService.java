@@ -21,7 +21,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.response.AdminsResponse;
 
 @Slf4j
 @Component
-public class PermissionHelper {
+public class PermissionHelperService {
 
   private final GlobalPermissionManager globalPermissionManager;
   private final PermissionManager permissionManager;
@@ -29,7 +29,7 @@ public class PermissionHelper {
   private final UserData userData;
   private final MyteamApiClient myteamClient;
 
-  public PermissionHelper(
+  public PermissionHelperService(
       @ComponentImport GlobalPermissionManager globalPermissionManager,
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport ProjectManager projectManager,
