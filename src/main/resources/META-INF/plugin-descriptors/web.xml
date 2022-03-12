@@ -46,7 +46,7 @@
 
     <webwork1 key="project-chat-settings-app-action" class="java.lang.Object" roles-required="use">
         <actions>
-            <action name="ru.mail.jira.plugins.myteam.actions.ProjectAdminAction" alias="ProjectChatSetting">
+            <action name="ru.mail.jira.plugins.myteam.actions.ProjectChatAdminAction" alias="ProjectChatAdminAction">
                 <view name="success">ru/mail/jira/plugins/myteam/configuration/project-chat-settings.vm</view>
                 <view name="securitybreach">/secure/views/securitybreach.jsp</view>
             </action>
@@ -56,7 +56,7 @@
     <sitemesh key="myteam-sitemesh-prettyurls" path="/myteam"/>
     <routing key="myteam-prettyurls" path="/myteam">
         <route from="/chats/settings" to="/secure/ChatSetting.jspa"/>
-        <route from="/projects/{id}/settings/chats" to="/secure/ProjectChatSetting.jspa?project={id}"/>
+        <route from="/projects/{id}/settings/chats" to="/secure/ProjectChatAdminAction.jspa?project={id}"/>
     </routing>
 
 
