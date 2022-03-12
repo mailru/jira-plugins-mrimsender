@@ -5,6 +5,8 @@
         <meta name="decorator" content="admin" />
         <meta name="admin.active.section" content="atl.jira.proj.config" />
         <meta name="admin.active.tab" content="service-portal-project-configuration-link"/>
+        <meta name="projectKey" content="$projectKey"/>
+        <meta name="projectId" content="$projectId"/>
         $webResourceManager.requireResourcesForContext("jira.edit.issue")
         $webResourceManager.requireResourcesForContext("atl.general")
         $webResourceManager.requireResourcesForContext("ru.mail.jira.plugins.myteam.project.chat.settings.panel")

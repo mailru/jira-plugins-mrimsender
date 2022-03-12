@@ -1,26 +1,37 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.actions;
 
+import com.atlassian.jira.bc.project.ProjectService;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
-import org.apache.commons.lang3.StringUtils;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import ru.mail.jira.plugins.myteam.commons.PermissionHelperService;
 
 public class ProjectChatAdminAction extends JiraWebActionSupport {
   private static final String SECURITY_BREACH = "securitybreach";
 
+  private final ProjectService projectService;
   private final PermissionHelperService permissionHelperService;
 
-  public ProjectChatAdminAction(PermissionHelperService permissionHelperService) {
+  public ProjectChatAdminAction(
+      @ComponentImport ProjectService projectService,
+      PermissionHelperService permissionHelperService) {
+    this.projectService = projectService;
     this.permissionHelperService = permissionHelperService;
   }
 
   @Override
   public String execute() {
-    String project = getHttpRequest().getParameter("project");
-    if (!StringUtils.isNumeric(project)
-        || !permissionHelperService.isProjectAdmin(getLoggedInUser(), Long.parseLong(project))) {
+    if (!permissionHelperService.isProjectAdmin(getLoggedInUser(), getProjectId())) {
       return SECURITY_BREACH;
     }
     return SUCCESS;
+  }
+
+  public String getProjectKey() {
+    return projectService.getProjectById(getProjectId()).get().getKey();
+  }
+
+  public Long getProjectId() {
+    return Long.parseLong(getHttpRequest().getParameter("project"));
   }
 }

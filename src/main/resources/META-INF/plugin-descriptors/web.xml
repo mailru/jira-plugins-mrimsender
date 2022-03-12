@@ -41,11 +41,7 @@
                 <view name="success">ru/mail/jira/plugins/myteam/configuration/chat-settings.vm</view>
                 <view name="securitybreach">/secure/views/securitybreach.jsp</view>
             </action>
-        </actions>
-    </webwork1>
 
-    <webwork1 key="project-chat-settings-app-action" class="java.lang.Object" roles-required="use">
-        <actions>
             <action name="ru.mail.jira.plugins.myteam.actions.ProjectChatAdminAction" alias="ProjectChatAdminAction">
                 <view name="success">ru/mail/jira/plugins/myteam/configuration/project-chat-settings.vm</view>
                 <view name="securitybreach">/secure/views/securitybreach.jsp</view>
