@@ -4,7 +4,6 @@ package ru.mail.jira.plugins.myteam.actions;
 import com.atlassian.jira.bc.project.ProjectService;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
-import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import ru.mail.jira.plugins.myteam.commons.PermissionHelperService;
 
 public class ProjectAdminAction extends JiraWebActionSupport {
@@ -14,7 +13,7 @@ public class ProjectAdminAction extends JiraWebActionSupport {
   private final PermissionHelperService permissionHelperService;
 
   public ProjectAdminAction(
-      @ComponentImport ProjectService projectService, PermissionHelperService permissionHelperService) {
+      ProjectService projectService, PermissionHelperService permissionHelperService) {
     this.projectService = projectService;
     this.permissionHelperService = permissionHelperService;
   }
