@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -161,7 +162,6 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     IssueCreationSettingsDto settingsDto =
         new IssueCreationSettingsDto(
             settings, messageFormatter.getMyteamLink(settings.getChatId()));
-    IssueType issueType = issueTypeManager.getIssueType(settings.getIssueTypeId());
 
     try {
       ChatInfoResponse chatInfo = myteamApiClient.getChatInfo(settings.getChatId()).getBody();
@@ -171,8 +171,12 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     } catch (MyteamServerErrorException e) {
       log.error(e.getLocalizedMessage(), e);
     }
-    if (issueType != null) {
-      settingsDto.setIssueTypeName(issueType.getNameTranslation());
+
+    if (StringUtils.isNotEmpty(settings.getIssueTypeId())) {
+      IssueType issueType = issueTypeManager.getIssueType(settings.getIssueTypeId());
+      if (issueType != null) {
+        settingsDto.setIssueTypeName(issueType.getNameTranslation());
+      }
     }
     return settingsDto;
   }
