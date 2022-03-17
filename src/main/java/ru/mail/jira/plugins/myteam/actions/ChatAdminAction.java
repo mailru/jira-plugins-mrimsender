@@ -24,7 +24,8 @@ public class ChatAdminAction extends JiraWebActionSupport {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     String chatId = this.getHttpRequest().getParameter("chatId");
 
-    if (user == null || !permissionHelperService.isChatAdminOrJiraAdmin(chatId, user.getEmailAddress())) {
+    if (user == null
+        || !permissionHelperService.isChatAdminOrJiraAdmin(chatId, user.getEmailAddress())) {
       return SECURITY_BREACH;
     }
 
