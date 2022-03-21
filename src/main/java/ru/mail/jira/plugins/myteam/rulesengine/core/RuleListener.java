@@ -2,23 +2,21 @@
 package ru.mail.jira.plugins.myteam.rulesengine.core;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.Rule;
-import org.jeasy.rules.api.RuleListener;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
-import java.io.IOException;
-
 @Slf4j
-public class MyRuleListener implements RuleListener {
+public class RuleListener implements org.jeasy.rules.api.RuleListener {
   private final UserChatService userChatService;
 
-  public MyRuleListener(UserChatService userChatService) {
+  public RuleListener(UserChatService userChatService) {
     this.userChatService = userChatService;
   }
 

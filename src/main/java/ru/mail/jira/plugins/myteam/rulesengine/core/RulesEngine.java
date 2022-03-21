@@ -7,14 +7,14 @@ import org.jeasy.rules.api.RulesEngineParameters;
 import org.jeasy.rules.core.DefaultRulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
-public final class MyRulesEngine {
+public final class RulesEngine {
 
   private final DefaultRulesEngine rulesEngine;
   private final Rules rules;
 
-  public MyRulesEngine(RulesEngineParameters parameters, UserChatService userChatService) {
+  public RulesEngine(RulesEngineParameters parameters, UserChatService userChatService) {
     rulesEngine = new DefaultRulesEngine(parameters);
-    rulesEngine.registerRuleListener(new MyRuleListener(userChatService));
+    rulesEngine.registerRuleListener(new RuleListener(userChatService));
     rules = new Rules();
   }
 
