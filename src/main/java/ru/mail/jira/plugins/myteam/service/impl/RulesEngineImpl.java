@@ -62,9 +62,9 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
             true, false, false, RulesEngineParameters.DEFAULT_RULE_PRIORITY_THRESHOLD);
-    this.commandsRuleEngine = new MyRulesEngine(engineParams);
-    this.errorsRuleEngine = new MyRulesEngine(engineParams);
-    this.stateActionsRuleEngine = new MyRulesEngine(engineParams);
+    this.commandsRuleEngine = new MyRulesEngine(engineParams, userChatService);
+    this.errorsRuleEngine = new MyRulesEngine(engineParams, userChatService);
+    this.stateActionsRuleEngine = new MyRulesEngine(engineParams, userChatService);
   }
 
   @Override

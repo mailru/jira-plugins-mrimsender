@@ -5,15 +5,16 @@ import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.Rules;
 import org.jeasy.rules.api.RulesEngineParameters;
 import org.jeasy.rules.core.DefaultRulesEngine;
+import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 public final class MyRulesEngine {
 
   private final DefaultRulesEngine rulesEngine;
   private final Rules rules;
 
-  public MyRulesEngine(RulesEngineParameters parameters) {
+  public MyRulesEngine(RulesEngineParameters parameters, UserChatService userChatService) {
     rulesEngine = new DefaultRulesEngine(parameters);
-    rulesEngine.registerRuleListener(new MyRuleListener());
+    rulesEngine.registerRuleListener(new MyRuleListener(userChatService));
     rules = new Rules();
   }
 
