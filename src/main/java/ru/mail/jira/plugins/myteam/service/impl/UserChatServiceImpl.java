@@ -21,6 +21,8 @@ import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.GroupChatInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.repository.MyteamChatRepository;
@@ -76,6 +78,24 @@ public class UserChatServiceImpl implements UserChatService {
   @Override
   public boolean isChatAdmin(String chatId, String userId) {
     return permissionHelperService.isChatAdminOrJiraAdmin(chatId, userId);
+  }
+
+  @Override
+  public String getGroupChatName(String chatId) {
+    try {
+      ChatInfoResponse chatInfo = myteamClient.getChatInfo(chatId).getBody();
+      if (chatInfo instanceof GroupChatInfo) {
+        return ((GroupChatInfo) chatInfo).getTitle();
+      }
+    } catch (MyteamServerErrorException ignored) {
+      return "unknown";
+    }
+    return "unknown";
+  }
+
+  @Override
+  public Locale getUserLocale(String userId) throws UserNotFoundException {
+    return localeManager.getLocaleFor(getJiraUserFromUserChatId(userId));
   }
 
   @Override

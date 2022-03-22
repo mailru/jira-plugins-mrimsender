@@ -76,7 +76,8 @@ public class IssueCreationSettingsController {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     permissionHelperService.checkProjectPermissions(user, projectId);
     return issueCreationSettingsService.getSettingsByProjectId(projectId).stream()
-        .peek(s -> s.setCanEdit(permissionHelperService.isChatAdminOrJiraAdmin(s.getChatId(), user)))
+        .peek(
+            s -> s.setCanEdit(permissionHelperService.isChatAdminOrJiraAdmin(s.getChatId(), user)))
         .collect(Collectors.toList());
   }
 

@@ -12,7 +12,8 @@ public class ChatAdminRule extends BaseRule {
   }
 
   public void checkAdminRules(MyteamEvent event) throws AdminRulesRequiredException {
-    if (!userChatService.isChatAdmin(event.getChatId(), event.getUserId()))
+    if (!userChatService.isChatAdmin(event.getChatId(), event.getUserId())) {
       throw new AdminRulesRequiredException();
+    }
   }
 }

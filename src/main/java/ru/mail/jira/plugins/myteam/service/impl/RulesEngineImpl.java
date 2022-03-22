@@ -8,7 +8,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.core.MyRulesEngine;
+import ru.mail.jira.plugins.myteam.rulesengine.core.RulesEngine;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
@@ -31,15 +31,15 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.base.EmptyState;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 import ru.mail.jira.plugins.myteam.service.IssueService;
-import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Component
-public class RulesEngineImpl implements RulesEngine, InitializingBean {
+public class RulesEngineImpl
+    implements ru.mail.jira.plugins.myteam.service.RulesEngine, InitializingBean {
 
-  private final MyRulesEngine commandsRuleEngine;
-  private final MyRulesEngine errorsRuleEngine;
-  private final MyRulesEngine stateActionsRuleEngine;
+  private final RulesEngine commandsRuleEngine;
+  private final RulesEngine errorsRuleEngine;
+  private final RulesEngine stateActionsRuleEngine;
 
   private final IssueCreationService issueCreationService;
   private final UserChatService userChatService;
@@ -62,9 +62,9 @@ public class RulesEngineImpl implements RulesEngine, InitializingBean {
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
             true, false, false, RulesEngineParameters.DEFAULT_RULE_PRIORITY_THRESHOLD);
-    this.commandsRuleEngine = new MyRulesEngine(engineParams);
-    this.errorsRuleEngine = new MyRulesEngine(engineParams);
-    this.stateActionsRuleEngine = new MyRulesEngine(engineParams);
+    this.commandsRuleEngine = new RulesEngine(engineParams, userChatService);
+    this.errorsRuleEngine = new RulesEngine(engineParams, userChatService);
+    this.stateActionsRuleEngine = new RulesEngine(engineParams, userChatService);
   }
 
   @Override
