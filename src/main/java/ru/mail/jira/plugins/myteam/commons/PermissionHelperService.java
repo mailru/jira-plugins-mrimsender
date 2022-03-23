@@ -42,7 +42,7 @@ public class PermissionHelperService {
     this.myteamClient = myteamClient;
   }
 
-  public boolean isChatAdminOrJiraAdmin(String chatId, String userId) {
+  public boolean isChatAdminOrJiraAdmin(String chatId, @Nullable String userId) {
     if (userId == null) {
       return false;
     }
