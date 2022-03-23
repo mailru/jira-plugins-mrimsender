@@ -22,7 +22,7 @@ public interface UserChatService {
 
   ApplicationUser getJiraUserFromUserChatId(String id) throws UserNotFoundException;
 
-  boolean isChatAdmin(String chatId, String userId);
+  Locale getUserLocale(String userId) throws UserNotFoundException;
 
   Locale getUserLocale(ApplicationUser user);
 
@@ -57,6 +57,10 @@ public interface UserChatService {
   void linkChat(String chatId, String issueKey) throws LinkIssueWithChatException;
 
   String getBotId();
+
+  boolean isChatAdmin(String chatId, String userId);
+
+  String getGroupChatName(String chatId);
 
   // State Manager
 
