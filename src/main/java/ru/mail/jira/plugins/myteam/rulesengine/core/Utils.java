@@ -102,12 +102,16 @@ public class Utils {
   public String convertToJiraCommentStyle(
       ChatMessageEvent event, ApplicationUser commentedUser, Issue commentedIssue) {
     List<Part> parts = event.getMessageParts();
-    StringBuilder outPutStrings = new StringBuilder(event.getMessage());
+    String message = Objects.requireNonNullElse(event.getMessage(), "");
+    StringBuilder outPutStrings = new StringBuilder(message);
     if (parts != null) {
       parts.forEach(
           part -> {
-            CommentaryParts currentPartClass =
-                CommentaryParts.valueOf(part.getClass().getSimpleName());
+            CommentaryParts currentPartClass = CommentaryParts.fromPartClass(part.getClass());
+            if (currentPartClass == null) {
+              return;
+            }
+
             switch (currentPartClass) {
               case File:
                 File file = (File) part;
@@ -123,7 +127,7 @@ public class Utils {
                       outPutStrings.append(
                           buildAttachmentLink(
                               file.getFileId(), fileInfo.getType(), fileInfo.getFilename(), null));
-                      outPutStrings.append(event.getMessage());
+                      outPutStrings.append(message);
                     }
                     if (fileInfo.getType().equals("image")) {
                       outPutStrings.append(
@@ -178,8 +182,11 @@ public class Utils {
     if (messageParts != null) {
       messageParts.forEach(
           messagePart -> {
-            CommentaryParts currentPartClass =
-                CommentaryParts.valueOf(messagePart.getClass().getSimpleName());
+            CommentaryParts currentPartClass = CommentaryParts.fromPartClass(part.getClass());
+            if (currentPartClass == null) {
+              return;
+            }
+
             switch (currentPartClass) {
               case File:
                 File file = (File) messagePart;
