@@ -15,7 +15,7 @@ const Container = styled.div`
 `;
 
 const Settings = styled.div`
-  background-color: var(--aui-item-selected-bg);
+  background-color: #f4f5f7;
   padding: 10px;
   margin: 10px 25px;
   box-sizing: border-box;

@@ -15,7 +15,6 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.exceptions.SettingsTagAlreadyExistsException;
 import ru.mail.jira.plugins.myteam.model.IssueCreationSettings;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
@@ -45,7 +45,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   private final MyteamApiClient myteamApiClient;
   private final MessageFormatter messageFormatter;
 
-  private final Cache<String, Optional<IssueCreationSettingsDto>> issueSettingsCache;
+  private final Cache<String, List<IssueCreationSettingsDto>> issueSettingsCache;
 
   public IssueCreationSettingsServiceImpl(
       IssueCreationSettingsRepository issueCreationSettingsRepository,
@@ -80,9 +80,9 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   @Override
   @Nullable
   public IssueCreationSettingsDto getSettings(String chatId, String tag) {
-    return issueSettingsCache
-        .get(chatId)
+    return issueSettingsCache.get(chatId).stream()
         .filter(settingsDto -> tag.equals(settingsDto.getTag()))
+        .findFirst()
         .orElse(null);
   }
 
@@ -96,12 +96,11 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
         issueCreationSettingsRepository.getSettingsByProjectId(project.getKey()));
   }
 
-  @NotNull
   @Override
-  public Optional<IssueCreationSettingsDto> getSettingsByChatId(String chatId) {
-    return issueCreationSettingsRepository
-        .getSettingsByChatId(chatId)
-        .map(this::mapAdditionalSettingsInfo);
+  public @NotNull List<IssueCreationSettingsDto> getSettingsByChatId(String chatId) {
+    return issueCreationSettingsRepository.getSettingsByChatId(chatId).stream()
+        .map(this::mapAdditionalSettingsInfo)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -118,15 +117,27 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     issueCreationSettingsRepository.create(settings);
     issueSettingsCache.remove(chatId);
 
-    return issueSettingsCache.get(chatId).orElse(null); // NotNull
+    return issueSettingsCache.get(chatId).stream().findFirst().orElse(null); // NotNull
   }
 
   @Override
-  public IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings) {
+  public IssueCreationSettingsDto createSettings(IssueCreationSettingsDto settings)
+      throws SettingsTagAlreadyExistsException {
+    checkAlreadyHasTag(settings);
+    return new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
+  }
+
+  @Override
+  public IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings)
+      throws SettingsTagAlreadyExistsException {
+    checkAlreadyHasTag(settings);
     issueCreationSettingsRepository.update(id, settings);
     issueSettingsCache.remove(settings.getChatId());
 
-    return issueSettingsCache.get(settings.getChatId()).orElse(null); // NotNull
+    return issueSettingsCache.get(settings.getChatId()).stream()
+        .filter(s -> settings.getTag().equals(s.getTag()))
+        .findFirst()
+        .orElse(null); // NotNull
   }
 
   @Override
@@ -139,10 +150,8 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   @Override
   public boolean hasChatSettings(String chatId, String tag) {
-    return issueSettingsCache
-        .get(chatId)
-        .filter(settingsDto -> tag.equals(settingsDto.getTag()))
-        .isPresent(); // NotNull
+    return issueSettingsCache.get(chatId).stream()
+        .anyMatch(settingsDto -> tag.equals(settingsDto.getTag())); // NotNull
   }
 
   @Override
@@ -150,6 +159,29 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     @NotNull IssueCreationSettings settings = issueCreationSettingsRepository.get(id);
     return new IssueCreationSettingsDto(
         settings, messageFormatter.getMyteamLink(settings.getChatId()));
+  }
+
+  @Override
+  public void deleteSettings(int id) {
+    issueCreationSettingsRepository.deleteById(id);
+  }
+
+  private void checkAlreadyHasTag(IssueCreationSettingsDto settings)
+      throws SettingsTagAlreadyExistsException {
+    List<IssueCreationSettings> chatSettings =
+        issueCreationSettingsRepository.getSettingsByChatId(settings.getChatId());
+    boolean isAlreadyHasTag =
+        chatSettings.stream()
+            .anyMatch(
+                s ->
+                    s.getTag().equals(settings.getTag())
+                        && s.getChatId().equals(settings.getChatId())
+                        && (settings.getId() == null || s.getID() != settings.getId()));
+
+    if (isAlreadyHasTag) {
+      throw new SettingsTagAlreadyExistsException(
+          String.format("Tag #%s is already added", settings.getTag()));
+    }
   }
 
   private List<IssueCreationSettingsDto> mapAdditionalSettingsInfos(

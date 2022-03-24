@@ -33,7 +33,7 @@ type FormState = Omit<EditableSettings, 'labels' | 'issueTypeId' | 'projectKey'>
   labels: ReadonlyArray<OptionType>;
 };
 
-const FORM_ID = 'issue-create-chat-settings';
+export const FORM_ID = 'issue-create-chat-settings';
 
 const HintBeforeTagInput = styled.span`
   margin-left: 7px;
@@ -78,6 +78,7 @@ const createOption = (value?: string) => {
 const getFormValues = (): Array<FieldParam> => {
   const values = $(`#${FORM_ID}`).serialize();
   const queryPairs = values.split('&');
+  console.log(queryPairs);
   return queryPairs
     .map((q) => {
       const split = q.split('=');
@@ -339,15 +340,6 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave, onCancel }: Pr
               {renderAdditionalSettings(defaultSettings)}
 
               {renderAdditionalFields(requiredFieldsState)}
-
-              <FormFooter>
-                <ButtonGroup>
-                  <Button type="submit" appearance="primary">
-                    Сохранить
-                  </Button>
-                  {onCancel ? <Button onClick={onCancel}>Отмена</Button> : null}
-                </ButtonGroup>
-              </FormFooter>
             </div>
           </form>
         )}

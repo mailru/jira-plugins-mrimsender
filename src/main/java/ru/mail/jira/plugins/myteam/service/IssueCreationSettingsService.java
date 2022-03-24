@@ -2,9 +2,9 @@
 package ru.mail.jira.plugins.myteam.service;
 
 import java.util.List;
-import java.util.Optional;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
+import ru.mail.jira.plugins.myteam.exceptions.SettingsTagAlreadyExistsException;
 
 public interface IssueCreationSettingsService {
 
@@ -17,15 +17,21 @@ public interface IssueCreationSettingsService {
 
   List<IssueCreationSettingsDto> getSettingsByProjectId(long projectId);
 
-  Optional<IssueCreationSettingsDto> getSettingsByChatId(String chatId);
+  List<IssueCreationSettingsDto> getSettingsByChatId(String chatId);
 
   IssueCreationSettingsDto addDefaultSettings(String chatId);
 
-  IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings);
+  IssueCreationSettingsDto createSettings(IssueCreationSettingsDto settings)
+      throws SettingsTagAlreadyExistsException;
+
+  IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings)
+      throws SettingsTagAlreadyExistsException;
 
   boolean hasRequiredFields(@Nullable IssueCreationSettingsDto settings);
 
   boolean hasChatSettings(String chatId, String tag);
 
   IssueCreationSettingsDto getSettingsById(int id);
+
+  void deleteSettings(int id);
 }
