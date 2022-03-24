@@ -25,18 +25,6 @@ public class IssueCreationSettingsController {
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final PermissionHelperService permissionHelperService;
 
-  //  @ResponseStatus(value = HttpStatus.FORBIDDEN)
-  //  @ExceptionHandler(PermissionException.class)
-  //  public String noRightsHandleException(PermissionException e) {
-  //    return e.getLocalizedMessage();
-  //  }
-  //
-  //  @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-  //  @ExceptionHandler(SettingsTagAlreadyExistsException.class)
-  //  public String settingsTagAlreadyExistsHandleException(SettingsTagAlreadyExistsException e) {
-  //    return e.getLocalizedMessage();
-  //  }
-
   public IssueCreationSettingsController(
       IssueCreationSettingsService issueCreationSettingsService,
       PermissionHelperService permissionHelperService,
@@ -74,7 +62,7 @@ public class IssueCreationSettingsController {
   }
 
   @GET
-  @Path("/projects/{id}/settings")
+  @Path("/settings/projects/{id}")
   public List<IssueCreationSettingsDto> getProjectChatSettings(
       @PathParam("id") final Long projectId) throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();

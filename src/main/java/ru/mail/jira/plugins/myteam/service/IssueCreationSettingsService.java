@@ -19,8 +19,6 @@ public interface IssueCreationSettingsService {
 
   List<IssueCreationSettingsDto> getSettingsByChatId(String chatId);
 
-  IssueCreationSettingsDto addDefaultSettings(String chatId);
-
   IssueCreationSettingsDto createSettings(IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException;
 

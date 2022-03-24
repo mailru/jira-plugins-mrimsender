@@ -43,7 +43,7 @@ const EditIssueCreationSettingsDialog = ({ settingsId, isOpen, onClose, onSaveSu
       {isOpen && (
         <Modal onClose={onClose}>
           <ModalHeader>
-            <ModalTitle>Редактирование настроек {settings.data?.chatId}</ModalTitle>
+            <ModalTitle>Редактирование настроек {settings.data?.chatTitle}</ModalTitle>
           </ModalHeader>
           {statusState.status !== Status.None ? (
             <SectionMessage appearance={statusState.status === Status.Success ? 'success' : 'error'}>

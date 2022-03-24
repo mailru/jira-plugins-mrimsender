@@ -1,9 +1,6 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
-import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
-import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_SUMMARY_TEMPLATE;
-
 import com.atlassian.cache.Cache;
 import com.atlassian.cache.CacheManager;
 import com.atlassian.cache.CacheSettingsBuilder;
@@ -92,8 +89,11 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     if (project == null) {
       return new ArrayList<>();
     }
-    return mapAdditionalSettingsInfos(
-        issueCreationSettingsRepository.getSettingsByProjectId(project.getKey()));
+
+    List<IssueCreationSettings> set =
+        issueCreationSettingsRepository.getSettingsByProjectId(project.getKey());
+
+    return mapAdditionalSettingsInfos(set);
   }
 
   @Override
@@ -101,23 +101,6 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     return issueCreationSettingsRepository.getSettingsByChatId(chatId).stream()
         .map(this::mapAdditionalSettingsInfo)
         .collect(Collectors.toList());
-  }
-
-  @Override
-  public IssueCreationSettingsDto addDefaultSettings(String chatId) {
-    IssueCreationSettingsDto settings =
-        IssueCreationSettingsDto.builder()
-            .chatId(chatId)
-            .enabled(false)
-            .tag("task")
-            .creationSuccessTemplate(DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE)
-            .issueSummaryTemplate(DEFAULT_ISSUE_SUMMARY_TEMPLATE)
-            .build();
-
-    issueCreationSettingsRepository.create(settings);
-    issueSettingsCache.remove(chatId);
-
-    return issueSettingsCache.get(chatId).stream().findFirst().orElse(null); // NotNull
   }
 
   @Override

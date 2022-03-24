@@ -32,5 +32,5 @@ export const deleteChatIssueCreationSettings = async (id: number): Promise<Axios
 export const loadProjectChatIssueCreationSettings = async (
   projectId: string,
 ): Promise<AxiosResponse<Array<IssueCreationSettings>>> => {
-  return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/projects/${projectId}/settings`);
+  return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/settings/projects/${projectId}`);
 };
