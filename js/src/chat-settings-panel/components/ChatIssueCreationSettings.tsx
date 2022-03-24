@@ -1,19 +1,15 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import {
-  createChatIssueCreationSettings,
-  deleteChatIssueCreationSettings,
-  loadChatIssueCreationSettings,
-} from '../../shared/api/SettingsApiClient';
+import { deleteChatIssueCreationSettings, loadChatIssueCreationSettings } from '../../shared/api/SettingsApiClient';
 import styled from 'styled-components';
 import { IssueCreationSettings, LoadableDataState } from '../../shared/types';
 import EditIcon from '@atlaskit/icon/glyph/edit';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
-import EditIssueCreationSettingsDialog from '../../shared/components/EditIssueCreationSettingsDialog';
+import EditIssueCreationSettingsDialog from '../../shared/components/dialogs/EditIssueCreationSettingsDialog';
 import { ChatName } from '../../shared/components/ChatName';
 import LoadableComponent from '../../shared/components/LoadableComponent';
 import Button from '@atlaskit/button';
 import { I18n } from '@atlassian/wrm-react-i18n';
-import NewIssueCreationSettingsDialog from '../../shared/components/NewIssueCreationSettingsDialog';
+import NewIssueCreationSettingsDialog from '../../shared/components/dialogs/NewIssueCreationSettingsDialog';
 import ConfirmationDialog from '../../shared/components/dialogs/ConfirmationDialog';
 
 type Props = {
@@ -146,10 +142,15 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
 
   useLayoutEffect(loadSettings, []);
 
+  const firstSettings = settings.data ? settings.data[0] : null;
+
   return (
     <Container>
       <TitleContainer>
-        <h2>Настройки создания задач</h2>
+        <h2>
+          Настройки создания задач{' '}
+          <ChatName chatTitle={firstSettings?.chatTitle || ''} href={firstSettings?.chatLink} />
+        </h2>
         <Button appearance="subtle" onClick={() => setNewSettingsDialogState({ isOpen: true })}>
           {I18n.getText('common.forms.create')}
         </Button>
@@ -174,7 +175,10 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
             settingsId={editSettingsDialogState.settingsId}
             isOpen={editSettingsDialogState.isOpen}
             onClose={() => setEditSettingsDialogState({ isOpen: false })}
-            onSaveSuccess={loadSettings}
+            onSaveSuccess={() => {
+              setEditSettingsDialogState({ isOpen: false });
+              loadSettings();
+            }}
           />
         ) : null}
 

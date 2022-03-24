@@ -1,12 +1,12 @@
 import Button from '@atlaskit/button';
 import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle, ModalTransition } from '@atlaskit/modal-dialog';
 import SectionMessage from '@atlaskit/section-message';
-import React, { ReactElement, useState } from 'react';
-import { IssueCreationSettings } from '../types';
-import EditIssueCreationSettingsForm, { FORM_ID } from './EditIssueCreationSettingsForm';
+import React, { ReactElement } from 'react';
+import { IssueCreationSettings } from '../../types';
+import EditIssueCreationSettingsForm, { FORM_ID } from '../EditIssueCreationSettingsForm';
 import { I18n } from '@atlassian/wrm-react-i18n';
-import { createChatIssueCreationSettings } from '../api/SettingsApiClient';
-import { useTimeoutState } from '../hooks';
+import { createChatIssueCreationSettings } from '../../api/SettingsApiClient';
+import { useTimeoutState } from '../../hooks';
 
 type Props = {
   className?: string;
@@ -48,7 +48,6 @@ const NewIssueCreationSettingsDialog = ({ isOpen, chatId, onClose, onSaveSuccess
               defaultSettings={DEFAULT_SETTINGS}
               onCancel={() => {
                 onClose();
-                setStatus({ status: Status.None }, 5000);
               }}
               onSave={(settings) => {
                 if (chatId) {
@@ -65,14 +64,7 @@ const NewIssueCreationSettingsDialog = ({ isOpen, chatId, onClose, onSaveSuccess
             />
           </ModalBody>
           <ModalFooter>
-            <Button
-              form={FORM_ID}
-              type="submit"
-              appearance="primary"
-              autoFocus
-              onClick={() => {
-                setStatus({ status: Status.None }, 0);
-              }}>
+            <Button form={FORM_ID} type="submit" appearance="primary" autoFocus>
               {I18n.getText('common.forms.create')}
             </Button>
             <Button

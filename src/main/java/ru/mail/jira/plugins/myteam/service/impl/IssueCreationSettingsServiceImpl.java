@@ -180,7 +180,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
     if (isAlreadyHasTag) {
       throw new SettingsTagAlreadyExistsException(
-          String.format("Tag #%s is already added", settings.getTag()));
+          String.format("Tag #%s is already exist", settings.getTag()));
     }
   }
 
