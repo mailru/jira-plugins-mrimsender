@@ -82,7 +82,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   @Override
   @Nullable
   public IssueCreationSettingsDto getSettingsFromCache(String chatId, String tag) {
-    return issueSettingsCache.get(combineKey(chatId, chatId)).orElse(null); // NotNull
+    return issueSettingsCache.get(combineKey(chatId, tag)).orElse(null); // NotNull
   }
 
   @Override
@@ -207,7 +207,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   private Pair<String, String> splitKey(String key) {
     List<String> split = Splitter.on(SPLITTER).splitToList(key);
-    return Pair.of(split.get(0), split.get(0));
+    return Pair.of(split.get(0), split.get(1));
   }
 
   private String combineKey(String chatId, String tag) {
