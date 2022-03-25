@@ -89,7 +89,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       throws MyteamServerErrorException, IOException {
     try {
       IssueCreationSettingsDto settings =
-          issueCreationSettingsService.getSettings(event.getChatId(), tag);
+          issueCreationSettingsService.getSettingsFromCache(event.getChatId(), tag);
 
       if (settings == null || !issueCreationSettingsService.hasRequiredFields(settings)) {
         return;

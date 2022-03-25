@@ -9,9 +9,12 @@ import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.exception.NotFoundException;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
+import com.atlassian.jira.util.lang.Pair;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.google.common.base.Splitter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +36,8 @@ import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 @Slf4j
 public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsService {
 
+  private static final String SPLITTER = "##";
+
   private static final String CACHE_NAME =
       IssueCreationSettingsServiceImpl.class.getName() + ".issueSettingsCache";
 
@@ -42,7 +47,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   private final MyteamApiClient myteamApiClient;
   private final MessageFormatter messageFormatter;
 
-  private final Cache<String, List<IssueCreationSettingsDto>> issueSettingsCache;
+  private final Cache<String, Optional<IssueCreationSettingsDto>> issueSettingsCache;
 
   public IssueCreationSettingsServiceImpl(
       IssueCreationSettingsRepository issueCreationSettingsRepository,
@@ -60,7 +65,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     issueSettingsCache =
         cacheManager.getCache(
             CACHE_NAME,
-            this::getSettingsByChatId,
+            this::getSettingsByChatIdAndTag,
             new CacheSettingsBuilder().remote().replicateViaInvalidation().build());
   }
 
@@ -76,11 +81,8 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   @Override
   @Nullable
-  public IssueCreationSettingsDto getSettings(String chatId, String tag) {
-    return issueSettingsCache.get(chatId).stream()
-        .filter(settingsDto -> tag.equals(settingsDto.getTag()))
-        .findFirst()
-        .orElse(null);
+  public IssueCreationSettingsDto getSettingsFromCache(String chatId, String tag) {
+    return issueSettingsCache.get(combineKey(chatId, chatId)).orElse(null); // NotNull
   }
 
   @Override
@@ -104,23 +106,21 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   }
 
   @Override
-  public IssueCreationSettingsDto createSettings(IssueCreationSettingsDto settings)
+  public IssueCreationSettingsDto createSettings(@NotNull IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException {
     checkAlreadyHasTag(settings);
-    return new IssueCreationSettingsDto(issueCreationSettingsRepository.create(settings));
+    issueCreationSettingsRepository.create(settings);
+    return getSettingsFromCache(settings.getChatId(), settings.getTag());
   }
 
   @Override
-  public IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings)
+  public IssueCreationSettingsDto updateSettings(int id, @NotNull IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException {
     checkAlreadyHasTag(settings);
     issueCreationSettingsRepository.update(id, settings);
-    issueSettingsCache.remove(settings.getChatId());
+    issueSettingsCache.remove(combineKey(settings.getChatId(), settings.getTag()));
 
-    return issueSettingsCache.get(settings.getChatId()).stream()
-        .filter(s -> settings.getTag().equals(s.getTag()))
-        .findFirst()
-        .orElse(null); // NotNull
+    return getSettingsFromCache(settings.getChatId(), settings.getTag());
   }
 
   @Override
@@ -133,8 +133,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   @Override
   public boolean hasChatSettings(String chatId, String tag) {
-    return issueSettingsCache.get(chatId).stream()
-        .anyMatch(settingsDto -> tag.equals(settingsDto.getTag())); // NotNull
+    return getSettingsFromCache(chatId, tag) != null;
   }
 
   @Override
@@ -146,7 +145,9 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   @Override
   public void deleteSettings(int id) {
+    @NotNull IssueCreationSettings settings = issueCreationSettingsRepository.get(id);
     issueCreationSettingsRepository.deleteById(id);
+    issueSettingsCache.remove(combineKey(settings.getChatId(), settings.getTag()));
   }
 
   private void checkAlreadyHasTag(IssueCreationSettingsDto settings)
@@ -172,6 +173,14 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     return settings.stream().map(this::mapAdditionalSettingsInfo).collect(Collectors.toList());
   }
 
+  private @NotNull Optional<IssueCreationSettingsDto> getSettingsByChatIdAndTag(
+      String chatIdAndTag) {
+    Pair<String, String> key = splitKey(chatIdAndTag);
+    return issueCreationSettingsRepository
+        .getSettingsByChatIdAndTag(key.first(), key.second())
+        .map(this::mapAdditionalSettingsInfo);
+  }
+
   private IssueCreationSettingsDto mapAdditionalSettingsInfo(IssueCreationSettings settings) {
 
     IssueCreationSettingsDto settingsDto =
@@ -194,5 +203,14 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
       }
     }
     return settingsDto;
+  }
+
+  private Pair<String, String> splitKey(String key) {
+    List<String> split = Splitter.on(SPLITTER).splitToList(key);
+    return Pair.of(split.get(0), split.get(0));
+  }
+
+  private String combineKey(String chatId, String tag) {
+    return chatId + SPLITTER + tag;
   }
 }

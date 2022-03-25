@@ -78,7 +78,6 @@ const createOption = (value?: string) => {
 const getFormValues = (): Array<FieldParam> => {
   const values = $(`#${FORM_ID}`).serialize();
   const queryPairs = values.split('&');
-  console.log(queryPairs);
   return queryPairs
     .map((q) => {
       const split = q.split('=');
