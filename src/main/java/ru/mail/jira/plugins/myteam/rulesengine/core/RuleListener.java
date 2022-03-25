@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.rulesengine.core;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.UndeclaredThrowableException;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.Rule;
@@ -47,7 +48,9 @@ public class RuleListener implements org.jeasy.rules.api.RuleListener {
   }
 
   private boolean checkAdminRulesException(Facts facts, Exception exception) {
-    if (exception instanceof AdminRulesRequiredException) {
+    if (exception instanceof UndeclaredThrowableException
+        && ((UndeclaredThrowableException) exception).getUndeclaredThrowable().getCause()
+            instanceof AdminRulesRequiredException) {
       MyteamEvent event = facts.get("event");
       if (event != null) {
         try {
