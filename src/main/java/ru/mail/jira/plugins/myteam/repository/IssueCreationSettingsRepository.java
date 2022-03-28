@@ -7,6 +7,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 import net.java.ao.Query;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -99,16 +100,12 @@ public class IssueCreationSettingsRepository
     return null;
   }
 
-  public Optional<IssueCreationSettings> getSettingsByChatId(String chatId) {
+  public List<IssueCreationSettings> getSettingsByChatId(String chatId) {
 
     IssueCreationSettings[] settings =
         ao.find(IssueCreationSettings.class, Query.select().where("CHAT_ID = ?", chatId));
 
-    if (settings.length == 0) {
-      return Optional.empty();
-    }
-
-    return Optional.of(settings[0]);
+    return Arrays.stream(settings).collect(Collectors.toList());
   }
 
   public Optional<IssueCreationSettings> getSettingsByChatIdAndTag(String chatId, String tag) {
@@ -123,6 +120,18 @@ public class IssueCreationSettingsRepository
     }
 
     return Optional.of(settings[0]);
+  }
+
+  @Override
+  public void deleteById(int id) {
+    IssueCreationSettings settings = get(id);
+
+    ao.executeInTransaction(
+        () -> {
+          ao.deleteWithSQL(AdditionalIssueField.class, "ISSUE_CREATION_SETTINGS_ID = ?", id);
+          ao.delete(settings);
+          return null;
+        });
   }
 
   public List<IssueCreationSettings> getSettingsByProjectId(String projectKey) {

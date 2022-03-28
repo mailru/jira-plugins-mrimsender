@@ -3,7 +3,7 @@ import { loadProjectChatIssueCreationSettings } from '../../shared/api/SettingsA
 import styled from 'styled-components';
 import { IssueCreationSettings, LoadableDataState } from '../../shared/types';
 import EditIcon from '@atlaskit/icon/glyph/edit';
-import EditIssueCreationSettingsDialog from '../../shared/components/EditIssueCreationSettingsDialog';
+import EditIssueCreationSettingsDialog from '../../shared/components/dialogs/EditIssueCreationSettingsDialog';
 import contextPath from 'wrm/context-path';
 import { ChatName } from '../../shared/components/ChatName';
 import LoadableComponent from '../../shared/components/LoadableComponent';
@@ -15,7 +15,7 @@ const Container = styled.div`
 `;
 
 const Settings = styled.div`
-  background-color: var(--aui-item-selected-bg);
+  background-color: #f4f5f7;
   padding: 10px;
   margin: 10px 25px;
   box-sizing: border-box;
@@ -138,7 +138,10 @@ const ProjectIssueCreationSettings = (): ReactElement => {
             settingsId={editSettingsDialogState.settingsId}
             isOpen={editSettingsDialogState.isOpen}
             onClose={() => setEditSettingsDialogState({ isOpen: false })}
-            onSaveSuccess={loadSettings}
+            onSaveSuccess={() => {
+              setEditSettingsDialogState({ isOpen: false });
+              loadSettings();
+            }}
           />
         ) : null}
       </LoadableComponent>

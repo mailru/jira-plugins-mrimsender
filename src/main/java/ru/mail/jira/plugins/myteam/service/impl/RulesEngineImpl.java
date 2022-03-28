@@ -86,8 +86,7 @@ public class RulesEngineImpl
     // Admin Group Commands
 
     commandsRuleEngine.registerRule(
-        new IssueCreationSettingsCommand(
-            userChatService, this, issueCreationSettingsService, issueService));
+        new IssueCreationSettingsCommand(userChatService, this, issueService));
 
     // Commands
     commandsRuleEngine.registerRule(new HelpCommandRule(userChatService, this));
