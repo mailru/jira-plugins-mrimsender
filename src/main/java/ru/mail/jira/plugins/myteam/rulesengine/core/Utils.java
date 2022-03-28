@@ -11,6 +11,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import kong.unirest.HttpResponse;
