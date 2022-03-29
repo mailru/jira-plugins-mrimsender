@@ -237,7 +237,7 @@ public class Utils {
             }
           });
     } else {
-      outPutStrings.append(Objects.requireNonNullElse(text, ""));
+      outPutStrings.append(text);
     }
     return outPutStrings.toString();
   }

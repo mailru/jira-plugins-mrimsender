@@ -33,7 +33,7 @@ type FormState = Omit<EditableSettings, 'labels' | 'issueTypeId' | 'projectKey'>
   labels: ReadonlyArray<OptionType>;
 };
 
-const FORM_ID = 'issue-create-chat-settings';
+export const FORM_ID = 'issue-create-chat-settings';
 
 const HintBeforeTagInput = styled.span`
   margin-left: 7px;
@@ -339,15 +339,6 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave, onCancel }: Pr
               {renderAdditionalSettings(defaultSettings)}
 
               {renderAdditionalFields(requiredFieldsState)}
-
-              <FormFooter>
-                <ButtonGroup>
-                  <Button type="submit" appearance="primary">
-                    Сохранить
-                  </Button>
-                  {onCancel ? <Button onClick={onCancel}>Отмена</Button> : null}
-                </ButtonGroup>
-              </FormFooter>
             </div>
           </form>
         )}

@@ -1,6 +1,7 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.controller.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,6 +19,7 @@ import ru.mail.jira.plugins.myteam.model.IssueCreationSettings;
 @Builder
 @ToString
 @XmlRootElement
+@JsonIgnoreProperties(ignoreUnknown = true)
 @SuppressWarnings("MissingSummary")
 public class IssueCreationSettingsDto {
 

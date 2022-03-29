@@ -77,6 +77,6 @@
     <web-item key="chat-settings-project-configuration" section="atl.jira.proj.config/chat-settings-project-section">
         <label key="ru.mail.jira.plugins.myteam.project.section.chatSettings.title"/>
         <condition class="com.atlassian.jira.plugin.webfragment.conditions.CanAdministerProjectCondition"/>
-        <link linkId="service-portal-project-configuration-link">/myteam/projects/$project.id/settings/chats</link>
+        <link linkId="chat-settings-project-configuration-link">/myteam/projects/$project.id/settings/chats</link>
     </web-item>
 </web>
