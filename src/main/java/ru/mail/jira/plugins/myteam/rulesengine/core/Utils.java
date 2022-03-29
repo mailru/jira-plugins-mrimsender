@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
@@ -75,6 +76,7 @@ public class Utils {
       attachmentManager.convertTemporaryAttachment(params);
       return true;
     } catch (Exception e) {
+      SentryClient.capture(e);
       log.error(e.getLocalizedMessage(), e);
       return false;
     }
@@ -140,6 +142,7 @@ public class Utils {
                     }
                   }
                 } catch (UnirestException | IOException | MyteamServerErrorException e) {
+                  SentryClient.capture(e);
                   log.error(
                       "Unable to create attachment for comment on Issue {}",
                       commentedIssue.getKey(),
@@ -155,9 +158,12 @@ public class Utils {
                   outPutStrings.setLength(0);
                   outPutStrings.append(replacedMention);
                 } else {
-                  log.error(
-                      "Unable change Myteam mention to Jira's mention, because Can't find user with id:{}",
-                      mention.getUserId());
+                  String errorMessage =
+                      String.format(
+                          "Unable change Myteam mention to Jira's mention, because can't find user with id: %s",
+                          mention.getUserId());
+                  SentryClient.capture(errorMessage);
+                  log.error(errorMessage);
                 }
                 break;
               default:
@@ -182,7 +188,8 @@ public class Utils {
     if (messageParts != null) {
       messageParts.forEach(
           messagePart -> {
-            CommentaryParts currentPartClass = CommentaryParts.fromPartClass(part.getClass());
+            CommentaryParts currentPartClass =
+                CommentaryParts.fromPartClass(messagePart.getClass());
             if (currentPartClass == null) {
               return;
             }
@@ -206,6 +213,7 @@ public class Utils {
                     }
                   }
                 } catch (UnirestException | IOException | MyteamServerErrorException e) {
+                  SentryClient.capture(e);
                   log.error("Unable to add attachment to Issue {}", issue.getKey(), e);
                 }
                 break;
@@ -217,9 +225,12 @@ public class Utils {
                 } else {
                   outPutStrings.append(
                       replaceMention(text, mention.getUserId(), mention.getFirstName()));
-                  log.error(
-                      "Unable change Myteam mention to Jira's mention, because Can't find user with id:{}",
-                      mention.getUserId());
+                  String errorMessage =
+                      String.format(
+                          "Unable change Myteam mention to Jira's mention, because can't find user with id: %s",
+                          mention.getUserId());
+                  SentryClient.capture(errorMessage);
+                  log.error(errorMessage);
                 }
                 break;
               default:

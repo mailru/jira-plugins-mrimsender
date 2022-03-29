@@ -7,13 +7,12 @@ import com.atlassian.jira.user.UserPropertyManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.StreamSupport;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.service.PluginData;
-
-import java.util.concurrent.TimeUnit;
-import java.util.stream.StreamSupport;
 
 @Component
 public class UserData {
@@ -76,7 +75,7 @@ public class UserData {
   @Nullable
   /** mrimLogin in most cases equals to user email */
   public ApplicationUser getUserByMrimLogin(@Nullable String mrimLogin) {
-    if(mrimLogin == null) {
+    if (mrimLogin == null) {
       return null;
     }
     return userByMrimLoginCache.get(
