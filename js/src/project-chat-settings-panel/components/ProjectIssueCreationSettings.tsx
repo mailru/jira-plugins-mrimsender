@@ -107,7 +107,7 @@ const ProjectIssueCreationSettings = (): ReactElement => {
   });
 
   const loadSettings = () => {
-    const match = location.pathname.match(/myteam\/projects\/(\d+)\/settings\/chats/);
+    const match = location.pathname.match(/myteam\/projects\/(\w+)\/settings\/chats/);
     setSettings({ isLoading: true });
     if (match) {
       loadProjectChatIssueCreationSettings(match[1])

@@ -52,7 +52,7 @@
     <sitemesh key="myteam-sitemesh-prettyurls" path="/myteam"/>
     <routing key="myteam-prettyurls" path="/myteam">
         <route from="/chats/settings" to="/secure/ChatSetting.jspa"/>
-        <route from="/projects/{id}/settings/chats" to="/secure/ProjectChatAdminAction.jspa?project={id}"/>
+        <route from="/projects/{key}/settings/chats" to="/secure/ProjectChatAdminAction.jspa?project={key}"/>
     </routing>
 
 
@@ -77,6 +77,6 @@
     <web-item key="chat-settings-project-configuration" section="atl.jira.proj.config/chat-settings-project-section">
         <label key="ru.mail.jira.plugins.myteam.project.section.chatSettings.title"/>
         <condition class="com.atlassian.jira.plugin.webfragment.conditions.CanAdministerProjectCondition"/>
-        <link linkId="chat-settings-project-configuration-link">/myteam/projects/$project.id/settings/chats</link>
+        <link linkId="chat-settings-project-configuration-link">/myteam/projects/$project.key/settings/chats</link>
     </web-item>
 </web>

@@ -86,8 +86,8 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   }
 
   @Override
-  public List<IssueCreationSettingsDto> getSettingsByProjectId(long projectId) {
-    Project project = projectService.getProjectById(projectId).getProject();
+  public List<IssueCreationSettingsDto> getSettingsByProjectKey(String projectKey) {
+    Project project = projectService.getProjectByKey(projectKey).getProject();
     if (project == null) {
       return new ArrayList<>();
     }

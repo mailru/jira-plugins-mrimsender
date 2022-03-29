@@ -17,7 +17,7 @@ public interface IssueCreationSettingsService {
   @Nullable
   IssueCreationSettingsDto getSettingsFromCache(String chatId, String tag);
 
-  List<IssueCreationSettingsDto> getSettingsByProjectId(long projectId);
+  List<IssueCreationSettingsDto> getSettingsByProjectKey(String projectKey);
 
   List<IssueCreationSettingsDto> getSettingsByChatId(String chatId);
 
