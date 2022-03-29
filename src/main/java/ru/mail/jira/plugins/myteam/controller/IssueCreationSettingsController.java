@@ -62,12 +62,12 @@ public class IssueCreationSettingsController {
   }
 
   @GET
-  @Path("/settings/projects/{id}")
+  @Path("/settings/projects/{projectKey}")
   public List<IssueCreationSettingsDto> getProjectChatSettings(
-      @PathParam("id") final Long projectId) throws PermissionException {
+      @PathParam("projectKey") final String projectKey) throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-    permissionHelperService.checkProjectPermissions(user, projectId);
-    return issueCreationSettingsService.getSettingsByProjectId(projectId).stream()
+    permissionHelperService.checkProjectPermissions(user, projectKey);
+    return issueCreationSettingsService.getSettingsByProjectKey(projectKey).stream()
         .peek(
             s -> s.setCanEdit(permissionHelperService.isChatAdminOrJiraAdmin(s.getChatId(), user)))
         .collect(Collectors.toList());

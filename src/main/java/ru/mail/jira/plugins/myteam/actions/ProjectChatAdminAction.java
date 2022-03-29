@@ -21,17 +21,17 @@ public class ProjectChatAdminAction extends JiraWebActionSupport {
 
   @Override
   public String execute() {
-    if (!permissionHelperService.isProjectAdmin(getLoggedInUser(), getProjectId())) {
+    if (!permissionHelperService.isProjectAdmin(getLoggedInUser(), getProjectKey())) {
       return SECURITY_BREACH;
     }
     return SUCCESS;
   }
 
   public String getProjectKey() {
-    return projectService.getProjectById(getProjectId()).get().getKey();
+    return getHttpRequest().getParameter("project");
   }
 
   public Long getProjectId() {
-    return Long.parseLong(getHttpRequest().getParameter("project"));
+    return projectService.getProjectByKey(getProjectKey()).get().getId();
   }
 }

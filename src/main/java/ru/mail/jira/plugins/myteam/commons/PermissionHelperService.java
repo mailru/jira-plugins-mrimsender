@@ -86,6 +86,15 @@ public class PermissionHelperService {
     }
   }
 
+  public boolean isProjectAdmin(ApplicationUser user, String projectKey) {
+    try {
+      return isProjectAdmin(user, getExistingProject(projectKey));
+    } catch (Exception e) {
+      log.error("calling isProjectAdmin({},{})", user, projectKey, e);
+      return false;
+    }
+  }
+
   public boolean isProjectAdmin(ApplicationUser user, Project project) {
     return isJiraAdmin(user)
         || permissionManager.hasPermission(ProjectPermissions.ADMINISTER_PROJECTS, project, user);
@@ -93,6 +102,14 @@ public class PermissionHelperService {
 
   private Project getExistingProject(long projectId) {
     Project project = projectManager.getProjectObj(projectId);
+    if (project == null) {
+      throw new RestFieldException("Project doesn't exist");
+    }
+    return project;
+  }
+
+  private Project getExistingProject(String projectKey) {
+    Project project = projectManager.getProjectObjByKey(projectKey);
     if (project == null) {
       throw new RestFieldException("Project doesn't exist");
     }
@@ -112,10 +129,10 @@ public class PermissionHelperService {
     throw new PermissionException();
   }
 
-  public ApplicationUser checkProjectPermissions(ApplicationUser user, Long projectId)
+  public ApplicationUser checkProjectPermissions(ApplicationUser user, String projectKey)
       throws PermissionException {
 
-    if (isProjectAdmin(user, projectId)) {
+    if (isProjectAdmin(user, projectKey)) {
       return user;
     }
     throw new PermissionException();
