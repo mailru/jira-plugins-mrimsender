@@ -188,7 +188,8 @@ public class Utils {
     if (messageParts != null) {
       messageParts.forEach(
           messagePart -> {
-            CommentaryParts currentPartClass = CommentaryParts.fromPartClass(part.getClass());
+            CommentaryParts currentPartClass =
+                CommentaryParts.fromPartClass(messagePart.getClass());
             if (currentPartClass == null) {
               return;
             }
