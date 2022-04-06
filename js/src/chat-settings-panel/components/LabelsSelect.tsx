@@ -4,7 +4,7 @@ import { loadLabelsSugestions } from '../../shared/api/CommonApiClient';
 
 const createOption = (label: string) => ({
   label,
-  value: label.toLowerCase().replace(/[^\wА-Яа-я]/g, ''),
+  value: label.toLowerCase().trim(),
 });
 
 type Props = {
