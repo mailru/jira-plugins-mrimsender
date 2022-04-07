@@ -3,24 +3,31 @@
 #   ref: 'master'
 #   file: '/ci/templates/Plugin.JDK11.gitlab-ci.yml'
 
-
 include:
   - template: Code-Quality.gitlab-ci.yml
   - template: Security/Secret-Detection.gitlab-ci.yml
   - template: Security/SAST.gitlab-ci.yml
 
-variables:
-  MAVEN_OPTS: "--batch-mode"
+secret_detection:
+  before_script: []
+  cache: {}
 
-image: registry-gitlab.corp.mail.ru/atl-team/maven-yarn-docker:3.0.7_JDK11
+variables:
+  MAVEN_OPTS: "--batch-mode -Dmaven.repo.local=./.m2/repository -Dmaven.artifact.threads=30"
+
+image: registry-gitlab.corp.mail.ru/atl-team/maven-yarn-docker:3.0.6_JDK11
 
 default:
   tags:
     - docker
 
+before_script:
+  - "[[ -e /root ]] && [[ -e /root/.m2 ]] && cp -R /root/.m2 ./"
+
 cache:
   key: $CI_DEFAULT_BRANCH
   paths:
+    - ./.m2
     - js/node_modules
 
 stages:
@@ -52,6 +59,40 @@ marketplace-build:
     - export SENTRY_DSN=
   extends:
     - .build
+  when: manual
+
+
+sast:
+  stage: test
+
+spotbugs-sast:
+  stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  variables:
+    FAIL_NEVER: 1
+    MAVEN_REPO_PATH: .m2/
+    COMPILE: "false"
+    SAST_EXCLUDED_PATHS: spec, test, tests, tmp, .m2
+
+code_quality:
+  stage: test
+  before_script:
+    - cp $CODECLIMATE_CONFIG ./.codeclimate.yml
+  artifacts:
+    paths: 
+      - gl-code-quality-report.json
+
+code_quality_html:
+  stage: test
+  before_script:
+    - cp $CODECLIMATE_CONFIG ./.codeclimate.yml
+  extends: code_quality
+  variables:
+    REPORT_FORMAT: html
+  artifacts:
+    paths: 
+      - gl-code-quality-report.html
   when: manual
 
 mvn-dependency-check:
@@ -89,40 +130,3 @@ upload:
   only:
     refs:
       - tags
-
-secret_detection:
-  before_script: []
-  cache: {}
-
-sast:
-  stage: test
-
-spotbugs-sast:
-  stage: test
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-  variables:
-    FAIL_NEVER: 1
-    MAVEN_REPO_PATH: .m2/
-    COMPILE: "false"
-    SAST_EXCLUDED_PATHS: spec, test, tests, tmp, .m2
-
-code_quality:
-  stage: test
-  before_script:
-    - cp $CODECLIMATE_CONFIG1 ./.codeclimate.yml
-  artifacts:
-    paths: 
-      - gl-code-quality-report.json
-
-code_quality_html:
-  stage: test
-  before_script:
-    - cp $CODECLIMATE_CONFIG1 ./.codeclimate.yml
-  extends: code_quality
-  variables:
-    REPORT_FORMAT: html
-  artifacts:
-    paths: 
-      - gl-code-quality-report.html
-  when: manual
