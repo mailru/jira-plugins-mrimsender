@@ -99,20 +99,15 @@ sast:
 
 spotbugs-sast:
   stage: test
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
   variables:
     FAIL_NEVER: 1
-    MAVEN_REPO_PATH: .m2/
+    MAVEN_REPO_PATH: /root/.m2
     COMPILE: "false"
     SAST_EXCLUDED_PATHS: spec, test, tests, tmp, .m2
 
 code_quality:
   stage: test
   before_script:
-    - ls -a
-    - ls -a /root
-    - ls -a /root/.m2
     - cp $CODECLIMATE_CONFIG1 ./.codeclimate.yml
   artifacts:
     paths: 
