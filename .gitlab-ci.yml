@@ -110,6 +110,9 @@ spotbugs-sast:
 code_quality:
   stage: test
   before_script:
+    - ls -a
+    - ls -a /root
+    - ls -a /root/.m2
     - cp $CODECLIMATE_CONFIG1 ./.codeclimate.yml
   artifacts:
     paths: 
@@ -118,6 +121,9 @@ code_quality:
 code_quality_html:
   stage: test
   before_script:
+    - ls -a
+    - ls -a /root
+    - ls -a /root/.m2
     - cp $CODECLIMATE_CONFIG1 ./.codeclimate.yml
   extends: code_quality
   variables:
