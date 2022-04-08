@@ -175,37 +175,29 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       @NotNull Map<Field, String> fields,
       ApplicationUser user) {
 
-    // need here to because issueService use authenticationContext
-    ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
-    try {
-      jiraAuthenticationContext.setLoggedInUser(user);
-      IssueInputParameters issueInputParameters =
-          issueService.newIssueInputParameters(
-              fields.entrySet().stream()
-                  .collect(
-                      Collectors.toMap(
-                          (e) -> e.getKey().getId(),
-                          (e) -> {
-                            CreateIssueFieldValueHandler cfConfig =
-                                getFieldValueHandler(e.getKey());
-                            return cfConfig.getValueAsArray(
-                                Utils.removeAllEmojis(e.getValue()),
-                                e.getKey(),
-                                project,
-                                issueType,
-                                localeManager.getLocaleFor(user));
-                          })));
-      issueInputParameters.setRetainExistingValuesWhenParameterNotProvided(true, true);
+    IssueInputParameters issueInputParameters =
+        issueService.newIssueInputParameters(
+            fields.entrySet().stream()
+                .collect(
+                    Collectors.toMap(
+                        (e) -> e.getKey().getId(),
+                        (e) -> {
+                          CreateIssueFieldValueHandler cfConfig = getFieldValueHandler(e.getKey());
+                          return cfConfig.getValueAsArray(
+                              Utils.removeAllEmojis(e.getValue()),
+                              e.getKey(),
+                              project,
+                              issueType,
+                              localeManager.getLocaleFor(user));
+                        })));
+    issueInputParameters.setRetainExistingValuesWhenParameterNotProvided(true, true);
 
-      // manually setting current user as issue reporter and selected ProjectId and IssueTypeId
-      issueInputParameters.setProjectId(project.getId());
-      issueInputParameters.setIssueTypeId(issueType.getId());
-      issueInputParameters.setReporterId(user.getName());
+    // manually setting current user as issue reporter and selected ProjectId and IssueTypeId
+    issueInputParameters.setProjectId(project.getId());
+    issueInputParameters.setIssueTypeId(issueType.getId());
+    issueInputParameters.setReporterId(user.getName());
 
-      return issueService.validateCreate(user, issueInputParameters);
-    } finally {
-      jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
-    }
+    return issueService.validateCreate(user, issueInputParameters);
   }
 
   @Override
@@ -288,21 +280,13 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       @NotNull Map<Field, String> fields,
       ApplicationUser user)
       throws IssueCreationValidationException {
-    return createIssue(project, issueType, fields, user, user);
-  }
-
-  @NotNull
-  public MutableIssue createIssue(
-      Project project,
-      IssueType issueType,
-      @NotNull Map<Field, String> fields,
-      ApplicationUser user,
-      ApplicationUser reporter)
-      throws IssueCreationValidationException {
     JiraThreadLocalUtils.preCall();
+    // need here to because issueService use authenticationContext
+    ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
     try {
+      jiraAuthenticationContext.setLoggedInUser(user);
       IssueService.CreateValidationResult issueValidationResult =
-          validateIssueWithGivenFields(project, issueType, fields, user);
+              validateIssueWithGivenFields(project, issueType, fields, user);
 
       if (issueValidationResult.isValid()) {
         IssueService.IssueResult issueResult = issueService.create(user, issueValidationResult);
@@ -310,14 +294,15 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
           return issueResult.getIssue();
         } else {
           throw new IssueCreationValidationException(
-              "Unable to create issue with provided fields", issueResult.getErrorCollection());
+                  "Unable to create issue with provided fields", issueResult.getErrorCollection());
         }
       } else {
         throw new IssueCreationValidationException(
-            "Unable to create issue with provided fields",
-            issueValidationResult.getErrorCollection());
+                "Unable to create issue with provided fields",
+                issueValidationResult.getErrorCollection());
       }
     } finally {
+      jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
       JiraThreadLocalUtils.postCall();
     }
   }

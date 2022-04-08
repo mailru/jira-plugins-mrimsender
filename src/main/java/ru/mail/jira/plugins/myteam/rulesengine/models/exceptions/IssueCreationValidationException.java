@@ -12,7 +12,7 @@ public class IssueCreationValidationException extends Exception {
 
     super(
         String.format(
-            "%s\n\n%s",
+            "%s%n%n%s",
             message,
             errors.getErrors().keySet().stream()
                 .map(e -> String.format("%s: %s", e, errors.getErrors().get(e)))

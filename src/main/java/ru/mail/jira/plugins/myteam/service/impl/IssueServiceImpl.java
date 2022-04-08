@@ -198,7 +198,7 @@ public class IssueServiceImpl implements IssueService {
       throws PermissionException, ProjectBannedException {
     Project selectedProject = projectManager.getProjectByCurrentKeyIgnoreCase(projectKey);
     if (selectedProject == null) {
-      return null;
+      throw new PermissionException();
     }
     if (isProjectExcluded(selectedProject.getId())) {
       throw new ProjectBannedException(String.format("Project with key %s is banned", projectKey));
