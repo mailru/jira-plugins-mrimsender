@@ -87,7 +87,7 @@ public class Utils {
   }
 
   private String buildAttachmentLink(String fileId, String fileType, String fileName, String text) {
-    String linkFormat = fileType.equals("image") ? "!%s!\n" : "[^%s]\n";
+    String linkFormat = fileType.equals("image") ? "!%s|thumbnail!\n" : "[^%s]\n";
     if (text == null) {
       return String.format(linkFormat, fileName);
     } else {
