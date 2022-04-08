@@ -326,7 +326,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   @Override
   public Issue updateIssueDescription(
       String description, MutableIssue issue, ApplicationUser user) {
-    issue.setDescription(description);
+    issue.setDescription(ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis(description));
     return issueManager.updateIssue(user, issue, EventDispatchOption.DO_NOT_DISPATCH, false);
   }
 
