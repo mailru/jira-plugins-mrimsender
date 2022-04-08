@@ -8,6 +8,7 @@ import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 
+@ToString
 public class Reply extends Part<Reply.Data> {
   public ReplyMessage getMessage() {
     return this.getPayload().message;

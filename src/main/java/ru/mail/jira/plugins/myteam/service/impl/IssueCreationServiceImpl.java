@@ -34,7 +34,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.validation.constraints.NotNull;
+
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
@@ -119,9 +120,12 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       IssueFieldsFilter issueFieldsFilter) {
     FieldLayout fieldLayout = fieldLayoutManager.getFieldLayout(project, issueType.getId());
     // getting (selectedProject, selectedIssueType, selectedIssueOperation) fields screen
-    return issueTypeScreenSchemeManager.getIssueTypeScreenScheme(project)
+    return issueTypeScreenSchemeManager
+        .getIssueTypeScreenScheme(project)
         .getEffectiveFieldScreenScheme(issueType)
-        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION).getTabs().stream()
+        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION)
+        .getTabs()
+        .stream()
         .flatMap(
             tab ->
                 tab.getFieldScreenLayoutItems().stream()
@@ -277,6 +281,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   }
 
   @Override
+  @NotNull
   public MutableIssue createIssue(
       Project project,
       IssueType issueType,
@@ -286,6 +291,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     return createIssue(project, issueType, fields, user, user);
   }
 
+  @NotNull
   public MutableIssue createIssue(
       Project project,
       IssueType issueType,
@@ -299,7 +305,13 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
           validateIssueWithGivenFields(project, issueType, fields, user);
 
       if (issueValidationResult.isValid()) {
-        return issueService.create(user, issueValidationResult).getIssue();
+        IssueService.IssueResult issueResult = issueService.create(user, issueValidationResult);
+        if (issueResult.isValid()) {
+          return issueResult.getIssue();
+        } else {
+          throw new IssueCreationValidationException(
+              "Unable to create issue with provided fields", issueResult.getErrorCollection());
+        }
       } else {
         throw new IssueCreationValidationException(
             "Unable to create issue with provided fields",
@@ -311,6 +323,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   }
 
   @Override
+  @NotNull
   public MutableIssue createIssue(
       String projectKey,
       String issueTypeId,
@@ -325,7 +338,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
 
   @Override
   public Issue updateIssueDescription(
-      String description, MutableIssue issue, ApplicationUser user) {
+      String description, @NotNull MutableIssue issue, ApplicationUser user) {
     issue.setDescription(description);
     return issueManager.updateIssue(user, issue, EventDispatchOption.DO_NOT_DISPATCH, false);
   }

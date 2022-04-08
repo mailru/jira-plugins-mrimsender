@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeasy.rules.annotation.Action;
@@ -87,6 +89,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
   @Action
   public void execute(@Fact("event") ChatMessageEvent event, @Fact("args") String tag)
       throws MyteamServerErrorException, IOException {
+    ApplicationUser initiator = null;
     try {
       IssueCreationSettingsDto settings =
           issueCreationSettingsService.getSettingsFromCache(event.getChatId(), tag);
@@ -99,7 +102,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
       User firstMessageReporter = reporters.get(0);
 
-      ApplicationUser initiator = userChatService.getJiraUserFromUserChatId(event.getUserId());
+      initiator = userChatService.getJiraUserFromUserChatId(event.getUserId());
 
       if (initiator == null || firstMessageReporter == null) {
         return;
@@ -178,12 +181,22 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
           getCreationSuccessMessage(settings.getCreationSuccessTemplate(), issue, summary));
     } catch (Exception e) {
       log.error(e.getLocalizedMessage(), e);
-      SentryClient.capture(e);
+      if (initiator != null) {
+        io.sentry.protocol.User user = new io.sentry.protocol.User();
+        user.setId(initiator.getKey());
+        user.setEmail(initiator.getEmailAddress());
+        user.setUsername(initiator.getDisplayName());
+        Sentry.setUser(user);
+      }
+      Sentry.addBreadcrumb("tag", tag);
+      Sentry.addBreadcrumb("event", event.toString());
+      Sentry.captureException(e);
+
       userChatService.sendMessageText(
           event.getUserId(),
           MessageFormatter.shieldText(
               String.format(
-                  "Возникла ошибка при создании задачи.\n\n%s", e.getLocalizedMessage())));
+                  "Возникла ошибка при создании задачи.%n%n%s", e.getLocalizedMessage())));
     }
   }
 

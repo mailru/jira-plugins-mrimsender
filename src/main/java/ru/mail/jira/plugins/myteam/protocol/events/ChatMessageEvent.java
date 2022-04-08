@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.protocol.events;
 
 import java.util.List;
 import lombok.Getter;
+import lombok.ToString;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
@@ -11,6 +12,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
 
 @Getter
+@ToString
 public class ChatMessageEvent extends MyteamEvent {
   private final String message;
   private final Long messageId;
