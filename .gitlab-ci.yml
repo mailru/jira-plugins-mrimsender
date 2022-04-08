@@ -1,4 +1,4 @@
 include:
   project: 'ATL-TEAM/gitlab'
-  ref: 'master'
+  ref: 'JD-1918'
   file: '/ci/templates/Plugin.JDK11.gitlab-ci.yml'
