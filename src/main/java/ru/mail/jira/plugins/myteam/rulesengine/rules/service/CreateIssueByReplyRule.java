@@ -181,16 +181,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
           getCreationSuccessMessage(settings.getCreationSuccessTemplate(), issue, summary));
     } catch (Exception e) {
       log.error(e.getLocalizedMessage(), e);
-      if (initiator != null) {
-        io.sentry.protocol.User user = new io.sentry.protocol.User();
-        user.setId(initiator.getKey());
-        user.setEmail(initiator.getEmailAddress());
-        user.setUsername(initiator.getDisplayName());
-        Sentry.setUser(user);
-      }
-      Sentry.addBreadcrumb("tag", tag);
-      Sentry.addBreadcrumb("event", event.toString());
-      Sentry.captureException(e);
+      SentryClient.capture(e);
 
       userChatService.sendMessageText(
           event.getUserId(),
