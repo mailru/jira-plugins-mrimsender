@@ -16,6 +16,11 @@ export type IssueCreationSettings = {
   reporter: 'INITIATOR' | 'MESSAGE_AUTHOR';
 };
 
+export type IssueCreationSettingsDefault = {
+  creationSuccessTemplate: string;
+  issueSummaryTemplate: string;
+};
+
 export type FieldHtml = {
   id: string;
   label: string;

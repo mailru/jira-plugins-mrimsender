@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 import contextPath from 'wrm/context-path';
-import { IssueCreationSettings } from '../types';
+import { IssueCreationSettings, IssueCreationSettingsDefault } from '../types';
 
 export const loadChatIssueCreationSettings = async (
   chatId: string,
@@ -10,6 +10,10 @@ export const loadChatIssueCreationSettings = async (
 
 export const loadChatIssueCreationSettingsById = async (id: number): Promise<AxiosResponse<IssueCreationSettings>> => {
   return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/settings/${id}`);
+};
+
+export const loadChatIssueDefaultSettings = async (): Promise<AxiosResponse<IssueCreationSettingsDefault>> => {
+  return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/settings/default`);
 };
 
 export const createChatIssueCreationSettings = async (
