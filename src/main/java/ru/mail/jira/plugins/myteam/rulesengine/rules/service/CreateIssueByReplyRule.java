@@ -163,27 +163,19 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       issueCreationService.updateIssueDescription(
           getIssueDescription(event, issue), issue, reporterJiraUser);
 
-      reporters.stream() // add watchers
-          .map(
-              u -> {
-                try {
-                  return userChatService.getJiraUserFromUserChatId(u.getUserId());
-                } catch (UserNotFoundException e) {
-                  return null;
-                }
-              })
-          .filter(Objects::nonNull)
-          .forEach(
-              user -> {
-                try {
-                  if (settings.getAddReporterInWatchers()) {
-                    issueService.watchIssue(issue, user);
-                  } else {
-                    issueService.unwatchIssue(issue.getKey(), user);
+      if (settings.getAddReporterInWatchers()) {
+        reporters.stream() // add watchers
+            .map(
+                u -> {
+                  try {
+                    return userChatService.getJiraUserFromUserChatId(u.getUserId());
+                  } catch (UserNotFoundException e) {
+                    return null;
                   }
-                } catch (IssueWatchingException ignore) {
-                }
-              });
+                })
+            .filter(Objects::nonNull)
+            .forEach(user -> issueService.watchIssue(issue, user));
+      }
 
       userChatService.sendMessageText(
           event.getChatId(),
