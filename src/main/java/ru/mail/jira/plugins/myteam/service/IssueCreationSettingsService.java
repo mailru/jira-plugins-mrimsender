@@ -37,4 +37,6 @@ public interface IssueCreationSettingsService {
   IssueCreationSettingsDto getSettingsById(int id);
 
   void deleteSettings(int id);
+
+  void updateDefaultSettings(@NotNull IssueCreationSettingsDto settings);
 }

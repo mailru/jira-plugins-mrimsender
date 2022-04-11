@@ -12,7 +12,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.springframework.stereotype.Controller;
 import ru.mail.jira.plugins.myteam.commons.PermissionHelperService;
-import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDefaultDto;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.exceptions.SettingsTagAlreadyExistsException;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
@@ -54,14 +53,6 @@ public class IssueCreationSettingsController {
   }
 
   @GET
-  @Path("/settings/default")
-  public IssueCreationSettingsDefaultDto getChatSettingsDefault() throws PermissionException {
-    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-    permissionHelperService.checkChatAdminPermissions(user);
-    return new IssueCreationSettingsDefaultDto();
-  }
-
-  @GET
   @Path("/settings/chats/{id}")
   public List<IssueCreationSettingsDto> getChatSettings(@PathParam("id") final String id)
       throws PermissionException {
@@ -90,6 +81,7 @@ public class IssueCreationSettingsController {
       throws SettingsTagAlreadyExistsException, PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     permissionHelperService.checkChatAdminPermissions(user, settings.getChatId());
+    issueCreationSettingsService.updateDefaultSettings(settings);
     IssueCreationSettingsDto originalSettings =
         issueCreationSettingsService.createSettings(settings);
     return originalSettings.getId();

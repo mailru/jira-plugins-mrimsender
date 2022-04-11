@@ -1,6 +1,9 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
+import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
+import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_SUMMARY_TEMPLATE;
+
 import com.atlassian.cache.Cache;
 import com.atlassian.cache.CacheManager;
 import com.atlassian.cache.CacheSettingsBuilder;
@@ -148,6 +151,14 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     @NotNull IssueCreationSettings settings = issueCreationSettingsRepository.get(id);
     issueCreationSettingsRepository.deleteById(id);
     issueSettingsCache.remove(combineKey(settings.getChatId(), settings.getTag()));
+  }
+
+  @Override
+  public void updateDefaultSettings(@NotNull IssueCreationSettingsDto settings) {
+    if (settings.getIssueSummaryTemplate() == null)
+      settings.setIssueSummaryTemplate(DEFAULT_ISSUE_SUMMARY_TEMPLATE);
+    if (settings.getCreationSuccessTemplate() == null)
+      settings.setCreationSuccessTemplate(DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE);
   }
 
   private void checkAlreadyHasTag(IssueCreationSettingsDto settings)

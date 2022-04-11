@@ -12,10 +12,6 @@ export const loadChatIssueCreationSettingsById = async (id: number): Promise<Axi
   return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/settings/${id}`);
 };
 
-export const loadChatIssueDefaultSettings = async (): Promise<AxiosResponse<IssueCreationSettingsDefault>> => {
-  return axios.get(`${contextPath()}/rest/myteam/1.0/issueCreation/settings/default`);
-};
-
 export const createChatIssueCreationSettings = async (
   settings: IssueCreationSettings,
 ): Promise<AxiosResponse<IssueCreationSettings>> => {

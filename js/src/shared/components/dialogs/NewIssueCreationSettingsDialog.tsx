@@ -5,7 +5,7 @@ import React, { ReactElement, useLayoutEffect, useState } from 'react';
 import { IssueCreationSettings, LoadableDataState } from '../../types';
 import EditIssueCreationSettingsForm, { FORM_ID } from '../EditIssueCreationSettingsForm';
 import { I18n } from '@atlassian/wrm-react-i18n';
-import { createChatIssueCreationSettings, loadChatIssueDefaultSettings } from '../../api/SettingsApiClient';
+import { createChatIssueCreationSettings } from '../../api/SettingsApiClient';
 import { useTimeoutState } from '../../hooks';
 
 type Props = {
@@ -30,20 +30,6 @@ const DEFAULT_SETTINGS: Partial<IssueCreationSettings> = {
 
 const NewIssueCreationSettingsDialog = ({ isOpen, chatId, onClose, onSaveSuccess }: Props): ReactElement => {
   const [statusState, setStatus] = useTimeoutState<{ status: Status | null; error?: string }>({ status: Status.None });
-  const [settings, setSettings] = useState<LoadableDataState<Partial<IssueCreationSettings>>>({ isLoading: false });
-
-  useLayoutEffect(() => {
-    setSettings({ isLoading: true });
-    loadChatIssueDefaultSettings()
-      .then((responce) => {
-        const defaultData: Partial<IssueCreationSettings> = { ...DEFAULT_SETTINGS, ...responce.data };
-        setSettings({ isLoading: false, data: defaultData });
-      })
-      .catch((e) => {
-        console.error(e);
-        setSettings({ isLoading: false, error: JSON.stringify(e) });
-      });
-  }, []);
 
   return (
     <ModalTransition>
@@ -59,7 +45,7 @@ const NewIssueCreationSettingsDialog = ({ isOpen, chatId, onClose, onSaveSuccess
           ) : null}
           <ModalBody>
             <EditIssueCreationSettingsForm
-              defaultSettings={settings.data ?? DEFAULT_SETTINGS}
+              defaultSettings={DEFAULT_SETTINGS}
               onCancel={() => {
                 onClose();
               }}
