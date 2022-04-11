@@ -34,7 +34,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
@@ -120,12 +119,9 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       IssueFieldsFilter issueFieldsFilter) {
     FieldLayout fieldLayout = fieldLayoutManager.getFieldLayout(project, issueType.getId());
     // getting (selectedProject, selectedIssueType, selectedIssueOperation) fields screen
-    return issueTypeScreenSchemeManager
-        .getIssueTypeScreenScheme(project)
+    return issueTypeScreenSchemeManager.getIssueTypeScreenScheme(project)
         .getEffectiveFieldScreenScheme(issueType)
-        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION)
-        .getTabs()
-        .stream()
+        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION).getTabs().stream()
         .flatMap(
             tab ->
                 tab.getFieldScreenLayoutItems().stream()
@@ -286,7 +282,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     try {
       jiraAuthenticationContext.setLoggedInUser(user);
       IssueService.CreateValidationResult issueValidationResult =
-              validateIssueWithGivenFields(project, issueType, fields, user);
+          validateIssueWithGivenFields(project, issueType, fields, user);
 
       if (issueValidationResult.isValid()) {
         IssueService.IssueResult issueResult = issueService.create(user, issueValidationResult);
@@ -294,12 +290,12 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
           return issueResult.getIssue();
         } else {
           throw new IssueCreationValidationException(
-                  "Unable to create issue with provided fields", issueResult.getErrorCollection());
+              "Unable to create issue with provided fields", issueResult.getErrorCollection());
         }
       } else {
         throw new IssueCreationValidationException(
-                "Unable to create issue with provided fields",
-                issueValidationResult.getErrorCollection());
+            "Unable to create issue with provided fields",
+            issueValidationResult.getErrorCollection());
       }
     } finally {
       jiraAuthenticationContext.setLoggedInUser(contextPrevUser);

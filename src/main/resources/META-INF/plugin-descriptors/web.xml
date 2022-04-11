@@ -17,9 +17,9 @@
         <resource type="download" name="myteam-configuration-page.js" location="ru/mail/jira/plugins/myteam/configuration/myteam-configuration-page.js" />
     </web-resource>
 
-    <webwork1 key="myteam-configuration-action" class="java.lang.Object" roles-required="admin">
+    <webwork1 key="myteam-configuration-action" class="java.lang.Object">
         <actions>
-            <action name="ru.mail.jira.plugins.myteam.configuration.MyteamConfigurationAction" alias="MyteamConfiguration">
+            <action name="ru.mail.jira.plugins.myteam.configuration.MyteamConfigurationAction" alias="MyteamConfiguration" roles-required="admin">
                 <view name="input">/ru/mail/jira/plugins/myteam/configuration/myteam-configuration-page.vm</view>
             </action>
         </actions>
@@ -35,14 +35,14 @@
         <context>atl.userprofile</context>
     </web-resource>
 
-    <webwork1 key="chat-settings-app-action" class="java.lang.Object" roles-required="use">
+    <webwork1 key="chat-settings-app-action" class="java.lang.Object">
         <actions>
-            <action name="ru.mail.jira.plugins.myteam.actions.ChatAdminAction" alias="ChatSetting">
+            <action name="ru.mail.jira.plugins.myteam.actions.ChatAdminAction" alias="ChatSetting" roles-required="use">
                 <view name="success">ru/mail/jira/plugins/myteam/configuration/chat-settings.vm</view>
                 <view name="securitybreach">/secure/views/securitybreach.jsp</view>
             </action>
 
-            <action name="ru.mail.jira.plugins.myteam.actions.ProjectChatAdminAction" alias="ProjectChatAdminAction">
+            <action name="ru.mail.jira.plugins.myteam.actions.ProjectChatAdminAction" alias="ProjectChatAdminAction" roles-required="use">
                 <view name="success">ru/mail/jira/plugins/myteam/configuration/project-chat-settings.vm</view>
                 <view name="securitybreach">/secure/views/securitybreach.jsp</view>
             </action>

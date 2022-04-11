@@ -14,6 +14,7 @@ export type IssueCreationSettings = {
   labels: Array<string>;
   additionalFields: Array<FieldParam>;
   reporter: 'INITIATOR' | 'MESSAGE_AUTHOR';
+  addReporterInWatchers: boolean;
 };
 
 export type FieldHtml = {

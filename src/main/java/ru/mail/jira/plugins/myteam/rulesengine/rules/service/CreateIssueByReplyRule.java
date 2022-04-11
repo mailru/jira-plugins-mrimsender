@@ -15,8 +15,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeasy.rules.annotation.Action;
@@ -34,6 +32,7 @@ import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.ChatAdminRule;
@@ -164,17 +163,19 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       issueCreationService.updateIssueDescription(
           getIssueDescription(event, issue), issue, reporterJiraUser);
 
-      reporters.stream() // add watchers
-          .map(
-              u -> {
-                try {
-                  return userChatService.getJiraUserFromUserChatId(u.getUserId());
-                } catch (UserNotFoundException e) {
-                  return null;
-                }
-              })
-          .filter(Objects::nonNull)
-          .forEach(user -> issueService.watchIssue(issue, user));
+      if (settings.getAddReporterInWatchers()) {
+        reporters.stream() // add watchers
+            .map(
+                u -> {
+                  try {
+                    return userChatService.getJiraUserFromUserChatId(u.getUserId());
+                  } catch (UserNotFoundException e) {
+                    return null;
+                  }
+                })
+            .filter(Objects::nonNull)
+            .forEach(user -> issueService.watchIssue(issue, user));
+      }
 
       userChatService.sendMessageText(
           event.getChatId(),
