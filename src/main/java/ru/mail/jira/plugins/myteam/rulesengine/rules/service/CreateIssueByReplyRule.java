@@ -15,8 +15,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import io.sentry.Sentry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeasy.rules.annotation.Action;
@@ -34,6 +32,7 @@ import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.ChatAdminRule;
@@ -174,7 +173,17 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                 }
               })
           .filter(Objects::nonNull)
-          .forEach(user -> issueService.watchIssue(issue, user));
+          .forEach(
+              user -> {
+                try {
+                  if (settings.getAddReporterInWatchers()) {
+                    issueService.watchIssue(issue, user);
+                  } else {
+                    issueService.unwatchIssue(issue.getKey(), user);
+                  }
+                } catch (IssueWatchingException ignore) {
+                }
+              });
 
       userChatService.sendMessageText(
           event.getChatId(),

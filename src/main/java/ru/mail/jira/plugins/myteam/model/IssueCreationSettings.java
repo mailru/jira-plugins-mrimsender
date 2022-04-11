@@ -46,6 +46,10 @@ public interface IssueCreationSettings extends Entity {
 
   void setReporter(IssueReporter issueReporter);
 
+  boolean isAddReporterInWatchers();
+
+  void setAddReporterInWatchers(boolean addReporterInWatchers);
+
   @Nullable
   @StringLength(StringLength.UNLIMITED)
   String getCreationSuccessTemplate();

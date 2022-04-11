@@ -3,7 +3,6 @@ import { FieldHtml, FieldParam, IssueCreationSettings, LoadableDataState } from 
 import Textfield from '@atlaskit/textfield';
 import { Checkbox } from '@atlaskit/checkbox';
 import Form, { CheckboxField, ErrorMessage, Field, FormFooter, HelperMessage } from '@atlaskit/form';
-import Button, { ButtonGroup } from '@atlaskit/button';
 import LabelsSelect from '../../chat-settings-panel/components/LabelsSelect';
 import ProjectSelect from '../../chat-settings-panel/components/ProjectSelect';
 import IssueTypeSelect from '../../chat-settings-panel/components/IssueTypeSelect';
@@ -83,7 +82,7 @@ const getFormValues = (): Array<FieldParam> => {
       const split = q.split('=');
       return { field: split[0], value: split[1] };
     })
-    .filter((f) => f.value.length > 0 && !['enabled', 'tag'].includes(f.field));
+    .filter((f) => f.value.length > 0 && !['enabled', 'tag', 'addReporterInWatchers'].includes(f.field));
 };
 
 const isIgnoredField = (id: string): boolean => {
@@ -216,6 +215,11 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
           </>
         )}
       </Field>
+      <CheckboxField name="addReporterInWatchers" defaultIsChecked={settings.addReporterInWatchers}>
+        {({ fieldProps }) => (
+          <Checkbox label="Добавлять автора в Наблюдатели" size="large" defaultChecked={settings.addReporterInWatchers} {...fieldProps} />
+        )}
+      </CheckboxField>
       <h3>Шаблоны</h3>
       <LineHelperMessage>{`Текст шаблона может содержать ключи для автоподстановки, где {{key}} будет заменен на соответствующее значение.`}</LineHelperMessage>
       <Field
@@ -316,6 +320,7 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave, onCancel }: Pr
           tag,
           labels,
           reporter,
+          addReporterInWatchers,
           creationSuccessTemplate,
           issueSummaryTemplate,
         }: FormState) => {
@@ -323,6 +328,7 @@ const EditIssueCreationSettingsForm = ({ defaultSettings, onSave, onCancel }: Pr
             enabled,
             tag,
             reporter,
+            addReporterInWatchers,
             creationSuccessTemplate,
             issueSummaryTemplate: issueSummaryTemplate ? issueSummaryTemplate.replace('\n', '') : undefined,
             projectKey: String(projectKey.value),

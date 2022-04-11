@@ -37,6 +37,7 @@ public class IssueCreationSettingsDto {
   @Nullable @XmlElement private String issueTypeName;
   @XmlElement private Boolean canEdit;
   @XmlElement private IssueReporter reporter;
+  @XmlElement private Boolean addReporterInWatchers;
   @XmlElement private List<String> labels;
   @XmlElement private List<AdditionalIssueFieldDto> additionalFields;
 
@@ -46,6 +47,7 @@ public class IssueCreationSettingsDto {
     this.enabled = entity.isEnabled();
     this.tag = entity.getTag();
     this.reporter = entity.getReporter();
+    this.addReporterInWatchers = entity.isAddReporterInWatchers();
     this.projectKey = entity.getProjectKey();
     this.issueTypeId = entity.getIssueTypeId();
     this.creationSuccessTemplate = entity.getCreationSuccessTemplate();
@@ -67,6 +69,7 @@ public class IssueCreationSettingsDto {
     this.enabled = entity.isEnabled();
     this.tag = entity.getTag();
     this.reporter = entity.getReporter();
+    this.addReporterInWatchers = entity.isAddReporterInWatchers();
     this.projectKey = entity.getProjectKey();
     this.issueTypeId = entity.getIssueTypeId();
     this.creationSuccessTemplate = entity.getCreationSuccessTemplate();
