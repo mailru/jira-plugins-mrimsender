@@ -1,6 +1,9 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
+import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
+import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_SUMMARY_TEMPLATE;
+
 import com.atlassian.cache.Cache;
 import com.atlassian.cache.CacheManager;
 import com.atlassian.cache.CacheSettingsBuilder;
@@ -76,7 +79,10 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   @Override
   public IssueCreationSettingsDto getSettings(int id) throws NotFoundException {
-    return new IssueCreationSettingsDto(issueCreationSettingsRepository.get(id));
+    IssueCreationSettingsDto settings =
+        new IssueCreationSettingsDto(issueCreationSettingsRepository.get(id));
+    applyDefaultTemplateIfEmpty(settings);
+    return settings;
   }
 
   @Override
@@ -101,14 +107,20 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   @Override
   public @NotNull List<IssueCreationSettingsDto> getSettingsByChatId(String chatId) {
     return issueCreationSettingsRepository.getSettingsByChatId(chatId).stream()
-        .map(this::mapAdditionalSettingsInfo)
-        .collect(Collectors.toList());
+            .map(
+                el -> {
+                  IssueCreationSettingsDto settings = mapAdditionalSettingsInfo(el);
+                  applyDefaultTemplateIfEmpty(settings);
+                  return settings;
+                })
+            .collect(Collectors.toList());
   }
 
   @Override
   public IssueCreationSettingsDto createSettings(@NotNull IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException {
     checkAlreadyHasTag(settings);
+    applyDefaultTemplateIfEmpty(settings);
     issueCreationSettingsRepository.create(settings);
     return getSettingsFromCache(settings.getChatId(), settings.getTag());
   }
@@ -117,6 +129,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   public IssueCreationSettingsDto updateSettings(int id, @NotNull IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException {
     checkAlreadyHasTag(settings);
+    applyDefaultTemplateIfEmpty(settings);
     issueCreationSettingsRepository.update(id, settings);
     issueSettingsCache.remove(combineKey(settings.getChatId(), settings.getTag()));
 
@@ -139,8 +152,11 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   @Override
   public IssueCreationSettingsDto getSettingsById(int id) {
     @NotNull IssueCreationSettings settings = issueCreationSettingsRepository.get(id);
-    return new IssueCreationSettingsDto(
-        settings, messageFormatter.getMyteamLink(settings.getChatId()));
+    IssueCreationSettingsDto settingsDto =
+        new IssueCreationSettingsDto(
+            settings, messageFormatter.getMyteamLink(settings.getChatId()));
+    applyDefaultTemplateIfEmpty(settingsDto);
+    return settingsDto;
   }
 
   @Override
@@ -148,6 +164,13 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     @NotNull IssueCreationSettings settings = issueCreationSettingsRepository.get(id);
     issueCreationSettingsRepository.deleteById(id);
     issueSettingsCache.remove(combineKey(settings.getChatId(), settings.getTag()));
+  }
+
+  private void applyDefaultTemplateIfEmpty(@NotNull IssueCreationSettingsDto settings) {
+    if (StringUtils.isEmpty(settings.getIssueSummaryTemplate()))
+      settings.setIssueSummaryTemplate(DEFAULT_ISSUE_SUMMARY_TEMPLATE);
+    if (StringUtils.isEmpty(settings.getCreationSuccessTemplate()))
+      settings.setCreationSuccessTemplate(DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE);
   }
 
   private void checkAlreadyHasTag(IssueCreationSettingsDto settings)
