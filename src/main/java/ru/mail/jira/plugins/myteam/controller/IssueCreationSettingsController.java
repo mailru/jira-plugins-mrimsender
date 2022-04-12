@@ -81,7 +81,6 @@ public class IssueCreationSettingsController {
       throws SettingsTagAlreadyExistsException, PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     permissionHelperService.checkChatAdminPermissions(user, settings.getChatId());
-    issueCreationSettingsService.updateDefaultSettings(settings);
     IssueCreationSettingsDto originalSettings =
         issueCreationSettingsService.createSettings(settings);
     return originalSettings.getId();

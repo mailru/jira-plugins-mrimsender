@@ -1,8 +1,8 @@
 import Button from '@atlaskit/button';
 import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle, ModalTransition } from '@atlaskit/modal-dialog';
 import SectionMessage from '@atlaskit/section-message';
-import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import { IssueCreationSettings, LoadableDataState } from '../../types';
+import React, { ReactElement } from 'react';
+import { IssueCreationSettings } from '../../types';
 import EditIssueCreationSettingsForm, { FORM_ID } from '../EditIssueCreationSettingsForm';
 import { I18n } from '@atlassian/wrm-react-i18n';
 import { createChatIssueCreationSettings } from '../../api/SettingsApiClient';

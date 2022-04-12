@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 import contextPath from 'wrm/context-path';
-import { IssueCreationSettings, IssueCreationSettingsDefault } from '../types';
+import { IssueCreationSettings } from '../types';
 
 export const loadChatIssueCreationSettings = async (
   chatId: string,
