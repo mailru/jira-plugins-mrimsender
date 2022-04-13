@@ -151,7 +151,7 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
           Настройки создания задач{' '}
           <ChatName chatTitle={firstSettings?.chatTitle || ''} href={firstSettings?.chatLink} />
         </h2>
-        <Button appearance="subtle" onClick={() => setNewSettingsDialogState({ isOpen: true })}>
+        <Button appearance="primary" onClick={() => setNewSettingsDialogState({ isOpen: true })}>
           {I18n.getText('common.forms.create')}
         </Button>
       </TitleContainer>
