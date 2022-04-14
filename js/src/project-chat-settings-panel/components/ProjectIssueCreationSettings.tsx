@@ -1,11 +1,11 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import { loadProjectChatIssueCreationSettings } from '../../shared/api/SettingsApiClient';
 import styled from 'styled-components';
-import { IssueCreationSettings, LoadableDataState } from '../../shared/types';
 import EditIcon from '@atlaskit/icon/glyph/edit';
-import EditIssueCreationSettingsDialog from '../../shared/components/dialogs/EditIssueCreationSettingsDialog';
 import contextPath from 'wrm/context-path';
-import { ChatName } from '../../shared/components/ChatName';
+import { loadProjectChatIssueCreationSettings } from '../../shared/api/SettingsApiClient';
+import { IssueCreationSettings, LoadableDataState } from '../../shared/types';
+import EditIssueCreationSettingsDialog from '../../shared/components/dialogs/EditIssueCreationSettingsDialog';
+import ChatName from '../../shared/components/ChatName';
 import LoadableComponent from '../../shared/components/LoadableComponent';
 
 const Container = styled.div`
@@ -53,13 +53,18 @@ const Field = styled.div`
   }
 `;
 
-const renderSettingsElement = (settings: IssueCreationSettings, onEdit: (settingsId: number) => void) => {
+const renderSettingsElement = (
+  settings: IssueCreationSettings,
+  onEdit: (settingsId: number) => void,
+) => {
   return (
     <Settings>
       <SpaceBetweenRow>
         <ChatName
           chatTitle={settings.chatTitle || 'Неизвестно'}
-          href={`${contextPath()}/myteam/chats/settings?chatId=${settings.chatId}`}
+          href={`${contextPath()}/myteam/chats/settings?chatId=${
+            settings.chatId
+          }`}
           disabled={!settings.canEdit}
         />
         {settings.canEdit ? (
@@ -70,23 +75,28 @@ const renderSettingsElement = (settings: IssueCreationSettings, onEdit: (setting
       </SpaceBetweenRow>
 
       <Field>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label>Включен:</label>
         <span>{settings.enabled ? 'да' : 'нет'}</span>
       </Field>
       <Field>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label>Тег: </label>
         <span>{settings.tag}</span>
       </Field>
       <Field>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label>Проект:</label>
         <span>{settings.projectKey}</span>
       </Field>
       <Field>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label>Тип задачи:</label>
         <span>{settings.issueTypeName}</span>
       </Field>
       <SpaceBetweenRow>
         <Field>
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label>Метки:</label>
           <span>{settings.labels ? settings.labels.join(', ') : ''}</span>
         </Field>
@@ -98,20 +108,29 @@ const renderSettingsElement = (settings: IssueCreationSettings, onEdit: (setting
   );
 };
 
-const ProjectIssueCreationSettings = (): ReactElement => {
-  const [settings, setSettings] = useState<LoadableDataState<Array<IssueCreationSettings>>>({
+function ProjectIssueCreationSettings(): ReactElement {
+  const [settings, setSettings] = useState<
+    LoadableDataState<Array<IssueCreationSettings>>
+  >({
     isLoading: false,
   });
-  const [editSettingsDialogState, setEditSettingsDialogState] = useState<{ isOpen: boolean; settingsId?: number }>({
+  const [editSettingsDialogState, setEditSettingsDialogState] = useState<{
+    isOpen: boolean;
+    settingsId?: number;
+  }>({
     isOpen: false,
   });
 
   const loadSettings = () => {
-    const match = location.pathname.match(/myteam\/projects\/(\w+)\/settings\/chats/);
+    const match = window.location.pathname.match(
+      /myteam\/projects\/(\w+)\/settings\/chats/,
+    );
     setSettings({ isLoading: true });
     if (match) {
       loadProjectChatIssueCreationSettings(match[1])
-        .then((response) => setSettings({ data: response.data, isLoading: false }))
+        .then((response) =>
+          setSettings({ data: response.data, isLoading: false }),
+        )
         .catch((e) => {
           console.error(e);
           setSettings({ isLoading: false, error: JSON.stringify(e) });
@@ -128,7 +147,9 @@ const ProjectIssueCreationSettings = (): ReactElement => {
       <LoadableComponent isLoading={settings.isLoading}>
         {settings.data && settings.data.length > 0 ? (
           settings.data.map((s) =>
-            renderSettingsElement(s, (settingsId) => setEditSettingsDialogState({ isOpen: true, settingsId })),
+            renderSettingsElement(s, (settingsId) =>
+              setEditSettingsDialogState({ isOpen: true, settingsId }),
+            ),
           )
         ) : (
           <h4>Нет настроек для данного проекта</h4>
@@ -147,6 +168,6 @@ const ProjectIssueCreationSettings = (): ReactElement => {
       </LoadableComponent>
     </Container>
   );
-};
+}
 
 export default ProjectIssueCreationSettings;

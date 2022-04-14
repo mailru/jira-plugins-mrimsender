@@ -2,6 +2,7 @@ import styled from '@emotion/styled';
 import React, { ReactElement, ReactNode } from 'react';
 import Spinner from '@atlaskit/spinner';
 import SectionMessage from '@atlaskit/section-message';
+
 type Props = {
   className?: string;
   children?: ReactNode;
@@ -15,17 +16,29 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
-const LoadableComponent = ({ className, children, isLoading, error }: Props): ReactElement => {
+function LoadableComponent({
+  className,
+  children,
+  isLoading,
+  error,
+}: Props): ReactElement {
   return (
     <Container className={className}>
       {isLoading ? <Spinner size="large" /> : children}
       {error ? (
-        <SectionMessage appearance={'error'}>
+        <SectionMessage appearance="error">
           <p>{error}</p>
         </SectionMessage>
       ) : null}
     </Container>
   );
+}
+
+LoadableComponent.defaultProps = {
+  className: undefined,
+  children: undefined,
+  isLoading: undefined,
+  error: undefined,
 };
 
 export default LoadableComponent;

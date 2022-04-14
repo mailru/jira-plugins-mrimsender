@@ -3,9 +3,10 @@ import ReactDOM from 'react-dom';
 import { CacheProvider } from '@emotion/core';
 import createCache from '@emotion/cache';
 import ProjectIssueCreationSettings from './components/ProjectIssueCreationSettings';
+
 const PANEL_CONTAINER_ID_SELECTOR = 'myteam-project-chat-settings-container';
 
-export function init(): void {
+export default function init(): void {
   const emotionCache = createCache({
     key: 'myteam-styles',
   });

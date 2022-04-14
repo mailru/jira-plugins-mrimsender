@@ -21,16 +21,32 @@ const TitleLink = styled.span`
   }
 `;
 
-export const ChatName = ({ className, chatTitle, href, target, rel, disabled }: Props): ReactElement => {
+export default function ChatName({
+  className,
+  chatTitle,
+  href,
+  target,
+  rel,
+  disabled,
+}: Props): ReactElement {
   return (
     <TitleLink className={className}>
       <a
         className={disabled ? 'disabled' : ''}
         target={target || '_blank'}
-        href={disabled ? undefined : href}
-        rel={rel || 'noreferrer'}>
+        href={disabled ? '/#' : href}
+        rel={rel || 'noreferrer'}
+      >
         {chatTitle}
       </a>
     </TitleLink>
   );
+}
+
+ChatName.defaultProps = {
+  className: undefined,
+  href: undefined,
+  disabled: undefined,
+  target: undefined,
+  rel: undefined,
 };

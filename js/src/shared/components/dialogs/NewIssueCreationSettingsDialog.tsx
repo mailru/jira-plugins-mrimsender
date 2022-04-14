@@ -1,16 +1,22 @@
 import Button from '@atlaskit/button';
-import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle, ModalTransition } from '@atlaskit/modal-dialog';
+import Modal, {
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+  ModalTransition,
+} from '@atlaskit/modal-dialog';
 import SectionMessage from '@atlaskit/section-message';
 import React, { ReactElement } from 'react';
-import { IssueCreationSettings } from '../../types';
-import EditIssueCreationSettingsForm, { FORM_ID } from '../EditIssueCreationSettingsForm';
 import { I18n } from '@atlassian/wrm-react-i18n';
+import { IssueCreationSettings } from '../../types';
+import EditIssueCreationSettingsForm, {
+  FORM_ID,
+} from '../EditIssueCreationSettingsForm';
 import { createChatIssueCreationSettings } from '../../api/SettingsApiClient';
 import { useTimeoutState } from '../../hooks';
 
 type Props = {
-  className?: string;
-
   chatId: string;
   isOpen: boolean;
   onClose: () => void;
@@ -28,8 +34,16 @@ const DEFAULT_SETTINGS: Partial<IssueCreationSettings> = {
   tag: 'task',
 };
 
-const NewIssueCreationSettingsDialog = ({ isOpen, chatId, onClose, onSaveSuccess }: Props): ReactElement => {
-  const [statusState, setStatus] = useTimeoutState<{ status: Status | null; error?: string }>({ status: Status.None });
+function NewIssueCreationSettingsDialog({
+  isOpen,
+  chatId,
+  onClose,
+  onSaveSuccess,
+}: Props): ReactElement {
+  const [statusState, setStatus] = useTimeoutState<{
+    status: Status | null;
+    error?: string;
+  }>({ status: Status.None });
 
   return (
     <ModalTransition>
@@ -39,8 +53,16 @@ const NewIssueCreationSettingsDialog = ({ isOpen, chatId, onClose, onSaveSuccess
             <ModalTitle>Новые настройки для чата</ModalTitle>
           </ModalHeader>
           {statusState.status !== Status.None ? (
-            <SectionMessage appearance={statusState.status === Status.Success ? 'success' : 'error'}>
-              <p>{statusState.status === Status.Success ? 'Настройки успешно сохранены.' : statusState.error}</p>
+            <SectionMessage
+              appearance={
+                statusState.status === Status.Success ? 'success' : 'error'
+              }
+            >
+              <p>
+                {statusState.status === Status.Success
+                  ? 'Настройки успешно сохранены.'
+                  : statusState.error}
+              </p>
             </SectionMessage>
           ) : null}
           <ModalBody>
@@ -51,13 +73,18 @@ const NewIssueCreationSettingsDialog = ({ isOpen, chatId, onClose, onSaveSuccess
               }}
               onSave={(settings) => {
                 if (chatId) {
-                  (settings as IssueCreationSettings).chatId = chatId;
-                  createChatIssueCreationSettings(settings as IssueCreationSettings)
+                  const issueCreationSettings =
+                    settings as IssueCreationSettings;
+                  issueCreationSettings.chatId = chatId;
+                  createChatIssueCreationSettings(issueCreationSettings)
                     .then(() => {
                       onSaveSuccess();
                     })
                     .catch((e) => {
-                      setStatus({ status: Status.Error, error: e.response.data.error }, 5000);
+                      setStatus(
+                        { status: Status.Error, error: e.response.data.error },
+                        5000,
+                      );
                     });
                 }
               }}
@@ -73,7 +100,8 @@ const NewIssueCreationSettingsDialog = ({ isOpen, chatId, onClose, onSaveSuccess
               onClick={() => {
                 onClose();
                 setStatus({ status: Status.None }, 0);
-              }}>
+              }}
+            >
               {I18n.getText('common.forms.cancel')}
             </Button>
           </ModalFooter>
@@ -81,6 +109,6 @@ const NewIssueCreationSettingsDialog = ({ isOpen, chatId, onClose, onSaveSuccess
       )}
     </ModalTransition>
   );
-};
+}
 
 export default NewIssueCreationSettingsDialog;

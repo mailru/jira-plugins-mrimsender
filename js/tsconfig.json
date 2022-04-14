@@ -1,4 +1,5 @@
 {
+  "extends": "@atlascommunity/tsconfig-base",
   "compilerOptions": {
     "allowJs": false,
     "strict": true,

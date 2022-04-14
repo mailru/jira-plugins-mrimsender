@@ -1,8 +1,6 @@
 import AJS from 'AJS';
+import init from './init';
 
-// jira-way to load
 AJS.toInit(() => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { init } = require('./init');
   init();
 });

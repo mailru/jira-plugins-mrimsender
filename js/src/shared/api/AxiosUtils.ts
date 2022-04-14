@@ -1,8 +1,10 @@
-import axios, { CancelToken, CancelTokenSource } from 'axios';
+import axios, { CancelTokenSource } from 'axios';
 
-const CancelToken = axios.CancelToken;
+const { CancelToken } = axios;
 
-export function getCancelTokenHandler(): (tokenId: string) => CancelTokenSource {
+export default function getCancelTokenHandler(): (
+  tokenId: string,
+) => CancelTokenSource {
   const cancelTokenCache: { [key: string]: CancelTokenSource } = {};
 
   return (tokenName: string) => {
