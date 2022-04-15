@@ -22,7 +22,7 @@ const ConfirmationDialog = ({ title, body, isOpen, onOk, onCancel }: Props): Rea
           <ModalBody>{body}</ModalBody>
           <ModalFooter>
             <Button appearance="primary" onClick={onOk}>
-            {I18n.getText('common.forms.confirm')}
+              {I18n.getText('common.forms.confirm')}
             </Button>
             <Button appearance="subtle" onClick={onCancel} autoFocus>
               {I18n.getText('common.forms.cancel')}
