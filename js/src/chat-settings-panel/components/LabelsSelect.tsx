@@ -1,5 +1,9 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import { AsyncCreatableSelect, OptionsType, OptionType } from '@atlaskit/select';
+import {
+  AsyncCreatableSelect,
+  OptionsType,
+  OptionType,
+} from '@atlaskit/select';
 import { loadLabelsSugestions } from '../../shared/api/CommonApiClient';
 
 const createOption = (label: string) => ({
@@ -24,7 +28,12 @@ const loadLabels = async (query: string): Promise<Array<OptionType>> => {
   });
 };
 
-const LabelsSelect = ({ id, className, defaultLabels, onChange }: Props): ReactElement => {
+function LabelsSelect({
+  id,
+  className,
+  defaultLabels,
+  onChange,
+}: Props): ReactElement {
   const [value, setValue] = useState<OptionsType<OptionType>>();
   const [options, setOptions] = useState<OptionsType<OptionType>>([]);
 
@@ -55,12 +64,18 @@ const LabelsSelect = ({ id, className, defaultLabels, onChange }: Props): ReactE
       setValue(mappedOptions);
       onChange(mappedOptions);
 
-      options.forEach((l) => !newValues.has(String(l.value)) && newValues.add(String(l.value)));
+      options.forEach(
+        (l) =>
+          !newValues.has(String(l.value)) && newValues.add(String(l.value)),
+      );
     }
 
     loadLabels('')
       .then((labelOptions) => {
-        labelOptions.forEach((l) => !newValues.has(String(l.value)) && newValues.add(String(l.value)));
+        labelOptions.forEach(
+          (l) =>
+            !newValues.has(String(l.value)) && newValues.add(String(l.value)),
+        );
 
         setOptions(Array.from(newValues).map(createOption));
       })
@@ -83,6 +98,11 @@ const LabelsSelect = ({ id, className, defaultLabels, onChange }: Props): ReactE
       loadOptions={loadLabels}
     />
   );
+}
+
+LabelsSelect.defaultProps = {
+  className: undefined,
+  defaultLabels: undefined,
 };
 
 export default LabelsSelect;

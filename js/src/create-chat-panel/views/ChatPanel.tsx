@@ -1,15 +1,15 @@
 import React from 'react';
 import { observer } from 'mobx-react';
-import { ChatPanelStore } from '../stores/ChatPanelStore';
-import { CreateChatDialog } from './CreateChatDialog';
 import { ModalTransition } from '@atlaskit/modal-dialog';
 import { I18n } from '@atlassian/wrm-react-i18n';
 import styled from '@emotion/styled';
 import { gridSize } from '@atlaskit/theme';
-import { ChatInfo } from './ChatInfo';
 import Spinner from '@atlaskit/spinner';
-import { ErrorView } from './ErrorView';
 import LoadingButton from '@atlaskit/button/loading-button';
+import { ChatInfo } from './ChatInfo';
+import { ErrorView } from './ErrorView';
+import CreateChatDialog from './CreateChatDialog';
+import ChatPanelStore from '../stores/ChatPanelStore';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const MyteamImage = require('../../assets/myteam.png');
 
@@ -39,7 +39,7 @@ export const ChatPanel = observer((props: CreateChatPanelProps) => {
   if (store.isLoading)
     return (
       <StyledSpinnerContainer>
-        <Spinner size={'medium'} />
+        <Spinner size="medium" />
       </StyledSpinnerContainer>
     );
 
@@ -53,7 +53,10 @@ export const ChatPanel = observer((props: CreateChatPanelProps) => {
         <LoadingButton
           isLoading={store.isDialogDataLoading}
           onClick={store.openCreateChatDialog}
-          iconBefore={<img height={gridSize() * 2.5} src={MyteamImage.default} alt="Some image here" />}>
+          iconBefore={
+            <img height={gridSize() * 2.5} src={MyteamImage.default} alt="" />
+          }
+        >
           {I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.title')}
         </LoadingButton>
       </StyledCreateChatButtonContainer>

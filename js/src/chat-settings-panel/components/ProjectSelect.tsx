@@ -9,7 +9,9 @@ type Props = SelectProps<OptionType> & {
   onChange: (value: OptionType | null) => void;
 };
 
-const mapProjectsToOptions = (projects: ReadonlyArray<ProjectData>): Array<OptionType> => {
+const mapProjectsToOptions = (
+  projects: ReadonlyArray<ProjectData>,
+): Array<OptionType> => {
   return projects.map((project) => {
     return { label: `${project.name} (${project.key})`, value: project.key };
   });
@@ -17,26 +19,35 @@ const mapProjectsToOptions = (projects: ReadonlyArray<ProjectData>): Array<Optio
 
 const filterOptions = (options: Array<OptionType>) => {
   return (inputValue: string) =>
-    new Promise(async (resolve) => {
+    new Promise((resolve) => {
       resolve(
         options.filter(
           (o) =>
             !inputValue ||
-            inputValue.length == 0 ||
-            o.label.toLocaleLowerCase().indexOf(inputValue.toLocaleLowerCase()) != -1 ||
-            String(o.value).toLocaleLowerCase().indexOf(inputValue.toLocaleLowerCase()) != -1,
+            inputValue.length === 0 ||
+            o.label
+              .toLocaleLowerCase()
+              .indexOf(inputValue.toLocaleLowerCase()) !== -1 ||
+            String(o.value)
+              .toLocaleLowerCase()
+              .indexOf(inputValue.toLocaleLowerCase()) !== -1,
         ),
       );
     });
 };
 
-const ProjectSelect = ({ id, className, defaultProjectKey, onChange }: Props): ReactElement => {
+function ProjectSelect({
+  id,
+  className,
+  defaultProjectKey,
+  onChange,
+}: Props): ReactElement {
   const [projects, setProjects] = useState<Array<OptionType>>([]);
   const [value, setValue] = useState<OptionType | null>();
 
-  const updateValue = (value: OptionType | null): void => {
-    setValue(value);
-    onChange(value);
+  const updateValue = (selectValue: OptionType | null): void => {
+    setValue(selectValue);
+    onChange(selectValue);
   };
 
   useLayoutEffect(() => {
@@ -44,7 +55,9 @@ const ProjectSelect = ({ id, className, defaultProjectKey, onChange }: Props): R
       const options = mapProjectsToOptions(data);
       setProjects(options);
 
-      const selectedValues = options.filter((o) => o.value == defaultProjectKey);
+      const selectedValues = options.filter(
+        (o) => o.value === defaultProjectKey,
+      );
 
       if (selectedValues.length) {
         updateValue(selectedValues[0]);
@@ -65,6 +78,11 @@ const ProjectSelect = ({ id, className, defaultProjectKey, onChange }: Props): R
       loadOptions={filterOptions(projects)}
     />
   );
+}
+
+ProjectSelect.defaultProps = {
+  className: undefined,
+  defaultProjectKey: undefined,
 };
 
 export default ProjectSelect;

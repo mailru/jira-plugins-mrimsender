@@ -1,11 +1,11 @@
 import { observer } from 'mobx-react';
 import React from 'react';
 import styled from '@emotion/styled';
-import { ChatInfoType } from '../stores/LoadingService';
 import { I18n } from '@atlassian/wrm-react-i18n';
 import AvatarGroup from '@atlaskit/avatar-group';
 
 import MyteamImage from '../../assets/myteam.png';
+import { ChatInfoType } from '../stores/types';
 
 type ChatInfoProps = {
   chatInfo: ChatInfoType;
@@ -35,10 +35,18 @@ export const ChatInfo = observer((props: ChatInfoProps) => {
         {chatInfo.name}
       </a>
       <StyledContainer>
-        <StyledLabel>{I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.members.preview')}</StyledLabel>
+        <StyledLabel>
+          {I18n.getText(
+            'ru.mail.jira.plugins.myteam.createChat.panel.members.preview',
+          )}
+        </StyledLabel>
         <AvatarGroup
           appearance="stack"
-          data={chatInfo.members.map((member: any) => ({ name: member.name, id: member.id, src: member.avatarUrl }))}
+          data={chatInfo.members.map((member: any) => ({
+            name: member.name,
+            id: member.id,
+            src: member.avatarUrl,
+          }))}
         />
       </StyledContainer>
     </div>

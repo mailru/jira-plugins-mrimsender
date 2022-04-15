@@ -7,22 +7,38 @@ type ErrorViewProps = {
   reactErrorInfo?: ErrorInfo;
 };
 
-export const ErrorView = (props: ErrorViewProps) => {
+export function ErrorView(props: ErrorViewProps) {
   const { error, reactErrorInfo } = props;
   return (
-    <>
-      <SectionMessage appearance="error">
-        <p>{I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.error.info')}</p>
-        <p>{I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.error.contact')}</p>
-        {(error || reactErrorInfo) && <p>{`Details: `}</p>}
-        {error && error.message && <p>{`Error: ${error.message}`}</p>}
-        {reactErrorInfo && <p>{`React ErrorInfo: ${reactErrorInfo.componentStack}`}</p>}
-      </SectionMessage>
-    </>
+    <SectionMessage appearance="error">
+      <p>
+        {I18n.getText(
+          'ru.mail.jira.plugins.myteam.createChat.panel.error.info',
+        )}
+      </p>
+      <p>
+        {I18n.getText(
+          'ru.mail.jira.plugins.myteam.createChat.panel.error.contact',
+        )}
+      </p>
+      {(error || reactErrorInfo) && <p>{`Details: `}</p>}
+      {error && error.message && <p>{`Error: ${error.message}`}</p>}
+      {reactErrorInfo && (
+        <p>{`React ErrorInfo: ${reactErrorInfo.componentStack}`}</p>
+      )}
+    </SectionMessage>
   );
+}
+
+ErrorView.defaultProps = {
+  error: undefined,
+  reactErrorInfo: undefined,
 };
 
-export const makeFaultTolerantComponent = (ErrorView: React.ComponentType<ErrorViewProps>) =>
+export const makeFaultTolerantComponent = (
+  ErrorViewComponent: React.ComponentType<ErrorViewProps>,
+) =>
+  // eslint-disable-next-line react/display-name
   class extends React.Component<any, { error?: Error; errorInfo?: ErrorInfo }> {
     constructor(props: any) {
       super(props);
@@ -40,11 +56,12 @@ export const makeFaultTolerantComponent = (ErrorView: React.ComponentType<ErrorV
 
     render() {
       const { error, errorInfo } = this.state;
+      const { children } = this.props;
       if (error || errorInfo) {
         // Render error view
-        return <ErrorView error={error} reactErrorInfo={errorInfo} />;
+        return <ErrorViewComponent error={error} reactErrorInfo={errorInfo} />;
       }
       // Normally, just render children
-      return this.props.children;
+      return children;
     }
   };

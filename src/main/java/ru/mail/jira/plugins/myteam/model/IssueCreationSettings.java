@@ -41,6 +41,10 @@ public interface IssueCreationSettings extends Entity {
 
   void setLabels(String labels);
 
+  boolean isCreationByAllMembers();
+
+  void setCreationByAllMembers(boolean creationByAllMembers);
+
   @Nullable
   IssueReporter getReporter();
 

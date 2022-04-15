@@ -40,6 +40,7 @@ public class IssueCreationSettingsRepository
           entity.setIssueTypeId(dto.getIssueTypeId());
           entity.setProjectKey(dto.getProjectKey());
           entity.setEnabled(dto.getEnabled());
+          entity.setCreationByAllMembers(dto.getCreationByAllMembers());
           entity.setReporter(dto.getReporter());
           entity.setAddReporterInWatchers(dto.getAddReporterInWatchers());
           entity.setCreationSuccessTemplate(dto.getCreationSuccessTemplate());

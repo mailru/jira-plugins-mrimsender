@@ -3,13 +3,15 @@ import qs from 'qs';
 import contextPath from 'wrm/context-path';
 import { FieldHtml, FieldParam } from '../types';
 import { collectFieldsData } from '../utils';
-import { getCancelTokenHandler } from './AxiosUtils';
+import getCancelTokenHandler from './AxiosUtils';
 
 export type IssueTypeData = { name: string; id: string };
 
 export type ProjectData = { name: string; key: string };
 
-export const loadProjects = (): Promise<AxiosResponse<ReadonlyArray<ProjectData>>> => {
+export const loadProjects = (): Promise<
+  AxiosResponse<ReadonlyArray<ProjectData>>
+> => {
   return axios.get(`${contextPath()}/rest/api/2/project`);
 };
 
@@ -17,13 +19,17 @@ const cancelTokenHandler = getCancelTokenHandler();
 
 export const loadProjectData = (
   projectKey: string,
-): Promise<AxiosResponse<{ id: string; issueTypes: ReadonlyArray<IssueTypeData> }>> => {
+): Promise<
+  AxiosResponse<{ id: string; issueTypes: ReadonlyArray<IssueTypeData> }>
+> => {
   return axios.get(`${contextPath()}/rest/api/2/project/${projectKey}`);
 };
 
 export const loadLabelsSugestions = (
   query: string,
-): Promise<AxiosResponse<{ suggestions: ReadonlyArray<{ html: string; label: string }> }>> => {
+): Promise<
+  AxiosResponse<{ suggestions: ReadonlyArray<{ html: string; label: string }> }>
+> => {
   return axios.get(`${contextPath()}/rest/api/1.0/labels/suggest`, {
     params: { query },
   });

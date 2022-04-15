@@ -32,7 +32,6 @@ import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.ChatAdminRule;
@@ -75,14 +74,16 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       @Fact("isGroup") boolean isGroup,
       @Fact("args") String tag)
       throws AdminRulesRequiredException {
-    checkAdminRules(event);
-
-    boolean hasSettings = issueCreationSettingsService.hasChatSettings(event.getChatId(), tag);
+    IssueCreationSettingsDto settings =
+        issueCreationSettingsService.getSettingsFromCache(event.getChatId(), tag);
+    if (settings != null && !settings.getCreationByAllMembers()) {
+      checkAdminRules(event);
+    }
 
     return isGroup
         && NAME.equalsName(command)
         && (event.isHasReply() || event.isHasForwards())
-        && hasSettings;
+        && settings != null;
   }
 
   @Action

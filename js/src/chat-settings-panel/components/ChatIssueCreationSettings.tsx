@@ -1,14 +1,17 @@
 import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import { deleteChatIssueCreationSettings, loadChatIssueCreationSettings } from '../../shared/api/SettingsApiClient';
 import styled from 'styled-components';
-import { IssueCreationSettings, LoadableDataState } from '../../shared/types';
 import EditIcon from '@atlaskit/icon/glyph/edit';
 import TrashIcon from '@atlaskit/icon/glyph/trash';
-import EditIssueCreationSettingsDialog from '../../shared/components/dialogs/EditIssueCreationSettingsDialog';
-import { ChatName } from '../../shared/components/ChatName';
-import LoadableComponent from '../../shared/components/LoadableComponent';
 import Button from '@atlaskit/button';
 import { I18n } from '@atlassian/wrm-react-i18n';
+import {
+  deleteChatIssueCreationSettings,
+  loadChatIssueCreationSettings,
+} from '../../shared/api/SettingsApiClient';
+import { IssueCreationSettings, LoadableDataState } from '../../shared/types';
+import EditIssueCreationSettingsDialog from '../../shared/components/dialogs/EditIssueCreationSettingsDialog';
+import ChatName from '../../shared/components/ChatName';
+import LoadableComponent from '../../shared/components/LoadableComponent';
 import NewIssueCreationSettingsDialog from '../../shared/components/dialogs/NewIssueCreationSettingsDialog';
 import ConfirmationDialog from '../../shared/components/dialogs/ConfirmationDialog';
 
@@ -93,19 +96,23 @@ const renderSettingsElement = (
       </SpaceBetweenRow>
 
       <Field>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label>Включен:</label>
         <span>{settings.enabled ? 'да' : 'нет'}</span>
       </Field>
       <Field>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label>Проект:</label>
         <span>{settings.projectKey}</span>
       </Field>
       <Field>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label>Тип задачи:</label>
         <span>{settings.issueTypeName}</span>
       </Field>
 
       <Field>
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
         <label>Метки:</label>
         <span>{settings.labels ? settings.labels.join(', ') : ''}</span>
       </Field>
@@ -113,26 +120,38 @@ const renderSettingsElement = (
   );
 };
 
-const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
-  const [settings, setSettings] = useState<LoadableDataState<Array<IssueCreationSettings>>>({
+function ChatIssueCreationSettings({ chatId }: Props): ReactElement {
+  const [settings, setSettings] = useState<
+    LoadableDataState<Array<IssueCreationSettings>>
+  >({
     isLoading: false,
   });
-  const [editSettingsDialogState, setEditSettingsDialogState] = useState<{ isOpen: boolean; settingsId?: number }>({
+  const [editSettingsDialogState, setEditSettingsDialogState] = useState<{
+    isOpen: boolean;
+    settingsId?: number;
+  }>({
     isOpen: false,
   });
 
-  const [newSettingsDialogState, setNewSettingsDialogState] = useState<{ isOpen: boolean }>({
+  const [newSettingsDialogState, setNewSettingsDialogState] = useState<{
+    isOpen: boolean;
+  }>({
     isOpen: false,
   });
 
-  const [confirmationDialogState, setConfirmationDialogState] = useState<{ isOpen: boolean; settingsId?: number }>({
+  const [confirmationDialogState, setConfirmationDialogState] = useState<{
+    isOpen: boolean;
+    settingsId?: number;
+  }>({
     isOpen: false,
   });
 
   const loadSettings = () => {
     if (chatId) {
       loadChatIssueCreationSettings(chatId)
-        .then((response) => setSettings({ data: response.data, isLoading: false }))
+        .then((response) =>
+          setSettings({ data: response.data, isLoading: false }),
+        )
         .catch((e) => {
           console.error(e);
           setSettings({ isLoading: false, error: JSON.stringify(e) });
@@ -149,9 +168,15 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
       <TitleContainer>
         <h2>
           Настройки создания задач{' '}
-          <ChatName chatTitle={firstSettings?.chatTitle || ''} href={firstSettings?.chatLink} />
+          <ChatName
+            chatTitle={firstSettings?.chatTitle || ''}
+            href={firstSettings?.chatLink}
+          />
         </h2>
-        <Button appearance="primary" onClick={() => setNewSettingsDialogState({ isOpen: true })}>
+        <Button
+          appearance="primary"
+          onClick={() => setNewSettingsDialogState({ isOpen: true })}
+        >
           {I18n.getText('common.forms.create')}
         </Button>
       </TitleContainer>
@@ -161,7 +186,8 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
           settings.data.map((s) =>
             renderSettingsElement(
               s,
-              (settingsId) => setEditSettingsDialogState({ isOpen: true, settingsId }),
+              (settingsId) =>
+                setEditSettingsDialogState({ isOpen: true, settingsId }),
               (settingsId) => {
                 setConfirmationDialogState({ settingsId, isOpen: true });
               },
@@ -199,7 +225,9 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
           body="Вы действительно хотите удалить данные настройки?"
           onOk={() => {
             if (confirmationDialogState.settingsId) {
-              deleteChatIssueCreationSettings(confirmationDialogState.settingsId).then(() => {
+              deleteChatIssueCreationSettings(
+                confirmationDialogState.settingsId,
+              ).then(() => {
                 loadSettings();
                 setConfirmationDialogState({ isOpen: false });
               });
@@ -207,10 +235,11 @@ const ChatIssueCreationSettings = ({ chatId }: Props): ReactElement => {
           }}
           onCancel={() => {
             setConfirmationDialogState({ isOpen: false });
-          }}></ConfirmationDialog>
+          }}
+        />
       </LoadableComponent>
     </Container>
   );
-};
+}
 
 export default ChatIssueCreationSettings;
