@@ -97,7 +97,12 @@ const getFormValues = (): Array<FieldParam> => {
     .filter(
       (f) =>
         f.value.length > 0 &&
-        !['enabled', 'tag', 'addReporterInWatchers', 'creationByAllMembers'].includes(f.field),
+        ![
+          'enabled',
+          'tag',
+          'addReporterInWatchers',
+          'creationByAllMembers',
+        ].includes(f.field),
     );
 };
 
