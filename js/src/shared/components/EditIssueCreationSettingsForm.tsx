@@ -97,7 +97,7 @@ const getFormValues = (): Array<FieldParam> => {
     .filter(
       (f) =>
         f.value.length > 0 &&
-        !['enabled', 'tag', 'addReporterInWatchers'].includes(f.field),
+        !['enabled', 'tag', 'addReporterInWatchers', 'creationByAllMembers'].includes(f.field),
     );
 };
 
@@ -239,6 +239,21 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
   return (
     <>
       <h3>Дополнительные настройки</h3>
+      <CheckboxField
+        name="creationByAllMembers"
+        defaultIsChecked={settings.creationByAllMembers}
+      >
+        {({ fieldProps }) => (
+          <Checkbox
+            label="Разрешить создавать задачу всем участникам чата"
+            size="large"
+            defaultChecked={settings.creationByAllMembers}
+            // eslint-disable-next-line react/jsx-props-no-spreading
+            {...fieldProps}
+          />
+        )}
+      </CheckboxField>
+
       <Field
         label="Автор задачи"
         name="reporter"
@@ -411,6 +426,7 @@ function EditIssueCreationSettingsForm({
           projectKey,
           tag,
           labels,
+          creationByAllMembers,
           reporter,
           addReporterInWatchers,
           creationSuccessTemplate,
@@ -419,6 +435,7 @@ function EditIssueCreationSettingsForm({
           onSave({
             enabled,
             tag,
+            creationByAllMembers,
             reporter,
             addReporterInWatchers,
             creationSuccessTemplate,

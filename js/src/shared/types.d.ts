@@ -13,6 +13,7 @@ export type IssueCreationSettings = {
   issueSummaryTemplate: string;
   labels: Array<string>;
   additionalFields: Array<FieldParam>;
+  creationByAllMembers: boolean,
   reporter: 'INITIATOR' | 'MESSAGE_AUTHOR';
   addReporterInWatchers: boolean;
 };
