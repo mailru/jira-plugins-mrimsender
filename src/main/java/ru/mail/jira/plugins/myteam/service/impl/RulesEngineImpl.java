@@ -22,6 +22,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNotFoundErrorRu
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.CreateIssueByReplyRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
+import ru.mail.jira.plugins.myteam.rulesengine.rules.state.assignissue.AssignIssueInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment.IssueCommentInputRule;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.*;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuesearch.IssueKeyInputRule;
@@ -95,6 +96,7 @@ public class RulesEngineImpl
     commandsRuleEngine.registerRule(new AssignedIssuesCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new CreatedIssuesCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new LinkIssueWithChatCommandRule(userChatService, this));
+    commandsRuleEngine.registerRule(new AssignIssueCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new ViewIssueCommandRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(new WatchIssueCommandRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(
@@ -123,6 +125,8 @@ public class RulesEngineImpl
         new IssueCommentInputRule(userChatService, this, issueService));
     stateActionsRuleEngine.registerRule(new FieldInputRule(userChatService, this));
     stateActionsRuleEngine.registerRule(new IssueKeyInputRule(userChatService, this));
+    stateActionsRuleEngine.registerRule(
+        new AssignIssueInputRule(userChatService, this, issueService));
 
     commandsRuleEngine.registerRule(
         new IssueTypeSelectButtonRule(userChatService, this, issueService));

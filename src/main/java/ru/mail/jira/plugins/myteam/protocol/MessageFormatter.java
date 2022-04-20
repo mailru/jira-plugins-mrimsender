@@ -536,47 +536,6 @@ public class MessageFormatter {
         String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), key));
   }
 
-  public List<List<InlineKeyboardMarkupButton>> getIssueButtons(
-      String issueKey, ApplicationUser recipient, boolean isWatching) {
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-    buttons.add(buttonsRow);
-
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                localeManager.getLocaleFor(recipient),
-                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"),
-            String.join("-", ButtonRuleType.CommentIssue.getName(), issueKey)));
-
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                localeManager.getLocaleFor(recipient),
-                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"),
-            String.join("-", ButtonRuleType.ViewComments.getName(), issueKey)));
-
-    ArrayList<InlineKeyboardMarkupButton> watchButtonRow = new ArrayList<>();
-
-    watchButtonRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                localeManager.getLocaleFor(recipient),
-                isWatching
-                    ? "ru.mail.jira.plugins.myteam.mrimsenderEventListener.unwatchButton.text"
-                    : "ru.mail.jira.plugins.myteam.mrimsenderEventListener.watchButton.text"),
-            String.join(
-                "-",
-                isWatching
-                    ? CommandRuleType.UnwatchIssue.getName()
-                    : CommandRuleType.WatchIssue.getName(),
-                issueKey)));
-
-    buttons.add(watchButtonRow);
-
-    return buttons;
-  }
-
   public List<List<InlineKeyboardMarkupButton>> getCancelButton(Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
 

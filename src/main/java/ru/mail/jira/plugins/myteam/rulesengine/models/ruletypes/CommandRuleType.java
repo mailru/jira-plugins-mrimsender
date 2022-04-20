@@ -11,6 +11,7 @@ public enum CommandRuleType implements RuleType {
   WatchingIssues("watching"),
   AssignedIssues("assigned"),
   CreatedIssues("created"),
+  AssignIssue("assign"),
   WatchIssue("watch"),
   LinkIssueWithChat("link"),
   UnwatchIssue("unwatch"),

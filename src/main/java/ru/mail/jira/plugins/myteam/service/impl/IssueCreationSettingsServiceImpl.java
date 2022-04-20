@@ -107,13 +107,13 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   @Override
   public @NotNull List<IssueCreationSettingsDto> getSettingsByChatId(String chatId) {
     return issueCreationSettingsRepository.getSettingsByChatId(chatId).stream()
-            .map(
-                el -> {
-                  IssueCreationSettingsDto settings = mapAdditionalSettingsInfo(el);
-                  applyDefaultTemplateIfEmpty(settings);
-                  return settings;
-                })
-            .collect(Collectors.toList());
+        .map(
+            el -> {
+              IssueCreationSettingsDto settings = mapAdditionalSettingsInfo(el);
+              applyDefaultTemplateIfEmpty(settings);
+              return settings;
+            })
+        .collect(Collectors.toList());
   }
 
   @Override

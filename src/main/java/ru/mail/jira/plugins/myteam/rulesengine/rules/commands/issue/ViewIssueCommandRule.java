@@ -7,13 +7,17 @@ import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
@@ -60,8 +64,7 @@ public class ViewIssueCommandRule extends BaseRule {
             messageFormatter.createIssueSummary(issue, user),
             isGroup
                 ? null
-                : messageFormatter.getIssueButtons(
-                    issue.getKey(), user, issueService.isUserWatching(issue, user)));
+                : getIssueButtons(issue.getKey(), user, issueService.isUserWatching(issue, user)));
         updateState(chatId, issueKey);
       } catch (IssuePermissionException e) {
         rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e);
@@ -87,5 +90,53 @@ public class ViewIssueCommandRule extends BaseRule {
     } else {
       userChatService.setState(chatId, new ViewingIssueState(userChatService, issueKey));
     }
+  }
+
+  private List<List<InlineKeyboardMarkupButton>> getIssueButtons(
+      String issueKey, ApplicationUser recipient, boolean isWatching) {
+    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+    buttons.add(buttonsRow);
+
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            userChatService.getRawText(
+                userChatService.getUserLocale(recipient),
+                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"),
+            String.join("-", ButtonRuleType.CommentIssue.getName(), issueKey)));
+
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            userChatService.getRawText(
+                userChatService.getUserLocale(recipient),
+                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"),
+            String.join("-", ButtonRuleType.ViewComments.getName(), issueKey)));
+
+    ArrayList<InlineKeyboardMarkupButton> watchButtonRow = new ArrayList<>();
+
+    watchButtonRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            userChatService.getRawText(
+                userChatService.getUserLocale(recipient),
+                isWatching
+                    ? "ru.mail.jira.plugins.myteam.mrimsenderEventListener.unwatchButton.text"
+                    : "ru.mail.jira.plugins.myteam.mrimsenderEventListener.watchButton.text"),
+            String.join(
+                "-",
+                isWatching
+                    ? CommandRuleType.UnwatchIssue.getName()
+                    : CommandRuleType.WatchIssue.getName(),
+                issueKey)));
+
+    watchButtonRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            userChatService.getRawText(
+                userChatService.getUserLocale(recipient),
+                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.assign.text"),
+            String.join("-", CommandRuleType.AssignIssue.getName(), issueKey)));
+
+    buttons.add(watchButtonRow);
+
+    return buttons;
   }
 }
