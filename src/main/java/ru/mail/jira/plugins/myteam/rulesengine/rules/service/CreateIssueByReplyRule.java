@@ -74,14 +74,16 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       @Fact("isGroup") boolean isGroup,
       @Fact("args") String tag)
       throws AdminRulesRequiredException {
-    checkAdminRules(event);
-
-    boolean hasSettings = issueCreationSettingsService.hasChatSettings(event.getChatId(), tag);
+    IssueCreationSettingsDto settings =
+        issueCreationSettingsService.getSettingsFromCache(event.getChatId(), tag);
+    if (settings != null && !settings.getCreationByAllMembers()) {
+      checkAdminRules(event);
+    }
 
     return isGroup
         && NAME.equalsName(command)
         && (event.isHasReply() || event.isHasForwards())
-        && hasSettings;
+        && settings != null;
   }
 
   @Action

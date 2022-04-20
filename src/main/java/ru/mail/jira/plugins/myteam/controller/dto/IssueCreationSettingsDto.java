@@ -36,6 +36,7 @@ public class IssueCreationSettingsDto {
   @Nullable @XmlElement private String chatTitle;
   @Nullable @XmlElement private String issueTypeName;
   @XmlElement private Boolean canEdit;
+  @XmlElement private Boolean creationByAllMembers;
   @XmlElement private IssueReporter reporter;
   @XmlElement private Boolean addReporterInWatchers;
   @XmlElement private List<String> labels;
@@ -46,6 +47,7 @@ public class IssueCreationSettingsDto {
     this.chatId = entity.getChatId();
     this.enabled = entity.isEnabled();
     this.tag = entity.getTag();
+    this.creationByAllMembers = entity.isCreationByAllMembers();
     this.reporter = entity.getReporter();
     this.addReporterInWatchers = entity.isAddReporterInWatchers();
     this.projectKey = entity.getProjectKey();
@@ -68,6 +70,7 @@ public class IssueCreationSettingsDto {
     this.chatId = entity.getChatId();
     this.enabled = entity.isEnabled();
     this.tag = entity.getTag();
+    this.creationByAllMembers = entity.isCreationByAllMembers();
     this.reporter = entity.getReporter();
     this.addReporterInWatchers = entity.isAddReporterInWatchers();
     this.projectKey = entity.getProjectKey();

@@ -2,34 +2,40 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import { configure } from 'mobx';
-import { ChatPanel, StyledChatPanelContainer } from './views/ChatPanel';
-import { ChatPanelStore } from './stores/ChatPanelStore';
 import legacyIssueApi from 'jira/issues/search/legacyissue';
 import EventTypes from 'jira/util/events/types';
 import Events from 'jira/util/events';
-import { ErrorView, makeFaultTolerantComponent } from './views/ErrorView';
 import { CacheProvider, EmotionCache } from '@emotion/core';
 import createCache from '@emotion/cache';
 import { IntlProvider } from 'react-intl-next';
+import { ErrorView, makeFaultTolerantComponent } from './views/ErrorView';
+import ChatPanelStore from './stores/ChatPanelStore';
+import { ChatPanel, StyledChatPanelContainer } from './views/ChatPanel';
 
 const PANEL_CONTAINER_ID_SELECTOR = '#myteam-chat-creation-panel-container';
 
-function memoizeStoreCreation(createStoreFunc: (issueKey: string) => ChatPanelStore) {
+function memoizeStoreCreation(
+  createStoreFunc: (issueKey: string) => ChatPanelStore,
+) {
   const cache: { [key: string]: ChatPanelStore } = {};
   return (issueKey: string) => {
     if (issueKey in cache) return cache[issueKey];
-    else {
-      cache[issueKey] = createStoreFunc(issueKey);
-      return cache[issueKey];
-    }
+
+    cache[issueKey] = createStoreFunc(issueKey);
+    return cache[issueKey];
   };
 }
 
-const createStore = memoizeStoreCreation((issueKey: string): ChatPanelStore => new ChatPanelStore(issueKey));
+const createStore = memoizeStoreCreation(
+  (issueKey: string): ChatPanelStore => new ChatPanelStore(issueKey),
+);
 
 const ErrorBoundary = makeFaultTolerantComponent(ErrorView);
 
-function renderMyteamChatPanel(reactDomRoot: HTMLElement, emotionCache: EmotionCache) {
+function renderMyteamChatPanel(
+  reactDomRoot: HTMLElement,
+  emotionCache: EmotionCache,
+) {
   const issueKey: string = legacyIssueApi.getIssueKey();
   const memoizedStore = createStore(issueKey);
   ReactDOM.render(
@@ -46,7 +52,10 @@ function renderMyteamChatPanel(reactDomRoot: HTMLElement, emotionCache: EmotionC
   );
 }
 
-function renderAllContentInContext($context: JQuery<any>, emotionCache: EmotionCache) {
+function renderAllContentInContext(
+  $context: JQuery<any>,
+  emotionCache: EmotionCache,
+) {
   if ($context.length === 0) return;
   try {
     // for each found custom table cfId root container on viewing page
@@ -56,7 +65,9 @@ function renderAllContentInContext($context: JQuery<any>, emotionCache: EmotionC
       .forEach((container) => {
         const affected = $.contains($context[0], container);
         if (!affected) {
-          console.debug('Found out that panel container is not affected => no render occurred');
+          console.debug(
+            'Found out that panel container is not affected => no render occurred',
+          );
           return;
         }
         if (container == null) {
@@ -70,7 +81,7 @@ function renderAllContentInContext($context: JQuery<any>, emotionCache: EmotionC
   }
 }
 
-export function init() {
+export default function init(): void {
   configure({ enforceActions: 'observed', isolateGlobalState: true });
   const emotionCache = createCache({
     key: 'myteam-styles',

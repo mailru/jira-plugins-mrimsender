@@ -1,7 +1,13 @@
 import React, { ReactElement } from 'react';
 import Button from '@atlaskit/button/standard-button';
 import { I18n } from '@atlassian/wrm-react-i18n';
-import Modal, { ModalBody, ModalFooter, ModalHeader, ModalTitle, ModalTransition } from '@atlaskit/modal-dialog';
+import Modal, {
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+  ModalTransition,
+} from '@atlaskit/modal-dialog';
 
 type Props = {
   title: string | ReactElement;
@@ -11,7 +17,13 @@ type Props = {
   onCancel: () => void;
 };
 
-const ConfirmationDialog = ({ title, body, isOpen, onOk, onCancel }: Props): ReactElement => {
+function ConfirmationDialog({
+  title,
+  body,
+  isOpen,
+  onOk,
+  onCancel,
+}: Props): ReactElement {
   return (
     <ModalTransition>
       {isOpen && (
@@ -32,6 +44,6 @@ const ConfirmationDialog = ({ title, body, isOpen, onOk, onCancel }: Props): Rea
       )}
     </ModalTransition>
   );
-};
+}
 
 export default ConfirmationDialog;

@@ -1,13 +1,18 @@
-import React, { Fragment, ReactElement } from 'react';
-import Modal, { ModalFooter, ModalHeader, ModalTitle, ModalTransition } from '@atlaskit/modal-dialog';
+import React, { ReactElement } from 'react';
+import Modal, {
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+  ModalTransition,
+} from '@atlaskit/modal-dialog';
 import { I18n } from '@atlassian/wrm-react-i18n';
 import Form, { ErrorMessage, Field } from '@atlaskit/form';
 import Textfield from '@atlaskit/textfield';
 import Button, { ButtonGroup } from '@atlaskit/button';
 import { ValueType } from '@atlaskit/select';
-import { ChatCreationData } from '../stores/ChatPanelStore';
 import UserPicker, { OptionData, Value } from '@atlaskit/user-picker';
 import styled from 'styled-components';
+import { ChatCreationData } from '../stores/types';
 
 type Props = {
   chatCreationData: ChatCreationData;
@@ -19,7 +24,8 @@ type Props = {
 
 type CreateChatDialogFormValuesType = {
   'chat-name': string;
-  'chat-members': ValueType<OptionData, true>;
+  // eslint-disable-next-line sonarjs/no-duplicate-string
+  'chat-members': ValueType<OptionData, true>; // eslint-disable sonarjs/no-duplicate-string
 };
 
 const ModalBody = styled.div`
@@ -28,9 +34,10 @@ const ModalBody = styled.div`
 `;
 
 const validateChatName = (value?: string) => {
-  if (!value || value.trim().length == 0) {
+  if (!value || value.trim().length === 0) {
     return 'TOO_SHORT';
   }
+  return undefined;
 };
 
 const validateChatMembers = (value?: ValueType<OptionData, true>) => {
@@ -40,55 +47,84 @@ const validateChatMembers = (value?: ValueType<OptionData, true>) => {
   if (value && value.length > 30) {
     return 'TOO_MORE';
   }
+  return undefined;
 };
 
-export const CreateChatDialog = ({ isOpen, onClose, chatCreationData, createChat, loadUsers }: Props): ReactElement => {
+export default function CreateChatDialog({
+  isOpen,
+  onClose,
+  chatCreationData,
+  createChat,
+  loadUsers,
+}: Props): ReactElement {
   return (
     <ModalTransition>
       {isOpen && (
         <Modal onClose={onClose}>
           <Form<CreateChatDialogFormValuesType>
             onSubmit={(values) => {
-              if (values != null && values['chat-members'] != null && values['chat-name'] != null) {
+              if (
+                values != null &&
+                values['chat-members'] != null &&
+                values['chat-name'] != null
+              ) {
                 createChat(
                   values['chat-name'],
-                  values['chat-members'].map((member) => Number.parseInt(member.id)),
+                  values['chat-members'].map((member) =>
+                    Number.parseInt(member.id, 10),
+                  ),
                 );
                 onClose();
               }
-            }}>
+            }}
+          >
             {({ formProps }) => (
+              // eslint-disable-next-line react/jsx-props-no-spreading
               <form {...formProps}>
                 <ModalHeader>
-                  <ModalTitle>{I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.title')}</ModalTitle>
+                  <ModalTitle>
+                    {I18n.getText(
+                      'ru.mail.jira.plugins.myteam.createChat.panel.title',
+                    )}
+                  </ModalTitle>
                 </ModalHeader>
                 <ModalBody>
                   <Field
-                    label={I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.name')}
+                    label={I18n.getText(
+                      'ru.mail.jira.plugins.myteam.createChat.panel.name',
+                    )}
                     name="chat-name"
                     defaultValue={chatCreationData.name}
-                    validate={validateChatName}>
+                    validate={validateChatName}
+                  >
                     {({ fieldProps, valid, error }) => (
-                      <Fragment>
+                      <>
+                        {/* eslint-disable-next-line react/jsx-props-no-spreading */}
                         <Textfield {...fieldProps} />
                         {error === 'TOO_SHORT' && !valid && (
                           <ErrorMessage>
-                            {I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.error.empty_name')}
+                            {I18n.getText(
+                              'ru.mail.jira.plugins.myteam.createChat.panel.error.empty_name',
+                            )}
                           </ErrorMessage>
                         )}
-                      </Fragment>
+                      </>
                     )}
                   </Field>
                   <Field<ValueType<OptionData, true>>
                     name="chat-members"
-                    label={I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.members')}
+                    label={I18n.getText(
+                      'ru.mail.jira.plugins.myteam.createChat.panel.members',
+                    )}
                     defaultValue={chatCreationData.members}
-                    validate={validateChatMembers}>
+                    validate={validateChatMembers}
+                  >
                     {({ fieldProps: { id, ...rest }, error, valid }) => (
-                      <Fragment>
+                      <>
                         <UserPicker
+                          // eslint-disable-next-line react/jsx-props-no-spreading
                           {...rest}
-                          width={'100%'}
+                          width="100%"
                           value={rest.value as Value}
                           onChange={(value) => {
                             rest.onChange(value as ValueType<OptionData, true>);
@@ -100,15 +136,19 @@ export const CreateChatDialog = ({ isOpen, onClose, chatCreationData, createChat
                         />
                         {error === 'TOO_SHORT' && !valid && (
                           <ErrorMessage>
-                            {I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.error.empty_members')}
+                            {I18n.getText(
+                              'ru.mail.jira.plugins.myteam.createChat.panel.error.empty_members',
+                            )}
                           </ErrorMessage>
                         )}
                         {error === 'TOO_MORE' && !valid && (
                           <ErrorMessage>
-                            {I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel.error.more_members')}
+                            {I18n.getText(
+                              'ru.mail.jira.plugins.myteam.createChat.panel.error.more_members',
+                            )}
                           </ErrorMessage>
                         )}
-                      </Fragment>
+                      </>
                     )}
                   </Field>
                 </ModalBody>
@@ -130,4 +170,4 @@ export const CreateChatDialog = ({ isOpen, onClose, chatCreationData, createChat
       )}
     </ModalTransition>
   );
-};
+}

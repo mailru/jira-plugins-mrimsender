@@ -1,20 +1,10 @@
 import { action, makeObservable, observable } from 'mobx';
-import { ChatInfoType, LoadingService } from './LoadingService';
+import LoadingService from './LoadingService';
+import { ChatCreationData, ChatInfoType } from './types';
 
-type ChatMember = {
-  id: string;
-  name: string;
-  src: string;
-};
-
-export type ChatCreationData = {
-  name: string;
-  description: string;
-  members: ChatMember[];
-};
-
-export class ChatPanelStore {
+export default class ChatPanelStore {
   readonly issueKey: string;
+
   readonly loadingService: LoadingService;
 
   constructor(issueKey: string) {
@@ -63,18 +53,26 @@ export class ChatPanelStore {
           );
         }),
       )
-      .finally(action(() => (this.isLoading = false)));
+      .finally(
+        action(() => {
+          this.isLoading = false;
+        }),
+      );
   };
 
   @action('loadDialogData')
   loadDialogData = async (): Promise<void> => {
     try {
-      const chatCreationData = await this.loadingService.loadChatCreationData(this.issueKey);
+      const chatCreationData = await this.loadingService.loadChatCreationData(
+        this.issueKey,
+      );
       if (chatCreationData != null) {
         this.dialogData = chatCreationData;
       }
     } catch (e: any) {
-      this.error = new Error(`An error in loadDialogData status=${e.status} statusText=${e.statusText}`);
+      this.error = new Error(
+        `An error in loadDialogData status=${e.status} statusText=${e.statusText}`,
+      );
     }
   };
 
@@ -104,7 +102,9 @@ export class ChatPanelStore {
     this.loadingService.createChat(this.issueKey, name, members).then(
       this.setChatInfo,
       action((reason: JQueryXHR) => {
-        this.error = new Error(`An error in createChat status=${reason.status} statusText=${reason.statusText}`);
+        this.error = new Error(
+          `An error in createChat status=${reason.status} statusText=${reason.statusText}`,
+        );
       }),
     );
   };
