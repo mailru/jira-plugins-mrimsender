@@ -53,8 +53,11 @@ public class IssueTypeSelectButtonRule extends BaseRule {
 
     Locale locale = userChatService.getUserLocale(user);
     try {
-      state.setIssueType(issueService.getIssueType(issueTypeId), user);
+      state.setIssueType(
+          issueService.getIssueType(issueTypeId),
+          user); // set issue type and load required fields meta
       rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
+
     } catch (UnsupportedCustomFieldsException e) {
       log.error(e.getLocalizedMessage(), e);
       userChatService.sendMessageText(

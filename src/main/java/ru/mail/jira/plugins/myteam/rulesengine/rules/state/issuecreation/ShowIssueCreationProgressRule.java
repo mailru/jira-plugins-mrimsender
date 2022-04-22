@@ -23,6 +23,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleT
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.CreatingIssueState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
@@ -80,6 +81,9 @@ public class ShowIssueCreationProgressRule extends BaseRule {
               userChatService.getRawText(
                   locale,
                   "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
+
+      userChatService.setState(chatId, new FillingIssueFieldState(userChatService, rulesEngine, field.get()));
+
     } else {
       userChatService.sendMessageText(
           event.getChatId(),

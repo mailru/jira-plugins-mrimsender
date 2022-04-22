@@ -39,10 +39,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.commons.Utils;
-import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CheckboxValueHandler;
-import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
-import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.DefaultFieldValueHandler;
-import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.PriorityValueHandler;
+import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.*;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
@@ -104,6 +101,9 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
 
     PriorityValueHandler priority = new PriorityValueHandler(i18nResolver, prioritySchemeManager);
     supportedIssueCreationCustomFields.put(priority.getClassName(), priority);
+
+    EpicLinkValueHandler epicLink = new EpicLinkValueHandler();
+    supportedIssueCreationCustomFields.put(epicLink.getClassName(), epicLink);
 
     //    ComponentsValueHandler components =
     //        new ComponentsValueHandler(projectComponentManager, i18nResolver);

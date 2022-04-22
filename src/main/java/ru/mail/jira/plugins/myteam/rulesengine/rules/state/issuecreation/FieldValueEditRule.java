@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
 import com.atlassian.jira.issue.fields.Field;
 import java.io.IOException;
-import java.util.Optional;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -16,7 +15,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
-import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.CreatingIssueState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
@@ -38,25 +37,25 @@ public class FieldValueEditRule extends BaseRule {
 
   @Condition
   public boolean isValid(@Fact("state") BotState state, @Fact("command") String command) {
-    return state instanceof CreatingIssueState && NAME.equalsName(command);
+    return state instanceof FillingIssueFieldState && NAME.equalsName(command);
   }
 
   @Action
   public void execute(
       @Fact("event") MyteamEvent event,
-      @Fact("state") CreatingIssueState state,
+      @Fact("state") FillingIssueFieldState state,
       @Fact("args") String value)
       throws MyteamServerErrorException, IOException {
 
-    Optional<Field> field = state.getCurrentField();
+    Field field = state.getField();
     if (event instanceof ButtonClickEvent)
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
-    if (field.isPresent()) {
-      // TODO add field value validation
 
-      CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field.get());
-      state.setCurrentFieldValue(handler.updateValue(state.getFieldValue(field.get()), value));
-      rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
-    }
+    // TODO add field value validation
+
+    CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field);
+
+    state.setValue(handler.updateValue(state.getValue(), value));
+    rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
   }
 }
