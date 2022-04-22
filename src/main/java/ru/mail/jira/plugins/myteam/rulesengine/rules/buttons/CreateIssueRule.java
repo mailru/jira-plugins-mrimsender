@@ -2,8 +2,6 @@
 package ru.mail.jira.plugins.myteam.rulesengine.rules.buttons;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
-import com.atlassian.jira.user.ApplicationUser;
-import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -46,19 +44,11 @@ public class CreateIssueRule extends BaseRule {
   @Action
   public void execute(@Fact("event") ButtonClickEvent event)
       throws MyteamServerErrorException, UserNotFoundException {
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    Locale locale = userChatService.getUserLocale(user);
-
     userChatService.setState(
         event.getChatId(), new CreatingIssueState(userChatService, issueCreationService));
 
-    SelectingProjectState newState =
-        new SelectingProjectState(
-            issueService,
-            userChatService,
-            userChatService.getRawText(
-                locale,
-                "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"));
+    SelectingProjectState newState = new SelectingProjectState(issueService, userChatService);
+
     newState.setWaiting(true);
 
     newState.updatePage(event, false);

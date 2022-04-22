@@ -35,7 +35,7 @@ public class Pager {
   }
 
   public boolean hasNext() {
-    return Math.ceil(total / pageSize) - page > 1;
+    return Math.ceil((float) total / pageSize) - page > 1;
   }
 
   public boolean hasPrev() {

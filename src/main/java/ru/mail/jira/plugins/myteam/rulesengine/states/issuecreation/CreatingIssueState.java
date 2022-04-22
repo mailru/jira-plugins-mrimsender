@@ -99,8 +99,8 @@ public class CreatingIssueState extends BotState implements CancelableState {
     fieldValues.remove(field);
   }
 
-  public String createInsertFieldMessage(Locale locale, String messagePrefix) {
-    return String.join("\n", messagePrefix, this.formatIssueCreationFields(locale, fieldValues));
+  public String createInsertFieldMessage(Locale locale, String messageHeader) {
+    return String.join("\n", messageHeader, this.formatIssueCreationFields(locale, fieldValues));
   }
 
   private Optional<Field> getFirstUnfilledField() {

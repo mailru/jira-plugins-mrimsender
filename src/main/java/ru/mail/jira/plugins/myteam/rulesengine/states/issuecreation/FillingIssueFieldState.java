@@ -28,7 +28,7 @@ public class FillingIssueFieldState extends BotState
   @Getter private final boolean isSearchOn;
   @Getter private final boolean isAdditionalField;
   @Getter @Setter private String input;
-  @Getter @Setter private String value;
+  @Getter @Setter private String value = "";
   @Getter private final Pager pager;
 
   public FillingIssueFieldState(

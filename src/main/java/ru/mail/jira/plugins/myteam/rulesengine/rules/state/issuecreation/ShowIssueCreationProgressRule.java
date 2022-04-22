@@ -69,7 +69,16 @@ public class ShowIssueCreationProgressRule extends BaseRule {
 
     Optional<Field> field = issueCreationState.getCurrentField();
 
-    if (field.isPresent()) {
+    if (!field.isPresent()) {
+      userChatService.sendMessageText(
+          event.getChatId(),
+          userChatService.getRawText(
+                  locale,
+                  "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreationConfirmation")
+              + issueCreationState.createInsertFieldMessage(locale, ""),
+          getIssueCreationConfirmButtons(locale));
+
+    } else {
       CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field.get());
 
       FillingIssueFieldState fillingFieldState = null;
@@ -117,14 +126,6 @@ public class ShowIssueCreationProgressRule extends BaseRule {
       } else {
         userChatService.sendMessageText(event.getChatId(), msg, buttons);
       }
-
-    } else {
-      userChatService.sendMessageText(
-          event.getChatId(),
-          userChatService.getRawText(
-              locale,
-              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreationConfirmation"),
-          getIssueCreationConfirmButtons(locale));
     }
 
     if (event instanceof ButtonClickEvent) {
