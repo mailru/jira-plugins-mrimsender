@@ -17,6 +17,7 @@ import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.Create
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
+import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
@@ -47,43 +48,53 @@ public class ShowIssueCreationProgressRule extends BaseRule {
 
   @Condition
   public boolean isValid(@Fact("state") BotState state, @Fact("command") String command) {
-    return state instanceof CreatingIssueState && NAME.equalsName(command);
+    return (state instanceof CreatingIssueState || state instanceof FillingIssueFieldState)
+        && NAME.equalsName(command);
   }
 
   @Action
   public void execute(
       @Fact("event") MyteamEvent event,
-      @Fact("state") CreatingIssueState state,
+      @Fact("state") BotState state,
       @Fact("args") String messagePrefix)
       throws MyteamServerErrorException, IOException, UserNotFoundException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();
     Locale locale = userChatService.getUserLocale(user);
 
-    Optional<Field> field = state.getCurrentField();
+    BotState prevState = userChatService.getPrevState(event.getChatId());
+
+    CreatingIssueState issueCreationState =
+        (CreatingIssueState) (state instanceof CreatingIssueState ? state : prevState);
+
+    Optional<Field> field = issueCreationState.getCurrentField();
 
     if (field.isPresent()) {
       CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field.get());
+
+      FillingIssueFieldState fillingFieldState = null;
+
+      if (state instanceof FillingIssueFieldState) {
+        fillingFieldState = (FillingIssueFieldState) state;
+      }
+
       userChatService.sendMessageText(
           chatId,
-          state.createInsertFieldMessage(
+          issueCreationState.createInsertFieldMessage(
               locale,
               messagePrefix == null || messagePrefix.length() == 0
-                  ? handler.getInsertFieldMessage(field.get(), locale)
+                  ? handler.getInsertFieldMessage(fillingFieldState, locale)
                   : messagePrefix),
           MessageFormatter.buildButtonsWithCancel(
               handler.getButtons(
-                  field.get(),
-                  state.getProject(),
-                  state.getIssueType(),
-                  state.getFieldValue(field.get()),
+                  issueCreationState.getProject(),
+                  issueCreationState.getIssueType(),
+                  fillingFieldState,
+                  user,
                   userChatService.getUserLocale(user)),
               userChatService.getRawText(
                   locale,
                   "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
-
-      userChatService.setState(chatId, new FillingIssueFieldState(userChatService, rulesEngine, field.get()));
-
     } else {
       userChatService.sendMessageText(
           event.getChatId(),
@@ -91,6 +102,10 @@ public class ShowIssueCreationProgressRule extends BaseRule {
               locale,
               "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreationConfirmation"),
           getIssueCreationConfirmButtons(locale));
+    }
+
+    if (event instanceof ButtonClickEvent) {
+      userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
     }
   }
 

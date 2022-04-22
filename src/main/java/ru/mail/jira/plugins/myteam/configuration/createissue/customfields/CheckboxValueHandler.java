@@ -11,11 +11,13 @@ import com.atlassian.jira.issue.fields.config.FieldConfig;
 import com.atlassian.jira.issue.fields.config.FieldConfigScheme;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
+import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 
 public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
 
@@ -34,19 +36,22 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getInsertFieldMessage(Field field, Locale locale) {
+  public String getInsertFieldMessage(FillingIssueFieldState state, Locale locale) {
     i18nResolver.getText("aa");
-    return String.format("Ввведите значение для поля %s", field.getName());
+    return String.format("Ввведите значение для поля %s", state.getField().getName());
   }
 
   @Override
   public List<List<InlineKeyboardMarkupButton>> getButtons(
-      Field field, Project project, IssueType issueType, String value, Locale locale) {
-
+      Project project,
+      IssueType issueType,
+      FillingIssueFieldState state,
+      ApplicationUser user,
+      Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    Options options = getOptions((CustomField) field);
+    Options options = getOptions((CustomField) state.getField());
 
-    List<String> values = Arrays.asList(value.split(delimiter));
+    List<String> values = Arrays.asList(state.getValue().split(delimiter));
 
     options.forEach(
         option -> {

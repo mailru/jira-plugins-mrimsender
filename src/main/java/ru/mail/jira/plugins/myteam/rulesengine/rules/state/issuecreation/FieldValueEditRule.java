@@ -48,8 +48,9 @@ public class FieldValueEditRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
 
     Field field = state.getField();
-    if (event instanceof ButtonClickEvent)
+    if (event instanceof ButtonClickEvent) {
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
+    }
 
     // TODO add field value validation
 

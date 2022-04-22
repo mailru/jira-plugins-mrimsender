@@ -1,11 +1,13 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
+import com.atlassian.jira.issue.fields.Field;
 import java.io.IOException;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
+import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
@@ -13,6 +15,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleT
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.CreatingIssueState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.SelectingIssueAdditionalFieldsState;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
@@ -52,10 +55,18 @@ public class SelectAdditionalFieldRule extends BaseRule {
       @Fact("args") String fieldId)
       throws MyteamServerErrorException, IOException {
     userChatService.answerCallbackQuery(event.getQueryId());
+    Field field = issueCreationService.getField(fieldId);
 
-    prevState.addField(issueCreationService.getField(fieldId));
+    prevState.addField(field);
 
     userChatService.revertState(event.getChatId());
+
+    CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field);
+    FillingIssueFieldState fillingFieldState =
+        new FillingIssueFieldState(
+            userChatService, rulesEngine, field, handler.isSearchable(), true);
+
+    userChatService.setState(event.getChatId(), fillingFieldState);
 
     rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
   }

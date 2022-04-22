@@ -28,8 +28,19 @@ public class FieldInputRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") ChatMessageEvent event, @Fact("args") String value)
+  public void execute(
+      @Fact("state") FillingIssueFieldState state,
+      @Fact("event") ChatMessageEvent event,
+      @Fact("args") String value)
       throws MyteamServerErrorException, IOException {
-    rulesEngine.fireCommand(StateActionRuleType.SelectIssueCreationValue, event, value);
+    state.setInput(value);
+
+    if (state.isSearchOn()) {
+      state.getPager().setPage(0);
+      state.getPager().setTotal(0);
+      rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event, value);
+    } else {
+      rulesEngine.fireCommand(StateActionRuleType.SelectIssueCreationValue, event, value);
+    }
   }
 }

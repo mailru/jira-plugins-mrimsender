@@ -2,9 +2,11 @@
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
+import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -19,6 +21,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleT
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.CreatingIssueState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
@@ -56,6 +59,15 @@ public class IssueTypeSelectButtonRule extends BaseRule {
       state.setIssueType(
           issueService.getIssueType(issueTypeId),
           user); // set issue type and load required fields meta
+
+      Optional<Field> lastField = state.getCurrentField();
+
+      if (lastField.isPresent()) {
+        FillingIssueFieldState fillingFieldState =
+            new FillingIssueFieldState(userChatService, rulesEngine, lastField.get(), false, false);
+        userChatService.setState(event.getChatId(), fillingFieldState);
+      }
+
       rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
 
     } catch (UnsupportedCustomFieldsException e) {

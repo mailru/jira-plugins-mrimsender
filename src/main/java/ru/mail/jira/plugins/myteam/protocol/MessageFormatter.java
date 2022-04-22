@@ -44,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -611,6 +612,14 @@ public class MessageFormatter {
       Locale locale, boolean withPrev, boolean withNext) {
     if (!withPrev && !withNext) return null;
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
+    List<InlineKeyboardMarkupButton> newButtonsRow = getPagerButtonsRow(locale, withPrev, withNext);
+    buttons.add(newButtonsRow);
+    return buttons;
+  }
+
+  @NotNull
+  public List<InlineKeyboardMarkupButton> getPagerButtonsRow(
+      Locale locale, boolean withPrev, boolean withNext) {
     List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>();
     if (withPrev) {
       newButtonsRow.add(
@@ -628,8 +637,7 @@ public class MessageFormatter {
                   "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.nextPageButton.text"),
               ButtonRuleType.NextPage.getName()));
     }
-    buttons.add(newButtonsRow);
-    return buttons;
+    return newButtonsRow;
   }
 
   public String stringifyPagedCollection(

@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
 import com.atlassian.jira.issue.fields.Field;
 import java.io.IOException;
+import java.util.Optional;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -50,19 +51,30 @@ public class FieldValueSelectRule extends BaseRule {
       @Fact("args") String value)
       throws MyteamServerErrorException, IOException {
     Field field = state.getField();
-    if (event instanceof ButtonClickEvent)
+    if (event instanceof ButtonClickEvent) {
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
+    }
 
     CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field);
 
     BotState prevState = userChatService.getPrevState(event.getChatId());
 
+    userChatService.revertState(event.getChatId());
+
     if (prevState instanceof CreatingIssueState) {
       ((CreatingIssueState) prevState)
-          .setFieldValue(state.getField(), handler.updateValue(state.getValue(), value));
+          .setFieldValue(field, handler.updateValue(state.getValue(), value));
       ((CreatingIssueState) prevState).nextField(true);
+
+      Optional<Field> lastField = ((CreatingIssueState) prevState).getCurrentField();
+      if (lastField.isPresent()) {
+        FillingIssueFieldState fillingFieldState =
+            new FillingIssueFieldState(
+                userChatService, rulesEngine, lastField.get(), handler.isSearchable(), false);
+        userChatService.setState(event.getChatId(), fillingFieldState);
+      }
     }
-    userChatService.revertState(event.getChatId());
+
     rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
   }
 }
