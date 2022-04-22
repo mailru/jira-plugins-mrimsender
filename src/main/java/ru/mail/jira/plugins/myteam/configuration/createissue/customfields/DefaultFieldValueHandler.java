@@ -121,8 +121,11 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
   }
 
   private String[] mapStringToSingleFieldValue(Field field, String fieldValue, Locale locale) {
-    // no preprocessing for description state needed
-    if (field.getId().equals(IssueFieldConstants.DESCRIPTION)) return new String[] {fieldValue};
+    // no preprocessing for description and summary fields needed
+    if (field.getId().equals(IssueFieldConstants.DESCRIPTION)
+        || field.getId().equals(IssueFieldConstants.SUMMARY)) {
+      return new String[] {fieldValue};
+    }
 
     List<String> fieldValues =
         Arrays.stream(fieldValue.split(",")).map(String::trim).collect(Collectors.toList());
