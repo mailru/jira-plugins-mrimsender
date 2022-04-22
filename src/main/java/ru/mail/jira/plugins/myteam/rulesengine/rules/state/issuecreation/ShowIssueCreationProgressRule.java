@@ -118,9 +118,7 @@ public class ShowIssueCreationProgressRule extends BaseRule {
                       locale,
                       "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text"));
 
-      if (event instanceof ButtonClickEvent
-          && fillingFieldState != null
-          && fillingFieldState.isSearchOn()) {
+      if (event instanceof ButtonClickEvent) {
         userChatService.editMessageText(
             chatId, ((ButtonClickEvent) event).getMsgId(), msg, buttons);
       } else {
