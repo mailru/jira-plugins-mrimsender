@@ -38,7 +38,12 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getInsertFieldMessage(FillingIssueFieldState state, Locale locale) {
+  public String getInsertFieldMessage(
+      Project project,
+      IssueType issueType,
+      FillingIssueFieldState state,
+      ApplicationUser user,
+      Locale locale) {
     if (Utils.isArrayLikeField(state.getField())) {
       return i18nResolver.getText(
           locale,

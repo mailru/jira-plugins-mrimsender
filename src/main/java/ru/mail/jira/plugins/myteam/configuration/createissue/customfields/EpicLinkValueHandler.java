@@ -11,11 +11,13 @@ import com.atlassian.jira.jql.builder.JqlQueryBuilder;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.bean.PagerFilter;
+import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Pager;
@@ -26,10 +28,13 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssue
 public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
 
   private final SearchService searchService;
+  private final I18nResolver i18nResolver;
   private final MessageFormatter messageFormatter;
 
-  public EpicLinkValueHandler(SearchService searchService, MessageFormatter messageFormatter) {
+  public EpicLinkValueHandler(
+      SearchService searchService, I18nResolver i18nResolver, MessageFormatter messageFormatter) {
     this.searchService = searchService;
+    this.i18nResolver = i18nResolver;
     this.messageFormatter = messageFormatter;
   }
 
@@ -39,38 +44,47 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getInsertFieldMessage(FillingIssueFieldState field, Locale locale) {
-    return "Введите название эпика";
+  public String getInsertFieldMessage(
+      Project project,
+      IssueType issueType,
+      FillingIssueFieldState state,
+      ApplicationUser user,
+      Locale locale) {
+    try {
+      List<Issue> epics = getEpics(state, user);
+
+      if (epics.size() == 0) {
+        return i18nResolver.getRawText(
+            locale,
+            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.epicLinkSelect.empty");
+      }
+    } catch (SearchException e) {
+      log.error(e.getLocalizedMessage(), e);
+    }
+
+    return i18nResolver.getRawText(
+        locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.epicLinkSelect.message");
   }
 
-  // key:KB-1
   @Override
   public List<List<InlineKeyboardMarkupButton>> getButtons(
       Project project,
       IssueType issueType,
-      FillingIssueFieldState fillingFieldState,
+      FillingIssueFieldState state,
       ApplicationUser user,
       Locale locale) {
 
-    JqlQueryBuilder jqlBuilder = JqlQueryBuilder.newBuilder();
-    JqlClauseBuilder jqlClauseBuilder = jqlBuilder.where().issueType().eq("epic");
-
-    if (fillingFieldState.getInput() != null && fillingFieldState.getInput().length() > 0) {
-      jqlClauseBuilder.and().summary().like(String.format("*%s*", fillingFieldState.getInput()));
-    }
-
     try {
-      ThreadLocalSearcherCache.startSearcherContext();
-      List<Issue> res =
-          searchService
-              .search(user, jqlClauseBuilder.buildQuery(), PagerFilter.getUnlimitedFilter())
-              .getResults();
+      List<Issue> epics = getEpics(state, user);
+      if (epics.size() == 0) {
+        return null;
+      }
 
-      Pager pager = fillingFieldState.getPager();
-      pager.setTotal(res.size());
+      Pager pager = state.getPager();
+      pager.setTotal(epics.size());
 
       List<List<InlineKeyboardMarkupButton>> buttons =
-          res.stream()
+          epics.stream()
               .skip((long) pager.getPage() * pager.getPageSize())
               .limit(pager.getPageSize())
               .map(
@@ -83,15 +97,38 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
                                   StateActionRuleType.SelectIssueCreationValue.getName(),
                                   String.format("key:%s", issue.getKey())))))
               .collect(Collectors.toList());
-      buttons.add(messageFormatter.getPagerButtonsRow(locale, pager.hasPrev(), pager.hasNext()));
+      @NotNull
+      List<InlineKeyboardMarkupButton> pagerButtonsRow =
+          messageFormatter.getPagerButtonsRow(locale, pager.hasPrev(), pager.hasNext());
+      if (pagerButtonsRow.size() > 0) {
+        buttons.add(pagerButtonsRow);
+      }
       return buttons;
     } catch (SearchException e) {
       log.error(e.getLocalizedMessage(), e);
-    } finally {
-      ThreadLocalSearcherCache.stopAndCloseSearcherContext();
     }
 
     return null;
+  }
+
+  private List<Issue> getEpics(FillingIssueFieldState fillingFieldState, ApplicationUser user)
+      throws SearchException {
+    try {
+      ThreadLocalSearcherCache.startSearcherContext();
+
+      JqlQueryBuilder jqlBuilder = JqlQueryBuilder.newBuilder();
+      JqlClauseBuilder jqlClauseBuilder = jqlBuilder.where().issueType().eq("epic");
+
+      if (fillingFieldState.getInput() != null && fillingFieldState.getInput().length() > 0) {
+        jqlClauseBuilder.and().summary().like(String.format("*%s*", fillingFieldState.getInput()));
+      }
+
+      return searchService
+          .search(user, jqlClauseBuilder.buildQuery(), PagerFilter.getUnlimitedFilter())
+          .getResults();
+    } finally {
+      ThreadLocalSearcherCache.stopAndCloseSearcherContext();
+    }
   }
 
   @Override

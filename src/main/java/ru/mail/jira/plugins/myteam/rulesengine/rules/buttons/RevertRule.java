@@ -1,4 +1,4 @@
-/* (C)2021 */
+/* (C)2022 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.buttons;
 
 import java.io.IOException;
@@ -11,27 +11,27 @@ import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
-import ru.mail.jira.plugins.myteam.rulesengine.states.base.CancelableState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.RevertibleState;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
-@Rule(name = "cancel", description = "Clear state and send cancel message")
-public class CancelRule extends BaseRule {
+@Rule(name = "revert", description = "revert state and update message")
+public class RevertRule extends BaseRule {
 
-  static final ButtonRuleType NAME = ButtonRuleType.Cancel;
+  static final ButtonRuleType NAME = ButtonRuleType.Revert;
 
-  public CancelRule(UserChatService userChatService, RulesEngine rulesEngine) {
+  public RevertRule(UserChatService userChatService, RulesEngine rulesEngine) {
     super(userChatService, rulesEngine);
   }
 
   @Condition
   public boolean isValid(@Fact("command") String command, @Fact("state") BotState state) {
-    return NAME.equalsName(command) && state instanceof CancelableState;
+    return NAME.equalsName(command) && state instanceof RevertibleState;
   }
 
   @Action
-  public void execute(@Fact("event") MyteamEvent event, @Fact("state") CancelableState state)
+  public void execute(@Fact("event") MyteamEvent event, @Fact("state") RevertibleState state)
       throws MyteamServerErrorException, IOException {
-    state.cancel(event);
+    state.revert(event);
   }
 }

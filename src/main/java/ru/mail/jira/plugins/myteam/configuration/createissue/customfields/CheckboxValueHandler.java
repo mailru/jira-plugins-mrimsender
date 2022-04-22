@@ -36,7 +36,12 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getInsertFieldMessage(FillingIssueFieldState state, Locale locale) {
+  public String getInsertFieldMessage(
+      Project project,
+      IssueType issueType,
+      FillingIssueFieldState state,
+      ApplicationUser user,
+      Locale locale) {
     i18nResolver.getText("aa");
     return String.format("Ввведите значение для поля %s", state.getField().getName());
   }

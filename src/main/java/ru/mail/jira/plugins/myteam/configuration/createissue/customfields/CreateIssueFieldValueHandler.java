@@ -21,11 +21,16 @@ public interface CreateIssueFieldValueHandler {
   /**
    * Custom text render for Myteam message
    *
-   * @param field current custom field
+   * @param state state containing field, its value and filling state parameters such as paging
    * @param locale user locale
    * @return Message to shown in Myteam
    */
-  String getInsertFieldMessage(FillingIssueFieldState field, Locale locale);
+  String getInsertFieldMessage(
+      Project project,
+      IssueType issueType,
+      FillingIssueFieldState state,
+      ApplicationUser user,
+      Locale locale);
 
   /**
    * Custom buttons setup attached to issue creation message

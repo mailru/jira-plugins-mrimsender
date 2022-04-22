@@ -13,18 +13,20 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleT
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.CancelableState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.PageableState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.base.RevertibleState;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Slf4j
-public class FillingIssueFieldState extends BotState implements CancelableState, PageableState {
+public class FillingIssueFieldState extends BotState
+    implements CancelableState, PageableState, RevertibleState {
 
   private final UserChatService userChatService;
   private final RulesEngine rulesEngine;
 
   @Getter private final Field field;
   @Getter private final boolean isSearchOn;
-  @Getter private final boolean isAdditional;
+  @Getter private final boolean isAdditionalField;
   @Getter @Setter private String input;
   @Getter @Setter private String value;
   @Getter private final Pager pager;
@@ -35,9 +37,9 @@ public class FillingIssueFieldState extends BotState implements CancelableState,
     this.rulesEngine = rulesEngine;
     this.field = field;
     this.isSearchOn = false;
-    this.isAdditional = false;
+    this.isAdditionalField = false;
     isWaiting = true;
-    pager = new Pager(0, 10);
+    pager = new Pager(0, 7);
   }
 
   public FillingIssueFieldState(
@@ -50,9 +52,9 @@ public class FillingIssueFieldState extends BotState implements CancelableState,
     this.rulesEngine = rulesEngine;
     this.field = field;
     this.isSearchOn = isSearchOn;
-    this.isAdditional = isAdditional;
+    this.isAdditionalField = isAdditional;
     isWaiting = true;
-    pager = new Pager(0, 2);
+    pager = new Pager(0, 7);
   }
 
   @Override
@@ -93,5 +95,21 @@ public class FillingIssueFieldState extends BotState implements CancelableState,
         log.error(e.getLocalizedMessage(), e);
       }
     }
+  }
+
+  @Override
+  public void revert(MyteamEvent event) {
+    String chatId = event.getChatId();
+
+    BotState prevState = userChatService.getPrevState(chatId);
+
+    if (prevState instanceof CreatingIssueState) {
+      ((CreatingIssueState) prevState).removeField(this.getField());
+      ((CreatingIssueState) prevState).nextField(true);
+    }
+
+    userChatService.revertState(event.getChatId());
+
+    rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
   }
 }

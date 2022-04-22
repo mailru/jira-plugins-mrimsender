@@ -121,6 +121,13 @@ public class MessageFormatter {
     return buttonsRow;
   }
 
+  public static List<InlineKeyboardMarkupButton> getBackButtonRow(String title) {
+    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, ButtonRuleType.Revert.getName()));
+    return buttonsRow;
+  }
+
   public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(
       List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
     if (buttons == null) {
@@ -129,6 +136,17 @@ public class MessageFormatter {
       return newButtons;
     }
     buttons.add(getCancelButtonRow(cancelButtonText));
+    return buttons;
+  }
+
+  public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithBack(
+      List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
+    if (buttons == null) {
+      List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
+      newButtons.add(getBackButtonRow(cancelButtonText));
+      return newButtons;
+    }
+    buttons.add(getBackButtonRow(cancelButtonText));
     return buttons;
   }
 
@@ -612,8 +630,12 @@ public class MessageFormatter {
       Locale locale, boolean withPrev, boolean withNext) {
     if (!withPrev && !withNext) return null;
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
-    List<InlineKeyboardMarkupButton> newButtonsRow = getPagerButtonsRow(locale, withPrev, withNext);
-    buttons.add(newButtonsRow);
+
+    List<InlineKeyboardMarkupButton> pagerButtonsRow =
+        getPagerButtonsRow(locale, withPrev, withNext);
+    if (pagerButtonsRow.size() > 0) {
+      buttons.add(pagerButtonsRow);
+    }
     return buttons;
   }
 

@@ -78,6 +78,7 @@ public class RulesEngineImpl
     commandsRuleEngine.registerRule(new SearchIssueByKeyInputRule(userChatService, this));
     commandsRuleEngine.registerRule(new NextPageRule(userChatService, this));
     commandsRuleEngine.registerRule(new PrevPageRule(userChatService, this));
+    commandsRuleEngine.registerRule(new RevertRule(userChatService, this));
     commandsRuleEngine.registerRule(new CancelRule(userChatService, this));
     commandsRuleEngine.registerRule(new CommentIssueRule(userChatService, this));
     commandsRuleEngine.registerRule(

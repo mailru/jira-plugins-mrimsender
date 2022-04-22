@@ -12,6 +12,7 @@ import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.version.VersionManager;
+import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,7 +41,12 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getInsertFieldMessage(FillingIssueFieldState state, Locale locale) {
+  public String getInsertFieldMessage(
+      Project project,
+      IssueType issueType,
+      FillingIssueFieldState state,
+      ApplicationUser user,
+      Locale locale) {
     if (Utils.isArrayLikeField(state.getField())) {
       return i18nResolver.getText(
           locale,

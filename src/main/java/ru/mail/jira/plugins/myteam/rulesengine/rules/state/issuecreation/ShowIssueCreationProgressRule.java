@@ -78,23 +78,46 @@ public class ShowIssueCreationProgressRule extends BaseRule {
         fillingFieldState = (FillingIssueFieldState) state;
       }
 
-      userChatService.sendMessageText(
-          chatId,
+      String msg =
           issueCreationState.createInsertFieldMessage(
               locale,
-              messagePrefix == null || messagePrefix.length() == 0
-                  ? handler.getInsertFieldMessage(fillingFieldState, locale)
-                  : messagePrefix),
-          MessageFormatter.buildButtonsWithCancel(
-              handler.getButtons(
+              handler.getInsertFieldMessage(
                   issueCreationState.getProject(),
                   issueCreationState.getIssueType(),
                   fillingFieldState,
                   user,
-                  userChatService.getUserLocale(user)),
-              userChatService.getRawText(
-                  locale,
-                  "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
+                  locale));
+
+      List<List<InlineKeyboardMarkupButton>> handlerButtons =
+          handler.getButtons(
+              issueCreationState.getProject(),
+              issueCreationState.getIssueType(),
+              fillingFieldState,
+              user,
+              locale);
+
+      List<List<InlineKeyboardMarkupButton>> buttons =
+          fillingFieldState != null && fillingFieldState.isAdditionalField()
+              ? MessageFormatter.buildButtonsWithBack(
+                  handlerButtons,
+                  userChatService.getRawText(
+                      locale,
+                      "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text"))
+              : MessageFormatter.buildButtonsWithCancel(
+                  handlerButtons,
+                  userChatService.getRawText(
+                      locale,
+                      "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text"));
+
+      if (event instanceof ButtonClickEvent
+          && fillingFieldState != null
+          && fillingFieldState.isSearchOn()) {
+        userChatService.editMessageText(
+            chatId, ((ButtonClickEvent) event).getMsgId(), msg, buttons);
+      } else {
+        userChatService.sendMessageText(event.getChatId(), msg, buttons);
+      }
+
     } else {
       userChatService.sendMessageText(
           event.getChatId(),

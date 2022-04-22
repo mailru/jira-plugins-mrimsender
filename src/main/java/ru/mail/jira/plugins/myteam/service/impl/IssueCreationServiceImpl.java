@@ -110,7 +110,8 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     PriorityValueHandler priority = new PriorityValueHandler(i18nResolver, prioritySchemeManager);
     supportedIssueCreationCustomFields.put(priority.getClassName(), priority);
 
-    EpicLinkValueHandler epicLink = new EpicLinkValueHandler(searchService, messageFormatter);
+    EpicLinkValueHandler epicLink =
+        new EpicLinkValueHandler(searchService, i18nResolver, messageFormatter);
     supportedIssueCreationCustomFields.put(epicLink.getClassName(), epicLink);
   }
 
