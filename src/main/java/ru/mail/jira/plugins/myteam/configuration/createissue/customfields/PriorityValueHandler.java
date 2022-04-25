@@ -9,6 +9,7 @@ import com.atlassian.jira.issue.fields.config.manager.PrioritySchemeManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.jira.project.Project;
+import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,6 +20,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
+import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 
 public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   private final I18nResolver i18nResolver;
@@ -36,24 +38,32 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getInsertFieldMessage(Field field, Locale locale) {
-    if (Utils.isArrayLikeField(field)) {
+  public String getInsertFieldMessage(
+      Project project,
+      IssueType issueType,
+      FillingIssueFieldState state,
+      ApplicationUser user,
+      Locale locale) {
+    if (Utils.isArrayLikeField(state.getField())) {
       return i18nResolver.getText(
           locale,
           "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.arrayMessage",
-          i18nResolver.getRawText(locale, field.getNameKey()).toLowerCase(locale));
+          i18nResolver.getRawText(locale, state.getField().getNameKey()).toLowerCase(locale));
     }
 
     return i18nResolver.getText(
         locale,
         "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.message",
-        i18nResolver.getRawText(locale, field.getNameKey()).toLowerCase(locale));
+        i18nResolver.getRawText(locale, state.getField().getNameKey()).toLowerCase(locale));
   }
 
   @Override
   public List<List<InlineKeyboardMarkupButton>> getButtons(
-      Field field, Project project, IssueType issueType, String value, Locale locale) {
-
+      @NotNull Project project,
+      @NotNull IssueType issueType,
+      @NotNull FillingIssueFieldState fillingFieldState,
+      @NotNull ApplicationUser user,
+      @NotNull Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     Collection<Priority> priorities = getPriorities(project, issueType);
     priorities.forEach(
@@ -68,11 +78,6 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
           MessageFormatter.addRowWithButton(buttons, issueTypeButton);
         });
     return buttons;
-  }
-
-  @Override
-  public String updateValue(String value, String newValue) {
-    return newValue;
   }
 
   @Override

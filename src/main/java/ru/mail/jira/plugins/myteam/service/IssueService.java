@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.exception.ParseException;
@@ -16,6 +17,7 @@ import java.util.Collection;
 import java.util.List;
 import javax.naming.NoPermissionException;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AssigneeChangeValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 
@@ -55,4 +57,7 @@ public interface IssueService {
   Collection<IssueType> getProjectIssueTypes(Project project, ApplicationUser user);
 
   IssueType getIssueType(String id);
+
+  boolean changeIssueAssignee(String issueKey, String userMention, ApplicationUser user)
+      throws UserNotFoundException, AssigneeChangeValidationException;
 }

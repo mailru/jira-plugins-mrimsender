@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 public class Pager {
-  private int page = 0;
+  @Setter private int page = 0;
   @Setter private int total;
   private final int pageSize;
 
@@ -35,7 +35,7 @@ public class Pager {
   }
 
   public boolean hasNext() {
-    return (total / pageSize > page);
+    return Math.ceil((float) total / pageSize) - page > 1;
   }
 
   public boolean hasPrev() {

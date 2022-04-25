@@ -109,23 +109,12 @@ public class JqlSearchState extends BotState implements PageableState, Cancelabl
   }
 
   @Override
-  public void cancel(MyteamEvent event) {
-    userChatService.deleteState(event.getChatId());
+  public UserChatService getUserChatService() {
+    return userChatService;
+  }
 
-    if (event instanceof ButtonClickEvent) {
-      try {
-        ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-        Locale locale = userChatService.getUserLocale(user);
-        userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
-        userChatService.editMessageText(
-            event.getChatId(),
-            ((ButtonClickEvent) event).getMsgId(),
-            userChatService.getRawText(
-                locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.actionCanceled"),
-            null);
-      } catch (MyteamServerErrorException | UserNotFoundException | IOException e) {
-        log.error(e.getLocalizedMessage(), e);
-      }
-    }
+  @Override
+  public void onError(Exception e) {
+    log.error(e.getLocalizedMessage(), e);
   }
 }

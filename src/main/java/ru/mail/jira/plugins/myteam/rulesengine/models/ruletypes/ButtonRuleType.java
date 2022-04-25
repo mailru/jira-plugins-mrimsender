@@ -7,6 +7,7 @@ public enum ButtonRuleType implements RuleType {
   NextPage("next"),
   PrevPage("previous"),
   Cancel("cancel"),
+  Revert("revert"),
   SearchIssueByJqlInput("searchIssueByJqlInput"),
   SearchIssueByKeyInput("searchIssueByKeyInput"),
   ViewComments("viewComments"),

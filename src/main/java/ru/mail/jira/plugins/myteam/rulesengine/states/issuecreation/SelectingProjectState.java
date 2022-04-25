@@ -30,14 +30,11 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
   private final UserChatService userChatService;
   private final MessageFormatter messageFormatter;
   private final Pager pager;
-  private final String messagePrefix;
 
-  public SelectingProjectState(
-      IssueService issueService, UserChatService userChatService, String messagePrefix) {
+  public SelectingProjectState(IssueService issueService, UserChatService userChatService) {
     this.issueService = issueService;
     this.userChatService = userChatService;
     this.messageFormatter = userChatService.getMessageFormatter();
-    this.messagePrefix = messagePrefix;
     int PROJECT_LIST_PAGE_SIZE = 10;
     pager = new Pager(0, PROJECT_LIST_PAGE_SIZE);
   }
@@ -81,13 +78,12 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
       }
 
       String msg =
-          messagePrefix
-              + createSelectProjectMessage(
-                  locale,
-                  nextProjectsInterval,
-                  pager.getPage(),
-                  allowedProjectList.size(),
-                  pager.getPageSize());
+          createSelectProjectMessage(
+              locale,
+              nextProjectsInterval,
+              pager.getPage(),
+              allowedProjectList.size(),
+              pager.getPageSize());
 
       List<List<InlineKeyboardMarkupButton>> buttons =
           MessageFormatter.buildButtonsWithCancel(

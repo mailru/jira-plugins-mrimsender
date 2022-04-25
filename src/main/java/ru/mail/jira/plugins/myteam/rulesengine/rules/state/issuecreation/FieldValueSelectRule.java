@@ -17,6 +17,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleT
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.CreatingIssueState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
@@ -40,23 +41,40 @@ public class FieldValueSelectRule extends BaseRule {
 
   @Condition
   public boolean isValid(@Fact("state") BotState state, @Fact("command") String command) {
-    return state instanceof CreatingIssueState && NAME.equalsName(command);
+    return state instanceof FillingIssueFieldState && NAME.equalsName(command);
   }
 
   @Action
   public void execute(
       @Fact("event") MyteamEvent event,
-      @Fact("state") CreatingIssueState state,
+      @Fact("state") FillingIssueFieldState state,
       @Fact("args") String value)
       throws MyteamServerErrorException, IOException {
-    Optional<Field> field = state.getCurrentField();
-    if (event instanceof ButtonClickEvent)
+    Field field = state.getField();
+    if (event instanceof ButtonClickEvent) {
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
-    if (field.isPresent()) {
-      CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field.get());
-      state.setCurrentFieldValue(handler.updateValue(state.getFieldValue(field.get()), value));
-      state.nextField(true);
-      rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
     }
+
+    CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field);
+
+    BotState prevState = userChatService.getPrevState(event.getChatId());
+
+    userChatService.revertState(event.getChatId());
+
+    if (prevState instanceof CreatingIssueState) {
+      ((CreatingIssueState) prevState)
+          .setFieldValue(field, handler.updateValue(state.getValue(), value));
+      ((CreatingIssueState) prevState).nextField(true);
+
+      Optional<Field> lastField = ((CreatingIssueState) prevState).getCurrentField();
+      if (lastField.isPresent()) {
+        FillingIssueFieldState fillingFieldState =
+            new FillingIssueFieldState(
+                userChatService, rulesEngine, lastField.get(), handler.isSearchable(), false);
+        userChatService.setState(event.getChatId(), fillingFieldState);
+      }
+    }
+
+    rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
   }
 }

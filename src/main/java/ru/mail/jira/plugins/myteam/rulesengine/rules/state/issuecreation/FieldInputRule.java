@@ -11,7 +11,7 @@ import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
-import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.CreatingIssueState;
+import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
@@ -24,16 +24,23 @@ public class FieldInputRule extends BaseRule {
 
   @Condition
   public boolean isValid(@Fact("state") BotState state, @Fact("args") String value) {
-    return state instanceof CreatingIssueState
-        && ((CreatingIssueState) state).getIssueType() != null
-        && ((CreatingIssueState) state).getProject() != null
-        && value != null
-        && value.length() > 0;
+    return state instanceof FillingIssueFieldState && value != null && value.length() > 0;
   }
 
   @Action
-  public void execute(@Fact("event") ChatMessageEvent event, @Fact("args") String value)
+  public void execute(
+      @Fact("state") FillingIssueFieldState state,
+      @Fact("event") ChatMessageEvent event,
+      @Fact("args") String value)
       throws MyteamServerErrorException, IOException {
-    rulesEngine.fireCommand(StateActionRuleType.SelectIssueCreationValue, event, value);
+    state.setInput(value);
+
+    if (state.isSearchOn()) {
+      state.getPager().setPage(0);
+      state.getPager().setTotal(0);
+      rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event, value);
+    } else {
+      rulesEngine.fireCommand(StateActionRuleType.SelectIssueCreationValue, event, value);
+    }
   }
 }

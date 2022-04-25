@@ -1,7 +1,9 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
+import com.atlassian.greenhopper.api.customfield.ManagedCustomFieldsService;
 import com.atlassian.jira.bc.issue.IssueService;
+import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.event.type.EventDispatchOption;
@@ -39,10 +41,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.commons.Utils;
-import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CheckboxValueHandler;
-import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
-import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.DefaultFieldValueHandler;
-import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.PriorityValueHandler;
+import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.*;
+import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
@@ -64,8 +64,11 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final OptionsManager optionsManager;
   private final PrioritySchemeManager prioritySchemeManager;
+  private final SearchService searchService;
+  private final ManagedCustomFieldsService managedCustomFieldsService;
   private final HashMap<String, CreateIssueFieldValueHandler> supportedIssueCreationCustomFields;
   private final CreateIssueFieldValueHandler defaultHandler;
+  private final MessageFormatter messageFormatter;
   private final ru.mail.jira.plugins.myteam.service.IssueService myteamIssueService;
 
   public IssueCreationServiceImpl(
@@ -80,6 +83,9 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport OptionsManager optionsManager,
       @ComponentImport PrioritySchemeManager prioritySchemeManager,
+      @ComponentImport SearchService searchService,
+      @ComponentImport ManagedCustomFieldsService managedCustomFieldsService,
+      MessageFormatter messageFormatter,
       ru.mail.jira.plugins.myteam.service.IssueService myteamIssueService) {
     this.i18nResolver = i18nResolver;
     this.issueTypeScreenSchemeManager = issueTypeScreenSchemeManager;
@@ -89,6 +95,9 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     this.localeManager = localeManager;
     this.issueManager = issueManager;
     this.issueService = issueService;
+    this.searchService = searchService;
+    this.managedCustomFieldsService = managedCustomFieldsService;
+    this.messageFormatter = messageFormatter;
     this.myteamIssueService = myteamIssueService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.optionsManager = optionsManager;
@@ -105,9 +114,10 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     PriorityValueHandler priority = new PriorityValueHandler(i18nResolver, prioritySchemeManager);
     supportedIssueCreationCustomFields.put(priority.getClassName(), priority);
 
-    //    ComponentsValueHandler components =
-    //        new ComponentsValueHandler(projectComponentManager, i18nResolver);
-    //    supportedIssueCreationCustomFields.put(components.getClassName(), components);
+    EpicLinkValueHandler epicLink =
+        new EpicLinkValueHandler(
+            searchService, i18nResolver, messageFormatter, managedCustomFieldsService);
+    supportedIssueCreationCustomFields.put(epicLink.getClassName(), epicLink);
   }
 
   @Override

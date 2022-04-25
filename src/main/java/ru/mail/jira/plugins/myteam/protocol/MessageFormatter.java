@@ -44,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,6 +121,13 @@ public class MessageFormatter {
     return buttonsRow;
   }
 
+  public static List<InlineKeyboardMarkupButton> getBackButtonRow(String title) {
+    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(title, ButtonRuleType.Revert.getName()));
+    return buttonsRow;
+  }
+
   public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(
       List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
     if (buttons == null) {
@@ -128,6 +136,17 @@ public class MessageFormatter {
       return newButtons;
     }
     buttons.add(getCancelButtonRow(cancelButtonText));
+    return buttons;
+  }
+
+  public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithBack(
+      List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
+    if (buttons == null) {
+      List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
+      newButtons.add(getBackButtonRow(cancelButtonText));
+      return newButtons;
+    }
+    buttons.add(getBackButtonRow(cancelButtonText));
     return buttons;
   }
 
@@ -536,47 +555,6 @@ public class MessageFormatter {
         String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), key));
   }
 
-  public List<List<InlineKeyboardMarkupButton>> getIssueButtons(
-      String issueKey, ApplicationUser recipient, boolean isWatching) {
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-    buttons.add(buttonsRow);
-
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                localeManager.getLocaleFor(recipient),
-                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"),
-            String.join("-", ButtonRuleType.CommentIssue.getName(), issueKey)));
-
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                localeManager.getLocaleFor(recipient),
-                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"),
-            String.join("-", ButtonRuleType.ViewComments.getName(), issueKey)));
-
-    ArrayList<InlineKeyboardMarkupButton> watchButtonRow = new ArrayList<>();
-
-    watchButtonRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                localeManager.getLocaleFor(recipient),
-                isWatching
-                    ? "ru.mail.jira.plugins.myteam.mrimsenderEventListener.unwatchButton.text"
-                    : "ru.mail.jira.plugins.myteam.mrimsenderEventListener.watchButton.text"),
-            String.join(
-                "-",
-                isWatching
-                    ? CommandRuleType.UnwatchIssue.getName()
-                    : CommandRuleType.WatchIssue.getName(),
-                issueKey)));
-
-    buttons.add(watchButtonRow);
-
-    return buttons;
-  }
-
   public List<List<InlineKeyboardMarkupButton>> getCancelButton(Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
 
@@ -652,6 +630,18 @@ public class MessageFormatter {
       Locale locale, boolean withPrev, boolean withNext) {
     if (!withPrev && !withNext) return null;
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
+
+    List<InlineKeyboardMarkupButton> pagerButtonsRow =
+        getPagerButtonsRow(locale, withPrev, withNext);
+    if (pagerButtonsRow.size() > 0) {
+      buttons.add(pagerButtonsRow);
+    }
+    return buttons;
+  }
+
+  @NotNull
+  public List<InlineKeyboardMarkupButton> getPagerButtonsRow(
+      Locale locale, boolean withPrev, boolean withNext) {
     List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>();
     if (withPrev) {
       newButtonsRow.add(
@@ -669,8 +659,7 @@ public class MessageFormatter {
                   "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.nextPageButton.text"),
               ButtonRuleType.NextPage.getName()));
     }
-    buttons.add(newButtonsRow);
-    return buttons;
+    return newButtonsRow;
   }
 
   public String stringifyPagedCollection(

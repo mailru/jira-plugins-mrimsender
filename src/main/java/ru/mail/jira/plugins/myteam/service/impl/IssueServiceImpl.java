@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.properties.APKeys;
@@ -9,10 +10,13 @@ import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.exception.ParseException;
 import com.atlassian.jira.exception.PermissionException;
+import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
+import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.comments.CommentManager;
+import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.config.manager.IssueTypeSchemeManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.search.SearchException;
@@ -32,9 +36,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
+import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AssigneeChangeValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.service.IssueService;
@@ -43,6 +50,7 @@ import ru.mail.jira.plugins.myteam.service.PluginData;
 @Service
 public class IssueServiceImpl implements IssueService {
 
+  private final com.atlassian.jira.bc.issue.IssueService jiraIssueService;
   private final IssueManager issueManager;
   private final PermissionManager permissionManager;
   private final WatcherManager watcherManager;
@@ -53,11 +61,12 @@ public class IssueServiceImpl implements IssueService {
   private final IssueTypeManager issueTypeManager;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final Utils utils;
+  private final UserData userData;
   private final PluginData pluginData;
   private final String JIRA_BASE_URL;
 
   public IssueServiceImpl(
-      Utils utils,
+      @ComponentImport com.atlassian.jira.bc.issue.IssueService jiraIssueService,
       @ComponentImport IssueManager issueManager,
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport WatcherManager watcherManager,
@@ -68,7 +77,10 @@ public class IssueServiceImpl implements IssueService {
       @ComponentImport IssueTypeManager issueTypeManager,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport ApplicationProperties applicationProperties,
+      UserData userData,
+      Utils utils,
       PluginData pluginData) {
+    this.jiraIssueService = jiraIssueService;
     this.issueManager = issueManager;
     this.permissionManager = permissionManager;
     this.watcherManager = watcherManager;
@@ -78,6 +90,7 @@ public class IssueServiceImpl implements IssueService {
     this.issueTypeSchemeManager = issueTypeSchemeManager;
     this.issueTypeManager = issueTypeManager;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
+    this.userData = userData;
     this.utils = utils;
     this.pluginData = pluginData;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
@@ -224,6 +237,38 @@ public class IssueServiceImpl implements IssueService {
   @Override
   public IssueType getIssueType(String id) {
     return issueTypeManager.getIssueType(id);
+  }
+
+  @Override
+  public boolean changeIssueAssignee(
+      String issueKey, String assigneeMyteamLogin, ApplicationUser user)
+      throws UserNotFoundException, AssigneeChangeValidationException {
+    @Nullable ApplicationUser assignee = userData.getUserByMrimLogin(assigneeMyteamLogin);
+    if (assignee == null) {
+      throw new UserNotFoundException(assigneeMyteamLogin);
+    }
+    MutableIssue issue = jiraIssueService.getIssue(user, issueKey).getIssue();
+
+    if (issue == null) {
+      throw new IssueNotFoundException();
+    }
+    JiraThreadLocalUtils.preCall();
+    // need here to because issueService use authenticationContext
+    ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
+    try {
+      jiraAuthenticationContext.setLoggedInUser(user);
+      com.atlassian.jira.bc.issue.IssueService.AssignValidationResult assignResult =
+          jiraIssueService.validateAssign(user, issue.getId(), assignee.getUsername());
+
+      if (!assignResult.isValid()) {
+        throw new AssigneeChangeValidationException(
+            "Unable to change issue assignee", assignResult.getErrorCollection());
+      }
+      return jiraIssueService.assign(user, assignResult).isValid();
+    } finally {
+      jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
+      JiraThreadLocalUtils.postCall();
+    }
   }
 
   @Override

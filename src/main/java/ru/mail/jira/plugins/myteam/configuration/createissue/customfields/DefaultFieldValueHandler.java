@@ -12,11 +12,12 @@ import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.version.VersionManager;
+import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
 import java.util.stream.Collectors;
-import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
+import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 
 public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
 
@@ -40,28 +41,22 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getInsertFieldMessage(Field field, Locale locale) {
-    if (Utils.isArrayLikeField(field)) {
+  public String getInsertFieldMessage(
+      Project project,
+      IssueType issueType,
+      FillingIssueFieldState state,
+      ApplicationUser user,
+      Locale locale) {
+    if (Utils.isArrayLikeField(state.getField())) {
       return i18nResolver.getText(
           locale,
           "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.arrayMessage",
-          i18nResolver.getRawText(locale, field.getNameKey()).toLowerCase(locale));
+          i18nResolver.getRawText(locale, state.getField().getNameKey()).toLowerCase(locale));
     }
     return i18nResolver.getText(
         locale,
         "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.message",
-        i18nResolver.getRawText(locale, field.getNameKey()).toLowerCase(locale));
-  }
-
-  @Override
-  public List<List<InlineKeyboardMarkupButton>> getButtons(
-      Field field, Project project, IssueType issueType, String value, Locale locale) {
-    return null;
-  }
-
-  @Override
-  public String updateValue(String value, String newValue) {
-    return newValue;
+        i18nResolver.getRawText(locale, state.getField().getNameKey()).toLowerCase(locale));
   }
 
   @Override
@@ -108,7 +103,7 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
 
       case IssueFieldConstants.ISSUE_LINKS:
         //                IssueLinksSystemField issueLinksSystemField = (IssueLinksSystemField)
-        // field;
+        // state;
         // hmmm....  well to parse input strings to IssueLinksSystemField.IssueFieldValue we should
         // strict user input format
         break;
@@ -135,7 +130,7 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
     List<String> fieldValues =
         Arrays.stream(fieldValue.split(",")).map(String::trim).collect(Collectors.toList());
 
-    // this field list was made based on information of which fields implements
+    // this state list was made based on information of which fields implements
     // AbstractOrderableField.getRelevantParams method
     switch (field.getId()) {
       case IssueFieldConstants.ASSIGNEE:
