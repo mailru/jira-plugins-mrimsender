@@ -10,11 +10,13 @@ import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.exception.ParseException;
 import com.atlassian.jira.exception.PermissionException;
+import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.comments.CommentManager;
+import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.config.manager.IssueTypeSchemeManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.search.SearchException;
@@ -74,8 +76,8 @@ public class IssueServiceImpl implements IssueService {
       @ComponentImport IssueTypeSchemeManager issueTypeSchemeManager,
       @ComponentImport IssueTypeManager issueTypeManager,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-      UserData userData,
       @ComponentImport ApplicationProperties applicationProperties,
+      UserData userData,
       Utils utils,
       PluginData pluginData) {
     this.jiraIssueService = jiraIssueService;

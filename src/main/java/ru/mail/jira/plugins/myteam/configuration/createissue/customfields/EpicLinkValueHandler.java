@@ -1,8 +1,10 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.configuration.createissue.customfields;
 
+import com.atlassian.greenhopper.api.customfield.ManagedCustomFieldsService;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.index.ThreadLocalSearcherCache;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.search.SearchException;
@@ -33,12 +35,17 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
   private final SearchService searchService;
   private final I18nResolver i18nResolver;
   private final MessageFormatter messageFormatter;
+  private final CustomField epicField;
 
   public EpicLinkValueHandler(
-      SearchService searchService, I18nResolver i18nResolver, MessageFormatter messageFormatter) {
+      SearchService searchService,
+      I18nResolver i18nResolver,
+      MessageFormatter messageFormatter,
+      ManagedCustomFieldsService managedCustomFieldsService) {
     this.searchService = searchService;
     this.i18nResolver = i18nResolver;
     this.messageFormatter = messageFormatter;
+    epicField = managedCustomFieldsService.getEpicNameCustomField().get();
   }
 
   @Override
@@ -94,7 +101,8 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
                   issue ->
                       ImmutableList.of(
                           InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-                              String.format("%s (%s)", issue.getSummary(), issue.getKey()),
+                              String.format(
+                                  "%s (%s)", issue.getCustomFieldValue(epicField), issue.getKey()),
                               String.join(
                                   "-",
                                   StateActionRuleType.SelectIssueCreationValue.getName(),
@@ -123,7 +131,17 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
       JqlClauseBuilder jqlClauseBuilder = jqlBuilder.where().issueType().eq("epic");
 
       if (fillingFieldState.getInput() != null && fillingFieldState.getInput().length() > 0) {
-        jqlClauseBuilder.and().summary().like(String.format("*%s*", fillingFieldState.getInput()));
+        jqlClauseBuilder
+            .and()
+            .addClause(
+                JqlQueryBuilder.newBuilder()
+                    .where()
+                    .summary()
+                    .like(String.format("*%s*", fillingFieldState.getInput()))
+                    .or()
+                    .customField(epicField.getIdAsLong())
+                    .like(String.format("*%s*", fillingFieldState.getInput()))
+                    .buildClause());
       }
 
       return searchService
