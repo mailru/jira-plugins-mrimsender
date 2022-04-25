@@ -7,6 +7,8 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
 import java.util.List;
 import java.util.Locale;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 
@@ -40,12 +42,13 @@ public interface CreateIssueFieldValueHandler {
    * @param locale user locale
    * @return Buttons to shown in Myteam
    */
+  @Nullable
   default List<List<InlineKeyboardMarkupButton>> getButtons(
-      Project project,
-      IssueType issueType,
-      FillingIssueFieldState fillingFieldState,
-      ApplicationUser user,
-      Locale locale) {
+      @NotNull Project project,
+      @NotNull IssueType issueType,
+      @NotNull FillingIssueFieldState fillingFieldState,
+      @NotNull ApplicationUser user,
+      @NotNull Locale locale) {
     return null;
   }
 

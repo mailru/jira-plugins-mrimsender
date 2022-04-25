@@ -14,6 +14,7 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
@@ -42,17 +43,16 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
       FillingIssueFieldState state,
       ApplicationUser user,
       Locale locale) {
-    i18nResolver.getText("aa");
     return String.format("Ввведите значение для поля %s", state.getField().getName());
   }
 
   @Override
   public List<List<InlineKeyboardMarkupButton>> getButtons(
-      Project project,
-      IssueType issueType,
-      FillingIssueFieldState state,
-      ApplicationUser user,
-      Locale locale) {
+      @NotNull Project project,
+      @NotNull IssueType issueType,
+      @NotNull FillingIssueFieldState state,
+      @NotNull ApplicationUser user,
+      @NotNull Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     Options options = getOptions((CustomField) state.getField());
 

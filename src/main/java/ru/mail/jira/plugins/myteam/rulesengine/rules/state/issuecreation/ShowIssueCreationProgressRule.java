@@ -53,10 +53,7 @@ public class ShowIssueCreationProgressRule extends BaseRule {
   }
 
   @Action
-  public void execute(
-      @Fact("event") MyteamEvent event,
-      @Fact("state") BotState state,
-      @Fact("args") String messagePrefix)
+  public void execute(@Fact("event") MyteamEvent event, @Fact("state") BotState state)
       throws MyteamServerErrorException, IOException, UserNotFoundException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();

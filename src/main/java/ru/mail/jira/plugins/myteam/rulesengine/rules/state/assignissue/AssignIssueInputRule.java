@@ -13,6 +13,7 @@ import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AssigneeChangeValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.AssigningIssueState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
@@ -72,7 +73,7 @@ public class AssignIssueInputRule extends BaseRule {
                 locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.assignIssue.error"),
             messageFormatter.getCancelButton(locale));
       }
-    } catch (UserNotFoundException e) {
+    } catch (UserNotFoundException | AssigneeChangeValidationException e) {
       userChatService.sendMessageText(
           event.getChatId(),
           userChatService.getRawText(

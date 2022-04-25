@@ -68,11 +68,11 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
 
   @Override
   public List<List<InlineKeyboardMarkupButton>> getButtons(
-      Project project,
-      IssueType issueType,
-      FillingIssueFieldState state,
-      ApplicationUser user,
-      Locale locale) {
+      @NotNull Project project,
+      @NotNull IssueType issueType,
+      @NotNull FillingIssueFieldState state,
+      @NotNull ApplicationUser user,
+      @NotNull Locale locale) {
 
     try {
       List<Issue> epics = getEpics(state, user);

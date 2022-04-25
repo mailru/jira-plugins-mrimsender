@@ -59,11 +59,11 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
 
   @Override
   public List<List<InlineKeyboardMarkupButton>> getButtons(
-      Project project,
-      IssueType issueType,
-      FillingIssueFieldState fillingFieldState,
-      ApplicationUser user,
-      Locale locale) {
+      @NotNull Project project,
+      @NotNull IssueType issueType,
+      @NotNull FillingIssueFieldState fillingFieldState,
+      @NotNull ApplicationUser user,
+      @NotNull Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     Collection<Priority> priorities = getPriorities(project, issueType);
     priorities.forEach(

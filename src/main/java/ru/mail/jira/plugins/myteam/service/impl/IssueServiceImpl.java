@@ -39,6 +39,7 @@ import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
+import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AssigneeChangeValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.service.IssueService;
@@ -239,7 +240,7 @@ public class IssueServiceImpl implements IssueService {
   @Override
   public boolean changeIssueAssignee(
       String issueKey, String assigneeMyteamLogin, ApplicationUser user)
-      throws UserNotFoundException {
+      throws UserNotFoundException, AssigneeChangeValidationException {
     @Nullable ApplicationUser assignee = userData.getUserByMrimLogin(assigneeMyteamLogin);
     if (assignee == null) {
       throw new UserNotFoundException(assigneeMyteamLogin);
@@ -252,6 +253,12 @@ public class IssueServiceImpl implements IssueService {
 
     com.atlassian.jira.bc.issue.IssueService.AssignValidationResult assignResult =
         jiraIssueService.validateAssign(user, issue.getId(), assignee.getUsername());
+
+    if (!assignResult.isValid()) {
+      throw new AssigneeChangeValidationException(
+          "Unable to change issue assignee", assignResult.getErrorCollection());
+    }
+
     return jiraIssueService.assign(user, assignResult).isValid();
   }
 
