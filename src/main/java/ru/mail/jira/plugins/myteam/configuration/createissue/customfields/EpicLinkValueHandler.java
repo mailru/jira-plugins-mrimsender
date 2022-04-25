@@ -27,6 +27,9 @@ import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssue
 @Slf4j
 public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
 
+  private static final String CLASS_NAME =
+      "com.atlassian.greenhopper.customfield.epiclink.EpicLinkCFType";
+
   private final SearchService searchService;
   private final I18nResolver i18nResolver;
   private final MessageFormatter messageFormatter;
@@ -40,7 +43,7 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
 
   @Override
   public String getClassName() {
-    return "com.atlassian.greenhopper.customfield.epiclink.EpicLinkCFType";
+    return CLASS_NAME;
   }
 
   @Override

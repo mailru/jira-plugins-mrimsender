@@ -250,16 +250,23 @@ public class IssueServiceImpl implements IssueService {
     if (issue == null) {
       throw new IssueNotFoundException();
     }
+    JiraThreadLocalUtils.preCall();
+    // need here to because issueService use authenticationContext
+    ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
+    try {
+      jiraAuthenticationContext.setLoggedInUser(user);
+      com.atlassian.jira.bc.issue.IssueService.AssignValidationResult assignResult =
+          jiraIssueService.validateAssign(user, issue.getId(), assignee.getUsername());
 
-    com.atlassian.jira.bc.issue.IssueService.AssignValidationResult assignResult =
-        jiraIssueService.validateAssign(user, issue.getId(), assignee.getUsername());
-
-    if (!assignResult.isValid()) {
-      throw new AssigneeChangeValidationException(
-          "Unable to change issue assignee", assignResult.getErrorCollection());
+      if (!assignResult.isValid()) {
+        throw new AssigneeChangeValidationException(
+            "Unable to change issue assignee", assignResult.getErrorCollection());
+      }
+      return jiraIssueService.assign(user, assignResult).isValid();
+    } finally {
+      jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
+      JiraThreadLocalUtils.postCall();
     }
-
-    return jiraIssueService.assign(user, assignResult).isValid();
   }
 
   @Override

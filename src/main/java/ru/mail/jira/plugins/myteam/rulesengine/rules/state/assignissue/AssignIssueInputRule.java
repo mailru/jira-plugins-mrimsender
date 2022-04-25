@@ -5,14 +5,14 @@ import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
+import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AssigneeChangeValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.AssigningIssueState;
@@ -25,9 +25,6 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
     name = "user mention input result",
     description = "Fired when waiting for issue assignee on input")
 public class AssignIssueInputRule extends BaseRule {
-
-  private static final Pattern mentionPattern =
-      Pattern.compile("^@\\[(.+)\\]$", Pattern.CASE_INSENSITIVE);
 
   private final IssueService issueService;
 
@@ -47,18 +44,22 @@ public class AssignIssueInputRule extends BaseRule {
 
   @Action
   public void execute(
-      @Fact("event") MyteamEvent event,
+      @Fact("event") ChatMessageEvent event,
       @Fact("state") AssigningIssueState state,
       @Fact("args") String userMention)
       throws UserNotFoundException, MyteamServerErrorException, IOException {
-    Matcher result = mentionPattern.matcher(userMention);
+
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
+    Locale locale = userChatService.getUserLocale(user);
+
     String userEmail = userMention;
-    if (result.find()) {
-      userEmail = result.group(1);
+
+    for (Part part : event.getMessageParts()) {
+      if (part instanceof Mention) {
+        userEmail = ((Mention) part).getUserId();
+      }
     }
 
-    Locale locale = userChatService.getUserLocale(user);
     try {
       if (issueService.changeIssueAssignee(state.getIssueKey(), userEmail, user)) {
         userChatService.sendMessageText(
