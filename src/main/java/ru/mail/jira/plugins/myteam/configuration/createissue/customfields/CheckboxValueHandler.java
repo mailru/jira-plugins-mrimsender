@@ -16,6 +16,7 @@ import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
@@ -37,22 +38,24 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getInsertFieldMessage(
-      Project project,
-      IssueType issueType,
-      FillingIssueFieldState state,
-      ApplicationUser user,
-      Locale locale) {
+  public FieldInputMessageInfo getMessageInfo(
+      @NotNull Project project,
+      @NotNull IssueType issueType,
+      @NotNull ApplicationUser user,
+      @NotNull Locale locale,
+      @NotNull FillingIssueFieldState state) {
+    return FieldInputMessageInfo.builder()
+        .message(getInsertFieldMessage(state))
+        .buttons(getButtons(state, locale))
+        .build();
+  }
+
+  public String getInsertFieldMessage(FillingIssueFieldState state) {
     return String.format("Ввведите значение для поля %s", state.getField().getName());
   }
 
-  @Override
   public List<List<InlineKeyboardMarkupButton>> getButtons(
-      @NotNull Project project,
-      @NotNull IssueType issueType,
-      @NotNull FillingIssueFieldState state,
-      @NotNull ApplicationUser user,
-      @NotNull Locale locale) {
+      @NotNull FillingIssueFieldState state, @NotNull Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     Options options = getOptions((CustomField) state.getField());
 
@@ -123,6 +126,11 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
             })
         .filter(Objects::nonNull)
         .toArray(String[]::new);
+  }
+
+  @Override
+  public boolean isSearchable() {
+    return CreateIssueFieldValueHandler.super.isSearchable();
   }
 
   private Options getOptions(CustomField field) {

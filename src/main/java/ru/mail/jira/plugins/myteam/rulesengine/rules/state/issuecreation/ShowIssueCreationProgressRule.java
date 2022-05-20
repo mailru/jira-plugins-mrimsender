@@ -13,6 +13,7 @@ import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
+import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -84,33 +85,29 @@ public class ShowIssueCreationProgressRule extends BaseRule {
         fillingFieldState = (FillingIssueFieldState) state;
       }
 
-      String msg =
-          issueCreationState.createInsertFieldMessage(
-              locale,
-              handler.getInsertFieldMessage(
-                  issueCreationState.getProject(),
-                  issueCreationState.getIssueType(),
-                  fillingFieldState,
-                  user,
-                  locale));
+      if (fillingFieldState == null) {
+        return;
+      }
 
-      List<List<InlineKeyboardMarkupButton>> handlerButtons =
-          handler.getButtons(
+      FieldInputMessageInfo msgInfo =
+          handler.getMessageInfo(
               issueCreationState.getProject(),
               issueCreationState.getIssueType(),
-              fillingFieldState,
               user,
-              locale);
+              locale,
+              fillingFieldState);
+
+      String msg = issueCreationState.createInsertFieldMessage(locale, msgInfo.getMessage());
 
       List<List<InlineKeyboardMarkupButton>> buttons =
-          fillingFieldState != null && fillingFieldState.isAdditionalField()
+          fillingFieldState.isAdditionalField()
               ? MessageFormatter.buildButtonsWithBack(
-                  handlerButtons,
+                  msgInfo.getButtons(),
                   userChatService.getRawText(
                       locale,
                       "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text"))
               : MessageFormatter.buildButtonsWithCancel(
-                  handlerButtons,
+                  msgInfo.getButtons(),
                   userChatService.getRawText(
                       locale,
                       "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text"));

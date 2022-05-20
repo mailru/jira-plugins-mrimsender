@@ -15,20 +15,16 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.sal.api.message.I18nResolver;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Pager;
@@ -45,8 +41,6 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
   private final MessageFormatter messageFormatter;
   private final CustomField epicField;
 
-  private final LoadingCache<EpicSearchData, SearchResults<Issue>> ttlEpicsCache;
-
   public EpicLinkValueHandler(
       SearchService searchService,
       I18nResolver i18nResolver,
@@ -56,11 +50,6 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
     this.i18nResolver = i18nResolver;
     this.messageFormatter = messageFormatter;
     epicField = managedCustomFieldsService.getEpicNameCustomField().get();
-
-    ttlEpicsCache =
-        CacheBuilder.newBuilder()
-            .expireAfterAccess(20, TimeUnit.SECONDS)
-            .build(CacheLoader.from(this::getEpics));
   }
 
   @Override
@@ -69,26 +58,30 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getInsertFieldMessage(
-      Project project,
-      IssueType issueType,
-      FillingIssueFieldState state,
-      ApplicationUser user,
-      Locale locale) {
-    SearchResults<Issue> epics;
-    try {
-      epics =
-          ttlEpicsCache.get(
-              EpicSearchData.builder()
-                  .q(state.getInput())
-                  .user(user)
-                  .project(project)
-                  .page(state.getPager().getPage())
-                  .pageSize(state.getPager().getPageSize())
-                  .build());
-    } catch (ExecutionException e) {
-      return null;
-    }
+  public FieldInputMessageInfo getMessageInfo(
+      @NotNull Project project,
+      @NotNull IssueType issueType,
+      @NotNull ApplicationUser user,
+      @NotNull Locale locale,
+      @NotNull FillingIssueFieldState state) {
+    @Nullable
+    SearchResults<Issue> epics =
+        getEpics(
+            EpicSearchData.builder()
+                .q(state.getInput())
+                .user(user)
+                .project(project)
+                .page(state.getPager().getPage())
+                .pageSize(state.getPager().getPageSize())
+                .build());
+
+    return FieldInputMessageInfo.builder()
+        .message(getInsertFieldMessage(locale, epics))
+        .buttons(getButtons(state, locale, epics))
+        .build();
+  }
+
+  public String getInsertFieldMessage(Locale locale, @Nullable SearchResults<Issue> epics) {
 
     if (epics == null || epics.getResults().size() == 0) {
       return i18nResolver.getRawText(
@@ -99,27 +92,10 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
         locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.epicLinkSelect.message");
   }
 
-  @Override
   public List<List<InlineKeyboardMarkupButton>> getButtons(
-      @NotNull Project project,
-      @NotNull IssueType issueType,
       @NotNull FillingIssueFieldState state,
-      @NotNull ApplicationUser user,
-      @NotNull Locale locale) {
-    SearchResults<Issue> epics;
-    try {
-      epics =
-          ttlEpicsCache.get(
-              EpicSearchData.builder()
-                  .q(state.getInput())
-                  .user(user)
-                  .project(project)
-                  .page(state.getPager().getPage())
-                  .pageSize(state.getPager().getPageSize())
-                  .build());
-    } catch (ExecutionException e) {
-      return null;
-    }
+      @NotNull Locale locale,
+      @Nullable SearchResults<Issue> epics) {
     if (epics == null || epics.getResults().size() == 0) {
       return null;
     }
