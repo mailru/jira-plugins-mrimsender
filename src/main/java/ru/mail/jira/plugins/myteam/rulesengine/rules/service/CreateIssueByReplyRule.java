@@ -30,6 +30,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
@@ -70,7 +71,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
   @Condition
   public boolean isValid(
       @Fact("command") String command,
-      @Fact("event") ChatMessageEvent event,
+      @Fact("event") MyteamEvent event,
       @Fact("isGroup") boolean isGroup,
       @Fact("args") String tag)
       throws AdminRulesRequiredException {
@@ -82,7 +83,8 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
     return isGroup
         && NAME.equalsName(command)
-        && (event.isHasReply() || event.isHasForwards())
+        && event instanceof ChatMessageEvent
+        && (((ChatMessageEvent) event).isHasReply() || ((ChatMessageEvent) event).isHasForwards())
         && settings != null;
   }
 
