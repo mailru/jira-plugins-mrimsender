@@ -5,11 +5,9 @@ import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
-import java.util.List;
 import java.util.Locale;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 
 public interface CreateIssueFieldValueHandler {
@@ -21,36 +19,19 @@ public interface CreateIssueFieldValueHandler {
   String getClassName();
 
   /**
-   * Custom text render for Myteam message
+   * Custom text render for Myteam message and custom buttons setup attached to issue creation
+   * message
    *
    * @param state state containing field, its value and filling state parameters such as paging
    * @param locale user locale
    * @return Message to shown in Myteam
    */
-  String getInsertFieldMessage(
-      Project project,
-      IssueType issueType,
-      FillingIssueFieldState state,
-      ApplicationUser user,
-      Locale locale);
-
-  /**
-   * Custom buttons setup attached to issue creation message
-   *
-   * @param fillingFieldState state containing field, its value and filling state parameters such as
-   *     paging
-   * @param locale user locale
-   * @return Buttons to shown in Myteam
-   */
-  @Nullable
-  default List<List<InlineKeyboardMarkupButton>> getButtons(
+  FieldInputMessageInfo getMessageInfo(
       @NotNull Project project,
       @NotNull IssueType issueType,
-      @NotNull FillingIssueFieldState fillingFieldState,
       @NotNull ApplicationUser user,
-      @NotNull Locale locale) {
-    return null;
-  }
+      @NotNull Locale locale,
+      @NotNull FillingIssueFieldState state);
 
   /**
    * Map field value from String in IssueCreationDto to valid String array field value

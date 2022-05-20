@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import org.jetbrains.annotations.NotNull;
+import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
@@ -38,12 +39,19 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getInsertFieldMessage(
-      Project project,
-      IssueType issueType,
-      FillingIssueFieldState state,
-      ApplicationUser user,
-      Locale locale) {
+  public FieldInputMessageInfo getMessageInfo(
+      @NotNull Project project,
+      @NotNull IssueType issueType,
+      @NotNull ApplicationUser user,
+      @NotNull Locale locale,
+      @NotNull FillingIssueFieldState state) {
+    return FieldInputMessageInfo.builder()
+        .message(getInsertFieldMessage(state, locale))
+        .buttons(getButtons(project, issueType, locale))
+        .build();
+  }
+
+  private String getInsertFieldMessage(FillingIssueFieldState state, Locale locale) {
     if (Utils.isArrayLikeField(state.getField())) {
       return i18nResolver.getText(
           locale,
@@ -57,13 +65,8 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
         i18nResolver.getRawText(locale, state.getField().getNameKey()).toLowerCase(locale));
   }
 
-  @Override
-  public List<List<InlineKeyboardMarkupButton>> getButtons(
-      @NotNull Project project,
-      @NotNull IssueType issueType,
-      @NotNull FillingIssueFieldState fillingFieldState,
-      @NotNull ApplicationUser user,
-      @NotNull Locale locale) {
+  private List<List<InlineKeyboardMarkupButton>> getButtons(
+      @NotNull Project project, @NotNull IssueType issueType, @NotNull Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     Collection<Priority> priorities = getPriorities(project, issueType);
     priorities.forEach(

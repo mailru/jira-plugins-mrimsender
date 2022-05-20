@@ -293,7 +293,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       jiraAuthenticationContext.setLoggedInUser(user);
       IssueService.CreateValidationResult issueValidationResult =
           validateIssueWithGivenFields(project, issueType, fields, user);
-
       if (issueValidationResult.isValid()) {
         IssueService.IssueResult issueResult = issueService.create(user, issueValidationResult);
         if (issueResult.isValid()) {
