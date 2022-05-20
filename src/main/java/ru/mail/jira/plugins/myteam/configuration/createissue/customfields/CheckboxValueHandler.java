@@ -128,11 +128,6 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
         .toArray(String[]::new);
   }
 
-  @Override
-  public boolean isSearchable() {
-    return CreateIssueFieldValueHandler.super.isSearchable();
-  }
-
   private Options getOptions(CustomField field) {
     Options options = null;
 
