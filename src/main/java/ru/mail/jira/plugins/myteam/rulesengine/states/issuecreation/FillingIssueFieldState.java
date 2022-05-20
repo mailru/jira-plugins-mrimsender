@@ -21,6 +21,8 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
 public class FillingIssueFieldState extends BotState
     implements CancelableState, PageableState, RevertibleState {
 
+  public static int DEFAULT_FILLING_FIELD_PAGE_SIZE = 7;
+
   private final UserChatService userChatService;
   private final RulesEngine rulesEngine;
 
@@ -39,7 +41,7 @@ public class FillingIssueFieldState extends BotState
     this.isSearchOn = false;
     this.isAdditionalField = false;
     isWaiting = true;
-    pager = new Pager(0, 7);
+    pager = new Pager(0, DEFAULT_FILLING_FIELD_PAGE_SIZE);
   }
 
   public FillingIssueFieldState(
@@ -54,7 +56,7 @@ public class FillingIssueFieldState extends BotState
     this.isSearchOn = isSearchOn;
     this.isAdditionalField = isAdditional;
     isWaiting = true;
-    pager = new Pager(0, 7);
+    pager = new Pager(0, DEFAULT_FILLING_FIELD_PAGE_SIZE);
   }
 
   @Override
