@@ -51,7 +51,7 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
         .build();
   }
 
-  public String getInsertFieldMessage(FillingIssueFieldState state, Locale locale) {
+  private String getInsertFieldMessage(FillingIssueFieldState state, Locale locale) {
     if (Utils.isArrayLikeField(state.getField())) {
       return i18nResolver.getText(
           locale,
@@ -65,7 +65,7 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
         i18nResolver.getRawText(locale, state.getField().getNameKey()).toLowerCase(locale));
   }
 
-  public List<List<InlineKeyboardMarkupButton>> getButtons(
+  private List<List<InlineKeyboardMarkupButton>> getButtons(
       @NotNull Project project, @NotNull IssueType issueType, @NotNull Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     Collection<Priority> priorities = getPriorities(project, issueType);

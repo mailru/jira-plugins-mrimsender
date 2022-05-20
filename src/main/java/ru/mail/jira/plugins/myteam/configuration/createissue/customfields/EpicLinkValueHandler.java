@@ -19,9 +19,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
@@ -65,15 +62,7 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
       @NotNull Locale locale,
       @NotNull FillingIssueFieldState state) {
     @Nullable
-    SearchResults<Issue> epics =
-        getEpics(
-            EpicSearchData.builder()
-                .q(state.getInput())
-                .user(user)
-                .project(project)
-                .page(state.getPager().getPage())
-                .pageSize(state.getPager().getPageSize())
-                .build());
+    SearchResults<Issue> epics = getEpics(user, project, state.getInput(), state.getPager());
 
     return FieldInputMessageInfo.builder()
         .message(getInsertFieldMessage(locale, epics))
@@ -81,7 +70,7 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
         .build();
   }
 
-  public String getInsertFieldMessage(Locale locale, @Nullable SearchResults<Issue> epics) {
+  private String getInsertFieldMessage(Locale locale, @Nullable SearchResults<Issue> epics) {
 
     if (epics == null || epics.getResults().size() == 0) {
       return i18nResolver.getRawText(
@@ -92,7 +81,7 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
         locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.epicLinkSelect.message");
   }
 
-  public List<List<InlineKeyboardMarkupButton>> getButtons(
+  private List<List<InlineKeyboardMarkupButton>> getButtons(
       @NotNull FillingIssueFieldState state,
       @NotNull Locale locale,
       @Nullable SearchResults<Issue> epics) {
@@ -126,34 +115,35 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Nullable
-  private SearchResults<Issue> getEpics(EpicSearchData data) {
+  private SearchResults<Issue> getEpics(
+      ApplicationUser user, Project project, String q, Pager pager) {
     try {
       ThreadLocalSearcherCache.startSearcherContext();
 
       JqlQueryBuilder jqlBuilder = JqlQueryBuilder.newBuilder();
       JqlClauseBuilder jqlClauseBuilder = jqlBuilder.where().issueType().eq("epic");
 
-      if (data.getQ() != null && data.getQ().length() > 0) {
+      if (q != null && q.length() > 0) {
         jqlClauseBuilder
             .and()
             .addClause(
                 JqlQueryBuilder.newBuilder()
                     .where()
                     .summary()
-                    .like(String.format("*%s*", data.getQ()))
+                    .like(String.format("*%s*", q))
                     .or()
                     .customField(epicField.getIdAsLong())
-                    .like(String.format("*%s*", data.getQ()))
+                    .like(String.format("*%s*", q))
                     .buildClause());
       } else {
-        jqlClauseBuilder.and().project().eq(data.getProject().getKey());
+        jqlClauseBuilder.and().project().eq(project.getKey());
       }
 
       return searchService.search(
-          data.getUser(),
+          user,
           jqlClauseBuilder.buildQuery(),
           PagerFilter.newPageAlignedFilter(
-              data.getPage() * data.getPageSize(), data.getPageSize()));
+              pager.getPage() * pager.getPageSize(), pager.getPageSize()));
     } catch (SearchException e) {
       return null;
     } finally {
@@ -164,16 +154,5 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
   @Override
   public boolean isSearchable() {
     return true;
-  }
-
-  @Getter
-  @Builder
-  @EqualsAndHashCode
-  private static class EpicSearchData {
-    private final ApplicationUser user;
-    private final Project project;
-    private final String q;
-    private final int page;
-    private final int pageSize;
   }
 }

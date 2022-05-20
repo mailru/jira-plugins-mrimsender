@@ -52,7 +52,7 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
     return FieldInputMessageInfo.builder().message(getInsertFieldMessage(state, locale)).build();
   }
 
-  public String getInsertFieldMessage(FillingIssueFieldState state, Locale locale) {
+  private String getInsertFieldMessage(FillingIssueFieldState state, Locale locale) {
     if (Utils.isArrayLikeField(state.getField())) {
       return i18nResolver.getText(
           locale,

@@ -50,11 +50,11 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
         .build();
   }
 
-  public String getInsertFieldMessage(FillingIssueFieldState state) {
+  private String getInsertFieldMessage(FillingIssueFieldState state) {
     return String.format("Ввведите значение для поля %s", state.getField().getName());
   }
 
-  public List<List<InlineKeyboardMarkupButton>> getButtons(
+  private List<List<InlineKeyboardMarkupButton>> getButtons(
       @NotNull FillingIssueFieldState state, @NotNull Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     Options options = getOptions((CustomField) state.getField());
