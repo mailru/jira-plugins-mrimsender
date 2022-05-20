@@ -116,7 +116,6 @@ const isIgnoredField = (id: string): boolean => {
     'description',
     'attachment',
     'duedate',
-    'assignee',
     'labels-textarea',
     'timetracking', // unsupported
     'issuelinks', // unsupported
