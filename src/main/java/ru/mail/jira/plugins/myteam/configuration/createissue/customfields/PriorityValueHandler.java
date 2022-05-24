@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import org.jetbrains.annotations.NotNull;
 import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
@@ -40,11 +39,11 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
 
   @Override
   public FieldInputMessageInfo getMessageInfo(
-      @NotNull Project project,
-      @NotNull IssueType issueType,
-      @NotNull ApplicationUser user,
-      @NotNull Locale locale,
-      @NotNull FillingIssueFieldState state) {
+      Project project,
+      IssueType issueType,
+      ApplicationUser user,
+      Locale locale,
+      FillingIssueFieldState state) {
     return FieldInputMessageInfo.builder()
         .message(getInsertFieldMessage(state, locale))
         .buttons(getButtons(project, issueType, locale))
@@ -66,7 +65,7 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   }
 
   private List<List<InlineKeyboardMarkupButton>> getButtons(
-      @NotNull Project project, @NotNull IssueType issueType, @NotNull Locale locale) {
+      Project project, IssueType issueType, Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     Collection<Priority> priorities = getPriorities(project, issueType);
     priorities.forEach(
@@ -99,7 +98,6 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
     return new String[] {selectedPriorityId};
   }
 
-  @NotNull
   private Collection<Priority> getPriorities(Project project, IssueType issueType) {
     return prioritySchemeManager.getPrioritiesFromIds(
         prioritySchemeManager.getOptions(new IssueContextImpl(project.getId(), issueType.getId())));

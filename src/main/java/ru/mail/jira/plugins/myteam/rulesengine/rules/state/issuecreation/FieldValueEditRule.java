@@ -1,7 +1,9 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
+import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.fields.Field;
+import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -9,6 +11,7 @@ import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.exceptions.ValidationException;
 import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
@@ -45,18 +48,27 @@ public class FieldValueEditRule extends BaseRule {
       @Fact("event") MyteamEvent event,
       @Fact("state") FillingIssueFieldState state,
       @Fact("args") String value)
-      throws MyteamServerErrorException, IOException {
+      throws MyteamServerErrorException, IOException, UserNotFoundException {
 
     Field field = state.getField();
     if (event instanceof ButtonClickEvent) {
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
     }
-
-    // TODO add field value validation
+    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
 
     CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field);
 
-    state.setValue(handler.updateValue(state.getValue(), value));
-    rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
+    try {
+      state.setValue(handler.updateValue(state.getValue(), value, event));
+    } catch (ValidationException e) {
+      userChatService.sendMessageText(
+          event.getChatId(),
+          userChatService.getText(
+              userChatService.getUserLocale(user),
+              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.validationError",
+              e.getLocalizedMessage()));
+    } finally {
+      rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);
+    }
   }
 }

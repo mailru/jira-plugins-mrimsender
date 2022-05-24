@@ -16,6 +16,10 @@ import kong.unirest.UnirestException;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.commons.HttpClient;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
+import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 
 public class Utils {
 
@@ -150,5 +154,18 @@ public class Utils {
     } else {
       return str.replaceAll("[^\\p{L}\\p{M}\\p{N}\\p{P}\\p{Z}\\p{Cf}\\p{Cs}\\s\\|$^+=~±><]", "");
     }
+  }
+
+  @Nullable
+  public static String getEmailFromMention(MyteamEvent event) {
+    String userEmail = null;
+    if (event instanceof ChatMessageEvent && ((ChatMessageEvent) event).isHasMentions()) {
+      for (Part part : ((ChatMessageEvent) event).getMessageParts()) {
+        if (part instanceof Mention) {
+          userEmail = ((Mention) part).getUserId();
+        }
+      }
+    }
+    return userEmail;
   }
 }

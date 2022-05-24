@@ -6,8 +6,9 @@ import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
 import java.util.Locale;
-import org.jetbrains.annotations.NotNull;
 import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
+import ru.mail.jira.plugins.myteam.exceptions.ValidationException;
+import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 
 public interface CreateIssueFieldValueHandler {
@@ -27,19 +28,21 @@ public interface CreateIssueFieldValueHandler {
    * @return Message to shown in Myteam
    */
   FieldInputMessageInfo getMessageInfo(
-      @NotNull Project project,
-      @NotNull IssueType issueType,
-      @NotNull ApplicationUser user,
-      @NotNull Locale locale,
-      @NotNull FillingIssueFieldState state);
+      Project project,
+      IssueType issueType,
+      ApplicationUser user,
+      Locale locale,
+      FillingIssueFieldState state);
 
   /**
    * Map field value from String in IssueCreationDto to valid String array field value
    *
    * @param value value of custom field
+   * @param event myteam event
    * @return valid String for field in IssueInputParameters
    */
-  default String updateValue(String value, String newValue) {
+  default String updateValue(String value, String newValue, MyteamEvent event)
+      throws ValidationException {
     return newValue;
   }
 

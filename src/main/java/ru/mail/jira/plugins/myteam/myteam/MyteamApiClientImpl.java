@@ -8,7 +8,6 @@ import kong.unirest.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.HttpClient;
@@ -194,10 +193,10 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
   @Override
   public HttpResponse<CreateChatResponse> createChat(
-      @NotNull String creatorBotToken,
-      @NotNull String name,
+      String creatorBotToken,
+      String name,
       String about,
-      @NotNull List<ChatMemberId> members,
+      List<ChatMemberId> members,
       boolean isPublic)
       throws IOException, UnirestException, MyteamServerErrorException {
     if (members.size() > 0 && members.size() <= 30) {
@@ -222,7 +221,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
   @Override
   public HttpResponse<SuccessResponse> setAboutChat(
-      @Nonnull String botToken, @NotNull String chatId, String about)
+      @Nonnull String botToken, String chatId, String about)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<SuccessResponse> response =
         HttpClient.getPrimaryClient()
