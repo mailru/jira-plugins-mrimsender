@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
+import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
@@ -35,6 +36,7 @@ import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Component
+@ExportAsService(LifecycleAware.class)
 public class RulesEngineImpl
     implements ru.mail.jira.plugins.myteam.service.RulesEngine, LifecycleAware {
 

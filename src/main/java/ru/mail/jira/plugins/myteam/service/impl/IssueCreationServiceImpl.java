@@ -26,6 +26,7 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
+import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import com.atlassian.sal.api.message.I18nResolver;
@@ -47,6 +48,7 @@ import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.dto.FieldDto;
 
 @Service
+@ExportAsService(LifecycleAware.class)
 public class IssueCreationServiceImpl implements IssueCreationService, LifecycleAware {
 
   private final I18nResolver i18nResolver;
