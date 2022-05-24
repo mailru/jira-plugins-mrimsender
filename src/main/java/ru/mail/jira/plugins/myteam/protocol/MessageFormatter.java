@@ -664,7 +664,7 @@ public class MessageFormatter {
       Locale locale, Collection<?> collection, int pageNumber, int total, int pageSize) {
     if (collection.size() == 0) return "";
 
-    StringJoiner sj = new StringJoiner("\n");
+    StringJoiner sj = new StringJoiner("\n\n");
 
     // stringify collection
     collection.forEach(obj -> sj.add(obj.toString()));

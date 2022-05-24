@@ -1,10 +1,10 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
+import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.RulesEngineParameters;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
@@ -36,7 +36,7 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Component
 public class RulesEngineImpl
-    implements ru.mail.jira.plugins.myteam.service.RulesEngine, InitializingBean {
+    implements ru.mail.jira.plugins.myteam.service.RulesEngine, LifecycleAware {
 
   private final RulesEngine commandsRuleEngine;
   private final RulesEngine errorsRuleEngine;
@@ -69,7 +69,7 @@ public class RulesEngineImpl
   }
 
   @Override
-  public void afterPropertiesSet() {
+  public void onStart() {
     // Defaults
     stateActionsRuleEngine.registerRule(new DefaultMessageRule(userChatService, this));
 
@@ -144,6 +144,9 @@ public class RulesEngineImpl
     errorsRuleEngine.registerRule(new IssueNotFoundErrorRule(userChatService, this));
     errorsRuleEngine.registerRule(new IssueNoPermissionErrorRule(userChatService, this));
   }
+
+  @Override
+  public void onStop() {}
 
   @Override
   public void fireCommand(RuleType command, MyteamEvent event) {

@@ -8,11 +8,7 @@ import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.event.type.EventDispatchOption;
 import com.atlassian.jira.exception.PermissionException;
-import com.atlassian.jira.issue.Issue;
-import com.atlassian.jira.issue.IssueFieldConstants;
-import com.atlassian.jira.issue.IssueInputParameters;
-import com.atlassian.jira.issue.IssueManager;
-import com.atlassian.jira.issue.MutableIssue;
+import com.atlassian.jira.issue.*;
 import com.atlassian.jira.issue.customfields.manager.OptionsManager;
 import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.Field;
@@ -31,12 +27,12 @@ import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.commons.Utils;
@@ -51,7 +47,7 @@ import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.dto.FieldDto;
 
 @Service
-public class IssueCreationServiceImpl implements IssueCreationService, InitializingBean {
+public class IssueCreationServiceImpl implements IssueCreationService, LifecycleAware {
 
   private final I18nResolver i18nResolver;
   private final IssueTypeScreenSchemeManager issueTypeScreenSchemeManager;
@@ -110,7 +106,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   }
 
   @Override
-  public void afterPropertiesSet() {
+  public void onStart() {
     CheckboxValueHandler checkbox = new CheckboxValueHandler(optionsManager, i18nResolver);
     supportedIssueCreationCustomFields.put(checkbox.getClassName(), checkbox);
 
@@ -125,6 +121,9 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     AssigneeValueHandler assignee = new AssigneeValueHandler(userData, i18nResolver);
     supportedIssueCreationCustomFields.put(assignee.getClassName(), assignee);
   }
+
+  @Override
+  public void onStop() {}
 
   @Override
   public LinkedHashMap<Field, String> getIssueCreationFieldsValues(
