@@ -41,6 +41,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.commons.Utils;
+import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.*;
 import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
@@ -66,6 +67,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   private final PrioritySchemeManager prioritySchemeManager;
   private final SearchService searchService;
   private final ManagedCustomFieldsService managedCustomFieldsService;
+  private final UserData userData;
   private final HashMap<String, CreateIssueFieldValueHandler> supportedIssueCreationCustomFields;
   private final CreateIssueFieldValueHandler defaultHandler;
   private final MessageFormatter messageFormatter;
@@ -85,6 +87,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
       @ComponentImport PrioritySchemeManager prioritySchemeManager,
       @ComponentImport SearchService searchService,
       @ComponentImport ManagedCustomFieldsService managedCustomFieldsService,
+      UserData userData,
       MessageFormatter messageFormatter,
       ru.mail.jira.plugins.myteam.service.IssueService myteamIssueService) {
     this.i18nResolver = i18nResolver;
@@ -97,6 +100,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     this.issueService = issueService;
     this.searchService = searchService;
     this.managedCustomFieldsService = managedCustomFieldsService;
+    this.userData = userData;
     this.messageFormatter = messageFormatter;
     this.myteamIssueService = myteamIssueService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
@@ -118,6 +122,10 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
         new EpicLinkValueHandler(
             searchService, i18nResolver, messageFormatter, managedCustomFieldsService);
     supportedIssueCreationCustomFields.put(epicLink.getClassName(), epicLink);
+
+    AssigneeValueHandler assignee = new AssigneeValueHandler(userData, i18nResolver);
+    System.out.println(userData.getUserByMrimLogin("123"));
+    supportedIssueCreationCustomFields.put(assignee.getClassName(), assignee);
   }
 
   @Override

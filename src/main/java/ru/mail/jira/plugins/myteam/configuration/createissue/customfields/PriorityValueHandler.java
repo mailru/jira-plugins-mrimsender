@@ -39,7 +39,7 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public FieldInputMessageInfo getMessageInfo(
+  public @NotNull FieldInputMessageInfo getMessageInfo(
       @NotNull Project project,
       @NotNull IssueType issueType,
       @NotNull ApplicationUser user,

@@ -6,6 +6,7 @@ import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
 import java.util.Locale;
+import javax.validation.ValidationException;
 import org.jetbrains.annotations.NotNull;
 import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
@@ -26,6 +27,7 @@ public interface CreateIssueFieldValueHandler {
    * @param locale user locale
    * @return Message to shown in Myteam
    */
+  @NotNull
   FieldInputMessageInfo getMessageInfo(
       @NotNull Project project,
       @NotNull IssueType issueType,
@@ -39,7 +41,8 @@ public interface CreateIssueFieldValueHandler {
    * @param value value of custom field
    * @return valid String for field in IssueInputParameters
    */
-  default String updateValue(String value, String newValue) {
+  default String updateValue(String value, String newValue)
+      throws ValidationException, ru.mail.jira.plugins.myteam.exceptions.ValidationException {
     return newValue;
   }
 
