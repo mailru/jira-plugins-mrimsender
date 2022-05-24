@@ -9,9 +9,8 @@ import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AssigneeChangeValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
@@ -52,12 +51,10 @@ public class AssignIssueInputRule extends BaseRule {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
     Locale locale = userChatService.getUserLocale(user);
 
-    String userEmail = userMention;
+    String userEmail = Utils.getEmailFromMention(event);
 
-    for (Part part : event.getMessageParts()) {
-      if (part instanceof Mention) {
-        userEmail = ((Mention) part).getUserId();
-      }
+    if (userEmail == null) {
+      userEmail = userMention;
     }
 
     try {

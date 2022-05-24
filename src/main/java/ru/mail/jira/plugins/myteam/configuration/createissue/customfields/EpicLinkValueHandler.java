@@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -55,12 +54,12 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public @NotNull FieldInputMessageInfo getMessageInfo(
-      @NotNull Project project,
-      @NotNull IssueType issueType,
-      @NotNull ApplicationUser user,
-      @NotNull Locale locale,
-      @NotNull FillingIssueFieldState state) {
+  public FieldInputMessageInfo getMessageInfo(
+      Project project,
+      IssueType issueType,
+      ApplicationUser user,
+      Locale locale,
+      FillingIssueFieldState state) {
     @Nullable
     SearchResults<Issue> epics = getEpics(user, project, state.getInput(), state.getPager());
 
@@ -82,9 +81,7 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
   }
 
   private List<List<InlineKeyboardMarkupButton>> getButtons(
-      @NotNull FillingIssueFieldState state,
-      @NotNull Locale locale,
-      @Nullable SearchResults<Issue> epics) {
+      FillingIssueFieldState state, Locale locale, @Nullable SearchResults<Issue> epics) {
     if (epics == null || epics.getResults().size() == 0) {
       return null;
     }
@@ -105,7 +102,7 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
                                 StateActionRuleType.SelectIssueCreationValue.getName(),
                                 String.format("key:%s", issue.getKey())))))
             .collect(Collectors.toList());
-    @NotNull
+
     List<InlineKeyboardMarkupButton> pagerButtonsRow =
         messageFormatter.getPagerButtonsRow(locale, pager.hasPrev(), pager.hasNext());
     if (pagerButtonsRow.size() > 0) {

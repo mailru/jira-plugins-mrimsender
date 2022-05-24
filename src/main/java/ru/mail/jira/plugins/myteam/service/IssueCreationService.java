@@ -12,7 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.validation.constraints.NotNull;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.CreateIssueFieldValueHandler;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
@@ -53,17 +52,11 @@ public interface IssueCreationService {
       Project project, ApplicationUser user, String issueTypeId);
 
   MutableIssue createIssue(
-      Project project,
-      IssueType issueType,
-      @NotNull Map<Field, String> fields,
-      ApplicationUser user)
+      Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user)
       throws IssueCreationValidationException;
 
   MutableIssue createIssue(
-      String projectKey,
-      String issueTypeId,
-      @NotNull Map<Field, String> fields,
-      ApplicationUser user)
+      String projectKey, String issueTypeId, Map<Field, String> fields, ApplicationUser user)
       throws IssueCreationValidationException, PermissionException, ProjectBannedException;
 
   Issue updateIssueDescription(String description, MutableIssue issue, ApplicationUser user);

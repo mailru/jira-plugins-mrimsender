@@ -21,7 +21,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
@@ -105,7 +104,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   }
 
   @Override
-  public @NotNull List<IssueCreationSettingsDto> getSettingsByChatId(String chatId) {
+  public List<IssueCreationSettingsDto> getSettingsByChatId(String chatId) {
     return issueCreationSettingsRepository.getSettingsByChatId(chatId).stream()
         .map(
             el -> {
@@ -117,7 +116,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   }
 
   @Override
-  public IssueCreationSettingsDto createSettings(@NotNull IssueCreationSettingsDto settings)
+  public IssueCreationSettingsDto createSettings(IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException {
     checkAlreadyHasTag(settings);
     applyDefaultTemplateIfEmpty(settings);
@@ -126,7 +125,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   }
 
   @Override
-  public IssueCreationSettingsDto updateSettings(int id, @NotNull IssueCreationSettingsDto settings)
+  public IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException {
     checkAlreadyHasTag(settings);
     applyDefaultTemplateIfEmpty(settings);
@@ -151,7 +150,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   @Override
   public IssueCreationSettingsDto getSettingsById(int id) {
-    @NotNull IssueCreationSettings settings = issueCreationSettingsRepository.get(id);
+    IssueCreationSettings settings = issueCreationSettingsRepository.get(id);
     IssueCreationSettingsDto settingsDto =
         new IssueCreationSettingsDto(
             settings, messageFormatter.getMyteamLink(settings.getChatId()));
@@ -161,12 +160,12 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
 
   @Override
   public void deleteSettings(int id) {
-    @NotNull IssueCreationSettings settings = issueCreationSettingsRepository.get(id);
+    IssueCreationSettings settings = issueCreationSettingsRepository.get(id);
     issueCreationSettingsRepository.deleteById(id);
     issueSettingsCache.remove(combineKey(settings.getChatId(), settings.getTag()));
   }
 
-  private void applyDefaultTemplateIfEmpty(@NotNull IssueCreationSettingsDto settings) {
+  private void applyDefaultTemplateIfEmpty(IssueCreationSettingsDto settings) {
     if (StringUtils.isEmpty(settings.getIssueSummaryTemplate()))
       settings.setIssueSummaryTemplate(DEFAULT_ISSUE_SUMMARY_TEMPLATE);
     if (StringUtils.isEmpty(settings.getCreationSuccessTemplate()))
@@ -196,8 +195,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     return settings.stream().map(this::mapAdditionalSettingsInfo).collect(Collectors.toList());
   }
 
-  private @NotNull Optional<IssueCreationSettingsDto> getSettingsByChatIdAndTag(
-      String chatIdAndTag) {
+  private Optional<IssueCreationSettingsDto> getSettingsByChatIdAndTag(String chatIdAndTag) {
     Pair<String, String> key = splitKey(chatIdAndTag);
     return issueCreationSettingsRepository
         .getSettingsByChatIdAndTag(key.first(), key.second())

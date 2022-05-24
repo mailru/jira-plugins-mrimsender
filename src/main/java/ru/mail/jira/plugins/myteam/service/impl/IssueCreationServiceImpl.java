@@ -36,7 +36,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
@@ -124,7 +123,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
     supportedIssueCreationCustomFields.put(epicLink.getClassName(), epicLink);
 
     AssigneeValueHandler assignee = new AssigneeValueHandler(userData, i18nResolver);
-    System.out.println(userData.getUserByMrimLogin("123"));
     supportedIssueCreationCustomFields.put(assignee.getClassName(), assignee);
   }
 
@@ -184,10 +182,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   }
 
   private IssueService.CreateValidationResult validateIssueWithGivenFields(
-      Project project,
-      IssueType issueType,
-      @NotNull Map<Field, String> fields,
-      ApplicationUser user) {
+      Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user) {
 
     IssueInputParameters issueInputParameters =
         issueService.newIssueInputParameters(
@@ -287,12 +282,8 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   }
 
   @Override
-  @NotNull
   public MutableIssue createIssue(
-      Project project,
-      IssueType issueType,
-      @NotNull Map<Field, String> fields,
-      ApplicationUser user)
+      Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user)
       throws IssueCreationValidationException {
     JiraThreadLocalUtils.preCall();
     // need here to because issueService use authenticationContext
@@ -321,12 +312,8 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   }
 
   @Override
-  @NotNull
   public MutableIssue createIssue(
-      String projectKey,
-      String issueTypeId,
-      @NotNull Map<Field, String> fields,
-      ApplicationUser user)
+      String projectKey, String issueTypeId, Map<Field, String> fields, ApplicationUser user)
       throws IssueCreationValidationException, PermissionException, ProjectBannedException {
     Project project = myteamIssueService.getProject(projectKey, user);
     IssueType issueType = myteamIssueService.getIssueType(issueTypeId);
@@ -336,7 +323,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
 
   @Override
   public Issue updateIssueDescription(
-      String description, @NotNull MutableIssue issue, ApplicationUser user) {
+      String description, MutableIssue issue, ApplicationUser user) {
     issue.setDescription(ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis(description));
     return issueManager.updateIssue(user, issue, EventDispatchOption.DO_NOT_DISPATCH, false);
   }

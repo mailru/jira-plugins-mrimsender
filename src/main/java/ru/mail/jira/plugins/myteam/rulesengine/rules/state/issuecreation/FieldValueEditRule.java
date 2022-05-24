@@ -59,7 +59,7 @@ public class FieldValueEditRule extends BaseRule {
     CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field);
 
     try {
-      state.setValue(handler.updateValue(state.getValue(), value));
+      state.setValue(handler.updateValue(state.getValue(), value, event));
     } catch (ValidationException e) {
       userChatService.sendMessageText(
           event.getChatId(),

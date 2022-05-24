@@ -14,10 +14,10 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 
@@ -38,12 +38,12 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public @NotNull FieldInputMessageInfo getMessageInfo(
-      @NotNull Project project,
-      @NotNull IssueType issueType,
-      @NotNull ApplicationUser user,
-      @NotNull Locale locale,
-      @NotNull FillingIssueFieldState state) {
+  public FieldInputMessageInfo getMessageInfo(
+      Project project,
+      IssueType issueType,
+      ApplicationUser user,
+      Locale locale,
+      FillingIssueFieldState state) {
     return FieldInputMessageInfo.builder()
         .message(getInsertFieldMessage(state))
         .buttons(getButtons(state, locale))
@@ -55,7 +55,7 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   private List<List<InlineKeyboardMarkupButton>> getButtons(
-      @NotNull FillingIssueFieldState state, @NotNull Locale locale) {
+      FillingIssueFieldState state, Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     Options options = getOptions((CustomField) state.getField());
 
@@ -93,7 +93,7 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String updateValue(String oldValue, String newValue) {
+  public String updateValue(String oldValue, String newValue, MyteamEvent event) {
 
     if (oldValue.equals(newValue)) return newValue;
 

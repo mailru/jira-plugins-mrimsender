@@ -16,7 +16,6 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
 import java.util.stream.Collectors;
-import org.jetbrains.annotations.NotNull;
 import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
@@ -43,12 +42,12 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public @NotNull FieldInputMessageInfo getMessageInfo(
-      @NotNull Project project,
-      @NotNull IssueType issueType,
-      @NotNull ApplicationUser user,
-      @NotNull Locale locale,
-      @NotNull FillingIssueFieldState state) {
+  public FieldInputMessageInfo getMessageInfo(
+      Project project,
+      IssueType issueType,
+      ApplicationUser user,
+      Locale locale,
+      FillingIssueFieldState state) {
     return FieldInputMessageInfo.builder().message(getInsertFieldMessage(state, locale)).build();
   }
 

@@ -44,7 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -639,7 +638,6 @@ public class MessageFormatter {
     return buttons;
   }
 
-  @NotNull
   public List<InlineKeyboardMarkupButton> getPagerButtonsRow(
       Locale locale, boolean withPrev, boolean withNext) {
     List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>();

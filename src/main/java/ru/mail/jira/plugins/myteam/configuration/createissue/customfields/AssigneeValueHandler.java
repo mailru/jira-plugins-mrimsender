@@ -7,20 +7,17 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.configuration.UserData;
 import ru.mail.jira.plugins.myteam.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.exceptions.ValidationException;
+import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation.FillingIssueFieldState;
 
 public class AssigneeValueHandler implements CreateIssueFieldValueHandler {
   private final UserData userData;
   private final I18nResolver i18nResolver;
-
-  private static final Pattern pattern = Pattern.compile("^@\\[(.+)]$");
 
   public AssigneeValueHandler(UserData userData, I18nResolver i18nResolver) {
     this.userData = userData;
@@ -33,12 +30,12 @@ public class AssigneeValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public @NotNull FieldInputMessageInfo getMessageInfo(
-      @NotNull Project project,
-      @NotNull IssueType issueType,
-      @NotNull ApplicationUser user,
-      @NotNull Locale locale,
-      @NotNull FillingIssueFieldState state) {
+  public FieldInputMessageInfo getMessageInfo(
+      Project project,
+      IssueType issueType,
+      ApplicationUser user,
+      Locale locale,
+      FillingIssueFieldState state) {
     return FieldInputMessageInfo.builder()
         .message(
             i18nResolver.getRawText(
@@ -48,10 +45,13 @@ public class AssigneeValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String updateValue(String value, String newValue) throws ValidationException {
-    Matcher match = pattern.matcher(newValue);
-    if (match.find()) {
-      @Nullable ApplicationUser user = userData.getUserByMrimLogin(match.group(1));
+  public String updateValue(String value, String newValue, MyteamEvent event)
+      throws ValidationException {
+
+    @Nullable String userEmail = Utils.getEmailFromMention(event);
+
+    if (userEmail != null) {
+      @Nullable ApplicationUser user = userData.getUserByMrimLogin(userEmail);
       if (user == null) {
         throw new ValidationException("User not found");
       }

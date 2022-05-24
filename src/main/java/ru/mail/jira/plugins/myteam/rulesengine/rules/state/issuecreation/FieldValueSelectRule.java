@@ -69,7 +69,7 @@ public class FieldValueSelectRule extends BaseRule {
     if (prevState instanceof CreatingIssueState) {
       try {
         ((CreatingIssueState) prevState)
-            .setFieldValue(field, handler.updateValue(state.getValue(), value));
+            .setFieldValue(field, handler.updateValue(state.getValue(), value, event));
       } catch (ValidationException e) {
         userChatService.sendMessageText(
             event.getChatId(),

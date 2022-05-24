@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import net.java.ao.Query;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Repository;
 import ru.mail.jira.plugins.commons.dao.PagingAndSortingRepository;
@@ -26,13 +25,12 @@ public class IssueCreationSettingsRepository
   }
 
   @Override
-  public IssueCreationSettingsDto entityToDto(@NotNull IssueCreationSettings entity) {
+  public IssueCreationSettingsDto entityToDto(IssueCreationSettings entity) {
     return new IssueCreationSettingsDto(entity);
   }
 
   @Override
-  public void updateEntityFromDto(
-      @NotNull IssueCreationSettingsDto dto, @NotNull IssueCreationSettings entity) {
+  public void updateEntityFromDto(IssueCreationSettingsDto dto, IssueCreationSettings entity) {
     ao.executeInTransaction(
         () -> {
           entity.setChatId(dto.getChatId());
