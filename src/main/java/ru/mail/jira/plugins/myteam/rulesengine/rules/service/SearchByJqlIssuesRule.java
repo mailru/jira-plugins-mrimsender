@@ -1,8 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.service;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
@@ -39,13 +37,12 @@ public class SearchByJqlIssuesRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("args") String jql)
-      throws UserNotFoundException, MyteamServerErrorException, IOException {
+      throws MyteamServerErrorException, IOException {
     JqlSearchState newState = new JqlSearchState(userChatService, issueService, jql);
 
     if (jql == null || jql.length() == 0) { // if jql is not provided ask for input
-      ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
       String chatId = event.getChatId();
-      Locale locale = userChatService.getUserLocale(user);
+      Locale locale = userChatService.getUserLocale(event.getUserId());
 
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
       userChatService.sendMessageText(

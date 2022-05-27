@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.atlassian.jira.config.ConstantsManager;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.datetime.DateTimeFormatter;
@@ -39,7 +38,6 @@ public class MessageFormatterTest {
   @Before
   public void init() {
     ApplicationProperties applicationProperties = Mockito.mock(ApplicationProperties.class);
-    ConstantsManager constantsManager = Mockito.mock(ConstantsManager.class);
     DateTimeFormatter dateTimeFormatter = Mockito.mock(DateTimeFormatter.class);
     FieldManager fieldManager = Mockito.mock(FieldManager.class);
     IssueSecurityLevelManager issueSecurityLevelManager =
@@ -65,7 +63,6 @@ public class MessageFormatterTest {
     this.messageFormatter =
         new MessageFormatter(
             applicationProperties,
-            constantsManager,
             dateTimeFormatter,
             fieldManager,
             issueSecurityLevelManager,

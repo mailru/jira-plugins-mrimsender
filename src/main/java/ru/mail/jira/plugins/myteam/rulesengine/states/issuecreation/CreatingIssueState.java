@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
@@ -142,15 +141,7 @@ public class CreatingIssueState extends BotState implements CancelableState {
   @Override
   public void cancel(MyteamEvent event) {
     userChatService.deleteState(event.getChatId());
-
-    ApplicationUser user;
-    try {
-      user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-    } catch (UserNotFoundException e) {
-      log.error(e.getLocalizedMessage(), e);
-      return;
-    }
-    Locale locale = userChatService.getUserLocale(user);
+    Locale locale = userChatService.getUserLocale(event.getChatId());
 
     String msg =
         userChatService.getRawText(

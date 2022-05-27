@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.fields.Field;
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Optional;
 import org.jeasy.rules.annotation.Action;
@@ -58,8 +57,6 @@ public class FieldValueSelectRule extends BaseRule {
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
     }
 
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-
     CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field);
 
     BotState prevState = userChatService.getPrevState(event.getChatId());
@@ -74,7 +71,7 @@ public class FieldValueSelectRule extends BaseRule {
         userChatService.sendMessageText(
             event.getChatId(),
             userChatService.getText(
-                userChatService.getUserLocale(user),
+                userChatService.getUserLocale(event.getChatId()),
                 "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.validationError",
                 e.getLocalizedMessage()));
         rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);

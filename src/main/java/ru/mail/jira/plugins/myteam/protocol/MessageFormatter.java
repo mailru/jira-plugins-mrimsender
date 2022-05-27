@@ -1,7 +1,6 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.protocol;
 
-import com.atlassian.jira.config.ConstantsManager;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
@@ -44,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +61,6 @@ public class MessageFormatter {
   public static final String DELIMITER_STR = "----------";
 
   private final ApplicationProperties applicationProperties;
-  private final ConstantsManager constantsManager;
   private final DateTimeFormatter dateTimeFormatter;
   private final FieldManager fieldManager;
   private final IssueSecurityLevelManager issueSecurityLevelManager;
@@ -78,7 +77,6 @@ public class MessageFormatter {
   @Autowired
   public MessageFormatter(
       @ComponentImport ApplicationProperties applicationProperties,
-      @ComponentImport ConstantsManager constantsManager,
       @ComponentImport DateTimeFormatter dateTimeFormatter,
       @ComponentImport FieldManager fieldManager,
       @ComponentImport IssueSecurityLevelManager issueSecurityLevelManager,
@@ -91,7 +89,6 @@ public class MessageFormatter {
       @ComponentImport AttachmentManager attachmentManager,
       PluginData pluginData) {
     this.applicationProperties = applicationProperties;
-    this.constantsManager = constantsManager;
     this.dateTimeFormatter = dateTimeFormatter;
     this.fieldManager = fieldManager;
     this.issueSecurityLevelManager = issueSecurityLevelManager;
@@ -738,10 +735,8 @@ public class MessageFormatter {
     } else return i18nHelper.getText(messageKey);
   }
 
-  private String formatPriority(Priority priority) {
-    if (priority != null
-        && !priority.getId().equals(constantsManager.getDefaultPriorityObject().getId()))
-      return priority.getNameTranslation(i18nHelper);
+  private String formatPriority(@Nullable Priority priority) {
+    if (priority != null) return priority.getNameTranslation(i18nHelper);
     else return null;
   }
 

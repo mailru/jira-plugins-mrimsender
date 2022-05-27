@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.rulesengine.states;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.CancelableState;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
@@ -25,6 +26,7 @@ public class AssigningIssueState extends BotState implements CancelableState {
 
   @Override
   public void onError(Exception e) {
+    SentryClient.capture(e);
     log.error(e.getLocalizedMessage(), e);
   }
 }

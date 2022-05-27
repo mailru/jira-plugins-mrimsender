@@ -19,8 +19,9 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.Sets;
 import java.util.*;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,9 +35,8 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 
 @Component
+@Slf4j
 public class JiraEventListener implements InitializingBean, DisposableBean {
-  private static final Logger log = Logger.getLogger(JiraEventListener.class);
-
   private final EventPublisher eventPublisher;
   private final GroupManager groupManager;
   private final NotificationFilterManager notificationFilterManager;
@@ -90,10 +90,13 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   public void onIssueEvent(IssueEvent issueEvent) {
     try {
       if (issueEvent.isSendMail()) {
-        Set<ApplicationUser> recipients = new HashSet<>();
 
-        Set<NotificationRecipient> notificationRecipients =
-            Sets.newHashSet(notificationSchemeManager.getRecipients(issueEvent));
+        Set<NotificationRecipient> notificationRecipients = Sets.newHashSet();
+        try {
+          notificationRecipients.addAll(notificationSchemeManager.getRecipients(issueEvent));
+        } catch (Exception e) {
+          log.error("notificationSchemeManager.getRecipients({})", issueEvent, e);
+        }
         NotificationFilterContext context =
             notificationFilterManager.makeContextFrom(
                 JiraNotificationReason.ISSUE_EVENT, issueEvent);
@@ -113,16 +116,17 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
           notificationRecipients.addAll(recipientsFromScheme);
         }
 
-        for (NotificationRecipient notificationRecipient : notificationRecipients) {
-          if (canSendEventToUser(notificationRecipient.getUser(), issueEvent))
-            recipients.add(notificationRecipient.getUser());
-        }
+        Set<ApplicationUser> recipients =
+            notificationRecipients.stream()
+                .map(NotificationRecipient::getUser)
+                .filter(user -> canSendEventToUser(user, issueEvent))
+                .collect(Collectors.toSet());
 
         sendMessage(recipients, issueEvent, issueEvent.getIssue().getKey());
       }
     } catch (Exception e) {
       SentryClient.capture(e);
-      log.error(e.getMessage(), e);
+      log.error("onIssueEvent({})", issueEvent, e);
     }
   }
 
@@ -130,11 +134,12 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   @EventListener
   public void onMentionIssueEvent(MentionIssueEvent mentionIssueEvent) {
     try {
-      List<ApplicationUser> recipients = new ArrayList<>();
-      for (ApplicationUser user : mentionIssueEvent.getToUsers())
-        if (!mentionIssueEvent.getCurrentRecipients().contains(new NotificationRecipient(user)))
-          recipients.add(user);
-      sendMessage(recipients, mentionIssueEvent, mentionIssueEvent.getIssue().getKey());
+      sendMessage(
+          mentionIssueEvent.getRecipients().stream()
+              .map(NotificationRecipient::getUser)
+              .collect(Collectors.toSet()),
+          mentionIssueEvent,
+          mentionIssueEvent.getIssue().getKey());
     } catch (Exception e) {
       SentryClient.capture(e);
       log.error(e.getMessage(), e);
@@ -153,14 +158,14 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
       groupName = issueEvent.getComment().getGroupLevel();
     }
 
-    if (!permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issue, user))
+    if (!permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issue, user)) {
       return false;
-    if (groupName != null && !groupManager.isUserInGroup(user, groupName)) return false;
-    if (projectRole != null
-        && !projectRoleManager.isUserInProjectRole(user, projectRole, issue.getProjectObject()))
+    }
+    if (groupName != null && !groupManager.isUserInGroup(user, groupName)) {
       return false;
-
-    return true;
+    }
+    return projectRole == null
+        || projectRoleManager.isUserInProjectRole(user, projectRole, issue.getProjectObject());
   }
 
   private void sendMessage(Collection<ApplicationUser> recipients, Object event, String issueKey) {

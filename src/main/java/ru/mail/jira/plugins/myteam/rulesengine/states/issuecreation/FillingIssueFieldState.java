@@ -5,6 +5,7 @@ import com.atlassian.jira.issue.fields.Field;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
@@ -66,6 +67,7 @@ public class FillingIssueFieldState extends BotState
 
   @Override
   public void onError(Exception e) {
+    SentryClient.capture(e);
     log.error(e.getLocalizedMessage(), e);
   }
 

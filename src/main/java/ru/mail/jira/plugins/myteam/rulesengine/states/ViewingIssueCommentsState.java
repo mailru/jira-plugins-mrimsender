@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.states;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.issue.comments.Comment;
@@ -107,7 +106,7 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
       rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e);
     } catch (IssueNotFoundException e) {
       rulesEngine.fireError(ErrorRuleType.IssueNotFound, event, e);
-    } catch (MyteamServerErrorException | IOException | UserNotFoundException e) {
+    } catch (MyteamServerErrorException | IOException e) {
       log.error(e.getLocalizedMessage(), e);
     }
   }

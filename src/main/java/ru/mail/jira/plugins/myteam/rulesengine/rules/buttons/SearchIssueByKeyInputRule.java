@@ -1,8 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.buttons;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
@@ -34,9 +32,8 @@ public class SearchIssueByKeyInputRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") ButtonClickEvent event)
-      throws UserNotFoundException, MyteamServerErrorException, IOException {
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    Locale locale = userChatService.getUserLocale(user);
+      throws MyteamServerErrorException, IOException {
+    Locale locale = userChatService.getUserLocale(event.getUserId());
 
     String message =
         userChatService.getRawText(

@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.commands.issue;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.issue.Issue;
@@ -50,14 +49,12 @@ public class ViewIssueCommandRule extends BaseRule {
       @Fact("event") MyteamEvent event,
       @Fact("args") String issueKey,
       @Fact("isGroup") boolean isGroup)
-      throws MyteamServerErrorException, IOException, UserNotFoundException {
+      throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     if (issueKey.length() > 0 && user != null) {
       String chatId = event.getChatId();
       try {
-        Issue issue =
-            issueService.getIssueByUser(
-                issueKey, userChatService.getJiraUserFromUserChatId(event.getUserId()));
+        Issue issue = issueService.getIssueByUser(issueKey, user);
 
         userChatService.sendMessageText(
             chatId,
