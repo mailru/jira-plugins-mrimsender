@@ -1,25 +1,13 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.service.model;
 
-import java.util.List;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@XmlRootElement
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class FieldInfo {
-  @XmlElement private String id;
-  @XmlElement private String name;
-  @XmlElement private String value;
-  @XmlElement private List<String> values;
-  @XmlElement private String html;
+  private final String name;
+  private final String value;
+  private final String html;
 
   public FieldInfo(String name, String value, String html) {
     this.name = name;
