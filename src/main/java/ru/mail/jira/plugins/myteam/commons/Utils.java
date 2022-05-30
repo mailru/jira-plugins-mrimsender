@@ -9,8 +9,8 @@ import java.util.StringJoiner;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Mention;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Part;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 
 public class Utils {
 

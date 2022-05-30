@@ -15,8 +15,8 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.RestFieldException;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.repository.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.response.AdminsResponse;
+import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.AdminsResponse;
 
 @Slf4j
 @Component

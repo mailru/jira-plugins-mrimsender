@@ -41,11 +41,11 @@ import ru.mail.jira.plugins.myteam.controller.dto.ChatMemberDto;
 import ru.mail.jira.plugins.myteam.controller.dto.ChatMetaDto;
 import ru.mail.jira.plugins.myteam.db.model.MyteamChatMeta;
 import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
-import ru.mail.jira.plugins.myteam.repository.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.ChatInfoResponse;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.ChatMember;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.ChatMemberId;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.CreateChatResponse;
+import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Controller

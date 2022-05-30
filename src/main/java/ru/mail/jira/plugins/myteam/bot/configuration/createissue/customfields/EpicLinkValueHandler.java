@@ -25,7 +25,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.core.Pager;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation.FillingIssueFieldState;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
 public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
 

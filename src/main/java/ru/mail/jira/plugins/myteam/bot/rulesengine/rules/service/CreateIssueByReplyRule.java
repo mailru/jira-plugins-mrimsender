@@ -32,9 +32,9 @@ import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.User;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Forward;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Reply;
+import ru.mail.jira.plugins.myteam.myteam.dto.User;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
 import ru.mail.jira.plugins.myteam.service.*;
 
 @Slf4j

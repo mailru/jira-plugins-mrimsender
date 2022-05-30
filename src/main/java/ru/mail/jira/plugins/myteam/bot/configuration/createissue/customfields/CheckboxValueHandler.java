@@ -19,7 +19,7 @@ import ru.mail.jira.plugins.myteam.bot.configuration.createissue.FieldInputMessa
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation.FillingIssueFieldState;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
 public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
 

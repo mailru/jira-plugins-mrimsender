@@ -3,7 +3,7 @@ package ru.mail.jira.plugins.myteam.bot.events;
 
 import java.util.List;
 import lombok.Getter;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
 @Getter
 public class JiraNotifyEvent extends MyteamEvent {

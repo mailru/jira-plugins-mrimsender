@@ -13,8 +13,8 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.LinkIssueWi
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.response.MessageResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
 
 public interface UserChatService {
 

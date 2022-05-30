@@ -17,16 +17,16 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.repository.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.repository.myteam.MyteamApiClientImpl;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.events.CallbackQueryEvent;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.events.IcqEvent;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.events.NewMessageEvent;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.File;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Forward;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Mention;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Part;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.response.FetchResponse;
+import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
+import ru.mail.jira.plugins.myteam.myteam.MyteamApiClientImpl;
+import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
+import ru.mail.jira.plugins.myteam.myteam.dto.events.IcqEvent;
+import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.File;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Ignore

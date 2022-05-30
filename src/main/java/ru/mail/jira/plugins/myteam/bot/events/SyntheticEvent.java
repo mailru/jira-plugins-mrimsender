@@ -1,7 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.bot.events;
 
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.ChatType;
+import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 
 public class SyntheticEvent extends MyteamEvent {
 

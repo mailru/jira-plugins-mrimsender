@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.mail.jira.plugins.myteam.repository.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.repository.myteam.MyteamEventsFetcher;
+import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
+import ru.mail.jira.plugins.myteam.myteam.MyteamEventsFetcher;
 
 @Slf4j
 @Component

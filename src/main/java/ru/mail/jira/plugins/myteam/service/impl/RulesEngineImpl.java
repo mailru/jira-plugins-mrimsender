@@ -29,7 +29,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.jqlsearch.JqlInpu
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.EmptyState;
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.ChatType;
+import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 import ru.mail.jira.plugins.myteam.service.IssueService;

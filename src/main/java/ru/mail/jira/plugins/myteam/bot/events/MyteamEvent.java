@@ -3,7 +3,7 @@ package ru.mail.jira.plugins.myteam.bot.events;
 
 import lombok.*;
 import org.jetbrains.annotations.Nullable;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.ChatType;
+import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

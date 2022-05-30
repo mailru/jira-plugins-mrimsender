@@ -2,8 +2,8 @@
 package ru.mail.jira.plugins.myteam.bot.events;
 
 import lombok.Getter;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.ChatType;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.events.CallbackQueryEvent;
+import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
+import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 
 @Getter
 public class ButtonClickEvent extends MyteamEvent {

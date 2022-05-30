@@ -19,13 +19,13 @@ import org.junit.Ignore;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.repository.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.repository.myteam.MyteamApiClientImpl;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.SuccessResponse;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.events.CallbackQueryEvent;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.response.FetchResponse;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.response.MessageResponse;
+import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
+import ru.mail.jira.plugins.myteam.myteam.MyteamApiClientImpl;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.SuccessResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 public class MyteamApiClientImplTest {

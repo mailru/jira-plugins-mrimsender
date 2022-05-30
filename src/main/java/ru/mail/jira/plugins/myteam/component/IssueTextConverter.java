@@ -21,9 +21,9 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.repository.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.*;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.response.FileResponse;
+import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.*;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
 
 @Slf4j
 @Component

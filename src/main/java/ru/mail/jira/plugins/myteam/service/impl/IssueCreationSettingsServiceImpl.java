@@ -29,9 +29,9 @@ import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.db.model.IssueCreationSettings;
 import ru.mail.jira.plugins.myteam.db.repository.IssueCreationSettingsRepository;
-import ru.mail.jira.plugins.myteam.repository.myteam.MyteamApiClient;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.ChatInfoResponse;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.GroupChatInfo;
+import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.GroupChatInfo;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
 @Service

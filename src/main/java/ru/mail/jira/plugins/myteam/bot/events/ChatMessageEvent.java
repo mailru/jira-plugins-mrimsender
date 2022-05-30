@@ -4,13 +4,13 @@ package ru.mail.jira.plugins.myteam.bot.events;
 import java.util.List;
 import lombok.Getter;
 import lombok.ToString;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.ChatType;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.User;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.events.NewMessageEvent;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Forward;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Mention;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Part;
-import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Reply;
+import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
+import ru.mail.jira.plugins.myteam.myteam.dto.User;
+import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Mention;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
+import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
 
 @Getter
 @ToString
