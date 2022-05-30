@@ -12,7 +12,7 @@ import ru.mail.jira.plugins.myteam.bot.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.myteam.bot.listeners.MyteamEventsListener;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.UserData;
-import ru.mail.jira.plugins.myteam.service.MyteamService;
+import ru.mail.jira.plugins.myteam.protocol.MyteamService;
 
 @Service
 public class MyteamServiceImpl implements MyteamService {
