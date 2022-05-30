@@ -48,7 +48,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationVa
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
-import ru.mail.jira.plugins.myteam.service.dto.FieldDto;
+import ru.mail.jira.plugins.myteam.service.model.FieldInfo;
 
 @Service
 public class IssueCreationServiceImpl implements IssueCreationService, InitializingBean {
@@ -335,7 +335,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
   }
 
   @Override
-  public List<FieldDto> getRequiredFields(
+  public List<FieldInfo> getRequiredFields(
       String projectKey, String issueTypeId, ApplicationUser user)
       throws PermissionException, ProjectBannedException {
     Project project = myteamIssueService.getProject(projectKey, user);
@@ -346,7 +346,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Initializ
             project, issueType, new HashSet<>(), new HashSet<>(), IssueFieldsFilter.REQUIRED);
 
     return fields.keySet().stream()
-        .map(field -> new FieldDto(field.getName(), "", field.getName()))
+        .map(field -> new FieldInfo(field.getName(), "", field.getName()))
         .collect(Collectors.toList());
   }
 

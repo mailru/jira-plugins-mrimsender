@@ -1,5 +1,5 @@
 /* (C)2022 */
-package ru.mail.jira.plugins.myteam.service.dto;
+package ru.mail.jira.plugins.myteam.service.model;
 
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
@@ -14,14 +14,14 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class FieldDto {
+public class FieldInfo {
   @XmlElement private String id;
   @XmlElement private String name;
   @XmlElement private String value;
   @XmlElement private List<String> values;
   @XmlElement private String html;
 
-  public FieldDto(String name, String value, String html) {
+  public FieldInfo(String name, String value, String html) {
     this.name = name;
     this.value = value;
     this.html = html;

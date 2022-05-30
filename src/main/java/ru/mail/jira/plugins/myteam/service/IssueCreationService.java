@@ -18,7 +18,7 @@ import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueT
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
-import ru.mail.jira.plugins.myteam.service.dto.FieldDto;
+import ru.mail.jira.plugins.myteam.service.model.FieldInfo;
 
 public interface IssueCreationService {
   /**
@@ -63,7 +63,7 @@ public interface IssueCreationService {
 
   boolean isFieldSupported(String fieldId);
 
-  List<FieldDto> getRequiredFields(String projectKey, String issueTypeId, ApplicationUser user)
+  List<FieldInfo> getRequiredFields(String projectKey, String issueTypeId, ApplicationUser user)
       throws PermissionException, ProjectBannedException;
 
   Field getField(String fieldId);
