@@ -48,7 +48,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
         HttpClientBuilder.create()
             .setServiceUnavailableRetryStrategy(
                 new ServiceUnavailableRetryStrategy() {
-                  private int interval = 1;
+                  private long interval = 100;
 
                   @Override
                   public boolean retryRequest(
@@ -67,7 +67,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
                   @Override
                   public long getRetryInterval() {
-                    final int retryInterval = interval;
+                    final long retryInterval = interval;
                     interval *= 2;
                     return retryInterval;
                   }
