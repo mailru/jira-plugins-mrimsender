@@ -15,6 +15,8 @@ import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.LinkIssueWithChatException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.PermissionHelper;
@@ -25,8 +27,6 @@ import ru.mail.jira.plugins.myteam.repository.myteam.dto.InlineKeyboardMarkupBut
 import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.GroupChatInfo;
 import ru.mail.jira.plugins.myteam.repository.myteam.dto.response.MessageResponse;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.LinkIssueWithChatException;
-import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.StateManager;
 import ru.mail.jira.plugins.myteam.service.UserChatService;

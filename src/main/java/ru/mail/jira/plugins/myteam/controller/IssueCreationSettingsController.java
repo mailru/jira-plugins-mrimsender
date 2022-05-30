@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.springframework.stereotype.Controller;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.SettingsTagAlreadyExistsException;
 import ru.mail.jira.plugins.myteam.component.PermissionHelper;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.SettingsTagAlreadyExistsException;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
 @Controller

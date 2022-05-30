@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.SettingsTagAlreadyExistsException;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
@@ -31,7 +32,6 @@ import ru.mail.jira.plugins.myteam.db.repository.IssueCreationSettingsRepository
 import ru.mail.jira.plugins.myteam.repository.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.GroupChatInfo;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.SettingsTagAlreadyExistsException;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
 @Service

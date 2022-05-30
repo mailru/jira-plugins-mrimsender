@@ -3,8 +3,8 @@ package ru.mail.jira.plugins.myteam.service;
 
 import java.util.List;
 import org.jetbrains.annotations.Nullable;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.SettingsTagAlreadyExistsException;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.SettingsTagAlreadyExistsException;
 
 public interface IssueCreationSettingsService {
 

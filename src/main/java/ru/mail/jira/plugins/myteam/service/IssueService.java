@@ -17,9 +17,9 @@ import java.util.Collection;
 import java.util.List;
 import javax.naming.NoPermissionException;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AssigneeChangeValidationException;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.AssigneeChangeValidationException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueWatchingException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
 
 public interface IssueService {
 
