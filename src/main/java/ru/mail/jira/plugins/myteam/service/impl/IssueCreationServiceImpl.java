@@ -35,17 +35,17 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
+import ru.mail.jira.plugins.myteam.bot.configuration.createissue.customfields.*;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IncorrectIssueTypeException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueCreationValidationException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.commons.Utils;
-import ru.mail.jira.plugins.myteam.configuration.UserData;
-import ru.mail.jira.plugins.myteam.configuration.createissue.customfields.*;
-import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IncorrectIssueTypeException;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueCreationValidationException;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
+import ru.mail.jira.plugins.myteam.component.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
-import ru.mail.jira.plugins.myteam.service.dto.FieldDto;
+import ru.mail.jira.plugins.myteam.service.model.FieldInfo;
 
 @Service
 @ExportAsService(LifecycleAware.class)
@@ -336,7 +336,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
   }
 
   @Override
-  public List<FieldDto> getRequiredFields(
+  public List<FieldInfo> getRequiredFields(
       String projectKey, String issueTypeId, ApplicationUser user)
       throws PermissionException, ProjectBannedException {
     Project project = myteamIssueService.getProject(projectKey, user);
@@ -347,7 +347,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
             project, issueType, new HashSet<>(), new HashSet<>(), IssueFieldsFilter.REQUIRED);
 
     return fields.keySet().stream()
-        .map(field -> new FieldDto(field.getName(), "", field.getName()))
+        .map(field -> new FieldInfo(field.getName(), "", field.getName()))
         .collect(Collectors.toList());
   }
 

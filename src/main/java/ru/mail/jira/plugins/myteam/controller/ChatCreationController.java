@@ -32,20 +32,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ru.mail.jira.plugins.myteam.configuration.UserData;
+import ru.mail.jira.plugins.myteam.bot.events.JiraIssueViewEvent;
+import ru.mail.jira.plugins.myteam.bot.listeners.MyteamEventsListener;
+import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.controller.dto.ChatCreationDataDto;
 import ru.mail.jira.plugins.myteam.controller.dto.ChatMemberDto;
 import ru.mail.jira.plugins.myteam.controller.dto.ChatMetaDto;
-import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.model.MyteamChatMeta;
+import ru.mail.jira.plugins.myteam.db.model.MyteamChatMeta;
+import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMember;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
-import ru.mail.jira.plugins.myteam.protocol.events.JiraIssueViewEvent;
-import ru.mail.jira.plugins.myteam.protocol.listeners.MyteamEventsListener;
-import ru.mail.jira.plugins.myteam.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Controller

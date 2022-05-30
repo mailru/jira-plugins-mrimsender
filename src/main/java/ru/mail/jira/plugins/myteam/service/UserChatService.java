@@ -9,12 +9,12 @@ import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import org.jetbrains.annotations.Nullable;
-import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.LinkIssueWithChatException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
-import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
-import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.LinkIssueWithChatException;
-import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 
 public interface UserChatService {
 

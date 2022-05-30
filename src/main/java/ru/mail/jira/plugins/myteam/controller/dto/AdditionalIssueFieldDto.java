@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlElement;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.mail.jira.plugins.myteam.model.AdditionalIssueField;
+import ru.mail.jira.plugins.myteam.db.model.AdditionalIssueField;
 
 @Getter
 @Setter

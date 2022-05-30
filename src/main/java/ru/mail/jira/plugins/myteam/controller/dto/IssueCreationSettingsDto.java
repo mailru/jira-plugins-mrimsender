@@ -10,7 +10,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import lombok.*;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.commons.IssueReporter;
-import ru.mail.jira.plugins.myteam.model.IssueCreationSettings;
+import ru.mail.jira.plugins.myteam.db.model.IssueCreationSettings;
 
 @Getter
 @Setter

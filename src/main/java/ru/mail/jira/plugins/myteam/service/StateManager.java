@@ -2,7 +2,7 @@
 package ru.mail.jira.plugins.myteam.service;
 
 import javax.annotation.Nullable;
-import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 
 public interface StateManager {
 

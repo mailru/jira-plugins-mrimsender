@@ -7,29 +7,29 @@ import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.RulesEngineParameters;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.core.RulesEngine;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ErrorRuleType;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons.*;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.HelpCommandRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.MenuCommandRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.admin.IssueCreationSettingsCommand;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.*;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNoPermissionErrorRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNotFoundErrorRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CreateIssueByReplyRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.DefaultMessageRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.SearchByJqlIssuesRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.assignissue.AssignIssueInputRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuecomment.IssueCommentInputRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuecreation.*;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuesearch.IssueKeyInputRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.jqlsearch.JqlInputRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.EmptyState;
+import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
-import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.core.RulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.*;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.HelpCommandRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.MenuCommandRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.admin.IssueCreationSettingsCommand;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.commands.issue.*;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNoPermissionErrorRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.errors.IssueNotFoundErrorRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.service.CreateIssueByReplyRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.service.DefaultMessageRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.service.SearchByJqlIssuesRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.state.assignissue.AssignIssueInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment.IssueCommentInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation.*;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuesearch.IssueKeyInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.rules.state.jqlsearch.JqlInputRule;
-import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
-import ru.mail.jira.plugins.myteam.rulesengine.states.base.EmptyState;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 import ru.mail.jira.plugins.myteam.service.IssueService;
@@ -48,19 +48,19 @@ public class RulesEngineImpl
   private final UserChatService userChatService;
   private final IssueService issueService;
   private final IssueCreationSettingsService issueCreationSettingsService;
-  private final Utils utils;
+  private final IssueTextConverter issueTextConverter;
 
   public RulesEngineImpl(
       IssueCreationService issueCreationService,
       UserChatService userChatService,
       IssueService issueService,
       IssueCreationSettingsService issueCreationSettingsService,
-      Utils utils) {
+      IssueTextConverter issueTextConverter) {
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
     this.issueService = issueService;
     this.issueCreationSettingsService = issueCreationSettingsService;
-    this.utils = utils;
+    this.issueTextConverter = issueTextConverter;
 
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
@@ -118,7 +118,7 @@ public class RulesEngineImpl
             issueCreationSettingsService,
             issueCreationService,
             issueService,
-            utils));
+            issueTextConverter));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));

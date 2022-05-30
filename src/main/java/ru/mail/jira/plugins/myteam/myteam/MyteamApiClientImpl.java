@@ -1,17 +1,25 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.myteam;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import javax.annotation.Nonnull;
 import kong.unirest.*;
+import kong.unirest.apache.ApacheClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.ServiceUnavailableRetryStrategy;
 import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.protocol.HttpContext;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.HttpClient;
-import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.commons.JacksonObjectMapper;
+import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.BotMetaInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.*;
@@ -24,6 +32,7 @@ import ru.mail.jira.plugins.myteam.service.PluginData;
 public class MyteamApiClientImpl implements MyteamApiClient {
   private final ObjectMapper objectMapper;
   private final PluginData pluginData;
+  private final UnirestInstance retryClient;
   private String apiToken;
   private String botApiUrl;
   private String botId;
@@ -34,6 +43,47 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     this.pluginData = pluginData;
     this.apiToken = pluginData.getToken();
     this.botApiUrl = pluginData.getBotApiUrl();
+
+    retryClient = Unirest.spawnInstance();
+
+    CloseableHttpClient apacheClient =
+        HttpClientBuilder.create()
+            .setServiceUnavailableRetryStrategy(
+                new ServiceUnavailableRetryStrategy() {
+                  private long interval = 100;
+
+                  @Override
+                  public boolean retryRequest(
+                      org.apache.http.HttpResponse response,
+                      int executionCount,
+                      HttpContext context) {
+                    if (executionCount > 3) {
+                      return false;
+                    }
+                    if (response.getStatusLine() == null) {
+                      return true;
+                    }
+                    final int statusCode = response.getStatusLine().getStatusCode();
+                    return statusCode == HttpStatus.GATEWAY_TIMEOUT;
+                  }
+
+                  @Override
+                  public long getRetryInterval() {
+                    final long retryInterval = interval;
+                    interval *= 2;
+                    return retryInterval;
+                  }
+                })
+            .build();
+
+    retryClient
+        .config()
+        .connectTimeout(10000)
+        .socketTimeout(300000)
+        .setObjectMapper(new JacksonObjectMapper())
+        .httpClient(new ApacheClient(apacheClient, HttpClient.getPrimaryClient().config()));
+
+    HttpClient.getPrimaryClient().shutDown();
   }
 
   @Override
@@ -50,7 +100,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     HttpResponse<MessageResponse> response;
     if (inlineKeyboardMarkup == null)
       response =
-          HttpClient.getPrimaryClient()
+          retryClient
               .post(botApiUrl + "/messages/sendText")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", apiToken)
@@ -60,7 +110,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .asObject(MessageResponse.class);
     else
       response =
-          HttpClient.getPrimaryClient()
+          retryClient
               .post(botApiUrl + "/messages/sendText")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", apiToken)
@@ -83,7 +133,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   public HttpResponse<StatusResponse> deleteMessages(String chatId, List<Long> messagesId)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<StatusResponse> response =
-        HttpClient.getPrimaryClient()
+        retryClient
             .get(botApiUrl + "/messages/deleteMessages")
             .queryString("token", apiToken)
             .queryString("chatId", chatId)
@@ -97,7 +147,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   public HttpResponse<FetchResponse> getEvents(long lastEventId, long pollTime)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<FetchResponse> response =
-        HttpClient.getPrimaryClient()
+        retryClient
             .get(botApiUrl + "/events/get")
             .queryString("token", apiToken)
             .queryString("lastEventId", lastEventId)
@@ -111,7 +161,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   public HttpResponse<AdminsResponse> getAdmins(String chatId)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<AdminsResponse> response =
-        HttpClient.getPrimaryClient()
+        retryClient
             .get(botApiUrl + "/chats/getAdmins")
             .queryString("token", apiToken)
             .queryString("chatId", chatId)
@@ -125,7 +175,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       String queryId, String text, boolean showAlert, String url)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<JsonNode> response =
-        HttpClient.getPrimaryClient()
+        retryClient
             .get(botApiUrl + "/messages/answerCallbackQuery")
             .queryString("token", apiToken)
             .queryString("queryId", queryId)
@@ -147,13 +197,18 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   public HttpResponse<FileResponse> getFile(String fileId)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<FileResponse> response =
-        HttpClient.getPrimaryClient()
+        retryClient
             .get(botApiUrl + "/files/getInfo")
             .queryString("token", apiToken)
             .queryString("fileId", fileId)
             .asObject(FileResponse.class);
     checkMyteamServerErrorException(response, "getFile");
     return response;
+  }
+
+  @Override
+  public InputStream loadUrlFile(String url) throws UnirestException {
+    return new ByteArrayInputStream(HttpClient.getPrimaryClient().get(url).asBytes().getBody());
   }
 
   @Override
@@ -166,7 +221,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     HttpResponse<MessageResponse> response;
     if (inlineKeyboardMarkup == null)
       response =
-          HttpClient.getPrimaryClient()
+          retryClient
               .post(botApiUrl + "/messages/editText")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", apiToken)
@@ -177,7 +232,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .asObject(MessageResponse.class);
     else
       response =
-          HttpClient.getPrimaryClient()
+          retryClient
               .post(botApiUrl + "/messages/editText")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", apiToken)
@@ -201,7 +256,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       throws IOException, UnirestException, MyteamServerErrorException {
     if (members.size() > 0 && members.size() <= 30) {
       MultipartBody postBody =
-          HttpClient.getPrimaryClient()
+          retryClient
               .post(botApiUrl + "/chats/createChat")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", creatorBotToken)
@@ -224,7 +279,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       @Nonnull String botToken, String chatId, String about)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<SuccessResponse> response =
-        HttpClient.getPrimaryClient()
+        retryClient
             .get(botApiUrl + "/chats/setAbout")
             .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
             .queryString("token", botToken)
@@ -239,7 +294,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   public HttpResponse<ChatInfoResponse> getChatInfo(@Nonnull String chatId)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<ChatInfoResponse> response =
-        HttpClient.getPrimaryClient()
+        retryClient
             .post(botApiUrl + "/chats/getInfo")
             .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
             .field("token", apiToken)
@@ -302,7 +357,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
   @Override
   public HttpResponse<ChatMember> getMembers(@Nonnull String chatId) throws UnirestException {
-    return HttpClient.getPrimaryClient()
+    return retryClient
         .post(botApiUrl + "/chats/getMembers")
         .header("Accept", "application/json")
         .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
@@ -314,7 +369,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   @Override
   public HttpResponse<BotMetaInfo> getSelfInfo()
       throws UnirestException, MyteamServerErrorException {
-    return HttpClient.getPrimaryClient()
+    return retryClient
         .post(botApiUrl + "/self/get")
         .header("Accept", "application/json")
         .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())

@@ -1,9 +1,9 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service;
 
-import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
-import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
+import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ErrorRuleType;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 
 public interface RulesEngine {
 

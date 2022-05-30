@@ -1,6 +1,6 @@
 Class BotsOrchestrationService
 ==============================
-ru.mail.jira.plugins.myteam.protocol.BotsOrchestrationService
+ru.mail.jira.plugins.myteam.bot.BotsOrchestrationService
 Summary
 -------
 #### Constructors
