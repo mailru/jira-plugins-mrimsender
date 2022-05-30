@@ -13,9 +13,9 @@
 
     <!-- Active Objects -->
     <ao key="ao-entities">
-        <entity>ru.mail.jira.plugins.myteam.model.MyteamChatMeta</entity>
-        <entity>ru.mail.jira.plugins.myteam.model.IssueCreationSettings</entity>
-        <entity>ru.mail.jira.plugins.myteam.model.AdditionalIssueField</entity>
+        <entity>ru.mail.jira.plugins.myteam.db.model.MyteamChatMeta</entity>
+        <entity>ru.mail.jira.plugins.myteam.db.model.IssueCreationSettings</entity>
+        <entity>ru.mail.jira.plugins.myteam.db.model.AdditionalIssueField</entity>
 
         <upgradeTask>ru.mail.jira.plugins.myteam.upgrades.Version2UpgradeTask</upgradeTask>
     </ao>

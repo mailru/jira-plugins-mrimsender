@@ -6,17 +6,19 @@ import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
-import ru.mail.jira.plugins.myteam.commons.Utils;
-import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
-import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
+import org.jetbrains.annotations.Nullable;
+import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.repository.myteam.dto.ChatType;
+import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Forward;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
@@ -27,6 +29,9 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
     name = "Default message",
     description = "Shows issue if message contains Issue key otherwise shows menu")
 public class DefaultMessageRule extends BaseRule {
+
+  private static final Pattern pattern =
+      Pattern.compile("[A-Z][A-Z\\d]+-[\\d]+", Pattern.CASE_INSENSITIVE);
 
   public DefaultMessageRule(UserChatService userChatService, RulesEngine rulesEngine) {
     super(userChatService, rulesEngine);
@@ -52,11 +57,11 @@ public class DefaultMessageRule extends BaseRule {
     if (forwards != null) {
       Forward forward = forwards.get(0);
       String forwardMessageText = forward.getMessage().getText();
-      String issueKey = Utils.findIssueKeyInStr(forwardMessageText);
+      String issueKey = findIssueKeyInStr(forwardMessageText);
       if (fireViewIssueResult(event, issueKey)) return;
     }
 
-    String issueKey = Utils.findIssueKeyInStr(((ChatMessageEvent) event).getMessage());
+    String issueKey = findIssueKeyInStr(((ChatMessageEvent) event).getMessage());
     if (fireViewIssueResult(event, issueKey)) return;
     userChatService.sendMessageText(
         chatId,
@@ -80,5 +85,14 @@ public class DefaultMessageRule extends BaseRule {
             .map(part -> (Forward) part)
             .collect(Collectors.toList())
         : null;
+  }
+
+  @Nullable
+  private static String findIssueKeyInStr(@Nullable String str) {
+    if (str == null) {
+      return null;
+    }
+    Matcher result = pattern.matcher(str);
+    return result.find() ? result.group(0) : null;
   }
 }

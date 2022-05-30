@@ -1,6 +1,6 @@
 Interface MyteamService
 =======================
-ru.mail.jira.plugins.myteam.protocol.MyteamService
+ru.mail.jira.plugins.myteam.service.MyteamService
 Summary
 -------
 #### Methods

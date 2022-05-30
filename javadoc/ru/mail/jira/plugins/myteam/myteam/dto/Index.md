@@ -1,4 +1,4 @@
-Package ru.mail.jira.plugins.myteam.myteam.dto
+Package ru.mail.jira.plugins.myteam.repository.myteam.dto
 ==============================================
 Enumerations
 ============

@@ -22,16 +22,16 @@ import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.commons.SentryClient;
+import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.commons.IssueReporter;
+import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
+import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
-import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.myteam.dto.User;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
-import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
-import ru.mail.jira.plugins.myteam.protocol.MessageFormatter;
-import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
+import ru.mail.jira.plugins.myteam.repository.myteam.dto.User;
+import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Forward;
+import ru.mail.jira.plugins.myteam.repository.myteam.dto.parts.Reply;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
@@ -52,7 +52,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final IssueCreationService issueCreationService;
   private final IssueService issueService;
-  private final Utils utils;
+  private final IssueTextConverter issueTextConverter;
 
   public CreateIssueByReplyRule(
       UserChatService userChatService,
@@ -60,12 +60,12 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       IssueCreationSettingsService issueCreationSettingsService,
       IssueCreationService issueCreationService,
       IssueService issueService,
-      Utils utils) {
+      IssueTextConverter issueTextConverter) {
     super(userChatService, rulesEngine);
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.issueCreationService = issueCreationService;
     this.issueService = issueService;
-    this.utils = utils;
+    this.issueTextConverter = issueTextConverter;
   }
 
   @Condition
@@ -246,7 +246,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
               }
 
               if (issue != null) {
-                text = utils.convertToJiraDescriptionStyle(p, issue);
+                text = issueTextConverter.convertToJiraDescriptionStyle(p, issue);
               }
 
               builder.append(messageFormatter.formatMyteamUserLink(user));

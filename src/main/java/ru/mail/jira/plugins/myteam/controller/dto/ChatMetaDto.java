@@ -9,10 +9,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChannelChatInfo;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.GroupChatInfo;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.PrivateChatInfo;
+import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.ChannelChatInfo;
+import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.ChatInfoResponse;
+import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.GroupChatInfo;
+import ru.mail.jira.plugins.myteam.repository.myteam.dto.chats.PrivateChatInfo;
 
 @AllArgsConstructor
 @XmlRootElement

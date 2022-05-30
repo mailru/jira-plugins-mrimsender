@@ -19,7 +19,7 @@
 
     <webwork1 key="myteam-configuration-action" class="java.lang.Object">
         <actions>
-            <action name="ru.mail.jira.plugins.myteam.configuration.MyteamConfigurationAction" alias="MyteamConfiguration" roles-required="admin">
+            <action name="ru.mail.jira.plugins.myteam.commons.actions.MyteamConfigurationAction" alias="MyteamConfiguration" roles-required="admin">
                 <view name="input">/ru/mail/jira/plugins/myteam/configuration/myteam-configuration-page.vm</view>
             </action>
         </actions>
@@ -37,12 +37,12 @@
 
     <webwork1 key="chat-settings-app-action" class="java.lang.Object">
         <actions>
-            <action name="ru.mail.jira.plugins.myteam.actions.ChatAdminAction" alias="ChatSetting" roles-required="use">
+            <action name="ru.mail.jira.plugins.myteam.commons.actions.ChatAdminAction" alias="ChatSetting" roles-required="use">
                 <view name="success">ru/mail/jira/plugins/myteam/configuration/chat-settings.vm</view>
                 <view name="securitybreach">/secure/views/securitybreach.jsp</view>
             </action>
 
-            <action name="ru.mail.jira.plugins.myteam.actions.ProjectChatAdminAction" alias="ProjectChatAdminAction" roles-required="use">
+            <action name="ru.mail.jira.plugins.myteam.commons.actions.ProjectChatAdminAction" alias="ProjectChatAdminAction" roles-required="use">
                 <view name="success">ru/mail/jira/plugins/myteam/configuration/project-chat-settings.vm</view>
                 <view name="securitybreach">/secure/views/securitybreach.jsp</view>
             </action>
@@ -57,13 +57,13 @@
 
 
     <web-panel key="myteam-profile-panel" location="webpanels.user.profile.summary.custom" weight="10">
-        <condition class="ru.mail.jira.plugins.myteam.configuration.MyteamProfilePanelCondition" />
-        <context-provider class="ru.mail.jira.plugins.myteam.configuration.MyteamProfilePanel" />
+        <condition class="ru.mail.jira.plugins.myteam.commons.conditions.MyteamProfilePanelCondition" />
+        <context-provider class="ru.mail.jira.plugins.myteam.controller.MyteamProfilePanel" />
         <resource type="velocity" name="view" location="ru/mail/jira/plugins/myteam/configuration/myteam-profile-panel.vm" />
     </web-panel>
 
     <web-panel key="myteam-chat-creation-panel" location="atl.jira.view.issue.right.context" weight="200">
-        <condition class="ru.mail.jira.plugins.myteam.configuration.MyteamCreateChatPanelCondition"/>
+        <condition class="ru.mail.jira.plugins.myteam.commons.conditions.MyteamCreateChatPanelCondition"/>
         <label key="ru.mail.jira.plugins.myteam.createChat.panel"/>
         <resource name="view" type="static"><![CDATA[<div id="myteam-chat-creation-panel-container">MyTeam chat creation panel container here</div>]]></resource>
         <resource type="download" name="icon" location="/ru/mail/jira/plugins/myteam/images/myteam.ico"/>

@@ -6,7 +6,7 @@ import com.atlassian.activeobjects.external.ActiveObjectsUpgradeTask;
 import com.atlassian.activeobjects.external.ModelVersion;
 import com.atlassian.sal.api.transaction.TransactionCallback;
 import lombok.extern.slf4j.Slf4j;
-import ru.mail.jira.plugins.myteam.model.IssueCreationSettings;
+import ru.mail.jira.plugins.myteam.db.model.IssueCreationSettings;
 
 @Slf4j
 public class Version2UpgradeTask implements ActiveObjectsUpgradeTask {

@@ -5,7 +5,7 @@ import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
-import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.rulesengine.states.JqlSearchState;

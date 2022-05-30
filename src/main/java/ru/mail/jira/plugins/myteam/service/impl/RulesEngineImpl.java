@@ -6,10 +6,10 @@ import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.RulesEngineParameters;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
-import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
-import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
+import ru.mail.jira.plugins.myteam.repository.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.rulesengine.core.RulesEngine;
-import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.rulesengine.rules.buttons.*;
@@ -46,19 +46,19 @@ public class RulesEngineImpl
   private final UserChatService userChatService;
   private final IssueService issueService;
   private final IssueCreationSettingsService issueCreationSettingsService;
-  private final Utils utils;
+  private final IssueTextConverter issueTextConverter;
 
   public RulesEngineImpl(
       IssueCreationService issueCreationService,
       UserChatService userChatService,
       IssueService issueService,
       IssueCreationSettingsService issueCreationSettingsService,
-      Utils utils) {
+      IssueTextConverter issueTextConverter) {
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
     this.issueService = issueService;
     this.issueCreationSettingsService = issueCreationSettingsService;
-    this.utils = utils;
+    this.issueTextConverter = issueTextConverter;
 
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
@@ -116,7 +116,7 @@ public class RulesEngineImpl
             issueCreationSettingsService,
             issueCreationService,
             issueService,
-            utils));
+            issueTextConverter));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));

@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.Rule;
 import ru.mail.jira.plugins.commons.SentryClient;
-import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 

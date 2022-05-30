@@ -1,7 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.states;
 
-import static ru.mail.jira.plugins.myteam.protocol.MessageFormatter.LIST_PAGE_SIZE;
+import static ru.mail.jira.plugins.myteam.component.MessageFormatter.LIST_PAGE_SIZE;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.ParseException;
@@ -14,10 +14,10 @@ import java.util.List;
 import java.util.Locale;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import ru.mail.jira.plugins.myteam.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.protocol.events.ButtonClickEvent;
-import ru.mail.jira.plugins.myteam.protocol.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.bot.events.ButtonClickEvent;
+import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
+import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.repository.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.CancelableState;
 import ru.mail.jira.plugins.myteam.rulesengine.states.base.PageableState;

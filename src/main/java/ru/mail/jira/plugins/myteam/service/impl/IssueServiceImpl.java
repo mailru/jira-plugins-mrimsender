@@ -36,9 +36,9 @@ import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
-import ru.mail.jira.plugins.myteam.configuration.UserData;
-import ru.mail.jira.plugins.myteam.protocol.events.ChatMessageEvent;
-import ru.mail.jira.plugins.myteam.rulesengine.core.Utils;
+import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
+import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
+import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.AssigneeChangeValidationException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.rulesengine.models.exceptions.ProjectBannedException;
@@ -58,7 +58,7 @@ public class IssueServiceImpl implements IssueService {
   private final IssueTypeSchemeManager issueTypeSchemeManager;
   private final IssueTypeManager issueTypeManager;
   private final JiraAuthenticationContext jiraAuthenticationContext;
-  private final Utils utils;
+  private final IssueTextConverter issueTextConverter;
   private final UserData userData;
   private final PluginData pluginData;
   private final String JIRA_BASE_URL;
@@ -76,7 +76,7 @@ public class IssueServiceImpl implements IssueService {
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport ApplicationProperties applicationProperties,
       UserData userData,
-      Utils utils,
+      IssueTextConverter issueTextConverter,
       PluginData pluginData) {
     this.jiraIssueService = jiraIssueService;
     this.issueManager = issueManager;
@@ -89,7 +89,7 @@ public class IssueServiceImpl implements IssueService {
     this.issueTypeManager = issueTypeManager;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.userData = userData;
-    this.utils = utils;
+    this.issueTextConverter = issueTextConverter;
     this.pluginData = pluginData;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
   }
@@ -186,7 +186,7 @@ public class IssueServiceImpl implements IssueService {
           commentManager.create(
               commentedIssue,
               user,
-              utils.convertToJiraCommentStyle(event, user, commentedIssue),
+              issueTextConverter.convertToJiraCommentStyle(event, user, commentedIssue),
               true);
         } else {
           throw new NoPermissionException();
