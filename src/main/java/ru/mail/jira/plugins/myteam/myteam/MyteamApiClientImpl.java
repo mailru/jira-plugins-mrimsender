@@ -5,8 +5,13 @@ import java.io.IOException;
 import java.util.List;
 import javax.annotation.Nonnull;
 import kong.unirest.*;
+import kong.unirest.apache.ApacheClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.protocol.HttpContext;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -24,6 +29,7 @@ import ru.mail.jira.plugins.myteam.service.PluginData;
 public class MyteamApiClientImpl implements MyteamApiClient {
   private final ObjectMapper objectMapper;
   private final PluginData pluginData;
+  private final UnirestInstance retryClient;
   private String apiToken;
   private String botApiUrl;
   private String botId;
@@ -34,6 +40,30 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     this.pluginData = pluginData;
     this.apiToken = pluginData.getToken();
     this.botApiUrl = pluginData.getBotApiUrl();
+    Unirest.config().reset();
+    retryClient = Unirest.spawnInstance();
+
+    HttpRequestRetryHandler retryHandler =
+        new HttpRequestRetryHandler() {
+          @Override
+          public boolean retryRequest(IOException e, int executionCount, HttpContext httpContext) {
+            // wait a second before retrying again
+            //          Thread.sleep(1000)
+            System.out.println("TEST\n " + executionCount);
+            return executionCount <= 3;
+          }
+        };
+    CloseableHttpClient apacheClient =
+        HttpClientBuilder.create().setRetryHandler(retryHandler).build();
+
+    //    ApacheClient.builder(HttpClients.createDefault()).apply(a);
+
+    //    ApacheClient.builder().withRequestConfig()
+
+    retryClient.config().reset().httpClient(new ApacheClient(apacheClient, Unirest.config()));
+    //        .setObjectMapper(Unirest.primaryInstance().config().getObjectMapper())
+    //        .connectTimeout(Unirest.primaryInstance().config().getConnectionTimeout())
+    //        .socketTimeout(Unirest.primaryInstance().config().getSocketTimeout());
   }
 
   @Override
@@ -50,7 +80,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     HttpResponse<MessageResponse> response;
     if (inlineKeyboardMarkup == null)
       response =
-          HttpClient.getPrimaryClient()
+          retryClient
               .post(botApiUrl + "/messages/sendText")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", apiToken)
@@ -60,8 +90,8 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .asObject(MessageResponse.class);
     else
       response =
-          HttpClient.getPrimaryClient()
-              .post(botApiUrl + "/messages/sendText")
+          retryClient
+              .post("http://mockserver.dev-traefik.jiradev.cloud.devmail.ru" + "/messages/sendText")
               .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
               .field("token", apiToken)
               .field("chatId", chatId)
