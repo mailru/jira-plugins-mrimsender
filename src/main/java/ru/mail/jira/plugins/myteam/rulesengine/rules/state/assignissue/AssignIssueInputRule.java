@@ -46,7 +46,7 @@ public class AssignIssueInputRule extends BaseRule {
       @Fact("event") ChatMessageEvent event,
       @Fact("state") AssigningIssueState state,
       @Fact("args") String userMention)
-      throws UserNotFoundException, MyteamServerErrorException, IOException {
+      throws MyteamServerErrorException, IOException {
 
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
     Locale locale = userChatService.getUserLocale(user);

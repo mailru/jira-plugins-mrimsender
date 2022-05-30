@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
@@ -48,7 +47,7 @@ public class ConfirmIssueCreationRule extends BaseRule {
   @Action
   public void execute(
       @Fact("event") ButtonClickEvent event, @Fact("state") CreatingIssueState state)
-      throws MyteamServerErrorException, IOException, UserNotFoundException {
+      throws MyteamServerErrorException, IOException {
 
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
     Locale locale = userChatService.getUserLocale(user);

@@ -1,8 +1,6 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.commands.issue;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
@@ -35,12 +33,10 @@ public class AssignIssueCommandRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("args") String issueKey)
-      throws UserNotFoundException, MyteamServerErrorException, IOException {
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-
+      throws MyteamServerErrorException, IOException {
     userChatService.setState(event.getChatId(), new AssigningIssueState(issueKey, userChatService));
 
-    Locale locale = userChatService.getUserLocale(user);
+    Locale locale = userChatService.getUserLocale(event.getUserId());
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(

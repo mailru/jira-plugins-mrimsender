@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecomment;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
@@ -42,7 +41,7 @@ public class IssueCommentInputRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") ChatMessageEvent event)
-      throws MyteamServerErrorException, IOException, UserNotFoundException {
+      throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
 
     CommentingIssueState state = (CommentingIssueState) userChatService.getState(event.getChatId());

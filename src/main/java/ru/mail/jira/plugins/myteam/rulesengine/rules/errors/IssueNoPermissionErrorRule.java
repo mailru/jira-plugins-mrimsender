@@ -2,7 +2,6 @@
 package ru.mail.jira.plugins.myteam.rulesengine.rules.errors;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
@@ -36,12 +35,10 @@ public class IssueNoPermissionErrorRule extends BaseRule {
       throws UserNotFoundException, MyteamServerErrorException, IOException {
     log.error(e.getLocalizedMessage(), e);
 
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(
-            userChatService.getUserLocale(user),
+            userChatService.getUserLocale(event.getUserId()),
             "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
   }
 }

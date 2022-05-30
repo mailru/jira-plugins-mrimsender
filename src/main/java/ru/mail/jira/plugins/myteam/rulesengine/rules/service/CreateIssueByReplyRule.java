@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.rulesengine.rules.service;
 
 import static ru.mail.jira.plugins.myteam.commons.Const.*;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.MutableIssue;
@@ -146,13 +145,10 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
             String.join(",", settings.getLabels()));
       }
 
-      ApplicationUser reporterJiraUser;
-      try {
-        reporterJiraUser =
-            userChatService.getJiraUserFromUserChatId(firstMessageReporter.getUserId());
-      } catch (UserNotFoundException e) {
-        reporterJiraUser = initiator;
-      }
+      ApplicationUser reporterJiraUser =
+          Optional.ofNullable(
+                  userChatService.getJiraUserFromUserChatId(firstMessageReporter.getUserId()))
+              .orElse(initiator);
 
       MutableIssue issue =
           issueCreationService.createIssue(
@@ -168,14 +164,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
       if (settings.getAddReporterInWatchers()) {
         reporters.stream() // add watchers
-            .map(
-                u -> {
-                  try {
-                    return userChatService.getJiraUserFromUserChatId(u.getUserId());
-                  } catch (UserNotFoundException e) {
-                    return null;
-                  }
-                })
+            .map(u -> userChatService.getJiraUserFromUserChatId(u.getUserId()))
             .filter(Objects::nonNull)
             .forEach(user -> issueService.watchIssue(issue, user));
       }

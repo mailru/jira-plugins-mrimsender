@@ -1,9 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.state.issuecreation;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.fields.Field;
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -48,13 +46,12 @@ public class FieldValueEditRule extends BaseRule {
       @Fact("event") MyteamEvent event,
       @Fact("state") FillingIssueFieldState state,
       @Fact("args") String value)
-      throws MyteamServerErrorException, IOException, UserNotFoundException {
+      throws MyteamServerErrorException, IOException {
 
     Field field = state.getField();
     if (event instanceof ButtonClickEvent) {
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
     }
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
 
     CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field);
 
@@ -64,7 +61,7 @@ public class FieldValueEditRule extends BaseRule {
       userChatService.sendMessageText(
           event.getChatId(),
           userChatService.getText(
-              userChatService.getUserLocale(user),
+              userChatService.getUserLocale(event.getChatId()),
               "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.validationError",
               e.getLocalizedMessage()));
     } finally {

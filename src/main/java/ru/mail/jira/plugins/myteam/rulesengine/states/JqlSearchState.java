@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.rulesengine.states;
 
 import static ru.mail.jira.plugins.myteam.component.MessageFormatter.LIST_PAGE_SIZE;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.ParseException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.search.SearchException;
@@ -14,6 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
@@ -54,13 +54,7 @@ public class JqlSearchState extends BotState implements PageableState, Cancelabl
 
   @Override
   public void updatePage(MyteamEvent event, boolean editMessage) {
-    ApplicationUser user;
-    try {
-      user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    } catch (UserNotFoundException e) {
-      log.error(e.getLocalizedMessage(), e);
-      return;
-    }
+    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     Locale locale = userChatService.getUserLocale(user);
 
     try {
@@ -115,6 +109,7 @@ public class JqlSearchState extends BotState implements PageableState, Cancelabl
 
   @Override
   public void onError(Exception e) {
+    SentryClient.capture(e);
     log.error(e.getLocalizedMessage(), e);
   }
 }

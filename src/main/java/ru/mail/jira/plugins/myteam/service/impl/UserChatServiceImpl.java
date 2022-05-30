@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.issue.Issue;
@@ -69,10 +68,8 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
-  public ApplicationUser getJiraUserFromUserChatId(String id) throws UserNotFoundException {
-    ApplicationUser user = userData.getUserByMrimLogin(id);
-    if (user == null) throw new UserNotFoundException(id);
-    return user;
+  public ApplicationUser getJiraUserFromUserChatId(String id) {
+    return userData.getUserByMrimLogin(id);
   }
 
   @Override
@@ -94,8 +91,8 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
-  public Locale getUserLocale(String userId) throws UserNotFoundException {
-    return localeManager.getLocaleFor(getJiraUserFromUserChatId(userId));
+  public Locale getUserLocale(String userId) {
+    return getUserLocale(getJiraUserFromUserChatId(userId));
   }
 
   @Override

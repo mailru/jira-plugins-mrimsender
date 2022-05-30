@@ -1,9 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.project.Project;
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -53,15 +51,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
 
   @Override
   public void updatePage(MyteamEvent event, boolean editMessage) {
-
-    ApplicationUser user;
-    try {
-      user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-    } catch (UserNotFoundException e) {
-      log.error(e.getLocalizedMessage(), e);
-      return;
-    }
-    Locale locale = userChatService.getUserLocale(user);
+    Locale locale = userChatService.getUserLocale(event.getChatId());
 
     List<Project> allowedProjectList = issueService.getAllowedProjects();
 
@@ -106,8 +96,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
   @Override
   public void cancel(MyteamEvent event) {
     try {
-      ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-      Locale locale = userChatService.getUserLocale(user);
+      Locale locale = userChatService.getUserLocale(event.getChatId());
 
       String msg =
           userChatService.getRawText(
@@ -120,7 +109,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
         userChatService.sendMessageText(event.getChatId(), msg);
       }
       userChatService.deleteState(event.getChatId());
-    } catch (MyteamServerErrorException | IOException | UserNotFoundException e) {
+    } catch (MyteamServerErrorException | IOException e) {
       log.error(e.getLocalizedMessage(), e);
     }
   }

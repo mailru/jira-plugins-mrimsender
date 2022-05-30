@@ -1,11 +1,9 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.states.issuecreation;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -77,15 +75,7 @@ public class SelectingIssueAdditionalFieldsState extends BotState
 
   @Override
   public void updatePage(MyteamEvent event, boolean editMessage) {
-
-    ApplicationUser user;
-    try {
-      user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-    } catch (UserNotFoundException e) {
-      log.error(e.getLocalizedMessage(), e);
-      return;
-    }
-    Locale locale = userChatService.getUserLocale(user);
+    Locale locale = userChatService.getUserLocale(event.getChatId());
 
     LinkedHashMap<Field, String> nonRequiredFields =
         issueCreationService.getIssueCreationFieldsValues(

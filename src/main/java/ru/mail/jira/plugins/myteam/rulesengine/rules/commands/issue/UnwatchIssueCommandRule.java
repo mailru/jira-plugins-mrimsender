@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.rules.commands.issue;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.user.ApplicationUser;
@@ -43,7 +42,7 @@ public class UnwatchIssueCommandRule extends BaseRule {
 
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("args") String issueKey)
-      throws MyteamServerErrorException, IOException, UserNotFoundException {
+      throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();
     Locale locale = userChatService.getUserLocale(user);

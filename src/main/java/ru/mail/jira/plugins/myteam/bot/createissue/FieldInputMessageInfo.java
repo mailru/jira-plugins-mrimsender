@@ -9,6 +9,7 @@ import ru.mail.jira.plugins.myteam.repository.myteam.dto.InlineKeyboardMarkupBut
 
 @Getter
 @Builder
+@SuppressWarnings("MissingSummary")
 public class FieldInputMessageInfo {
   private final String message;
   @Nullable private final List<List<InlineKeyboardMarkupButton>> buttons;

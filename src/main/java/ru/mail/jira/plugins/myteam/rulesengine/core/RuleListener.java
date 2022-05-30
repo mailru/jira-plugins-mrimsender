@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.rulesengine.core;
 
-import com.atlassian.crowd.exception.UserNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +59,7 @@ public class RuleListener implements org.jeasy.rules.api.RuleListener {
                   userChatService.getUserLocale(event.getUserId()),
                   "ru.mail.jira.plugins.myteam.chat.adminPermissionsRequired",
                   userChatService.getGroupChatName(event.getChatId())));
-        } catch (MyteamServerErrorException | IOException | UserNotFoundException e) {
+        } catch (MyteamServerErrorException | IOException e) {
           log.error(e.getLocalizedMessage(), e);
         }
       }
