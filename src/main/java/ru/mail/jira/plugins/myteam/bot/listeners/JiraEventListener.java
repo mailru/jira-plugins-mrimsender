@@ -18,8 +18,6 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.Sets;
-import java.util.*;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.DisposableBean;
@@ -33,6 +31,9 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleT
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -134,12 +135,16 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   @EventListener
   public void onMentionIssueEvent(MentionIssueEvent mentionIssueEvent) {
     try {
-      sendMessage(
-          mentionIssueEvent.getRecipients().stream()
-              .map(NotificationRecipient::getUser)
-              .collect(Collectors.toSet()),
-          mentionIssueEvent,
-          mentionIssueEvent.getIssue().getKey());
+      List<ApplicationUser> recipients = new ArrayList<>();
+      for (ApplicationUser user : mentionIssueEvent.getToUsers()) {
+        if (mentionIssueEvent.getCurrentRecipients() != null
+            && !mentionIssueEvent
+                .getCurrentRecipients()
+                .contains(new NotificationRecipient(user))) {
+          recipients.add(user);
+        }
+      }
+      sendMessage(recipients, mentionIssueEvent, mentionIssueEvent.getIssue().getKey());
     } catch (Exception e) {
       SentryClient.capture(e);
       log.error(e.getMessage(), e);
