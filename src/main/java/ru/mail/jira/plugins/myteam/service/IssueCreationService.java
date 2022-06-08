@@ -18,7 +18,6 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueCreati
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
-import ru.mail.jira.plugins.myteam.service.model.FieldInfo;
 
 public interface IssueCreationService {
   /**
@@ -48,9 +47,6 @@ public interface IssueCreationService {
   List<Field> getIssueFields(Project project, ApplicationUser user, String issueTypeId)
       throws UnsupportedCustomFieldsException, IncorrectIssueTypeException;
 
-  LinkedHashMap<Field, String> getRequiredIssueFields(
-      Project project, ApplicationUser user, String issueTypeId);
-
   MutableIssue createIssue(
       Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user)
       throws IssueCreationValidationException;
@@ -59,12 +55,12 @@ public interface IssueCreationService {
       String projectKey, String issueTypeId, Map<Field, String> fields, ApplicationUser user)
       throws IssueCreationValidationException, PermissionException, ProjectBannedException;
 
+  void addIssueChatLink(Issue issue, String title, String link, ApplicationUser user)
+      throws IssueCreationValidationException;
+
   Issue updateIssueDescription(String description, MutableIssue issue, ApplicationUser user);
 
   boolean isFieldSupported(String fieldId);
-
-  List<FieldInfo> getRequiredFields(String projectKey, String issueTypeId, ApplicationUser user)
-      throws PermissionException, ProjectBannedException;
 
   Field getField(String fieldId);
 }

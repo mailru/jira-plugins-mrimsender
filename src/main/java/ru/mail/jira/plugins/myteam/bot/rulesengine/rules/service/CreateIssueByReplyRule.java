@@ -159,6 +159,9 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                   ? reporterJiraUser
                   : initiator);
 
+      issueCreationService.addIssueChatLink(
+          issue, settings.getChatTitle(), settings.getChatLink(), initiator);
+
       issueCreationService.updateIssueDescription(
           getIssueDescription(event, issue), issue, reporterJiraUser);
 
