@@ -8,6 +8,7 @@ import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -83,7 +84,6 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
     return isGroup
         && NAME.equalsName(command)
         && event instanceof ChatMessageEvent
-        && (((ChatMessageEvent) event).isHasReply() || ((ChatMessageEvent) event).isHasForwards())
         && settings != null;
   }
 
@@ -101,7 +101,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
       List<User> reporters = getReportersFromEventParts(event);
 
-      User firstMessageReporter = reporters.get(0);
+      User firstMessageReporter = reporters.size() > 0 ? reporters.get(0) : event.getFrom();
 
       initiator = userChatService.getJiraUserFromUserChatId(event.getUserId());
 
@@ -204,6 +204,9 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
   }
 
   private List<User> getReportersFromEventParts(ChatMessageEvent event) {
+    if (event.getMessageParts() == null) {
+      return ImmutableList.of();
+    }
     return event.getMessageParts().stream()
         .filter(p -> (p instanceof Reply || p instanceof Forward))
         .map(
@@ -217,39 +220,42 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
   private String getIssueDescription(ChatMessageEvent event, Issue issue) {
     StringBuilder builder = new StringBuilder();
 
-    event.getMessageParts().stream()
-        .filter(part -> (part instanceof Reply || part instanceof Forward))
-        .forEach(
-            p -> {
-              User user;
-              long timestamp;
-              String text;
-              if (p instanceof Reply) {
-                user = ((Reply) p).getMessage().getFrom();
-                timestamp = ((Reply) p).getMessage().getTimestamp();
-                text = ((Reply) p).getPayload().getMessage().getText();
-              } else {
-                user = ((Forward) p).getMessage().getFrom();
-                timestamp = ((Forward) p).getMessage().getTimestamp();
-                text = ((Forward) p).getPayload().getMessage().getText();
-              }
+    if (event.getMessageParts() != null) {
+      event.getMessageParts().stream()
+          .filter(part -> (part instanceof Reply || part instanceof Forward))
+          .forEach(
+              p -> {
+                User user;
+                long timestamp;
+                String text;
+                if (p instanceof Reply) {
+                  user = ((Reply) p).getMessage().getFrom();
+                  timestamp = ((Reply) p).getMessage().getTimestamp();
+                  text = ((Reply) p).getPayload().getMessage().getText();
+                } else {
+                  user = ((Forward) p).getMessage().getFrom();
+                  timestamp = ((Forward) p).getMessage().getTimestamp();
+                  text = ((Forward) p).getPayload().getMessage().getText();
+                }
 
-              if (issue != null) {
-                text = issueTextConverter.convertToJiraDescriptionStyle(p, issue);
-              }
+                if (issue != null) {
+                  text = issueTextConverter.convertToJiraDescriptionStyle(p, issue);
+                }
 
-              builder.append(messageFormatter.formatMyteamUserLink(user));
-              builder
-                  .append("(")
-                  .append(
-                      formatter.format(
-                          LocalDateTime.ofInstant(
-                              Instant.ofEpochSecond(timestamp), TimeZone.getDefault().toZoneId())))
-                  .append("):\n")
-                  .append("\n{quote} ");
-              builder.append(text);
-              builder.append(" {quote}\n\n");
-            });
+                builder.append(messageFormatter.formatMyteamUserLink(user));
+                builder
+                    .append("(")
+                    .append(
+                        formatter.format(
+                            LocalDateTime.ofInstant(
+                                Instant.ofEpochSecond(timestamp),
+                                TimeZone.getDefault().toZoneId())))
+                    .append("):\n")
+                    .append("\n{quote} ");
+                builder.append(text);
+                builder.append(" {quote}\n\n");
+              });
+    }
     return builder.toString();
   }
 
