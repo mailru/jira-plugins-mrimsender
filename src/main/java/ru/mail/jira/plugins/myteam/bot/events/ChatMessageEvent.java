@@ -4,6 +4,7 @@ package ru.mail.jira.plugins.myteam.bot.events;
 import java.util.List;
 import lombok.Getter;
 import lombok.ToString;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
@@ -18,7 +19,7 @@ public class ChatMessageEvent extends MyteamEvent {
   private final String message;
   private final Long messageId;
   private final User from;
-  private final List<Part> messageParts;
+  @Nullable private final List<Part> messageParts;
   private final boolean hasForwards;
   private final boolean hasReply;
   private final boolean hasMentions;
