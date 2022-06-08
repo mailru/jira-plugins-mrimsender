@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.service.impl;
 
 import com.atlassian.greenhopper.api.customfield.ManagedCustomFieldsService;
 import com.atlassian.jira.bc.issue.IssueService;
+import com.atlassian.jira.bc.issue.link.RemoteIssueLinkService;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.LocaleManager;
@@ -20,11 +21,13 @@ import com.atlassian.jira.issue.fields.layout.field.FieldLayoutManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenLayoutItem;
 import com.atlassian.jira.issue.fields.screen.issuetype.IssueTypeScreenSchemeManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
+import com.atlassian.jira.issue.link.RemoteIssueLinkBuilder;
 import com.atlassian.jira.issue.operation.IssueOperations;
 import com.atlassian.jira.issue.search.constants.SystemSearchConstants;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.util.ErrorCollection;
 import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
@@ -45,7 +48,6 @@ import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
-import ru.mail.jira.plugins.myteam.service.model.FieldInfo;
 
 @Service
 @ExportAsService(LifecycleAware.class)
@@ -63,6 +65,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
   private final OptionsManager optionsManager;
   private final PrioritySchemeManager prioritySchemeManager;
   private final SearchService searchService;
+  private final RemoteIssueLinkService remoteIssueLinkService;
   private final ManagedCustomFieldsService managedCustomFieldsService;
   private final UserData userData;
   private final HashMap<String, CreateIssueFieldValueHandler> supportedIssueCreationCustomFields;
@@ -83,6 +86,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
       @ComponentImport OptionsManager optionsManager,
       @ComponentImport PrioritySchemeManager prioritySchemeManager,
       @ComponentImport SearchService searchService,
+      @ComponentImport RemoteIssueLinkService remoteIssueLinkService,
       @ComponentImport ManagedCustomFieldsService managedCustomFieldsService,
       UserData userData,
       MessageFormatter messageFormatter,
@@ -96,6 +100,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
     this.issueManager = issueManager;
     this.issueService = issueService;
     this.searchService = searchService;
+    this.remoteIssueLinkService = remoteIssueLinkService;
     this.managedCustomFieldsService = managedCustomFieldsService;
     this.userData = userData;
     this.messageFormatter = messageFormatter;
@@ -275,14 +280,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
   }
 
   @Override
-  public LinkedHashMap<Field, String> getRequiredIssueFields(
-      Project project, ApplicationUser user, String issueTypeId) {
-    IssueType issueType = myteamIssueService.getIssueType(issueTypeId);
-    return getIssueCreationFieldsValues(
-        project, issueType, new HashSet<>(), new HashSet<>(), IssueFieldsFilter.REQUIRED);
-  }
-
-  @Override
   public MutableIssue createIssue(
       Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user)
       throws IssueCreationValidationException {
@@ -323,6 +320,28 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
   }
 
   @Override
+  public void addIssueChatLink(Issue issue, String title, String link, ApplicationUser user)
+      throws IssueCreationValidationException {
+    RemoteIssueLinkBuilder linkBuilder = new RemoteIssueLinkBuilder();
+
+    linkBuilder.url(link);
+    linkBuilder.title(
+        i18nResolver.getText(
+            localeManager.getLocaleFor(user),
+            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.createdInChat",
+            title));
+    linkBuilder.issueId(issue.getId());
+
+    RemoteIssueLinkService.CreateValidationResult createValidationResult =
+        remoteIssueLinkService.validateCreate(user, linkBuilder.build());
+
+    if (createValidationResult.isValid()) {
+      RemoteIssueLinkService.RemoteIssueLinkResult linkResult =
+          remoteIssueLinkService.create(user, createValidationResult);
+    }
+  }
+
+  @Override
   public Issue updateIssueDescription(
       String description, MutableIssue issue, ApplicationUser user) {
     issue.setDescription(ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis(description));
@@ -333,22 +352,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
   public boolean isFieldSupported(String fieldId) {
     CustomField field = fieldManager.getCustomField(fieldId);
     return field != null && !getFieldValueHandler(field).equals(defaultHandler);
-  }
-
-  @Override
-  public List<FieldInfo> getRequiredFields(
-      String projectKey, String issueTypeId, ApplicationUser user)
-      throws PermissionException, ProjectBannedException {
-    Project project = myteamIssueService.getProject(projectKey, user);
-    IssueType issueType = myteamIssueService.getIssueType(issueTypeId);
-
-    LinkedHashMap<Field, String> fields =
-        getIssueCreationFieldsValues(
-            project, issueType, new HashSet<>(), new HashSet<>(), IssueFieldsFilter.REQUIRED);
-
-    return fields.keySet().stream()
-        .map(field -> new FieldInfo(field.getName(), "", field.getName()))
-        .collect(Collectors.toList());
   }
 
   @Override
