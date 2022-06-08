@@ -335,21 +335,9 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
     RemoteIssueLinkService.CreateValidationResult createValidationResult =
         remoteIssueLinkService.validateCreate(user, linkBuilder.build());
 
-    ErrorCollection errors = null;
-
     if (createValidationResult.isValid()) {
       RemoteIssueLinkService.RemoteIssueLinkResult linkResult =
           remoteIssueLinkService.create(user, createValidationResult);
-      if (!linkResult.isValid()) {
-        errors = linkResult.getErrorCollection();
-      }
-    } else {
-      errors = createValidationResult.getErrorCollection();
-    }
-
-    if (errors != null) {
-      throw new IssueCreationValidationException(
-          "Unable to create issue with provided fields", errors);
     }
   }
 
