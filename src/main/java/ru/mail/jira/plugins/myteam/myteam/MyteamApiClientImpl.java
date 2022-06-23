@@ -99,28 +99,15 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   public HttpResponse<MessageResponse> sendMessageText(
       String chatId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException, MyteamServerErrorException {
-    HttpResponse<MessageResponse> response;
-    if (inlineKeyboardMarkup == null)
-      response =
-          retryClient
-              .post(botApiUrl + "/messages/sendText")
-              .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
-              .field("token", apiToken)
-              .field("chatId", chatId)
-              .field("text", text)
-              .field("parseMode", "MarkdownV2")
-              .asObject(MessageResponse.class);
-    else
-      response =
-          retryClient
-              .post(botApiUrl + "/messages/sendText")
-              .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
-              .field("token", apiToken)
-              .field("chatId", chatId)
-              .field("text", text)
-              .field("parseMode", "MarkdownV2")
-              .field("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
-              .asObject(MessageResponse.class);
+    
+    HttpResponse<MessageResponse> response = sendMessage(chatId, text, inlineKeyboardMarkup, true);
+
+    if (response.getBody() != null
+        && !response.getBody().isOk()
+        && response.getBody().getDescription().equals("Format error")) {
+      sendMessage(chatId, text, inlineKeyboardMarkup, false);
+    }
+
     checkMyteamSendTextErrorException(response, chatId, text);
     return response;
   }
@@ -245,6 +232,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
               .field("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup))
               .asObject(MessageResponse.class);
     checkMyteamSendTextErrorException(response, chatId, text);
+
     return response;
   }
 
@@ -328,6 +316,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   void checkMyteamSendTextErrorException(
       HttpResponse<MessageResponse> response, String chatId, String text)
       throws MyteamServerErrorException {
+
     if (response.getStatus() >= 500 || response.getBody() == null || !response.getBody().isOk()) {
       MyteamServerErrorException newException =
           new MyteamServerErrorException(
@@ -394,5 +383,29 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     } catch (MyteamServerErrorException e) {
       log.error("Unable to get bot self meta data", e);
     }
+  }
+
+  private HttpResponse<MessageResponse> sendMessage(
+      String chatId,
+      String text,
+      List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup,
+      boolean isMarkdown)
+      throws IOException {
+    MultipartBody req =
+        retryClient
+            .post(botApiUrl + "/messages/sendText")
+            .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
+            .field("token", apiToken)
+            .field("chatId", chatId)
+            .field("text", text);
+
+    if (isMarkdown) {
+      req.field("parseMode", "MarkdownV2");
+    }
+
+    if (inlineKeyboardMarkup != null) {
+      req.field("inlineKeyboardMarkup", objectMapper.writeValueAsString(inlineKeyboardMarkup));
+    }
+    return req.asObject(MessageResponse.class);
   }
 }
