@@ -27,7 +27,7 @@ public class BotsOrchestrationService implements LifecycleAware {
   private final ClusterMessagingService clusterMessagingService;
   private final MyteamBot myteamBot;
   private final MessageConsumer messageConsumer;
-  private final ExecutorService executorService =
+  private static final ExecutorService executorService =
       Executors.newSingleThreadExecutor(
           new ThreadFactoryBuilder().setNameFormat(ORCHESTRATION_SERVICE_THREAD_PREFIX).build());
 

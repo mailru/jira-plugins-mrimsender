@@ -1,17 +1,10 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.bot.listeners;
 
-import static ru.mail.jira.plugins.myteam.commons.Const.CHAT_COMMAND_PREFIX;
-import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
-
 import com.google.common.base.Splitter;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -24,14 +17,22 @@ import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static ru.mail.jira.plugins.myteam.commons.Const.CHAT_COMMAND_PREFIX;
+import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
+
 @Slf4j
 @Component
 public class MyteamEventsListener {
-  private static final String THREAD_NAME_PREFIX = "icq-events-listener-thread-pool";
+  private static final String THREAD_NAME_PREFIX = "icq-events-listener-%d";
 
-  private final ExecutorService executorService =
+  private static final ExecutorService executorService =
       Executors.newFixedThreadPool(
-          2, new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX).build());
+          4, new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX).build());
   private final AsyncEventBus asyncEventBus;
   private final MyteamApiClient myteamApiClient;
   private final RulesEngine rulesEngine;

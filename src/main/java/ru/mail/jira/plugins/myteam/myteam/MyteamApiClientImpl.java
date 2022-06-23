@@ -1,11 +1,6 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.myteam;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import javax.annotation.Nonnull;
 import kong.unirest.*;
 import kong.unirest.apache.ApacheClient;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +18,15 @@ import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException
 import ru.mail.jira.plugins.myteam.myteam.dto.BotMetaInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.*;
-import ru.mail.jira.plugins.myteam.myteam.dto.response.*;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FileResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.*;
 import ru.mail.jira.plugins.myteam.service.PluginData;
+
+import javax.annotation.Nonnull;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -48,6 +49,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
     CloseableHttpClient apacheClient =
         HttpClientBuilder.create()
+            .setRetryHandler((exception, executionCount, context) -> executionCount <= 3)
             .setServiceUnavailableRetryStrategy(
                 new ServiceUnavailableRetryStrategy() {
                   private long interval = 100;
@@ -78,10 +80,10 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
     retryClient
         .config()
-        .connectTimeout(10000)
-        .socketTimeout(300000)
+        .connectTimeout(3_000)
+        .socketTimeout(2_000)
         .setObjectMapper(new JacksonObjectMapper())
-        .httpClient(new ApacheClient(apacheClient, HttpClient.getPrimaryClient().config()));
+        .httpClient(new ApacheClient(apacheClient, retryClient.config()));
 
     HttpClient.getPrimaryClient().shutDown();
   }

@@ -25,7 +25,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
 @Component
 public class MyteamEventsFetcher {
   private static final Logger log = LoggerFactory.getLogger(MyteamEventsFetcher.class);
-  private static final String THREAD_NAME_PREFIX_FORMAT = "icq-events-fetcher-thread-pool-%d";
+  private static final String THREAD_NAME_PREFIX_FORMAT = "icq-events-fetcher-%d";
   private final MyteamApiClient myteamApiClient;
   private final MyteamEventsListener myteamEventsListener;
   private AtomicBoolean isRunning;
