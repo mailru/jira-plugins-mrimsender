@@ -1,6 +1,8 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.component;
 
+import static ru.mail.jira.plugins.myteam.commons.Utils.shieldText;
+
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
@@ -144,72 +146,6 @@ public class MessageFormatter {
     }
     buttons.add(getBackButtonRow(cancelButtonText));
     return buttons;
-  }
-
-  public static String shieldText(String inputDescription) {
-    if (inputDescription == null) {
-      return null;
-    }
-    StringBuilder result = new StringBuilder();
-    char[] arrayFromInput = inputDescription.toCharArray();
-    for (char c : arrayFromInput) {
-      switch (c) {
-        case '*':
-          result.append("\\*");
-          break;
-        case '_':
-          result.append("\\_");
-          break;
-        case '~':
-          result.append("\\~");
-          break;
-        case '`':
-          result.append("\\`");
-          break;
-        case '-':
-          result.append("\\-");
-          break;
-        case '>':
-          result.append("\\>");
-          break;
-        case '\\':
-          result.append("\\\\");
-          break;
-        case '{':
-          result.append("\\{");
-          break;
-        case '}':
-          result.append("\\}");
-          break;
-        case '[':
-          result.append("\\[");
-          break;
-        case ']':
-          result.append("\\]");
-          break;
-        case '(':
-          result.append("\\(");
-          break;
-        case ')':
-          result.append("\\)");
-          break;
-        case '#':
-          result.append("\\#");
-          break;
-        case '+':
-          result.append("\\+");
-          break;
-        case '.':
-          result.append("\\.");
-          break;
-        case '!':
-          result.append("\\!");
-          break;
-        default:
-          result.append(c);
-      }
-    }
-    return result.toString();
   }
 
   public static String getUserDisplayName(User user) {

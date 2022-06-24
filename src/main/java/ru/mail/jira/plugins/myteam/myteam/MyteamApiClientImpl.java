@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.commons.JacksonObjectMapper;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.BotMetaInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -99,13 +100,13 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   public HttpResponse<MessageResponse> sendMessageText(
       String chatId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException, MyteamServerErrorException {
-    
+
     HttpResponse<MessageResponse> response = sendMessage(chatId, text, inlineKeyboardMarkup, true);
 
     if (response.getBody() != null
         && !response.getBody().isOk()
         && response.getBody().getDescription().equals("Format error")) {
-      sendMessage(chatId, text, inlineKeyboardMarkup, false);
+      sendMessage(chatId, Utils.unshieldText(text), inlineKeyboardMarkup, false);
     }
 
     checkMyteamSendTextErrorException(response, chatId, text);
