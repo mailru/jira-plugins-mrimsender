@@ -27,16 +27,11 @@ import com.atlassian.jira.issue.search.constants.SystemSearchConstants;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.util.ErrorCollection;
 import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import com.atlassian.sal.api.message.I18nResolver;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.bot.configuration.createissue.customfields.*;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IncorrectIssueTypeException;
@@ -44,10 +39,16 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueCreati
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
-import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
+
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis;
 
 @Service
 @ExportAsService(LifecycleAware.class)
@@ -141,9 +142,12 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
       IssueFieldsFilter issueFieldsFilter) {
     FieldLayout fieldLayout = fieldLayoutManager.getFieldLayout(project, issueType.getId());
     // getting (selectedProject, selectedIssueType, selectedIssueOperation) fields screen
-    return issueTypeScreenSchemeManager.getIssueTypeScreenScheme(project)
+    return issueTypeScreenSchemeManager
+        .getIssueTypeScreenScheme(project)
         .getEffectiveFieldScreenScheme(issueType)
-        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION).getTabs().stream()
+        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION)
+        .getTabs()
+        .stream()
         .flatMap(
             tab ->
                 tab.getFieldScreenLayoutItems().stream()
@@ -199,7 +203,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
                         (e) -> {
                           CreateIssueFieldValueHandler cfConfig = getFieldValueHandler(e.getKey());
                           return cfConfig.getValueAsArray(
-                              Utils.removeAllEmojis(e.getValue()),
+                              removeAllEmojis(e.getValue()),
                               e.getKey(),
                               project,
                               issueType,
@@ -320,8 +324,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
   }
 
   @Override
-  public void addIssueChatLink(Issue issue, String title, String link, ApplicationUser user)
-      throws IssueCreationValidationException {
+  public void addIssueChatLink(Issue issue, String title, String link, ApplicationUser user) {
     RemoteIssueLinkBuilder linkBuilder = new RemoteIssueLinkBuilder();
 
     linkBuilder.url(link);
@@ -329,22 +332,21 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
         i18nResolver.getText(
             localeManager.getLocaleFor(user),
             "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.createdInChat",
-            title));
+            removeAllEmojis(title)));
     linkBuilder.issueId(issue.getId());
 
     RemoteIssueLinkService.CreateValidationResult createValidationResult =
         remoteIssueLinkService.validateCreate(user, linkBuilder.build());
 
     if (createValidationResult.isValid()) {
-      RemoteIssueLinkService.RemoteIssueLinkResult linkResult =
-          remoteIssueLinkService.create(user, createValidationResult);
+      remoteIssueLinkService.create(user, createValidationResult);
     }
   }
 
   @Override
   public Issue updateIssueDescription(
       String description, MutableIssue issue, ApplicationUser user) {
-    issue.setDescription(ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis(description));
+    issue.setDescription(removeAllEmojis(description));
     return issueManager.updateIssue(user, issue, EventDispatchOption.DO_NOT_DISPATCH, false);
   }
 
