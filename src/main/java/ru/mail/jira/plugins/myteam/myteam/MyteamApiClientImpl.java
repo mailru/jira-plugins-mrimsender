@@ -106,7 +106,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     if (response.getBody() != null
         && !response.getBody().isOk()
         && response.getBody().getDescription().equals("Format error")) {
-      sendMessage(chatId, Utils.unshieldText(text), inlineKeyboardMarkup, false);
+      response = sendMessage(chatId, Utils.unshieldText(text), inlineKeyboardMarkup, false);
     }
 
     checkMyteamSendTextErrorException(response, chatId, text);
