@@ -19,7 +19,6 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation.CreatingIssueState;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
@@ -72,7 +71,7 @@ public class ConfirmIssueCreationRule extends BaseRule {
       log.error(e.getLocalizedMessage(), e);
       userChatService.sendMessageText(
           event.getChatId(),
-          MessageFormatter.shieldText(
+          Utils.shieldText(
               String.join(
                   "\n",
                   userChatService.getRawText(

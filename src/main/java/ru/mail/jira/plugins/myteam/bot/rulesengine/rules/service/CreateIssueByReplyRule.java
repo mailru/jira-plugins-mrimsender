@@ -29,6 +29,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleT
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.ChatAdminRule;
 import ru.mail.jira.plugins.myteam.commons.IssueReporter;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
@@ -181,7 +182,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
       userChatService.sendMessageText(
           event.getUserId(),
-          MessageFormatter.shieldText(
+          Utils.shieldText(
               String.format(
                   "Возникла ошибка при создании задачи.%n%n%s", e.getLocalizedMessage())));
     }

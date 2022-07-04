@@ -21,6 +21,10 @@ public class Utils {
         .collect(joining("\n"));
   }
 
+  public static String unshieldText(String s) {
+    return s.replaceAll("\\\\([*+#_~\\-`!.<>\\[\\]|(){}\\\\])", "$1");
+  }
+
   public static String shieldText(String str) {
     if (str == null) {
       return null;
