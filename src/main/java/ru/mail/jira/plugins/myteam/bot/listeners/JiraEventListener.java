@@ -181,7 +181,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
           if (event instanceof IssueEvent)
             message = messageFormatter.formatEvent(recipient, (IssueEvent) event);
           if (event instanceof MentionIssueEvent)
-            message = messageFormatter.formatEvent((MentionIssueEvent) event);
+            message = messageFormatter.formatEvent(recipient, (MentionIssueEvent) event);
 
           if (message != null) {
             myteamEventsListener.publishEvent(
