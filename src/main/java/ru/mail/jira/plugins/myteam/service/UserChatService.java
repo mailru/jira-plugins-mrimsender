@@ -22,6 +22,11 @@ public interface UserChatService {
   @Nullable
   ApplicationUser getJiraUserFromUserChatId(@Nullable String id);
 
+  @Nullable
+  ApplicationUser getCtxUser();
+
+  Locale getCtxUserLocale();
+
   Locale getUserLocale(@Nullable String userId);
 
   Locale getUserLocale(@Nullable ApplicationUser user);

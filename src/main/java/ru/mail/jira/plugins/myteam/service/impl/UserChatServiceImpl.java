@@ -4,6 +4,7 @@ package ru.mail.jira.plugins.myteam.service.impl;
 import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
@@ -14,6 +15,7 @@ import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.LinkIssueWithChatException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
@@ -42,6 +44,7 @@ public class UserChatServiceImpl implements UserChatService {
   private final StateManager stateManager;
   private final IssueService issueService;
   private final MyteamChatRepository myteamChatRepository;
+  private final JiraAuthenticationContext jiraAuthenticationContext;
 
   @Getter(onMethod_ = {@Override})
   private final MessageFormatter messageFormatter;
@@ -55,7 +58,8 @@ public class UserChatServiceImpl implements UserChatService {
       IssueService issueService,
       MyteamChatRepository myteamChatRepository,
       @ComponentImport LocaleManager localeManager,
-      @ComponentImport I18nResolver i18nResolver) {
+      @ComponentImport I18nResolver i18nResolver,
+      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
     this.myteamClient = myteamApiClient;
     this.userData = userData;
     this.permissionHelper = permissionHelper;
@@ -65,11 +69,22 @@ public class UserChatServiceImpl implements UserChatService {
     this.stateManager = stateManager;
     this.issueService = issueService;
     this.myteamChatRepository = myteamChatRepository;
+    this.jiraAuthenticationContext = jiraAuthenticationContext;
   }
 
   @Override
   public ApplicationUser getJiraUserFromUserChatId(String id) {
     return userData.getUserByMrimLogin(id);
+  }
+
+  @Override
+  public @Nullable ApplicationUser getCtxUser() {
+    return jiraAuthenticationContext.getLoggedInUser();
+  }
+
+  @Override
+  public Locale getCtxUserLocale() {
+    return jiraAuthenticationContext.getLocale();
   }
 
   @Override
