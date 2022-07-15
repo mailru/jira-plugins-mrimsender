@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.core.Pager;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.StateActionRuleType;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation.FillingIssueFieldState;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.FillingIssueFieldState;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 

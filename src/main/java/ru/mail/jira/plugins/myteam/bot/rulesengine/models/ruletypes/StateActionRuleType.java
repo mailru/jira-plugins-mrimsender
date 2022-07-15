@@ -10,6 +10,7 @@ public enum StateActionRuleType implements RuleType {
   SelectIssueCreationValue("selectIssueCreationValue"),
   EditIssueCreationValue("editIssueCreationValue"),
   ConfirmIssueCreation("confirmIssueCreation"),
+  SelectIssueTransition("selectIssueTransition"),
   AddAdditionalFields("addAdditionalFields");
 
   @Getter(onMethod_ = {@Override})

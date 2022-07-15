@@ -13,11 +13,13 @@ import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
+import com.opensymphony.workflow.loader.ActionDescriptor;
 import java.util.Collection;
 import java.util.List;
 import javax.naming.NoPermissionException;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.AssigneeChangeValidationException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueTransitionException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
 
@@ -27,9 +29,6 @@ public interface IssueService {
       throws IssuePermissionException, IssueNotFoundException;
 
   Issue getIssue(String issueKey) throws IssueNotFoundException;
-
-  List<Comment> getIssueComments(String issueKey, ApplicationUser user)
-      throws IssuePermissionException, IssueNotFoundException;
 
   boolean isUserWatching(Issue issue, ApplicationUser user);
 
@@ -49,7 +48,13 @@ public interface IssueService {
   void commentIssue(String issueKey, ApplicationUser user, ChatMessageEvent event)
       throws NoPermissionException;
 
+  void changeIssueStatus(Issue issue, int transitionId, ApplicationUser user)
+      throws IssueTransitionException;
+
   List<Project> getAllowedProjects();
+
+  List<Comment> getIssueComments(String issueKey, ApplicationUser user)
+      throws IssuePermissionException, IssueNotFoundException;
 
   Project getProject(String projectKey, ApplicationUser user)
       throws PermissionException, ProjectBannedException;
@@ -57,6 +62,9 @@ public interface IssueService {
   Collection<IssueType> getProjectIssueTypes(Project project, ApplicationUser user);
 
   IssueType getIssueType(String id);
+
+  Collection<ActionDescriptor> getIssueTransitions(String issueKey, ApplicationUser user)
+      throws IssuePermissionException, IssueNotFoundException;
 
   boolean changeIssueAssignee(String issueKey, String userMention, ApplicationUser user)
       throws UserNotFoundException, AssigneeChangeValidationException;

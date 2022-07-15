@@ -28,8 +28,10 @@ import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.thread.JiraThreadLocalUtils;
 import com.atlassian.jira.web.bean.PagerFilter;
+import com.atlassian.jira.workflow.WorkflowManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
+import com.opensymphony.workflow.loader.ActionDescriptor;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,6 +40,7 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.AssigneeChangeValidationException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueTransitionException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
@@ -59,6 +62,7 @@ public class IssueServiceImpl implements IssueService {
   private final IssueTypeManager issueTypeManager;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final IssueTextConverter issueTextConverter;
+  private final WorkflowManager workflowManager;
   private final UserData userData;
   private final PluginData pluginData;
   private final String JIRA_BASE_URL;
@@ -74,6 +78,7 @@ public class IssueServiceImpl implements IssueService {
       @ComponentImport IssueTypeSchemeManager issueTypeSchemeManager,
       @ComponentImport IssueTypeManager issueTypeManager,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+      @ComponentImport WorkflowManager workflowManager,
       @ComponentImport ApplicationProperties applicationProperties,
       UserData userData,
       IssueTextConverter issueTextConverter,
@@ -88,6 +93,7 @@ public class IssueServiceImpl implements IssueService {
     this.issueTypeSchemeManager = issueTypeSchemeManager;
     this.issueTypeManager = issueTypeManager;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
+    this.workflowManager = workflowManager;
     this.userData = userData;
     this.issueTextConverter = issueTextConverter;
     this.pluginData = pluginData;
@@ -98,7 +104,7 @@ public class IssueServiceImpl implements IssueService {
   public Issue getIssueByUser(String issueKey, ApplicationUser user) {
     ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
     try {
-      jiraAuthenticationContext.setLoggedInUser(user);
+      jiraAuthenticationContext.setLoggedInUser(user); // TODO FIX THREAD CONTEXT
       Issue issue = issueManager.getIssueByKeyIgnoreCase(issueKey);
       if (issue != null) {
         if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issue, user)) {
@@ -198,6 +204,27 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
+  public void changeIssueStatus(Issue issue, int transitionId, ApplicationUser user)
+      throws IssueTransitionException {
+    com.atlassian.jira.bc.issue.IssueService.TransitionValidationResult validationResult =
+        jiraIssueService.validateTransition(
+            user, issue.getId(), transitionId, jiraIssueService.newIssueInputParameters());
+
+    if (!validationResult.isValid()) {
+      throw new IssueTransitionException(
+          "Error due validation issue transition", validationResult.getErrorCollection());
+    }
+
+    com.atlassian.jira.bc.issue.IssueService.IssueResult res =
+        jiraIssueService.transition(user, validationResult);
+
+    if (!res.isValid()) {
+      throw new IssueTransitionException(
+          "Error due changing issue status", validationResult.getErrorCollection());
+    }
+  }
+
+  @Override
   public List<Project> getAllowedProjects() {
     return projectManager.getProjects().stream()
         .filter(proj -> !isProjectExcluded(proj.getId()))
@@ -235,6 +262,12 @@ public class IssueServiceImpl implements IssueService {
   @Override
   public IssueType getIssueType(String id) {
     return issueTypeManager.getIssueType(id);
+  }
+
+  @Override
+  public Collection<ActionDescriptor> getIssueTransitions(String issueKey, ApplicationUser user) {
+    Issue issue = getIssueByUser(issueKey, user);
+    return workflowManager.getWorkflow(issue).getAllActions();
   }
 
   @Override

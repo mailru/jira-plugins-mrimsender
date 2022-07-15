@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation;
+package ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation;
 
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;

@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation;
+package ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation;
 
 import com.atlassian.jira.project.Project;
 import java.io.IOException;

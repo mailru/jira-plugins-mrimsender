@@ -134,6 +134,17 @@ public class ViewIssueCommandRule extends BaseRule {
 
     buttons.add(watchButtonRow);
 
+    ArrayList<InlineKeyboardMarkupButton> transitionButtonRow = new ArrayList<>();
+
+    transitionButtonRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            userChatService.getRawText(
+                userChatService.getUserLocale(recipient),
+                "ru.mail.jira.plugins.myteam.messageFormatter.editIssue.transitionChange.title"),
+            String.join("-", CommandRuleType.IssueTransition.getName(), issueKey)));
+
+    buttons.add(transitionButtonRow);
+
     return buttons;
   }
 }
