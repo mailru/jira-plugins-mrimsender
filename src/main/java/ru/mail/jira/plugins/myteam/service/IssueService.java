@@ -63,7 +63,7 @@ public interface IssueService {
 
   IssueType getIssueType(String id);
 
-  Collection<ActionDescriptor> getIssueTransitions(String issueKey, ApplicationUser user)
+  Collection<ActionDescriptor> getIssueTransitions(String issueKey)
       throws IssuePermissionException, IssueNotFoundException;
 
   boolean changeIssueAssignee(String issueKey, String userMention, ApplicationUser user)

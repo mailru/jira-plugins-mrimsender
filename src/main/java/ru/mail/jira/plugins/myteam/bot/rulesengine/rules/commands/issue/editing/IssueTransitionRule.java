@@ -43,14 +43,14 @@ public class IssueTransitionRule extends BaseRule {
   @Action
   public void execute(@Fact("event") ButtonClickEvent event, @Fact("args") String issueKey)
       throws MyteamServerErrorException, IOException {
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
+    ApplicationUser user = userChatService.getCtxUser();
 
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(
-            userChatService.getUserLocale(user),
+            userChatService.getCtxUserLocale(),
             "ru.mail.jira.plugins.myteam.messageFormatter.editIssue.transitionChange.message"),
-        getTransitionButtons(issueKey, user));
+        getTransitionButtons(issueKey));
 
     userChatService.setState(
         event.getChatId(),
@@ -60,9 +60,8 @@ public class IssueTransitionRule extends BaseRule {
     userChatService.answerCallbackQuery(event.getQueryId());
   }
 
-  private List<List<InlineKeyboardMarkupButton>> getTransitionButtons(
-      String issueKey, ApplicationUser user) {
-    Collection<ActionDescriptor> transitions = issueService.getIssueTransitions(issueKey, user);
+  private List<List<InlineKeyboardMarkupButton>> getTransitionButtons(String issueKey) {
+    Collection<ActionDescriptor> transitions = issueService.getIssueTransitions(issueKey);
 
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
 
@@ -80,7 +79,7 @@ public class IssueTransitionRule extends BaseRule {
 
           buttons.add(buttonsRow);
         });
-    buttons.add(messageFormatter.getCancelButtonRow(userChatService.getUserLocale(user)));
+    buttons.add(messageFormatter.getCancelButtonRow(userChatService.getCtxUserLocale()));
 
     return buttons;
   }

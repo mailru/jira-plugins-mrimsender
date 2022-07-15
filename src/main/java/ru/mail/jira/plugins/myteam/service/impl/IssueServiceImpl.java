@@ -265,8 +265,8 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public Collection<ActionDescriptor> getIssueTransitions(String issueKey, ApplicationUser user) {
-    Issue issue = getIssueByUser(issueKey, user);
+  public Collection<ActionDescriptor> getIssueTransitions(String issueKey) {
+    Issue issue = getIssueByUser(issueKey, jiraAuthenticationContext.getLoggedInUser());
     return workflowManager.getWorkflow(issue).getAllActions();
   }
 
