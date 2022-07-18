@@ -1,7 +1,6 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.editing;
 
-import com.atlassian.jira.user.ApplicationUser;
 import com.opensymphony.workflow.loader.ActionDescriptor;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,8 +42,6 @@ public class IssueTransitionRule extends BaseRule {
   @Action
   public void execute(@Fact("event") ButtonClickEvent event, @Fact("args") String issueKey)
       throws MyteamServerErrorException, IOException {
-    ApplicationUser user = userChatService.getCtxUser();
-
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(
@@ -54,8 +51,7 @@ public class IssueTransitionRule extends BaseRule {
 
     userChatService.setState(
         event.getChatId(),
-        new IssueTransitionEditingState(
-            issueService.getIssueByUser(issueKey, user), userChatService));
+        new IssueTransitionEditingState(issueService.getIssueByUser(issueKey), userChatService));
 
     userChatService.answerCallbackQuery(event.getQueryId());
   }

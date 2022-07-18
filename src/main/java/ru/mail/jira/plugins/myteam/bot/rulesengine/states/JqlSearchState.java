@@ -55,7 +55,7 @@ public class JqlSearchState extends BotState implements PageableState, Cancelabl
   @Override
   public void updatePage(MyteamEvent event, boolean editMessage) {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    Locale locale = userChatService.getUserLocale(user);
+    Locale locale = userChatService.getCtxUserLocale();
 
     try {
       if (event instanceof ButtonClickEvent) {
@@ -63,7 +63,7 @@ public class JqlSearchState extends BotState implements PageableState, Cancelabl
       }
 
       SearchResults<Issue> parseResult =
-          issueService.SearchByJql(jql, user, page, JQL_SEARCH_PAGE_SIZE);
+          issueService.SearchByJql(jql, page, JQL_SEARCH_PAGE_SIZE);
       if (parseResult.getTotal() == 0) {
         userChatService.sendMessageText(
             event.getChatId(),

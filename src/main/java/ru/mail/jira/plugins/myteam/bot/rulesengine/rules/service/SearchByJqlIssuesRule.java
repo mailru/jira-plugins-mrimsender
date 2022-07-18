@@ -42,7 +42,7 @@ public class SearchByJqlIssuesRule extends BaseRule {
 
     if (jql == null || jql.length() == 0) { // if jql is not provided ask for input
       String chatId = event.getChatId();
-      Locale locale = userChatService.getUserLocale(event.getUserId());
+      Locale locale = userChatService.getCtxUserLocale();
 
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
       userChatService.sendMessageText(

@@ -54,7 +54,7 @@ public class IssueTypeSelectButtonRule extends BaseRule {
     String chatId = event.getChatId();
     userChatService.answerCallbackQuery(event.getQueryId());
 
-    Locale locale = userChatService.getUserLocale(user);
+    Locale locale = userChatService.getCtxUserLocale();
     try {
       state.setIssueType(
           issueService.getIssueType(issueTypeId),

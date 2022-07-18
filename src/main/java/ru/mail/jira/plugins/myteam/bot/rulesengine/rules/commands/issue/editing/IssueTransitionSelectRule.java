@@ -48,12 +48,12 @@ public class IssueTransitionSelectRule extends BaseRule {
     @Nullable ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
 
     try {
-      issueService.changeIssueStatus(state.getIssue(), Integer.parseInt(transitionId), user);
+      issueService.changeIssueStatus(state.getIssue(), Integer.parseInt(transitionId));
       userChatService.editMessageText(
           event.getChatId(),
           event.getMsgId(),
           userChatService.getRawText(
-              userChatService.getUserLocale(user),
+              userChatService.getCtxUserLocale(),
               "ru.mail.jira.plugins.myteam.messageFormatter.editIssue.transitionChange.success"),
           null);
       userChatService.deleteState(event.getChatId());
@@ -63,7 +63,7 @@ public class IssueTransitionSelectRule extends BaseRule {
           String.join(
               "\n",
               userChatService.getText(
-                  userChatService.getUserLocale(user),
+                  userChatService.getCtxUserLocale(),
                   "ru.mail.jira.plugins.myteam.messageFormatter.editIssue.transitionChange.error",
                   e.getMessage()),
               Utils.stringifyMap(e.getErrors().getErrors()),

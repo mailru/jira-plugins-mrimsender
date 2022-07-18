@@ -4,7 +4,6 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.states;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.issue.comments.Comment;
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -68,9 +67,8 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
   @Override
   public void updatePage(MyteamEvent event, boolean editMessage) {
     try {
-      ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-      Locale locale = userChatService.getUserLocale(user);
-      List<Comment> totalComments = issueService.getIssueComments(issueKey, user);
+      Locale locale = userChatService.getCtxUserLocale();
+      List<Comment> totalComments = issueService.getIssueComments(issueKey);
 
       if (event instanceof ButtonClickEvent)
         userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());

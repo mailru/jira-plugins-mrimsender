@@ -313,7 +313,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
   public MutableIssue createIssue(
       String projectKey, String issueTypeId, Map<Field, String> fields, ApplicationUser user)
       throws IssueCreationValidationException, PermissionException, ProjectBannedException {
-    Project project = myteamIssueService.getProject(projectKey, user);
+    Project project = myteamIssueService.getProject(projectKey);
     IssueType issueType = myteamIssueService.getIssueType(issueTypeId);
 
     return createIssue(project, issueType, fields, user);

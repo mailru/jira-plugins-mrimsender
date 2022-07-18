@@ -33,7 +33,7 @@ public class SearchIssueByKeyInputRule extends BaseRule {
   @Action
   public void execute(@Fact("event") ButtonClickEvent event)
       throws MyteamServerErrorException, IOException {
-    Locale locale = userChatService.getUserLocale(event.getUserId());
+    Locale locale = userChatService.getCtxUserLocale();
 
     String message =
         userChatService.getRawText(

@@ -49,7 +49,7 @@ public class ConfirmIssueCreationRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
 
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-    Locale locale = userChatService.getUserLocale(user);
+    Locale locale = userChatService.getCtxUserLocale();
 
     userChatService.answerCallbackQuery(event.getQueryId());
     try {

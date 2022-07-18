@@ -57,7 +57,7 @@ public class ShowIssueCreationProgressRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();
-    Locale locale = userChatService.getUserLocale(user);
+    Locale locale = userChatService.getCtxUserLocale();
 
     BotState prevState = userChatService.getPrevState(event.getChatId());
 

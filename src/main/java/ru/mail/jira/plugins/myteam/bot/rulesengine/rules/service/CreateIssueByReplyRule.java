@@ -25,6 +25,7 @@ import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.AdminRulesRequiredException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.ChatAdminRule;
@@ -170,7 +171,14 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
         reporters.stream() // add watchers
             .map(u -> userChatService.getJiraUserFromUserChatId(u.getUserId()))
             .filter(Objects::nonNull)
-            .forEach(user -> issueService.watchIssue(issue, user));
+            .forEach(
+                user -> {
+                  try {
+                    issueService.watchIssue(issue, user);
+                  } catch (IssueWatchingException e) {
+                    log.error(e.getLocalizedMessage(), e);
+                  }
+                });
       }
 
       userChatService.sendMessageText(

@@ -101,25 +101,15 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public Issue getIssueByUser(String issueKey, ApplicationUser user) {
-    ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
-    try {
-      jiraAuthenticationContext.setLoggedInUser(user); // TODO FIX THREAD CONTEXT
-      Issue issue = issueManager.getIssueByKeyIgnoreCase(issueKey);
-      if (issue != null) {
-        if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issue, user)) {
-          return issue;
-        } else
-          throw new IssuePermissionException(
-              String.format("User has no permissions to view issue %s", issueKey));
-      } else throw new IssueNotFoundException(String.format("Issue %s not found", issueKey));
-    } finally {
-      jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
-    }
+  public Issue getIssueByUser(String issueKey) {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+
+    return getIssueByUser(issueKey, user);
   }
 
   @Override
-  public boolean isUserWatching(Issue issue, ApplicationUser user) {
+  public boolean isUserWatching(Issue issue) {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     return watcherManager.isWatching(user, issue);
   }
 
@@ -129,8 +119,9 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public SearchResults<Issue> SearchByJql(String jql, ApplicationUser user, int page, int pageSize)
+  public SearchResults<Issue> SearchByJql(String jql, int page, int pageSize)
       throws SearchException, ParseException {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     JiraThreadLocalUtils.preCall();
 
     SearchService.ParseResult parseResult = searchService.parseQuery(user, jql);
@@ -150,28 +141,29 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public void watchIssue(String issueKey, ApplicationUser user)
+  public void watchIssue(String issueKey)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     Issue issue = getIssueByUser(issueKey, user);
+    watchIssue(issue, user);
+  }
+
+  @Override
+  public void watchIssue(Issue issue, ApplicationUser user)
+      throws IssuePermissionException, IssueNotFoundException, IssueWatchingException {
     if (watcherManager.isWatching(user, issue)) {
       throw new IssueWatchingException(
-          String.format("Issue with key %s already watched", issueKey));
+          String.format("Issue with key %s already watched", issue.getKey()));
     } else {
       watcherManager.startWatching(user, issue);
     }
   }
 
   @Override
-  public void watchIssue(Issue issue, ApplicationUser user) {
-    if (!watcherManager.isWatching(user, issue)) {
-      watcherManager.startWatching(user, issue);
-    }
-  }
-
-  @Override
-  public void unwatchIssue(String issueKey, ApplicationUser user)
+  public void unwatchIssue(String issueKey)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException {
-    Issue issue = getIssueByUser(issueKey, user);
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+    Issue issue = getIssueByUser(issueKey);
     if (!watcherManager.isWatching(user, issue)) {
       throw new IssueWatchingException(
           String.format("Issue with key %s already unwatched", issueKey));
@@ -181,9 +173,9 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public void commentIssue(String issueKey, ApplicationUser user, ChatMessageEvent event)
-      throws NoPermissionException {
+  public void commentIssue(String issueKey, ChatMessageEvent event) throws NoPermissionException {
     JiraThreadLocalUtils.preCall();
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     try {
       Issue commentedIssue = issueManager.getIssueByCurrentKey(issueKey);
       if (user != null && commentedIssue != null) {
@@ -204,8 +196,8 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public void changeIssueStatus(Issue issue, int transitionId, ApplicationUser user)
-      throws IssueTransitionException {
+  public void changeIssueStatus(Issue issue, int transitionId) throws IssueTransitionException {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     com.atlassian.jira.bc.issue.IssueService.TransitionValidationResult validationResult =
         jiraIssueService.validateTransition(
             user, issue.getId(), transitionId, jiraIssueService.newIssueInputParameters());
@@ -232,8 +224,9 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public Project getProject(String projectKey, ApplicationUser user)
-      throws PermissionException, ProjectBannedException {
+  public Project getProject(String projectKey) throws PermissionException, ProjectBannedException {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+
     Project selectedProject = projectManager.getProjectByCurrentKeyIgnoreCase(projectKey);
     if (selectedProject == null) {
       throw new PermissionException();
@@ -249,14 +242,8 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public Collection<IssueType> getProjectIssueTypes(Project project, ApplicationUser user) {
-    ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
-    try {
-      jiraAuthenticationContext.setLoggedInUser(user);
-      return issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(project);
-    } finally {
-      jiraAuthenticationContext.setLoggedInUser(contextPrevUser);
-    }
+  public Collection<IssueType> getProjectIssueTypes(Project project) {
+    return issueTypeSchemeManager.getNonSubTaskIssueTypesForProject(project);
   }
 
   @Override
@@ -266,15 +253,14 @@ public class IssueServiceImpl implements IssueService {
 
   @Override
   public Collection<ActionDescriptor> getIssueTransitions(String issueKey) {
-    Issue issue = getIssueByUser(issueKey, jiraAuthenticationContext.getLoggedInUser());
-    return workflowManager.getWorkflow(issue).getAllActions();
+    return workflowManager.getWorkflow(getIssueByUser(issueKey)).getAllActions();
   }
 
   @Override
-  public boolean changeIssueAssignee(
-      String issueKey, String assigneeMyteamLogin, ApplicationUser user)
+  public boolean changeIssueAssignee(String issueKey, String assigneeMyteamLogin)
       throws UserNotFoundException, AssigneeChangeValidationException {
     @Nullable ApplicationUser assignee = userData.getUserByMrimLogin(assigneeMyteamLogin);
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     if (assignee == null) {
       throw new UserNotFoundException(assigneeMyteamLogin);
     }
@@ -312,11 +298,11 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public List<Comment> getIssueComments(String issueKey, ApplicationUser user)
+  public List<Comment> getIssueComments(String issueKey)
       throws IssuePermissionException, IssueNotFoundException {
     JiraThreadLocalUtils.preCall();
     try {
-      return commentManager.getComments(getIssueByUser(issueKey, user));
+      return commentManager.getComments(getIssueByUser(issueKey));
     } finally {
       JiraThreadLocalUtils.postCall();
     }
@@ -324,5 +310,18 @@ public class IssueServiceImpl implements IssueService {
 
   private boolean isProjectExcluded(Long projectId) {
     return pluginData.getExcludingProjectIds().contains(projectId);
+  }
+
+  private Issue getIssueByUser(String issueKey, ApplicationUser user) {
+    Issue issue = issueManager.getIssueByKeyIgnoreCase(issueKey);
+    if (issue != null) {
+      if (permissionManager.hasPermission(ProjectPermissions.BROWSE_PROJECTS, issue, user)) {
+        return issue;
+      } else
+        throw new IssuePermissionException(
+            String.format("User has no permissions to view issue %s", issueKey));
+    } else {
+      throw new IssueNotFoundException(String.format("Issue %s not found", issueKey));
+    }
   }
 }

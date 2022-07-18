@@ -51,12 +51,13 @@ public class RuleListener implements org.jeasy.rules.api.RuleListener {
         && ((UndeclaredThrowableException) exception).getUndeclaredThrowable().getCause()
             instanceof AdminRulesRequiredException) {
       MyteamEvent event = facts.get("event");
+      userChatService.getCtxUserLocale();
       if (event != null) {
         try {
           userChatService.sendMessageText(
               event.getUserId(),
               userChatService.getText(
-                  userChatService.getUserLocale(event.getUserId()),
+                  userChatService.getCtxUserLocale(),
                   "ru.mail.jira.plugins.myteam.chat.adminPermissionsRequired",
                   userChatService.getGroupChatName(event.getChatId())));
         } catch (MyteamServerErrorException | IOException e) {

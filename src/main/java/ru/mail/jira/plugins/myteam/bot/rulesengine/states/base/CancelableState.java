@@ -24,7 +24,7 @@ public interface CancelableState {
     if (event instanceof ButtonClickEvent) {
       try {
         ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-        Locale locale = userChatService.getUserLocale(user);
+        Locale locale = userChatService.getCtxUserLocale();
         userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
         userChatService.editMessageText(
             event.getChatId(),

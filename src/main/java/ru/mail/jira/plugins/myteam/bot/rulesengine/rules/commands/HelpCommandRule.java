@@ -33,7 +33,7 @@ public class HelpCommandRule extends BaseRule {
   @Action
   public void execute(@Fact("event") MyteamEvent event)
       throws MyteamServerErrorException, IOException {
-    Locale locale = userChatService.getUserLocale(event.getUserId());
+    Locale locale = userChatService.getCtxUserLocale();
     if (event.getChatType() == ChatType.GROUP)
       userChatService.sendMessageText(
           event.getChatId(),

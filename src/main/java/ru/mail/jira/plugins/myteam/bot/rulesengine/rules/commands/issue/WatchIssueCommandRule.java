@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue;
 
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
@@ -44,11 +43,10 @@ public class WatchIssueCommandRule extends BaseRule {
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("args") String issueKey)
       throws MyteamServerErrorException, IOException {
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();
-    Locale locale = userChatService.getUserLocale(user);
+    Locale locale = userChatService.getCtxUserLocale();
     try {
-      issueService.watchIssue(issueKey, user);
+      issueService.watchIssue(issueKey);
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(

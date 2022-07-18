@@ -54,14 +54,14 @@ public class ViewIssueCommandRule extends BaseRule {
     if (issueKey.length() > 0 && user != null) {
       String chatId = event.getChatId();
       try {
-        Issue issue = issueService.getIssueByUser(issueKey, user);
+        Issue issue = issueService.getIssueByUser(issueKey);
 
         userChatService.sendMessageText(
             chatId,
             messageFormatter.createIssueSummary(issue, user),
             isGroup
                 ? null
-                : getIssueButtons(issue.getKey(), user, issueService.isUserWatching(issue, user)));
+                : getIssueButtons(issue.getKey(), user, issueService.isUserWatching(issue)));
         updateState(chatId, issueKey);
       } catch (IssuePermissionException e) {
         rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e);

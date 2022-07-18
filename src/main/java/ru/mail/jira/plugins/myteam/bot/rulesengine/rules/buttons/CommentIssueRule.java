@@ -39,7 +39,7 @@ public class CommentIssueRule extends BaseRule {
     userChatService.setState(event.getChatId(), newState);
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
 
-    Locale locale = userChatService.getUserLocale(user);
+    Locale locale = userChatService.getCtxUserLocale();
     String message =
         userChatService.getText(
             locale,
