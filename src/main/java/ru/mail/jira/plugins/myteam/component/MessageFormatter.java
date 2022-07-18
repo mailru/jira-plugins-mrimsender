@@ -418,14 +418,16 @@ public class MessageFormatter {
     return sb.toString();
   }
 
-  public String formatEvent(MentionIssueEvent mentionIssueEvent) {
+  public String formatEvent(ApplicationUser recipient, MentionIssueEvent mentionIssueEvent) {
     Issue issue = mentionIssueEvent.getIssue();
     ApplicationUser user = mentionIssueEvent.getFromUser();
     String issueLink = getIssueLink(issue.getKey());
+    Locale recipientLocale = localeManager.getLocaleFor(recipient);
 
     StringBuilder sb = new StringBuilder();
     sb.append(
-        i18nHelper.getText(
+        i18nResolver.getText(
+            recipientLocale,
             "ru.mail.jira.plugins.myteam.notification.mentioned",
             formatUser(user, "common.words.anonymous", true),
             issueLink));
