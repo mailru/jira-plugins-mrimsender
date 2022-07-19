@@ -43,10 +43,11 @@ public class UnwatchIssueCommandRule extends BaseRule {
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("args") String issueKey)
       throws MyteamServerErrorException, IOException {
+    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();
-    Locale locale = userChatService.getCtxUserLocale();
+    Locale locale = userChatService.getUserLocale(user);
     try {
-      issueService.unwatchIssue(issueKey);
+      issueService.unwatchIssue(issueKey, user);
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(

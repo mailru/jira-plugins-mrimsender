@@ -63,11 +63,11 @@ public class ProjectKeyInputRule extends BaseRule {
       throws MyteamServerErrorException, IOException, UserNotFoundException {
     String chatId = event.getChatId();
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(chatId);
-    Locale locale = userChatService.getCtxUserLocale();
+    Locale locale = userChatService.getUserLocale(user);
 
     try {
 
-      Project project = issueService.getProject(projectKey);
+      Project project = issueService.getProject(projectKey, user);
       if (project == null) {
         userChatService.sendMessageText(
             chatId,
@@ -78,7 +78,7 @@ public class ProjectKeyInputRule extends BaseRule {
         prevState.setProject(project);
         userChatService.revertState(chatId);
 
-        Collection<IssueType> projectIssueTypes = issueService.getProjectIssueTypes(project);
+        Collection<IssueType> projectIssueTypes = issueService.getProjectIssueTypes(project, user);
 
         userChatService.sendMessageText(
             chatId,

@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuecomment;
 
+import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
 import javax.naming.NoPermissionException;
@@ -41,13 +42,14 @@ public class IssueCommentInputRule extends BaseRule {
   @Action
   public void execute(@Fact("event") ChatMessageEvent event)
       throws MyteamServerErrorException, IOException {
+    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
 
     CommentingIssueState state = (CommentingIssueState) userChatService.getState(event.getChatId());
     String issueKey = state.getIssueKey();
 
-    Locale locale = userChatService.getCtxUserLocale();
+    Locale locale = userChatService.getUserLocale(user);
     try {
-      issueService.commentIssue(issueKey, event);
+      issueService.commentIssue(issueKey, user, event);
       userChatService.sendMessageText(
           event.getChatId(),
           userChatService.getRawText(

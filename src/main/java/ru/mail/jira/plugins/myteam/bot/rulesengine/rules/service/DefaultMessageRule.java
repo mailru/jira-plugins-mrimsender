@@ -47,7 +47,7 @@ public class DefaultMessageRule extends BaseRule {
   public void execute(@Fact("event") MyteamEvent event)
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    Locale locale = userChatService.getCtxUserLocale();
+    Locale locale = userChatService.getUserLocale(user);
 
     String chatId = event.getChatId();
 

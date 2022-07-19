@@ -25,44 +25,47 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBann
 
 public interface IssueService {
 
-  Issue getIssueByUser(String issueKey) throws IssuePermissionException, IssueNotFoundException;
+  Issue getIssueByUser(String issueKey, ApplicationUser user)
+      throws IssuePermissionException, IssueNotFoundException;
 
   Issue getIssue(String issueKey) throws IssueNotFoundException;
 
-  boolean isUserWatching(Issue issue);
+  boolean isUserWatching(Issue issue, ApplicationUser user);
 
   String getJiraBaseUrl();
 
-  SearchResults<Issue> SearchByJql(String jql,  int page, int pageSize)
+  SearchResults<Issue> SearchByJql(String jql, ApplicationUser user, int page, int pageSize)
       throws SearchException, ParseException;
 
-  void watchIssue(String issueKey)
+  void watchIssue(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
 
-  void watchIssue(Issue issueKey, ApplicationUser user)
+  void watchIssue(Issue issue, ApplicationUser user);
+
+  void unwatchIssue(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
 
-  void unwatchIssue(String issueKey)
-      throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
+  void commentIssue(String issueKey, ApplicationUser user, ChatMessageEvent event)
+      throws NoPermissionException;
 
-  void commentIssue(String issueKey, ChatMessageEvent event) throws NoPermissionException;
-
-  void changeIssueStatus(Issue issue, int transitionId) throws IssueTransitionException;
+  void changeIssueStatus(Issue issue, int transitionId, ApplicationUser user)
+      throws IssueTransitionException;
 
   List<Project> getAllowedProjects();
 
-  List<Comment> getIssueComments(String issueKey)
+  List<Comment> getIssueComments(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException;
 
-  Project getProject(String projectKey) throws PermissionException, ProjectBannedException;
+  Project getProject(String projectKey, ApplicationUser user)
+      throws PermissionException, ProjectBannedException;
 
-  Collection<IssueType> getProjectIssueTypes(Project project);
+  Collection<IssueType> getProjectIssueTypes(Project project, ApplicationUser user);
 
   IssueType getIssueType(String id);
 
-  Collection<ActionDescriptor> getIssueTransitions(String issueKey)
+  Collection<ActionDescriptor> getIssueTransitions(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException;
 
-  boolean changeIssueAssignee(String issueKey, String userMention)
+  boolean changeIssueAssignee(String issueKey, String userMention, ApplicationUser user)
       throws UserNotFoundException, AssigneeChangeValidationException;
 }

@@ -36,7 +36,7 @@ public class AssignIssueCommandRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
     userChatService.setState(event.getChatId(), new AssigningIssueState(issueKey, userChatService));
 
-    Locale locale = userChatService.getCtxUserLocale();
+    Locale locale = userChatService.getUserLocale(event.getUserId());
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(

@@ -102,15 +102,9 @@ public class MyteamEventsListener {
 
   @Subscribe
   public void handleButtonClickEvent(ButtonClickEvent event) throws UnirestException {
-    @Nullable ApplicationUser user = userData.getUserByMrimLogin(event.getUserId());
-
-    offRequestThreadExecutor.execute(
-        user,
-        () -> {
-          String buttonPrefix = StringUtils.substringBefore(event.getCallbackData(), "-");
-          String data = StringUtils.substringAfter(event.getCallbackData(), "-");
-          rulesEngine.fireCommand(buttonPrefix, event, data);
-        });
+    String buttonPrefix = StringUtils.substringBefore(event.getCallbackData(), "-");
+    String data = StringUtils.substringAfter(event.getCallbackData(), "-");
+    rulesEngine.fireCommand(buttonPrefix, event, data);
   }
 
   @Subscribe

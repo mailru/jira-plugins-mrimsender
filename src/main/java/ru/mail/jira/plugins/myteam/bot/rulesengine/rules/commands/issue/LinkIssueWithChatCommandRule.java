@@ -37,7 +37,7 @@ public class LinkIssueWithChatCommandRule extends BaseRule {
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("args") String issueKey)
       throws MyteamServerErrorException, IOException {
-    Locale locale = userChatService.getCtxUserLocale();
+    Locale locale = userChatService.getUserLocale(event.getUserId());
     String chatId = event.getChatId();
     try {
       userChatService.linkChat(chatId, issueKey);

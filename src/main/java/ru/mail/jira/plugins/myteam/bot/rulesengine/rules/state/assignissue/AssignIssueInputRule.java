@@ -2,6 +2,7 @@
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.assignissue;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
+import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
@@ -47,7 +48,8 @@ public class AssignIssueInputRule extends BaseRule {
       @Fact("args") String userMention)
       throws MyteamServerErrorException, IOException {
 
-    Locale locale = userChatService.getCtxUserLocale();
+    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
+    Locale locale = userChatService.getUserLocale(user);
 
     String userEmail = Utils.getEmailFromMention(event);
 
@@ -56,7 +58,7 @@ public class AssignIssueInputRule extends BaseRule {
     }
 
     try {
-      if (issueService.changeIssueAssignee(state.getIssueKey(), userEmail)) {
+      if (issueService.changeIssueAssignee(state.getIssueKey(), userEmail, user)) {
         userChatService.sendMessageText(
             event.getChatId(),
             userChatService.getRawText(
