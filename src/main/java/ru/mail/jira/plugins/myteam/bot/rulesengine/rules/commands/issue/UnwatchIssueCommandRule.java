@@ -45,13 +45,12 @@ public class UnwatchIssueCommandRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();
-    Locale locale = userChatService.getUserLocale(user);
+
     try {
       issueService.unwatchIssue(issueKey, user);
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(
-              locale,
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyUnwatch",
               messageFormatter.createIssueLink(issueKey)));
     } catch (IssueWatchingException e) {
@@ -59,7 +58,6 @@ public class UnwatchIssueCommandRule extends BaseRule {
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(
-              locale,
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyUnwatching",
               messageFormatter.createIssueLink(issueKey)));
     } catch (IssuePermissionException e) {

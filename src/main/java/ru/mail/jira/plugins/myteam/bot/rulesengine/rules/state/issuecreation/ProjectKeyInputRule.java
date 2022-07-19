@@ -72,7 +72,6 @@ public class ProjectKeyInputRule extends BaseRule {
         userChatService.sendMessageText(
             chatId,
             userChatService.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedProjectNotValid"));
       } else {
         prevState.setProject(project);

@@ -120,20 +120,19 @@ public class CreatingIssueState extends BotState implements CancelableState {
     sj.add(DELIMITER_STR);
     sj.add(
         userChatService.getRawText(
-            locale,
             "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.currentIssueCreationDtoState"));
-    sj.add(String.join(" ", userChatService.getRawText(locale, "Project:"), project.getName()));
+    sj.add(String.join(" ", userChatService.getRawText("Project:"), project.getName()));
     sj.add(
         String.join(
             " ",
-            userChatService.getRawText(locale, "IssueType:"),
+            userChatService.getRawText("IssueType:"),
             issueType.getNameTranslation(locale.toString())));
     fieldValuesMap.forEach(
         (field, value) ->
             sj.add(
                 String.join(
                     " : ",
-                    userChatService.getRawText(locale, field.getNameKey()),
+                    userChatService.getRawText(field.getNameKey()),
                     value.isEmpty() ? "-" : value)));
     return sj.toString();
   }
@@ -141,11 +140,10 @@ public class CreatingIssueState extends BotState implements CancelableState {
   @Override
   public void cancel(MyteamEvent event) {
     userChatService.deleteState(event.getChatId());
-    Locale locale = userChatService.getUserLocale(event.getChatId());
 
     String msg =
         userChatService.getRawText(
-            locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.canceled");
+            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.canceled");
     try {
       if (event instanceof ButtonClickEvent) {
         userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());

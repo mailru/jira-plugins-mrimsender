@@ -71,7 +71,6 @@ public class FieldValueSelectRule extends BaseRule {
         userChatService.sendMessageText(
             event.getChatId(),
             userChatService.getText(
-                userChatService.getUserLocale(event.getChatId()),
                 "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.validationError",
                 e.getLocalizedMessage()));
         rulesEngine.fireCommand(StateActionRuleType.ShowCreatingIssueProgressMessage, event);

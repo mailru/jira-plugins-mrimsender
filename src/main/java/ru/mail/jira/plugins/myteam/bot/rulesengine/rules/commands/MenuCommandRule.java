@@ -34,11 +34,10 @@ public class MenuCommandRule extends BaseRule {
   public void execute(@Fact("event") MyteamEvent event)
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    Locale locale = userChatService.getUserLocale(user);
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(
-            locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
+            "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
         messageFormatter.getMenuButtons(user));
 
     if (event instanceof ButtonClickEvent) {

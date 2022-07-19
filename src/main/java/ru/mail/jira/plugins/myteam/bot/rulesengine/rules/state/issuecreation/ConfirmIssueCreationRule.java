@@ -49,7 +49,6 @@ public class ConfirmIssueCreationRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
 
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-    Locale locale = userChatService.getUserLocale(user);
 
     userChatService.answerCallbackQuery(event.getQueryId());
     try {
@@ -62,7 +61,6 @@ public class ConfirmIssueCreationRule extends BaseRule {
         userChatService.sendMessageText(
             event.getChatId(),
             userChatService.getText(
-                locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreated",
                 issueLink));
       }
@@ -75,7 +73,6 @@ public class ConfirmIssueCreationRule extends BaseRule {
               String.join(
                   "\n",
                   userChatService.getRawText(
-                      locale,
                       "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.validationError"),
                   Utils.stringifyMap(e.getErrors().getErrors()),
                   Utils.stringifyCollection(e.getErrors().getErrorMessages()))));

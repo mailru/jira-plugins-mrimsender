@@ -46,13 +46,12 @@ public class WatchIssueCommandRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();
-    Locale locale = userChatService.getUserLocale(user);
+
     try {
       issueService.watchIssue(issueKey, user);
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(
-              locale,
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyWatch",
               messageFormatter.createIssueLink(issueKey)));
     } catch (IssueWatchingException e) {
@@ -60,7 +59,6 @@ public class WatchIssueCommandRule extends BaseRule {
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(
-              locale,
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyWatching",
               messageFormatter.createIssueLink(issueKey)));
     } catch (IssuePermissionException e) {

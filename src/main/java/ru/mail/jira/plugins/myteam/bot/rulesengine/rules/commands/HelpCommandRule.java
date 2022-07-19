@@ -33,17 +33,15 @@ public class HelpCommandRule extends BaseRule {
   @Action
   public void execute(@Fact("event") MyteamEvent event)
       throws MyteamServerErrorException, IOException {
-    Locale locale = userChatService.getUserLocale(event.getUserId());
     if (event.getChatType() == ChatType.GROUP)
       userChatService.sendMessageText(
           event.getChatId(),
           userChatService.getRawText(
-              locale,
               "ru.mail.jira.plugins.myteam.myteamEventsListener.groupChat.helpMessage.text"));
     else
       userChatService.sendMessageText(
           event.getChatId(),
           userChatService.getRawText(
-              locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.helpMessage.text"));
+              "ru.mail.jira.plugins.myteam.myteamEventsListener.helpMessage.text"));
   }
 }

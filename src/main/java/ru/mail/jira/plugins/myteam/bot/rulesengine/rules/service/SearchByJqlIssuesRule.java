@@ -42,18 +42,14 @@ public class SearchByJqlIssuesRule extends BaseRule {
 
     if (jql == null || jql.length() == 0) { // if jql is not provided ask for input
       String chatId = event.getChatId();
-      Locale locale = userChatService.getUserLocale(event.getUserId());
-
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
       userChatService.sendMessageText(
           chatId,
           userChatService.getRawText(
-              locale,
               "ru.mail.jira.plugins.myteam.myteamEventsListener.searchByJqlClauseButton.insertJqlClause.message"),
           MessageFormatter.buildButtonsWithCancel(
               null,
               userChatService.getRawText(
-                  locale,
                   "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text")));
 
       newState.setWaiting(true);

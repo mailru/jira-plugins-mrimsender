@@ -56,7 +56,6 @@ public class RuleListener implements org.jeasy.rules.api.RuleListener {
           userChatService.sendMessageText(
               event.getUserId(),
               userChatService.getText(
-                  userChatService.getUserLocale(event.getUserId()),
                   "ru.mail.jira.plugins.myteam.chat.adminPermissionsRequired",
                   userChatService.getGroupChatName(event.getChatId())));
         } catch (MyteamServerErrorException | IOException e) {

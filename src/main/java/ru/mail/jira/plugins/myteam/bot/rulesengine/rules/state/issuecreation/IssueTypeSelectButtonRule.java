@@ -77,7 +77,6 @@ public class IssueTypeSelectButtonRule extends BaseRule {
           String.join(
               "\n",
               userChatService.getRawText(
-                  locale,
                   "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.requiredCFError"),
               messageFormatter.stringifyFieldsCollection(locale, e.getRequiredCustomFields())));
 
@@ -86,7 +85,6 @@ public class IssueTypeSelectButtonRule extends BaseRule {
       userChatService.sendMessageText(
           chatId,
           userChatService.getRawText(
-              locale,
               "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedIssueTypeNotValid"));
     }
   }

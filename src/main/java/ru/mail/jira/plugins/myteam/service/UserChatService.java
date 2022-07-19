@@ -33,7 +33,11 @@ public interface UserChatService {
 
   String getRawText(Locale locale, String key);
 
+  String getRawText(String key);
+
   String getText(Locale locale, String s, String data);
+
+  String getText(String s, String data);
 
   MessageFormatter getMessageFormatter();
 

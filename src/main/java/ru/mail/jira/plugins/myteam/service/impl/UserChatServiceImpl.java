@@ -121,8 +121,18 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
+  public String getRawText(String key) {
+    return i18nResolver.getRawText(key);
+  }
+
+  @Override
   public String getText(Locale locale, String key, String param) {
     return i18nResolver.getText(locale, key, param);
+  }
+
+  @Override
+  public String getText(String key, String param) {
+    return i18nResolver.getText(key, param);
   }
 
   @Override

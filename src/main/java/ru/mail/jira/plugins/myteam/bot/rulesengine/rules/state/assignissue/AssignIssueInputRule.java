@@ -62,20 +62,20 @@ public class AssignIssueInputRule extends BaseRule {
         userChatService.sendMessageText(
             event.getChatId(),
             userChatService.getRawText(
-                locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.assignIssue.success"));
+                "ru.mail.jira.plugins.myteam.messageQueueProcessor.assignIssue.success"));
         userChatService.deleteState(event.getChatId());
       } else {
         userChatService.sendMessageText(
             event.getChatId(),
             userChatService.getRawText(
-                locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.assignIssue.error"),
+                "ru.mail.jira.plugins.myteam.messageQueueProcessor.assignIssue.error"),
             messageFormatter.getCancelButton(locale));
       }
     } catch (UserNotFoundException | AssigneeChangeValidationException e) {
       userChatService.sendMessageText(
           event.getChatId(),
           userChatService.getRawText(
-              locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.assignIssue.error"),
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.assignIssue.error"),
           messageFormatter.getCancelButton(locale));
     }
   }

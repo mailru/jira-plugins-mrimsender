@@ -37,14 +37,12 @@ public class LinkIssueWithChatCommandRule extends BaseRule {
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("args") String issueKey)
       throws MyteamServerErrorException, IOException {
-    Locale locale = userChatService.getUserLocale(event.getUserId());
     String chatId = event.getChatId();
     try {
       userChatService.linkChat(chatId, issueKey);
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(
-              locale,
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueLinkedToChat",
               messageFormatter.createIssueLink(issueKey)));
     } catch (LinkIssueWithChatException e) {
@@ -52,7 +50,6 @@ public class LinkIssueWithChatCommandRule extends BaseRule {
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(
-              locale,
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueLinkedToChat.error",
               messageFormatter.createIssueLink(issueKey)));
     } catch (IssueNotFoundException e) {
