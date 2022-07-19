@@ -4,7 +4,6 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;

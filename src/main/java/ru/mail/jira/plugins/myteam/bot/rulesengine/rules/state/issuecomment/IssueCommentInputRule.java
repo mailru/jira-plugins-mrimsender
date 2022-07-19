@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuecomment;
 
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.util.Locale;
 import javax.naming.NoPermissionException;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;

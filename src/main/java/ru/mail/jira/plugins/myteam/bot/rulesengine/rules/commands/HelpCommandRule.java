@@ -2,7 +2,6 @@
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands;
 
 import java.io.IOException;
-import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
