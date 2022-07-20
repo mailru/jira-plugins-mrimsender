@@ -16,7 +16,6 @@ import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.issue.fields.config.manager.IssueTypeSchemeManager;
-import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
@@ -32,10 +31,13 @@ import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.jira.workflow.IssueWorkflowManager;
 import com.atlassian.jira.workflow.TransitionOptions;
 import com.atlassian.jira.workflow.WorkflowActionsBean;
-import com.atlassian.jira.workflow.WorkflowManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
 import com.opensymphony.workflow.loader.ActionDescriptor;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.naming.NoPermissionException;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
@@ -48,16 +50,10 @@ import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
-import javax.naming.NoPermissionException;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 public class IssueServiceImpl implements IssueService {
 
-  private final WorkflowActionsBean workflowActionsBean = new WorkflowActionsBean();
-  private final FieldScreenManager fieldScreenManager;
+  private final WorkflowActionsBean workflowActionsBean;
   private final com.atlassian.jira.bc.issue.IssueService jiraIssueService;
   private final IssueManager issueManager;
   private final PermissionManager permissionManager;
@@ -69,14 +65,12 @@ public class IssueServiceImpl implements IssueService {
   private final IssueTypeManager issueTypeManager;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final IssueTextConverter issueTextConverter;
-  private final WorkflowManager workflowManager;
   private final IssueWorkflowManager issueWorkflowManager;
   private final UserData userData;
   private final PluginData pluginData;
   private final String JIRA_BASE_URL;
 
   public IssueServiceImpl(
-      @ComponentImport FieldScreenManager fieldScreenManager,
       @ComponentImport com.atlassian.jira.bc.issue.IssueService jiraIssueService,
       @ComponentImport IssueManager issueManager,
       @ComponentImport PermissionManager permissionManager,
@@ -87,13 +81,11 @@ public class IssueServiceImpl implements IssueService {
       @ComponentImport IssueTypeSchemeManager issueTypeSchemeManager,
       @ComponentImport IssueTypeManager issueTypeManager,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-      @ComponentImport WorkflowManager workflowManager,
       @ComponentImport IssueWorkflowManager issueWorkflowManager,
       @ComponentImport ApplicationProperties applicationProperties,
       UserData userData,
       IssueTextConverter issueTextConverter,
       PluginData pluginData) {
-    this.fieldScreenManager = fieldScreenManager;
     this.jiraIssueService = jiraIssueService;
     this.issueManager = issueManager;
     this.permissionManager = permissionManager;
@@ -104,12 +96,12 @@ public class IssueServiceImpl implements IssueService {
     this.issueTypeSchemeManager = issueTypeSchemeManager;
     this.issueTypeManager = issueTypeManager;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
-    this.workflowManager = workflowManager;
     this.issueWorkflowManager = issueWorkflowManager;
     this.userData = userData;
     this.issueTextConverter = issueTextConverter;
     this.pluginData = pluginData;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
+    this.workflowActionsBean = new WorkflowActionsBean();
   }
 
   @Override
@@ -279,8 +271,12 @@ public class IssueServiceImpl implements IssueService {
   @Override
   public Collection<ActionDescriptor> getIssueTransitions(String issueKey, ApplicationUser user) {
     Issue issue = getIssueByUser(issueKey, user);
-    return issueWorkflowManager.getSortedAvailableActions(
-        issue, TransitionOptions.defaults(), user);
+    List<ActionDescriptor> actions =
+        issueWorkflowManager.getSortedAvailableActions(issue, TransitionOptions.defaults(), user);
+
+    return actions.stream()
+        .filter(a -> workflowActionsBean.getFieldScreenIdForView(a).isPresent())
+        .collect(Collectors.toList());
   }
 
   @Override
