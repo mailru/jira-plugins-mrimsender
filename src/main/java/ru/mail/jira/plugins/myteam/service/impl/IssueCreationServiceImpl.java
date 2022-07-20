@@ -1,6 +1,8 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
+import static ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis;
+
 import com.atlassian.greenhopper.api.customfield.ManagedCustomFieldsService;
 import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.issue.link.RemoteIssueLinkService;
@@ -32,6 +34,10 @@ import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import com.atlassian.sal.api.message.I18nResolver;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.bot.configuration.createissue.customfields.*;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IncorrectIssueTypeException;
@@ -42,13 +48,6 @@ import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis;
 
 @Service
 @ExportAsService(LifecycleAware.class)
@@ -142,12 +141,9 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
       IssueFieldsFilter issueFieldsFilter) {
     FieldLayout fieldLayout = fieldLayoutManager.getFieldLayout(project, issueType.getId());
     // getting (selectedProject, selectedIssueType, selectedIssueOperation) fields screen
-    return issueTypeScreenSchemeManager
-        .getIssueTypeScreenScheme(project)
+    return issueTypeScreenSchemeManager.getIssueTypeScreenScheme(project)
         .getEffectiveFieldScreenScheme(issueType)
-        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION)
-        .getTabs()
-        .stream()
+        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION).getTabs().stream()
         .flatMap(
             tab ->
                 tab.getFieldScreenLayoutItems().stream()

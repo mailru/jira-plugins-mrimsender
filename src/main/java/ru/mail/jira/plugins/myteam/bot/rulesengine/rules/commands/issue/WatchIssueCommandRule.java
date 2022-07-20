@@ -5,7 +5,6 @@ import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -46,13 +45,12 @@ public class WatchIssueCommandRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();
-    Locale locale = userChatService.getUserLocale(user);
+
     try {
       issueService.watchIssue(issueKey, user);
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(
-              locale,
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.successfullyWatch",
               messageFormatter.createIssueLink(issueKey)));
     } catch (IssueWatchingException e) {
@@ -60,7 +58,6 @@ public class WatchIssueCommandRule extends BaseRule {
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(
-              locale,
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.issueWatching.alreadyWatching",
               messageFormatter.createIssueLink(issueKey)));
     } catch (IssuePermissionException e) {

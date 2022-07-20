@@ -42,7 +42,6 @@ public class CommentIssueRule extends BaseRule {
     Locale locale = userChatService.getUserLocale(user);
     String message =
         userChatService.getText(
-            locale,
             "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.insertComment.message",
             issueKey);
 

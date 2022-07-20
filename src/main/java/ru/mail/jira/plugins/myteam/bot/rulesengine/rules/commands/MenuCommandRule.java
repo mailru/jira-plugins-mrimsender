@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands;
 
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -34,11 +33,10 @@ public class MenuCommandRule extends BaseRule {
   public void execute(@Fact("event") MyteamEvent event)
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    Locale locale = userChatService.getUserLocale(user);
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(
-            locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
+            "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
         messageFormatter.getMenuButtons(user));
 
     if (event instanceof ButtonClickEvent) {

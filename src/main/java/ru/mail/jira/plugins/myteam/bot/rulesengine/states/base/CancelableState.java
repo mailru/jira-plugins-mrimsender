@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.states.base;
 
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.util.Locale;
 import ru.mail.jira.plugins.myteam.bot.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
@@ -24,13 +23,12 @@ public interface CancelableState {
     if (event instanceof ButtonClickEvent) {
       try {
         ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-        Locale locale = userChatService.getUserLocale(user);
         userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
         userChatService.editMessageText(
             event.getChatId(),
             ((ButtonClickEvent) event).getMsgId(),
             userChatService.getRawText(
-                locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.actionCanceled"),
+                "ru.mail.jira.plugins.myteam.myteamEventsListener.actionCanceled"),
             null);
       } catch (MyteamServerErrorException | IOException e) {
         onError(e);

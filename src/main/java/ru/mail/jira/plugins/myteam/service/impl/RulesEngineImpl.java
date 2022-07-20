@@ -16,6 +16,8 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.HelpCommandRul
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.MenuCommandRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.admin.IssueCreationSettingsCommand;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.*;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.editing.IssueTransitionRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.editing.IssueTransitionSelectRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNoPermissionErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNotFoundErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CreateIssueByReplyRule;
@@ -102,6 +104,9 @@ public class RulesEngineImpl
     commandsRuleEngine.registerRule(new AssignIssueCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new ViewIssueCommandRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(new WatchIssueCommandRule(userChatService, this, issueService));
+    commandsRuleEngine.registerRule(new IssueTransitionRule(userChatService, this, issueService));
+    commandsRuleEngine.registerRule(
+        new IssueTransitionSelectRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(
         new UnwatchIssueCommandRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(

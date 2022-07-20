@@ -4,7 +4,6 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuecreation;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -16,7 +15,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation.CreatingIssueState;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.CreatingIssueState;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
@@ -49,7 +48,6 @@ public class ConfirmIssueCreationRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
 
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-    Locale locale = userChatService.getUserLocale(user);
 
     userChatService.answerCallbackQuery(event.getQueryId());
     try {
@@ -62,7 +60,6 @@ public class ConfirmIssueCreationRule extends BaseRule {
         userChatService.sendMessageText(
             event.getChatId(),
             userChatService.getText(
-                locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreated",
                 issueLink));
       }
@@ -75,7 +72,6 @@ public class ConfirmIssueCreationRule extends BaseRule {
               String.join(
                   "\n",
                   userChatService.getRawText(
-                      locale,
                       "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.validationError"),
                   Utils.stringifyMap(e.getErrors().getErrors()),
                   Utils.stringifyCollection(e.getErrors().getErrorMessages()))));

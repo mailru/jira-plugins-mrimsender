@@ -80,7 +80,7 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
         userChatService.sendMessageText(
             event.getChatId(),
             userChatService.getRawText(
-                locale, "ru.mail.jira.plugins.myteam.myteamEventsListener.showComments.empty"));
+                "ru.mail.jira.plugins.myteam.myteamEventsListener.showComments.empty"));
 
       } else {
         pager.setTotal(totalComments.size());

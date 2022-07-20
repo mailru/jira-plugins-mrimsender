@@ -492,12 +492,15 @@ public class MessageFormatter {
   public List<List<InlineKeyboardMarkupButton>> getCancelButton(Locale locale) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
 
-    buttons.add(
-        getCancelButtonRow(
-            i18nResolver.getRawText(
-                locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text")));
+    buttons.add(getCancelButtonRow(locale));
 
     return buttons;
+  }
+
+  public List<InlineKeyboardMarkupButton> getCancelButtonRow(Locale locale) {
+    return getCancelButtonRow(
+        i18nResolver.getRawText(
+            locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text"));
   }
 
   public List<List<InlineKeyboardMarkupButton>> getMenuButtons(ApplicationUser currentUser) {

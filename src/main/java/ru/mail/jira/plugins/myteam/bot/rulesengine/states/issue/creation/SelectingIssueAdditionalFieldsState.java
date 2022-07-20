@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation;
+package ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation;
 
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.issue.issuetype.IssueType;
@@ -91,7 +91,6 @@ public class SelectingIssueAdditionalFieldsState extends BotState
 
     String msg =
         userChatService.getRawText(
-            locale,
             "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message");
     List<List<InlineKeyboardMarkupButton>> buttons =
         getSelectAdditionalFieldMessageButtons(
@@ -155,7 +154,7 @@ public class SelectingIssueAdditionalFieldsState extends BotState
 
     String cancelTitle =
         userChatService.getRawText(
-            locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text");
+            "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text");
 
     if (buttons == null || buttons.size() == 0) { // if no pager buttons
       fieldButtons.add(MessageFormatter.getCancelButtonRow(cancelTitle));

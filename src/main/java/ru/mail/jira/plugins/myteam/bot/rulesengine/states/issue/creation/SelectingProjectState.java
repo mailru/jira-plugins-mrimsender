@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation;
+package ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation;
 
 import com.atlassian.jira.project.Project;
 import java.io.IOException;
@@ -79,7 +79,6 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
           MessageFormatter.buildButtonsWithCancel(
               messageFormatter.getListButtons(locale, pager.hasPrev(), pager.hasNext()),
               userChatService.getRawText(
-                  locale,
                   "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text"));
 
       if (event instanceof ButtonClickEvent && editMessage) {
@@ -96,11 +95,9 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
   @Override
   public void cancel(MyteamEvent event) {
     try {
-      Locale locale = userChatService.getUserLocale(event.getChatId());
-
       String msg =
           userChatService.getRawText(
-              locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.canceled");
+              "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.canceled");
       if (event instanceof ButtonClickEvent) {
         userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());
         userChatService.editMessageText(
@@ -123,7 +120,6 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
     StringJoiner sj = new StringJoiner("\n");
     sj.add(
         userChatService.getRawText(
-            locale,
             "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message"));
     sj.add(DELIMITER_STR);
     List<String> formattedProjectList =

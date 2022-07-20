@@ -22,13 +22,22 @@ public interface UserChatService {
   @Nullable
   ApplicationUser getJiraUserFromUserChatId(@Nullable String id);
 
+  @Nullable
+  ApplicationUser getCtxUser();
+
+  Locale getCtxUserLocale();
+
   Locale getUserLocale(@Nullable String userId);
 
   Locale getUserLocale(@Nullable ApplicationUser user);
 
   String getRawText(Locale locale, String key);
 
+  String getRawText(String key);
+
   String getText(Locale locale, String s, String data);
+
+  String getText(String s, String data);
 
   MessageFormatter getMessageFormatter();
 

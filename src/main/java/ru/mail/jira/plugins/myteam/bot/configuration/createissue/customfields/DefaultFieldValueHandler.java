@@ -17,7 +17,7 @@ import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
 import java.util.stream.Collectors;
 import ru.mail.jira.plugins.myteam.bot.configuration.createissue.FieldInputMessageInfo;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation.FillingIssueFieldState;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.FillingIssueFieldState;
 
 public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
 

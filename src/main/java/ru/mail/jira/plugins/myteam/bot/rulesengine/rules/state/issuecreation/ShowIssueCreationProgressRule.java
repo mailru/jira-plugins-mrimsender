@@ -20,8 +20,8 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation.CreatingIssueState;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation.FillingIssueFieldState;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.CreatingIssueState;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.FillingIssueFieldState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -70,7 +70,6 @@ public class ShowIssueCreationProgressRule extends BaseRule {
       userChatService.sendMessageText(
           event.getChatId(),
           userChatService.getRawText(
-                  locale,
                   "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreationConfirmation")
               + issueCreationState.createInsertFieldMessage(locale, ""),
           getIssueCreationConfirmButtons(locale));
@@ -132,20 +131,17 @@ public class ShowIssueCreationProgressRule extends BaseRule {
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             userChatService.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.issueCreationConfirmButton.text"),
             StateActionRuleType.ConfirmIssueCreation.getName()));
 
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             userChatService.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.issueAddExtraFieldsButton.text"),
             StateActionRuleType.AddAdditionalFields.getName()));
     return MessageFormatter.buildButtonsWithCancel(
         buttons,
         userChatService.getRawText(
-            locale,
             "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text"));
   }
 }

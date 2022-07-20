@@ -21,8 +21,8 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBann
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation.CreatingIssueState;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issuecreation.SelectingProjectState;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.CreatingIssueState;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.SelectingProjectState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -72,7 +72,6 @@ public class ProjectKeyInputRule extends BaseRule {
         userChatService.sendMessageText(
             chatId,
             userChatService.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedProjectNotValid"));
       } else {
         prevState.setProject(project);

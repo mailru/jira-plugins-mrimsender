@@ -37,7 +37,6 @@ public class SearchIssueByKeyInputRule extends BaseRule {
 
     String message =
         userChatService.getRawText(
-            locale,
             "ru.mail.jira.plugins.myteam.messageQueueProcessor.searchButton.insertIssueKey.message");
 
     userChatService.answerCallbackQuery(event.getQueryId());

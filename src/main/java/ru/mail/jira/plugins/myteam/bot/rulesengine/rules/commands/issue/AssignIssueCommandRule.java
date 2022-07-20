@@ -40,7 +40,7 @@ public class AssignIssueCommandRule extends BaseRule {
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(
-            locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.assignIssue.message"),
+            "ru.mail.jira.plugins.myteam.messageQueueProcessor.assignIssue.message"),
         messageFormatter.getCancelButton(locale));
 
     if (event instanceof ButtonClickEvent) {

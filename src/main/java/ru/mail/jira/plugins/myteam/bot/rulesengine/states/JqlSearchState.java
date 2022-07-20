@@ -68,7 +68,6 @@ public class JqlSearchState extends BotState implements PageableState, Cancelabl
         userChatService.sendMessageText(
             event.getChatId(),
             userChatService.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.emptyResult"));
       } else {
         String msg =
@@ -92,7 +91,6 @@ public class JqlSearchState extends BotState implements PageableState, Cancelabl
         userChatService.sendMessageText(
             event.getChatId(),
             userChatService.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.myteamEventsListener.searchIssues.jqlParseError.text"));
       } catch (MyteamServerErrorException | IOException ex) {
         log.error(e.getLocalizedMessage(), e);
