@@ -16,7 +16,6 @@ import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.issue.fields.config.manager.IssueTypeSchemeManager;
-import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
@@ -32,10 +31,13 @@ import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.jira.workflow.IssueWorkflowManager;
 import com.atlassian.jira.workflow.TransitionOptions;
 import com.atlassian.jira.workflow.WorkflowActionsBean;
-import com.atlassian.jira.workflow.WorkflowManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
 import com.opensymphony.workflow.loader.ActionDescriptor;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.naming.NoPermissionException;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
@@ -47,11 +49,6 @@ import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.PluginData;
-
-import javax.naming.NoPermissionException;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class IssueServiceImpl implements IssueService {
@@ -278,8 +275,7 @@ public class IssueServiceImpl implements IssueService {
         issueWorkflowManager.getSortedAvailableActions(issue, TransitionOptions.defaults(), user);
 
     return actions.stream()
-        .filter(
-            a -> workflowActionsBean.getFieldScreenIdForView(a).isEmpty())
+        .filter(a -> workflowActionsBean.getFieldScreenIdForView(a).isEmpty())
         .collect(Collectors.toList());
   }
 

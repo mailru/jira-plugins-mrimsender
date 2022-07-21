@@ -203,26 +203,47 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
     buttons.add(buttonsRow);
 
-    InlineKeyboardMarkupButton issueInfo = new InlineKeyboardMarkupButton();
-    issueInfo.setText(
-        i18nResolver.getRawText(
-            locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.text"));
-    issueInfo.setCallbackData(String.join("-", CommandRuleType.Issue.getName(), issueKey));
-    buttonsRow.add(issueInfo);
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getRawText(
+                locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"),
+            String.join("-", ButtonRuleType.CommentIssue.getName(), issueKey)));
 
-    InlineKeyboardMarkupButton comment = new InlineKeyboardMarkupButton();
-    comment.setText(
-        i18nResolver.getRawText(
-            locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"));
-    comment.setCallbackData(String.join("-", ButtonRuleType.CommentIssue.getName(), issueKey));
-    buttonsRow.add(comment);
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getRawText(
+                locale,
+                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"),
+            String.join("-", ButtonRuleType.ViewComments.getName(), issueKey)));
 
-    InlineKeyboardMarkupButton showMenuButton =
+    ArrayList<InlineKeyboardMarkupButton> assignAndTransitionButtonRow = new ArrayList<>();
+
+    assignAndTransitionButtonRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getRawText(
+                locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.assign.text"),
+            String.join("-", CommandRuleType.AssignIssue.getName(), issueKey)));
+    assignAndTransitionButtonRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getRawText(
+                locale,
+                "ru.mail.jira.plugins.myteam.messageFormatter.editIssue.transitionChange.title"),
+            String.join("-", CommandRuleType.IssueTransition.getName(), issueKey)));
+
+    buttons.add(assignAndTransitionButtonRow);
+
+    List<InlineKeyboardMarkupButton> quickViewAndMenuRow = new ArrayList<>();
+    quickViewAndMenuRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getRawText(
+                locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.text"),
+            String.join("-", CommandRuleType.Issue.getName(), issueKey)));
+    quickViewAndMenuRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getText(
                 locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
-            CommandRuleType.Menu.getName());
-    MessageFormatter.addRowWithButton(buttons, showMenuButton);
+            CommandRuleType.Menu.getName()));
+    buttons.add(quickViewAndMenuRow);
 
     return buttons;
   }
