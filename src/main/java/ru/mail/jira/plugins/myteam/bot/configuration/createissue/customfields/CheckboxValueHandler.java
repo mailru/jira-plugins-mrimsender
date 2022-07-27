@@ -39,14 +39,10 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
 
   @Override
   public FieldInputMessageInfo getMessageInfo(
-      Project project,
-      IssueType issueType,
-      ApplicationUser user,
-      Locale locale,
-      FillingIssueFieldState state) {
+      Project project, IssueType issueType, ApplicationUser user, FillingIssueFieldState state) {
     return FieldInputMessageInfo.builder()
         .message(getInsertFieldMessage(state))
-        .buttons(getButtons(state, locale))
+        .buttons(getButtons(state))
         .build();
   }
 
@@ -54,8 +50,7 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
     return String.format("Ввведите значение для поля %s", state.getField().getName());
   }
 
-  private List<List<InlineKeyboardMarkupButton>> getButtons(
-      FillingIssueFieldState state, Locale locale) {
+  private List<List<InlineKeyboardMarkupButton>> getButtons(FillingIssueFieldState state) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     Options options = getOptions((CustomField) state.getField());
 
@@ -79,7 +74,7 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
     InlineKeyboardMarkupButton optionButton =
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getRawText(
-                locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.add"),
+                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.add"),
             String.join(
                 "-",
                 StateActionRuleType.SelectIssueCreationValue.getName(),
@@ -112,8 +107,7 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(
-      String value, Field field, Project project, IssueType issueType, Locale locale) {
+  public String[] getValueAsArray(String value, Field field, Project project, IssueType issueType) {
     List<String> values = new ArrayList<>(Arrays.asList(value.split(delimiter)));
 
     Options options = getOptions((CustomField) field);

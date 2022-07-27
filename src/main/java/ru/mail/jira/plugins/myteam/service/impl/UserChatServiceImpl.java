@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
-import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.security.JiraAuthenticationContext;
@@ -37,7 +36,6 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
 public class UserChatServiceImpl implements UserChatService {
 
   private final UserData userData;
-  private final LocaleManager localeManager;
   private final MyteamApiClient myteamClient;
   private final PermissionHelper permissionHelper;
   private final I18nResolver i18nResolver;
@@ -57,13 +55,11 @@ public class UserChatServiceImpl implements UserChatService {
       StateManager stateManager,
       IssueService issueService,
       MyteamChatRepository myteamChatRepository,
-      @ComponentImport LocaleManager localeManager,
       @ComponentImport I18nResolver i18nResolver,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
     this.myteamClient = myteamApiClient;
     this.userData = userData;
     this.permissionHelper = permissionHelper;
-    this.localeManager = localeManager;
     this.i18nResolver = i18nResolver;
     this.messageFormatter = messageFormatter;
     this.stateManager = stateManager;
@@ -103,16 +99,6 @@ public class UserChatServiceImpl implements UserChatService {
       return "unknown";
     }
     return "unknown";
-  }
-
-  @Override
-  public Locale getUserLocale(String userId) {
-    return getUserLocale(getJiraUserFromUserChatId(userId));
-  }
-
-  @Override
-  public Locale getUserLocale(ApplicationUser user) {
-    return localeManager.getLocaleFor(user);
   }
 
   @Override

@@ -2,7 +2,6 @@
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue;
 
 import java.io.IOException;
-import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -36,12 +35,11 @@ public class AssignIssueCommandRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
     userChatService.setState(event.getChatId(), new AssigningIssueState(issueKey, userChatService));
 
-    Locale locale = userChatService.getUserLocale(event.getUserId());
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(
             "ru.mail.jira.plugins.myteam.messageQueueProcessor.assignIssue.message"),
-        messageFormatter.getCancelButton(locale));
+        messageFormatter.getCancelButton());
 
     if (event instanceof ButtonClickEvent) {
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());

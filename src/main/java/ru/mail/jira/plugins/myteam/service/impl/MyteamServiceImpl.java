@@ -35,7 +35,7 @@ public class MyteamServiceImpl implements MyteamService {
     if (user == null || StringUtils.isEmpty(message))
       throw new IllegalArgumentException("User and message must be specified");
 
-    String mrimLogin = userData.getMrimLogin(user);
+    String mrimLogin = user.getEmailAddress();
     if (user.isActive() && !StringUtils.isBlank(mrimLogin) && userData.isEnabled(user)) {
       sendMessage(mrimLogin, message);
       return true;

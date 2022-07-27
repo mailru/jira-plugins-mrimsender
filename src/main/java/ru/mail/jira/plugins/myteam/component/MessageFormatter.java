@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.component;
 
 import static ru.mail.jira.plugins.myteam.commons.Utils.shieldText;
 
-import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.datetime.DateTimeFormatter;
@@ -70,7 +69,6 @@ public class MessageFormatter {
   private final IssueTypeScreenSchemeManager issueTypeScreenSchemeManager;
   private final FieldScreenManager fieldScreenManager;
   private final I18nResolver i18nResolver;
-  private final LocaleManager localeManager;
   private final String jiraBaseUrl;
   private final UserManager userManager;
   private final AttachmentManager attachmentManager;
@@ -86,7 +84,6 @@ public class MessageFormatter {
       @ComponentImport IssueTypeScreenSchemeManager issueTypeScreenSchemeManager,
       @ComponentImport FieldScreenManager fieldScreenManager,
       @ComponentImport I18nResolver i18nResolver,
-      @ComponentImport LocaleManager localeManager,
       @ComponentImport UserManager userManager,
       @ComponentImport AttachmentManager attachmentManager,
       PluginData pluginData) {
@@ -98,7 +95,6 @@ public class MessageFormatter {
     this.issueTypeScreenSchemeManager = issueTypeScreenSchemeManager;
     this.fieldScreenManager = fieldScreenManager;
     this.i18nResolver = i18nResolver;
-    this.localeManager = localeManager;
     this.jiraBaseUrl = applicationProperties.getString(APKeys.JIRA_BASEURL);
     this.userManager = userManager;
     this.attachmentManager = attachmentManager;
@@ -161,33 +157,27 @@ public class MessageFormatter {
   public String formatSystemFields(
       ApplicationUser recipient, Issue issue, boolean useMentionFormat) {
     StringBuilder sb = new StringBuilder();
-    Locale recipientLocale = localeManager.getLocaleFor(recipient);
     if (issue.getIssueType() != null)
       appendField(
           sb,
-          i18nResolver.getRawText(recipientLocale, "issue.field.issuetype"),
+          i18nResolver.getRawText("issue.field.issuetype"),
           shieldText(issue.getIssueType().getNameTranslation(i18nHelper)),
           false);
 
     appendField(
-        sb,
-        i18nResolver.getRawText(recipientLocale, "issue.field.affectsversions"),
-        issue.getAffectedVersions());
+        sb, i18nResolver.getRawText("issue.field.affectsversions"), issue.getAffectedVersions());
     appendField(
         sb,
-        i18nResolver.getRawText(recipientLocale, "issue.field.assignee"),
+        i18nResolver.getRawText("issue.field.assignee"),
         formatUser(issue.getAssignee(), "common.concepts.unassigned", useMentionFormat),
         false);
 
-    appendField(
-        sb,
-        i18nResolver.getRawText(recipientLocale, "issue.field.components"),
-        issue.getComponents());
+    appendField(sb, i18nResolver.getRawText("issue.field.components"), issue.getComponents());
 
     if (issue.getCreated() != null)
       appendField(
           sb,
-          i18nResolver.getRawText(recipientLocale, "issue.field.created"),
+          i18nResolver.getRawText("issue.field.created"),
           dateTimeFormatter
               .forUser(recipient)
               .withStyle(DateTimeStyle.COMPLETE)
@@ -197,7 +187,7 @@ public class MessageFormatter {
     if (issue.getDueDate() != null)
       appendField(
           sb,
-          i18nResolver.getRawText(recipientLocale, "issue.field.duedate"),
+          i18nResolver.getRawText("issue.field.duedate"),
           dateTimeFormatter
               .forUser(recipient)
               .withSystemZone()
@@ -207,23 +197,19 @@ public class MessageFormatter {
 
     appendField(
         sb,
-        i18nResolver.getRawText(recipientLocale, "issue.field.environment"),
+        i18nResolver.getRawText("issue.field.environment"),
         shieldText(issue.getEnvironment()),
         false);
+    appendField(sb, i18nResolver.getRawText("issue.field.fixversions"), issue.getFixVersions());
+    appendField(sb, i18nResolver.getRawText("issue.field.labels"), issue.getLabels());
     appendField(
         sb,
-        i18nResolver.getRawText(recipientLocale, "issue.field.fixversions"),
-        issue.getFixVersions());
-    appendField(
-        sb, i18nResolver.getRawText(recipientLocale, "issue.field.labels"), issue.getLabels());
-    appendField(
-        sb,
-        i18nResolver.getRawText(recipientLocale, "issue.field.priority"),
+        i18nResolver.getRawText("issue.field.priority"),
         shieldText(formatPriority(issue.getPriority())),
         false);
     appendField(
         sb,
-        i18nResolver.getRawText(recipientLocale, "issue.field.reporter"),
+        i18nResolver.getRawText("issue.field.reporter"),
         formatUser(issue.getReporter(), "common.concepts.no.reporter", useMentionFormat),
         false);
 
@@ -234,15 +220,9 @@ public class MessageFormatter {
       if (!StringUtils.isBlank(issueSecurityLevel.getDescription()))
         value += " " + issueSecurityLevel.getDescription();
       appendField(
-          sb,
-          i18nResolver.getRawText(recipientLocale, "issue.field.securitylevel"),
-          shieldText(value),
-          false);
+          sb, i18nResolver.getRawText("issue.field.securitylevel"), shieldText(value), false);
     }
-    appendField(
-        sb,
-        i18nResolver.getRawText(recipientLocale, "issue.field.attachment"),
-        issue.getAttachments());
+    appendField(sb, i18nResolver.getRawText("issue.field.attachment"), issue.getAttachments());
 
     if (!StringUtils.isBlank(issue.getDescription())) {
       sb.append("\n\n")
@@ -267,7 +247,6 @@ public class MessageFormatter {
     Issue issue = issueEvent.getIssue();
     ApplicationUser user = issueEvent.getUser();
     String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue.getKey()));
-    Locale recipientLocale = localeManager.getLocaleFor(recipient);
     StringBuilder sb = new StringBuilder();
 
     boolean useMentionFormat = !recipient.equals(user);
@@ -275,7 +254,6 @@ public class MessageFormatter {
     if (EventType.ISSUE_CREATED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.created",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
@@ -285,14 +263,12 @@ public class MessageFormatter {
       // {0} обновил запрос [ {1} ]
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.updated",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     } else if (EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.assigned",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink,
@@ -301,98 +277,85 @@ public class MessageFormatter {
       Resolution resolution = issue.getResolution();
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.resolved",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink,
               resolution != null
                   ? resolution.getNameTranslation(i18nHelper)
-                  : i18nResolver.getText(recipientLocale, "common.resolution.unresolved")));
+                  : i18nResolver.getText("common.resolution.unresolved")));
     } else if (EventType.ISSUE_CLOSED_ID.equals(eventTypeId)) {
       Resolution resolution = issue.getResolution();
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.closed",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink,
               resolution != null
                   ? resolution.getNameTranslation(i18nHelper)
-                  : i18nResolver.getText(recipientLocale, "common.resolution.unresolved")));
+                  : i18nResolver.getText("common.resolution.unresolved")));
     } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.commented",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     } else if (EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.commentEdited",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     } else if (EventType.ISSUE_REOPENED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.reopened",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     } else if (EventType.ISSUE_DELETED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.deleted",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     } else if (EventType.ISSUE_MOVED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.moved",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     } else if (EventType.ISSUE_WORKLOGGED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.worklogged",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     } else if (EventType.ISSUE_WORKSTARTED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.workStarted",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     } else if (EventType.ISSUE_WORKSTOPPED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.workStopped",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     } else if (EventType.ISSUE_WORKLOG_UPDATED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.worklogUpdated",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     } else if (EventType.ISSUE_WORKLOG_DELETED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.worklogDeleted",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     } else {
       sb.append(
           i18nResolver.getText(
-              recipientLocale,
               "ru.mail.jira.plugins.myteam.notification.updated",
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
@@ -410,7 +373,6 @@ public class MessageFormatter {
         formatChangeLog(
             issueEvent.getChangeLog(),
             EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId),
-            recipientLocale,
             useMentionFormat));
     if (issueEvent.getComment() != null && !StringUtils.isBlank(issueEvent.getComment().getBody()))
       sb.append("\n\n")
@@ -422,12 +384,10 @@ public class MessageFormatter {
     Issue issue = mentionIssueEvent.getIssue();
     ApplicationUser user = mentionIssueEvent.getFromUser();
     String issueLink = getIssueLink(issue.getKey());
-    Locale recipientLocale = localeManager.getLocaleFor(recipient);
 
     StringBuilder sb = new StringBuilder();
     sb.append(
         i18nResolver.getText(
-            recipientLocale,
             "ru.mail.jira.plugins.myteam.notification.mentioned",
             formatUser(user, "common.words.anonymous", true),
             issueLink));
@@ -489,29 +449,27 @@ public class MessageFormatter {
         String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), key));
   }
 
-  public List<List<InlineKeyboardMarkupButton>> getCancelButton(Locale locale) {
+  public List<List<InlineKeyboardMarkupButton>> getCancelButton() {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
 
-    buttons.add(getCancelButtonRow(locale));
+    buttons.add(getCancelButtonRow());
 
     return buttons;
   }
 
-  public List<InlineKeyboardMarkupButton> getCancelButtonRow(Locale locale) {
+  public List<InlineKeyboardMarkupButton> getCancelButtonRow() {
     return getCancelButtonRow(
         i18nResolver.getRawText(
-            locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text"));
+            "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text"));
   }
 
-  public List<List<InlineKeyboardMarkupButton>> getMenuButtons(ApplicationUser currentUser) {
-    Locale locale = localeManager.getLocaleFor(currentUser);
+  public List<List<InlineKeyboardMarkupButton>> getMenuButtons() {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
 
     // create 'search issue' button
     InlineKeyboardMarkupButton showIssueButton =
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.showIssueButton.text"),
             ButtonRuleType.SearchIssueByKeyInput.getName());
     addRowWithButton(buttons, showIssueButton);
@@ -520,7 +478,6 @@ public class MessageFormatter {
     InlineKeyboardMarkupButton activeAssignedIssuesButton =
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.activeIssuesAssignedToMeButton.text"),
             CommandRuleType.AssignedIssues.getName());
     addRowWithButton(buttons, activeAssignedIssuesButton);
@@ -529,7 +486,6 @@ public class MessageFormatter {
     InlineKeyboardMarkupButton activeWatchingIssuesButton =
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.activeIssuesWatchingByMeButton.text"),
             CommandRuleType.WatchingIssues.getName());
     addRowWithButton(buttons, activeWatchingIssuesButton);
@@ -538,7 +494,6 @@ public class MessageFormatter {
     InlineKeyboardMarkupButton activeCreatedIssuesButton =
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.activeIssuesCreatedByMeButton.text"),
             CommandRuleType.CreatedIssues.getName());
     addRowWithButton(buttons, activeCreatedIssuesButton);
@@ -547,7 +502,6 @@ public class MessageFormatter {
     InlineKeyboardMarkupButton searchIssueByJqlButton =
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.searchIssueByJqlButton.text"),
             ButtonRuleType.SearchIssueByJqlInput.getName());
     addRowWithButton(buttons, searchIssueByJqlButton);
@@ -556,34 +510,29 @@ public class MessageFormatter {
     InlineKeyboardMarkupButton createIssueButton =
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.mainMenu.createIssueButton.text"),
             ButtonRuleType.CreateIssue.getName());
     addRowWithButton(buttons, createIssueButton);
     return buttons;
   }
 
-  public List<List<InlineKeyboardMarkupButton>> getListButtons(
-      Locale locale, boolean withPrev, boolean withNext) {
+  public List<List<InlineKeyboardMarkupButton>> getListButtons(boolean withPrev, boolean withNext) {
     if (!withPrev && !withNext) return null;
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
 
-    List<InlineKeyboardMarkupButton> pagerButtonsRow =
-        getPagerButtonsRow(locale, withPrev, withNext);
+    List<InlineKeyboardMarkupButton> pagerButtonsRow = getPagerButtonsRow(withPrev, withNext);
     if (pagerButtonsRow.size() > 0) {
       buttons.add(pagerButtonsRow);
     }
     return buttons;
   }
 
-  public List<InlineKeyboardMarkupButton> getPagerButtonsRow(
-      Locale locale, boolean withPrev, boolean withNext) {
+  public List<InlineKeyboardMarkupButton> getPagerButtonsRow(boolean withPrev, boolean withNext) {
     List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>();
     if (withPrev) {
       newButtonsRow.add(
           InlineKeyboardMarkupButton.buildButtonWithoutUrl(
               i18nResolver.getRawText(
-                  locale,
                   "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.prevPageButton.text"),
               ButtonRuleType.PrevPage.getName()));
     }
@@ -591,7 +540,6 @@ public class MessageFormatter {
       newButtonsRow.add(
           InlineKeyboardMarkupButton.buildButtonWithoutUrl(
               i18nResolver.getRawText(
-                  locale,
                   "ru.mail.jira.plugins.myteam.messageFormatter.listButtons.nextPageButton.text"),
               ButtonRuleType.NextPage.getName()));
     }
@@ -599,7 +547,7 @@ public class MessageFormatter {
   }
 
   public String stringifyPagedCollection(
-      Locale locale, Collection<?> collection, int pageNumber, int total, int pageSize) {
+      Collection<?> collection, int pageNumber, int total, int pageSize) {
     if (collection.size() == 0) return "";
 
     StringJoiner sj = new StringJoiner("\n\n");
@@ -614,7 +562,6 @@ public class MessageFormatter {
       sj.add(DELIMITER_STR);
       sj.add(
           i18nResolver.getText(
-              locale,
               "pager.results.displayissues.short",
               String.join(
                   " - ",
@@ -626,10 +573,8 @@ public class MessageFormatter {
     return sj.toString();
   }
 
-  public String stringifyIssueList(
-      Locale locale, List<Issue> issueList, int pageNumber, int total) {
+  public String stringifyIssueList(List<Issue> issueList, int pageNumber, int total) {
     return stringifyPagedCollection(
-        locale,
         issueList.stream()
             .map(
                 issue ->
@@ -642,12 +587,10 @@ public class MessageFormatter {
         LIST_PAGE_SIZE);
   }
 
-  public String stringifyFieldsCollection(Locale locale, Collection<? extends Field> fields) {
-    return String.join(
-        "\n",
-        fields.stream()
-            .map(field -> i18nResolver.getRawText(locale, field.getNameKey()))
-            .collect(Collectors.toList()));
+  public String stringifyFieldsCollection(Collection<? extends Field> fields) {
+    return fields.stream()
+        .map(field -> i18nResolver.getRawText(field.getNameKey()))
+        .collect(Collectors.joining("\n"));
   }
 
   public String formatMyteamUserLink(User user) {
@@ -840,10 +783,7 @@ public class MessageFormatter {
   }
 
   private String formatChangeLog(
-      GenericValue changeLog,
-      boolean ignoreAssigneeField,
-      Locale recipientLocale,
-      boolean useMentionFormat) {
+      GenericValue changeLog, boolean ignoreAssigneeField, boolean useMentionFormat) {
     StringBuilder sb = new StringBuilder();
     if (changeLog != null)
       try {
@@ -889,24 +829,19 @@ public class MessageFormatter {
               sb.append("\n\n")
                   .append(
                       i18nResolver.getText(
-                          recipientLocale,
                           "ru.mail.jira.plugins.myteam.notification.attachmentDeleted",
                           changeItem.getString("oldstring")));
             }
             continue;
           }
           if (!"custom".equalsIgnoreCase(changeItem.getString("fieldtype")))
-            title =
-                i18nResolver.getText(
-                    recipientLocale, "issue.field." + field.replaceAll(" ", "").toLowerCase());
+            title = i18nResolver.getText("issue.field." + field.replaceAll(" ", "").toLowerCase());
 
           if (("Fix Version".equals(field) || "Component".equals(field) || "Version".equals(field))
               && changeItem.get("oldvalue") != null
               && changeItem.get("newvalue") == null) {
             newString = changeItem.getString("oldstring");
-            title =
-                i18nResolver.getText(
-                    recipientLocale, "ru.mail.jira.plugins.myteam.notification.deleted", title);
+            title = i18nResolver.getText("ru.mail.jira.plugins.myteam.notification.deleted", title);
           }
 
           if (fieldManager.isNavigableField(field)) {

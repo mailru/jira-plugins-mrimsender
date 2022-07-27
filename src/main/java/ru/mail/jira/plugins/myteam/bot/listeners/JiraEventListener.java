@@ -3,7 +3,6 @@ package ru.mail.jira.plugins.myteam.bot.listeners;
 
 import com.atlassian.event.api.EventListener;
 import com.atlassian.event.api.EventPublisher;
-import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.issue.Issue;
@@ -15,10 +14,14 @@ import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.util.thread.OffRequestThreadExecutor;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.Sets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -47,7 +50,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   private final MessageFormatter messageFormatter;
   private final MyteamEventsListener myteamEventsListener;
   private final I18nResolver i18nResolver;
-  private final LocaleManager localeManager;
+  private final OffRequestThreadExecutor offRequestThreadExecutor;
 
   @Autowired
   public JiraEventListener(
@@ -58,7 +61,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport ProjectRoleManager projectRoleManager,
       @ComponentImport I18nResolver i18nResolver,
-      @ComponentImport LocaleManager localeManager,
+      @ComponentImport OffRequestThreadExecutor offRequestThreadExecutor,
       UserData userData,
       MessageFormatter messageFormatter,
       MyteamEventsListener myteamEventsListener) {
@@ -72,7 +75,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     this.messageFormatter = messageFormatter;
     this.myteamEventsListener = myteamEventsListener;
     this.i18nResolver = i18nResolver;
-    this.localeManager = localeManager;
+    this.offRequestThreadExecutor = offRequestThreadExecutor;
   }
 
   @Override
@@ -175,30 +178,31 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   private void sendMessage(Collection<ApplicationUser> recipients, Object event, String issueKey) {
     for (ApplicationUser recipient : recipients) {
       if (recipient.isActive() && userData.isEnabled(recipient)) {
-        String mrimLogin = userData.getMrimLogin(recipient);
-        if (StringUtils.isNotBlank(mrimLogin)) {
-          String message = null;
-          if (event instanceof IssueEvent)
-            message = messageFormatter.formatEvent(recipient, (IssueEvent) event);
-          if (event instanceof MentionIssueEvent)
-            message = messageFormatter.formatEvent(recipient, (MentionIssueEvent) event);
+        if (StringUtils.isNotBlank(recipient.getEmailAddress())) {
+          offRequestThreadExecutor.execute(
+              recipient,
+              () -> {
+                String message = null;
+                if (event instanceof IssueEvent)
+                  message = messageFormatter.formatEvent(recipient, (IssueEvent) event);
+                if (event instanceof MentionIssueEvent)
+                  message = messageFormatter.formatEvent(recipient, (MentionIssueEvent) event);
 
-          if (message != null) {
-            myteamEventsListener.publishEvent(
-                new JiraNotifyEvent(
-                    mrimLogin,
-                    message,
-                    getAllIssueButtons(issueKey, localeManager.getLocaleFor(recipient))));
-          } else {
-            myteamEventsListener.publishEvent(new JiraNotifyEvent(mrimLogin, message, null));
-          }
+                if (message != null) {
+                  myteamEventsListener.publishEvent(
+                      new JiraNotifyEvent(
+                          recipient.getEmailAddress(), message, getAllIssueButtons(issueKey)));
+                } else {
+                  myteamEventsListener.publishEvent(
+                      new JiraNotifyEvent(recipient.getEmailAddress(), message, null));
+                }
+              });
         }
       }
     }
   }
 
-  private List<List<InlineKeyboardMarkupButton>> getAllIssueButtons(
-      String issueKey, Locale locale) {
+  private List<List<InlineKeyboardMarkupButton>> getAllIssueButtons(String issueKey) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
     buttons.add(buttonsRow);
@@ -206,13 +210,12 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getRawText(
-                locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"),
+                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"),
             String.join("-", ButtonRuleType.CommentIssue.getName(), issueKey)));
 
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"),
             String.join("-", ButtonRuleType.ViewComments.getName(), issueKey)));
 
@@ -221,12 +224,11 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     assignAndTransitionButtonRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getRawText(
-                locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.assign.text"),
+                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.assign.text"),
             String.join("-", CommandRuleType.AssignIssue.getName(), issueKey)));
     assignAndTransitionButtonRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.editIssue.transitionChange.title"),
             String.join("-", CommandRuleType.IssueTransition.getName(), issueKey)));
 
@@ -236,12 +238,11 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     quickViewAndMenuRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getRawText(
-                locale, "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.text"),
+                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.text"),
             String.join("-", CommandRuleType.Issue.getName(), issueKey)));
     quickViewAndMenuRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getText(
-                locale, "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
+            i18nResolver.getText("ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
             CommandRuleType.Menu.getName()));
     buttons.add(quickViewAndMenuRow);
 

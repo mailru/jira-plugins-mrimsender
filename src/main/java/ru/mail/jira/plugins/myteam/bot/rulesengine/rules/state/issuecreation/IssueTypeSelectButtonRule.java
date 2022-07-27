@@ -5,7 +5,6 @@ import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.util.Locale;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
@@ -54,7 +53,6 @@ public class IssueTypeSelectButtonRule extends BaseRule {
     String chatId = event.getChatId();
     userChatService.answerCallbackQuery(event.getQueryId());
 
-    Locale locale = userChatService.getUserLocale(user);
     try {
       state.setIssueType(
           issueService.getIssueType(issueTypeId),
@@ -78,7 +76,7 @@ public class IssueTypeSelectButtonRule extends BaseRule {
               "\n",
               userChatService.getRawText(
                   "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.requiredCFError"),
-              messageFormatter.stringifyFieldsCollection(locale, e.getRequiredCustomFields())));
+              messageFormatter.stringifyFieldsCollection(e.getRequiredCustomFields())));
 
     } catch (IncorrectIssueTypeException e) {
       log.error(e.getLocalizedMessage(), e);

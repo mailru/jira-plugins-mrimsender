@@ -17,7 +17,6 @@ import com.atlassian.jira.web.bean.PagerFilter;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.configuration.createissue.FieldInputMessageInfo;
@@ -55,33 +54,29 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
 
   @Override
   public FieldInputMessageInfo getMessageInfo(
-      Project project,
-      IssueType issueType,
-      ApplicationUser user,
-      Locale locale,
-      FillingIssueFieldState state) {
+      Project project, IssueType issueType, ApplicationUser user, FillingIssueFieldState state) {
     @Nullable
     SearchResults<Issue> epics = getEpics(user, project, state.getInput(), state.getPager());
 
     return FieldInputMessageInfo.builder()
-        .message(getInsertFieldMessage(locale, epics))
-        .buttons(getButtons(state, locale, epics))
+        .message(getInsertFieldMessage(epics))
+        .buttons(getButtons(state, epics))
         .build();
   }
 
-  private String getInsertFieldMessage(Locale locale, @Nullable SearchResults<Issue> epics) {
+  private String getInsertFieldMessage(@Nullable SearchResults<Issue> epics) {
 
     if (epics == null || epics.getResults().size() == 0) {
       return i18nResolver.getRawText(
-          locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.epicLinkSelect.empty");
+          "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.epicLinkSelect.empty");
     }
 
     return i18nResolver.getRawText(
-        locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.epicLinkSelect.message");
+        "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.epicLinkSelect.message");
   }
 
   private List<List<InlineKeyboardMarkupButton>> getButtons(
-      FillingIssueFieldState state, Locale locale, @Nullable SearchResults<Issue> epics) {
+      FillingIssueFieldState state, @Nullable SearchResults<Issue> epics) {
     if (epics == null || epics.getResults().size() == 0) {
       return null;
     }
@@ -104,7 +99,7 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
             .collect(Collectors.toList());
 
     List<InlineKeyboardMarkupButton> pagerButtonsRow =
-        messageFormatter.getPagerButtonsRow(locale, pager.hasPrev(), pager.hasNext());
+        messageFormatter.getPagerButtonsRow(pager.hasPrev(), pager.hasNext());
     if (pagerButtonsRow.size() > 0) {
       buttons.add(pagerButtonsRow);
     }

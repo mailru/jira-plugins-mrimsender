@@ -4,7 +4,6 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.assignissue;
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -49,7 +48,6 @@ public class AssignIssueInputRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
 
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
-    Locale locale = userChatService.getUserLocale(user);
 
     String userEmail = Utils.getEmailFromMention(event);
 
@@ -69,14 +67,14 @@ public class AssignIssueInputRule extends BaseRule {
             event.getChatId(),
             userChatService.getRawText(
                 "ru.mail.jira.plugins.myteam.messageQueueProcessor.assignIssue.error"),
-            messageFormatter.getCancelButton(locale));
+            messageFormatter.getCancelButton());
       }
     } catch (UserNotFoundException | AssigneeChangeValidationException e) {
       userChatService.sendMessageText(
           event.getChatId(),
           userChatService.getRawText(
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.assignIssue.error"),
-          messageFormatter.getCancelButton(locale));
+          messageFormatter.getCancelButton());
     }
   }
 }

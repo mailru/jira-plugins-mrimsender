@@ -8,7 +8,6 @@ import com.atlassian.jira.bc.issue.IssueService;
 import com.atlassian.jira.bc.issue.link.RemoteIssueLinkService;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.config.IssueTypeManager;
-import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.event.type.EventDispatchOption;
 import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.issue.*;
@@ -58,7 +57,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
   private final IssueTypeManager issueTypeManager;
   private final FieldLayoutManager fieldLayoutManager;
   private final FieldManager fieldManager;
-  private final LocaleManager localeManager;
   private final IssueManager issueManager;
   private final IssueService issueService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
@@ -79,7 +77,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
       @ComponentImport IssueTypeManager issueTypeManager,
       @ComponentImport FieldLayoutManager fieldLayoutManager,
       @ComponentImport FieldManager fieldManager,
-      @ComponentImport LocaleManager localeManager,
       @ComponentImport IssueManager issueManager,
       @ComponentImport IssueService issueService,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
@@ -96,7 +93,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
     this.issueTypeManager = issueTypeManager;
     this.fieldLayoutManager = fieldLayoutManager;
     this.fieldManager = fieldManager;
-    this.localeManager = localeManager;
     this.issueManager = issueManager;
     this.issueService = issueService;
     this.searchService = searchService;
@@ -199,11 +195,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
                         (e) -> {
                           CreateIssueFieldValueHandler cfConfig = getFieldValueHandler(e.getKey());
                           return cfConfig.getValueAsArray(
-                              removeAllEmojis(e.getValue()),
-                              e.getKey(),
-                              project,
-                              issueType,
-                              localeManager.getLocaleFor(user));
+                              removeAllEmojis(e.getValue()), e.getKey(), project, issueType);
                         })));
     issueInputParameters.setRetainExistingValuesWhenParameterNotProvided(true, true);
 
@@ -326,7 +318,6 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
     linkBuilder.url(link);
     linkBuilder.title(
         i18nResolver.getText(
-            localeManager.getLocaleFor(user),
             "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.createdInChat",
             removeAllEmojis(title)));
     linkBuilder.issueId(issue.getId());

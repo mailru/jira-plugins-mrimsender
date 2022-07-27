@@ -70,7 +70,6 @@ public class MessageFormatterTest {
             issueTypeScreenSchemeManager,
             fieldScreenManager,
             i18nResolver,
-            localeManager,
             userManager,
             attachmentManager,
             pluginData);

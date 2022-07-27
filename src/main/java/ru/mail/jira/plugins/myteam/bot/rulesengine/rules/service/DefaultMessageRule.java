@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service;
 
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -45,8 +44,6 @@ public class DefaultMessageRule extends BaseRule {
   @Action
   public void execute(@Fact("event") MyteamEvent event)
       throws MyteamServerErrorException, IOException {
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-
     String chatId = event.getChatId();
 
     List<Forward> forwards = getForwardList((ChatMessageEvent) event);
@@ -64,7 +61,7 @@ public class DefaultMessageRule extends BaseRule {
         chatId,
         userChatService.getRawText(
             "ru.mail.jira.plugins.myteam.myteamEventsListener.defaultMessage.text"),
-        messageFormatter.getMenuButtons(user));
+        messageFormatter.getMenuButtons());
   }
 
   private boolean fireViewIssueResult(MyteamEvent event, String issueKey) {

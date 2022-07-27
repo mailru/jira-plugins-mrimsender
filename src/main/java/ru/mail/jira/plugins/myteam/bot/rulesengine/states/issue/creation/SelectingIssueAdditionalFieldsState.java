@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -75,8 +74,6 @@ public class SelectingIssueAdditionalFieldsState extends BotState
 
   @Override
   public void updatePage(MyteamEvent event, boolean editMessage) {
-    Locale locale = userChatService.getUserLocale(event.getChatId());
-
     LinkedHashMap<Field, String> nonRequiredFields =
         issueCreationService.getIssueCreationFieldsValues(
             project, issueType, null, null, IssueFieldsFilter.NON_REQUIRED);
@@ -94,7 +91,7 @@ public class SelectingIssueAdditionalFieldsState extends BotState
             "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectProject.message");
     List<List<InlineKeyboardMarkupButton>> buttons =
         getSelectAdditionalFieldMessageButtons(
-            locale, pager.hasPrev(), pager.hasNext(), pageFieldsInterval);
+            pager.hasPrev(), pager.hasNext(), pageFieldsInterval);
 
     try {
       if (event instanceof ButtonClickEvent) {
@@ -124,9 +121,9 @@ public class SelectingIssueAdditionalFieldsState extends BotState
   }
 
   private List<List<InlineKeyboardMarkupButton>> getSelectAdditionalFieldMessageButtons(
-      Locale locale, boolean withPrev, boolean withNext, List<Field> fields) {
+      boolean withPrev, boolean withNext, List<Field> fields) {
     List<List<InlineKeyboardMarkupButton>> buttons =
-        messageFormatter.getListButtons(locale, withPrev, withNext);
+        messageFormatter.getListButtons(withPrev, withNext);
 
     int colCount =
         fields.size() <= ADDITIONAL_FIELD_ONE_COLUMN_MAX_COUNT

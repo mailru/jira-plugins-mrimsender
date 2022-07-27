@@ -98,8 +98,8 @@ public class CreatingIssueState extends BotState implements CancelableState {
     fieldValues.remove(field);
   }
 
-  public String createInsertFieldMessage(Locale locale, String messageHeader) {
-    return String.join("\n", messageHeader, this.formatIssueCreationFields(locale, fieldValues));
+  public String createInsertFieldMessage(String messageHeader) {
+    return String.join("\n", messageHeader, this.formatIssueCreationFields(fieldValues));
   }
 
   private Optional<Field> getFirstUnfilledField() {
@@ -114,7 +114,7 @@ public class CreatingIssueState extends BotState implements CancelableState {
         .orElseGet(() -> fieldValues.size() - 1);
   }
 
-  private String formatIssueCreationFields(Locale locale, Map<Field, String> fieldValuesMap) {
+  private String formatIssueCreationFields(Map<Field, String> fieldValuesMap) {
     StringJoiner sj = new StringJoiner("\n");
 
     sj.add(DELIMITER_STR);
@@ -123,10 +123,7 @@ public class CreatingIssueState extends BotState implements CancelableState {
             "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.currentIssueCreationDtoState"));
     sj.add(String.join(" ", userChatService.getRawText("Project:"), project.getName()));
     sj.add(
-        String.join(
-            " ",
-            userChatService.getRawText("IssueType:"),
-            issueType.getNameTranslation(locale.toString())));
+        String.join(" ", userChatService.getRawText("IssueType:"), issueType.getNameTranslation()));
     fieldValuesMap.forEach(
         (field, value) ->
             sj.add(
