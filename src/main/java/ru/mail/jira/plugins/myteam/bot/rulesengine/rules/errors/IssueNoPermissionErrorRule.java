@@ -38,7 +38,6 @@ public class IssueNoPermissionErrorRule extends BaseRule {
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(
-            userChatService.getUserLocale(event.getUserId()),
             "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
   }
 }

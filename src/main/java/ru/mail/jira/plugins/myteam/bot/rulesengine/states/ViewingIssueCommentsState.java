@@ -8,7 +8,6 @@ import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
@@ -69,7 +68,6 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
   public void updatePage(MyteamEvent event, boolean editMessage) {
     try {
       ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-      Locale locale = userChatService.getUserLocale(user);
       List<Comment> totalComments = issueService.getIssueComments(issueKey, user);
 
       if (event instanceof ButtonClickEvent)
@@ -92,10 +90,9 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
                 .collect(Collectors.toList());
 
         List<List<InlineKeyboardMarkupButton>> buttons =
-            messageFormatter.getListButtons(locale, pager.hasPrev(), pager.hasNext());
+            messageFormatter.getListButtons(pager.hasPrev(), pager.hasNext());
 
-        String msg =
-            stringifyIssueCommentsList(locale, comments, pager.getPage(), pager.getTotal());
+        String msg = stringifyIssueCommentsList(comments, pager.getPage(), pager.getTotal());
 
         if (event instanceof ButtonClickEvent && editMessage)
           userChatService.editMessageText(
@@ -111,11 +108,9 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
     }
   }
 
-  private String stringifyIssueCommentsList(
-      Locale locale, List<Comment> commentList, int pageNumber, int total) {
+  private String stringifyIssueCommentsList(List<Comment> commentList, int pageNumber, int total) {
     SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     return messageFormatter.stringifyPagedCollection(
-        locale,
         commentList.stream()
             .map(
                 comment ->

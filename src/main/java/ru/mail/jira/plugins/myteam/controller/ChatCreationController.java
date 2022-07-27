@@ -5,7 +5,6 @@ import com.atlassian.jira.avatar.Avatar;
 import com.atlassian.jira.avatar.AvatarService;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.user.search.UserSearchService;
-import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.issue.Issue;
@@ -19,7 +18,6 @@ import com.atlassian.sal.api.message.I18nResolver;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -64,7 +62,6 @@ public class ChatCreationController {
   private final MyteamEventsListener myteamEventsListener;
   private final UserSearchService userSearchService;
   private final I18nResolver i18nResolver;
-  private final LocaleManager localeManager;
   private final ApplicationProperties applicationProperties;
 
   @Autowired
@@ -76,7 +73,6 @@ public class ChatCreationController {
       @ComponentImport UserManager userManager,
       @ComponentImport UserSearchService userSearchService,
       @ComponentImport I18nResolver i18nResolver,
-      @ComponentImport LocaleManager localeManager,
       @ComponentImport ApplicationProperties applicationProperties,
       MyteamApiClient myteamApiClient,
       MyteamChatRepository myteamChatRepository,
@@ -95,7 +91,6 @@ public class ChatCreationController {
     this.userData = userData;
     this.myteamEventsListener = myteamEventsListener;
     this.i18nResolver = i18nResolver;
-    this.localeManager = localeManager;
     this.applicationProperties = applicationProperties;
   }
 
@@ -233,7 +228,7 @@ public class ChatCreationController {
             .map(memberId -> userManager.getUserById(memberId).orElse(null))
             .filter(Objects::nonNull)
             .filter(userData::isCreateChatsWithUserAllowed)
-            .map(user -> new ChatMemberId(userData.getMrimLogin(user)))
+            .map(user -> new ChatMemberId(user.getEmailAddress()))
             .collect(Collectors.toList());
 
     List<ApplicationUser> applicationUsers =
@@ -260,13 +255,11 @@ public class ChatCreationController {
     new GroupChatInfo("title", "about", "rules", "http:/myteam/inite/link", false, false),
     chatMemberDtos);*/
     try {
-      Locale recipientLocale = localeManager.getLocaleFor(loggedInUser);
       HttpResponse<CreateChatResponse> createChatResponse =
           this.myteamApiClient.createChat(
               pluginData.getToken(),
               chatName,
               i18nResolver.getText(
-                  recipientLocale,
                   "ru.mail.jira.plugins.myteam.createChat.about.text",
                   StringUtils.EMPTY,
                   applicationProperties.getString(APKeys.JIRA_BASEURL) + "/browse/" + issueKey),
@@ -288,7 +281,6 @@ public class ChatCreationController {
               pluginData.getToken(),
               chatId,
               i18nResolver.getText(
-                  recipientLocale,
                   "ru.mail.jira.plugins.myteam.createChat.about.text",
                   chatMetaDto != null ? chatMetaDto.getLink() : StringUtils.EMPTY,
                   applicationProperties.getString(APKeys.JIRA_BASEURL) + "/browse/" + issueKey));

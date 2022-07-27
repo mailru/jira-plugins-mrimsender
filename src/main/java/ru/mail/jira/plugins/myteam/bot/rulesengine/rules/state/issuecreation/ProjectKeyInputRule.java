@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -63,7 +62,6 @@ public class ProjectKeyInputRule extends BaseRule {
       throws MyteamServerErrorException, IOException, UserNotFoundException {
     String chatId = event.getChatId();
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(chatId);
-    Locale locale = userChatService.getUserLocale(user);
 
     try {
 
@@ -81,11 +79,10 @@ public class ProjectKeyInputRule extends BaseRule {
 
         userChatService.sendMessageText(
             chatId,
-            getSelectIssueTypeMessage(locale),
+            getSelectIssueTypeMessage(),
             MessageFormatter.buildButtonsWithCancel(
-                buildIssueTypesButtons(projectIssueTypes, locale),
+                buildIssueTypesButtons(projectIssueTypes),
                 userChatService.getRawText(
-                    locale,
                     "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text")));
       }
     } catch (PermissionException e) {
@@ -93,31 +90,29 @@ public class ProjectKeyInputRule extends BaseRule {
       userChatService.sendMessageText(
           chatId,
           userChatService.getRawText(
-              locale,
               "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.notEnoughPermissions"));
     } catch (ProjectBannedException e) {
       log.error(e.getLocalizedMessage(), e);
       userChatService.sendMessageText(
           chatId,
           userChatService.getRawText(
-              locale,
               "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectedProjectIsBanned"));
     }
   }
 
-  private String getSelectIssueTypeMessage(Locale locale) {
+  private String getSelectIssueTypeMessage() {
     return userChatService.getRawText(
-        locale, "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectIssueType.message");
+        "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.selectIssueType.message");
   }
 
   private List<List<InlineKeyboardMarkupButton>> buildIssueTypesButtons(
-      Collection<IssueType> issueTypes, Locale locale) {
+      Collection<IssueType> issueTypes) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     issueTypes.forEach(
         issueType -> {
           InlineKeyboardMarkupButton issueTypeButton =
               InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-                  issueType.getNameTranslation(locale.getLanguage()),
+                  issueType.getNameTranslation(),
                   String.join(
                       "-", StateActionRuleType.SelectIssueType.getName(), issueType.getId()));
           MessageFormatter.addRowWithButton(buttons, issueTypeButton);

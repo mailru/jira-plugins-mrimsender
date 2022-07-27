@@ -36,12 +36,6 @@ public class UserData {
     this.pluginData = pluginData;
   }
 
-  public String getMrimLogin(ApplicationUser user) {
-    String mrimLogin = userPropertyManager.getPropertySet(user).getString(MRIM_LOGIN_USER_PROPERTY);
-    if (mrimLogin == null) mrimLogin = user.getEmailAddress();
-    return mrimLogin;
-  }
-
   public void setMrimLogin(ApplicationUser user, String mrimLogin) {
     userPropertyManager.getPropertySet(user).setString(MRIM_LOGIN_USER_PROPERTY, mrimLogin);
   }

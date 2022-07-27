@@ -4,7 +4,6 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation;
 import com.atlassian.jira.project.Project;
 import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -51,8 +50,6 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
 
   @Override
   public void updatePage(MyteamEvent event, boolean editMessage) {
-    Locale locale = userChatService.getUserLocale(event.getChatId());
-
     List<Project> allowedProjectList = issueService.getAllowedProjects();
 
     pager.setTotal(allowedProjectList.size());
@@ -69,7 +66,6 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
 
       String msg =
           createSelectProjectMessage(
-              locale,
               nextProjectsInterval,
               pager.getPage(),
               allowedProjectList.size(),
@@ -77,7 +73,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
 
       List<List<InlineKeyboardMarkupButton>> buttons =
           MessageFormatter.buildButtonsWithCancel(
-              messageFormatter.getListButtons(locale, pager.hasPrev(), pager.hasNext()),
+              messageFormatter.getListButtons(pager.hasPrev(), pager.hasNext()),
               userChatService.getRawText(
                   "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text"));
 
@@ -112,11 +108,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
   }
 
   private String createSelectProjectMessage(
-      Locale locale,
-      List<Project> visibleProjects,
-      int pageNumber,
-      int totalProjectsNum,
-      int pageSize) {
+      List<Project> visibleProjects, int pageNumber, int totalProjectsNum, int pageSize) {
     StringJoiner sj = new StringJoiner("\n");
     sj.add(
         userChatService.getRawText(
@@ -128,7 +120,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
             .collect(Collectors.toList());
     sj.add(
         messageFormatter.stringifyPagedCollection(
-            locale, formattedProjectList, pageNumber, totalProjectsNum, pageSize));
+            formattedProjectList, pageNumber, totalProjectsNum, pageSize));
     return sj.toString();
   }
 }

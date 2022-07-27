@@ -2,7 +2,6 @@
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons;
 
 import java.io.IOException;
-import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -33,15 +32,12 @@ public class SearchIssueByKeyInputRule extends BaseRule {
   @Action
   public void execute(@Fact("event") ButtonClickEvent event)
       throws MyteamServerErrorException, IOException {
-    Locale locale = userChatService.getUserLocale(event.getUserId());
-
     String message =
         userChatService.getRawText(
             "ru.mail.jira.plugins.myteam.messageQueueProcessor.searchButton.insertIssueKey.message");
 
     userChatService.answerCallbackQuery(event.getQueryId());
-    userChatService.sendMessageText(
-        event.getChatId(), message, messageFormatter.getCancelButton(locale));
+    userChatService.sendMessageText(event.getChatId(), message, messageFormatter.getCancelButton());
 
     ViewingIssueState newState = new ViewingIssueState(userChatService, null);
     newState.setWaiting(true);

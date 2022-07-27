@@ -1,9 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons;
 
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.util.Locale;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -37,16 +35,13 @@ public class CommentIssueRule extends BaseRule {
     CommentingIssueState newState = new CommentingIssueState(issueKey);
     newState.setWaiting(true);
     userChatService.setState(event.getChatId(), newState);
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
 
-    Locale locale = userChatService.getUserLocale(user);
     String message =
         userChatService.getText(
             "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.insertComment.message",
             issueKey);
 
-    userChatService.sendMessageText(
-        event.getChatId(), message, messageFormatter.getCancelButton(locale));
+    userChatService.sendMessageText(event.getChatId(), message, messageFormatter.getCancelButton());
     userChatService.answerCallbackQuery(event.getQueryId());
   }
 }

@@ -27,10 +27,6 @@ public interface UserChatService {
 
   Locale getCtxUserLocale();
 
-  Locale getUserLocale(@Nullable String userId);
-
-  Locale getUserLocale(@Nullable ApplicationUser user);
-
   String getRawText(Locale locale, String key);
 
   String getRawText(String key);

@@ -42,40 +42,32 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
 
   @Override
   public FieldInputMessageInfo getMessageInfo(
-      Project project,
-      IssueType issueType,
-      ApplicationUser user,
-      Locale locale,
-      FillingIssueFieldState state) {
-    return FieldInputMessageInfo.builder().message(getInsertFieldMessage(state, locale)).build();
+      Project project, IssueType issueType, ApplicationUser user, FillingIssueFieldState state) {
+    return FieldInputMessageInfo.builder().message(getInsertFieldMessage(state)).build();
   }
 
-  private String getInsertFieldMessage(FillingIssueFieldState state, Locale locale) {
+  private String getInsertFieldMessage(FillingIssueFieldState state) {
     if (isArrayLikeField(state.getField())) {
       return i18nResolver.getText(
-          locale,
           "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.arrayMessage",
-          i18nResolver.getRawText(locale, state.getField().getNameKey()).toLowerCase(locale));
+          i18nResolver.getRawText(state.getField().getNameKey()).toLowerCase());
     }
     return i18nResolver.getText(
-        locale,
         "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.message",
-        i18nResolver.getRawText(locale, state.getField().getNameKey()).toLowerCase(locale));
+        i18nResolver.getRawText(state.getField().getNameKey()).toLowerCase());
   }
 
   @Override
-  public String[] getValueAsArray(
-      String value, Field field, Project project, IssueType issueType, Locale locale) {
-    return mapUserInputStringToFieldValue(project.getId(), field, value, locale);
+  public String[] getValueAsArray(String value, Field field, Project project, IssueType issueType) {
+    return mapUserInputStringToFieldValue(project.getId(), field, value);
   }
 
   // TODO custom handlers for all system fiels
-  private String[] mapUserInputStringToFieldValue(
-      Long projectId, Field field, String fieldValue, Locale locale) {
+  private String[] mapUserInputStringToFieldValue(Long projectId, Field field, String fieldValue) {
     if (isArrayLikeField(field)) {
       return mapStringToArrayFieldValue(projectId, field, fieldValue);
     }
-    return mapStringToSingleFieldValue(field, fieldValue, locale);
+    return mapStringToSingleFieldValue(field, fieldValue);
   }
 
   private String[] mapStringToArrayFieldValue(Long projectId, Field field, String fieldValue) {
@@ -124,7 +116,7 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
     return fieldValues.toArray(new String[0]);
   }
 
-  private String[] mapStringToSingleFieldValue(Field field, String fieldValue, Locale locale) {
+  private String[] mapStringToSingleFieldValue(Field field, String fieldValue) {
     // no preprocessing for description and summary fields needed
     if (field.getId().equals(IssueFieldConstants.DESCRIPTION)
         || field.getId().equals(IssueFieldConstants.SUMMARY)) {
@@ -162,9 +154,7 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
                   .filter(
                       resolution ->
                           resolution.getName().equals(resolutionStrValue)
-                              || resolution
-                                  .getNameTranslation(locale.getLanguage())
-                                  .equals(resolutionStrValue))
+                              || resolution.getNameTranslation().equals(resolutionStrValue))
                   .findFirst()
                   .map(IssueConstant::getId)
                   .orElse("");

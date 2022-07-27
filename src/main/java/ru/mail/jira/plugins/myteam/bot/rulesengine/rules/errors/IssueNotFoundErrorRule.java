@@ -33,7 +33,6 @@ public class IssueNotFoundErrorRule extends BaseRule {
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(
-            userChatService.getUserLocale(event.getUserId()),
             "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
   }
 }

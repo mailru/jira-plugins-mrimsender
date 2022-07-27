@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands;
 
-import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -32,12 +31,11 @@ public class MenuCommandRule extends BaseRule {
   @Action
   public void execute(@Fact("event") MyteamEvent event)
       throws MyteamServerErrorException, IOException {
-    ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(
             "ru.mail.jira.plugins.myteam.messageQueueProcessor.mainMenu.text"),
-        messageFormatter.getMenuButtons(user));
+        messageFormatter.getMenuButtons());
 
     if (event instanceof ButtonClickEvent) {
       userChatService.answerCallbackQuery(((ButtonClickEvent) event).getQueryId());

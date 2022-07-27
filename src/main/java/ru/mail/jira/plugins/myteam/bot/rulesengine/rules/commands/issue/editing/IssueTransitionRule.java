@@ -48,7 +48,6 @@ public class IssueTransitionRule extends BaseRule {
     userChatService.sendMessageText(
         event.getChatId(),
         userChatService.getRawText(
-            userChatService.getUserLocale(user),
             "ru.mail.jira.plugins.myteam.messageFormatter.editIssue.transitionChange.message"),
         getTransitionButtons(issueKey, user));
 
@@ -80,7 +79,7 @@ public class IssueTransitionRule extends BaseRule {
 
           buttons.add(buttonsRow);
         });
-    buttons.add(messageFormatter.getCancelButtonRow(userChatService.getUserLocale(user)));
+    buttons.add(messageFormatter.getCancelButtonRow());
 
     return buttons;
   }

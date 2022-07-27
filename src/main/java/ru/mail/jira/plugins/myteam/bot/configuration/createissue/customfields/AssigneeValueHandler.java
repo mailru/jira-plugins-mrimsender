@@ -6,7 +6,6 @@ import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
-import java.util.Locale;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
@@ -31,15 +30,10 @@ public class AssigneeValueHandler implements CreateIssueFieldValueHandler {
 
   @Override
   public FieldInputMessageInfo getMessageInfo(
-      Project project,
-      IssueType issueType,
-      ApplicationUser user,
-      Locale locale,
-      FillingIssueFieldState state) {
+      Project project, IssueType issueType, ApplicationUser user, FillingIssueFieldState state) {
     return FieldInputMessageInfo.builder()
         .message(
             i18nResolver.getRawText(
-                locale,
                 "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.assigneeField.message"))
         .build();
   }

@@ -98,14 +98,12 @@ public class ViewIssueCommandRule extends BaseRule {
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             userChatService.getRawText(
-                userChatService.getUserLocale(recipient),
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"),
             String.join("-", ButtonRuleType.CommentIssue.getName(), issueKey)));
 
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             userChatService.getRawText(
-                userChatService.getUserLocale(recipient),
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"),
             String.join("-", ButtonRuleType.ViewComments.getName(), issueKey)));
 
@@ -114,7 +112,6 @@ public class ViewIssueCommandRule extends BaseRule {
     watchButtonRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             userChatService.getRawText(
-                userChatService.getUserLocale(recipient),
                 isWatching
                     ? "ru.mail.jira.plugins.myteam.mrimsenderEventListener.unwatchButton.text"
                     : "ru.mail.jira.plugins.myteam.mrimsenderEventListener.watchButton.text"),
@@ -128,7 +125,6 @@ public class ViewIssueCommandRule extends BaseRule {
     watchButtonRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             userChatService.getRawText(
-                userChatService.getUserLocale(recipient),
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.assign.text"),
             String.join("-", CommandRuleType.AssignIssue.getName(), issueKey)));
 
@@ -139,7 +135,6 @@ public class ViewIssueCommandRule extends BaseRule {
     transitionButtonRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             userChatService.getRawText(
-                userChatService.getUserLocale(recipient),
                 "ru.mail.jira.plugins.myteam.messageFormatter.editIssue.transitionChange.title"),
             String.join("-", CommandRuleType.IssueTransition.getName(), issueKey)));
 

@@ -10,7 +10,6 @@ import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import ru.mail.jira.plugins.commons.SentryClient;
@@ -55,7 +54,6 @@ public class JqlSearchState extends BotState implements PageableState, Cancelabl
   @Override
   public void updatePage(MyteamEvent event, boolean editMessage) {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
-    Locale locale = userChatService.getUserLocale(user);
 
     try {
       if (event instanceof ButtonClickEvent) {
@@ -73,12 +71,11 @@ public class JqlSearchState extends BotState implements PageableState, Cancelabl
         String msg =
             userChatService
                 .getMessageFormatter()
-                .stringifyIssueList(locale, parseResult.getResults(), page, parseResult.getTotal());
+                .stringifyIssueList(parseResult.getResults(), page, parseResult.getTotal());
         List<List<InlineKeyboardMarkupButton>> buttons =
             userChatService
                 .getMessageFormatter()
-                .getListButtons(
-                    locale, page != 0, parseResult.getTotal() > (page + 1) * LIST_PAGE_SIZE);
+                .getListButtons(page != 0, parseResult.getTotal() > (page + 1) * LIST_PAGE_SIZE);
         if (event instanceof ButtonClickEvent && editMessage)
           userChatService.editMessageText(
               event.getChatId(), ((ButtonClickEvent) event).getMsgId(), msg, buttons);

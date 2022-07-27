@@ -14,7 +14,6 @@ import com.atlassian.sal.api.message.I18nResolver;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import ru.mail.jira.plugins.myteam.bot.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.FillingIssueFieldState;
@@ -38,33 +37,27 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
 
   @Override
   public FieldInputMessageInfo getMessageInfo(
-      Project project,
-      IssueType issueType,
-      ApplicationUser user,
-      Locale locale,
-      FillingIssueFieldState state) {
+      Project project, IssueType issueType, ApplicationUser user, FillingIssueFieldState state) {
     return FieldInputMessageInfo.builder()
-        .message(getInsertFieldMessage(state, locale))
-        .buttons(getButtons(project, issueType, locale))
+        .message(getInsertFieldMessage(state))
+        .buttons(getButtons(project, issueType))
         .build();
   }
 
-  private String getInsertFieldMessage(FillingIssueFieldState state, Locale locale) {
+  private String getInsertFieldMessage(FillingIssueFieldState state) {
     return i18nResolver.getText(
-        locale,
         "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.message",
-        i18nResolver.getRawText(locale, state.getField().getNameKey()).toLowerCase(locale));
+        i18nResolver.getRawText(state.getField().getNameKey()).toLowerCase());
   }
 
-  private List<List<InlineKeyboardMarkupButton>> getButtons(
-      Project project, IssueType issueType, Locale locale) {
+  private List<List<InlineKeyboardMarkupButton>> getButtons(Project project, IssueType issueType) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     Collection<Priority> priorities = getPriorities(project, issueType);
     priorities.forEach(
         priority -> {
           InlineKeyboardMarkupButton issueTypeButton =
               InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-                  priority.getNameTranslation(locale.getLanguage()),
+                  priority.getNameTranslation(),
                   String.join(
                       "-",
                       StateActionRuleType.SelectIssueCreationValue.getName(),
@@ -75,15 +68,14 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(
-      String value, Field field, Project project, IssueType issueType, Locale locale) {
+  public String[] getValueAsArray(String value, Field field, Project project, IssueType issueType) {
     String selectedPriorityId =
         getPriorities(project, issueType).stream()
             .filter(
                 priority ->
                     priority.getId().equals(value)
                         || priority.getName().equals(value)
-                        || priority.getNameTranslation(locale.getLanguage()).equals(value))
+                        || priority.getNameTranslation().equals(value))
             .findFirst()
             .map(IssueConstant::getId)
             .orElse("");

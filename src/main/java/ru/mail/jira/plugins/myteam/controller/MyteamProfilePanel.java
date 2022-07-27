@@ -46,7 +46,7 @@ public class MyteamProfilePanel implements ContextProvider {
   public Map<String, Object> getContextMap(Map<String, Object> paramMap) {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     Map<String, Object> result = new HashMap<String, Object>();
-    result.put("mrimLogin", userData.getMrimLogin(user));
+    result.put("mrimLogin", user.getEmailAddress());
     result.put("enabled", userData.isEnabled(user));
     result.put("isChatCreationAllowed", userData.isCreateChatsWithUserAllowed(user));
     result.put("botName", pluginData.getBotName());

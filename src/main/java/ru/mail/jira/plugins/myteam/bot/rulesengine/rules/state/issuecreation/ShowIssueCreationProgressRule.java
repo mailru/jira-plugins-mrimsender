@@ -6,7 +6,6 @@ import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -57,7 +56,6 @@ public class ShowIssueCreationProgressRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     String chatId = event.getChatId();
-    Locale locale = userChatService.getUserLocale(user);
 
     BotState prevState = userChatService.getPrevState(event.getChatId());
 
@@ -71,8 +69,8 @@ public class ShowIssueCreationProgressRule extends BaseRule {
           event.getChatId(),
           userChatService.getRawText(
                   "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.issueCreationConfirmation")
-              + issueCreationState.createInsertFieldMessage(locale, ""),
-          getIssueCreationConfirmButtons(locale));
+              + issueCreationState.createInsertFieldMessage(""),
+          getIssueCreationConfirmButtons());
 
     } else {
       CreateIssueFieldValueHandler handler = issueCreationService.getFieldValueHandler(field.get());
@@ -92,22 +90,19 @@ public class ShowIssueCreationProgressRule extends BaseRule {
               issueCreationState.getProject(),
               issueCreationState.getIssueType(),
               user,
-              locale,
               fillingFieldState);
 
-      String msg = issueCreationState.createInsertFieldMessage(locale, msgInfo.getMessage());
+      String msg = issueCreationState.createInsertFieldMessage(msgInfo.getMessage());
 
       List<List<InlineKeyboardMarkupButton>> buttons =
           fillingFieldState.isAdditionalField()
               ? MessageFormatter.buildButtonsWithBack(
                   msgInfo.getButtons(),
                   userChatService.getRawText(
-                      locale,
                       "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text"))
               : MessageFormatter.buildButtonsWithCancel(
                   msgInfo.getButtons(),
                   userChatService.getRawText(
-                      locale,
                       "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text"));
 
       if (event instanceof ButtonClickEvent) {
@@ -123,7 +118,7 @@ public class ShowIssueCreationProgressRule extends BaseRule {
     }
   }
 
-  private List<List<InlineKeyboardMarkupButton>> getIssueCreationConfirmButtons(Locale locale) {
+  private List<List<InlineKeyboardMarkupButton>> getIssueCreationConfirmButtons() {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
     buttons.add(buttonsRow);
