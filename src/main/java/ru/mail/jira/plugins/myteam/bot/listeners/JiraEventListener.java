@@ -99,66 +99,73 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   @SuppressWarnings("unused")
   @EventListener
   public void onIssueEvent(IssueEvent issueEvent) {
-    try {
-      if (issueEvent.isSendMail()) {
+    executorService.execute(
+        () -> {
+          try {
+            if (issueEvent.isSendMail()) {
 
-        Set<NotificationRecipient> notificationRecipients = Sets.newHashSet();
-        try {
-          notificationRecipients.addAll(notificationSchemeManager.getRecipients(issueEvent));
-        } catch (Exception e) {
-          log.error("notificationSchemeManager.getRecipients({})", issueEvent, e);
-        }
-        NotificationFilterContext context =
-            notificationFilterManager.makeContextFrom(
-                JiraNotificationReason.ISSUE_EVENT, issueEvent);
-        for (SchemeEntity schemeEntity :
-            notificationSchemeManager.getNotificationSchemeEntities(
-                issueEvent.getProject(), issueEvent.getEventTypeId())) {
-          context =
-              notificationFilterManager.makeContextFrom(
-                  context,
-                  com.atlassian.jira.notification.type.NotificationType.from(
-                      schemeEntity.getType()));
-          Set<NotificationRecipient> recipientsFromScheme =
-              notificationSchemeManager.getRecipients(issueEvent, schemeEntity);
-          recipientsFromScheme =
-              Sets.newHashSet(
-                  notificationFilterManager.recomputeRecipients(recipientsFromScheme, context));
-          notificationRecipients.addAll(recipientsFromScheme);
-        }
+              Set<NotificationRecipient> notificationRecipients = Sets.newHashSet();
+              try {
+                notificationRecipients.addAll(notificationSchemeManager.getRecipients(issueEvent));
+              } catch (Exception e) {
+                log.error("notificationSchemeManager.getRecipients({})", issueEvent, e);
+              }
+              NotificationFilterContext context =
+                  notificationFilterManager.makeContextFrom(
+                      JiraNotificationReason.ISSUE_EVENT, issueEvent);
+              for (SchemeEntity schemeEntity :
+                  notificationSchemeManager.getNotificationSchemeEntities(
+                      issueEvent.getProject(), issueEvent.getEventTypeId())) {
+                context =
+                    notificationFilterManager.makeContextFrom(
+                        context,
+                        com.atlassian.jira.notification.type.NotificationType.from(
+                            schemeEntity.getType()));
+                Set<NotificationRecipient> recipientsFromScheme =
+                    notificationSchemeManager.getRecipients(issueEvent, schemeEntity);
+                recipientsFromScheme =
+                    Sets.newHashSet(
+                        notificationFilterManager.recomputeRecipients(
+                            recipientsFromScheme, context));
+                notificationRecipients.addAll(recipientsFromScheme);
+              }
 
-        Set<ApplicationUser> recipients =
-            notificationRecipients.stream()
-                .map(NotificationRecipient::getUser)
-                .filter(user -> canSendEventToUser(user, issueEvent))
-                .collect(Collectors.toSet());
+              Set<ApplicationUser> recipients =
+                  notificationRecipients.stream()
+                      .map(NotificationRecipient::getUser)
+                      .filter(user -> canSendEventToUser(user, issueEvent))
+                      .collect(Collectors.toSet());
 
-        sendMessage(recipients, issueEvent, issueEvent.getIssue().getKey());
-      }
-    } catch (Exception e) {
-      SentryClient.capture(e);
-      log.error("onIssueEvent({})", issueEvent, e);
-    }
+              sendMessage(recipients, issueEvent, issueEvent.getIssue().getKey());
+            }
+          } catch (Exception e) {
+            SentryClient.capture(e);
+            log.error("onIssueEvent({})", issueEvent, e);
+          }
+        });
   }
 
   @SuppressWarnings("unused")
   @EventListener
   public void onMentionIssueEvent(MentionIssueEvent mentionIssueEvent) {
-    try {
-      List<ApplicationUser> recipients = new ArrayList<>();
-      for (ApplicationUser user : mentionIssueEvent.getToUsers()) {
-        if (mentionIssueEvent.getCurrentRecipients() != null
-            && !mentionIssueEvent
-                .getCurrentRecipients()
-                .contains(new NotificationRecipient(user))) {
-          recipients.add(user);
-        }
-      }
-      sendMessage(recipients, mentionIssueEvent, mentionIssueEvent.getIssue().getKey());
-    } catch (Exception e) {
-      SentryClient.capture(e);
-      log.error(e.getMessage(), e);
-    }
+    executorService.execute(
+        () -> {
+          try {
+            List<ApplicationUser> recipients = new ArrayList<>();
+            for (ApplicationUser user : mentionIssueEvent.getToUsers()) {
+              if (mentionIssueEvent.getCurrentRecipients() != null
+                  && !mentionIssueEvent
+                      .getCurrentRecipients()
+                      .contains(new NotificationRecipient(user))) {
+                recipients.add(user);
+              }
+            }
+            sendMessage(recipients, mentionIssueEvent, mentionIssueEvent.getIssue().getKey());
+          } catch (Exception e) {
+            SentryClient.capture(e);
+            log.error(e.getMessage(), e);
+          }
+        });
   }
 
   private boolean canSendEventToUser(ApplicationUser user, IssueEvent issueEvent) {
@@ -187,29 +194,25 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     for (ApplicationUser recipient : recipients) {
       if (recipient.isActive() && userData.isEnabled(recipient)) {
         if (StringUtils.isNotBlank(recipient.getEmailAddress())) {
-          executorService.execute(
-              () ->
-                  offRequestThreadExecutor.execute(
-                      recipient,
-                      () -> {
-                        String message = null;
-                        if (event instanceof IssueEvent)
-                          message = messageFormatter.formatEvent(recipient, (IssueEvent) event);
-                        if (event instanceof MentionIssueEvent)
-                          message =
-                              messageFormatter.formatEvent(recipient, (MentionIssueEvent) event);
 
-                        if (message != null) {
-                          myteamEventsListener.publishEvent(
-                              new JiraNotifyEvent(
-                                  recipient.getEmailAddress(),
-                                  message,
-                                  getAllIssueButtons(issueKey)));
-                        } else {
-                          myteamEventsListener.publishEvent(
-                              new JiraNotifyEvent(recipient.getEmailAddress(), message, null));
-                        }
-                      }));
+          offRequestThreadExecutor.execute(
+              recipient,
+              () -> {
+                String message = null;
+                if (event instanceof IssueEvent)
+                  message = messageFormatter.formatEvent(recipient, (IssueEvent) event);
+                if (event instanceof MentionIssueEvent)
+                  message = messageFormatter.formatEvent(recipient, (MentionIssueEvent) event);
+
+                if (message != null) {
+                  myteamEventsListener.publishEvent(
+                      new JiraNotifyEvent(
+                          recipient.getEmailAddress(), message, getAllIssueButtons(issueKey)));
+                } else {
+                  myteamEventsListener.publishEvent(
+                      new JiraNotifyEvent(recipient.getEmailAddress(), message, null));
+                }
+              });
         }
       }
     }
