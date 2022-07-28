@@ -57,8 +57,8 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   private final I18nResolver i18nResolver;
   private final OffRequestThreadExecutor offRequestThreadExecutor;
   private final ExecutorService executorService =
-      Executors.newSingleThreadExecutor(
-          new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX_FORMAT).build());
+      Executors.newFixedThreadPool(
+          2, new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX_FORMAT).build());
 
   @Autowired
   public JiraEventListener(
