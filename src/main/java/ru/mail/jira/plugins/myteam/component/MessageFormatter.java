@@ -49,6 +49,7 @@ import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -652,6 +653,7 @@ public class MessageFormatter {
                         StandardCharsets.UTF_8.toString())
                     .getEscapedURI();
           } catch (URIException e) {
+            SentryClient.capture(e);
             log.error("Unable to create attachment link for file: {}", attachment.getFilename());
           }
           value.append(markdownTextLink(attachment.getFilename(), attachmentUrl));
@@ -672,6 +674,7 @@ public class MessageFormatter {
             + shieldText(new URI(url, false, StandardCharsets.UTF_8.toString()).getEscapedURI())
             + ")";
       } catch (URIException e) {
+        SentryClient.capture(e);SentryClient.capture(e);
         log.error("Unable to create text link for issueKey: {}, url:{}", text, url);
       }
     }
@@ -819,6 +822,7 @@ public class MessageFormatter {
                                     StandardCharsets.UTF_8.toString())
                                 .getEscapedURI()));
               } catch (URIException e) {
+                SentryClient.capture(e);
                 log.error(
                     "Can't find attachment id:{} name:{}",
                     changeItem.getString("newvalue"),
@@ -847,7 +851,7 @@ public class MessageFormatter {
           if (fieldManager.isNavigableField(field)) {
             final NavigableField navigableField = fieldManager.getNavigableField(field);
             if (navigableField != null)
-              newString = navigableField.prettyPrintChangeHistory(newString, i18nHelper);
+              newString = navigableField.prettyPrintChangeHistory(newString);
           }
 
           appendField(sb, title, shieldText(newString), true);
@@ -856,8 +860,8 @@ public class MessageFormatter {
         if (!StringUtils.isBlank(changedDescription))
           sb.append("\n\n")
               .append(makeMyteamMarkdownFromJira(changedDescription, useMentionFormat));
-      } catch (GenericEntityException ignored) {
-        // ignore
+      } catch (GenericEntityException e) {
+        SentryClient.capture(e);
       }
     return sb.toString();
   }
