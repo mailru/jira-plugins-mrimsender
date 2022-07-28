@@ -13,4 +13,10 @@
           class="com.atlassian.activeobjects.external.TransactionalAnnotationProcessor"
           autowire="constructor"/>-->
 
+
+    <bean id="jiraBotTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <property name="threadNamePrefix" value="vkteam-executor"/>
+        <property name="corePoolSize" value="3"/>
+        <property name="maxPoolSize" value="8"/>
+    </bean>
 </beans>

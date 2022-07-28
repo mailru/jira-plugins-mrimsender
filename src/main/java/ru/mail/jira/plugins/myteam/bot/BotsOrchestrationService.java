@@ -6,11 +6,9 @@ import com.atlassian.jira.cluster.ClusterMessagingService;
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 /** Service which allow to stop or restart all bots which are running on a cluster */
@@ -21,21 +19,20 @@ public class BotsOrchestrationService implements LifecycleAware {
   private static final String BOT_LIFECYCLE_CHANNEL = "ru.mail.jira.myteam";
   private static final String BOT_RESTART_MESSAGE = "restart";
   private static final String BOT_STOP_MESSAGE = "stop";
-  private static final String ORCHESTRATION_SERVICE_THREAD_PREFIX =
-      "orchestration-service-thread-%d";
 
   private final ClusterMessagingService clusterMessagingService;
   private final MyteamBot myteamBot;
   private final MessageConsumer messageConsumer;
-  private static final ExecutorService executorService =
-      Executors.newSingleThreadExecutor(
-          new ThreadFactoryBuilder().setNameFormat(ORCHESTRATION_SERVICE_THREAD_PREFIX).build());
+  private final ThreadPoolTaskExecutor jiraBotTaskExecutor;
 
   @Autowired
   public BotsOrchestrationService(
-      @ComponentImport ClusterMessagingService clusterMessagingService, MyteamBot myteamBot) {
+      @ComponentImport ClusterMessagingService clusterMessagingService,
+      MyteamBot myteamBot,
+      ThreadPoolTaskExecutor jiraBotTaskExecutor) {
     this.clusterMessagingService = clusterMessagingService;
     this.myteamBot = myteamBot;
+    this.jiraBotTaskExecutor = jiraBotTaskExecutor;
     this.messageConsumer = new MessageConsumer();
   }
 
@@ -70,10 +67,10 @@ public class BotsOrchestrationService implements LifecycleAware {
     public void receive(String channel, String message, String senderId) {
       if (BOT_LIFECYCLE_CHANNEL.equals(channel)) {
         if (BOT_RESTART_MESSAGE.equals(message)) {
-          executorService.execute(myteamBot::restartBot);
+          jiraBotTaskExecutor.execute(myteamBot::restartBot);
         }
         if (BOT_STOP_MESSAGE.equals(message)) {
-          executorService.execute(myteamBot::stopBot);
+          jiraBotTaskExecutor.execute(myteamBot::stopBot);
         }
       }
     }

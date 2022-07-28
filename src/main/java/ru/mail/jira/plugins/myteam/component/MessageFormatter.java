@@ -674,7 +674,7 @@ public class MessageFormatter {
             + shieldText(new URI(url, false, StandardCharsets.UTF_8.toString()).getEscapedURI())
             + ")";
       } catch (URIException e) {
-        SentryClient.capture(e);SentryClient.capture(e);
+        SentryClient.capture(e);
         log.error("Unable to create text link for issueKey: {}, url:{}", text, url);
       }
     }
@@ -850,8 +850,9 @@ public class MessageFormatter {
 
           if (fieldManager.isNavigableField(field)) {
             final NavigableField navigableField = fieldManager.getNavigableField(field);
-            if (navigableField != null)
+            if (navigableField != null) {
               newString = navigableField.prettyPrintChangeHistory(newString);
+            }
           }
 
           appendField(sb, title, shieldText(newString), true);

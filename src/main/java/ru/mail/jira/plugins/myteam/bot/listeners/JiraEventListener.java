@@ -18,12 +18,17 @@ import com.atlassian.jira.util.thread.OffRequestThreadExecutor;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.events.JiraNotifyEvent;
@@ -33,18 +38,9 @@ import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-
 @Component
 @Slf4j
 public class JiraEventListener implements InitializingBean, DisposableBean {
-  private static final String THREAD_NAME_PREFIX_FORMAT = "vkteams-jira-events-listener-%d";
   private final EventPublisher eventPublisher;
   private final GroupManager groupManager;
   private final NotificationFilterManager notificationFilterManager;
@@ -56,9 +52,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   private final MyteamEventsListener myteamEventsListener;
   private final I18nResolver i18nResolver;
   private final OffRequestThreadExecutor offRequestThreadExecutor;
-  private final ExecutorService executorService =
-      Executors.newFixedThreadPool(
-          2, new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX_FORMAT).build());
+  private final ThreadPoolTaskExecutor jiraBotTaskExecutor;
 
   @Autowired
   public JiraEventListener(
@@ -72,7 +66,8 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
       @ComponentImport OffRequestThreadExecutor offRequestThreadExecutor,
       UserData userData,
       MessageFormatter messageFormatter,
-      MyteamEventsListener myteamEventsListener) {
+      MyteamEventsListener myteamEventsListener,
+      ThreadPoolTaskExecutor jiraBotTaskExecutor) {
     this.eventPublisher = eventPublisher;
     this.groupManager = groupManager;
     this.notificationFilterManager = notificationFilterManager;
@@ -84,6 +79,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     this.myteamEventsListener = myteamEventsListener;
     this.i18nResolver = i18nResolver;
     this.offRequestThreadExecutor = offRequestThreadExecutor;
+    this.jiraBotTaskExecutor = jiraBotTaskExecutor;
   }
 
   @Override
@@ -99,7 +95,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   @SuppressWarnings("unused")
   @EventListener
   public void onIssueEvent(IssueEvent issueEvent) {
-    executorService.execute(
+    jiraBotTaskExecutor.execute(
         () -> {
           try {
             if (issueEvent.isSendMail()) {
@@ -148,7 +144,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   @SuppressWarnings("unused")
   @EventListener
   public void onMentionIssueEvent(MentionIssueEvent mentionIssueEvent) {
-    executorService.execute(
+    jiraBotTaskExecutor.execute(
         () -> {
           try {
             List<ApplicationUser> recipients = new ArrayList<>();

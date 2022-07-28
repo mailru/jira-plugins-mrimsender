@@ -10,16 +10,14 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.google.common.base.Splitter;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.events.*;
@@ -32,29 +30,27 @@ import ru.mail.jira.plugins.myteam.service.RulesEngine;
 @Slf4j
 @Component
 public class MyteamEventsListener {
-  private static final String THREAD_NAME_PREFIX = "icq-events-listener-%d";
-
-  private static final ExecutorService executorService =
-      Executors.newFixedThreadPool(
-          4, new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX).build());
   private final AsyncEventBus asyncEventBus;
   private final MyteamApiClient myteamApiClient;
   private final RulesEngine rulesEngine;
   private final UserData userData;
   private final OffRequestThreadExecutor offRequestThreadExecutor;
+  private final ThreadPoolTaskExecutor jiraBotTaskExecutor;
 
   @Autowired
   public MyteamEventsListener(
       MyteamApiClient myteamApiClient,
       RulesEngine rulesEngine,
       UserData userData,
-      @ComponentImport OffRequestThreadExecutor offRequestThreadExecutor) {
+      @ComponentImport OffRequestThreadExecutor offRequestThreadExecutor,
+      ThreadPoolTaskExecutor jiraBotTaskExecutor) {
     this.rulesEngine = rulesEngine;
     this.userData = userData;
     this.offRequestThreadExecutor = offRequestThreadExecutor;
+    this.jiraBotTaskExecutor = jiraBotTaskExecutor;
     this.asyncEventBus =
         new AsyncEventBus(
-            executorService,
+            this.jiraBotTaskExecutor,
             (exception, context) -> {
               log.error(
                   "Exception occurred in subscriber = {}",
