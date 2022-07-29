@@ -9,6 +9,7 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.notification.*;
 import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.scheme.SchemeEntity;
+import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
@@ -18,6 +19,11 @@ import com.atlassian.jira.util.thread.OffRequestThreadExecutor;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.DisposableBean;
@@ -33,12 +39,6 @@ import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 @Component
 @Slf4j
 public class JiraEventListener implements InitializingBean, DisposableBean {
@@ -53,6 +53,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   private final MyteamEventsListener myteamEventsListener;
   private final I18nResolver i18nResolver;
   private final OffRequestThreadExecutor offRequestThreadExecutor;
+  private final JiraAuthenticationContext jiraAuthenticationContext;
   private final ThreadPoolTaskExecutor jiraBotTaskExecutor;
 
   @Autowired
@@ -68,6 +69,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
       UserData userData,
       MessageFormatter messageFormatter,
       MyteamEventsListener myteamEventsListener,
+      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       ThreadPoolTaskExecutor jiraBotTaskExecutor) {
     this.eventPublisher = eventPublisher;
     this.groupManager = groupManager;
@@ -80,6 +82,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     this.myteamEventsListener = myteamEventsListener;
     this.i18nResolver = i18nResolver;
     this.offRequestThreadExecutor = offRequestThreadExecutor;
+    this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.jiraBotTaskExecutor = jiraBotTaskExecutor;
   }
 
@@ -192,29 +195,35 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
       if (recipient.isActive() && userData.isEnabled(recipient)) {
         if (StringUtils.isNotBlank(recipient.getEmailAddress())) {
 
-          offRequestThreadExecutor.execute(
-              recipient,
-              () -> {
-                try {
-                  String message = null;
-                  if (event instanceof IssueEvent)
-                    message = messageFormatter.formatEvent(recipient, (IssueEvent) event);
-                  if (event instanceof MentionIssueEvent)
-                    message = messageFormatter.formatEvent(recipient, (MentionIssueEvent) event);
+          ApplicationUser contextUser = jiraAuthenticationContext.getLoggedInUser();
+          jiraAuthenticationContext.setLoggedInUser(recipient);
+          try {
+            String message = null;
+            if (event instanceof IssueEvent)
+              message = messageFormatter.formatEvent(recipient, (IssueEvent) event);
+            if (event instanceof MentionIssueEvent)
+              message = messageFormatter.formatEvent(recipient, (MentionIssueEvent) event);
 
-                  if (message != null) {
-                    myteamEventsListener.publishEvent(
-                        new JiraNotifyEvent(
-                            recipient.getEmailAddress(), message, getAllIssueButtons(issueKey)));
-                  } else {
-                    myteamEventsListener.publishEvent(
-                        new JiraNotifyEvent(recipient.getEmailAddress(), message, null));
-                  }
-                } catch (Exception e) {
-                  SentryClient.capture(event.toString());
-                  SentryClient.capture(e);
-                }
-              });
+            if (message != null) {
+              myteamEventsListener.publishEvent(
+                  new JiraNotifyEvent(
+                      recipient.getEmailAddress(), message, getAllIssueButtons(issueKey)));
+            } else {
+              myteamEventsListener.publishEvent(
+                  new JiraNotifyEvent(recipient.getEmailAddress(), message, null));
+            }
+          } catch (Exception e) {
+            SentryClient.capture(event.toString());
+            SentryClient.capture(e);
+          } finally {
+            jiraAuthenticationContext.setLoggedInUser(contextUser);
+          }
+
+          //          offRequestThreadExecutor.execute(
+          //              recipient,
+          //              () -> {
+          //
+          //              });
         }
       }
     }
