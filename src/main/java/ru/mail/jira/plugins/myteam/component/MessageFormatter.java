@@ -861,7 +861,7 @@ public class MessageFormatter {
         if (!StringUtils.isBlank(changedDescription))
           sb.append("\n\n")
               .append(makeMyteamMarkdownFromJira(changedDescription, useMentionFormat));
-      } catch (GenericEntityException e) {
+      } catch (Exception e) {
         SentryClient.capture(e);
       }
     return sb.toString();

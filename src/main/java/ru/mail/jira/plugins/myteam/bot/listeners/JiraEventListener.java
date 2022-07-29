@@ -18,11 +18,6 @@ import com.atlassian.jira.util.thread.OffRequestThreadExecutor;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.Sets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.DisposableBean;
@@ -37,6 +32,12 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleT
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -194,19 +195,24 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
           offRequestThreadExecutor.execute(
               recipient,
               () -> {
-                String message = null;
-                if (event instanceof IssueEvent)
-                  message = messageFormatter.formatEvent(recipient, (IssueEvent) event);
-                if (event instanceof MentionIssueEvent)
-                  message = messageFormatter.formatEvent(recipient, (MentionIssueEvent) event);
+                try {
+                  String message = null;
+                  if (event instanceof IssueEvent)
+                    message = messageFormatter.formatEvent(recipient, (IssueEvent) event);
+                  if (event instanceof MentionIssueEvent)
+                    message = messageFormatter.formatEvent(recipient, (MentionIssueEvent) event);
 
-                if (message != null) {
-                  myteamEventsListener.publishEvent(
-                      new JiraNotifyEvent(
-                          recipient.getEmailAddress(), message, getAllIssueButtons(issueKey)));
-                } else {
-                  myteamEventsListener.publishEvent(
-                      new JiraNotifyEvent(recipient.getEmailAddress(), message, null));
+                  if (message != null) {
+                    myteamEventsListener.publishEvent(
+                        new JiraNotifyEvent(
+                            recipient.getEmailAddress(), message, getAllIssueButtons(issueKey)));
+                  } else {
+                    myteamEventsListener.publishEvent(
+                        new JiraNotifyEvent(recipient.getEmailAddress(), message, null));
+                  }
+                } catch (Exception e) {
+                  SentryClient.capture(event.toString());
+                  SentryClient.capture(e);
                 }
               });
         }
