@@ -61,8 +61,9 @@ public class IssueCommentInputRule extends BaseRule {
     } catch (ValidationException e) {
       userChatService.sendMessageText(
           event.getChatId(),
-          userChatService.getRawText(
-              "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.commentValidationFailed" + e.getMessage()));
+          userChatService.getText(
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.commentValidationFailed",
+              e.getMessage()));
     }
     userChatService.deleteState(event.getChatId());
   }
