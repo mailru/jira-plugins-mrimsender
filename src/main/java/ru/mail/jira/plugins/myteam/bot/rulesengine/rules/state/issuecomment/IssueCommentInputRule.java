@@ -14,6 +14,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.CommentingIssueState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.commons.exceptions.ValidationException;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
@@ -57,6 +58,12 @@ public class IssueCommentInputRule extends BaseRule {
           event.getChatId(),
           userChatService.getRawText(
               "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.noPermissions"));
+    } catch (ValidationException e) {
+      userChatService.sendMessageText(
+          event.getChatId(),
+          userChatService.getText(
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.commentValidationFailed",
+              e.getMessage()));
     }
     userChatService.deleteState(event.getChatId());
   }
