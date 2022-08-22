@@ -2,6 +2,7 @@
 package ru.mail.jira.plugins.myteam.service.impl;
 
 import com.atlassian.crowd.exception.UserNotFoundException;
+import com.atlassian.jira.bc.issue.comment.CommentService;
 import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.properties.APKeys;
@@ -34,10 +35,13 @@ import com.atlassian.jira.workflow.WorkflowActionsBean;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
 import com.opensymphony.workflow.loader.ActionDescriptor;
+
 import java.util.Collection;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
+
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
@@ -45,6 +49,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.AssigneeCha
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueTransitionException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
+import ru.mail.jira.plugins.myteam.commons.exceptions.ValidationException;
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.service.IssueService;
@@ -59,7 +64,7 @@ public class IssueServiceImpl implements IssueService {
   private final PermissionManager permissionManager;
   private final WatcherManager watcherManager;
   private final SearchService searchService;
-  private final CommentManager commentManager;
+  private final CommentService commentService;
   private final ProjectManager projectManager;
   private final IssueTypeSchemeManager issueTypeSchemeManager;
   private final IssueTypeManager issueTypeManager;
@@ -76,7 +81,7 @@ public class IssueServiceImpl implements IssueService {
       @ComponentImport PermissionManager permissionManager,
       @ComponentImport WatcherManager watcherManager,
       @ComponentImport SearchService searchService,
-      @ComponentImport CommentManager commentManager,
+      @ComponentImport CommentService commentService,
       @ComponentImport ProjectManager projectManager,
       @ComponentImport IssueTypeSchemeManager issueTypeSchemeManager,
       @ComponentImport IssueTypeManager issueTypeManager,
@@ -91,7 +96,7 @@ public class IssueServiceImpl implements IssueService {
     this.permissionManager = permissionManager;
     this.watcherManager = watcherManager;
     this.searchService = searchService;
-    this.commentManager = commentManager;
+    this.commentService = commentService;
     this.projectManager = projectManager;
     this.issueTypeSchemeManager = issueTypeSchemeManager;
     this.issueTypeManager = issueTypeManager;
@@ -186,24 +191,34 @@ public class IssueServiceImpl implements IssueService {
 
   @Override
   public void commentIssue(String issueKey, ApplicationUser user, ChatMessageEvent event)
-      throws NoPermissionException {
-    JiraThreadLocalUtils.preCall();
-    try {
-      Issue commentedIssue = issueManager.getIssueByCurrentKey(issueKey);
-      if (user != null && commentedIssue != null) {
-        if (permissionManager.hasPermission(
-            ProjectPermissions.ADD_COMMENTS, commentedIssue, user)) {
-          commentManager.create(
-              commentedIssue,
+      throws NoPermissionException, ValidationException {
+
+    Issue commentedIssue = issueManager.getIssueByCurrentKey(issueKey);
+    if (user != null && commentedIssue != null) {
+      if (permissionManager.hasPermission(
+          ProjectPermissions.ADD_COMMENTS, commentedIssue, user)) {
+
+        CommentService.CommentParameters commentParameters =
+            CommentService.CommentParameters.builder()
+                .author(user)
+                .body(issueTextConverter.convertToJiraCommentStyle(event, user, commentedIssue))
+                .issue(commentedIssue)
+                .build();
+        CommentService.CommentCreateValidationResult validationResult =
+            commentService.validateCommentCreate(user, commentParameters);
+        if (validationResult.isValid()) {
+          commentService.create(
               user,
-              issueTextConverter.convertToJiraCommentStyle(event, user, commentedIssue),
+              validationResult,
               true);
         } else {
-          throw new NoPermissionException();
+          StringJoiner joiner = new StringJoiner(" ");
+          validationResult.getErrorCollection().getErrorMessages().forEach(joiner::add);
+          throw new ValidationException(joiner.toString());
         }
+      } else {
+        throw new NoPermissionException();
       }
-    } finally {
-      JiraThreadLocalUtils.postCall();
     }
   }
 
@@ -323,12 +338,7 @@ public class IssueServiceImpl implements IssueService {
   @Override
   public List<Comment> getIssueComments(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException {
-    JiraThreadLocalUtils.preCall();
-    try {
-      return commentManager.getComments(getIssueByUser(issueKey, user));
-    } finally {
-      JiraThreadLocalUtils.postCall();
-    }
+    return commentService.getCommentsForUser(user, getIssueByUser(issueKey, user));
   }
 
   private boolean isProjectExcluded(Long projectId) {

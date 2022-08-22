@@ -22,6 +22,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.AssigneeCha
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueTransitionException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
+import ru.mail.jira.plugins.myteam.commons.exceptions.ValidationException;
 
 public interface IssueService {
 
@@ -46,7 +47,7 @@ public interface IssueService {
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
 
   void commentIssue(String issueKey, ApplicationUser user, ChatMessageEvent event)
-      throws NoPermissionException;
+      throws NoPermissionException, ValidationException;
 
   void changeIssueStatus(Issue issue, int transitionId, ApplicationUser user)
       throws IssueTransitionException;
