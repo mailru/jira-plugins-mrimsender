@@ -14,10 +14,7 @@ import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.attachment.Attachment;
-import com.atlassian.jira.issue.fields.CustomField;
-import com.atlassian.jira.issue.fields.Field;
-import com.atlassian.jira.issue.fields.FieldManager;
-import com.atlassian.jira.issue.fields.NavigableField;
+import com.atlassian.jira.issue.fields.*;
 import com.atlassian.jira.issue.fields.screen.FieldScreen;
 import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
 import com.atlassian.jira.issue.fields.screen.FieldScreenScheme;
@@ -631,6 +628,14 @@ public class MessageFormatter {
     }
   }
 
+  private void appendUserField(
+      StringBuilder sb, String title, ApplicationUser user, boolean mentionFormat) {
+    sb.append("\n")
+        .append(title)
+        .append(": ")
+        .append(formatUser(user, "common.words.anonymous", mentionFormat));
+  }
+
   private void appendField(StringBuilder sb, String title, Collection<?> collection) {
     if (collection != null) {
       StringBuilder value = new StringBuilder();
@@ -850,6 +855,14 @@ public class MessageFormatter {
           if (fieldManager.isNavigableField(field)) {
             final NavigableField navigableField = fieldManager.getNavigableField(field);
             if (navigableField != null) {
+              if (navigableField instanceof UserField) {
+                appendUserField(
+                    sb,
+                    title,
+                    userManager.getUserByKey(changeItem.getString("newvalue")),
+                    useMentionFormat);
+                continue;
+              }
               newString = navigableField.prettyPrintChangeHistory(newString);
             }
           }
