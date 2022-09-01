@@ -31,12 +31,14 @@ import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
@@ -628,14 +630,6 @@ public class MessageFormatter {
     }
   }
 
-  private void appendUserField(
-      StringBuilder sb, String title, ApplicationUser user, boolean mentionFormat) {
-    sb.append("\n")
-        .append(title)
-        .append(": ")
-        .append(formatUser(user, "common.words.anonymous", mentionFormat));
-  }
-
   private void appendField(StringBuilder sb, String title, Collection<?> collection) {
     if (collection != null) {
       StringBuilder value = new StringBuilder();
@@ -650,11 +644,11 @@ public class MessageFormatter {
           try {
             attachmentUrl =
                 new URI(
-                        String.format(
-                            "%s/secure/attachment/%d/%s",
-                            jiraBaseUrl, attachment.getId(), attachment.getFilename()),
-                        false,
-                        StandardCharsets.UTF_8.toString())
+                    String.format(
+                        "%s/secure/attachment/%d/%s",
+                        jiraBaseUrl, attachment.getId(), attachment.getFilename()),
+                    false,
+                    StandardCharsets.UTF_8.toString())
                     .getEscapedURI();
           } catch (URIException e) {
             SentryClient.capture(e);
@@ -819,11 +813,11 @@ public class MessageFormatter {
                         markdownTextLink(
                             attachment.getFilename(),
                             new URI(
-                                    String.format(
-                                        "%s/secure/attachment/%d/%s",
-                                        jiraBaseUrl, attachment.getId(), attachment.getFilename()),
-                                    false,
-                                    StandardCharsets.UTF_8.toString())
+                                String.format(
+                                    "%s/secure/attachment/%d/%s",
+                                    jiraBaseUrl, attachment.getId(), attachment.getFilename()),
+                                false,
+                                StandardCharsets.UTF_8.toString())
                                 .getEscapedURI()));
               } catch (URIException e) {
                 SentryClient.capture(e);
@@ -856,11 +850,14 @@ public class MessageFormatter {
             final NavigableField navigableField = fieldManager.getNavigableField(field);
             if (navigableField != null) {
               if (navigableField instanceof UserField) {
-                appendUserField(
-                    sb,
-                    title,
-                    userManager.getUserByKey(changeItem.getString("newvalue")),
-                    useMentionFormat);
+                sb.append("\n")
+                    .append(title)
+                    .append(": ")
+                    .append(
+                        formatUser(
+                            userManager.getUserByKey(changeItem.getString("newvalue")),
+                            "common.words.anonymous",
+                            useMentionFormat));
                 continue;
               }
               newString = navigableField.prettyPrintChangeHistory(newString);
