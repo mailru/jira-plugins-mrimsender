@@ -138,7 +138,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
       fieldValues.put(
           issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
-          getIssueDescription(event, null));
+          getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), null));
 
       if (settings.getLabels() != null) {
         fieldValues.put(
@@ -164,7 +164,9 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
           issue, settings.getChatTitle(), settings.getChatLink(), initiator);
 
       issueCreationService.updateIssueDescription(
-          getIssueDescription(event, issue), issue, reporterJiraUser);
+          getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), issue),
+          issue,
+          reporterJiraUser);
 
       if (settings.getAddReporterInWatchers()) {
         reporters.stream() // add watchers
@@ -221,7 +223,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
         .collect(Collectors.toList());
   }
 
-  private String getIssueDescription(ChatMessageEvent event, Issue issue) {
+  private String getIssueDescription(ChatMessageEvent event, String template, Issue issue) {
     StringBuilder builder = new StringBuilder();
 
     if (event.getMessageParts() != null) {
@@ -246,6 +248,11 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                   text = issueTextConverter.convertToJiraDescriptionStyle(p, issue);
                 }
 
+                String resultTemplate = template;
+                if (resultTemplate == null) {
+                  resultTemplate = DEFAULT_ISSUE_QUOTE_MESSAGE_TEMPLATE;
+                }
+
                 builder.append(messageFormatter.formatMyteamUserLink(user));
                 builder
                     .append("(")
@@ -255,9 +262,9 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                                 Instant.ofEpochSecond(timestamp),
                                 TimeZone.getDefault().toZoneId())))
                     .append("):\n")
-                    .append("\n{quote} ");
-                builder.append(text);
-                builder.append(" {quote}\n\n");
+                    .append("\n");
+                builder.append(resultTemplate.replaceAll("\\{\\{message}}", text));
+                builder.append("\n\n");
               });
     }
     return builder.toString();

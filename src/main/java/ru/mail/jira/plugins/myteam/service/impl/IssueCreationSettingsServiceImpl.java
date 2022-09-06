@@ -2,6 +2,7 @@
 package ru.mail.jira.plugins.myteam.service.impl;
 
 import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
+import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_QUOTE_MESSAGE_TEMPLATE;
 import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_SUMMARY_TEMPLATE;
 
 import com.atlassian.cache.Cache;
@@ -170,6 +171,8 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
       settings.setIssueSummaryTemplate(DEFAULT_ISSUE_SUMMARY_TEMPLATE);
     if (StringUtils.isEmpty(settings.getCreationSuccessTemplate()))
       settings.setCreationSuccessTemplate(DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE);
+    if (StringUtils.isEmpty(settings.getIssueQuoteMessageTemplate()))
+      settings.setIssueQuoteMessageTemplate(DEFAULT_ISSUE_QUOTE_MESSAGE_TEMPLATE);
   }
 
   private void checkAlreadyHasTag(IssueCreationSettingsDto settings)

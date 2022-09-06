@@ -339,6 +339,20 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
           </>
         )}
       </Field>
+      <Field
+        label="Шаблон цитирования сообщений"
+        name="issueQuoteMessageTemplate"
+        defaultValue={settings.issueQuoteMessageTemplate}
+      >
+        {({ fieldProps, error }) => (
+          <>
+            {/* eslint-disable-next-line react/jsx-props-no-spreading */}
+            <TextArea {...(fieldProps as any)} resize="auto" />
+            <LineHelperMessage>{`message - цитируемое сообщение.`}</LineHelperMessage>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+          </>
+        )}
+      </Field>
     </>
   );
 };
@@ -435,6 +449,7 @@ function EditIssueCreationSettingsForm({
           addReporterInWatchers,
           creationSuccessTemplate,
           issueSummaryTemplate,
+          issueQuoteMessageTemplate,
         }: FormState) => {
           onSave({
             enabled,
@@ -446,6 +461,7 @@ function EditIssueCreationSettingsForm({
             issueSummaryTemplate: issueSummaryTemplate
               ? issueSummaryTemplate.replace('\n', '')
               : undefined,
+            issueQuoteMessageTemplate: issueQuoteMessageTemplate,
             projectKey: String(projectKey.value),
             issueTypeId: String(issueTypeId.value),
             labels: labels ? labels.map((l) => String(l.value)) : [],
