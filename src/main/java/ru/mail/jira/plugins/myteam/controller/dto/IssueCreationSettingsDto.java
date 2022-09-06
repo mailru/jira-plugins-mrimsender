@@ -32,6 +32,7 @@ public class IssueCreationSettingsDto {
   @XmlElement private String tag;
   @XmlElement private String creationSuccessTemplate;
   @XmlElement private String issueSummaryTemplate;
+  @XmlElement private String issueQuoteMessageTemplate;
   @Nullable @XmlElement private String chatLink;
   @Nullable @XmlElement private String chatTitle;
   @Nullable @XmlElement private String issueTypeName;
@@ -54,6 +55,7 @@ public class IssueCreationSettingsDto {
     this.issueTypeId = entity.getIssueTypeId();
     this.creationSuccessTemplate = entity.getCreationSuccessTemplate();
     this.issueSummaryTemplate = entity.getIssueSummaryTemplate();
+    this.issueQuoteMessageTemplate = entity.getIssueQuoteMessageTemplate();
     this.labels =
         entity.getLabels() != null
             ? Arrays.asList(entity.getLabels().split(LABELS_DELIMITER))
@@ -77,6 +79,7 @@ public class IssueCreationSettingsDto {
     this.issueTypeId = entity.getIssueTypeId();
     this.creationSuccessTemplate = entity.getCreationSuccessTemplate();
     this.issueSummaryTemplate = entity.getIssueSummaryTemplate();
+    this.issueQuoteMessageTemplate = entity.getIssueQuoteMessageTemplate();
     this.labels =
         entity.getLabels() != null
             ? Arrays.asList(entity.getLabels().split(LABELS_DELIMITER))

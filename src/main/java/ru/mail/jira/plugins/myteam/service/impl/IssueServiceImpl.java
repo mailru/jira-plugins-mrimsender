@@ -15,7 +15,6 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.comments.Comment;
-import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.issue.fields.config.manager.IssueTypeSchemeManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.search.SearchException;
@@ -35,13 +34,11 @@ import com.atlassian.jira.workflow.WorkflowActionsBean;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
 import com.opensymphony.workflow.loader.ActionDescriptor;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
-
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
@@ -57,7 +54,6 @@ import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Service
 public class IssueServiceImpl implements IssueService {
-
   private final WorkflowActionsBean workflowActionsBean;
   private final com.atlassian.jira.bc.issue.IssueService jiraIssueService;
   private final IssueManager issueManager;
@@ -195,8 +191,7 @@ public class IssueServiceImpl implements IssueService {
 
     Issue commentedIssue = issueManager.getIssueByCurrentKey(issueKey);
     if (user != null && commentedIssue != null) {
-      if (permissionManager.hasPermission(
-          ProjectPermissions.ADD_COMMENTS, commentedIssue, user)) {
+      if (permissionManager.hasPermission(ProjectPermissions.ADD_COMMENTS, commentedIssue, user)) {
 
         CommentService.CommentParameters commentParameters =
             CommentService.CommentParameters.builder()
@@ -207,10 +202,7 @@ public class IssueServiceImpl implements IssueService {
         CommentService.CommentCreateValidationResult validationResult =
             commentService.validateCommentCreate(user, commentParameters);
         if (validationResult.isValid()) {
-          commentService.create(
-              user,
-              validationResult,
-              true);
+          commentService.create(user, validationResult, true);
         } else {
           StringJoiner joiner = new StringJoiner(" ");
           validationResult.getErrorCollection().getErrorMessages().forEach(joiner::add);

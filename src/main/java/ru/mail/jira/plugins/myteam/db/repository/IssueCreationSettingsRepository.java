@@ -43,6 +43,7 @@ public class IssueCreationSettingsRepository
           entity.setAddReporterInWatchers(dto.getAddReporterInWatchers());
           entity.setCreationSuccessTemplate(dto.getCreationSuccessTemplate());
           entity.setIssueSummaryTemplate(dto.getIssueSummaryTemplate());
+          entity.setIssueQuoteMessageTemplate(dto.getIssueQuoteMessageTemplate());
           entity.setLabels(
               (dto.getLabels() == null || dto.getLabels().size() == 0)
                   ? null

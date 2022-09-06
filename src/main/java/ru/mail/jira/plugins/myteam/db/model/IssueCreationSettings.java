@@ -66,6 +66,12 @@ public interface IssueCreationSettings extends Entity {
 
   void setIssueSummaryTemplate(String template);
 
+  @Nullable
+  @StringLength(StringLength.UNLIMITED)
+  String getIssueQuoteMessageTemplate();
+
+  void setIssueQuoteMessageTemplate(String issueQuoteMessageTemplate);
+
   @OneToMany
   AdditionalIssueField[] getAdditionalFields();
 }
