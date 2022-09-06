@@ -11,7 +11,7 @@ export type IssueCreationSettings = {
   tag: string;
   creationSuccessTemplate: string;
   issueSummaryTemplate: string;
-  issueQuoteMessageTemplate: string,
+  issueQuoteMessageTemplate: string;
   labels: Array<string>;
   additionalFields: Array<FieldParam>;
   creationByAllMembers: boolean;
