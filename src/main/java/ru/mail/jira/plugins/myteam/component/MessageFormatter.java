@@ -855,7 +855,7 @@ public class MessageFormatter {
                         formatUser(
                             userManager.getUserByKey(changeItem.getString("newvalue")),
                             "common.words.anonymous",
-                            false));
+                            true));
                 continue;
               }
               newString = navigableField.prettyPrintChangeHistory(newString);
