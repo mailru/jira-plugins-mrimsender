@@ -1,0 +1,39 @@
+/* (C)2022 */
+package ru.mail.jira.plugins.myteam.db.model;
+
+import java.util.Date;
+import net.java.ao.Entity;
+import net.java.ao.schema.Indexed;
+import net.java.ao.schema.Table;
+import org.jetbrains.annotations.Nullable;
+
+@Table("MYTEAM_FILTER_SUBSCRIPTION")
+public interface FilterSubscription extends Entity {
+  @Indexed
+  Long getFilterId();
+
+  void setFieldId(Long fieldId);
+
+  @Indexed
+  String getUserKey();
+
+  void setUserKey(String userKey);
+
+  @Nullable
+  String getGroupName();
+
+  void setGroupName(String groupName);
+
+  String getCronExpression();
+
+  void setCronExpression(String cronExpression);
+
+  @Nullable
+  Date getLastRun();
+
+  void setLastRun(Date lastRun);
+
+  boolean isEmailOnEmpty();
+
+  void setEmailOnEmpty(boolean emailOnEmpty);
+}
