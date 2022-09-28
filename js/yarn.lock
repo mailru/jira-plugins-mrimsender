@@ -315,16 +315,6 @@
     "@babel/runtime" "^7.0.0"
     "@emotion/core" "^10.0.9"
 
-"@atlaskit/motion@^1.2.0":
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/@atlaskit/motion/-/motion-1.2.2.tgz#f8ab48e767982dcfe3ade9d2be23952ab0597a11"
-  integrity sha512-UIoFuB299bTehwTkoBs65YS8kn9y32v1b5LsbuSqkWV2ZgiLrWaOdq8RgPBlHuICq9oBeVy6aBPLR0gkht1iJA==
-  dependencies:
-    "@atlaskit/ds-lib" "^2.1.0"
-    "@babel/runtime" "^7.0.0"
-    "@emotion/core" "^10.0.9"
-    bind-event-listener "^2.1.1"
-
 "@atlaskit/pagination@^14.2.0":
   version "14.2.0"
   resolved "https://registry.yarnpkg.com/@atlaskit/pagination/-/pagination-14.2.0.tgz#a9a515164316100574c67d700c257d93e37d5a52"
@@ -422,20 +412,6 @@
     react-select "^4.3.1"
     react-uid "^2.2.0"
     shallow-equal "^1.0.0"
-
-"@atlaskit/side-navigation@^1.2.14":
-  version "1.2.14"
-  resolved "https://registry.yarnpkg.com/@atlaskit/side-navigation/-/side-navigation-1.2.14.tgz#5f43f22f21f721a986bba2fbc311f6c10d9cf596"
-  integrity sha512-qOxLW1ONBVgRW62BRfCHS+o2TGpRLzTEE/JiH+g/1toPObPOJrsg6K4WYhDOyfQzK9uzUXkX2g6Pi96v/UU/vQ==
-  dependencies:
-    "@atlaskit/ds-lib" "^2.1.0"
-    "@atlaskit/icon" "^21.10.0"
-    "@atlaskit/menu" "^1.3.0"
-    "@atlaskit/motion" "^1.2.0"
-    "@atlaskit/theme" "^12.1.0"
-    "@atlaskit/tokens" "^0.10.0"
-    "@babel/runtime" "^7.0.0"
-    "@emotion/core" "^10.0.9"
 
 "@atlaskit/spinner@^15.0.0", "@atlaskit/spinner@^15.1.0", "@atlaskit/spinner@^15.1.4", "@atlaskit/spinner@^15.1.6":
   version "15.1.6"

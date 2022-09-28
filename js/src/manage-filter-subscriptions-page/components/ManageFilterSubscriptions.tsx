@@ -1,35 +1,31 @@
-import React, { ReactElement } from 'react';
-import {
-  ButtonItem,
-  NavigationHeader,
-  Section,
-  SideNavigation,
-} from '@atlaskit/side-navigation';
+import React, {ReactElement, useLayoutEffect, useState} from 'react';
 import styled from 'styled-components';
 import { I18n } from '@atlassian/wrm-react-i18n';
 import MyteamImage from '../../assets/myteam.png';
-import UserFilterSubscriptions from './UserFilterSubscriptions';
+import {FilterSubscription, LoadableDataState} from "../../shared/types";
+import {loadUserSubscriptions} from "../../shared/api/SubscriptionsApiClient";
+import contextPath from "wrm/context-path";
+import DropdownMenu, {DropdownItem, DropdownItemGroup} from "@atlaskit/dropdown-menu";
+import Button from "@atlaskit/button";
+import MoreIcon from "@atlaskit/icon/glyph/more";
+import DynamicTable from "@atlaskit/dynamic-table";
 
-const FilterSubscriptions = styled.div`
-  display: flex;
-`;
-
-const LeftMenu = styled.div`
-  width: 240px;
-  background-color: #f4f5f7;
-`;
-
-const Content = styled.div`
+const Page = styled.div`
   background-color: #fff;
-  width: 100%;
   padding: 20px;
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
+    justify-content: space-between;
+`
 
-  h4 {
+const Left = styled.div`
+  display: flex;
+  align-items: center;
+
+  h1 {
     margin: 0;
   }
 `;
@@ -39,43 +35,177 @@ const Logo = styled.img`
   vertical-align: middle;
 `;
 
+const PageDescription = styled.div`
+  padding-top: 10px;
+  padding-bottom: 10px;
+`;
+const Cell = styled.div`
+  margin-top: 5px;
+  margin-bottom: 5px;
+`;
+
+const tableHead = {
+  cells: [
+    {
+      content: I18n.getText('report.chart.filter'),
+      key: 'filter',
+      isSortable: false,
+    },
+    {
+      content: I18n.getText('subscriptions.subscribed'),
+      key: 'subscribed',
+      isSortable: false,
+    },
+    {
+      content: I18n.getText('filtersubscription.field.schedule'),
+      key: 'schedule',
+      isSortable: false,
+    },
+    {
+      content: I18n.getText('admin.schedulerdetails.last.run'),
+      key: 'lastRun',
+      isSortable: false,
+    },
+    {
+      content: I18n.getText('admin.schedulerdetails.next.run'),
+      key: 'nextRun',
+      isSortable: false,
+    },
+    {
+      content: I18n.getText('common.words.actions'),
+      key: 'actions',
+      isSortable: false,
+    },
+  ],
+};
+
 function ManageFilterSubscriptions(): ReactElement {
-  const [view, setView] = React.useState<string>('my');
+  const [subscriptions, setSubscriptions] = useState<
+    LoadableDataState<Array<FilterSubscription>>
+    >({
+    isLoading: false,
+  });
+
+  useLayoutEffect(() => {
+    setSubscriptions({ isLoading: true });
+    loadUserSubscriptions()
+      .then((response) =>
+        setSubscriptions({ data: response.data, isLoading: false }),
+      )
+      .catch((e) => {
+        console.error(e);
+        setSubscriptions({ isLoading: false, error: JSON.stringify(e) });
+      });
+  }, []);
+
+  const buildRows = () => {
+    if (subscriptions.data === undefined) return [];
+    return subscriptions.data.map((subscription) => ({
+      cells: [
+        {
+          key: subscription.filter.id,
+          content: (
+            <Cell>
+              <a
+                href={`${contextPath()}/issues/?filter=${
+                  subscription.filter.id
+                }`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {subscription.filter.name}
+              </a>
+            </Cell>
+          ),
+        },
+        {
+          key: subscription.groupName,
+          content: (
+            <Cell>
+              {subscription.groupName === undefined
+                ? subscription.user.displayName
+                : subscription.groupName}
+            </Cell>
+          ),
+        },
+        {
+          key: subscription.cronExpressionDescription,
+          content: <Cell>{subscription.cronExpressionDescription}</Cell>,
+        },
+        {
+          key: subscription.lastRun,
+          content: <Cell>{subscription.lastRun}</Cell>,
+        },
+        {
+          key: subscription.nextRun,
+          content: <Cell>{subscription.nextRun}</Cell>,
+        },
+        {
+          content: (
+            <Cell>
+              <DropdownMenu
+                trigger={({ triggerRef, ...props }) => (
+                  <Button
+                    {...props}
+                    appearance="subtle"
+                    iconBefore={<MoreIcon label="more" />}
+                    ref={triggerRef}
+                  />
+                )}
+              >
+                <DropdownItemGroup>
+                  <DropdownItem>
+                    {I18n.getText('common.forms.run.now')}
+                  </DropdownItem>
+                  <DropdownItem>
+                    {I18n.getText('common.words.edit')}
+                  </DropdownItem>
+                  <DropdownItem>
+                    {I18n.getText('common.words.delete')}
+                  </DropdownItem>
+                </DropdownItemGroup>
+              </DropdownMenu>
+            </Cell>
+          ),
+        },
+      ],
+    }));
+  };
 
   return (
-    <FilterSubscriptions>
-      <LeftMenu>
-        <SideNavigation label="project" testId="side-navigation">
-          <NavigationHeader>
-            <Header>
-              <Logo height={24} src={MyteamImage} alt="Myteam logo" />
-              <h4>
-                {I18n.getText(
-                  'ru.mail.jira.plugins.myteam.subscriptions.page.title',
-                )}
-              </h4>
-            </Header>
-          </NavigationHeader>
-          <Section>
-            <ButtonItem
-              isSelected={view === 'my'}
-              onClick={() => setView('my')}
-            >
-              My Subscriptions
-            </ButtonItem>
-            <ButtonItem
-              isSelected={view === 'search'}
-              onClick={() => setView('search')}
-            >
-              Search filter
-            </ButtonItem>
-          </Section>
-        </SideNavigation>
-      </LeftMenu>
-      <Content>
-        {view === 'my' ? <UserFilterSubscriptions /> : <div>Hello World</div>}
-      </Content>
-    </FilterSubscriptions>
+    <Page>
+      <Header>
+        <Left>
+          <Logo height={48} src={MyteamImage} alt="Myteam logo" />
+          <h1>
+            {I18n.getText(
+              'ru.mail.jira.plugins.myteam.subscriptions.page.title',
+            )}
+          </h1>
+        </Left>
+        <Button>{I18n.getText('subscriptions.add')}</Button>
+      </Header>
+      <PageDescription>
+        {I18n.getText(
+          'ru.mail.jira.plugins.myteam.subscriptions.page.my.description',
+        )}
+      </PageDescription>
+      <DynamicTable
+        head={tableHead}
+        rows={buildRows()}
+        rowsPerPage={20}
+        defaultPage={1}
+        isLoading={subscriptions.isLoading}
+        emptyView={
+          <h2>
+            {I18n.getText(
+              'ru.mail.jira.plugins.myteam.subscriptions.page.my.empty',
+            )}
+          </h2>
+        }
+        loadingSpinnerSize="large"
+      />
+    </Page>
   );
 }
 

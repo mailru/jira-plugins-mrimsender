@@ -27,7 +27,6 @@
     "@atlaskit/modal-dialog": "^12.2.4",
     "@atlaskit/section-message": "^6.1.7",
     "@atlaskit/select": "^15.2.7",
-    "@atlaskit/side-navigation": "^1.2.14",
     "@atlaskit/spinner": "^15.1.6",
     "@atlaskit/textarea": "^4.3.0",
     "@atlaskit/textfield": "^5.1.6",

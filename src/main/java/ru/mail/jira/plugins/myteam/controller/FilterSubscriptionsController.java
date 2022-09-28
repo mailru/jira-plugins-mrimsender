@@ -32,7 +32,6 @@ public class FilterSubscriptionsController {
   }
 
   @GET
-  @Produces({MediaType.APPLICATION_JSON})
   public List<FilterSubscriptionDto> getCurrentUserSubscriptions() {
     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
     if (loggedInUser == null) {
