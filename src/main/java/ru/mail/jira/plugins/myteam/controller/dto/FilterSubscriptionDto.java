@@ -18,21 +18,26 @@ import ru.mail.jira.plugins.myteam.db.model.FilterSubscription;
 public class FilterSubscriptionDto {
   @Nullable @XmlElement private Integer id;
 
-  @Nullable @XmlElement private Long filterId;
+  @Nullable @XmlElement private JqlFilterDto filter;
 
   @Nullable @XmlElement private UserDto user;
 
   @Nullable @XmlElement private String groupName;
 
+  @Nullable @XmlElement private String mode;
+
   @Nullable @XmlElement private String cronExpression;
 
+  @Nullable @XmlElement private String cronExpressionDescription;
+
   @Nullable @XmlElement private String lastRun;
+
+  @Nullable @XmlElement private String next;
 
   @XmlElement private Boolean emailOnEmpty;
 
   public FilterSubscriptionDto(FilterSubscription filterSubscription) {
     this.id = filterSubscription.getID();
-    this.filterId = filterSubscription.getFilterId();
     this.groupName = filterSubscription.getGroupName();
     this.cronExpression = filterSubscription.getCronExpression();
     if (filterSubscription.getLastRun() != null)
