@@ -7,12 +7,12 @@ import net.java.ao.schema.Indexed;
 import net.java.ao.schema.Table;
 import org.jetbrains.annotations.Nullable;
 
-@Table("MYTEAM_FILTER_SUBSCRIPTION")
+@Table("MYTEAM_SUBSCRIPTION")
 public interface FilterSubscription extends Entity {
   @Indexed
   Long getFilterId();
 
-  void setFieldId(Long fieldId);
+  void setFilterId(Long filterId);
 
   @Indexed
   String getUserKey();

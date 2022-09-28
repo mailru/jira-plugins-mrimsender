@@ -20,6 +20,8 @@
     "@atlaskit/avatar-group": "^8.0.14",
     "@atlaskit/button": "^15.1.4",
     "@atlaskit/checkbox": "^12.3.7",
+    "@atlaskit/dropdown-menu": "^11.5.0",
+    "@atlaskit/dynamic-table": "^14.8.0",
     "@atlaskit/form": "^8.4.8",
     "@atlaskit/icon": "^21.10.4",
     "@atlaskit/modal-dialog": "^12.2.4",
@@ -44,6 +46,7 @@
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-intl-next": "npm:react-intl@^5.18.1",
+    "react-query": "^3.39.2",
     "styled-components": "^3.2.6",
     "webpack-sources": "^3.2.3"
   },

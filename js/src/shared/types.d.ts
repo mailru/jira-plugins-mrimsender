@@ -36,3 +36,26 @@ export type LoadableDataState<T> = {
   data?: T;
   error?: string;
 };
+
+export type FilterSubscription = {
+  id: number;
+  filter: Filter;
+  user: User;
+  groupName?: string;
+  cronExpression: string;
+  cronExpressionDescription: string;
+  lastRun?: string;
+  nextRun: string;
+  emailOnEmpty: boolean;
+};
+
+export type User = {
+  key: string;
+  displayName: string;
+};
+
+export type Filter = {
+  id: number;
+  name: string;
+  jql: string;
+};

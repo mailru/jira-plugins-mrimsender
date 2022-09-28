@@ -24,6 +24,7 @@ const config = {
     'create-chat-panel': [path.join(FRONTEND_SRC_DIR, 'create-chat-panel', 'index.tsx')], // build entry point
     'chat-settings-panel': [path.join(FRONTEND_SRC_DIR, 'chat-settings-panel', 'index.tsx')],
     'project-chat-settings-panel': [path.join(FRONTEND_SRC_DIR, 'project-chat-settings-panel', 'index.tsx')],
+    'manage-filter-subscriptions-page': [path.join(FRONTEND_SRC_DIR, 'manage-filter-subscriptions-page', 'index.tsx')]
   },
   module: {
     rules: [
@@ -53,6 +54,7 @@ const config = {
         'chat-settings-panel': [PLUGIN_KEY + '.' + 'chat.settings.panel'], // Specify in which web-resource context to include entrypoint resources
         'project-chat-settings-panel': [PLUGIN_KEY + '.' + 'project.chat.settings.panel'],
         'create-chat-panel': ['jira.browse.project', 'jira.navigator.advanced'],
+        'manage-filter-subscriptions-page': [PLUGIN_KEY + '.' + 'manage.filter.subscriptions.page'],
       },
       verbose: false,
       xmlDescriptors: path.resolve(MVN_OUTPUT_DIR, 'META-INF', 'plugin-descriptors', 'wr-webpack-bundles.xml'), //An absolute filepath to where the generated XML should be output to
