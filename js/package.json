@@ -46,6 +46,7 @@
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-intl-next": "npm:react-intl@^5.18.1",
+    "react-query": "^3.39.2",
     "styled-components": "^3.2.6",
     "webpack-sources": "^3.2.3"
   },

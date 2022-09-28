@@ -1,14 +1,13 @@
-import React, {ReactElement, useLayoutEffect, useState} from 'react';
+import React, {ReactElement} from 'react';
 import styled from 'styled-components';
 import { I18n } from '@atlassian/wrm-react-i18n';
 import MyteamImage from '../../assets/myteam.png';
-import {FilterSubscription, LoadableDataState} from "../../shared/types";
-import {loadUserSubscriptions} from "../../shared/api/SubscriptionsApiClient";
 import contextPath from "wrm/context-path";
 import DropdownMenu, {DropdownItem, DropdownItemGroup} from "@atlaskit/dropdown-menu";
 import Button from "@atlaskit/button";
 import MoreIcon from "@atlaskit/icon/glyph/more";
 import DynamicTable from "@atlaskit/dynamic-table";
+import {useGetSubscriptions} from "../../shared/hooks";
 
 const Page = styled.div`
   background-color: #fff;
@@ -80,27 +79,10 @@ const tableHead = {
 };
 
 function ManageFilterSubscriptions(): ReactElement {
-  const [subscriptions, setSubscriptions] = useState<
-    LoadableDataState<Array<FilterSubscription>>
-    >({
-    isLoading: false,
-  });
-
-  useLayoutEffect(() => {
-    setSubscriptions({ isLoading: true });
-    loadUserSubscriptions()
-      .then((response) =>
-        setSubscriptions({ data: response.data, isLoading: false }),
-      )
-      .catch((e) => {
-        console.error(e);
-        setSubscriptions({ isLoading: false, error: JSON.stringify(e) });
-      });
-  }, []);
+  const subscriptions = useGetSubscriptions();
 
   const buildRows = () => {
-    if (subscriptions.data === undefined) return [];
-    return subscriptions.data.map((subscription) => ({
+    return subscriptions.data?.map((subscription) => ({
       cells: [
         {
           key: subscription.filter.id,

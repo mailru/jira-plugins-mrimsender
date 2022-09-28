@@ -1,4 +1,8 @@
 import React, { useEffect, useRef } from 'react';
+import {QueryObserverResult, useQuery} from "react-query";
+import {AxiosError} from "axios";
+import {FilterSubscription} from "./types";
+import {getCurrentUserSubscriptions} from "./api/SubscriptionsApiClient";
 
 export const useTimeoutState = <T>(
   defaultState: T,
@@ -30,3 +34,13 @@ export const usePrevious = <T>(value: T): T | undefined => {
   });
   return ref.current;
 };
+
+export const useGetSubscriptions = (): QueryObserverResult<FilterSubscription[], AxiosError> =>
+  useQuery<FilterSubscription[], AxiosError> (
+    ['getSubscriptions'],
+    () => getCurrentUserSubscriptions(),
+    {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  );
