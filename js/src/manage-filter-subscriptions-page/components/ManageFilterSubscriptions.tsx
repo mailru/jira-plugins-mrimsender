@@ -8,6 +8,7 @@ import Button from "@atlaskit/button";
 import MoreIcon from "@atlaskit/icon/glyph/more";
 import DynamicTable from "@atlaskit/dynamic-table";
 import {useGetSubscriptions} from "../../shared/hooks";
+import {FilterSubscription} from "../../shared/types";
 
 const Page = styled.div`
   background-color: #fff;
@@ -78,81 +79,81 @@ const tableHead = {
   ],
 };
 
+const buildRows = (subscriptions?: FilterSubscription[]) => {
+  return subscriptions?.map((subscription) => ({
+    cells: [
+      {
+        key: subscription.filter.id,
+        content: (
+          <Cell>
+            <a
+              href={`${contextPath()}/issues/?filter=${
+                subscription.filter.id
+              }`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {subscription.filter.name}
+            </a>
+          </Cell>
+        ),
+      },
+      {
+        key: subscription.groupName,
+        content: (
+          <Cell>
+            {subscription.groupName === undefined
+              ? subscription.user.displayName
+              : subscription.groupName}
+          </Cell>
+        ),
+      },
+      {
+        key: subscription.cronExpressionDescription,
+        content: <Cell>{subscription.cronExpressionDescription}</Cell>,
+      },
+      {
+        key: subscription.lastRun,
+        content: <Cell>{subscription.lastRun}</Cell>,
+      },
+      {
+        key: subscription.nextRun,
+        content: <Cell>{subscription.nextRun}</Cell>,
+      },
+      {
+        content: (
+          <Cell>
+            <DropdownMenu
+              trigger={({ triggerRef, ...props }) => (
+                <Button
+                  {...props}
+                  appearance="subtle"
+                  iconBefore={<MoreIcon label="more" />}
+                  ref={triggerRef}
+                />
+              )}
+            >
+              <DropdownItemGroup>
+                <DropdownItem>
+                  {I18n.getText('common.forms.run.now')}
+                </DropdownItem>
+                <DropdownItem>
+                  {I18n.getText('common.words.edit')}
+                </DropdownItem>
+                <DropdownItem>
+                  {I18n.getText('common.words.delete')}
+                </DropdownItem>
+              </DropdownItemGroup>
+            </DropdownMenu>
+          </Cell>
+        ),
+      },
+    ],
+  }));
+};
+
 function ManageFilterSubscriptions(): ReactElement {
   const subscriptions = useGetSubscriptions();
-
-  const buildRows = () => {
-    return subscriptions.data?.map((subscription) => ({
-      cells: [
-        {
-          key: subscription.filter.id,
-          content: (
-            <Cell>
-              <a
-                href={`${contextPath()}/issues/?filter=${
-                  subscription.filter.id
-                }`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {subscription.filter.name}
-              </a>
-            </Cell>
-          ),
-        },
-        {
-          key: subscription.groupName,
-          content: (
-            <Cell>
-              {subscription.groupName === undefined
-                ? subscription.user.displayName
-                : subscription.groupName}
-            </Cell>
-          ),
-        },
-        {
-          key: subscription.cronExpressionDescription,
-          content: <Cell>{subscription.cronExpressionDescription}</Cell>,
-        },
-        {
-          key: subscription.lastRun,
-          content: <Cell>{subscription.lastRun}</Cell>,
-        },
-        {
-          key: subscription.nextRun,
-          content: <Cell>{subscription.nextRun}</Cell>,
-        },
-        {
-          content: (
-            <Cell>
-              <DropdownMenu
-                trigger={({ triggerRef, ...props }) => (
-                  <Button
-                    {...props}
-                    appearance="subtle"
-                    iconBefore={<MoreIcon label="more" />}
-                    ref={triggerRef}
-                  />
-                )}
-              >
-                <DropdownItemGroup>
-                  <DropdownItem>
-                    {I18n.getText('common.forms.run.now')}
-                  </DropdownItem>
-                  <DropdownItem>
-                    {I18n.getText('common.words.edit')}
-                  </DropdownItem>
-                  <DropdownItem>
-                    {I18n.getText('common.words.delete')}
-                  </DropdownItem>
-                </DropdownItemGroup>
-              </DropdownMenu>
-            </Cell>
-          ),
-        },
-      ],
-    }));
-  };
 
   return (
     <Page>
@@ -174,7 +175,7 @@ function ManageFilterSubscriptions(): ReactElement {
       </PageDescription>
       <DynamicTable
         head={tableHead}
-        rows={buildRows()}
+        rows={buildRows(subscriptions.data)}
         rowsPerPage={20}
         defaultPage={1}
         isLoading={subscriptions.isLoading}
