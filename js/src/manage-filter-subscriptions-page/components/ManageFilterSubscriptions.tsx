@@ -1,4 +1,4 @@
-import React, {ReactElement} from 'react';
+import React, {ReactElement, useState} from 'react';
 import styled from 'styled-components';
 import { I18n } from '@atlassian/wrm-react-i18n';
 import MyteamImage from '../../assets/myteam.png';
@@ -7,8 +7,9 @@ import DropdownMenu, {DropdownItem, DropdownItemGroup} from "@atlaskit/dropdown-
 import Button from "@atlaskit/button";
 import MoreIcon from "@atlaskit/icon/glyph/more";
 import DynamicTable from "@atlaskit/dynamic-table";
-import {useGetSubscriptions} from "../../shared/hooks";
+import {useGetSubscriptions, useSubscriptionDelete} from "../../shared/hooks";
 import {FilterSubscription} from "../../shared/types";
+import ConfirmationDialog from "../../shared/components/dialogs/ConfirmationDialog";
 
 const Page = styled.div`
   background-color: #fff;
@@ -79,7 +80,14 @@ const tableHead = {
   ],
 };
 
-const buildRows = (subscriptions?: FilterSubscription[]) => {
+type BuildRowsProps = {
+  subscriptions?: FilterSubscription[];
+  selectSubscription: (subscription: FilterSubscription) => void;
+  openEditDialog: (open: boolean) => void;
+  openDeleteDialog: (open: boolean) => void;
+};
+
+const buildRows = ({subscriptions, selectSubscription, openEditDialog, openDeleteDialog}: BuildRowsProps) => {
   return subscriptions?.map((subscription) => ({
     cells: [
       {
@@ -137,10 +145,16 @@ const buildRows = (subscriptions?: FilterSubscription[]) => {
                 <DropdownItem>
                   {I18n.getText('common.forms.run.now')}
                 </DropdownItem>
-                <DropdownItem>
+                <DropdownItem onClick={() => {
+                  selectSubscription(subscription);
+                  openEditDialog(true);
+                }}>
                   {I18n.getText('common.words.edit')}
                 </DropdownItem>
-                <DropdownItem>
+                <DropdownItem onClick={() => {
+                  selectSubscription(subscription);
+                  openDeleteDialog(true);
+                }}>
                   {I18n.getText('common.words.delete')}
                 </DropdownItem>
               </DropdownItemGroup>
@@ -153,7 +167,13 @@ const buildRows = (subscriptions?: FilterSubscription[]) => {
 };
 
 function ManageFilterSubscriptions(): ReactElement {
+  const [openCreateSubscriptionDialog, setOpenCreateSubscriptionDialog] = useState<boolean>(false);
+  const [openEditSubscriptionDialog, setOpenEditSubscriptionDialog] = useState<boolean>(false);
+  const [openDeleteSubscriptionDialog, setOpenDeleteSubscriptionDialog] = useState<boolean>(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<FilterSubscription>();
+
   const subscriptions = useGetSubscriptions();
+  const deleteSubscription = useSubscriptionDelete();
 
   return (
     <Page>
@@ -170,23 +190,42 @@ function ManageFilterSubscriptions(): ReactElement {
       </Header>
       <PageDescription>
         {I18n.getText(
-          'ru.mail.jira.plugins.myteam.subscriptions.page.my.description',
+          'ru.mail.jira.plugins.myteam.subscriptions.page.description',
         )}
       </PageDescription>
       <DynamicTable
         head={tableHead}
-        rows={buildRows(subscriptions.data)}
+        rows={buildRows({
+          subscriptions: subscriptions.data,
+          selectSubscription: setSelectedSubscription,
+          openEditDialog: setOpenEditSubscriptionDialog,
+          openDeleteDialog: setOpenDeleteSubscriptionDialog,
+        })}
         rowsPerPage={20}
         defaultPage={1}
         isLoading={subscriptions.isLoading}
         emptyView={
           <h2>
             {I18n.getText(
-              'ru.mail.jira.plugins.myteam.subscriptions.page.my.empty',
+              'ru.mail.jira.plugins.myteam.subscriptions.page.empty',
             )}
           </h2>
         }
         loadingSpinnerSize="large"
+      />
+      <ConfirmationDialog
+        isOpen={openDeleteSubscriptionDialog}
+        title={I18n.getText('ru.mail.jira.plugins.myteam.subscriptions.page.subscription.delete')}
+        body={I18n.getText('ru.mail.jira.plugins.myteam.subscriptions.page.subscription.delete.description')}
+        onOk={() => {
+          if (selectedSubscription !== undefined) {
+            deleteSubscription.mutate(selectedSubscription.id, {
+              onSuccess: () => subscriptions.refetch(),
+            });
+            setOpenDeleteSubscriptionDialog(false);
+          }
+        }}
+        onCancel={() => setOpenDeleteSubscriptionDialog(false)}
       />
     </Page>
   );
