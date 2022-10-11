@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.bot.configuration.createissue.customfields.*;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IncorrectIssueTypeException;
@@ -137,9 +138,12 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
       IssueFieldsFilter issueFieldsFilter) {
     FieldLayout fieldLayout = fieldLayoutManager.getFieldLayout(project, issueType.getId());
     // getting (selectedProject, selectedIssueType, selectedIssueOperation) fields screen
-    return issueTypeScreenSchemeManager.getIssueTypeScreenScheme(project)
+    return issueTypeScreenSchemeManager
+        .getIssueTypeScreenScheme(project)
         .getEffectiveFieldScreenScheme(issueType)
-        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION).getTabs().stream()
+        .getFieldScreen(IssueOperations.CREATE_ISSUE_OPERATION)
+        .getTabs()
+        .stream()
         .flatMap(
             tab ->
                 tab.getFieldScreenLayoutItems().stream()
@@ -184,7 +188,10 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
   }
 
   private IssueService.CreateValidationResult validateIssueWithGivenFields(
-      Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user) {
+      Project project,
+      IssueType issueType,
+      Map<Field, String> fields,
+      @Nullable ApplicationUser user) {
 
     IssueInputParameters issueInputParameters =
         issueService.newIssueInputParameters(
@@ -202,7 +209,7 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
     // manually setting current user as issue reporter and selected ProjectId and IssueTypeId
     issueInputParameters.setProjectId(project.getId());
     issueInputParameters.setIssueTypeId(issueType.getId());
-    issueInputParameters.setReporterId(user.getName());
+    issueInputParameters.setReporterId(user != null ? user.getName() : null);
 
     return issueService.validateCreate(user, issueInputParameters);
   }
@@ -216,7 +223,8 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
   }
 
   @Override
-  public List<Field> getIssueFields(Project project, ApplicationUser user, String issueTypeId)
+  public List<Field> getIssueFields(
+      Project project, @Nullable ApplicationUser user, String issueTypeId)
       throws UnsupportedCustomFieldsException, IncorrectIssueTypeException {
 
     Optional<IssueType> maybeCorrectIssueType =
@@ -273,7 +281,10 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
 
   @Override
   public MutableIssue createIssue(
-      Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user)
+      Project project,
+      IssueType issueType,
+      Map<Field, String> fields,
+      @Nullable ApplicationUser user)
       throws IssueCreationValidationException {
     JiraThreadLocalUtils.preCall();
     // need here to because issueService use authenticationContext
@@ -312,7 +323,8 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
   }
 
   @Override
-  public void addIssueChatLink(Issue issue, String title, String link, ApplicationUser user) {
+  public void addIssueChatLink(
+      Issue issue, @Nullable String title, @Nullable String link, ApplicationUser user) {
     RemoteIssueLinkBuilder linkBuilder = new RemoteIssueLinkBuilder();
 
     linkBuilder.url(link);

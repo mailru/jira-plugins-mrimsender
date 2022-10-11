@@ -24,13 +24,16 @@ public class AssigneeValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getClassName() {
+  public @Nullable String getClassName() {
     return AssigneeSystemField.class.getName();
   }
 
   @Override
   public FieldInputMessageInfo getMessageInfo(
-      Project project, IssueType issueType, ApplicationUser user, FillingIssueFieldState state) {
+      Project project,
+      IssueType issueType,
+      @Nullable ApplicationUser user,
+      FillingIssueFieldState state) {
     return FieldInputMessageInfo.builder()
         .message(
             i18nResolver.getRawText(

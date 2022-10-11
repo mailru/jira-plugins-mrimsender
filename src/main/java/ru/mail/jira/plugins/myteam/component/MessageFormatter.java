@@ -120,7 +120,7 @@ public class MessageFormatter {
   }
 
   public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(
-      List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
+      @Nullable List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
     if (buttons == null) {
       List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
       newButtons.add(getCancelButtonRow(cancelButtonText));
@@ -131,7 +131,7 @@ public class MessageFormatter {
   }
 
   public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithBack(
-      List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
+      @Nullable List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
     if (buttons == null) {
       List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
       newButtons.add(getBackButtonRow(cancelButtonText));
@@ -513,6 +513,7 @@ public class MessageFormatter {
     return buttons;
   }
 
+  @Nullable
   public List<List<InlineKeyboardMarkupButton>> getListButtons(boolean withPrev, boolean withNext) {
     if (!withPrev && !withNext) return null;
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
@@ -616,12 +617,14 @@ public class MessageFormatter {
     } else return i18nHelper.getText(messageKey);
   }
 
+  @Nullable
   private String formatPriority(@Nullable Priority priority) {
     if (priority != null) return priority.getNameTranslation(i18nHelper);
     else return null;
   }
 
-  private void appendField(StringBuilder sb, String title, String value, boolean appendEmpty) {
+  private void appendField(
+      StringBuilder sb, @Nullable String title, @Nullable String value, boolean appendEmpty) {
     if (appendEmpty || !StringUtils.isBlank(value)) {
       if (sb.length() == 0) sb.append("\n");
       sb.append("\n").append(title).append(": ").append(StringUtils.defaultString(value));
@@ -692,6 +695,7 @@ public class MessageFormatter {
     return output.toString();
   }
 
+  @Nullable
   private String makeMyteamMarkdownFromJira(String inputText, boolean useMentionFormat) {
     if (inputText == null) {
       return null;

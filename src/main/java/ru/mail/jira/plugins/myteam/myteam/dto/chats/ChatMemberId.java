@@ -7,6 +7,7 @@ import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+@SuppressWarnings("NullAway")
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @Getter
 @Setter

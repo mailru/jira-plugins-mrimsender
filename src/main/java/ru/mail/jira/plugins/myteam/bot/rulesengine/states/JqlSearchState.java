@@ -23,6 +23,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
+@SuppressWarnings({"NullAway"})
 @Slf4j
 public class JqlSearchState extends BotState implements PageableState, CancelableState {
 
@@ -61,7 +62,7 @@ public class JqlSearchState extends BotState implements PageableState, Cancelabl
       }
 
       SearchResults<Issue> parseResult =
-          issueService.SearchByJql(jql, user, page, JQL_SEARCH_PAGE_SIZE);
+          issueService.searchByJql(jql, user, page, JQL_SEARCH_PAGE_SIZE);
       if (parseResult.getTotal() == 0) {
         userChatService.sendMessageText(
             event.getChatId(),

@@ -62,6 +62,9 @@ public class ShowIssueCreationProgressRule extends BaseRule {
     CreatingIssueState issueCreationState =
         (CreatingIssueState) (state instanceof CreatingIssueState ? state : prevState);
 
+    if (issueCreationState == null)
+      throw new MyteamServerErrorException(500, "Issue Creation Bot State is empty.");
+
     Optional<Field> field = issueCreationState.getCurrentField();
 
     if (!field.isPresent()) {

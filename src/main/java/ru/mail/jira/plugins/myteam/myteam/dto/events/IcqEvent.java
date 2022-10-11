@@ -8,6 +8,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonSubTypes;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 
+@SuppressWarnings("NullAway")
 @JsonTypeInfo(
     defaultImpl = IcqEvent.class,
     use = JsonTypeInfo.Id.NAME,

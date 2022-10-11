@@ -20,7 +20,7 @@ import ru.mail.jira.plugins.myteam.db.model.IssueCreationSettings;
 @ToString
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-@SuppressWarnings("MissingSummary")
+@SuppressWarnings({"MissingSummary", "NullAway", "CanIgnoreReturnValueSuggester"})
 public class IssueCreationSettingsDto {
 
   public static String LABELS_DELIMITER = ";";

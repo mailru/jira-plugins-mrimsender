@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.configuration.createissue.customfields.CreateIssueFieldValueHandler;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IncorrectIssueTypeException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueCreationValidationException;
@@ -44,18 +45,22 @@ public interface IssueCreationService {
 
   CreateIssueFieldValueHandler getFieldValueHandler(Field field);
 
-  List<Field> getIssueFields(Project project, ApplicationUser user, String issueTypeId)
+  List<Field> getIssueFields(Project project, @Nullable ApplicationUser user, String issueTypeId)
       throws UnsupportedCustomFieldsException, IncorrectIssueTypeException;
 
   MutableIssue createIssue(
-      Project project, IssueType issueType, Map<Field, String> fields, ApplicationUser user)
+      Project project,
+      IssueType issueType,
+      Map<Field, String> fields,
+      @Nullable ApplicationUser user)
       throws IssueCreationValidationException;
 
   MutableIssue createIssue(
       String projectKey, String issueTypeId, Map<Field, String> fields, ApplicationUser user)
       throws IssueCreationValidationException, PermissionException, ProjectBannedException;
 
-  void addIssueChatLink(Issue issue, String title, String link, ApplicationUser user)
+  void addIssueChatLink(
+      Issue issue, @Nullable String title, @Nullable String link, ApplicationUser user)
       throws IssueCreationValidationException;
 
   Issue updateIssueDescription(String description, MutableIssue issue, ApplicationUser user);

@@ -16,6 +16,7 @@ import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
@@ -40,6 +41,7 @@ public class IssueTextConverter {
     this.attachmentManager = attachmentManager;
   }
 
+  @Nullable
   public String convertToJiraCommentStyle(
       ChatMessageEvent event, ApplicationUser commentedUser, Issue commentedIssue) {
     List<Part> parts = event.getMessageParts();
@@ -208,7 +210,8 @@ public class IssueTextConverter {
     return Pattern.compile("@\\[" + userId + "]").matcher(text).replaceAll("[~" + userName + "]");
   }
 
-  private String buildAttachmentLink(String fileId, String fileType, String fileName, String text) {
+  private String buildAttachmentLink(
+      String fileId, String fileType, String fileName, @Nullable String text) {
     String linkFormat = fileType.equals("image") ? "!%s|thumbnail!\n" : "[^%s]\n";
     if (text == null) {
       return String.format(linkFormat, fileName);

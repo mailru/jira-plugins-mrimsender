@@ -19,4 +19,7 @@
         <property name="corePoolSize" value="2"/>
         <property name="maxPoolSize" value="4"/>
     </bean>
+
+    <bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean"/>
+    <bean id="pluginMethodValidationPostProcessor" class="org.springframework.validation.beanvalidation.MethodValidationPostProcessor"/>
 </beans>

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
@@ -16,10 +17,12 @@ import ru.mail.jira.plugins.myteam.myteam.dto.response.*;
 
 public interface MyteamApiClient {
   HttpResponse<MessageResponse> sendMessageText(
-      String chatId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
+      String chatId,
+      @Nullable String text,
+      @Nullable List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException, MyteamServerErrorException;
 
-  HttpResponse<MessageResponse> sendMessageText(String chatId, String text)
+  HttpResponse<MessageResponse> sendMessageText(String chatId, @Nullable String text)
       throws UnirestException, IOException, MyteamServerErrorException;
 
   HttpResponse<StatusResponse> deleteMessages(String chatId, List<Long> messagesId)
@@ -32,7 +35,7 @@ public interface MyteamApiClient {
       throws UnirestException, MyteamServerErrorException;
 
   HttpResponse<JsonNode> answerCallbackQuery(
-      String queryId, String text, boolean showAlert, String url)
+      String queryId, String text, boolean showAlert, @Nullable String url)
       throws UnirestException, MyteamServerErrorException;
 
   HttpResponse<JsonNode> answerCallbackQuery(String queryId)
@@ -49,7 +52,7 @@ public interface MyteamApiClient {
       String chatId,
       long messageId,
       String text,
-      List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
+      @Nullable List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException, MyteamServerErrorException;
 
   HttpResponse<CreateChatResponse> createChat(

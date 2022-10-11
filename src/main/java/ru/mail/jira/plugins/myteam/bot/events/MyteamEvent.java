@@ -9,6 +9,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @ToString
+@SuppressWarnings("NullAway")
 public abstract class MyteamEvent {
   protected String chatId;
   protected String userId;

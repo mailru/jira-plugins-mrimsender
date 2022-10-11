@@ -48,13 +48,16 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getClassName() {
+  public @Nullable String getClassName() {
     return CLASS_NAME;
   }
 
   @Override
   public FieldInputMessageInfo getMessageInfo(
-      Project project, IssueType issueType, ApplicationUser user, FillingIssueFieldState state) {
+      Project project,
+      IssueType issueType,
+      @Nullable ApplicationUser user,
+      FillingIssueFieldState state) {
     @Nullable
     SearchResults<Issue> epics = getEpics(user, project, state.getInput(), state.getPager());
 
@@ -75,9 +78,10 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
         "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.epicLinkSelect.message");
   }
 
+  @Nullable
   private List<List<InlineKeyboardMarkupButton>> getButtons(
       FillingIssueFieldState state, @Nullable SearchResults<Issue> epics) {
-    if (epics == null || epics.getResults().size() == 0) {
+    if (epics == null || epics.getResults().isEmpty()) {
       return null;
     }
 
@@ -108,7 +112,7 @@ public class EpicLinkValueHandler implements CreateIssueFieldValueHandler {
 
   @Nullable
   private SearchResults<Issue> getEpics(
-      ApplicationUser user, Project project, String q, Pager pager) {
+      @Nullable ApplicationUser user, Project project, @Nullable String q, Pager pager) {
     try {
       ThreadLocalSearcherCache.startSearcherContext();
 

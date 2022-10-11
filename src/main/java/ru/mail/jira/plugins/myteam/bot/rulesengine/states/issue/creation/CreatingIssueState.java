@@ -10,6 +10,7 @@ import java.util.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IncorrectIssueTypeException;
@@ -20,6 +21,7 @@ import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
+@SuppressWarnings({"NullAway"})
 @Slf4j
 public class CreatingIssueState extends BotState implements CancelableState {
   private static final String DELIMITER_STR = "----------";
@@ -61,7 +63,7 @@ public class CreatingIssueState extends BotState implements CancelableState {
     return Optional.of(fields.get(currentFieldPosition));
   }
 
-  public void setIssueType(IssueType issueType, ApplicationUser user)
+  public void setIssueType(IssueType issueType, @Nullable ApplicationUser user)
       throws UnsupportedCustomFieldsException, IncorrectIssueTypeException {
     this.issueType = issueType;
     List<Field> fields = issueCreationService.getIssueFields(project, user, issueType.getId());

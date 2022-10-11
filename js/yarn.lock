@@ -376,6 +376,18 @@
     "@atlaskit/theme" "^12.0.0"
     "@babel/runtime" "^7.0.0"
 
+"@atlaskit/radio@^5.4.0":
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/@atlaskit/radio/-/radio-5.4.0.tgz#9362ba67905470d605b325d436eb76c9850990b7"
+  integrity sha512-fQpkO6MlTn+0v4MTrIdA36ni4Lij9OXry879noKGlvgcLp58SebQmBWGa4RygRl1c3k3IbQq2eHRoVoDAlIKDg==
+  dependencies:
+    "@atlaskit/analytics-next" "^8.0.0"
+    "@atlaskit/ds-lib" "^2.1.0"
+    "@atlaskit/theme" "^12.2.0"
+    "@atlaskit/tokens" "^0.10.0"
+    "@babel/runtime" "^7.0.0"
+    "@emotion/react" "^11.7.1"
+
 "@atlaskit/section-message@^6.1.7":
   version "6.1.7"
   resolved "https://registry.yarnpkg.com/@atlaskit/section-message/-/section-message-6.1.7.tgz#470e8c6da444a8cc46ec1ece08d4319576577cd1"

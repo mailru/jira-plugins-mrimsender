@@ -14,6 +14,7 @@ import com.atlassian.sal.api.message.I18nResolver;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.StateActionRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.FillingIssueFieldState;
@@ -31,13 +32,16 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getClassName() {
+  public @Nullable String getClassName() {
     return PrioritySystemField.class.getName();
   }
 
   @Override
   public FieldInputMessageInfo getMessageInfo(
-      Project project, IssueType issueType, ApplicationUser user, FillingIssueFieldState state) {
+      Project project,
+      IssueType issueType,
+      @Nullable ApplicationUser user,
+      FillingIssueFieldState state) {
     return FieldInputMessageInfo.builder()
         .message(getInsertFieldMessage(state))
         .buttons(getButtons(project, issueType))
@@ -68,7 +72,8 @@ public class PriorityValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(String value, Field field, Project project, IssueType issueType) {
+  public String[] getValueAsArray(
+      @Nullable String value, Field field, Project project, IssueType issueType) {
     String selectedPriorityId =
         getPriorities(project, issueType).stream()
             .filter(

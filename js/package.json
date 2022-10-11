@@ -25,6 +25,7 @@
     "@atlaskit/form": "^8.4.8",
     "@atlaskit/icon": "^21.10.4",
     "@atlaskit/modal-dialog": "^12.2.4",
+    "@atlaskit/radio": "^5.4.0",
     "@atlaskit/section-message": "^6.1.7",
     "@atlaskit/select": "^15.2.7",
     "@atlaskit/spinner": "^15.1.6",

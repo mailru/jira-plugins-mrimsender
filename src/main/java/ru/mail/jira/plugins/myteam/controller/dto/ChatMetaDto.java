@@ -14,6 +14,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.GroupChatInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.PrivateChatInfo;
 
+@SuppressWarnings("NullAway")
 @AllArgsConstructor
 @XmlRootElement
 public class ChatMetaDto {

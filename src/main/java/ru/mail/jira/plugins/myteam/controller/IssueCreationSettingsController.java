@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Controller;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.SettingsTagAlreadyExistsException;
 import ru.mail.jira.plugins.myteam.component.PermissionHelper;
@@ -44,11 +45,13 @@ public class IssueCreationSettingsController {
 
   @GET
   @Path("/settings/{id}")
+  @Nullable
   public IssueCreationSettingsDto getChatSettingsById(@PathParam("id") final Integer id)
       throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     IssueCreationSettingsDto settings = issueCreationSettingsService.getSettingsById(id);
-    permissionHelper.checkChatAdminPermissions(user, settings.getChatId());
+    permissionHelper.checkChatAdminPermissions(
+        user, settings != null ? settings.getChatId() : null);
     return issueCreationSettingsService.getSettingsById(id);
   }
 
@@ -76,25 +79,28 @@ public class IssueCreationSettingsController {
   @RequiresXsrfCheck
   @Path("/settings")
   @Consumes(MediaType.APPLICATION_JSON)
+  @Nullable
   public Integer createChatSettings(final IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException, PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     permissionHelper.checkChatAdminPermissions(user, settings.getChatId());
     IssueCreationSettingsDto originalSettings =
         issueCreationSettingsService.createSettings(settings);
-    return originalSettings.getId();
+    return originalSettings != null ? originalSettings.getId() : null;
   }
 
   @PUT
   @RequiresXsrfCheck
   @Path("/settings/{id}")
   @Consumes(MediaType.APPLICATION_JSON)
+  @Nullable
   public IssueCreationSettingsDto updateChatSettings(
       @PathParam("id") final int id, final IssueCreationSettingsDto settings)
       throws PermissionException, SettingsTagAlreadyExistsException {
     IssueCreationSettingsDto originalSettings = issueCreationSettingsService.getSettings(id);
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-    permissionHelper.checkChatAdminPermissions(user, originalSettings.getChatId());
+    permissionHelper.checkChatAdminPermissions(
+        user, originalSettings != null ? originalSettings.getChatId() : null);
     return issueCreationSettingsService.updateSettings(id, settings);
   }
 
@@ -104,7 +110,8 @@ public class IssueCreationSettingsController {
   public void deleteChatSettings(@PathParam("id") final int id) throws PermissionException {
     IssueCreationSettingsDto settings = issueCreationSettingsService.getSettings(id);
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-    permissionHelper.checkChatAdminPermissions(user, settings.getChatId());
+    permissionHelper.checkChatAdminPermissions(
+        user, settings != null ? settings.getChatId() : null);
     issueCreationSettingsService.deleteSettings(id);
   }
 }

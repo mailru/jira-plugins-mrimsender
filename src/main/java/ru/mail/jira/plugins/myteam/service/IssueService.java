@@ -17,6 +17,7 @@ import com.opensymphony.workflow.loader.ActionDescriptor;
 import java.util.Collection;
 import java.util.List;
 import javax.naming.NoPermissionException;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.AssigneeChangeValidationException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueTransitionException;
@@ -26,7 +27,7 @@ import ru.mail.jira.plugins.myteam.commons.exceptions.ValidationException;
 
 public interface IssueService {
 
-  Issue getIssueByUser(String issueKey, ApplicationUser user)
+  Issue getIssueByUser(String issueKey, @Nullable ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException;
 
   Issue getIssue(String issueKey) throws IssueNotFoundException;
@@ -35,21 +36,22 @@ public interface IssueService {
 
   String getJiraBaseUrl();
 
-  SearchResults<Issue> SearchByJql(String jql, ApplicationUser user, int page, int pageSize)
+  SearchResults<Issue> searchByJql(String jql, ApplicationUser user, int page, int pageSize)
       throws SearchException, ParseException;
 
-  void watchIssue(String issueKey, ApplicationUser user)
+  void watchIssue(String issueKey, @Nullable ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
 
   void watchIssue(Issue issue, ApplicationUser user);
 
-  void unwatchIssue(String issueKey, ApplicationUser user)
+  void unwatchIssue(String issueKey, @Nullable ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
 
-  void commentIssue(String issueKey, ApplicationUser user, ChatMessageEvent event)
+  void commentIssue(
+      @Nullable String issueKey, @Nullable ApplicationUser user, ChatMessageEvent event)
       throws NoPermissionException, ValidationException;
 
-  void changeIssueStatus(Issue issue, int transitionId, ApplicationUser user)
+  void changeIssueStatus(Issue issue, int transitionId, @Nullable ApplicationUser user)
       throws IssueTransitionException;
 
   List<Project> getAllowedProjects();
@@ -57,16 +59,16 @@ public interface IssueService {
   List<Comment> getIssueComments(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException;
 
-  Project getProject(String projectKey, ApplicationUser user)
+  Project getProject(String projectKey, @Nullable ApplicationUser user)
       throws PermissionException, ProjectBannedException;
 
-  Collection<IssueType> getProjectIssueTypes(Project project, ApplicationUser user);
+  Collection<IssueType> getProjectIssueTypes(Project project, @Nullable ApplicationUser user);
 
   IssueType getIssueType(String id);
 
-  Collection<ActionDescriptor> getIssueTransitions(String issueKey, ApplicationUser user)
+  Collection<ActionDescriptor> getIssueTransitions(String issueKey, @Nullable ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException;
 
-  boolean changeIssueAssignee(String issueKey, String userMention, ApplicationUser user)
+  boolean changeIssueAssignee(String issueKey, String userMention, @Nullable ApplicationUser user)
       throws UserNotFoundException, AssigneeChangeValidationException;
 }

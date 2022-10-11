@@ -5,6 +5,7 @@ import lombok.*;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
+@SuppressWarnings("NullAway")
 @Getter
 @Setter
 @AllArgsConstructor

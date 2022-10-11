@@ -4,6 +4,7 @@ package ru.mail.jira.plugins.myteam.myteam.dto.chats;
 import lombok.*;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
+@SuppressWarnings("NullAway")
 @Getter
 @Setter
 @NoArgsConstructor

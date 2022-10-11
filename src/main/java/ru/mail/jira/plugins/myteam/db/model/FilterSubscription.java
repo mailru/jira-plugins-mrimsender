@@ -4,6 +4,7 @@ package ru.mail.jira.plugins.myteam.db.model;
 import java.util.Date;
 import net.java.ao.Entity;
 import net.java.ao.schema.Indexed;
+import net.java.ao.schema.StringLength;
 import net.java.ao.schema.Table;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,10 +20,18 @@ public interface FilterSubscription extends Entity {
 
   void setUserKey(String userKey);
 
-  @Nullable
-  String getGroupName();
+  RecipientsType getRecipientsType();
 
-  void setGroupName(String groupName);
+  void setRecipientsType(RecipientsType recipientsType);
+
+  @StringLength(StringLength.UNLIMITED)
+  String getRecipients();
+
+  void setRecipients(String recipients);
+
+  String getScheduleMode();
+
+  void setScheduleMode(String scheduleMode);
 
   String getCronExpression();
 
@@ -31,7 +40,11 @@ public interface FilterSubscription extends Entity {
   @Nullable
   Date getLastRun();
 
-  void setLastRun(Date lastRun);
+  void setLastRun(@Nullable Date lastRun);
+
+  FilterSubscriptionType getType();
+
+  void setType(FilterSubscriptionType type);
 
   boolean isEmailOnEmpty();
 

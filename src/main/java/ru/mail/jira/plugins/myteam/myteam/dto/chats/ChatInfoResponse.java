@@ -4,6 +4,7 @@ package ru.mail.jira.plugins.myteam.myteam.dto.chats;
 import org.codehaus.jackson.annotate.JsonSubTypes;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 
+@SuppressWarnings("NullAway")
 @JsonTypeInfo(
     defaultImpl = ChatInfoResponse.class,
     use = JsonTypeInfo.Id.NAME,

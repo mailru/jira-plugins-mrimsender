@@ -1,8 +1,18 @@
 import React, { useEffect, useRef } from 'react';
-import {QueryObserverResult, useMutation, UseMutationResult, useQuery} from "react-query";
-import {AxiosError} from "axios";
-import {FilterSubscription} from "./types";
-import {deleteSubscription, getCurrentUserSubscriptions} from "./api/SubscriptionsApiClient";
+import {
+  QueryObserverResult,
+  useMutation,
+  UseMutationResult,
+  useQuery,
+} from 'react-query';
+import { AxiosError } from 'axios';
+import { ErrorData, FilterSubscription } from './types';
+import {
+  createSubscription,
+  deleteSubscription,
+  getCurrentUserSubscriptions,
+  updateSubscription,
+} from './api/SubscriptionsApiClient';
 
 export const useTimeoutState = <T>(
   defaultState: T,
@@ -35,8 +45,11 @@ export const usePrevious = <T>(value: T): T | undefined => {
   return ref.current;
 };
 
-export const useGetSubscriptions = (): QueryObserverResult<FilterSubscription[], AxiosError> =>
-  useQuery<FilterSubscription[], AxiosError> (
+export const useGetSubscriptions = (): QueryObserverResult<
+  FilterSubscription[],
+  AxiosError
+> =>
+  useQuery<FilterSubscription[], AxiosError>(
     ['getSubscriptions'],
     () => getCurrentUserSubscriptions(),
     {
@@ -45,5 +58,19 @@ export const useGetSubscriptions = (): QueryObserverResult<FilterSubscription[],
     },
   );
 
-export const useSubscriptionDelete = (): UseMutationResult<undefined, AxiosError, number> =>
-  useMutation((id: number) => deleteSubscription(id));
+export const useSubscriptionMutation = (): UseMutationResult<
+  undefined,
+  AxiosError<ErrorData>,
+  FilterSubscription
+> =>
+  useMutation((subscription: FilterSubscription) =>
+    subscription.id
+      ? updateSubscription(subscription, subscription.id)
+      : createSubscription(subscription),
+  );
+
+export const useSubscriptionDelete = (): UseMutationResult<
+  undefined,
+  AxiosError,
+  number
+> => useMutation((id: number) => deleteSubscription(id));

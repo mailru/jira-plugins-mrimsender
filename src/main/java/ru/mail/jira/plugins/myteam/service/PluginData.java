@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.service;
 
 import java.util.List;
 import java.util.Set;
+import org.jetbrains.annotations.Nullable;
 
 public interface PluginData {
   Boolean isSetTokenViaFile();
@@ -25,9 +26,10 @@ public interface PluginData {
 
   void setNotifiedUserKeys(List<String> notifiedUserKeys);
 
+  @Nullable
   String getMainNodeId();
 
-  void setMainNodeId(String mainNodeId);
+  void setMainNodeId(@Nullable String mainNodeId);
 
   String getBotApiUrl();
 

@@ -2,8 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { CacheProvider } from '@emotion/core';
 import createCache from '@emotion/cache';
+import { QueryClient, QueryClientProvider } from 'react-query';
 import ManageFilterSubscriptions from './components/ManageFilterSubscriptions';
-import {QueryClient, QueryClientProvider} from "react-query";
 
 const CONTAINER_ID_SELECTOR = 'myteam-filter-subscriptions-container';
 

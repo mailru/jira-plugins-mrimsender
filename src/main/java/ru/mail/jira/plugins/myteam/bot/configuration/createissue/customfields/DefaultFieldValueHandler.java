@@ -16,6 +16,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.configuration.createissue.FieldInputMessageInfo;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.FillingIssueFieldState;
 
@@ -36,13 +37,16 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getClassName() {
+  public @Nullable String getClassName() {
     return null;
   }
 
   @Override
   public FieldInputMessageInfo getMessageInfo(
-      Project project, IssueType issueType, ApplicationUser user, FillingIssueFieldState state) {
+      Project project,
+      IssueType issueType,
+      @Nullable ApplicationUser user,
+      FillingIssueFieldState state) {
     return FieldInputMessageInfo.builder().message(getInsertFieldMessage(state)).build();
   }
 
@@ -58,19 +62,24 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(String value, Field field, Project project, IssueType issueType) {
+  public String[] getValueAsArray(
+      @Nullable String value, Field field, Project project, IssueType issueType) {
     return mapUserInputStringToFieldValue(project.getId(), field, value);
   }
 
   // TODO custom handlers for all system fiels
-  private String[] mapUserInputStringToFieldValue(Long projectId, Field field, String fieldValue) {
+  private String[] mapUserInputStringToFieldValue(
+      Long projectId, Field field, @Nullable String fieldValue) {
     if (isArrayLikeField(field)) {
       return mapStringToArrayFieldValue(projectId, field, fieldValue);
     }
     return mapStringToSingleFieldValue(field, fieldValue);
   }
 
-  private String[] mapStringToArrayFieldValue(Long projectId, Field field, String fieldValue) {
+  private String[] mapStringToArrayFieldValue(
+      Long projectId, Field field, @Nullable String fieldValue) {
+    if (fieldValue == null) return new String[0];
+
     List<String> fieldValues =
         Arrays.stream(fieldValue.split(",")).map(String::trim).collect(Collectors.toList());
 
@@ -116,7 +125,9 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
     return fieldValues.toArray(new String[0]);
   }
 
-  private String[] mapStringToSingleFieldValue(Field field, String fieldValue) {
+  private String[] mapStringToSingleFieldValue(Field field, @Nullable String fieldValue) {
+    if (fieldValue == null) return new String[0];
+
     // no preprocessing for description and summary fields needed
     if (field.getId().equals(IssueFieldConstants.DESCRIPTION)
         || field.getId().equals(IssueFieldConstants.SUMMARY)) {
@@ -165,7 +176,8 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
         if (!fieldValues.isEmpty()) {
           String issueSecurityLevelName = fieldValues.get(0);
           String selectedResolutionId =
-              issueSecurityLevelManager.getIssueSecurityLevelsByName(issueSecurityLevelName)
+              issueSecurityLevelManager
+                  .getIssueSecurityLevelsByName(issueSecurityLevelName)
                   .stream()
                   .findFirst()
                   .map(securityLevel -> Long.toString(securityLevel.getId()))

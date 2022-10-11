@@ -7,6 +7,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.Chat;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 
+@SuppressWarnings("NullAway")
 public class NewMessageEvent extends IcqEvent<NewMessageEvent.Data> {
   public long getMsgId() {
     return this.getPayload().msgId;

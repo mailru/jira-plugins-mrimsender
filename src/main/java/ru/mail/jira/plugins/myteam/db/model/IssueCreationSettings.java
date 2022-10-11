@@ -39,7 +39,7 @@ public interface IssueCreationSettings extends Entity {
   @StringLength(StringLength.UNLIMITED)
   String getLabels();
 
-  void setLabels(String labels);
+  void setLabels(@Nullable String labels);
 
   boolean isCreationByAllMembers();
 
