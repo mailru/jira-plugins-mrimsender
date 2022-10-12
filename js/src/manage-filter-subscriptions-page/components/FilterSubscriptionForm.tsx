@@ -409,7 +409,7 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                       <SmallSelect>
                         <Field<ValueType<OptionType>>
                           name="hours"
-                          label={I18n.getText('cron.editor.interval')}
+                          label={I18n.getText('ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval')}
                           defaultValue={currentValue?.hours !== undefined ? hourOptions.find(option => option.value === currentValue?.hours) : undefined}
                           isRequired={scheduleMode !== 'advanced'}
                           validate={(value) =>
@@ -557,7 +557,7 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
               {scheduleMode === 'advanced' && (
                 <Field
                   name="advanced"
-                  label={I18n.getText('cron.editor.interval')}
+                  label={I18n.getText('ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval')}
                   defaultValue={currentValue?.advanced}
                   isRequired={scheduleMode === 'advanced'}
                   validate={(value) =>
