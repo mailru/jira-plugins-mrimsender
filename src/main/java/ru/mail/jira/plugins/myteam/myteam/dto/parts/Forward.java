@@ -7,6 +7,7 @@ import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import ru.mail.jira.plugins.myteam.myteam.dto.Message;
 
+@SuppressWarnings("NullAway")
 @ToString
 public class Forward extends Part<Forward.Data> {
   public Message getMessage() {

@@ -33,17 +33,18 @@ public interface UserChatService {
 
   String getText(Locale locale, String s, String data);
 
-  String getText(String s, String data);
+  String getText(String s, @Nullable String data);
 
   MessageFormatter getMessageFormatter();
 
   // Myteam Client
 
+  @Nullable
   HttpResponse<MessageResponse> sendMessageText(
-      String chatId, String message, List<List<InlineKeyboardMarkupButton>> buttons)
+      String chatId, String message, @Nullable List<List<InlineKeyboardMarkupButton>> buttons)
       throws MyteamServerErrorException, IOException;
 
-  void sendMessageText(String chatId, String message)
+  void sendMessageText(String chatId, @Nullable String message)
       throws MyteamServerErrorException, IOException;
 
   boolean deleteMessages(String chatId, List<Long> messagesId)
@@ -53,7 +54,7 @@ public interface UserChatService {
       String chatId,
       long messageId,
       String text,
-      List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
+      @Nullable List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException, MyteamServerErrorException;
 
   HttpResponse<JsonNode> answerCallbackQuery(String queryId)
@@ -69,8 +70,10 @@ public interface UserChatService {
 
   // State Manager
 
+  @Nullable
   BotState getState(String chatId);
 
+  @Nullable
   BotState getPrevState(String chatId);
 
   void deleteState(String chatId);

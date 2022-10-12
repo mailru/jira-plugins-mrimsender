@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import qs from 'qs';
 import contextPath from 'wrm/context-path';
-import { FieldHtml, FieldParam } from '../types';
+import { FieldHtml, FieldParam, Group, JqlFilter } from '../types';
 import { collectFieldsData } from '../utils';
 import getCancelTokenHandler from './AxiosUtils';
 
@@ -71,5 +71,31 @@ export const loadIssueForm = (
           }
         });
     });
+  });
+};
+
+export const loadJqlFilters = (
+  query: string,
+): Promise<AxiosResponse<ReadonlyArray<JqlFilter>>> => {
+  return axios.get(`${contextPath()}/rest/myteam/1.0/subscriptions/filters`, {
+    params: { query },
+  });
+};
+
+export const loadJiraUsers = (
+  query: string,
+): Promise<
+  AxiosResponse<{ users: ReadonlyArray<{ key: string; displayName: string }> }>
+> => {
+  return axios.get(`${contextPath()}/rest/api/2/user/picker`, {
+    params: { query },
+  });
+};
+
+export const loadJiraGroups = (
+  query: string,
+): Promise<AxiosResponse<{ groups: ReadonlyArray<Group> }>> => {
+  return axios.get(`${contextPath()}/rest/api/2/groups/picker`, {
+    params: { query },
   });
 };

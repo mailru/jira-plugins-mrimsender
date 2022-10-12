@@ -31,6 +31,7 @@ import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Ignore
 // todo
+@SuppressWarnings("NullAway")
 public class MyteamEventsFetcherTest {
   private PluginData pluginData;
   private MyteamApiClient myteamApiClient;

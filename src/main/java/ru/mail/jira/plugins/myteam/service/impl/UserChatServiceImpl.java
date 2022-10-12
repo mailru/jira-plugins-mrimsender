@@ -69,7 +69,8 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
-  public ApplicationUser getJiraUserFromUserChatId(String id) {
+  @Nullable
+  public ApplicationUser getJiraUserFromUserChatId(@Nullable String id) {
     return userData.getUserByMrimLogin(id);
   }
 
@@ -117,20 +118,21 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
-  public String getText(String key, String param) {
+  public String getText(String key, @Nullable String param) {
     return i18nResolver.getText(key, param);
   }
 
   @Override
+  @Nullable
   public HttpResponse<MessageResponse> sendMessageText(
-      String chatId, String message, List<List<InlineKeyboardMarkupButton>> buttons)
+      String chatId, String message, @Nullable List<List<InlineKeyboardMarkupButton>> buttons)
       throws MyteamServerErrorException, IOException {
     myteamClient.sendMessageText(chatId, message, buttons);
     return null;
   }
 
   @Override
-  public void sendMessageText(String chatId, String message)
+  public void sendMessageText(String chatId, @Nullable String message)
       throws MyteamServerErrorException, IOException {
     myteamClient.sendMessageText(chatId, message);
   }
@@ -142,12 +144,12 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
-  public BotState getState(String chatId) {
+  public @Nullable BotState getState(String chatId) {
     return stateManager.getLastState(chatId);
   }
 
   @Override
-  public BotState getPrevState(String chatId) {
+  public @Nullable BotState getPrevState(String chatId) {
     return stateManager.getPrevState(chatId);
   }
 
@@ -176,7 +178,7 @@ public class UserChatServiceImpl implements UserChatService {
       String chatId,
       long messageId,
       String text,
-      List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
+      @Nullable List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException, MyteamServerErrorException {
     return myteamClient.editMessageText(chatId, messageId, text, inlineKeyboardMarkup);
   }

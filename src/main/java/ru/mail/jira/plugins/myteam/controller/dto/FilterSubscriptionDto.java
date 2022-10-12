@@ -1,53 +1,86 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.controller.dto;
 
-import static ru.mail.jira.plugins.myteam.db.repository.FilterSubscriptionRepository.DATE_TIME_FORMATTER;
-
-import java.time.ZoneId;
+import java.util.List;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.commons.dto.jira.UserDto;
-import ru.mail.jira.plugins.myteam.db.model.FilterSubscription;
+import ru.mail.jira.plugins.myteam.controller.validation.annotation.ChatValidation;
+import ru.mail.jira.plugins.myteam.controller.validation.annotation.ConditionalValidation;
+import ru.mail.jira.plugins.myteam.controller.validation.annotation.CronValidation;
+import ru.mail.jira.plugins.myteam.db.model.FilterSubscriptionType;
+import ru.mail.jira.plugins.myteam.db.model.RecipientsType;
 
+@SuppressWarnings("NullAway")
 @Getter
 @Setter
 @NoArgsConstructor
+@ConditionalValidation(
+    conditionalProperty = "recipientsType",
+    values = {"USER"},
+    requiredProperties = {"users"})
+@ConditionalValidation(
+    conditionalProperty = "recipientsType",
+    values = {"GROUP"},
+    requiredProperties = {"groups"})
+@ConditionalValidation(
+    conditionalProperty = "recipientsType",
+    values = {"CHAT"},
+    requiredProperties = {"chats"})
+@ConditionalValidation(
+    conditionalProperty = "scheduleMode",
+    values = {"daily"},
+    requiredProperties = {"hours", "minutes"})
+@ConditionalValidation(
+    conditionalProperty = "scheduleMode",
+    values = {"daysOfWeek"},
+    requiredProperties = {"hours", "minutes", "weekDays"})
+@ConditionalValidation(
+    conditionalProperty = "scheduleMode",
+    values = {"daysOfMonth"},
+    requiredProperties = {"hours", "minutes", "monthDay"})
+@ConditionalValidation(
+    conditionalProperty = "scheduleMode",
+    values = {"advanced"},
+    requiredProperties = {"advanced"})
 public class FilterSubscriptionDto {
-  @Nullable @XmlElement private Integer id;
+  @XmlElement private Integer id;
 
-  @Nullable @XmlElement private JqlFilterDto filter;
+  @NotNull @XmlElement private JqlFilterDto filter;
 
-  @Nullable @XmlElement private UserDto user;
+  @Nullable @XmlElement private UserDto creator;
 
-  @Nullable @XmlElement private String groupName;
+  @NotNull @XmlElement private RecipientsType recipientsType;
 
-  @Nullable @XmlElement private String mode;
+  @Nullable @XmlElement private List<UserDto> users;
 
-  @Nullable @XmlElement private String cronExpression;
+  @Nullable @XmlElement private List<String> groups;
 
-  @Nullable @XmlElement private String cronExpressionDescription;
+  @ChatValidation @Nullable @XmlElement private List<String> chats;
+
+  @NotNull @XmlElement private String scheduleMode;
+
+  @Nullable @XmlElement private String scheduleDescription;
+
+  @Nullable @XmlElement private Integer hours;
+
+  @Nullable @XmlElement private Integer minutes;
+
+  @Nullable @XmlElement private List<String> weekDays;
+
+  @Nullable @XmlElement private Integer monthDay;
+
+  @CronValidation @Nullable @XmlElement private String advanced;
 
   @Nullable @XmlElement private String lastRun;
 
-  @Nullable @XmlElement private String next;
+  @Nullable @XmlElement private String nextRun;
 
-  @XmlElement private Boolean emailOnEmpty;
+  @NotNull @XmlElement private FilterSubscriptionType type;
 
-  public FilterSubscriptionDto(FilterSubscription filterSubscription) {
-    this.id = filterSubscription.getID();
-    this.groupName = filterSubscription.getGroupName();
-    this.cronExpression = filterSubscription.getCronExpression();
-    if (filterSubscription.getLastRun() != null)
-      this.lastRun =
-          filterSubscription
-              .getLastRun()
-              .toInstant()
-              .atZone(ZoneId.systemDefault())
-              .toLocalDateTime()
-              .format(DATE_TIME_FORMATTER);
-    this.emailOnEmpty = filterSubscription.isEmailOnEmpty();
-  }
+  @XmlElement private boolean emailOnEmpty;
 }

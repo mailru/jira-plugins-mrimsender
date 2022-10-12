@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import kong.unirest.*;
 import kong.unirest.apache.ApacheClient;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Slf4j
 @Component
+@SuppressWarnings("NullAway")
 public class MyteamApiClientImpl implements MyteamApiClient {
   private final ObjectMapper objectMapper;
   private final PluginData pluginData;
@@ -97,7 +99,9 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
   @Override
   public HttpResponse<MessageResponse> sendMessageText(
-      String chatId, String text, List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
+      String chatId,
+      @Nullable String text,
+      @Nullable List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException, MyteamServerErrorException {
 
     HttpResponse<MessageResponse> response = sendMessage(chatId, text, inlineKeyboardMarkup, true);
@@ -113,7 +117,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   }
 
   @Override
-  public HttpResponse<MessageResponse> sendMessageText(String chatId, String text)
+  public HttpResponse<MessageResponse> sendMessageText(String chatId, @Nullable String text)
       throws IOException, UnirestException, MyteamServerErrorException {
     return sendMessageText(chatId, text, null);
   }
@@ -161,7 +165,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
   @Override
   public HttpResponse<JsonNode> answerCallbackQuery(
-      String queryId, String text, boolean showAlert, String url)
+      String queryId, @Nullable String text, boolean showAlert, @Nullable String url)
       throws UnirestException, MyteamServerErrorException {
     HttpResponse<JsonNode> response =
         retryClient
@@ -205,7 +209,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       String chatId,
       long messageId,
       String text,
-      List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
+      @Nullable List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException, MyteamServerErrorException {
     HttpResponse<MessageResponse> response;
     if (inlineKeyboardMarkup == null)
@@ -314,7 +318,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   }
 
   void checkMyteamSendTextErrorException(
-      HttpResponse<MessageResponse> response, String chatId, String text)
+      HttpResponse<MessageResponse> response, String chatId, @Nullable String text)
       throws MyteamServerErrorException {
 
     if (response.getStatus() >= 500 || response.getBody() == null || !response.getBody().isOk()) {
@@ -387,8 +391,8 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
   private HttpResponse<MessageResponse> sendMessage(
       String chatId,
-      String text,
-      List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup,
+      @Nullable String text,
+      @Nullable List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup,
       boolean isMarkdown)
       throws IOException {
     MultipartBody req =

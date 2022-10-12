@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nullable;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import kong.unirest.HttpResponse;
@@ -97,6 +98,7 @@ public class ChatCreationController {
   @GET
   @Path("/chatData/{issueKey}")
   @Produces({MediaType.APPLICATION_JSON})
+  @Nullable
   public ChatMetaDto findChatData(@PathParam("issueKey") String issueKey) {
 
     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
@@ -167,6 +169,7 @@ public class ChatCreationController {
   @GET
   @Path("/chatCreationData/{issueKey}")
   @Produces({MediaType.APPLICATION_JSON})
+  @Nullable
   public ChatCreationDataDto getChatCreationData(@PathParam("issueKey") String issueKey) {
     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
     if (loggedInUser == null) {
@@ -206,6 +209,7 @@ public class ChatCreationController {
   @POST
   @Path("/createChat/{issueKey}")
   @Produces({MediaType.APPLICATION_JSON})
+  @Nullable
   public ChatMetaDto createChat(
       @PathParam("issueKey") String issueKey,
       @FormParam("name") String chatName,
@@ -305,7 +309,8 @@ public class ChatCreationController {
       throw new SecurityException();
     }
     return userSearchService
-        .findUsersAllowEmptyQuery(new JiraServiceContextImpl(loggedInUser), searchText).stream()
+        .findUsersAllowEmptyQuery(new JiraServiceContextImpl(loggedInUser), searchText)
+        .stream()
         .map(
             user ->
                 new ChatMemberDto(

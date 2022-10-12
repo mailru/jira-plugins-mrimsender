@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -60,7 +61,7 @@ public class IssueTransitionRule extends BaseRule {
   }
 
   private List<List<InlineKeyboardMarkupButton>> getTransitionButtons(
-      String issueKey, ApplicationUser user) {
+      String issueKey, @Nullable ApplicationUser user) {
     Collection<ActionDescriptor> transitions = issueService.getIssueTransitions(issueKey, user);
 
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();

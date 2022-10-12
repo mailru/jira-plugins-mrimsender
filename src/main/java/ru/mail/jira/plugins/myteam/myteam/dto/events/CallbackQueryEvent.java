@@ -5,6 +5,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import ru.mail.jira.plugins.myteam.myteam.dto.Message;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 
+@SuppressWarnings("NullAway")
 public class CallbackQueryEvent extends IcqEvent<CallbackQueryEvent.Data> {
   public String getQueryId() {
     return this.getPayload().queryId;

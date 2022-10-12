@@ -37,25 +37,45 @@ export type LoadableDataState<T> = {
   error?: string;
 };
 
+export type ErrorData = {
+  error?: string;
+  fieldErrors?: { [name: string]: { messages: string[] } };
+  status: number;
+  timestamp: number;
+};
+
 export type FilterSubscription = {
-  id: number;
-  filter: Filter;
-  user: User;
-  groupName?: string;
-  cronExpression: string;
-  cronExpressionDescription: string;
+  id?: number;
+  filter?: JqlFilter;
+  creator?: User;
+  recipientsType?: string;
+  chats?: string[];
+  users?: User[];
+  groups?: string[];
+  scheduleMode?: string;
+  scheduleDescription?: string;
+  hours?: number;
+  minutes?: number;
+  weekDays?: string[];
+  monthDay?: number;
+  advanced?: string;
   lastRun?: string;
-  nextRun: string;
+  nextRun?: string;
+  type?: string;
   emailOnEmpty: boolean;
 };
 
 export type User = {
-  key: string;
+  userKey: string;
   displayName: string;
 };
 
-export type Filter = {
+export type Group = {
+  name: string;
+};
+
+export type JqlFilter = {
   id: number;
   name: string;
-  jql: string;
+  owner: boolean;
 };

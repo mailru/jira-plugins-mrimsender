@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
+@SuppressWarnings("NullAway")
 @ToString
 public class Mention extends Part<Mention.Data> {
 

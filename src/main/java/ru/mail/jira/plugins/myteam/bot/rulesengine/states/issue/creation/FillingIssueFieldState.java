@@ -18,6 +18,7 @@ import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
+@SuppressWarnings({"NullAway"})
 @Slf4j
 public class FillingIssueFieldState extends BotState
     implements CancelableState, PageableState, RevertibleState {

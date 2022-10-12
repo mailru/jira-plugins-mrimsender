@@ -29,6 +29,7 @@ import org.ofbiz.core.entity.GenericValue;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
+@SuppressWarnings({"MockNotUsedInProduction", "UnusedVariable"})
 public class MessageFormatterTest {
 
   private MessageFormatter messageFormatter;

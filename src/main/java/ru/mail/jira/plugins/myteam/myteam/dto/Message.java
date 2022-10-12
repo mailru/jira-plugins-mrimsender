@@ -8,6 +8,7 @@ import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 
+@SuppressWarnings("NullAway")
 @Getter
 @Setter
 @ToString

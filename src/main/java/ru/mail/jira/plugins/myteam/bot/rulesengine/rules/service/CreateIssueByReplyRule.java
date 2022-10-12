@@ -21,6 +21,7 @@ import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
@@ -223,7 +224,8 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
         .collect(Collectors.toList());
   }
 
-  private String getIssueDescription(ChatMessageEvent event, String template, Issue issue) {
+  private String getIssueDescription(
+      ChatMessageEvent event, String template, @Nullable Issue issue) {
     StringBuilder builder = new StringBuilder();
 
     if (event.getMessageParts() != null) {

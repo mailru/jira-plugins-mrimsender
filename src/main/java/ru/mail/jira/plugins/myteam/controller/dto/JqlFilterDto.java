@@ -1,19 +1,30 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.controller.dto;
 
+import com.atlassian.jira.issue.search.SearchRequest;
+import com.atlassian.jira.user.ApplicationUser;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.jetbrains.annotations.Nullable;
 
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
+@SuppressWarnings("NullAway")
 public class JqlFilterDto {
-  @Nullable @XmlElement private Long id;
+  @NotNull @XmlElement private Long id;
 
-  @Nullable @XmlElement private String name;
+  @NotNull @XmlElement private String name;
 
-  @Nullable @XmlElement private String jql;
+  @XmlElement private boolean owner;
+
+  public JqlFilterDto(SearchRequest searchRequest, ApplicationUser user) {
+    this.id = searchRequest.getId();
+    this.name = searchRequest.getName();
+    this.owner = searchRequest.getOwner().equals(user);
+  }
 }

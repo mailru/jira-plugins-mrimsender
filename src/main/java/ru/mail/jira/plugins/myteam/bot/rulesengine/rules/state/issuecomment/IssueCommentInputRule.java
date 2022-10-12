@@ -45,7 +45,7 @@ public class IssueCommentInputRule extends BaseRule {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getChatId());
 
     CommentingIssueState state = (CommentingIssueState) userChatService.getState(event.getChatId());
-    String issueKey = state.getIssueKey();
+    String issueKey = state != null ? state.getIssueKey() : null;
 
     try {
       issueService.commentIssue(issueKey, user, event);

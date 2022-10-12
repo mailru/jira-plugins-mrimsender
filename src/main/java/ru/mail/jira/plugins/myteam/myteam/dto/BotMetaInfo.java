@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
+@SuppressWarnings("NullAway")
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)

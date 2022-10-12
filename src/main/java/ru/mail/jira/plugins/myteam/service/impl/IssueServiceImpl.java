@@ -106,7 +106,7 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public Issue getIssueByUser(String issueKey, ApplicationUser user) {
+  public Issue getIssueByUser(String issueKey, @Nullable ApplicationUser user) {
     ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
     try {
       jiraAuthenticationContext.setLoggedInUser(user); // TODO FIX THREAD CONTEXT
@@ -134,7 +134,7 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public SearchResults<Issue> SearchByJql(String jql, ApplicationUser user, int page, int pageSize)
+  public SearchResults<Issue> searchByJql(String jql, ApplicationUser user, int page, int pageSize)
       throws SearchException, ParseException {
     JiraThreadLocalUtils.preCall();
 
@@ -155,7 +155,7 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public void watchIssue(String issueKey, ApplicationUser user)
+  public void watchIssue(String issueKey, @Nullable ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException {
     Issue issue = getIssueByUser(issueKey, user);
     if (watcherManager.isWatching(user, issue)) {
@@ -174,7 +174,7 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public void unwatchIssue(String issueKey, ApplicationUser user)
+  public void unwatchIssue(String issueKey, @Nullable ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException {
     Issue issue = getIssueByUser(issueKey, user);
     if (!watcherManager.isWatching(user, issue)) {
@@ -186,7 +186,8 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public void commentIssue(String issueKey, ApplicationUser user, ChatMessageEvent event)
+  public void commentIssue(
+      @Nullable String issueKey, @Nullable ApplicationUser user, ChatMessageEvent event)
       throws NoPermissionException, ValidationException {
 
     Issue commentedIssue = issueManager.getIssueByCurrentKey(issueKey);
@@ -215,7 +216,7 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public void changeIssueStatus(Issue issue, int transitionId, ApplicationUser user)
+  public void changeIssueStatus(Issue issue, int transitionId, @Nullable ApplicationUser user)
       throws IssueTransitionException {
     com.atlassian.jira.bc.issue.IssueService.TransitionValidationResult validationResult =
         jiraIssueService.validateTransition(
@@ -243,7 +244,7 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public Project getProject(String projectKey, ApplicationUser user)
+  public Project getProject(String projectKey, @Nullable ApplicationUser user)
       throws PermissionException, ProjectBannedException {
     Project selectedProject = projectManager.getProjectByCurrentKeyIgnoreCase(projectKey);
     if (selectedProject == null) {
@@ -260,7 +261,8 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public Collection<IssueType> getProjectIssueTypes(Project project, ApplicationUser user) {
+  public Collection<IssueType> getProjectIssueTypes(
+      Project project, @Nullable ApplicationUser user) {
     ApplicationUser contextPrevUser = jiraAuthenticationContext.getLoggedInUser();
     try {
       jiraAuthenticationContext.setLoggedInUser(user);
@@ -276,7 +278,8 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public Collection<ActionDescriptor> getIssueTransitions(String issueKey, ApplicationUser user) {
+  public Collection<ActionDescriptor> getIssueTransitions(
+      String issueKey, @Nullable ApplicationUser user) {
     Issue issue = getIssueByUser(issueKey, user);
     List<ActionDescriptor> actions =
         issueWorkflowManager.getSortedAvailableActions(issue, TransitionOptions.defaults(), user);
@@ -288,7 +291,7 @@ public class IssueServiceImpl implements IssueService {
 
   @Override
   public boolean changeIssueAssignee(
-      String issueKey, String assigneeMyteamLogin, ApplicationUser user)
+      String issueKey, String assigneeMyteamLogin, @Nullable ApplicationUser user)
       throws UserNotFoundException, AssigneeChangeValidationException {
     @Nullable ApplicationUser assignee = userData.getUserByMrimLogin(assigneeMyteamLogin);
     if (assignee == null) {

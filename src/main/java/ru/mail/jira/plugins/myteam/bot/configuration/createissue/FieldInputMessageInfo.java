@@ -7,9 +7,9 @@ import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
+@SuppressWarnings({"NullAway", "CanIgnoreReturnValueSuggester", "MissingSummary"})
 @Getter
 @Builder
-@SuppressWarnings("MissingSummary")
 public class FieldInputMessageInfo {
   private final String message;
   @Nullable private final List<List<InlineKeyboardMarkupButton>> buttons;

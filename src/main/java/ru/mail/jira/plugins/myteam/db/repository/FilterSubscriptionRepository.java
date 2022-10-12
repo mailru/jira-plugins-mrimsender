@@ -10,28 +10,34 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.web.component.cron.CronEditorBean;
 import com.atlassian.jira.web.component.cron.generator.CronExpressionDescriptor;
+import com.atlassian.jira.web.component.cron.generator.CronExpressionGenerator;
 import com.atlassian.jira.web.component.cron.parser.CronExpressionParser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import net.java.ao.Query;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.commons.dao.PagingAndSortingRepository;
 import ru.mail.jira.plugins.commons.dto.jira.UserDto;
+import ru.mail.jira.plugins.myteam.commons.CalendarUtils;
 import ru.mail.jira.plugins.myteam.controller.dto.FilterSubscriptionDto;
 import ru.mail.jira.plugins.myteam.controller.dto.JqlFilterDto;
 import ru.mail.jira.plugins.myteam.db.model.FilterSubscription;
+import ru.mail.jira.plugins.myteam.db.model.RecipientsType;
 
 @Component
+@SuppressWarnings("NullAway")
 public class FilterSubscriptionRepository
     extends PagingAndSortingRepository<FilterSubscription, FilterSubscriptionDto> {
-  public static final DateTimeFormatter DATE_TIME_FORMATTER =
-      java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+  public static final String SCHEDULE_PREFIX = "myteamScheduleMode";
 
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final SearchRequestService searchRequestService;
@@ -50,38 +56,78 @@ public class FilterSubscriptionRepository
 
   @Override
   public FilterSubscriptionDto entityToDto(@NotNull FilterSubscription entity) {
-    ApplicationUser user = userManager.getUserByKey(entity.getUserKey());
-    UserDto userDto = new UserDto();
-    if (user != null) {
-      userDto.setUserKey(user.getKey());
-      userDto.setDisplayName(user.getDisplayName());
+    ApplicationUser creator = userManager.getUserByKey(entity.getUserKey());
+    SearchRequest searchRequest =
+        searchRequestService.getFilter(new JiraServiceContextImpl(creator), entity.getFilterId());
+    RecipientsType recipientsType = entity.getRecipientsType();
+    String recipients = entity.getRecipients();
+    Map<String, String[]> scheduleParams = getScheduleParams(entity);
+
+    FilterSubscriptionDto dto = new FilterSubscriptionDto();
+    dto.setId(entity.getID());
+    dto.setFilter(new JqlFilterDto(searchRequest, creator));
+    dto.setCreator(buildUserDto(creator));
+    dto.setRecipientsType(recipientsType);
+    if (recipientsType.equals(RecipientsType.USER)) {
+      dto.setUsers(
+          CommonUtils.split(recipients).stream()
+              .map(key -> buildUserDto(userManager.getUserByKey(key)))
+              .collect(Collectors.toList()));
+    } else if (recipientsType.equals(RecipientsType.GROUP)) {
+      dto.setGroups(CommonUtils.split(recipients));
+    } else {
+      dto.setChats(CommonUtils.split(recipients));
     }
-    SearchRequest filter =
-        searchRequestService.getFilter(new JiraServiceContextImpl(user), entity.getFilterId());
-    FilterSubscriptionDto dto = new FilterSubscriptionDto(entity);
-    dto.setFilter(
-        new JqlFilterDto(filter.getId(), filter.getName(), filter.getQuery().getQueryString()));
-    dto.setCronExpressionDescription(getCronExpressionDescription(entity.getCronExpression()));
-    dto.setUser(userDto);
+    dto.setScheduleDescription(getCronExpressionDescription(entity.getCronExpression()));
+    if (scheduleParams.containsKey("scheduleMode"))
+      dto.setScheduleMode(scheduleParams.get("scheduleMode")[0]);
+    if (scheduleParams.containsKey("hours"))
+      dto.setHours(Integer.parseInt(scheduleParams.get("hours")[0]));
+    if (scheduleParams.containsKey("minutes"))
+      dto.setMinutes(Integer.parseInt(scheduleParams.get("minutes")[0]));
+    if (scheduleParams.containsKey("weekdays"))
+      dto.setWeekDays(Arrays.asList(scheduleParams.get("weekdays")));
+    if (scheduleParams.containsKey("monthDay"))
+      dto.setMonthDay(Integer.parseInt(scheduleParams.get("monthDay")[0]));
+    if (scheduleParams.containsKey("advanced")) dto.setAdvanced(scheduleParams.get("advanced")[0]);
+    dto.setLastRun(CalendarUtils.formatDate(entity.getLastRun()));
+    dto.setType(entity.getType());
+    dto.setEmailOnEmpty(entity.isEmailOnEmpty());
     return dto;
   }
 
   @Override
   public void updateEntityFromDto(
       @NotNull FilterSubscriptionDto dto, @NotNull FilterSubscription entity) {
-    if (dto.getFilter() != null)
-      entity.setFilterId(Objects.requireNonNull(dto.getFilter().getId()));
-    if (dto.getUser() != null)
-      entity.setUserKey(Objects.requireNonNull(dto.getUser().getUserKey()));
-    entity.setGroupName(dto.getGroupName());
-    entity.setCronExpression(Objects.requireNonNull(dto.getCronExpression()));
-    if (dto.getLastRun() != null)
-      entity.setLastRun(
-          Date.from(
-              LocalDateTime.parse(dto.getLastRun(), DATE_TIME_FORMATTER)
-                  .atZone(ZoneId.systemDefault())
-                  .toInstant()));
-    entity.setEmailOnEmpty(Objects.requireNonNull(dto.getEmailOnEmpty()));
+    ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
+    RecipientsType recipientsType = dto.getRecipientsType();
+    List<UserDto> users = dto.getUsers();
+    List<String> groups = dto.getGroups();
+    List<String> chats = dto.getChats();
+
+    entity.setFilterId(dto.getFilter().getId());
+    if (dto.getCreator() == null) {
+      entity.setUserKey(Objects.requireNonNull(Objects.requireNonNull(loggedInUser).getKey()));
+    } else {
+      entity.setUserKey(
+          Objects.requireNonNull(Objects.requireNonNull(dto.getCreator()).getUserKey()));
+    }
+    entity.setRecipientsType(recipientsType);
+    if (recipientsType.equals(RecipientsType.USER)) {
+      entity.setRecipients(
+          Objects.requireNonNull(users).stream()
+              .map(UserDto::getUserKey)
+              .collect(Collectors.joining(",")));
+    } else if (recipientsType.equals(RecipientsType.GROUP)) {
+      entity.setRecipients(String.join(",", Objects.requireNonNull(groups)));
+    } else {
+      entity.setRecipients(String.join(",", Objects.requireNonNull(chats)));
+    }
+    entity.setScheduleMode(dto.getScheduleMode());
+    entity.setCronExpression(Objects.requireNonNull(getCronExpressionString(dto)));
+    entity.setLastRun(CalendarUtils.parseDate(dto.getLastRun()));
+    entity.setType(dto.getType());
+    entity.setEmailOnEmpty(dto.isEmailOnEmpty());
   }
 
   @Override
@@ -102,5 +148,98 @@ public class FilterSubscriptionRepository
     } else {
       return cronExpression;
     }
+  }
+
+  @Nullable
+  private UserDto buildUserDto(ApplicationUser user) {
+    if (user == null) return null;
+    UserDto userDto = new UserDto();
+    userDto.setUserKey(user.getKey());
+    userDto.setDisplayName(user.getDisplayName());
+    return userDto;
+  }
+
+  public Map<String, String[]> getScheduleParams(FilterSubscription filterSubscription) {
+    String scheduleModeMode = filterSubscription.getScheduleMode();
+    Map<String, String[]> scheduleModeParams = new HashMap<>();
+    scheduleModeParams.put("scheduleMode", new String[] {scheduleModeMode});
+    if (CronEditorBean.ADVANCED_MODE.equals(scheduleModeMode)) {
+      scheduleModeParams.put("advanced", new String[] {filterSubscription.getCronExpression()});
+      return scheduleModeParams;
+    }
+
+    CronExpressionParser cronExpressionParser =
+        new CronExpressionParser(filterSubscription.getCronExpression());
+    CronEditorBean cronEditorBean = cronExpressionParser.getCronEditorBean();
+    if (cronEditorBean.getMinutes() != null && cronEditorBean.getHoursRunOnce() != null) {
+      scheduleModeParams.put(
+          "hours",
+          new String[] {
+            String.valueOf(
+                CalendarUtils.get24HourTime(
+                    Integer.parseInt(cronEditorBean.getHoursRunOnce()),
+                    cronEditorBean.getHoursRunOnceMeridian()))
+          });
+      scheduleModeParams.put("minutes", new String[] {cronEditorBean.getMinutes()});
+    }
+    if (CronEditorBean.DAYS_OF_WEEK_SPEC_MODE.equals(scheduleModeMode)
+        && cronEditorBean.getSpecifiedDaysPerWeek() != null)
+      scheduleModeParams.put(
+          "weekdays", StringUtils.split(cronEditorBean.getSpecifiedDaysPerWeek(), ","));
+    if (CronEditorBean.DAYS_OF_MONTH_SPEC_MODE.equals(scheduleModeMode)
+        && cronEditorBean.getDayOfMonth() != null)
+      scheduleModeParams.put("monthDay", new String[] {cronEditorBean.getDayOfMonth()});
+    return scheduleModeParams;
+  }
+
+  private Map<String, String[]> buildCronEditorBeanParams(
+      String scheduleMode,
+      Integer hours,
+      Integer minutes,
+      List<String> weekdays,
+      Integer monthDay,
+      String advanced) {
+    Map<String, String[]> result = new HashMap<>();
+    if (StringUtils.isNotBlank(scheduleMode))
+      result.put(
+          String.format("%s.dailyWeeklyMonthly", SCHEDULE_PREFIX), new String[] {scheduleMode});
+    if (!CronEditorBean.ADVANCED_MODE.equals(scheduleMode) && hours != null && minutes != null) {
+      result.put(
+          String.format("%s.runOnceHours", SCHEDULE_PREFIX),
+          new String[] {String.valueOf(CalendarUtils.get12HourTime(hours))});
+      result.put(
+          String.format("%s.runOnceMins", SCHEDULE_PREFIX), new String[] {String.valueOf(minutes)});
+      result.put(
+          String.format("%s.runOnceMeridian", SCHEDULE_PREFIX),
+          new String[] {CalendarUtils.getMeridianIndicator(hours)});
+    }
+    if (CronEditorBean.ADVANCED_MODE.equals(scheduleMode))
+      result.put(String.format("%s.cronString", SCHEDULE_PREFIX), new String[] {advanced});
+    if (CronEditorBean.DAYS_OF_WEEK_SPEC_MODE.equals(scheduleMode))
+      result.put(
+          String.format("%s.weekday", SCHEDULE_PREFIX),
+          weekdays != null ? weekdays.toArray(String[]::new) : new String[0]);
+    if (CronEditorBean.DAYS_OF_MONTH_SPEC_MODE.equals(scheduleMode) && monthDay != null) {
+      result.put(String.format("%s.monthDay", SCHEDULE_PREFIX), new String[] {monthDay.toString()});
+      result.put(String.format("%s.daysOfMonthOpt", SCHEDULE_PREFIX), new String[] {"dayOfMonth"});
+      result.put(String.format("%s.day", SCHEDULE_PREFIX), new String[] {"1"});
+      result.put(String.format("%s.week", SCHEDULE_PREFIX), new String[] {"1"});
+    }
+    result.put(String.format("%s.interval", SCHEDULE_PREFIX), new String[] {"0"});
+    return result;
+  }
+
+  public String getCronExpressionString(FilterSubscriptionDto filterSubscriptionDto) {
+    Map<String, String[]> scheduleParams =
+        buildCronEditorBeanParams(
+            filterSubscriptionDto.getScheduleMode(),
+            filterSubscriptionDto.getHours(),
+            filterSubscriptionDto.getMinutes(),
+            filterSubscriptionDto.getWeekDays(),
+            filterSubscriptionDto.getMonthDay(),
+            filterSubscriptionDto.getAdvanced());
+    CronEditorBean cronEditorBean = new CronEditorBean(SCHEDULE_PREFIX, scheduleParams);
+    CronExpressionGenerator cronExpressionGenerator = new CronExpressionGenerator();
+    return cronExpressionGenerator.getCronExpressionFromInput(cronEditorBean);
   }
 }

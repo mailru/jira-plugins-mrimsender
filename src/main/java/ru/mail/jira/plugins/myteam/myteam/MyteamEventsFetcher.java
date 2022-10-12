@@ -22,6 +22,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.events.CallbackQueryEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
 
+@SuppressWarnings("NullAway")
 @Component
 public class MyteamEventsFetcher {
   private static final Logger log = LoggerFactory.getLogger(MyteamEventsFetcher.class);

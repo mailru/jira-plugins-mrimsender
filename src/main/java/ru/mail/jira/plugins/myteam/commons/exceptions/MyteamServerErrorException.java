@@ -1,6 +1,8 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.commons.exceptions;
 
+import org.jetbrains.annotations.Nullable;
+
 public class MyteamServerErrorException extends Exception {
   public int status;
 
@@ -9,7 +11,7 @@ public class MyteamServerErrorException extends Exception {
     this.status = status;
   }
 
-  public MyteamServerErrorException(int status, String message, Throwable cause) {
+  public MyteamServerErrorException(int status, String message, @Nullable Throwable cause) {
     super(message, cause);
     this.status = status;
   }
