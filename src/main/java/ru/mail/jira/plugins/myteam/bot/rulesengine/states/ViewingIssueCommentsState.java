@@ -127,6 +127,7 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
             .collect(Collectors.toList()),
         pageNumber,
         total,
-        COMMENT_LIST_PAGE_SIZE);
+        COMMENT_LIST_PAGE_SIZE,
+        null);
   }
 }

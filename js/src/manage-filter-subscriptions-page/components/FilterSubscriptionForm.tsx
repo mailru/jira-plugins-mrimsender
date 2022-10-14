@@ -1,5 +1,5 @@
 /* eslint-disable  sonarjs/cognitive-complexity */
-import React, {ReactElement, useLayoutEffect, useState} from 'react';
+import React, { ReactElement, useState } from 'react';
 import Form, {
   CheckboxField,
   ErrorMessage,
@@ -12,10 +12,10 @@ import { I18n } from '@atlassian/wrm-react-i18n';
 import Select, { OptionsType, OptionType, ValueType } from '@atlaskit/select';
 import { RadioGroup } from '@atlaskit/radio';
 import Textfield from '@atlaskit/textfield';
-import JqlFilterSelect, {createFilterOption} from './JqlFilterSelect';
-import UsersSelect, {createUserOption} from './UsersSelect';
-import GroupsSelect, {createGroupOption} from './GroupsSelect';
-import ChatsSelect, {createChatOption} from './ChatsSelect';
+import JqlFilterSelect, { createFilterOption } from './JqlFilterSelect';
+import UsersSelect, { createUserOption } from './UsersSelect';
+import GroupsSelect, { createGroupOption } from './GroupsSelect';
+import ChatsSelect, { createChatOption } from './ChatsSelect';
 import { ErrorData, FilterSubscription } from '../../shared/types';
 
 type Props = {
@@ -142,7 +142,7 @@ const monthDayOptions = [...Array(32).keys()].map((monthDay) => ({
   value: monthDay,
 }));
 
-const typeOptions = [
+export const typeOptions = [
   {
     name: 'type',
     label: I18n.getText(
@@ -180,9 +180,17 @@ const validateNotNull = (value?: unknown) => {
   return I18n.getText('common.forms.requiredfields');
 };
 
-function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): ReactElement {
-  const [recipientsType, setRecipientsType] = useState<string | undefined>(currentValue?.recipientsType);
-  const [scheduleMode, setScheduleMode] = useState<string | undefined>(currentValue?.scheduleMode);
+function FilterSubscriptionForm({
+  currentValue,
+  onSave,
+  submitError,
+}: Props): ReactElement {
+  const [recipientsType, setRecipientsType] = useState<string | undefined>(
+    currentValue?.recipientsType,
+  );
+  const [scheduleMode, setScheduleMode] = useState<string | undefined>(
+    currentValue?.scheduleMode,
+  );
 
   return (
     <Container>
@@ -198,7 +206,10 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                     owner: formState.filter.owner,
                   }
                 : undefined,
-            creator: currentValue && currentValue.creator ? currentValue.creator : undefined,
+            creator:
+              currentValue && currentValue.creator
+                ? currentValue.creator
+                : undefined,
             recipientsType:
               formState.recipientsType !== undefined
                 ? formState.recipientsType.value.toString()
@@ -225,6 +236,7 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                 : undefined,
             advanced: formState.advanced?.toString(),
             type: formState.type,
+            lastRun: currentValue?.lastRun,
             emailOnEmpty: formState.emailOnEmpty,
           };
           onSave(subscription);
@@ -242,7 +254,10 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                 name="filter"
                 label={I18n.getText('template.subscription.filter')}
                 isRequired
-                defaultValue={currentValue?.filter && createFilterOption(currentValue?.filter)}
+                defaultValue={
+                  currentValue?.filter &&
+                  createFilterOption(currentValue?.filter)
+                }
                 validate={validateNotNull}
               >
                 {({ fieldProps, error }) => (
@@ -265,7 +280,9 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                 <Field<ValueType<OptionType>>
                   name="recipientsType"
                   label={I18n.getText('filtersubscription.field.recipients')}
-                  defaultValue={recipientsTypeOptions.find(option => option.value === recipientsType)}
+                  defaultValue={recipientsTypeOptions.find(
+                    (option) => option.value === recipientsType,
+                  )}
                   isRequired
                   validate={validateNotNull}
                 >
@@ -273,7 +290,9 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                     <>
                       <Select
                         inputId={fieldProps.id}
-                        value={recipientsTypeOptions.find(option => option.value === recipientsType)}
+                        value={recipientsTypeOptions.find(
+                          (option) => option.value === recipientsType,
+                        )}
                         onChange={(
                           value: { label: any; value: string } | null,
                         ) => {
@@ -300,7 +319,15 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                 {recipientsType === 'USER' && (
                   <Field<OptionsType>
                     name="users"
-                    defaultValue={currentValue?.users && currentValue.users.map(user => createUserOption({key: user.userKey, displayName: user.displayName}))}
+                    defaultValue={
+                      currentValue?.users &&
+                      currentValue.users.map((user) =>
+                        createUserOption({
+                          key: user.userKey,
+                          displayName: user.displayName,
+                        }),
+                      )
+                    }
                     isRequired={recipientsType === 'USER'}
                     validate={(value) =>
                       recipientsType === 'USER' && validateNotNull(value)
@@ -326,7 +353,12 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                 {recipientsType === 'GROUP' && (
                   <Field<OptionsType>
                     name="groups"
-                    defaultValue={currentValue?.groups && currentValue.groups.map(group => createGroupOption(group))}
+                    defaultValue={
+                      currentValue?.groups &&
+                      currentValue.groups.map((group) =>
+                        createGroupOption(group),
+                      )
+                    }
                     isRequired={recipientsType === 'GROUP'}
                     validate={(value) =>
                       recipientsType === 'GROUP' && validateNotNull(value)
@@ -352,7 +384,10 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                 {recipientsType === 'CHAT' && (
                   <Field<OptionsType>
                     name="chats"
-                    defaultValue={currentValue?.chats && currentValue.chats.map(chat => createChatOption(chat))}
+                    defaultValue={
+                      currentValue?.chats &&
+                      currentValue.chats.map((chat) => createChatOption(chat))
+                    }
                     isRequired={recipientsType === 'CHAT'}
                     validate={(value) =>
                       recipientsType === 'CHAT' && validateNotNull(value)
@@ -409,8 +444,17 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                       <SmallSelect>
                         <Field<ValueType<OptionType>>
                           name="hours"
-                          label={I18n.getText('ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval')}
-                          defaultValue={currentValue?.hours !== undefined ? hourOptions.find(option => option.value === currentValue?.hours) : undefined}
+                          label={I18n.getText(
+                            'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval',
+                          )}
+                          defaultValue={
+                            currentValue?.hours !== undefined
+                              ? hourOptions.find(
+                                  (option) =>
+                                    option.value === currentValue?.hours,
+                                )
+                              : undefined
+                          }
                           isRequired={scheduleMode !== 'advanced'}
                           validate={(value) =>
                             scheduleMode !== 'advanced' &&
@@ -422,7 +466,10 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                             <>
                               <Select
                                 inputId={fieldProps.id}
-                                defaultValue={hourOptions.find(option => option.value === currentValue?.hours)}
+                                defaultValue={hourOptions.find(
+                                  (option) =>
+                                    option.value === currentValue?.hours,
+                                )}
                                 options={hourOptions}
                                 onChange={(value) => fieldProps.onChange(value)}
                                 placeholder={I18n.getText(
@@ -450,7 +497,14 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                         <Field<ValueType<OptionType>>
                           name="minutes"
                           isRequired={scheduleMode !== 'advanced'}
-                          defaultValue={currentValue?.minutes !== undefined ? minutesOptions.find(option => option.value === currentValue?.minutes) : undefined}
+                          defaultValue={
+                            currentValue?.minutes !== undefined
+                              ? minutesOptions.find(
+                                  (option) =>
+                                    option.value === currentValue?.minutes,
+                                )
+                              : undefined
+                          }
                           validate={(value) =>
                             scheduleMode !== 'advanced' &&
                             validateNotNull(value)
@@ -461,7 +515,10 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                             <>
                               <Select
                                 inputId={fieldProps.id}
-                                defaultValue={minutesOptions.find(option => option.value === currentValue?.minutes)}
+                                defaultValue={minutesOptions.find(
+                                  (option) =>
+                                    option.value === currentValue?.minutes,
+                                )}
                                 options={minutesOptions}
                                 onChange={(value) => fieldProps.onChange(value)}
                                 placeholder={I18n.getText(
@@ -493,7 +550,11 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                       <CheckboxField
                         key={weekday.value}
                         name="weekDays"
-                        defaultIsChecked={currentValue && currentValue.weekDays && currentValue.weekDays.indexOf(weekday.value) != -1}
+                        defaultIsChecked={
+                          currentValue &&
+                          currentValue.weekDays &&
+                          currentValue.weekDays.indexOf(weekday.value) !== -1
+                        }
                         value={weekday.value}
                       >
                         {({ fieldProps }) => (
@@ -502,7 +563,12 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                               id={fieldProps.id}
                               label={weekday.label}
                               size="medium"
-                              defaultChecked={currentValue && currentValue.weekDays && currentValue.weekDays.indexOf(weekday.value) != -1}
+                              defaultChecked={
+                                currentValue &&
+                                currentValue.weekDays &&
+                                currentValue.weekDays.indexOf(weekday.value) !==
+                                  -1
+                              }
                               value={fieldProps.value}
                               onChange={(value) => fieldProps.onChange(value)}
                             />
@@ -521,7 +587,13 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                 <SmallSelect>
                   <Field<ValueType<OptionType>>
                     name="monthDay"
-                    defaultValue={currentValue?.monthDay !== undefined ? monthDayOptions.find(option => option.value === currentValue?.monthDay) : undefined}
+                    defaultValue={
+                      currentValue?.monthDay !== undefined
+                        ? monthDayOptions.find(
+                            (option) => option.value === currentValue?.monthDay,
+                          )
+                        : undefined
+                    }
                     isRequired={scheduleMode === 'daysOfMonth'}
                     validate={(value) =>
                       scheduleMode === 'daysOfMonth' && validateNotNull(value)
@@ -532,7 +604,9 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
                       <>
                         <Select
                           inputId={fieldProps.id}
-                          defaultValue={monthDayOptions.find(option => option.value === currentValue?.monthDay)}
+                          defaultValue={monthDayOptions.find(
+                            (option) => option.value === currentValue?.monthDay,
+                          )}
                           options={monthDayOptions}
                           onChange={(value) => fieldProps.onChange(value)}
                           placeholder={I18n.getText(
@@ -557,7 +631,9 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
               {scheduleMode === 'advanced' && (
                 <Field
                   name="advanced"
-                  label={I18n.getText('ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval')}
+                  label={I18n.getText(
+                    'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval',
+                  )}
                   defaultValue={currentValue?.advanced}
                   isRequired={scheduleMode === 'advanced'}
                   validate={(value) =>
@@ -636,6 +712,7 @@ function FilterSubscriptionForm({ currentValue, onSave, submitError }: Props): R
 }
 
 FilterSubscriptionForm.defaultProps = {
+  currentValue: undefined,
   onCancel: undefined,
   submitError: undefined,
 };

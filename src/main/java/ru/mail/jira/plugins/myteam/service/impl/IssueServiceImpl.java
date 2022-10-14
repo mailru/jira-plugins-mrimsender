@@ -155,6 +155,17 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
+  public SearchResults<Issue> searchByJqlQuery(
+      Query jqlQuery, ApplicationUser user, int page, int pageSize)
+      throws SearchException, ParseException {
+    JiraThreadLocalUtils.preCall();
+    PagerFilter<Issue> pagerFilter = new PagerFilter<>(page * pageSize, pageSize);
+    SearchResults<Issue> results = searchService.search(user, jqlQuery, pagerFilter);
+    JiraThreadLocalUtils.postCall();
+    return results;
+  }
+
+  @Override
   public void watchIssue(String issueKey, @Nullable ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException {
     Issue issue = getIssueByUser(issueKey, user);

@@ -27,3 +27,10 @@ export const deleteSubscription = (subscriptionId: number): Promise<any> =>
   axios
     .delete(`${contextPath()}/rest/myteam/1.0/subscriptions/${subscriptionId}`)
     .then((response) => response.data);
+
+export const runSubscription = (subscriptionId: number): Promise<any> =>
+  axios
+    .post(
+      `${contextPath()}/rest/myteam/1.0/subscriptions/${subscriptionId}/run`,
+    )
+    .then((response) => response.data);

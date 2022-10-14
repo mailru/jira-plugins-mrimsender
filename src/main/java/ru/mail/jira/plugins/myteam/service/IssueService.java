@@ -13,6 +13,7 @@ import com.atlassian.jira.issue.search.SearchException;
 import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.query.Query;
 import com.opensymphony.workflow.loader.ActionDescriptor;
 import java.util.Collection;
 import java.util.List;
@@ -37,6 +38,9 @@ public interface IssueService {
   String getJiraBaseUrl();
 
   SearchResults<Issue> searchByJql(String jql, ApplicationUser user, int page, int pageSize)
+      throws SearchException, ParseException;
+
+  SearchResults<Issue> searchByJqlQuery(Query query, ApplicationUser user, int page, int pageSize)
       throws SearchException, ParseException;
 
   void watchIssue(String issueKey, @Nullable ApplicationUser user)

@@ -121,7 +121,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
             .collect(Collectors.toList());
     sj.add(
         messageFormatter.stringifyPagedCollection(
-            formattedProjectList, pageNumber, totalProjectsNum, pageSize));
+            formattedProjectList, pageNumber, totalProjectsNum, pageSize, null));
     return sj.toString();
   }
 }

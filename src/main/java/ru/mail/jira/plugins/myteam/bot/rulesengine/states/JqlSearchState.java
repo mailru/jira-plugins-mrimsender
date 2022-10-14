@@ -72,7 +72,7 @@ public class JqlSearchState extends BotState implements PageableState, Cancelabl
         String msg =
             userChatService
                 .getMessageFormatter()
-                .stringifyIssueList(parseResult.getResults(), page, parseResult.getTotal());
+                .stringifyIssueList(parseResult.getResults(), page, parseResult.getTotal(), null);
         List<List<InlineKeyboardMarkupButton>> buttons =
             userChatService
                 .getMessageFormatter()

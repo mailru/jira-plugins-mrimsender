@@ -30,6 +30,12 @@ public class CalendarUtils {
         LocalDateTime.parse(date, dateTimeFormatter).atZone(ZoneId.systemDefault()).toInstant());
   }
 
+  @Nullable
+  public Date convertToDate(LocalDateTime dateTime) {
+    if (dateTime == null) return null;
+    return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
+  }
+
   public int get12HourTime(int hours) {
     return hours == 12 ? hours : hours % 12;
   }
