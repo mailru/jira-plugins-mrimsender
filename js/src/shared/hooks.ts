@@ -11,6 +11,7 @@ import {
   createSubscription,
   deleteSubscription,
   getCurrentUserSubscriptions,
+  runSubscription,
   updateSubscription,
 } from './api/SubscriptionsApiClient';
 
@@ -74,3 +75,9 @@ export const useSubscriptionDelete = (): UseMutationResult<
   AxiosError,
   number
 > => useMutation((id: number) => deleteSubscription(id));
+
+export const useRunSubscriptionMutation = (): UseMutationResult<
+  undefined,
+  AxiosError,
+  number
+> => useMutation((id: number) => runSubscription(id));

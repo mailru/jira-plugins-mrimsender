@@ -100,7 +100,20 @@ public class FilterSubscriptionsController {
     FilterSubscription subscription = filterSubscriptionRepository.get(id);
     permissionHelper.checkSubscriptionPermission(loggedInUser, subscription);
 
-    filterSubscriptionRepository.delete(subscription);
+    filterSubscriptionService.deleteFilterSubscription(id);
+  }
+
+  @POST
+  @Path("{id}/run")
+  public void runSubscription(@PathParam("id") int id) throws Exception {
+    ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
+    if (loggedInUser == null) {
+      throw new SecurityException();
+    }
+    FilterSubscription subscription = filterSubscriptionRepository.get(id);
+    permissionHelper.checkSubscriptionPermission(loggedInUser, subscription);
+
+    filterSubscriptionService.runFilterSubscription(id);
   }
 
   @GET
