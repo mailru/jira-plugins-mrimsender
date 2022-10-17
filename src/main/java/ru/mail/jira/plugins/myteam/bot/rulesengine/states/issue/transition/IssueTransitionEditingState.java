@@ -9,6 +9,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.CancelableState;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
+@SuppressWarnings({"NullAway"})
 @Slf4j
 public class IssueTransitionEditingState extends BotState implements CancelableState {
   @Getter private final Issue issue;

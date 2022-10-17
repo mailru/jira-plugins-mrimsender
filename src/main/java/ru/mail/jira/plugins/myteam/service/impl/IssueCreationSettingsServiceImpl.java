@@ -116,6 +116,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
         .collect(Collectors.toList());
   }
 
+  @Nullable
   @Override
   public IssueCreationSettingsDto createSettings(IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException {
@@ -125,6 +126,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     return getSettingsFromCache(settings.getChatId(), settings.getTag());
   }
 
+  @Nullable
   @Override
   public IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException {

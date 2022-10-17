@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.mail.jira.plugins.myteam.db.model.AdditionalIssueField;
 
+@SuppressWarnings("NullAway")
 @Getter
 @Setter
 @NoArgsConstructor

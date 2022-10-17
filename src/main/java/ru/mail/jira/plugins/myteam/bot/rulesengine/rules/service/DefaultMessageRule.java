@@ -64,7 +64,7 @@ public class DefaultMessageRule extends BaseRule {
         messageFormatter.getMenuButtons());
   }
 
-  private boolean fireViewIssueResult(MyteamEvent event, String issueKey) {
+  private boolean fireViewIssueResult(MyteamEvent event, @Nullable String issueKey) {
     if (issueKey != null) {
       rulesEngine.fireCommand(CommandRuleType.Issue.getName(), event, issueKey);
       return true;
@@ -72,8 +72,9 @@ public class DefaultMessageRule extends BaseRule {
     return false;
   }
 
+  @Nullable
   private List<Forward> getForwardList(ChatMessageEvent event) {
-    return event.isHasForwards()
+    return event.isHasForwards() && event.getMessageParts() != null
         ? event.getMessageParts().stream()
             .filter(part -> part instanceof Forward)
             .map(part -> (Forward) part)

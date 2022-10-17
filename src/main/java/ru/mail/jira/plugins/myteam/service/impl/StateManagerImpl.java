@@ -28,18 +28,19 @@ public class StateManagerImpl implements StateManager {
   }
 
   @Override
+  @Nullable
   public BotState getLastState(String chatId) {
     List<BotState> states = getStates(chatId);
 
-    if (states == null || states.size() == 0) {
+    if (states == null || states.isEmpty()) {
       return null;
     }
 
     return states.get(states.size() - 1);
   }
 
-  @Nullable
   @Override
+  @Nullable
   public BotState getPrevState(String chatId) {
     List<BotState> states = getStates(chatId);
 

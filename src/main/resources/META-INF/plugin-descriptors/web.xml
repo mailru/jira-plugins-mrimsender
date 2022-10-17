@@ -49,10 +49,33 @@
         </actions>
     </webwork1>
 
+    <webwork1 key="manage-filter-subscriptions-action" class="java.lang.Object" roles-required="use">
+        <actions>
+            <action name="ru.mail.jira.plugins.myteam.commons.actions.ManageFilterSubscriptionsAction"
+                    alias="ManageFilterSubscriptions">
+                <view name="success">ru/mail/jira/plugins/myteam/subscriptions/manage-filter-subscriptions-page.vm</view>
+                <view name="securitybreach">/secure/views/securitybreach.jsp</view>
+            </action>
+        </actions>
+    </webwork1>
+
+    <web-section key="myteam-manage-filter-subscriptions-section" name="My Team Manage Filter Subscriptions Section" location="find_link"
+                 i18n-name-key="ru.mail.jira.plugins.myteam.subscriptions.menu.section" weight="100">
+        <label key="ru.mail.jira.plugins.myteam.subscriptions.menu.section.name"/>
+    </web-section>
+
+    <web-item key="myteam-manage-filter-subscriptions_link" name="My Team Manage Filter Subscriptions Link" section="find_link/myteam-manage-filter-subscriptions-section"
+              i18n-name-key="ru.mail.jira.plugins.myteam.subscriptions.menu.item" weight="10">
+        <label key="ru.mail.jira.plugins.myteam.subscriptions.menu.item.name"/>
+        <tooltip key="ru.mail.jira.plugins.myteam.subscriptions.menu.item.link"/>
+        <link linkId="myteam-manage-filter-subscriptions_link">/myteam/subscriptions</link>
+    </web-item>
+
     <sitemesh key="myteam-sitemesh-prettyurls" path="/myteam"/>
     <routing key="myteam-prettyurls" path="/myteam">
         <route from="/chats/settings" to="/secure/ChatSetting.jspa"/>
         <route from="/projects/{key}/settings/chats" to="/secure/ProjectChatAdminAction.jspa?project={key}"/>
+        <route from="/subscriptions" to="/secure/ManageFilterSubscriptions.jspa"/>
     </routing>
 
 

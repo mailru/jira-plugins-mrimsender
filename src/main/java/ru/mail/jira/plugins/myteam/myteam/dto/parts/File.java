@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
+@SuppressWarnings("NullAway")
 @ToString
 public class File extends Part<File.Data> {
   public String getFileId() {

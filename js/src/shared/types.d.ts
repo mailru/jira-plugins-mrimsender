@@ -36,3 +36,46 @@ export type LoadableDataState<T> = {
   data?: T;
   error?: string;
 };
+
+export type ErrorData = {
+  error?: string;
+  fieldErrors?: { [name: string]: { messages: string[] } };
+  status: number;
+  timestamp: number;
+};
+
+export type FilterSubscription = {
+  id?: number;
+  filter?: JqlFilter;
+  creator?: User;
+  recipientsType?: string;
+  chats?: string[];
+  users?: User[];
+  groups?: string[];
+  scheduleMode?: string;
+  scheduleDescription?: string;
+  hours?: number;
+  minutes?: number;
+  weekDays?: string[];
+  monthDay?: number;
+  advanced?: string;
+  lastRun?: string;
+  nextRun?: string;
+  type?: string;
+  emailOnEmpty: boolean;
+};
+
+export type User = {
+  userKey: string;
+  displayName: string;
+};
+
+export type Group = {
+  name: string;
+};
+
+export type JqlFilter = {
+  id: number;
+  name: string;
+  owner: boolean;
+};

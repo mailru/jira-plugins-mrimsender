@@ -13,12 +13,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.myteam.bot.BotsOrchestrationService;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
+@SuppressWarnings("NullAway")
 public class MyteamConfigurationAction extends JiraWebActionSupport {
   private final PluginData pluginData;
   private final BotsOrchestrationService botsOrchestrationService;
@@ -143,12 +143,11 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     }
   }
 
-  @Nullable
   private String loadBotTokenFromFile(String tokenFilePath) throws IOException {
-    Properties myteamBotPropeties = new Properties();
+    Properties myteamBotProperties = new Properties();
     InputStream inputStream = new FileInputStream(tokenFilePath);
-    myteamBotPropeties.load(inputStream);
-    String token = myteamBotPropeties.getOrDefault("token", "").toString();
+    myteamBotProperties.load(inputStream);
+    String token = myteamBotProperties.getOrDefault("token", "").toString();
     inputStream.close();
     return token;
   }

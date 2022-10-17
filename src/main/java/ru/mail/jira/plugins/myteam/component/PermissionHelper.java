@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.RestFieldException;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.db.model.FilterSubscription;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.AdminsResponse;
 
@@ -48,7 +49,7 @@ public class PermissionHelper {
     return isChatAdminOrJiraAdmin(chatId, userData.getUserByMrimLogin(userId));
   }
 
-  public boolean isChatAdminOrJiraAdmin(String chatId, ApplicationUser user) {
+  public boolean isChatAdminOrJiraAdmin(String chatId, @Nullable ApplicationUser user) {
     if (user == null) {
       return false;
     }
@@ -122,7 +123,7 @@ public class PermissionHelper {
 
   public ApplicationUser checkChatAdminPermissions(ApplicationUser user, @Nullable String chatId)
       throws PermissionException {
-    if (isChatAdminOrJiraAdmin(chatId, user)) {
+    if (chatId != null && isChatAdminOrJiraAdmin(chatId, user)) {
       return user;
     }
     throw new PermissionException();
@@ -135,5 +136,12 @@ public class PermissionHelper {
       return user;
     }
     throw new PermissionException();
+  }
+
+  public void checkSubscriptionPermission(
+      ApplicationUser user, FilterSubscription filterSubscription) {
+    if (!isJiraAdmin(user) && !filterSubscription.getUserKey().equals(user.getKey())) {
+      throw new SecurityException();
+    }
   }
 }

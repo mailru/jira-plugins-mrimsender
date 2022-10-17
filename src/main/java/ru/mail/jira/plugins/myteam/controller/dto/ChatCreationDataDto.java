@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+@SuppressWarnings("NullAway")
 @AllArgsConstructor
 @XmlRootElement
 public class ChatCreationDataDto {

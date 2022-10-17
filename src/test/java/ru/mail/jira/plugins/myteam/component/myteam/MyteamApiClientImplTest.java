@@ -28,6 +28,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.response.FetchResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
+@SuppressWarnings({"DirectInvocationOnMock", "NullAway"})
 public class MyteamApiClientImplTest {
 
   private PluginData pluginData;

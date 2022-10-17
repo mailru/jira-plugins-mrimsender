@@ -19,6 +19,7 @@ import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
+@SuppressWarnings({"NullAway"})
 @Slf4j
 public class SelectingProjectState extends BotState implements PageableState, CancelableState {
   public static final String DELIMITER_STR = "----------";
@@ -120,7 +121,7 @@ public class SelectingProjectState extends BotState implements PageableState, Ca
             .collect(Collectors.toList());
     sj.add(
         messageFormatter.stringifyPagedCollection(
-            formattedProjectList, pageNumber, totalProjectsNum, pageSize));
+            formattedProjectList, pageNumber, totalProjectsNum, pageSize, null));
     return sj.toString();
   }
 }

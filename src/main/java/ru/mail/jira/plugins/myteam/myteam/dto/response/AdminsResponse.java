@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatAdmin;
 
+@SuppressWarnings("NullAway")
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -26,6 +26,7 @@ import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
+@SuppressWarnings({"NullAway"})
 @Slf4j
 public class ViewingIssueCommentsState extends BotState implements PageableState {
 
@@ -126,6 +127,7 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
             .collect(Collectors.toList()),
         pageNumber,
         total,
-        COMMENT_LIST_PAGE_SIZE);
+        COMMENT_LIST_PAGE_SIZE,
+        null);
   }
 }

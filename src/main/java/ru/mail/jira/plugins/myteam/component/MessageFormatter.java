@@ -23,6 +23,7 @@ import com.atlassian.jira.issue.label.Label;
 import com.atlassian.jira.issue.operation.IssueOperations;
 import com.atlassian.jira.issue.priority.Priority;
 import com.atlassian.jira.issue.resolution.Resolution;
+import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.issue.security.IssueSecurityLevel;
 import com.atlassian.jira.issue.security.IssueSecurityLevelManager;
 import com.atlassian.jira.project.ProjectConstant;
@@ -120,7 +121,7 @@ public class MessageFormatter {
   }
 
   public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithCancel(
-      List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
+      @Nullable List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
     if (buttons == null) {
       List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
       newButtons.add(getCancelButtonRow(cancelButtonText));
@@ -131,7 +132,7 @@ public class MessageFormatter {
   }
 
   public static List<List<InlineKeyboardMarkupButton>> buildButtonsWithBack(
-      List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
+      @Nullable List<List<InlineKeyboardMarkupButton>> buttons, String cancelButtonText) {
     if (buttons == null) {
       List<List<InlineKeyboardMarkupButton>> newButtons = new ArrayList<>();
       newButtons.add(getBackButtonRow(cancelButtonText));
@@ -232,6 +233,16 @@ public class MessageFormatter {
   public String createIssueLink(String issueKey) {
     return String.format(
         "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
+  }
+
+  public String createJqlLink(String jql) {
+    return String.format(
+        "%s/issues/?jql=%s", applicationProperties.getString(APKeys.JIRA_BASEURL), jql);
+  }
+
+  public String createFilterLink(Long id) {
+    return String.format(
+        "%s/issues/?filter=%s", applicationProperties.getString(APKeys.JIRA_BASEURL), id);
   }
 
   public String createMarkdownIssueShortLink(String issueKey) {
@@ -513,6 +524,7 @@ public class MessageFormatter {
     return buttons;
   }
 
+  @Nullable
   public List<List<InlineKeyboardMarkupButton>> getListButtons(boolean withPrev, boolean withNext) {
     if (!withPrev && !withNext) return null;
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>(1);
@@ -544,7 +556,7 @@ public class MessageFormatter {
   }
 
   public String stringifyPagedCollection(
-      Collection<?> collection, int pageNumber, int total, int pageSize) {
+      Collection<?> collection, int pageNumber, int total, int pageSize, String totalLink) {
     if (collection.size() == 0) return "";
 
     StringJoiner sj = new StringJoiner("\n\n");
@@ -564,13 +576,14 @@ public class MessageFormatter {
                   " - ",
                   Integer.toString(firstResultPageIndex),
                   Integer.toString(lastResultPageIndex)),
-              Integer.toString(total)));
+              StringUtils.isNotBlank(totalLink) ? totalLink : Integer.toString(total)));
     }
 
     return sj.toString();
   }
 
-  public String stringifyIssueList(List<Issue> issueList, int pageNumber, int total) {
+  public String stringifyIssueList(
+      List<Issue> issueList, int pageNumber, int total, String totalLink) {
     return stringifyPagedCollection(
         issueList.stream()
             .map(
@@ -581,7 +594,8 @@ public class MessageFormatter {
             .collect(Collectors.toList()),
         pageNumber,
         total,
-        LIST_PAGE_SIZE);
+        LIST_PAGE_SIZE,
+        totalLink);
   }
 
   public String stringifyFieldsCollection(Collection<? extends Field> fields) {
@@ -616,12 +630,39 @@ public class MessageFormatter {
     } else return i18nHelper.getText(messageKey);
   }
 
+  public String formatFilterSubscription(
+      String filterName, Long filterId, String searchJql, SearchResults<Issue> issueSearchResults) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(
+        i18nResolver.getText(
+            "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.message.header",
+            markdownTextLink(filterName, createFilterLink(filterId))));
+    sb.append("\n\n");
+
+    int totalIssues = issueSearchResults.getTotal();
+    if (totalIssues == 0) {
+      sb.append(
+          i18nResolver.getText(
+              "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.message.body.empty"));
+    } else {
+      sb.append(
+          stringifyIssueList(
+              issueSearchResults.getResults(),
+              0,
+              totalIssues,
+              markdownTextLink(Integer.toString(totalIssues), createJqlLink(searchJql))));
+    }
+    return sb.toString();
+  }
+
+  @Nullable
   private String formatPriority(@Nullable Priority priority) {
     if (priority != null) return priority.getNameTranslation(i18nHelper);
     else return null;
   }
 
-  private void appendField(StringBuilder sb, String title, String value, boolean appendEmpty) {
+  private void appendField(
+      StringBuilder sb, @Nullable String title, @Nullable String value, boolean appendEmpty) {
     if (appendEmpty || !StringUtils.isBlank(value)) {
       if (sb.length() == 0) sb.append("\n");
       sb.append("\n").append(title).append(": ").append(StringUtils.defaultString(value));
@@ -692,6 +733,7 @@ public class MessageFormatter {
     return output.toString();
   }
 
+  @Nullable
   private String makeMyteamMarkdownFromJira(String inputText, boolean useMentionFormat) {
     if (inputText == null) {
       return null;

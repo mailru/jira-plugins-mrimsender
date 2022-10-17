@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.myteam.service.PluginData;
@@ -97,7 +98,7 @@ public class PluginDataImpl implements PluginData {
   }
 
   @Override
-  public void setMainNodeId(String mainNodeId) {
+  public void setMainNodeId(@Nullable String mainNodeId) {
     pluginSettingsFactory.createGlobalSettings().put(MAIN_NODE_ID, mainNodeId);
   }
 

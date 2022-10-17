@@ -21,11 +21,16 @@ public class Utils {
         .collect(joining("\n"));
   }
 
-  public static String unshieldText(String s) {
+  @Nullable
+  public static String unshieldText(@Nullable String s) {
+    if (s == null) {
+      return null;
+    }
     return s.replaceAll("\\\\([*+#_~\\-`!.<>\\[\\]|(){}\\\\])", "$1");
   }
 
-  public static String shieldText(String str) {
+  @Nullable
+  public static String shieldText(@Nullable String str) {
     if (str == null) {
       return null;
     }
@@ -97,7 +102,8 @@ public class Utils {
     return sj.toString();
   }
 
-  public static String removeAllEmojis(String str) {
+  @Nullable
+  public static String removeAllEmojis(@Nullable String str) {
     if (str == null) {
       return null;
     } else {
@@ -108,10 +114,13 @@ public class Utils {
   @Nullable
   public static String getEmailFromMention(MyteamEvent event) {
     String userEmail = null;
-    if (event instanceof ChatMessageEvent && ((ChatMessageEvent) event).isHasMentions()) {
-      for (Part part : ((ChatMessageEvent) event).getMessageParts()) {
-        if (part instanceof Mention) {
-          userEmail = ((Mention) part).getUserId();
+    if (event instanceof ChatMessageEvent) {
+      ChatMessageEvent chatMessageEvent = (ChatMessageEvent) event;
+      if (chatMessageEvent.isHasMentions() && chatMessageEvent.getMessageParts() != null) {
+        for (Part part : chatMessageEvent.getMessageParts()) {
+          if (part instanceof Mention) {
+            userEmail = ((Mention) part).getUserId();
+          }
         }
       }
     }

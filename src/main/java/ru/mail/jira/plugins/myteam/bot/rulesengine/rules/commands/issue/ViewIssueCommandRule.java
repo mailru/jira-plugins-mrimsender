@@ -27,6 +27,7 @@ import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
+@SuppressWarnings("UnusedVariable")
 @Rule(name = "/issue", description = "View issue by key")
 public class ViewIssueCommandRule extends BaseRule {
 

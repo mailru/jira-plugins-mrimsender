@@ -33,13 +33,16 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String getClassName() {
+  public @Nullable String getClassName() {
     return MultiSelectCFType.class.getName();
   }
 
   @Override
   public FieldInputMessageInfo getMessageInfo(
-      Project project, IssueType issueType, ApplicationUser user, FillingIssueFieldState state) {
+      Project project,
+      IssueType issueType,
+      @Nullable ApplicationUser user,
+      FillingIssueFieldState state) {
     return FieldInputMessageInfo.builder()
         .message(getInsertFieldMessage(state))
         .buttons(getButtons(state))
@@ -56,20 +59,23 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
 
     List<String> values = Arrays.asList(state.getValue().split(delimiter));
 
-    options.forEach(
-        option -> {
-          InlineKeyboardMarkupButton optionButton =
-              InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-                  String.format(
-                      "%s %s", option.getValue(), values.contains(option.getValue()) ? "☑️" : "️"),
-                  String.join(
-                      "-",
-                      StateActionRuleType.EditIssueCreationValue.getName(),
-                      option.getValue()));
-          List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
-          newButtonsRow.add(optionButton);
-          buttons.add(newButtonsRow);
-        });
+    if (options != null) {
+      options.forEach(
+          option -> {
+            InlineKeyboardMarkupButton optionButton =
+                InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+                    String.format(
+                        "%s %s",
+                        option.getValue(), values.contains(option.getValue()) ? "☑️" : "️"),
+                    String.join(
+                        "-",
+                        StateActionRuleType.EditIssueCreationValue.getName(),
+                        option.getValue()));
+            List<InlineKeyboardMarkupButton> newButtonsRow = new ArrayList<>(1);
+            newButtonsRow.add(optionButton);
+            buttons.add(newButtonsRow);
+          });
+    }
 
     InlineKeyboardMarkupButton optionButton =
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
@@ -107,8 +113,10 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Override
-  public String[] getValueAsArray(String value, Field field, Project project, IssueType issueType) {
-    List<String> values = new ArrayList<>(Arrays.asList(value.split(delimiter)));
+  public String[] getValueAsArray(
+      @Nullable String value, Field field, Project project, IssueType issueType) {
+    List<String> values = new ArrayList<>();
+    if (value != null) values = Arrays.asList(value.split(delimiter));
 
     Options options = getOptions((CustomField) field);
 
@@ -122,6 +130,7 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
         .toArray(String[]::new);
   }
 
+  @Nullable
   private Options getOptions(CustomField field) {
     Options options = null;
 
@@ -140,7 +149,8 @@ public class CheckboxValueHandler implements CreateIssueFieldValueHandler {
   }
 
   @Nullable
-  public Option getOption(Options options, String value) {
+  public Option getOption(@Nullable Options options, String value) {
+    if (options == null) return null;
 
     for (Option opt : options) {
       if (opt.getValue().equals(value) || String.valueOf(opt.getOptionId()).equals(value)) {

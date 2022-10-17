@@ -7,6 +7,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
+@SuppressWarnings("NullAway")
 @Getter
 @Setter
 @ToString
