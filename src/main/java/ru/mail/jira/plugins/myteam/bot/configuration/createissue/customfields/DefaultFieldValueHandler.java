@@ -95,9 +95,10 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
         return fieldValues.stream()
             .map(
                 (strValue) -> {
-                  ProjectComponent component =
-                      projectComponentManager.getProjectComponent(Long.valueOf(strValue));
-                  if (component == null) {
+                  ProjectComponent component;
+                  try {
+                    component = projectComponentManager.getProjectComponent(Long.valueOf(strValue));
+                  } catch (NumberFormatException e) {
                     component = projectComponentManager.findByComponentName(projectId, strValue);
                   }
                   return Optional.ofNullable(component);
