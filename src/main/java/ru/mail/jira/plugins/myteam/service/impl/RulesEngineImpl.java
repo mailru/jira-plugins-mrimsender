@@ -12,6 +12,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.core.RulesEngine;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons.*;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.ChatIdCommandRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.HelpCommandRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.MenuCommandRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.admin.IssueCreationSettingsCommand;
@@ -95,6 +96,7 @@ public class RulesEngineImpl
         new IssueCreationSettingsCommand(userChatService, this, issueService));
 
     // Commands
+    commandsRuleEngine.registerRule(new ChatIdCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new HelpCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new MenuCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new WatchingIssuesCommandRule(userChatService, this));
