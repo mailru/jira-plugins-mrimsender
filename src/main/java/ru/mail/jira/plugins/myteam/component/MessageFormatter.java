@@ -388,7 +388,7 @@ public class MessageFormatter {
     return sb.toString();
   }
 
-  public String formatEvent(ApplicationUser recipient, MentionIssueEvent mentionIssueEvent) {
+  public String formatEvent(MentionIssueEvent mentionIssueEvent) {
     Issue issue = mentionIssueEvent.getIssue();
     ApplicationUser user = mentionIssueEvent.getFromUser();
     String issueLink = getIssueLink(issue.getKey());

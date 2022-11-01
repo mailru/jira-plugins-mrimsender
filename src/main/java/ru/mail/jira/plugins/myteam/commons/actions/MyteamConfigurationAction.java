@@ -4,6 +4,8 @@ package ru.mail.jira.plugins.myteam.commons.actions;
 import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.jira.security.GlobalPermissionManager;
+import com.atlassian.jira.security.request.RequestMethod;
+import com.atlassian.jira.security.request.SupportedMethods;
 import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
@@ -19,6 +21,7 @@ import ru.mail.jira.plugins.myteam.bot.BotsOrchestrationService;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @SuppressWarnings("NullAway")
+@SupportedMethods({RequestMethod.GET, RequestMethod.POST})
 public class MyteamConfigurationAction extends JiraWebActionSupport {
   private final PluginData pluginData;
   private final BotsOrchestrationService botsOrchestrationService;

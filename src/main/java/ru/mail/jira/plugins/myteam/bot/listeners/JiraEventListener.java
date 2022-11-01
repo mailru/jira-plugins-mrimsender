@@ -187,14 +187,12 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
             if (event instanceof IssueEvent)
               message = messageFormatter.formatEvent(recipient, (IssueEvent) event);
             if (event instanceof MentionIssueEvent)
-              message = messageFormatter.formatEvent(recipient, (MentionIssueEvent) event);
+              message = messageFormatter.formatEvent((MentionIssueEvent) event);
+
             if (message != null) {
               myteamEventsListener.publishEvent(
                   new JiraNotifyEvent(
                       recipient.getEmailAddress(), message, getAllIssueButtons(issueKey)));
-            } else {
-              myteamEventsListener.publishEvent(
-                  new JiraNotifyEvent(recipient.getEmailAddress(), message, null));
             }
           } catch (Exception e) {
             SentryClient.capture(event.toString());

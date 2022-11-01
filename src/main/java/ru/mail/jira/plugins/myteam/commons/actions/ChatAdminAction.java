@@ -2,11 +2,14 @@
 package ru.mail.jira.plugins.myteam.commons.actions;
 
 import com.atlassian.jira.security.JiraAuthenticationContext;
+import com.atlassian.jira.security.request.RequestMethod;
+import com.atlassian.jira.security.request.SupportedMethods;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.web.action.JiraWebActionSupport;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import ru.mail.jira.plugins.myteam.component.PermissionHelper;
 
+@SupportedMethods({RequestMethod.GET, RequestMethod.POST})
 public class ChatAdminAction extends JiraWebActionSupport {
   private static final String SECURITY_BREACH = "securitybreach";
   private final JiraAuthenticationContext jiraAuthenticationContext;

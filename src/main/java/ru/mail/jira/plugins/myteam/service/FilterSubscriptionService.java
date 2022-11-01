@@ -36,7 +36,6 @@ import java.util.Date;
 import java.util.Map;
 import javax.annotation.Nullable;
 import javax.validation.Valid;
-
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
@@ -289,7 +288,9 @@ public class FilterSubscriptionService {
       } catch (Exception e) {
         SentryClient.capture(e);
         return JobRunnerResponse.failed(
-            String.format("Fail send notification for My Team subscription with id %d. Error: %s", subscriptionId, e.getMessage()));
+            String.format(
+                "Fail send notification for My Team subscription with id %d. Error: %s",
+                subscriptionId, e.getMessage()));
       }
     }
   }
