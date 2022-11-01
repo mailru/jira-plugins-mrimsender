@@ -251,6 +251,7 @@ public class MessageFormatter {
         issueKey, applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
 
+  @Nullable
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
     Issue issue = issueEvent.getIssue();
     ApplicationUser user = issueEvent.getUser();
@@ -382,9 +383,17 @@ public class MessageFormatter {
             issueEvent.getChangeLog(),
             EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId),
             useMentionFormat));
-    if (issueEvent.getComment() != null && !StringUtils.isBlank(issueEvent.getComment().getBody()))
+    if (issueEvent.getComment() != null
+        && !StringUtils.isBlank(issueEvent.getComment().getBody())) {
+      if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)
+          && issueEvent.getComment().getBody().contains("[~" + recipient.getName() + "]")) {
+        // do not send message when recipient mentioned in comment
+        return null;
+      }
+
       sb.append("\n\n")
           .append(makeMyteamMarkdownFromJira(issueEvent.getComment().getBody(), useMentionFormat));
+    }
     return sb.toString();
   }
 
