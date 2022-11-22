@@ -53,4 +53,11 @@ module.exports = {
       amd: 'jira/util/events/reasons',
     },
   },
+  'wrm/i18n': {
+    dependency: 'com.atlassian.plugins.atlassian-plugins-webresource-plugin:i18n',
+    import: {
+      var: 'require("wrm/i18n")',
+      amd: 'wrm/i18n',
+    },
+  },
 };

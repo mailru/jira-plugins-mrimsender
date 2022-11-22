@@ -20,6 +20,7 @@ public interface FilterSubscription extends Entity {
 
   void setUserKey(String userKey);
 
+  @Indexed
   RecipientsType getRecipientsType();
 
   void setRecipientsType(RecipientsType recipientsType);

@@ -6,11 +6,16 @@ import {
   useQuery,
 } from 'react-query';
 import { AxiosError } from 'axios';
-import { ErrorData, FilterSubscription } from './types';
+import {
+  ErrorData,
+  FilterSubscription,
+  FilterSubscriptionsPermissions,
+} from './types';
 import {
   createSubscription,
   deleteSubscription,
   getCurrentUserSubscriptions,
+  getSubscriptionsPermissions,
   runSubscription,
   updateSubscription,
 } from './api/SubscriptionsApiClient';
@@ -46,13 +51,15 @@ export const usePrevious = <T>(value: T): T | undefined => {
   return ref.current;
 };
 
-export const useGetSubscriptions = (): QueryObserverResult<
-  FilterSubscription[],
-  AxiosError
-> =>
+export const useGetSubscriptions = (params?: {
+  subscribers?: Array<String>;
+  filterId?: number;
+  recipientsType?: string;
+  recipients?: Array<String>;
+}): QueryObserverResult<FilterSubscription[], AxiosError> =>
   useQuery<FilterSubscription[], AxiosError>(
-    ['getSubscriptions'],
-    () => getCurrentUserSubscriptions(),
+    ['getSubscriptions', params],
+    () => getCurrentUserSubscriptions(params),
     {
       refetchOnWindowFocus: false,
       retry: false,
@@ -81,3 +88,16 @@ export const useRunSubscriptionMutation = (): UseMutationResult<
   AxiosError,
   number
 > => useMutation((id: number) => runSubscription(id));
+
+export const useGetSubscriptionsPermissions = (): QueryObserverResult<
+  FilterSubscriptionsPermissions,
+  AxiosError
+> =>
+  useQuery<FilterSubscriptionsPermissions, AxiosError>(
+    ['getSubscriptionsPermissions'],
+    () => getSubscriptionsPermissions(),
+    {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  );

@@ -3,7 +3,11 @@ package ru.mail.jira.plugins.myteam.controller;
 
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
+import com.atlassian.jira.bc.group.search.GroupPickerSearchService;
+import com.atlassian.jira.bc.user.search.UserSearchParams;
+import com.atlassian.jira.bc.user.search.UserSearchService;
 import com.atlassian.jira.security.JiraAuthenticationContext;
+import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.sharing.SharedEntityColumn;
 import com.atlassian.jira.sharing.search.SharedEntitySearchContext;
 import com.atlassian.jira.sharing.search.SharedEntitySearchParameters;
@@ -11,6 +15,7 @@ import com.atlassian.jira.sharing.search.SharedEntitySearchParametersBuilder;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.ws.rs.DELETE;
@@ -27,8 +32,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ru.mail.jira.plugins.myteam.component.PermissionHelper;
 import ru.mail.jira.plugins.myteam.controller.dto.FilterSubscriptionDto;
+import ru.mail.jira.plugins.myteam.controller.dto.FilterSubscriptionPermissionsDto;
+import ru.mail.jira.plugins.myteam.controller.dto.GroupDto;
 import ru.mail.jira.plugins.myteam.controller.dto.JqlFilterDto;
+import ru.mail.jira.plugins.myteam.controller.dto.UserDto;
 import ru.mail.jira.plugins.myteam.db.model.FilterSubscription;
+import ru.mail.jira.plugins.myteam.db.model.RecipientsType;
 import ru.mail.jira.plugins.myteam.db.repository.FilterSubscriptionRepository;
 import ru.mail.jira.plugins.myteam.service.FilterSubscriptionService;
 
@@ -36,7 +45,10 @@ import ru.mail.jira.plugins.myteam.service.FilterSubscriptionService;
 @Path("/subscriptions")
 @Produces(MediaType.APPLICATION_JSON)
 public class FilterSubscriptionsController {
+  private final GroupManager groupManager;
+  private final GroupPickerSearchService groupPickerSearchService;
   private final JiraAuthenticationContext jiraAuthenticationContext;
+  private final UserSearchService userSearchService;
   private final SearchRequestService searchRequestService;
   private final FilterSubscriptionService filterSubscriptionService;
   private final FilterSubscriptionRepository filterSubscriptionRepository;
@@ -44,12 +56,18 @@ public class FilterSubscriptionsController {
 
   @Autowired
   public FilterSubscriptionsController(
+      @ComponentImport GroupManager groupManager,
+      @ComponentImport GroupPickerSearchService groupPickerSearchService,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+      UserSearchService userSearchService,
       SearchRequestService searchRequestService,
       FilterSubscriptionService filterSubscriptionService,
       FilterSubscriptionRepository filterSubscriptionRepository,
       PermissionHelper permissionHelper) {
+    this.groupManager = groupManager;
+    this.groupPickerSearchService = groupPickerSearchService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
+    this.userSearchService = userSearchService;
     this.searchRequestService = searchRequestService;
     this.filterSubscriptionService = filterSubscriptionService;
     this.filterSubscriptionRepository = filterSubscriptionRepository;
@@ -57,14 +75,32 @@ public class FilterSubscriptionsController {
   }
 
   @GET
-  public List<FilterSubscriptionDto> getCurrentUserSubscriptions() {
+  public List<FilterSubscriptionDto> getSubscriptions(
+      @QueryParam("subscribers") final List<String> subscribers,
+      @QueryParam("filterId") final Long filterId,
+      @QueryParam("recipientsType") final RecipientsType recipientsType,
+      @QueryParam("recipients") final List<String> recipients) {
     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
     if (loggedInUser == null) {
       throw new SecurityException();
     }
-    return Arrays.stream(filterSubscriptionRepository.getSubscription(loggedInUser.getKey()))
-        .map(filterSubscriptionRepository::entityToDto)
-        .collect(Collectors.toList());
+
+    if (permissionHelper.isJiraAdmin(loggedInUser)) {
+      return Arrays.stream(
+              filterSubscriptionRepository.getSubscriptions(
+                  subscribers, filterId, recipientsType, recipients))
+          .map(filterSubscriptionRepository::entityToDto)
+          .collect(Collectors.toList());
+    } else {
+      return Arrays.stream(
+              filterSubscriptionRepository.getSubscriptions(
+                  Collections.singletonList(loggedInUser.getKey()),
+                  filterId,
+                  recipientsType,
+                  recipients))
+          .map(filterSubscriptionRepository::entityToDto)
+          .collect(Collectors.toList());
+    }
   }
 
   @POST
@@ -135,5 +171,56 @@ public class FilterSubscriptionsController {
         .stream()
         .map(searchRequest -> new JqlFilterDto(searchRequest, loggedInUser))
         .collect(Collectors.toList());
+  }
+
+  @GET
+  @Path("users")
+  public List<UserDto> searchUsers(@QueryParam("query") final String query) {
+    ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
+    if (loggedInUser == null) {
+      throw new SecurityException();
+    }
+
+    if (!permissionHelper.isJiraAdmin(loggedInUser))
+      return Collections.singletonList(new UserDto(loggedInUser));
+
+    UserSearchParams searchParams =
+        new UserSearchParams(true, true, false, true, null, null, 10, true, false);
+    return userSearchService.findUsers(query, searchParams).stream()
+        .map(UserDto::new)
+        .collect(Collectors.toList());
+  }
+
+  @GET
+  @Path("groups")
+  public List<GroupDto> searchGroups(@QueryParam("query") final String query) {
+    ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
+    if (loggedInUser == null) {
+      throw new SecurityException();
+    }
+
+    if (permissionHelper.isJiraAdmin(loggedInUser)) {
+      return groupPickerSearchService.findGroups(query).stream()
+          .limit(10)
+          .map(GroupDto::new)
+          .collect(Collectors.toList());
+    } else {
+      return groupManager.getGroupNamesForUser(loggedInUser).stream()
+          .filter(name -> name.contains(query))
+          .limit(10)
+          .map(GroupDto::new)
+          .collect(Collectors.toList());
+    }
+  }
+
+  @GET
+  @Path("permissions")
+  public FilterSubscriptionPermissionsDto getPermissions() {
+    ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
+    if (loggedInUser == null) {
+      throw new SecurityException();
+    }
+
+    return new FilterSubscriptionPermissionsDto(permissionHelper.isJiraAdmin(loggedInUser));
   }
 }

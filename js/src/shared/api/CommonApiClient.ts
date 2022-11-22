@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import qs from 'qs';
 import contextPath from 'wrm/context-path';
-import { FieldHtml, FieldParam, Group, JqlFilter } from '../types';
+import { FieldHtml, FieldParam, Group, JqlFilter, User } from '../types';
 import { collectFieldsData } from '../utils';
 import getCancelTokenHandler from './AxiosUtils';
 
@@ -84,18 +84,16 @@ export const loadJqlFilters = (
 
 export const loadJiraUsers = (
   query: string,
-): Promise<
-  AxiosResponse<{ users: ReadonlyArray<{ key: string; displayName: string }> }>
-> => {
-  return axios.get(`${contextPath()}/rest/api/2/user/picker`, {
+): Promise<AxiosResponse<ReadonlyArray<User>>> => {
+  return axios.get(`${contextPath()}/rest/myteam/1.0/subscriptions/users`, {
     params: { query },
   });
 };
 
 export const loadJiraGroups = (
   query: string,
-): Promise<AxiosResponse<{ groups: ReadonlyArray<Group> }>> => {
-  return axios.get(`${contextPath()}/rest/api/2/groups/picker`, {
+): Promise<AxiosResponse<ReadonlyArray<Group>>> => {
+  return axios.get(`${contextPath()}/rest/myteam/1.0/subscriptions/groups`, {
     params: { query },
   });
 };

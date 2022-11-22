@@ -5,18 +5,17 @@ import { loadJiraUsers } from '../../shared/api/CommonApiClient';
 import { User } from '../../shared/types';
 
 type Props = {
-  selectedValue?: User[];
+  selectedValue?: OptionsType;
   id: string;
   onChange: (value: OptionsType) => void;
+  isMulti?: boolean;
+  placeholder?: string;
 };
 
-export const createUserOption = (user: {
-  key: string;
-  displayName: string;
-}): OptionType => {
+export const createUserOption = (user: User): OptionType => {
   return {
     label: user.displayName,
-    value: user.key,
+    value: user.userKey,
   };
 };
 
@@ -24,14 +23,21 @@ const loadUsers = async (query?: string): Promise<OptionType[]> => {
   return new Promise((resolve, reject) => {
     loadJiraUsers(query === undefined ? '' : query)
       .then((response) => {
-        resolve(response.data.users.map((user) => createUserOption(user)));
+        resolve(response.data.map(createUserOption));
       })
       .catch(reject);
   });
 };
 
-function UsersSelect({ id, onChange, selectedValue }: Props): ReactElement {
-  const [currentValue, setCurrentValue] = useState<OptionsType>();
+function UsersSelect({
+  id,
+  onChange,
+  selectedValue,
+  placeholder,
+}: Props): ReactElement {
+  const [currentValue, setCurrentValue] = useState<
+    OptionsType | OptionType | null
+  >();
 
   const handleChange = (value: OptionsType): void => {
     setCurrentValue(value);
@@ -40,11 +46,7 @@ function UsersSelect({ id, onChange, selectedValue }: Props): ReactElement {
 
   useLayoutEffect(() => {
     if (selectedValue) {
-      setCurrentValue(
-        selectedValue.map((val) =>
-          createUserOption({ key: val.userKey, displayName: val.displayName }),
-        ),
-      );
+      setCurrentValue(selectedValue);
     }
   }, [selectedValue]);
 
@@ -57,7 +59,7 @@ function UsersSelect({ id, onChange, selectedValue }: Props): ReactElement {
       cacheOptions
       loadOptions={loadUsers}
       noOptionsMessage={() => I18n.getText('common.concepts.no.matches')}
-      placeholder={I18n.getText('admin.common.words.users')}
+      placeholder={placeholder}
       isMulti
       menuPortalTarget={document.body}
       styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
@@ -67,6 +69,7 @@ function UsersSelect({ id, onChange, selectedValue }: Props): ReactElement {
 
 UsersSelect.defaultProps = {
   selectedValue: undefined,
+  placeholder: I18n.getText('admin.common.words.users'),
 };
 
 export default UsersSelect;

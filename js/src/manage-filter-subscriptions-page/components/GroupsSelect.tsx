@@ -5,7 +5,7 @@ import { loadJiraGroups } from '../../shared/api/CommonApiClient';
 
 type Props = {
   id: string;
-  selectedValue?: Array<string>;
+  selectedValue?: OptionsType;
   onChange: (value: OptionsType) => void;
 };
 
@@ -20,9 +20,7 @@ const loadGroups = async (query?: string): Promise<OptionType[]> => {
   return new Promise((resolve, reject) => {
     loadJiraGroups(query === undefined ? '' : query)
       .then((response) => {
-        resolve(
-          response.data.groups.map((group) => createGroupOption(group.name)),
-        );
+        resolve(response.data.map(({ name }) => createGroupOption(name)));
       })
       .catch(reject);
   });
@@ -38,7 +36,7 @@ function GroupsSelect({ id, onChange, selectedValue }: Props): ReactElement {
 
   useLayoutEffect(() => {
     if (selectedValue) {
-      setCurrentValue(selectedValue.map((val) => createGroupOption(val)));
+      setCurrentValue(selectedValue);
     }
   }, [selectedValue]);
 
