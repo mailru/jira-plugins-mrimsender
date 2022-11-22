@@ -20,8 +20,6 @@ import ChatsSelect, { createChatOption } from './ChatsSelect';
 import { ErrorData, FilterSubscription } from '../../shared/types';
 import { useGetSubscriptionsPermissions } from '../../shared/hooks';
 import RecipientsSelect, { recipientsTypeOptions } from './RecipientsSelect';
-import { Simulate } from 'react-dom/test-utils';
-import change = Simulate.change;
 
 type Props = {
   currentValue?: FilterSubscription;
@@ -258,12 +256,11 @@ function FilterSubscriptionForm({
                     <JqlFilterSelect
                       id={fieldProps.id}
                       selectedValue={
-                        currentValue !== undefined &&
-                        currentValue.filter !== undefined
+                        currentValue?.filter !== undefined
                           ? createFilterOption(currentValue.filter)
                           : undefined
                       }
-                      onChange={(value) => fieldProps.onChange(value)}
+                      onChange={fieldProps.onChange}
                     />
                     {(error || submitError?.fieldErrors?.filter) && (
                       <ErrorMessage>
@@ -278,7 +275,7 @@ function FilterSubscriptionForm({
                   name="recipientsType"
                   label={I18n.getText('filtersubscription.field.recipients')}
                   defaultValue={recipientsTypeOptions.find(
-                    (option) => option.value === recipientsType,
+                    ({ value }) => value === recipientsType,
                   )}
                   isRequired
                   validate={validateNotNull}
@@ -308,7 +305,7 @@ function FilterSubscriptionForm({
                     name="users"
                     defaultValue={
                       currentValue?.users &&
-                      currentValue.users.map((user) => createUserOption(user))
+                      currentValue.users.map(createUserOption)
                     }
                     isRequired={recipientsType === 'USER'}
                     validate={(value) =>
@@ -319,10 +316,10 @@ function FilterSubscriptionForm({
                       <>
                         <UsersSelect
                           id={fieldProps.id}
-                          selectedValue={currentValue?.users?.map((user) =>
-                            createUserOption(user),
+                          selectedValue={currentValue?.users?.map(
+                            createUserOption,
                           )}
-                          onChange={(value) => fieldProps.onChange(value)}
+                          onChange={fieldProps.onChange}
                         />
                         {!permission.data?.jiraAdmin && (
                           <HelperMessage>
@@ -344,12 +341,7 @@ function FilterSubscriptionForm({
                 {recipientsType === 'GROUP' && (
                   <Field<OptionsType>
                     name="groups"
-                    defaultValue={
-                      currentValue?.groups &&
-                      currentValue.groups.map((group) =>
-                        createGroupOption(group),
-                      )
-                    }
+                    defaultValue={currentValue?.groups?.map(createGroupOption)}
                     isRequired={recipientsType === 'GROUP'}
                     validate={(value) =>
                       recipientsType === 'GROUP' && validateNotNull(value)
@@ -359,10 +351,10 @@ function FilterSubscriptionForm({
                       <>
                         <GroupsSelect
                           id={fieldProps.id}
-                          selectedValue={currentValue?.groups?.map((group) =>
-                            createGroupOption(group),
+                          selectedValue={currentValue?.groups?.map(
+                            createGroupOption,
                           )}
-                          onChange={(value) => fieldProps.onChange(value)}
+                          onChange={fieldProps.onChange}
                         />
                         {(error || submitError?.fieldErrors?.groups) && (
                           <ErrorMessage>
@@ -377,10 +369,7 @@ function FilterSubscriptionForm({
                 {recipientsType === 'CHAT' && (
                   <Field<OptionsType>
                     name="chats"
-                    defaultValue={
-                      currentValue?.chats &&
-                      currentValue.chats.map((chat) => createChatOption(chat))
-                    }
+                    defaultValue={currentValue?.chats?.map(createChatOption)}
                     isRequired={recipientsType === 'CHAT'}
                     validate={(value) =>
                       recipientsType === 'CHAT' && validateNotNull(value)
@@ -390,10 +379,10 @@ function FilterSubscriptionForm({
                       <>
                         <ChatsSelect
                           id={fieldProps.id}
-                          selectedValue={currentValue?.chats?.map((chat) =>
-                            createChatOption(chat),
+                          selectedValue={currentValue?.chats?.map(
+                            createChatOption,
                           )}
-                          onChange={(value) => fieldProps.onChange(value)}
+                          onChange={fieldProps.onChange}
                         />
                         {(error || submitError?.fieldErrors?.chats) && (
                           <ErrorMessage>
@@ -466,7 +455,7 @@ function FilterSubscriptionForm({
                                     option.value === currentValue?.hours,
                                 )}
                                 options={hourOptions}
-                                onChange={(value) => fieldProps.onChange(value)}
+                                onChange={fieldProps.onChange}
                                 placeholder={I18n.getText(
                                   'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.hours',
                                 )}
@@ -515,7 +504,7 @@ function FilterSubscriptionForm({
                                     option.value === currentValue?.minutes,
                                 )}
                                 options={minutesOptions}
-                                onChange={(value) => fieldProps.onChange(value)}
+                                onChange={fieldProps.onChange}
                                 placeholder={I18n.getText(
                                   'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.minutes',
                                 )}
@@ -565,7 +554,7 @@ function FilterSubscriptionForm({
                                   -1
                               }
                               value={fieldProps.value}
-                              onChange={(value) => fieldProps.onChange(value)}
+                              onChange={fieldProps.onChange}
                             />
                             {submitError?.fieldErrors?.weekDays && (
                               <ErrorMessage>
@@ -603,7 +592,7 @@ function FilterSubscriptionForm({
                             (option) => option.value === currentValue?.monthDay,
                           )}
                           options={monthDayOptions}
-                          onChange={(value) => fieldProps.onChange(value)}
+                          onChange={fieldProps.onChange}
                           placeholder={I18n.getText(
                             'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.dayOfTheMonth',
                           )}
@@ -640,7 +629,7 @@ function FilterSubscriptionForm({
                       <Textfield
                         id={fieldProps.id}
                         defaultValue={currentValue?.advanced}
-                        onChange={(value) => fieldProps.onChange(value)}
+                        onChange={fieldProps.onChange}
                         autoComplete="off"
                         placeholder={I18n.getText('cron.editor.cronstring')}
                       />
@@ -693,8 +682,7 @@ function FilterSubscriptionForm({
                       'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.emailOnEmpty.label',
                     )}
                     size="medium"
-                    // eslint-disable-next-line react/jsx-props-no-spreading
-                    onChange={(value) => fieldProps.onChange(value)}
+                    onChange={fieldProps.onChange}
                   />
                 )}
               </CheckboxField>

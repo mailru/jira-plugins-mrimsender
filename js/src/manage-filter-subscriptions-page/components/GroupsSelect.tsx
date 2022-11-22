@@ -20,7 +20,7 @@ const loadGroups = async (query?: string): Promise<OptionType[]> => {
   return new Promise((resolve, reject) => {
     loadJiraGroups(query === undefined ? '' : query)
       .then((response) => {
-        resolve(response.data.map((group) => createGroupOption(group.name)));
+        resolve(response.data.map(({ name }) => createGroupOption(name)));
       })
       .catch(reject);
   });

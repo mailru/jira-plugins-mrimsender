@@ -57,8 +57,7 @@ const Logo = styled.img`
 `;
 
 const PageDescription = styled.div`
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding-block: 10px;
 `;
 
 const FiltersBlock = styled.div`
@@ -73,8 +72,7 @@ const SmallSelect = styled.div`
 `;
 
 const Cell = styled.div`
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-block: 5px;
 `;
 
 const Recipient = styled.div`
@@ -338,10 +336,7 @@ function ManageFilterSubscriptions(): ReactElement {
   };
 
   const subscriptions = useGetSubscriptions({
-    subscribers:
-      filterSubscribers !== undefined
-        ? filterSubscribers.map((subscriber) => subscriber.value.toString())
-        : undefined,
+    subscribers: filterSubscribers?.map(({ value }) => value.toString()),
     filterId:
       filter !== undefined && filter !== null
         ? parseInt(filter.value.toString(), 10)
@@ -386,7 +381,7 @@ function ManageFilterSubscriptions(): ReactElement {
           <UsersSelect
             id="filterSubscriber"
             selectedValue={filterSubscribers}
-            onChange={(value) => setFilterSubscribers(value)}
+            onChange={setFilterSubscribers}
             placeholder={I18n.getText(
               'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscriber',
             )}
@@ -396,7 +391,7 @@ function ManageFilterSubscriptions(): ReactElement {
           <JqlFilterSelect
             id="filter"
             selectedValue={filter}
-            onChange={(value) => setFilter(value)}
+            onChange={setFilter}
             placeholder={I18n.getText('template.subscription.filter')}
             isClearable={true}
           />
@@ -408,27 +403,25 @@ function ManageFilterSubscriptions(): ReactElement {
             onChange={(value) => {
               setRecipientsType(value?.value);
             }}
-            placeholder={I18n.getText('ru.mail.jira.plugins.myteam.subscriptions.page.table.subscribed')}
+            placeholder={I18n.getText(
+              'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscribed',
+            )}
             isClearable={true}
           />
         </SmallSelect>
         <SmallSelect>
           {recipientsType === 'USER' && (
-            <UsersSelect id="users" onChange={(value) => setUsers(value)} />
+            <UsersSelect id="users" onChange={setUsers} />
           )}
           {recipientsType === 'GROUP' && (
             <GroupsSelect
               id="groups"
               selectedValue={groups}
-              onChange={(value) => setGroups(value)}
+              onChange={setGroups}
             />
           )}
           {recipientsType === 'CHAT' && (
-            <ChatsSelect
-              id="chats"
-              selectedValue={chats}
-              onChange={(value) => setChats(value)}
-            />
+            <ChatsSelect id="chats" selectedValue={chats} onChange={setChats} />
           )}
         </SmallSelect>
       </FiltersBlock>

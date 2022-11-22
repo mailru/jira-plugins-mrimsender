@@ -45,7 +45,7 @@ function RecipientsSelect({
   useLayoutEffect(() => {
     if (selectedValue) {
       setCurrentValue(
-        recipientsTypeOptions.find((option) => option.value === selectedValue),
+        recipientsTypeOptions.find(({ value }) => value === selectedValue),
       );
     }
   }, [selectedValue]);

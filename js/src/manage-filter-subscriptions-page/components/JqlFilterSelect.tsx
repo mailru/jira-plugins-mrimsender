@@ -39,7 +39,7 @@ const loadFilters = async (query: string): Promise<Array<OptionType>> => {
   return new Promise((resolve, reject) => {
     loadJqlFilters(query)
       .then((response) => {
-        resolve(response.data.map((filter) => createFilterOption(filter)));
+        resolve(response.data.map(createFilterOption));
       })
       .catch(reject);
   });

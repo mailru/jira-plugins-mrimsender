@@ -38,7 +38,7 @@ function ChatsSelect({ id, selectedValue, onChange }: Props): ReactElement {
   useLayoutEffect(() => {
     if (selectedValue) {
       const newValues = new Set<string>(
-        selectedValue.map((val) => val.value.toString()),
+        selectedValue.map(({ value }) => value.toString()),
       );
       setCurrentValue(selectedValue);
 

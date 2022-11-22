@@ -23,7 +23,7 @@ const loadUsers = async (query?: string): Promise<OptionType[]> => {
   return new Promise((resolve, reject) => {
     loadJiraUsers(query === undefined ? '' : query)
       .then((response) => {
-        resolve(response.data.map((user) => createUserOption(user)));
+        resolve(response.data.map(createUserOption));
       })
       .catch(reject);
   });
