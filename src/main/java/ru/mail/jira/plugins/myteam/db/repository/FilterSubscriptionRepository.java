@@ -142,8 +142,46 @@ public class FilterSubscriptionRepository
     return null;
   }
 
-  public FilterSubscription[] getSubscription(@NotNull String userKey) {
-    return ao.find(FilterSubscription.class, Query.select().where("USER_KEY = ?", userKey));
+  public FilterSubscription[] getSubscriptions() {
+    return ao.find(FilterSubscription.class);
+  }
+
+  public FilterSubscription[] getSubscriptions(
+      @Nullable List<String> userKeys,
+      @Nullable Long filterId,
+      @Nullable RecipientsType recipientsType,
+      @Nullable List<String> recipients) {
+    StringBuilder queryBuilder = new StringBuilder();
+    if (userKeys != null && !userKeys.isEmpty()) {
+      queryBuilder.append("(");
+      for (String userKey : userKeys) {
+        queryBuilder.append(String.format("USER_KEY = '%s'", userKey));
+        if (userKeys.indexOf(userKey) != userKeys.size() - 1) queryBuilder.append(" OR ");
+      }
+      queryBuilder.append(")");
+    }
+    if (filterId != null) {
+      if (queryBuilder.length() > 0) queryBuilder.append(" AND ");
+      queryBuilder.append(String.format("FILTER_ID = %s", filterId));
+    }
+    if (recipientsType != null) {
+      if (queryBuilder.length() > 0) queryBuilder.append(" AND ");
+      queryBuilder.append(String.format("RECIPIENTS_TYPE = '%s'", recipientsType));
+    }
+    if (recipients != null && !recipients.isEmpty()) {
+      if (queryBuilder.length() > 0) queryBuilder.append(" AND ");
+      queryBuilder.append("(");
+      for (String recipient : recipients) {
+        queryBuilder.append(String.format("LOWER(RECIPIENTS) LIKE LOWER('%%%s%%')", recipient));
+        if (recipients.indexOf(recipient) != recipients.size() - 1) queryBuilder.append(" OR ");
+      }
+      queryBuilder.append(")");
+    }
+
+    if (queryBuilder.length() == 0) return getSubscriptions();
+    Query query = Query.select();
+    query.setWhereClause(queryBuilder.toString());
+    return ao.find(FilterSubscription.class, query);
   }
 
   public FilterSubscription updateLastRun(int id, LocalDateTime dateTime) {

@@ -1,10 +1,21 @@
 import axios from 'axios';
 import contextPath from 'wrm/context-path';
-import { FilterSubscription } from '../types';
+import { FilterSubscription, FilterSubscriptionsPermissions } from '../types';
+import qs from 'qs';
 
-export const getCurrentUserSubscriptions = (): Promise<FilterSubscription[]> =>
+export const getCurrentUserSubscriptions = (params?: {
+  subscribers?: Array<String>;
+  filterId?: number;
+  recipientsType?: string;
+  recipients?: Array<String>;
+}): Promise<FilterSubscription[]> =>
   axios
-    .get(`${contextPath()}/rest/myteam/1.0/subscriptions`)
+    .get(`${contextPath()}/rest/myteam/1.0/subscriptions`, {
+      params,
+      paramsSerializer: (params) => {
+        return qs.stringify(params, { arrayFormat: 'repeat' });
+      },
+    })
     .then((response) => response.data);
 
 export const createSubscription = (subscription: FilterSubscription) =>
@@ -34,3 +45,9 @@ export const runSubscription = (subscriptionId: number): Promise<any> =>
       `${contextPath()}/rest/myteam/1.0/subscriptions/${subscriptionId}/run`,
     )
     .then((response) => response.data);
+
+export const getSubscriptionsPermissions =
+  (): Promise<FilterSubscriptionsPermissions> =>
+    axios
+      .get(`${contextPath()}/rest/myteam/1.0/subscriptions/permissions`)
+      .then((response) => response.data);

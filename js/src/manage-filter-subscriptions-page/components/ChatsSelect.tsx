@@ -3,7 +3,7 @@ import { CreatableSelect, OptionsType } from '@atlaskit/select';
 
 type Props = {
   id: string;
-  selectedValue?: Array<string>;
+  selectedValue?: OptionsType;
   onChange: (value: OptionsType) => void;
 };
 
@@ -37,10 +37,10 @@ function ChatsSelect({ id, selectedValue, onChange }: Props): ReactElement {
 
   useLayoutEffect(() => {
     if (selectedValue) {
-      const newValues = new Set<string>(selectedValue);
-      const mappedOptions = Array.from(newValues).map(createChatOption);
-
-      setCurrentValue(mappedOptions);
+      const newValues = new Set<string>(
+        selectedValue.map((val) => val.value.toString()),
+      );
+      setCurrentValue(selectedValue);
 
       options.forEach(
         (l) =>

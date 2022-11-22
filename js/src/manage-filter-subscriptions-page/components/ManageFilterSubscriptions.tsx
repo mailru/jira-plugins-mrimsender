@@ -24,6 +24,12 @@ import ConfirmationDialog from '../../shared/components/dialogs/ConfirmationDial
 import CreateFilterSubscriptionDialog from './CreateFilterSubscriptionDialog';
 import EditFilterSubscriptionDialog from './EditFilterSubscriptionDialog';
 import { typeOptions } from './FilterSubscriptionForm';
+import UsersSelect from './UsersSelect';
+import { OptionsType, OptionType } from '@atlaskit/select';
+import JqlFilterSelect from './JqlFilterSelect';
+import RecipientsSelect from './RecipientsSelect';
+import GroupsSelect from './GroupsSelect';
+import ChatsSelect from './ChatsSelect';
 
 const Page = styled.div`
   background-color: #fff;
@@ -55,6 +61,17 @@ const PageDescription = styled.div`
   padding-bottom: 10px;
 `;
 
+const FiltersBlock = styled.div`
+  padding-bottom: 10px;
+  display: flex;
+  align-items: center;
+`;
+
+const SmallSelect = styled.div`
+  width: 200px;
+  margin-right: 10px;
+`;
+
 const Cell = styled.div`
   margin-top: 5px;
   margin-bottom: 5px;
@@ -73,12 +90,21 @@ const Recipient = styled.div`
 const tableHead = {
   cells: [
     {
+      content: I18n.getText(
+        'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscriber',
+      ),
+      key: 'subscriber',
+      isSortable: false,
+    },
+    {
       content: I18n.getText('report.chart.filter'),
       key: 'filter',
       isSortable: false,
     },
     {
-      content: I18n.getText('subscriptions.subscribed'),
+      content: I18n.getText(
+        'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscribed',
+      ),
       key: 'subscribed',
       isSortable: false,
     },
@@ -129,6 +155,20 @@ const buildRows = ({
 }: BuildRowsProps) => {
   return subscriptions?.map((subscription) => ({
     cells: [
+      {
+        key: subscription.creator?.userKey,
+        content: (
+          <Cell>
+            <Recipient
+              key={subscription.creator?.userKey}
+              title={I18n.getText('common.words.user')}
+            >
+              <PersonIcon size="small" label="" />
+              <div>{subscription.creator?.displayName}</div>
+            </Recipient>
+          </Cell>
+        ),
+      },
       {
         key: subscription.filter?.id,
         content: (
@@ -277,7 +317,38 @@ function ManageFilterSubscriptions(): ReactElement {
   const [selectedSubscription, setSelectedSubscription] =
     useState<FilterSubscription>();
 
-  const subscriptions = useGetSubscriptions();
+  const [filterSubscribers, setFilterSubscribers] = useState<OptionsType>();
+  const [filter, setFilter] = useState<OptionType | null>();
+  const [recipientsType, setRecipientsType] = useState<string | undefined>();
+  const [users, setUsers] = useState<OptionsType>();
+  const [groups, setGroups] = useState<OptionsType>();
+  const [chats, setChats] = useState<OptionsType>();
+
+  const getRecipients = () => {
+    if ('USER' === recipientsType) {
+      return users?.map((user) => user.value.toString());
+    }
+    if ('GROUP' === recipientsType) {
+      return groups?.map((group) => group.value.toString());
+    }
+    if ('CHAT' === recipientsType) {
+      return chats?.map((chat) => chat.value.toString());
+    }
+    return undefined;
+  };
+
+  const subscriptions = useGetSubscriptions({
+    subscribers:
+      filterSubscribers !== undefined
+        ? filterSubscribers.map((subscriber) => subscriber.value.toString())
+        : undefined,
+    filterId:
+      filter !== undefined && filter !== null
+        ? parseInt(filter.value.toString(), 10)
+        : undefined,
+    recipientsType: recipientsType,
+    recipients: getRecipients(),
+  });
   const deleteSubscription = useSubscriptionDelete();
   const subscriptionMutation = useSubscriptionMutation();
   const runSubscriptionMutation = useRunSubscriptionMutation();
@@ -310,6 +381,57 @@ function ManageFilterSubscriptions(): ReactElement {
           'ru.mail.jira.plugins.myteam.subscriptions.page.description',
         )}
       </PageDescription>
+      <FiltersBlock>
+        <SmallSelect>
+          <UsersSelect
+            id="filterSubscriber"
+            selectedValue={filterSubscribers}
+            onChange={(value) => setFilterSubscribers(value)}
+            placeholder={I18n.getText(
+              'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscriber',
+            )}
+          />
+        </SmallSelect>
+        <SmallSelect>
+          <JqlFilterSelect
+            id="filter"
+            selectedValue={filter}
+            onChange={(value) => setFilter(value)}
+            placeholder={I18n.getText('template.subscription.filter')}
+            isClearable={true}
+          />
+        </SmallSelect>
+        <SmallSelect>
+          <RecipientsSelect
+            id="recipients"
+            selectedValue={recipientsType}
+            onChange={(value) => {
+              setRecipientsType(value?.value);
+            }}
+            placeholder={I18n.getText('ru.mail.jira.plugins.myteam.subscriptions.page.table.subscribed')}
+            isClearable={true}
+          />
+        </SmallSelect>
+        <SmallSelect>
+          {recipientsType === 'USER' && (
+            <UsersSelect id="users" onChange={(value) => setUsers(value)} />
+          )}
+          {recipientsType === 'GROUP' && (
+            <GroupsSelect
+              id="groups"
+              selectedValue={groups}
+              onChange={(value) => setGroups(value)}
+            />
+          )}
+          {recipientsType === 'CHAT' && (
+            <ChatsSelect
+              id="chats"
+              selectedValue={chats}
+              onChange={(value) => setChats(value)}
+            />
+          )}
+        </SmallSelect>
+      </FiltersBlock>
       <DynamicTable
         head={tableHead}
         rows={buildRows({

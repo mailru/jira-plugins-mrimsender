@@ -65,6 +65,10 @@ export type FilterSubscription = {
   emailOnEmpty: boolean;
 };
 
+export type FilterSubscriptionsPermissions = {
+  jiraAdmin: boolean;
+};
+
 export type User = {
   userKey: string;
   displayName: string;

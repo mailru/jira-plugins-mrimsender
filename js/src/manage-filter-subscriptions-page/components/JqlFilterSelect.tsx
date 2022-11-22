@@ -21,8 +21,10 @@ const OptionLabel = styled.div`
 
 type Props = {
   id: string;
-  selectedValue?: JqlFilter;
+  selectedValue?: OptionType | null;
   onChange: (value: OptionType | null) => void;
+  placeholder?: string;
+  isClearable?: boolean;
 };
 
 export const createFilterOption = (filter: JqlFilter): OptionType => {
@@ -61,7 +63,13 @@ const formatOptionLabel = (
   );
 };
 
-function JqlFilterSelect({ id, selectedValue, onChange }: Props): ReactElement {
+function JqlFilterSelect({
+  id,
+  selectedValue,
+  onChange,
+  placeholder,
+  isClearable,
+}: Props): ReactElement {
   const [currentValue, setCurrentValue] = useState<OptionType | null>();
 
   const handleChange = (value: OptionType | null): void => {
@@ -71,7 +79,7 @@ function JqlFilterSelect({ id, selectedValue, onChange }: Props): ReactElement {
 
   useLayoutEffect(() => {
     if (selectedValue) {
-      setCurrentValue(createFilterOption(selectedValue));
+      setCurrentValue(selectedValue);
     }
   }, [selectedValue]);
 
@@ -81,6 +89,8 @@ function JqlFilterSelect({ id, selectedValue, onChange }: Props): ReactElement {
       onChange={handleChange}
       inputId={id}
       value={currentValue}
+      placeholder={placeholder}
+      isClearable={isClearable}
       cacheOptions
       loadOptions={loadFilters}
       formatOptionLabel={formatOptionLabel}
@@ -92,6 +102,8 @@ function JqlFilterSelect({ id, selectedValue, onChange }: Props): ReactElement {
 
 JqlFilterSelect.defaultProps = {
   selectedValue: undefined,
+  placeholder: undefined,
+  isClearable: false,
 };
 
 export default JqlFilterSelect;

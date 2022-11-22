@@ -599,7 +599,7 @@ public class MessageFormatter {
                 issue ->
                     markdownTextLink(issue.getKey(), createIssueLink(issue.getKey()))
                         + ' '
-                        + issue.getSummary())
+                        + shieldText(issue.getSummary()))
             .collect(Collectors.toList()),
         pageNumber,
         total,

@@ -5,6 +5,7 @@ import Form, {
   ErrorMessage,
   Field,
   Fieldset,
+  HelperMessage,
 } from '@atlaskit/form';
 import styled from '@emotion/styled';
 import { Checkbox } from '@atlaskit/checkbox';
@@ -17,6 +18,10 @@ import UsersSelect, { createUserOption } from './UsersSelect';
 import GroupsSelect, { createGroupOption } from './GroupsSelect';
 import ChatsSelect, { createChatOption } from './ChatsSelect';
 import { ErrorData, FilterSubscription } from '../../shared/types';
+import { useGetSubscriptionsPermissions } from '../../shared/hooks';
+import RecipientsSelect, { recipientsTypeOptions } from './RecipientsSelect';
+import { Simulate } from 'react-dom/test-utils';
+import change = Simulate.change;
 
 type Props = {
   currentValue?: FilterSubscription;
@@ -58,21 +63,6 @@ const SmallSelect = styled.div`
   width: 200px;
   margin-right: 10px;
 `;
-
-const recipientsTypeOptions = [
-  {
-    label: I18n.getText('common.words.user'),
-    value: 'USER',
-  },
-  {
-    label: I18n.getText('common.words.group'),
-    value: 'GROUP',
-  },
-  {
-    label: I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel'),
-    value: 'CHAT',
-  },
-];
 
 const scheduleOptions = [
   {
@@ -192,6 +182,8 @@ function FilterSubscriptionForm({
     currentValue?.scheduleMode,
   );
 
+  const permission = useGetSubscriptionsPermissions();
+
   return (
     <Container>
       <Form
@@ -265,7 +257,12 @@ function FilterSubscriptionForm({
                   <>
                     <JqlFilterSelect
                       id={fieldProps.id}
-                      selectedValue={currentValue?.filter}
+                      selectedValue={
+                        currentValue !== undefined &&
+                        currentValue.filter !== undefined
+                          ? createFilterOption(currentValue.filter)
+                          : undefined
+                      }
                       onChange={(value) => fieldProps.onChange(value)}
                     />
                     {(error || submitError?.fieldErrors?.filter) && (
@@ -288,23 +285,13 @@ function FilterSubscriptionForm({
                 >
                   {({ fieldProps, error }) => (
                     <>
-                      <Select
-                        inputId={fieldProps.id}
-                        value={recipientsTypeOptions.find(
-                          (option) => option.value === recipientsType,
-                        )}
-                        onChange={(
-                          value: { label: any; value: string } | null,
-                        ) => {
+                      <RecipientsSelect
+                        id={fieldProps.id}
+                        selectedValue={recipientsType}
+                        onChange={(value) => {
                           setRecipientsType(value?.value);
                           fieldProps.onChange(value);
                         }}
-                        options={recipientsTypeOptions}
-                        menuPortalTarget={document.body}
-                        styles={{
-                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                        }}
-                        isRequired={fieldProps.isRequired}
                       />
                       {(error || submitError?.fieldErrors?.recipientsType) && (
                         <ErrorMessage>
@@ -321,12 +308,7 @@ function FilterSubscriptionForm({
                     name="users"
                     defaultValue={
                       currentValue?.users &&
-                      currentValue.users.map((user) =>
-                        createUserOption({
-                          key: user.userKey,
-                          displayName: user.displayName,
-                        }),
-                      )
+                      currentValue.users.map((user) => createUserOption(user))
                     }
                     isRequired={recipientsType === 'USER'}
                     validate={(value) =>
@@ -337,9 +319,18 @@ function FilterSubscriptionForm({
                       <>
                         <UsersSelect
                           id={fieldProps.id}
-                          selectedValue={currentValue?.users}
+                          selectedValue={currentValue?.users?.map((user) =>
+                            createUserOption(user),
+                          )}
                           onChange={(value) => fieldProps.onChange(value)}
                         />
+                        {!permission.data?.jiraAdmin && (
+                          <HelperMessage>
+                            {I18n.getText(
+                              'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.users.message',
+                            )}
+                          </HelperMessage>
+                        )}
                         {(error || submitError?.fieldErrors?.users) && (
                           <ErrorMessage>
                             {error ||
@@ -368,7 +359,9 @@ function FilterSubscriptionForm({
                       <>
                         <GroupsSelect
                           id={fieldProps.id}
-                          selectedValue={currentValue?.groups}
+                          selectedValue={currentValue?.groups?.map((group) =>
+                            createGroupOption(group),
+                          )}
                           onChange={(value) => fieldProps.onChange(value)}
                         />
                         {(error || submitError?.fieldErrors?.groups) && (
@@ -397,7 +390,9 @@ function FilterSubscriptionForm({
                       <>
                         <ChatsSelect
                           id={fieldProps.id}
-                          selectedValue={currentValue?.chats}
+                          selectedValue={currentValue?.chats?.map((chat) =>
+                            createChatOption(chat),
+                          )}
                           onChange={(value) => fieldProps.onChange(value)}
                         />
                         {(error || submitError?.fieldErrors?.chats) && (
