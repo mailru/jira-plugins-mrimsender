@@ -255,7 +255,9 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                   resultTemplate = DEFAULT_ISSUE_QUOTE_MESSAGE_TEMPLATE;
                 }
 
-                builder.append(messageFormatter.formatMyteamUserLink(user));
+                if(user != null) {
+                  builder.append(messageFormatter.formatMyteamUserLink(user));
+                }
                 builder
                     .append("(")
                     .append(
@@ -265,7 +267,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                                 TimeZone.getDefault().toZoneId())))
                     .append("):\n")
                     .append("\n");
-                builder.append(resultTemplate.replaceAll("\\{\\{message}}", text));
+                builder.append(StringUtils.replace(resultTemplate, "{{message}}", text));
                 builder.append("\n\n");
               });
     }
