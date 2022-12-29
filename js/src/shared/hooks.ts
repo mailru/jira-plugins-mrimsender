@@ -7,6 +7,8 @@ import {
 } from 'react-query';
 import { AxiosError } from 'axios';
 import {
+  AccessRequest,
+  AccessRequestConfiguration,
   ErrorData,
   FilterSubscription,
   FilterSubscriptionsPermissions,
@@ -19,6 +21,14 @@ import {
   runSubscription,
   updateSubscription,
 } from './api/SubscriptionsApiClient';
+import {
+  createAccessRequestConfiguration,
+  deleteAccessRequestConfiguration,
+  getAccessRequest,
+  getAccessRequestConfiguration,
+  sendAccessRequest,
+  updateAccessRequestConfiguration,
+} from './api/AccessRequestApiClient';
 
 export const useTimeoutState = <T>(
   defaultState: T,
@@ -100,4 +110,66 @@ export const useGetSubscriptionsPermissions = (): QueryObserverResult<
       refetchOnWindowFocus: false,
       retry: false,
     },
+  );
+
+export const useGetAccessRequest = (
+  issueKey: string,
+): QueryObserverResult<AccessRequest, AxiosError> =>
+  useQuery<AccessRequest, AxiosError>(
+    ['getAccessRequestConfiguration'],
+    () => getAccessRequest(issueKey),
+    {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  );
+
+export const useAccessRequestMutation = (): UseMutationResult<
+  undefined,
+  AxiosError,
+  { issueKey: string; accessRequest: AccessRequest }
+> =>
+  useMutation(
+    ({
+      issueKey,
+      accessRequest,
+    }: {
+      issueKey: string;
+      accessRequest: AccessRequest;
+    }) => sendAccessRequest(issueKey, accessRequest),
+  );
+
+export const useGetAccessRequestConfiguration = (
+  projectKey: string,
+): QueryObserverResult<AccessRequestConfiguration, AxiosError> =>
+  useQuery<AccessRequestConfiguration, AxiosError>(
+    ['getAccessRequestConfiguration'],
+    () => getAccessRequestConfiguration(projectKey),
+    {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  );
+
+export const useAccessRequestConfigurationMutation = (): UseMutationResult<
+  undefined,
+  AxiosError<ErrorData>,
+  AccessRequestConfiguration
+> =>
+  useMutation((configuration: AccessRequestConfiguration) =>
+    configuration.id
+      ? updateAccessRequestConfiguration(configuration, configuration.id)
+      : createAccessRequestConfiguration(configuration),
+  );
+
+export const useAccessRequestConfigurationDelete = (): UseMutationResult<
+  undefined,
+  AxiosError,
+  {
+    projectKey: string;
+    id: number;
+  }
+> =>
+  useMutation(({ projectKey, id }: { projectKey: string; id: number }) =>
+    deleteAccessRequestConfiguration(projectKey, id),
   );

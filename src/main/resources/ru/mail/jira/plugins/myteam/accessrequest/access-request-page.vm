@@ -1,0 +1,12 @@
+<html>
+    <head>
+        <title>$i18n.getText( "ru.mail.jira.plugins.myteam.accessRequest.page.title" )</title>
+        <meta name="decorator" content="atl.general"/>
+        $webResourceManager.requireResourcesForContext( "atl.general" )
+        $webResourceManager.requireResourcesForContext( "jira.general" )
+        $webResourceManager.requireResourcesForContext( "ru.mail.jira.plugins.myteam.access.request.page" )
+    </head>
+    <body>
+        <div id="myteam-access-request-container"></div>
+    </body>
+</html>

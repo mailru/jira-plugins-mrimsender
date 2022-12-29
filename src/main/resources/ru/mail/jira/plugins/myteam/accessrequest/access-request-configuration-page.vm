@@ -1,0 +1,15 @@
+<html>
+    <head>
+        <title>$i18n.getText("ru.mail.jira.plugins.myteam.accessRequest.configuration.page.title")</title>
+        <meta name="decorator" content="admin" />
+        <meta name="admin.active.section" content="atl.jira.proj.config/projectgroup4" />
+        <meta name="admin.active.tab" content="access-request-config-link"/>
+        <meta name="projectKey" content="$projectKey"/>
+        $webResourceManager.requireResourcesForContext( "atl.general" )
+        $webResourceManager.requireResourcesForContext( "jira.general" )
+        $webResourceManager.requireResourcesForContext( "ru.mail.jira.plugins.myteam.access.request.configuration.page" )
+    </head>
+    <body>
+        <div id="myteam-access-request-configuration-container"></div>
+    </body>
+</html>
