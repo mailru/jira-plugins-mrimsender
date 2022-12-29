@@ -255,7 +255,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                   resultTemplate = DEFAULT_ISSUE_QUOTE_MESSAGE_TEMPLATE;
                 }
 
-                if(user != null) {
+                if (user != null) {
                   builder.append(messageFormatter.formatMyteamUserLink(user));
                 }
                 builder
