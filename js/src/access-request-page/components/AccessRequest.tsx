@@ -151,7 +151,9 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                     'ru.mail.jira.plugins.myteam.accessRequest.page.field.message',
                   )}
                   defaultValue={accessRequest.data?.message}
-                  isDisabled={accessRequest.data?.send || accessRequestMutation.isLoading}
+                  isDisabled={
+                    accessRequest.data?.send || accessRequestMutation.isLoading
+                  }
                 >
                   {({ fieldProps }: any) => (
                     <Fragment>
@@ -169,7 +171,9 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                 <Button
                   type="submit"
                   appearance="primary"
-                  isDisabled={accessRequest.data?.send || accessRequestMutation.isLoading}
+                  isDisabled={
+                    accessRequest.data?.send || accessRequestMutation.isLoading
+                  }
                 >
                   {I18n.getText('common.forms.send.request')}
                 </Button>
