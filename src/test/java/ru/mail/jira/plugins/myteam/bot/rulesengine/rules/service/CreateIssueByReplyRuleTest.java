@@ -1,4 +1,4 @@
-/* (C)2023 */
+/* (C)2022 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
