@@ -87,10 +87,7 @@ function ConfigurationForm({
                 <Field<OptionsType>
                   name="users"
                   label={I18n.getText('admin.common.words.users')}
-                  defaultValue={
-                    currentValue?.users &&
-                    currentValue.users.map(createUserOption)
-                  }
+                  defaultValue={currentValue?.users?.map(createUserOption)}
                 >
                   {({ fieldProps, error }) => (
                     <>

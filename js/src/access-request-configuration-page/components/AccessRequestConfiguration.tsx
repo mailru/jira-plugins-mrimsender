@@ -146,13 +146,13 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
                 'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.table.participants',
               )}
             </h2>
-            {configuration.data.users?.map((user) => (
+            {configuration.data.users?.map(({ userKey, displayName }) => (
               <Recipient
-                key={user.userKey}
+                key={userKey}
                 title={I18n.getText('common.words.user')}
               >
                 <PersonIcon size="small" label="" />
-                <div>{user.displayName}</div>
+                <div>{displayName}</div>
               </Recipient>
             ))}
             {configuration.data.groups?.map((group) => (
@@ -161,24 +161,24 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
                 <div>{group}</div>
               </Recipient>
             ))}
-            {configuration.data.projectRoles?.map((role) => (
+            {configuration.data.projectRoles?.map(({ id, name }) => (
               <Recipient
-                key={role.id}
+                key={id}
                 title={I18n.getText('admin.projects.project.roles')}
               >
                 <AppAccessIcon size="small" label="" />
-                <div>{role.name}</div>
+                <div>{name}</div>
               </Recipient>
             ))}
-            {configuration.data.userFields?.map((field) => (
+            {configuration.data.userFields?.map(({ id, name }) => (
               <Recipient
-                key={field.id}
+                key={id}
                 title={I18n.getText(
                   'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.userFields',
                 )}
               >
                 <PeopleIcon size="small" label="" />
-                <div>{field.name}</div>
+                <div>{name}</div>
               </Recipient>
             ))}
           </Recipients>
