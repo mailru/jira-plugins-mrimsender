@@ -189,9 +189,9 @@ public class AccessRequestService {
             .forEach(
                 user -> {
                   if (configuration.isSendMessage())
-                    sendMessage(user, issue, accessRequestDto.getMessage());
+                    sendMessage(user, loggedInUser, issue, accessRequestDto.getMessage());
                   if (configuration.isSendEmail())
-                    sendEmail(user, issue, accessRequestDto.getMessage());
+                    sendEmail(user, loggedInUser, issue, accessRequestDto.getMessage());
                 });
       }
     }
@@ -259,22 +259,24 @@ public class AccessRequestService {
         .isBefore(LocalDateTime.now(ZoneId.systemDefault()));
   }
 
-  private void sendMessage(ApplicationUser user, Issue issue, String message) {
+  private void sendMessage(ApplicationUser to, ApplicationUser from, Issue issue, String message) {
     try {
       userChatService.sendMessageText(
-          user.getEmailAddress(),
-          messageFormatter.formatAccessRequestMessage(user, issue, message));
+          to.getEmailAddress(), messageFormatter.formatAccessRequestMessage(from, issue, message));
     } catch (Exception e) {
       SentryClient.capture(e);
     }
   }
 
   private void sendEmail(
-      @NotNull ApplicationUser user, @NotNull Issue issue, @Nullable String message) {
-    Locale locale = localeManager.getLocaleFor(user);
+      @NotNull ApplicationUser to,
+      @NotNull ApplicationUser from,
+      @NotNull Issue issue,
+      @Nullable String message) {
+    Locale locale = localeManager.getLocaleFor(to);
     Map<String, Object> params = new HashMap<>();
     params.put("locale", locale);
-    params.put("user", dtoUtils.buildUserDto(user, applicationProperties));
+    params.put("user", dtoUtils.buildUserDto(from, applicationProperties));
     params.put("message", message);
     params.put("issue", issue);
     params.put(
@@ -284,12 +286,12 @@ public class AccessRequestService {
     params.put("i18nResolver", i18nResolver);
 
     MailQueueItem item =
-        new EmailBuilder(new Email(user.getEmailAddress()), "text/html", locale)
+        new EmailBuilder(new Email(to.getEmailAddress()), "text/html", locale)
             .withSubject(
                 i18nResolver.getText(
                     locale,
                     "ru.mail.jira.plugins.myteam.accessRequest.page.email.title",
-                    user.getDisplayName(),
+                    from.getDisplayName(),
                     issue.getKey()))
             .withBody(
                 velocityManager.getEncodedBody(

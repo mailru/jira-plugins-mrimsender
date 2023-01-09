@@ -83,6 +83,11 @@ function ConfigurationForm({
             id={FORM_ID}
           >
             <div className="form-body">
+              <div>
+                {I18n.getText(
+                  'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.userFields.description',
+                )}
+              </div>
               <Fieldset>
                 <Field<OptionsType>
                   name="users"
