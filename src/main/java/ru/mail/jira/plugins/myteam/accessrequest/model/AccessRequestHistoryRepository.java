@@ -41,7 +41,7 @@ public class AccessRequestHistoryRepository
             .map(key -> dtoUtils.buildUserDto(userManager.getUserByKey(key)))
             .collect(Collectors.toList()));
     dto.setMessage(entity.getMessage());
-    dto.setSend(Boolean.TRUE);
+    dto.setSent(Boolean.TRUE);
     dto.setRequesterKey(entity.getRequesterKey());
     dto.setIssueId(entity.getIssueId());
     return null;

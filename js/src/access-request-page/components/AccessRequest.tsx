@@ -78,25 +78,18 @@ function AccessRequest({ issueKey }: Props): ReactElement {
       ) : accessRequest.data ? (
         <Form
           onSubmit={(formState: FormState) => {
-            {
-              issueKey &&
-                accessRequest.data &&
-                accessRequestMutation.mutate(
-                  {
-                    issueKey: issueKey,
-                    accessRequest: {
-                      users: accessRequest.data.users,
-                      message: formState.message,
-                      send: accessRequest.data.send,
-                    },
-                  },
-                  {
-                    onSuccess: () => {
-                      accessRequest.refetch();
-                    },
-                  },
-                );
-            }
+            const { data, refetch } = accessRequest;
+
+            const isRequestNeeded = issueKey && data;
+            if (!isRequestNeeded) return;
+
+            const { users, sent } = data;
+            const { message } = formState;
+
+            accessRequestMutation.mutate(
+              { issueKey, accessRequest: { users, message, sent } },
+              { onSuccess: refetch },
+            );
           }}
         >
           {({ formProps }) => (
@@ -105,7 +98,7 @@ function AccessRequest({ issueKey }: Props): ReactElement {
               {...formProps}
             >
               <div className="form-body">
-                {accessRequest.data?.send && (
+                {accessRequest.data?.sent && (
                   <SectionMessage appearance="success">
                     <p>
                       {I18n.getText(
@@ -127,16 +120,18 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                 >
                   {({ fieldProps }: any) => (
                     <Fragment>
-                      {accessRequest.data?.users.map((user) => (
-                        <AvatarItem
-                          key={user.userKey}
-                          avatar={
-                            <Avatar appearance="circle" src={user.avatarUrl} />
-                          }
-                          primaryText={user.displayName}
-                          secondaryText={user.email}
-                        />
-                      ))}
+                      {accessRequest.data?.users.map(
+                        ({ userKey, displayName, email, avatarUrl }) => (
+                          <AvatarItem
+                            key={userKey}
+                            avatar={
+                              <Avatar appearance="circle" src={avatarUrl} />
+                            }
+                            primaryText={displayName}
+                            secondaryText={email}
+                          />
+                        ),
+                      )}
                       <HelperMessage>
                         {I18n.getText(
                           'ru.mail.jira.plugins.myteam.accessRequest.page.field.users.description',
@@ -152,7 +147,7 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                   )}
                   defaultValue={accessRequest.data?.message}
                   isDisabled={
-                    accessRequest.data?.send || accessRequestMutation.isLoading
+                    accessRequest.data?.sent || accessRequestMutation.isLoading
                   }
                 >
                   {({ fieldProps }: any) => (
@@ -172,7 +167,7 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                   type="submit"
                   appearance="primary"
                   isDisabled={
-                    accessRequest.data?.send || accessRequestMutation.isLoading
+                    accessRequest.data?.sent || accessRequestMutation.isLoading
                   }
                 >
                   {I18n.getText('common.forms.send.request')}

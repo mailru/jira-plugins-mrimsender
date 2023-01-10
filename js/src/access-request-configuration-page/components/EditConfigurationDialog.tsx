@@ -51,8 +51,8 @@ function EditConfigurationDialog({
             <ConfigurationForm
               projectKey={projectKey}
               currentValue={currentValue}
-              onCancel={() => onClose()}
-              onSave={(configuration) => onSaveSuccess(configuration)}
+              onCancel={onClose}
+              onSave={onSaveSuccess}
               submitError={editingError}
             />
           </ModalBody>
@@ -60,13 +60,7 @@ function EditConfigurationDialog({
             <Button form={FORM_ID} type="submit" appearance="primary" autoFocus>
               {I18n.getText('common.words.update')}
             </Button>
-            <Button
-              form={FORM_ID}
-              appearance="subtle"
-              onClick={() => {
-                onClose();
-              }}
-            >
+            <Button form={FORM_ID} appearance="subtle" onClick={onClose}>
               {I18n.getText('common.forms.cancel')}
             </Button>
           </ModalFooter>

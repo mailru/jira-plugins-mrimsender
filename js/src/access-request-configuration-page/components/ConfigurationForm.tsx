@@ -49,12 +49,19 @@ function ConfigurationForm({
   onSave,
   submitError,
 }: Props): ReactElement {
+  const usersError = submitError?.fieldErrors?.users?.messages[0];
+  const groupsError = submitError?.fieldErrors?.groups?.messages[0];
+  const projectRolesError = submitError?.fieldErrors?.projectRoles?.messages[0];
+  const userFieldsError = submitError?.fieldErrors?.userFields?.messages[0];
+  const participantsError = submitError?.fieldErrors?.participants?.messages[0];
+  const notificationsError =
+    submitError?.fieldErrors?.notifications?.messages[0];
   return (
     <Container>
       <Form
         onSubmit={(formState: FormState) => {
           const configuration: AccessRequestConfiguration = {
-            id: currentValue && currentValue.id ? currentValue.id : undefined,
+            id: currentValue?.id,
             projectKey: projectKey,
             users: formState.users?.map((user) => ({
               userKey: user.value.toString(),
@@ -103,10 +110,8 @@ function ConfigurationForm({
                         )}
                         onChange={fieldProps.onChange}
                       />
-                      {(error || submitError?.fieldErrors?.users) && (
-                        <ErrorMessage>
-                          {error || submitError?.fieldErrors?.users.messages[0]}
-                        </ErrorMessage>
+                      {(error || usersError) && (
+                        <ErrorMessage>{error || usersError}</ErrorMessage>
                       )}
                     </>
                   )}
@@ -125,11 +130,8 @@ function ConfigurationForm({
                         )}
                         onChange={fieldProps.onChange}
                       />
-                      {(error || submitError?.fieldErrors?.groups) && (
-                        <ErrorMessage>
-                          {error ||
-                            submitError?.fieldErrors?.groups.messages[0]}
-                        </ErrorMessage>
+                      {(error || groupsError) && (
+                        <ErrorMessage>{error || groupsError}</ErrorMessage>
                       )}
                     </>
                   )}
@@ -137,10 +139,9 @@ function ConfigurationForm({
                 <Field<OptionsType>
                   name="roles"
                   label={I18n.getText('admin.projects.project.roles')}
-                  defaultValue={
-                    currentValue?.projectRoles &&
-                    currentValue.projectRoles.map(createProjectRoleOption)
-                  }
+                  defaultValue={currentValue?.projectRoles?.map(
+                    createProjectRoleOption,
+                  )}
                 >
                   {({ fieldProps, error }) => (
                     <>
@@ -152,10 +153,9 @@ function ConfigurationForm({
                         onChange={fieldProps.onChange}
                         projectKey={projectKey}
                       />
-                      {(error || submitError?.fieldErrors?.projectRoles) && (
+                      {(error || projectRolesError) && (
                         <ErrorMessage>
-                          {error ||
-                            submitError?.fieldErrors?.projectRoles.messages[0]}
+                          {error || projectRolesError}
                         </ErrorMessage>
                       )}
                     </>
@@ -166,10 +166,9 @@ function ConfigurationForm({
                   label={I18n.getText(
                     'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.userFields',
                   )}
-                  defaultValue={
-                    currentValue?.userFields &&
-                    currentValue.userFields.map(createUserFieldOption)
-                  }
+                  defaultValue={currentValue?.userFields?.map(
+                    createUserFieldOption,
+                  )}
                 >
                   {({ fieldProps, error }) => (
                     <>
@@ -181,19 +180,14 @@ function ConfigurationForm({
                         onChange={fieldProps.onChange}
                         projectKey={projectKey}
                       />
-                      {(error || submitError?.fieldErrors?.userFields) && (
-                        <ErrorMessage>
-                          {error ||
-                            submitError?.fieldErrors?.userFields.messages[0]}
-                        </ErrorMessage>
+                      {(error || userFieldsError) && (
+                        <ErrorMessage>{error || userFieldsError}</ErrorMessage>
                       )}
                     </>
                   )}
                 </Field>
-                {submitError?.fieldErrors?.participants && (
-                  <ErrorMessage>
-                    {submitError?.fieldErrors?.participants.messages[0]}
-                  </ErrorMessage>
+                {participantsError && (
+                  <ErrorMessage>{participantsError}</ErrorMessage>
                 )}
               </Fieldset>
               <Fieldset>
@@ -218,12 +212,12 @@ function ConfigurationForm({
                 </CheckboxField>
                 <CheckboxField
                   name="sendMessage"
-                  defaultIsChecked={currentValue && currentValue.sendMessage}
+                  defaultIsChecked={currentValue?.sendMessage}
                 >
                   {({ fieldProps }) => (
                     <Checkbox
                       id={fieldProps.id}
-                      defaultChecked={currentValue && currentValue.sendMessage}
+                      defaultChecked={currentValue?.sendMessage}
                       label={I18n.getText(
                         'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.sendMessage',
                       )}
@@ -232,10 +226,8 @@ function ConfigurationForm({
                     />
                   )}
                 </CheckboxField>
-                {submitError?.fieldErrors?.notifications && (
-                  <ErrorMessage>
-                    {submitError?.fieldErrors?.notifications.messages[0]}
-                  </ErrorMessage>
+                {notificationsError && (
+                  <ErrorMessage>{notificationsError}</ErrorMessage>
                 )}
               </Fieldset>
             </div>

@@ -116,7 +116,7 @@ export const useGetAccessRequest = (
   issueKey: string,
 ): QueryObserverResult<AccessRequest, AxiosError> =>
   useQuery<AccessRequest, AxiosError>(
-    ['getAccessRequestConfiguration'],
+    ['getAccessRequestConfiguration', issueKey],
     () => getAccessRequest(issueKey),
     {
       refetchOnWindowFocus: false,
@@ -143,7 +143,7 @@ export const useGetAccessRequestConfiguration = (
   projectKey: string,
 ): QueryObserverResult<AccessRequestConfiguration, AxiosError> =>
   useQuery<AccessRequestConfiguration, AxiosError>(
-    ['getAccessRequestConfiguration'],
+    ['getAccessRequestConfiguration', projectKey],
     () => getAccessRequestConfiguration(projectKey),
     {
       refetchOnWindowFocus: false,

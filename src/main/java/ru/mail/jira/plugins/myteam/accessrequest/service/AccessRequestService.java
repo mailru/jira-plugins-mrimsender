@@ -125,7 +125,7 @@ public class AccessRequestService {
               .map(userKey -> dtoUtils.buildUserDto(userManager.getUserByKey(userKey)))
               .collect(Collectors.toList()));
       accessRequestDto.setMessage(accessRequestHistory.getMessage());
-      accessRequestDto.setSend(Boolean.TRUE);
+      accessRequestDto.setSent(Boolean.TRUE);
 
     } else {
       AccessRequestConfiguration configuration =
@@ -158,7 +158,7 @@ public class AccessRequestService {
               .filter(Objects::nonNull)
               .map(dtoUtils::buildUserDto)
               .collect(Collectors.toList()));
-      accessRequestDto.setSend(Boolean.FALSE);
+      accessRequestDto.setSent(Boolean.FALSE);
     }
 
     return accessRequestDto;

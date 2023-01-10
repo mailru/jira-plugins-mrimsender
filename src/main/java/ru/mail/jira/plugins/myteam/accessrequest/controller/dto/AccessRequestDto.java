@@ -19,7 +19,7 @@ public class AccessRequestDto {
 
   @Nullable @XmlElement private String message;
 
-  @XmlElement private boolean send;
+  @XmlElement private boolean sent;
 
   @Nullable @XmlElement private String requesterKey;
 

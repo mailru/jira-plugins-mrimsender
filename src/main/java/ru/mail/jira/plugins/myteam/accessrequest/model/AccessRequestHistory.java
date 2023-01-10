@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.accessrequest.model;
 
 import java.util.Date;
 import net.java.ao.Entity;
+import net.java.ao.schema.Indexed;
 import net.java.ao.schema.StringLength;
 import net.java.ao.schema.Table;
 
@@ -12,6 +13,7 @@ public interface AccessRequestHistory extends Entity {
 
   void setRequesterKey(String requesterKey);
 
+  @Indexed
   long getIssueId();
 
   void setIssueId(long issueId);

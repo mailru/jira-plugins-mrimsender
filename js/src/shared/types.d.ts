@@ -99,7 +99,7 @@ export type Field = {
 export type AccessRequest = {
   users: User[];
   message?: string;
-  send: boolean;
+  sent: boolean;
 };
 
 export type AccessRequestConfiguration = {

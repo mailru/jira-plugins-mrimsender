@@ -80,7 +80,7 @@ const Recipient = styled.div`
   align-items: center;
   padding: 2px;
 
-  & div:last-child {
+  div:last-child {
     margin-left: 5px;
   }
 `;

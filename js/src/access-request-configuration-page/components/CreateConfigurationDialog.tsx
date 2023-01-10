@@ -6,7 +6,7 @@ import Modal, {
   ModalTitle,
   ModalTransition,
 } from '@atlaskit/modal-dialog';
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useMemo } from 'react';
 import { I18n } from '@atlassian/wrm-react-i18n';
 import SectionMessage from '@atlaskit/section-message';
 import ConfigurationForm, { FORM_ID } from './ConfigurationForm';
@@ -27,6 +27,21 @@ function CreateConfigurationDialog({
   onSaveSuccess,
   creationError,
 }: Props): ReactElement {
+  const CreationError = useMemo(() => {
+    if (!creationError) return null;
+
+    const { error, fieldErrors } = creationError;
+    const hasError = error && fieldErrors === undefined;
+
+    if (!hasError) return null;
+
+    return (
+      <SectionMessage appearance="error">
+        <p>{error}</p>
+      </SectionMessage>
+    );
+  }, [creationError]);
+
   return (
     <ModalTransition>
       {isOpen && (
@@ -38,17 +53,11 @@ function CreateConfigurationDialog({
               )}
             </ModalTitle>
           </ModalHeader>
-          {creationError &&
-          creationError.error &&
-          creationError.fieldErrors === undefined ? (
-            <SectionMessage appearance="error">
-              <p>{creationError.error}</p>
-            </SectionMessage>
-          ) : null}
+          {CreationError}
           <ModalBody>
             <ConfigurationForm
               projectKey={projectKey}
-              onCancel={() => onClose()}
+              onCancel={onClose}
               onSave={(configuration) => onSaveSuccess(configuration)}
               submitError={creationError}
             />
@@ -57,13 +66,7 @@ function CreateConfigurationDialog({
             <Button form={FORM_ID} type="submit" appearance="primary" autoFocus>
               {I18n.getText('common.forms.create')}
             </Button>
-            <Button
-              form={FORM_ID}
-              appearance="subtle"
-              onClick={() => {
-                onClose();
-              }}
-            >
+            <Button form={FORM_ID} appearance="subtle" onClick={onClose}>
               {I18n.getText('common.forms.cancel')}
             </Button>
           </ModalFooter>
