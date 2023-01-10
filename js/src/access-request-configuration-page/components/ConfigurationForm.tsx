@@ -10,8 +10,8 @@ import styled from '@emotion/styled';
 import { Checkbox } from '@atlaskit/checkbox';
 import { I18n } from '@atlassian/wrm-react-i18n';
 import { OptionsType, OptionType } from '@atlaskit/select';
-import UsersSelect, { createUserOption } from '../components/UsersSelect';
-import GroupsSelect, { createGroupOption } from '../components/GroupsSelect';
+import UsersSelect, { createUserOption } from './UsersSelect';
+import GroupsSelect, { createGroupOption } from './GroupsSelect';
 import { AccessRequestConfiguration, ErrorData } from '../../shared/types';
 import ProjectRolesSelect, {
   createProjectRoleOption,
@@ -62,7 +62,7 @@ function ConfigurationForm({
         onSubmit={(formState: FormState) => {
           const configuration: AccessRequestConfiguration = {
             id: currentValue?.id,
-            projectKey: projectKey,
+            projectKey,
             users: formState.users?.map((user) => ({
               userKey: user.value.toString(),
               displayName: user.label,

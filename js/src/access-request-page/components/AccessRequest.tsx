@@ -1,10 +1,6 @@
 import React, { Fragment, ReactElement } from 'react';
 import styled from 'styled-components';
 import { I18n } from '@atlassian/wrm-react-i18n';
-import {
-  useAccessRequestMutation,
-  useGetAccessRequest,
-} from '../../shared/hooks';
 import Spinner from '@atlaskit/spinner';
 import contextPath from 'wrm/context-path';
 import Form, { Field, FormFooter, HelperMessage } from '@atlaskit/form';
@@ -12,6 +8,10 @@ import TextArea from '@atlaskit/textarea';
 import Button from '@atlaskit/button';
 import Avatar, { AvatarItem } from '@atlaskit/avatar';
 import SectionMessage from '@atlaskit/section-message';
+import {
+  useAccessRequestMutation,
+  useGetAccessRequest,
+} from '../../shared/hooks';
 
 type Props = {
   issueKey: string | null;
@@ -119,7 +119,7 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                   )}
                 >
                   {({ fieldProps }: any) => (
-                    <Fragment>
+                    <>
                       {accessRequest.data?.users.map(
                         ({ userKey, displayName, email, avatarUrl }) => (
                           <AvatarItem
@@ -137,7 +137,7 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                           'ru.mail.jira.plugins.myteam.accessRequest.page.field.users.description',
                         )}
                       </HelperMessage>
-                    </Fragment>
+                    </>
                   )}
                 </Field>
                 <Field
@@ -151,14 +151,14 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                   }
                 >
                   {({ fieldProps }: any) => (
-                    <Fragment>
+                    <>
                       <TextArea {...fieldProps} />
                       <HelperMessage>
                         {I18n.getText(
                           'ru.mail.jira.plugins.myteam.accessRequest.page.field.message.description',
                         )}
                       </HelperMessage>
-                    </Fragment>
+                    </>
                   )}
                 </Field>
               </div>

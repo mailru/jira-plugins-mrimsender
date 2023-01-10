@@ -12,6 +12,7 @@ import MoreIcon from '@atlaskit/icon/glyph/more';
 import PersonIcon from '@atlaskit/icon/glyph/person';
 import PeopleGroupIcon from '@atlaskit/icon/glyph/people-group';
 import DynamicTable from '@atlaskit/dynamic-table';
+import { OptionsType, OptionType } from '@atlaskit/select';
 import MyteamImage from '../../assets/myteam.png';
 import {
   useGetSubscriptions,
@@ -25,7 +26,6 @@ import CreateFilterSubscriptionDialog from './CreateFilterSubscriptionDialog';
 import EditFilterSubscriptionDialog from './EditFilterSubscriptionDialog';
 import { typeOptions } from './FilterSubscriptionForm';
 import UsersSelect from './UsersSelect';
-import { OptionsType, OptionType } from '@atlaskit/select';
 import JqlFilterSelect from './JqlFilterSelect';
 import RecipientsSelect from './RecipientsSelect';
 import GroupsSelect from './GroupsSelect';
@@ -323,13 +323,13 @@ function ManageFilterSubscriptions(): ReactElement {
   const [chats, setChats] = useState<OptionsType>();
 
   const getRecipients = () => {
-    if ('USER' === recipientsType) {
+    if (recipientsType === 'USER') {
       return users?.map((user) => user.value.toString());
     }
-    if ('GROUP' === recipientsType) {
+    if (recipientsType === 'GROUP') {
       return groups?.map((group) => group.value.toString());
     }
-    if ('CHAT' === recipientsType) {
+    if (recipientsType === 'CHAT') {
       return chats?.map((chat) => chat.value.toString());
     }
     return undefined;
@@ -341,7 +341,7 @@ function ManageFilterSubscriptions(): ReactElement {
       filter !== undefined && filter !== null
         ? parseInt(filter.value.toString(), 10)
         : undefined,
-    recipientsType: recipientsType,
+    recipientsType,
     recipients: getRecipients(),
   });
   const deleteSubscription = useSubscriptionDelete();
@@ -393,7 +393,7 @@ function ManageFilterSubscriptions(): ReactElement {
             selectedValue={filter}
             onChange={setFilter}
             placeholder={I18n.getText('template.subscription.filter')}
-            isClearable={true}
+            isClearable
           />
         </SmallSelect>
         <SmallSelect>
@@ -406,7 +406,7 @@ function ManageFilterSubscriptions(): ReactElement {
             placeholder={I18n.getText(
               'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscribed',
             )}
-            isClearable={true}
+            isClearable
           />
         </SmallSelect>
         <SmallSelect>

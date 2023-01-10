@@ -1,7 +1,7 @@
 import axios from 'axios';
 import contextPath from 'wrm/context-path';
-import { FilterSubscription, FilterSubscriptionsPermissions } from '../types';
 import qs from 'qs';
+import { FilterSubscription, FilterSubscriptionsPermissions } from '../types';
 
 export const getCurrentUserSubscriptions = (params?: {
   subscribers?: Array<String>;

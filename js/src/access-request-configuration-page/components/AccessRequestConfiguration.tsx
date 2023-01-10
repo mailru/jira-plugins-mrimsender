@@ -1,19 +1,19 @@
 import React, { ReactElement, useState } from 'react';
 import styled from 'styled-components';
 import { I18n } from '@atlassian/wrm-react-i18n';
+import PersonIcon from '@atlaskit/icon/glyph/person';
+import PeopleGroupIcon from '@atlaskit/icon/glyph/people-group';
+import PeopleIcon from '@atlaskit/icon/glyph/people';
+import AppAccessIcon from '@atlaskit/icon/glyph/app-access';
+import Button from '@atlaskit/button';
+import Spinner from '@atlaskit/spinner';
+import CreateConfigurationDialog from './CreateConfigurationDialog';
+import AccessRequestImage from '../../assets/access-request.png';
 import {
   useAccessRequestConfigurationDelete,
   useAccessRequestConfigurationMutation,
   useGetAccessRequestConfiguration,
 } from '../../shared/hooks';
-import PersonIcon from '@atlaskit/icon/glyph/person';
-import PeopleGroupIcon from '@atlaskit/icon/glyph/people-group';
-import PeopleIcon from '@atlaskit/icon/glyph/people';
-import AppAccessIcon from '@atlaskit/icon/glyph/app-access';
-import CreateConfigurationDialog from './CreateConfigurationDialog';
-import Button from '@atlaskit/button';
-import AccessRequestImage from '../../assets/access-request.png';
-import Spinner from '@atlaskit/spinner';
 import EditConfigurationDialog from './EditConfigurationDialog';
 import ConfirmationDialog from '../../shared/components/dialogs/ConfirmationDialog';
 

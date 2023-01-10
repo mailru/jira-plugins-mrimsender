@@ -2,8 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { CacheProvider } from '@emotion/core';
 import createCache from '@emotion/cache';
-import AccessRequestConfiguration from './components/AccessRequestConfiguration';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import AccessRequestConfiguration from './components/AccessRequestConfiguration';
 
 const PANEL_CONTAINER_ID_SELECTOR =
   'myteam-access-request-configuration-container';
