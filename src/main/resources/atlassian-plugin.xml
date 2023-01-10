@@ -17,6 +17,8 @@
         <entity>ru.mail.jira.plugins.myteam.db.model.IssueCreationSettings</entity>
         <entity>ru.mail.jira.plugins.myteam.db.model.AdditionalIssueField</entity>
         <entity>ru.mail.jira.plugins.myteam.db.model.FilterSubscription</entity>
+        <entity>ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestConfiguration</entity>
+        <entity>ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestHistory</entity>
 
         <upgradeTask>ru.mail.jira.plugins.myteam.upgrades.Version2UpgradeTask</upgradeTask>
     </ao>

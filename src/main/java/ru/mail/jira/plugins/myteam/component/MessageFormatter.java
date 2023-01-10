@@ -42,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -660,6 +661,24 @@ public class MessageFormatter {
               0,
               totalIssues,
               markdownTextLink(Integer.toString(totalIssues), createJqlLink(searchJql))));
+    }
+    return sb.toString();
+  }
+
+  public String formatAccessRequestMessage(
+      @NotNull ApplicationUser user, @NotNull Issue issue, @Nullable String message) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(
+        i18nResolver.getText(
+            "ru.mail.jira.plugins.myteam.accessRequest.page.message.title",
+            formatUser(user, "common.words.anonymous", true),
+            markdownTextLink(issue.getKey(), createIssueLink(issue.getKey())),
+            issue.getSummary()));
+    if (StringUtils.isNotBlank(message)) {
+      sb.append("\n");
+      sb.append(
+          i18nResolver.getText(
+              "ru.mail.jira.plugins.myteam.accessRequest.page.message.text", message));
     }
     return sb.toString();
   }

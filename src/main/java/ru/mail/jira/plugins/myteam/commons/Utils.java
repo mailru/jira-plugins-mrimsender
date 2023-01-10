@@ -3,7 +3,10 @@ package ru.mail.jira.plugins.myteam.commons;
 
 import static java.util.stream.Collectors.joining;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 import java.util.StringJoiner;
 import org.jetbrains.annotations.Nullable;
@@ -125,5 +128,13 @@ public class Utils {
       }
     }
     return userEmail;
+  }
+
+  public static LocalDateTime convertToLocalDateTime(Date date) {
+    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+  }
+
+  public static Date convertToDate(LocalDateTime date) {
+    return java.util.Date.from(date.atZone(ZoneId.systemDefault()).toInstant());
   }
 }

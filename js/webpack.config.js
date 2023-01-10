@@ -24,7 +24,9 @@ const config = {
     'create-chat-panel': [path.join(FRONTEND_SRC_DIR, 'create-chat-panel', 'index.tsx')], // build entry point
     'chat-settings-panel': [path.join(FRONTEND_SRC_DIR, 'chat-settings-panel', 'index.tsx')],
     'project-chat-settings-panel': [path.join(FRONTEND_SRC_DIR, 'project-chat-settings-panel', 'index.tsx')],
-    'manage-filter-subscriptions-page': [path.join(FRONTEND_SRC_DIR, 'manage-filter-subscriptions-page', 'index.tsx')]
+    'manage-filter-subscriptions-page': [path.join(FRONTEND_SRC_DIR, 'manage-filter-subscriptions-page', 'index.tsx')],
+    'access-request-configuration-page': [path.join(FRONTEND_SRC_DIR, 'access-request-configuration-page', 'index.tsx')],
+    'access-request-page': [path.join(FRONTEND_SRC_DIR, 'access-request-page', 'index.tsx')]
   },
   module: {
     rules: [
@@ -55,6 +57,8 @@ const config = {
         'project-chat-settings-panel': [PLUGIN_KEY + '.' + 'project.chat.settings.panel'],
         'create-chat-panel': ['jira.browse.project', 'jira.navigator.advanced'],
         'manage-filter-subscriptions-page': [PLUGIN_KEY + '.' + 'manage.filter.subscriptions.page'],
+        'access-request-configuration-page': [PLUGIN_KEY + '.' + 'access.request.configuration.page'],
+        'access-request-page': [PLUGIN_KEY + '.' + 'access.request.page'],
       },
       verbose: false,
       xmlDescriptors: path.resolve(MVN_OUTPUT_DIR, 'META-INF', 'plugin-descriptors', 'wr-webpack-bundles.xml'), //An absolute filepath to where the generated XML should be output to
