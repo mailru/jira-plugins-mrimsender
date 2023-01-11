@@ -221,7 +221,7 @@ public class IssueServiceImpl implements IssueService {
           throw new ValidationException(joiner.toString());
         }
       } else {
-        throw new NoPermissionException();
+        throw new NoPermissionException("User " + user + " can't create comment for issue " + issueKey);
       }
     }
   }
@@ -259,14 +259,14 @@ public class IssueServiceImpl implements IssueService {
       throws PermissionException, ProjectBannedException {
     Project selectedProject = projectManager.getProjectByCurrentKeyIgnoreCase(projectKey);
     if (selectedProject == null) {
-      throw new PermissionException();
+      throw new PermissionException(user + " can't view project " + projectKey);
     }
     if (isProjectExcluded(selectedProject.getId())) {
       throw new ProjectBannedException(String.format("Project with key %s is banned", projectKey));
     }
 
     if (!permissionManager.hasPermission(ProjectPermissions.CREATE_ISSUES, selectedProject, user)) {
-      throw new PermissionException();
+      throw new PermissionException(user + " can't create issue in project " + projectKey);
     }
     return selectedProject;
   }
