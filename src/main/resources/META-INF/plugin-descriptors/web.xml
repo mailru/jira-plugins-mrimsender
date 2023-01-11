@@ -59,6 +59,24 @@
         </actions>
     </webwork1>
 
+    <webwork1 key="access-request-config-action" class="java.lang.Object">
+        <actions>
+            <action name="ru.mail.jira.plugins.myteam.accessrequest.action.AccessRequestConfigurationAction" alias="AccessRequestConfiguration" roles-required="use">
+                <view name="success">ru/mail/jira/plugins/myteam/accessrequest/access-request-configuration-page.vm</view>
+                <view name="securitybreach">/secure/views/securitybreach.jsp</view>
+            </action>
+        </actions>
+    </webwork1>
+
+    <webwork1 key="access-request-action" class="java.lang.Object">
+        <actions>
+            <action name="ru.mail.jira.plugins.myteam.accessrequest.action.AccessRequestAction" alias="AccessRequest" roles-required="use">
+                <view name="success">ru/mail/jira/plugins/myteam/accessrequest/access-request-page.vm</view>
+                <view name="securitybreach">/secure/views/securitybreach.jsp</view>
+            </action>
+        </actions>
+    </webwork1>
+
     <web-section key="myteam-manage-filter-subscriptions-section" name="My Team Manage Filter Subscriptions Section" location="find_link"
                  i18n-name-key="ru.mail.jira.plugins.myteam.subscriptions.menu.section" weight="100">
         <label key="ru.mail.jira.plugins.myteam.subscriptions.menu.section.name"/>
@@ -101,5 +119,11 @@
         <label key="ru.mail.jira.plugins.myteam.project.section.chatSettings.title"/>
         <condition class="com.atlassian.jira.plugin.webfragment.conditions.CanAdministerProjectCondition"/>
         <link linkId="chat-settings-project-configuration-link">/myteam/projects/$project.key/settings/chats</link>
+    </web-item>
+
+    <web-item key="access-request-config-link" section="atl.jira.proj.config/projectgroup4" weight="100">
+        <label key="ru.mail.jira.plugins.myteam.project.section.accessRequest.title"/>
+        <condition class="com.atlassian.jira.plugin.webfragment.conditions.CanAdministerProjectCondition"/>
+        <link linkId="access-request-config-link">/secure/AccessRequestConfiguration.jspa?project=$project.key</link>
     </web-item>
 </web>

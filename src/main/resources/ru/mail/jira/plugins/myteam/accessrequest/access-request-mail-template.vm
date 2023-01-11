@@ -1,0 +1,23 @@
+<div style="background-color: #f5f5f5; padding-bottom: 30px; font-family: Arial, sans-serif;">
+    <div style="padding: 10px 20px;">
+        <a href="$user.profileUrl" target="_blank">$user.displayName</a>
+        $i18nResolver.getText( $locale, "ru.mail.jira.plugins.myteam.accessRequest.page.email.body.header" )
+    </div>
+    <div style="padding: 0 20px;">
+        <div style="padding: 15px; font-size: 20px; background-color: #ffffff; border: 1px solid #cccccc; border-radius: 5px;">
+            <div>
+                <a href="$issueUrl" target="_blank">[$issue.key] $issue.summary</a>
+            </div>
+            #if ( $message )
+                <div style="padding-top: 20px; color: #707070; font-size: 14px;">
+                    $i18nResolver.getText( $locale, "ru.mail.jira.plugins.myteam.accessRequest.page.email.body.message", $message )
+                </div>
+            #end
+            <div style="padding-block: 20px 10px">
+                <a href="$issueUrl" target="_blank" style="border: 1px solid #3572b0; border-radius: 3px; background: #3572b0; padding: 6px; text-decoration: none; color: #ffffff !important; font-weight: bold; font-size: 14px;">
+                    $i18nResolver.getText( $locale, "ru.mail.jira.plugins.myteam.accessRequest.page.email.body.button" )
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

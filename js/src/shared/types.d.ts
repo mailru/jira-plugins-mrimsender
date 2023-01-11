@@ -72,6 +72,8 @@ export type FilterSubscriptionsPermissions = {
 export type User = {
   userKey: string;
   displayName: string;
+  avatarUrl?: string;
+  email?: string;
 };
 
 export type Group = {
@@ -82,4 +84,31 @@ export type JqlFilter = {
   id: number;
   name: string;
   owner: boolean;
+};
+
+export type ProjectRole = {
+  id: string;
+  name: string;
+};
+
+export type Field = {
+  id: string;
+  name: string;
+};
+
+export type AccessRequest = {
+  users: User[];
+  message?: string;
+  sent: boolean;
+};
+
+export type AccessRequestConfiguration = {
+  id?: number;
+  projectKey: string;
+  users?: User[];
+  groups?: string[];
+  projectRoles?: ProjectRole[];
+  userFields?: Field[];
+  sendEmail: boolean;
+  sendMessage: boolean;
 };
