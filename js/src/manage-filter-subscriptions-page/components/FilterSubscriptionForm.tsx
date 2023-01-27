@@ -13,6 +13,7 @@ import { I18n } from '@atlassian/wrm-react-i18n';
 import Select, { OptionsType, OptionType, ValueType } from '@atlaskit/select';
 import { RadioGroup } from '@atlaskit/radio';
 import Textfield from '@atlaskit/textfield';
+import contextPath from 'wrm/context-path';
 import JqlFilterSelect, { createFilterOption } from './JqlFilterSelect';
 import UsersSelect, { createUserOption } from './UsersSelect';
 import GroupsSelect, { createGroupOption } from './GroupsSelect';
@@ -262,6 +263,22 @@ function FilterSubscriptionForm({
                       }
                       onChange={fieldProps.onChange}
                     />
+                    {console.log(fieldProps)}
+                    {(fieldProps.value?.value || currentValue?.filter?.id) && (
+                      <HelperMessage>
+                        <a
+                          target="_blank"
+                          rel="noreferrer"
+                          href={`${contextPath()}/issues/?filter=${
+                            fieldProps.value?.value || currentValue?.filter?.id
+                          }`}
+                        >
+                          {I18n.getText(
+                            'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.filter.description',
+                          )}
+                        </a>
+                      </HelperMessage>
+                    )}
                     {(error || submitError?.fieldErrors?.filter) && (
                       <ErrorMessage>
                         {error || submitError?.fieldErrors?.filter.messages[0]}
@@ -631,8 +648,22 @@ function FilterSubscriptionForm({
                         defaultValue={currentValue?.advanced}
                         onChange={fieldProps.onChange}
                         autoComplete="off"
-                        placeholder={I18n.getText('cron.editor.cronstring')}
+                        placeholder={I18n.getText(
+                          'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.advanced',
+                        )}
                       />
+                      <HelperMessage>
+                        <a
+                          target="_blank"
+                          ref="noreferrer"
+                          href="https://confluence.atlassian.com/jirasoftwareserver/constructing-cron-expressions-for-a-filter-subscription-939938814.html"
+                          rel="noreferrer"
+                        >
+                          {I18n.getText(
+                            'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.advanced.description',
+                          )}
+                        </a>
+                      </HelperMessage>
                       {(error || submitError?.fieldErrors?.advanced) && (
                         <ErrorMessage>
                           {error ||

@@ -221,7 +221,8 @@ public class IssueServiceImpl implements IssueService {
           throw new ValidationException(joiner.toString());
         }
       } else {
-        throw new NoPermissionException("User " + user + " can't create comment for issue " + issueKey);
+        throw new NoPermissionException(
+            "User " + user + " can't create comment for issue " + issueKey);
       }
     }
   }
