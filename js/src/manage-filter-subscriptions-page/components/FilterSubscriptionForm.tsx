@@ -631,8 +631,21 @@ function FilterSubscriptionForm({
                         defaultValue={currentValue?.advanced}
                         onChange={fieldProps.onChange}
                         autoComplete="off"
-                        placeholder={I18n.getText('cron.editor.cronstring')}
+                        placeholder={I18n.getText(
+                          'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.advanced',
+                        )}
                       />
+                      <HelperMessage>
+                        <a
+                          target="_blank"
+                          ref="noreferrer"
+                          href="https://confluence.atlassian.com/jirasoftwareserver/constructing-cron-expressions-for-a-filter-subscription-939938814.html"
+                        >
+                          {I18n.getText(
+                            'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.advanced.description',
+                          )}
+                        </a>
+                      </HelperMessage>
                       {(error || submitError?.fieldErrors?.advanced) && (
                         <ErrorMessage>
                           {error ||
