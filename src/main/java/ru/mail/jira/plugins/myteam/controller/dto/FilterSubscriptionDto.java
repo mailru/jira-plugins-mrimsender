@@ -83,4 +83,6 @@ public class FilterSubscriptionDto {
   @NotNull @XmlElement private FilterSubscriptionType type;
 
   @XmlElement private boolean emailOnEmpty;
+
+  @XmlElement private boolean separateIssues;
 }

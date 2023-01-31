@@ -50,4 +50,8 @@ public interface FilterSubscription extends Entity {
   boolean isEmailOnEmpty();
 
   void setEmailOnEmpty(boolean emailOnEmpty);
+
+  boolean isSeparateIssues();
+
+  void setSeparateIssues(boolean separateIssues);
 }

@@ -1,10 +1,12 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue;
 
+import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.sal.api.message.I18nResolver;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,21 +92,23 @@ public class ViewIssueCommandRule extends BaseRule {
     }
   }
 
-  private List<List<InlineKeyboardMarkupButton>> getIssueButtons(
+  public static List<List<InlineKeyboardMarkupButton>> getIssueButtons(
       String issueKey, ApplicationUser recipient, boolean isWatching) {
+    I18nResolver i18nResolver =
+        ComponentAccessor.getOSGiComponentInstanceOfType(I18nResolver.class);
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
     buttons.add(buttonsRow);
 
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            userChatService.getRawText(
+            i18nResolver.getRawText(
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"),
             String.join("-", ButtonRuleType.CommentIssue.getName(), issueKey)));
 
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            userChatService.getRawText(
+            i18nResolver.getRawText(
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"),
             String.join("-", ButtonRuleType.ViewComments.getName(), issueKey)));
 
@@ -112,7 +116,7 @@ public class ViewIssueCommandRule extends BaseRule {
 
     watchButtonRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            userChatService.getRawText(
+            i18nResolver.getRawText(
                 isWatching
                     ? "ru.mail.jira.plugins.myteam.mrimsenderEventListener.unwatchButton.text"
                     : "ru.mail.jira.plugins.myteam.mrimsenderEventListener.watchButton.text"),
@@ -125,7 +129,7 @@ public class ViewIssueCommandRule extends BaseRule {
 
     watchButtonRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            userChatService.getRawText(
+            i18nResolver.getRawText(
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.assign.text"),
             String.join("-", CommandRuleType.AssignIssue.getName(), issueKey)));
 
@@ -135,7 +139,7 @@ public class ViewIssueCommandRule extends BaseRule {
 
     transitionButtonRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            userChatService.getRawText(
+            i18nResolver.getRawText(
                 "ru.mail.jira.plugins.myteam.messageFormatter.editIssue.transitionChange.title"),
             String.join("-", CommandRuleType.IssueTransition.getName(), issueKey)));
 

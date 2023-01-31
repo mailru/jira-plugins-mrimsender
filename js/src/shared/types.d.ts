@@ -63,6 +63,7 @@ export type FilterSubscription = {
   nextRun?: string;
   type?: string;
   emailOnEmpty: boolean;
+  separateIssues: boolean;
 };
 
 export type FilterSubscriptionsPermissions = {

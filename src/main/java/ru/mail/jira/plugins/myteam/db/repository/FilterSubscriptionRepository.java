@@ -100,6 +100,7 @@ public class FilterSubscriptionRepository
     dto.setNextRun(getNextRun(entity));
     dto.setType(entity.getType());
     dto.setEmailOnEmpty(entity.isEmailOnEmpty());
+    dto.setSeparateIssues(entity.isSeparateIssues());
     return dto;
   }
 
@@ -135,6 +136,7 @@ public class FilterSubscriptionRepository
     entity.setLastRun(CalendarUtils.parseDate(dto.getLastRun()));
     entity.setType(dto.getType());
     entity.setEmailOnEmpty(dto.isEmailOnEmpty());
+    entity.setSeparateIssues(dto.isSeparateIssues());
   }
 
   @Override
