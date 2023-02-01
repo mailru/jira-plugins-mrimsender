@@ -196,10 +196,8 @@ public class FilterSubscriptionService {
       @Nullable ApplicationUser user,
       @Nullable String chatId,
       @Nullable Issue issue) {
-    ApplicationUser currentUser = jiraAuthenticationContext.getLoggedInUser();
     try {
       if (user != null) {
-        jiraAuthenticationContext.setLoggedInUser(user);
         if (issue != null) {
           userChatService.sendMessageText(
               user.getEmailAddress(),
@@ -221,8 +219,6 @@ public class FilterSubscriptionService {
               String.valueOf(chatId),
               "issueKey",
               issue != null ? issue.getKey() : StringUtils.EMPTY));
-    } finally {
-      jiraAuthenticationContext.setLoggedInUser(currentUser);
     }
   }
 
@@ -234,25 +230,26 @@ public class FilterSubscriptionService {
     ApplicationUser creator = userManager.getUserByKey(subscription.getUserKey());
     ApplicationUser jqlUser = subscriber != null ? subscriber : creator;
 
-    jiraAuthenticationContext.setLoggedInUser(jqlUser);
-    JiraServiceContextImpl jiraServiceContext = new JiraServiceContextImpl(jqlUser);
-    SearchRequest searchRequest =
-        searchRequestService.getFilter(jiraServiceContext, subscription.getFilterId());
-    MessageFormatter messageFormatter = userChatService.getMessageFormatter();
-
-    if (jiraServiceContext.getErrorCollection().hasAnyErrors()) {
-      sendMessage(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.error",
-              String.join(" ", jiraServiceContext.getErrorCollection().getErrorMessages())),
-          creator,
-          null,
-          null);
-      jiraAuthenticationContext.setLoggedInUser(currentUser);
-      return;
-    }
-
     try {
+      jiraAuthenticationContext.setLoggedInUser(jqlUser);
+      JiraServiceContextImpl jiraServiceContext = new JiraServiceContextImpl(jqlUser);
+      SearchRequest searchRequest =
+          searchRequestService.getFilter(jiraServiceContext, subscription.getFilterId());
+      MessageFormatter messageFormatter = userChatService.getMessageFormatter();
+
+      if (jiraServiceContext.getErrorCollection().hasAnyErrors()) {
+        jiraAuthenticationContext.setLoggedInUser(creator);
+        sendMessage(
+            i18nResolver.getText(
+                "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.error",
+                String.join(" ", jiraServiceContext.getErrorCollection().getErrorMessages())),
+            creator,
+            null,
+            null);
+        jiraAuthenticationContext.setLoggedInUser(currentUser);
+        return;
+      }
+
       Query jqlQuery =
           buildJqlQuery(searchRequest, subscription.getType(), subscription.getLastRun());
       int jqlLimit =
@@ -297,6 +294,7 @@ public class FilterSubscriptionService {
             null);
       }
     } catch (Exception e) {
+      jiraAuthenticationContext.setLoggedInUser(creator);
       sendMessage(
           i18nResolver.getText(
               "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.error",
