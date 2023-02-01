@@ -5,7 +5,6 @@ import static ru.mail.jira.plugins.myteam.bot.rulesengine.states.JqlSearchState.
 import static ru.mail.jira.plugins.myteam.bot.rulesengine.states.JqlSearchState.JQL_SEARCH_PAGE_SIZE_MAX;
 
 import com.atlassian.crowd.embedded.api.Group;
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.exception.DataAccessException;
@@ -13,6 +12,7 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
+import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
@@ -28,7 +28,6 @@ import com.atlassian.scheduler.config.JobConfig;
 import com.atlassian.scheduler.config.JobId;
 import com.atlassian.scheduler.config.JobRunnerKey;
 import com.atlassian.scheduler.config.Schedule;
-import java.io.IOException;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -43,7 +42,6 @@ import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.ViewIssueCommandRule;
 import ru.mail.jira.plugins.myteam.commons.Const;
-import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.controller.dto.FilterSubscriptionDto;
 import ru.mail.jira.plugins.myteam.db.model.FilterSubscription;
@@ -58,6 +56,7 @@ public class FilterSubscriptionService {
   private static final JobRunnerKey JOB_RUNNER_KEY =
       JobRunnerKey.of(FilterSubscriptionService.class.getName());
 
+  private final JiraAuthenticationContext jiraAuthenticationContext;
   private final I18nResolver i18nResolver;
   private final GroupManager groupManager;
   private final SchedulerService schedulerService;
@@ -69,6 +68,7 @@ public class FilterSubscriptionService {
   private final UserChatService userChatService;
 
   public FilterSubscriptionService(
+      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport I18nResolver i18nResolver,
       @ComponentImport GroupManager groupManager,
       @ComponentImport SchedulerService schedulerService,
@@ -78,6 +78,7 @@ public class FilterSubscriptionService {
       IssueService issueService,
       MyteamApiClient myteamClient,
       UserChatService userChatService) {
+    this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.i18nResolver = i18nResolver;
     this.issueService = issueService;
     this.groupManager = groupManager;
@@ -111,7 +112,7 @@ public class FilterSubscriptionService {
     deleteScheduleJob(filterSubscriptionId);
   }
 
-  public void runFilterSubscription(int subscriptionId) throws Exception {
+  public void runFilterSubscription(int subscriptionId) {
     FilterSubscription filterSubscription = filterSubscriptionRepository.get(subscriptionId);
     filterSubscriptionRepository.updateLastRun(
         subscriptionId, LocalDateTime.now(ZoneId.systemDefault()));
@@ -190,29 +191,34 @@ public class FilterSubscriptionService {
       String message,
       @Nullable ApplicationUser user,
       @Nullable String chatId,
-      @Nullable Issue issue)
-      throws MyteamServerErrorException, IOException {
-    if (user != null) {
-      if (issue != null) {
-        userChatService.sendMessageText(
-            user.getEmailAddress(),
-            message,
-            ViewIssueCommandRule.getIssueButtons(
-                issue.getKey(), user, issueService.isUserWatching(issue, user)));
-      } else {
-        userChatService.sendMessageText(user.getEmailAddress(), message);
+      @Nullable Issue issue) {
+    ApplicationUser currentUser = jiraAuthenticationContext.getLoggedInUser();
+    try {
+      if (user != null) {
+        jiraAuthenticationContext.setLoggedInUser(user);
+        if (issue != null) {
+          userChatService.sendMessageText(
+              user.getEmailAddress(),
+              message,
+              ViewIssueCommandRule.getIssueButtons(
+                  issue.getKey(), user, issueService.isUserWatching(issue, user)));
+        } else {
+          userChatService.sendMessageText(user.getEmailAddress(), message);
+        }
       }
+      if (chatId != null) userChatService.sendMessageText(chatId, message);
+    } catch (Exception e) {
+      SentryClient.capture(e);
+    } finally {
+      jiraAuthenticationContext.setLoggedInUser(currentUser);
     }
-    if (chatId != null) userChatService.sendMessageText(chatId, message);
   }
 
   private void sendMessages(
       FilterSubscription subscription,
       @Nullable ApplicationUser subscriber,
-      @Nullable String chatId)
-      throws UserNotFoundException, MyteamServerErrorException, IOException {
+      @Nullable String chatId) {
     ApplicationUser creator = userManager.getUserByKey(subscription.getUserKey());
-    if (creator == null) throw new UserNotFoundException(subscription.getUserKey());
 
     ApplicationUser jqlUser = subscriber != null ? subscriber : creator;
     JiraServiceContextImpl jiraServiceContext = new JiraServiceContextImpl(jqlUser);
@@ -221,11 +227,13 @@ public class FilterSubscriptionService {
     MessageFormatter messageFormatter = userChatService.getMessageFormatter();
 
     if (jiraServiceContext.getErrorCollection().hasAnyErrors()) {
-      userChatService.sendMessageText(
-          creator.getEmailAddress(),
+      sendMessage(
           i18nResolver.getText(
               "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.error",
-              String.join(" ", jiraServiceContext.getErrorCollection().getErrorMessages())));
+              String.join(" ", jiraServiceContext.getErrorCollection().getErrorMessages())),
+          creator,
+          null,
+          null);
       return;
     }
 
@@ -274,16 +282,17 @@ public class FilterSubscriptionService {
             null);
       }
     } catch (Exception e) {
-      userChatService.sendMessageText(
-          creator.getEmailAddress(),
+      sendMessage(
           i18nResolver.getText(
               "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.error",
-              String.join(" ", e.getLocalizedMessage())));
+              String.join(" ", e.getLocalizedMessage())),
+          creator,
+          null,
+          null);
     }
   }
 
-  private void sendMyteamNotifications(FilterSubscription subscription)
-      throws UserNotFoundException, IOException, MyteamServerErrorException {
+  private void sendMyteamNotifications(FilterSubscription subscription) {
     RecipientsType recipientsType = subscription.getRecipientsType();
     if (recipientsType.equals(RecipientsType.USER)) {
       for (String userKey : CommonUtils.split(subscription.getRecipients())) {
@@ -309,13 +318,14 @@ public class FilterSubscriptionService {
           myteamClient.getChatInfo(chat);
         } catch (Exception e) {
           ApplicationUser creator = userManager.getUserByKey(subscription.getUserKey());
-          if (creator == null) throw new UserNotFoundException(subscription.getUserKey());
 
-          userChatService.sendMessageText(
-              creator.getEmailAddress(),
+          sendMessage(
               i18nResolver.getText(
                   "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.error.chat.notExist",
-                  chat));
+                  chat),
+              creator,
+              null,
+              null);
         }
         sendMessages(subscription, null, chat);
       }

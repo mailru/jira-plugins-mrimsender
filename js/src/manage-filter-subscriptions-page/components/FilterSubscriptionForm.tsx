@@ -724,16 +724,14 @@ function FilterSubscriptionForm({
                 label={I18n.getText(
                   'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues',
                 )}
-                defaultIsChecked={currentValue && currentValue.separateIssues}
+                defaultIsChecked={currentValue?.separateIssues}
                 isDisabled={recipientsType === 'CHAT'}
               >
                 {({ fieldProps }) => (
                   <>
                     <Checkbox
                       id={fieldProps.id}
-                      defaultChecked={
-                        currentValue && currentValue.separateIssues
-                      }
+                      defaultChecked={currentValue?.separateIssues}
                       label={I18n.getText(
                         'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues.label',
                       )}
