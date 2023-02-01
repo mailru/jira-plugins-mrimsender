@@ -2,9 +2,9 @@
 package ru.mail.jira.plugins.myteam.service;
 
 import static ru.mail.jira.plugins.myteam.bot.rulesengine.states.JqlSearchState.JQL_SEARCH_PAGE_SIZE;
+import static ru.mail.jira.plugins.myteam.bot.rulesengine.states.JqlSearchState.JQL_SEARCH_PAGE_SIZE_MAX;
 
 import com.atlassian.crowd.embedded.api.Group;
-import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.exception.DataAccessException;
@@ -12,11 +12,10 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.search.SearchRequest;
 import com.atlassian.jira.issue.search.SearchResults;
 import com.atlassian.jira.jql.builder.JqlQueryBuilder;
+import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
-import com.atlassian.jira.util.ErrorCollection;
-import com.atlassian.jira.util.SimpleErrorCollection;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
 import com.atlassian.sal.api.message.I18nResolver;
@@ -42,6 +41,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.commons.SentryClient;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.CommonButtonsService;
 import ru.mail.jira.plugins.myteam.commons.Const;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.controller.dto.FilterSubscriptionDto;
@@ -57,27 +57,33 @@ public class FilterSubscriptionService {
   private static final JobRunnerKey JOB_RUNNER_KEY =
       JobRunnerKey.of(FilterSubscriptionService.class.getName());
 
+  private final JiraAuthenticationContext jiraAuthenticationContext;
   private final I18nResolver i18nResolver;
   private final GroupManager groupManager;
   private final SchedulerService schedulerService;
   private final SearchRequestService searchRequestService;
   private final UserManager userManager;
+  private final CommonButtonsService commonButtonsService;
   private final FilterSubscriptionRepository filterSubscriptionRepository;
   private final IssueService issueService;
   private final MyteamApiClient myteamClient;
   private final UserChatService userChatService;
 
   public FilterSubscriptionService(
+      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport I18nResolver i18nResolver,
       @ComponentImport GroupManager groupManager,
       @ComponentImport SchedulerService schedulerService,
       @ComponentImport SearchRequestService searchRequestService,
       @ComponentImport UserManager userManager,
+      CommonButtonsService commonButtonsService,
       FilterSubscriptionRepository filterSubscriptionRepository,
       IssueService issueService,
       MyteamApiClient myteamClient,
       UserChatService userChatService) {
+    this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.i18nResolver = i18nResolver;
+    this.commonButtonsService = commonButtonsService;
     this.issueService = issueService;
     this.groupManager = groupManager;
     this.searchRequestService = searchRequestService;
@@ -110,7 +116,7 @@ public class FilterSubscriptionService {
     deleteScheduleJob(filterSubscriptionId);
   }
 
-  public void runFilterSubscription(int subscriptionId) throws Exception {
+  public void runFilterSubscription(int subscriptionId) {
     FilterSubscription filterSubscription = filterSubscriptionRepository.get(subscriptionId);
     filterSubscriptionRepository.updateLastRun(
         subscriptionId, LocalDateTime.now(ZoneId.systemDefault()));
@@ -185,60 +191,129 @@ public class FilterSubscriptionService {
     return jqlQueryBuilder.buildQuery();
   }
 
-  @Nullable
-  private String buildMessage(FilterSubscription subscription, ErrorCollection errorCollection) {
-    ApplicationUser creator = userManager.getUserByKey(subscription.getUserKey());
-    JiraServiceContextImpl jiraServiceContext = new JiraServiceContextImpl(creator);
-    SearchRequest searchRequest =
-        searchRequestService.getFilter(jiraServiceContext, subscription.getFilterId());
-    MessageFormatter messageFormatter = userChatService.getMessageFormatter();
-
-    if (jiraServiceContext.getErrorCollection().hasAnyErrors()) {
-      errorCollection.addErrorCollection(jiraServiceContext.getErrorCollection());
-    } else {
-      try {
-        Query jqlQuery =
-            buildJqlQuery(searchRequest, subscription.getType(), subscription.getLastRun());
-        SearchResults<Issue> searchResults =
-            issueService.searchByJqlQuery(jqlQuery, creator, 0, JQL_SEARCH_PAGE_SIZE);
-
-        if (searchResults.getTotal() == 0 && !subscription.isEmailOnEmpty()) return null;
-        return messageFormatter.formatFilterSubscription(
-            searchRequest.getName(),
-            searchRequest.getId(),
-            searchRequest.getQuery().getQueryString(),
-            searchResults);
-
-      } catch (Exception e) {
-        errorCollection.addErrorMessage(e.getLocalizedMessage());
+  private void sendMessage(
+      String message,
+      @Nullable ApplicationUser user,
+      @Nullable String chatId,
+      @Nullable Issue issue) {
+    try {
+      if (user != null) {
+        if (issue != null) {
+          userChatService.sendMessageText(
+              user.getEmailAddress(),
+              message,
+              commonButtonsService.getIssueButtons(
+                  issue.getKey(), user, issueService.isUserWatching(issue, user)));
+        } else {
+          userChatService.sendMessageText(user.getEmailAddress(), message);
+        }
       }
+      if (chatId != null) userChatService.sendMessageText(chatId, message);
+    } catch (Exception e) {
+      SentryClient.capture(
+          e,
+          Map.of(
+              "user",
+              user != null ? user.getKey() : StringUtils.EMPTY,
+              "chatId",
+              String.valueOf(chatId),
+              "issueKey",
+              issue != null ? issue.getKey() : StringUtils.EMPTY));
     }
-    return null;
   }
 
-  private void sendMyteamNotifications(FilterSubscription subscription) throws Exception {
+  private void sendMessages(
+      FilterSubscription subscription,
+      @Nullable ApplicationUser subscriber,
+      @Nullable String chatId) {
+    ApplicationUser currentUser = jiraAuthenticationContext.getLoggedInUser();
     ApplicationUser creator = userManager.getUserByKey(subscription.getUserKey());
-    if (creator == null) throw new UserNotFoundException(subscription.getUserKey());
-    RecipientsType recipientsType = subscription.getRecipientsType();
-    ErrorCollection errorCollection = new SimpleErrorCollection();
-    String message = buildMessage(subscription, errorCollection);
+    ApplicationUser jqlUser = subscriber != null ? subscriber : creator;
 
-    if (errorCollection.hasAnyErrors()) {
-      userChatService.sendMessageText(
-          creator.getEmailAddress(),
+    try {
+      jiraAuthenticationContext.setLoggedInUser(jqlUser);
+      JiraServiceContextImpl jiraServiceContext = new JiraServiceContextImpl(jqlUser);
+      SearchRequest searchRequest =
+          searchRequestService.getFilter(jiraServiceContext, subscription.getFilterId());
+      MessageFormatter messageFormatter = userChatService.getMessageFormatter();
+
+      if (jiraServiceContext.getErrorCollection().hasAnyErrors()) {
+        jiraAuthenticationContext.setLoggedInUser(creator);
+        sendMessage(
+            i18nResolver.getText(
+                "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.error",
+                String.join(" ", jiraServiceContext.getErrorCollection().getErrorMessages())),
+            creator,
+            null,
+            null);
+        jiraAuthenticationContext.setLoggedInUser(currentUser);
+        return;
+      }
+
+      Query jqlQuery =
+          buildJqlQuery(searchRequest, subscription.getType(), subscription.getLastRun());
+      int jqlLimit =
+          subscription.isSeparateIssues() && subscriber != null
+              ? JQL_SEARCH_PAGE_SIZE_MAX
+              : JQL_SEARCH_PAGE_SIZE;
+      SearchResults<Issue> searchResults =
+          issueService.searchByJqlQuery(jqlQuery, jqlUser, 0, jqlLimit);
+
+      if (searchResults.getTotal() == 0) {
+        if (subscription.isEmailOnEmpty()) {
+          sendMessage(
+              messageFormatter.formatEmptyFilterSubscription(
+                  searchRequest.getName(), searchRequest.getId()),
+              subscriber,
+              chatId,
+              null);
+        }
+        return;
+      }
+
+      if (subscription.isSeparateIssues() && subscriber != null) {
+        sendMessage(
+            messageFormatter.formatIssueFilterSubscription(
+                searchRequest.getName(), searchRequest.getId(), searchResults.getTotal()),
+            subscriber,
+            chatId,
+            null);
+        for (Issue issue : searchResults.getResults()) {
+          sendMessage(
+              messageFormatter.createIssueSummary(issue, subscriber), subscriber, chatId, issue);
+        }
+      } else {
+        sendMessage(
+            messageFormatter.formatListFilterSubscription(
+                searchRequest.getName(),
+                searchRequest.getId(),
+                searchRequest.getQuery().getQueryString(),
+                searchResults),
+            subscriber,
+            chatId,
+            null);
+      }
+    } catch (Exception e) {
+      jiraAuthenticationContext.setLoggedInUser(creator);
+      sendMessage(
           i18nResolver.getText(
               "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.error",
-              String.join(" ", errorCollection.getErrorMessages())));
-      return;
+              String.join(" ", e.getLocalizedMessage())),
+          creator,
+          null,
+          null);
+    } finally {
+      jiraAuthenticationContext.setLoggedInUser(currentUser);
     }
+  }
 
-    if (StringUtils.isBlank(message)) return;
-
+  private void sendMyteamNotifications(FilterSubscription subscription) {
+    RecipientsType recipientsType = subscription.getRecipientsType();
     if (recipientsType.equals(RecipientsType.USER)) {
       for (String userKey : CommonUtils.split(subscription.getRecipients())) {
         ApplicationUser user = userManager.getUserByKey(userKey);
         if (user != null) {
-          userChatService.sendMessageText(user.getEmailAddress(), message);
+          sendMessages(subscription, user, null);
         }
       }
     } else if (recipientsType.equals(RecipientsType.GROUP)) {
@@ -247,7 +322,7 @@ public class FilterSubscriptionService {
         if (group != null) {
           for (ApplicationUser user : groupManager.getUsersInGroup(group)) {
             if (user != null) {
-              userChatService.sendMessageText(user.getEmailAddress(), message);
+              sendMessages(subscription, user, null);
             }
           }
         }
@@ -257,13 +332,17 @@ public class FilterSubscriptionService {
         try {
           myteamClient.getChatInfo(chat);
         } catch (Exception e) {
-          userChatService.sendMessageText(
-              creator.getEmailAddress(),
+          ApplicationUser creator = userManager.getUserByKey(subscription.getUserKey());
+
+          sendMessage(
               i18nResolver.getText(
                   "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.error.chat.notExist",
-                  chat));
+                  chat),
+              creator,
+              null,
+              null);
         }
-        userChatService.sendMessageText(chat, message);
+        sendMessages(subscription, null, chat);
       }
     }
   }

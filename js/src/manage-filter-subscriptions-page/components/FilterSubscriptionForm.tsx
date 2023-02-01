@@ -45,6 +45,7 @@ type FormState = {
   advanced?: string;
   type?: string;
   emailOnEmpty: boolean;
+  separateIssues: boolean;
 };
 
 const Container = styled.div`
@@ -228,6 +229,7 @@ function FilterSubscriptionForm({
             advanced: formState.advanced?.toString(),
             type: formState.type,
             lastRun: currentValue?.lastRun,
+            separateIssues: formState.separateIssues,
             emailOnEmpty: formState.emailOnEmpty,
           };
           onSave(subscription);
@@ -715,6 +717,41 @@ function FilterSubscriptionForm({
                     size="medium"
                     onChange={fieldProps.onChange}
                   />
+                )}
+              </CheckboxField>
+              <CheckboxField
+                name="separateIssues"
+                label={I18n.getText(
+                  'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues',
+                )}
+                defaultIsChecked={currentValue?.separateIssues}
+                isDisabled={recipientsType === 'CHAT'}
+              >
+                {({ fieldProps }) => (
+                  <>
+                    <Checkbox
+                      id={fieldProps.id}
+                      defaultChecked={currentValue?.separateIssues}
+                      label={I18n.getText(
+                        'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues.label',
+                      )}
+                      size="medium"
+                      onChange={fieldProps.onChange}
+                      isDisabled={recipientsType === 'CHAT'}
+                    />
+                    {recipientsType === 'CHAT' && (
+                      <ErrorMessage>
+                        {I18n.getText(
+                          'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues.warning',
+                        )}
+                      </ErrorMessage>
+                    )}
+                    <HelperMessage>
+                      {I18n.getText(
+                        'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues.description',
+                      )}
+                    </HelperMessage>
+                  </>
                 )}
               </CheckboxField>
             </div>

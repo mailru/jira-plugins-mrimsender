@@ -28,6 +28,7 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
 public class JqlSearchState extends BotState implements PageableState, CancelableState {
 
   public static final int JQL_SEARCH_PAGE_SIZE = 15;
+  public static final int JQL_SEARCH_PAGE_SIZE_MAX = 50;
 
   private final IssueService issueService;
   private final UserChatService userChatService;

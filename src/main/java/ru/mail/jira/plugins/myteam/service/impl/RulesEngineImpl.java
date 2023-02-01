@@ -19,6 +19,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.admin.IssueCre
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.*;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.editing.IssueTransitionRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.editing.IssueTransitionSelectRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.CommonButtonsService;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNoPermissionErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNotFoundErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CreateIssueByReplyRule;
@@ -47,6 +48,7 @@ public class RulesEngineImpl
   private final RulesEngine errorsRuleEngine;
   private final RulesEngine stateActionsRuleEngine;
 
+  private final CommonButtonsService commonButtonsService;
   private final IssueCreationService issueCreationService;
   private final UserChatService userChatService;
   private final IssueService issueService;
@@ -54,11 +56,13 @@ public class RulesEngineImpl
   private final IssueTextConverter issueTextConverter;
 
   public RulesEngineImpl(
+      CommonButtonsService commonButtonsService,
       IssueCreationService issueCreationService,
       UserChatService userChatService,
       IssueService issueService,
       IssueCreationSettingsService issueCreationSettingsService,
       IssueTextConverter issueTextConverter) {
+    this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
     this.issueService = issueService;
@@ -104,7 +108,8 @@ public class RulesEngineImpl
     commandsRuleEngine.registerRule(new CreatedIssuesCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new LinkIssueWithChatCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new AssignIssueCommandRule(userChatService, this));
-    commandsRuleEngine.registerRule(new ViewIssueCommandRule(userChatService, this, issueService));
+    commandsRuleEngine.registerRule(
+        new ViewIssueCommandRule(userChatService, this, commonButtonsService, issueService));
     commandsRuleEngine.registerRule(new WatchIssueCommandRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(new IssueTransitionRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(

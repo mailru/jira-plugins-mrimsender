@@ -58,6 +58,7 @@ import ru.mail.jira.plugins.myteam.service.PluginData;
 @Component
 public class MessageFormatter {
   public static final int LIST_PAGE_SIZE = 15;
+  public static final int MAX_MESSAGE_COUNT = 50;
   public static final String DELIMITER_STR = "----------";
 
   private final ApplicationProperties applicationProperties;
@@ -640,7 +641,37 @@ public class MessageFormatter {
     } else return i18nHelper.getText(messageKey);
   }
 
-  public String formatFilterSubscription(
+  public String formatEmptyFilterSubscription(String filterName, Long filterId) {
+    return i18nResolver.getText(
+            "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.message.header",
+            markdownTextLink(filterName, createFilterLink(filterId)))
+        + "\n\n"
+        + i18nResolver.getText(
+            "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.message.body.empty");
+  }
+
+  public String formatIssueFilterSubscription(String filterName, Long filterId, int totalIssues) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(
+        i18nResolver.getText(
+            "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.message.header",
+            markdownTextLink(filterName, createFilterLink(filterId))));
+    sb.append("\n\n");
+
+    String displayIssue =
+        totalIssues > MAX_MESSAGE_COUNT
+            ? i18nResolver.getText(
+                "pager.results.displayissues.short", MAX_MESSAGE_COUNT, totalIssues)
+            : String.valueOf(totalIssues);
+    sb.append(displayIssue);
+    sb.append(" ");
+    sb.append(
+        i18nResolver.getText(
+            "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.message.body"));
+    return sb.toString();
+  }
+
+  public String formatListFilterSubscription(
       String filterName, Long filterId, String searchJql, SearchResults<Issue> issueSearchResults) {
     StringBuilder sb = new StringBuilder();
     sb.append(
@@ -650,18 +681,12 @@ public class MessageFormatter {
     sb.append("\n\n");
 
     int totalIssues = issueSearchResults.getTotal();
-    if (totalIssues == 0) {
-      sb.append(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.message.body.empty"));
-    } else {
-      sb.append(
-          stringifyIssueList(
-              issueSearchResults.getResults(),
-              0,
-              totalIssues,
-              markdownTextLink(Integer.toString(totalIssues), createJqlLink(searchJql))));
-    }
+    sb.append(
+        stringifyIssueList(
+            issueSearchResults.getResults(),
+            0,
+            totalIssues,
+            markdownTextLink(Integer.toString(totalIssues), createJqlLink(searchJql))));
     return sb.toString();
   }
 
