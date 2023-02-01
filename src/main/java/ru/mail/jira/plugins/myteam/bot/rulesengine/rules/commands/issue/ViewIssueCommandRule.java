@@ -1,30 +1,25 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue;
 
-import com.atlassian.jira.component.ComponentAccessor;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.sal.api.message.I18nResolver;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.myteam.bot.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.BaseRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.CommonButtonsService;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.ViewingIssueState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
@@ -34,11 +29,16 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
 public class ViewIssueCommandRule extends BaseRule {
 
   static final RuleType NAME = CommandRuleType.Issue;
+  private final CommonButtonsService commonButtonsService;
   private final IssueService issueService;
 
   public ViewIssueCommandRule(
-      UserChatService userChatService, RulesEngine rulesEngine, IssueService issueService) {
+      UserChatService userChatService,
+      RulesEngine rulesEngine,
+      CommonButtonsService commonButtonsService,
+      IssueService issueService) {
     super(userChatService, rulesEngine);
+    this.commonButtonsService = commonButtonsService;
     this.issueService = issueService;
   }
 
@@ -64,7 +64,8 @@ public class ViewIssueCommandRule extends BaseRule {
             messageFormatter.createIssueSummary(issue, user),
             isGroup
                 ? null
-                : getIssueButtons(issue.getKey(), user, issueService.isUserWatching(issue, user)));
+                : commonButtonsService.getIssueButtons(
+                    issue.getKey(), user, issueService.isUserWatching(issue, user)));
         updateState(chatId, issueKey);
       } catch (IssuePermissionException e) {
         rulesEngine.fireError(ErrorRuleType.IssueNoPermission, event, e);
@@ -90,61 +91,5 @@ public class ViewIssueCommandRule extends BaseRule {
     } else {
       userChatService.setState(chatId, new ViewingIssueState(userChatService, issueKey));
     }
-  }
-
-  public static List<List<InlineKeyboardMarkupButton>> getIssueButtons(
-      String issueKey, ApplicationUser recipient, boolean isWatching) {
-    I18nResolver i18nResolver =
-        ComponentAccessor.getOSGiComponentInstanceOfType(I18nResolver.class);
-    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
-    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
-    buttons.add(buttonsRow);
-
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getRawText(
-                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.commentButton.text"),
-            String.join("-", ButtonRuleType.CommentIssue.getName(), issueKey)));
-
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getRawText(
-                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.showCommentsButton.text"),
-            String.join("-", ButtonRuleType.ViewComments.getName(), issueKey)));
-
-    ArrayList<InlineKeyboardMarkupButton> watchButtonRow = new ArrayList<>();
-
-    watchButtonRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getRawText(
-                isWatching
-                    ? "ru.mail.jira.plugins.myteam.mrimsenderEventListener.unwatchButton.text"
-                    : "ru.mail.jira.plugins.myteam.mrimsenderEventListener.watchButton.text"),
-            String.join(
-                "-",
-                isWatching
-                    ? CommandRuleType.UnwatchIssue.getName()
-                    : CommandRuleType.WatchIssue.getName(),
-                issueKey)));
-
-    watchButtonRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getRawText(
-                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.assign.text"),
-            String.join("-", CommandRuleType.AssignIssue.getName(), issueKey)));
-
-    buttons.add(watchButtonRow);
-
-    ArrayList<InlineKeyboardMarkupButton> transitionButtonRow = new ArrayList<>();
-
-    transitionButtonRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getRawText(
-                "ru.mail.jira.plugins.myteam.messageFormatter.editIssue.transitionChange.title"),
-            String.join("-", CommandRuleType.IssueTransition.getName(), issueKey)));
-
-    buttons.add(transitionButtonRow);
-
-    return buttons;
   }
 }

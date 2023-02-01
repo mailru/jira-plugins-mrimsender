@@ -35,12 +35,13 @@ import java.util.Date;
 import java.util.Map;
 import javax.annotation.Nullable;
 import javax.validation.Valid;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.commons.SentryClient;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.ViewIssueCommandRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.CommonButtonsService;
 import ru.mail.jira.plugins.myteam.commons.Const;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.controller.dto.FilterSubscriptionDto;
@@ -62,6 +63,7 @@ public class FilterSubscriptionService {
   private final SchedulerService schedulerService;
   private final SearchRequestService searchRequestService;
   private final UserManager userManager;
+  private final CommonButtonsService commonButtonsService;
   private final FilterSubscriptionRepository filterSubscriptionRepository;
   private final IssueService issueService;
   private final MyteamApiClient myteamClient;
@@ -74,12 +76,14 @@ public class FilterSubscriptionService {
       @ComponentImport SchedulerService schedulerService,
       @ComponentImport SearchRequestService searchRequestService,
       @ComponentImport UserManager userManager,
+      CommonButtonsService commonButtonsService,
       FilterSubscriptionRepository filterSubscriptionRepository,
       IssueService issueService,
       MyteamApiClient myteamClient,
       UserChatService userChatService) {
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.i18nResolver = i18nResolver;
+    this.commonButtonsService = commonButtonsService;
     this.issueService = issueService;
     this.groupManager = groupManager;
     this.searchRequestService = searchRequestService;
@@ -200,7 +204,7 @@ public class FilterSubscriptionService {
           userChatService.sendMessageText(
               user.getEmailAddress(),
               message,
-              ViewIssueCommandRule.getIssueButtons(
+              commonButtonsService.getIssueButtons(
                   issue.getKey(), user, issueService.isUserWatching(issue, user)));
         } else {
           userChatService.sendMessageText(user.getEmailAddress(), message);
@@ -208,7 +212,15 @@ public class FilterSubscriptionService {
       }
       if (chatId != null) userChatService.sendMessageText(chatId, message);
     } catch (Exception e) {
-      SentryClient.capture(e);
+      SentryClient.capture(
+          e,
+          Map.of(
+              "user",
+              user != null ? user.getKey() : StringUtils.EMPTY,
+              "chatId",
+              String.valueOf(chatId),
+              "issueKey",
+              issue != null ? issue.getKey() : StringUtils.EMPTY));
     } finally {
       jiraAuthenticationContext.setLoggedInUser(currentUser);
     }
@@ -218,9 +230,11 @@ public class FilterSubscriptionService {
       FilterSubscription subscription,
       @Nullable ApplicationUser subscriber,
       @Nullable String chatId) {
+    ApplicationUser currentUser = jiraAuthenticationContext.getLoggedInUser();
     ApplicationUser creator = userManager.getUserByKey(subscription.getUserKey());
-
     ApplicationUser jqlUser = subscriber != null ? subscriber : creator;
+
+    jiraAuthenticationContext.setLoggedInUser(jqlUser);
     JiraServiceContextImpl jiraServiceContext = new JiraServiceContextImpl(jqlUser);
     SearchRequest searchRequest =
         searchRequestService.getFilter(jiraServiceContext, subscription.getFilterId());
@@ -234,6 +248,7 @@ public class FilterSubscriptionService {
           creator,
           null,
           null);
+      jiraAuthenticationContext.setLoggedInUser(currentUser);
       return;
     }
 
@@ -289,6 +304,8 @@ public class FilterSubscriptionService {
           creator,
           null,
           null);
+    } finally {
+      jiraAuthenticationContext.setLoggedInUser(currentUser);
     }
   }
 
