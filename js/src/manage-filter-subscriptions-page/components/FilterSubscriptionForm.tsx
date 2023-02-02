@@ -657,9 +657,8 @@ function FilterSubscriptionForm({
                       <HelperMessage>
                         <a
                           target="_blank"
-                          ref="noreferrer"
-                          href="https://confluence.atlassian.com/jirasoftwareserver/constructing-cron-expressions-for-a-filter-subscription-939938814.html"
                           rel="noreferrer"
+                          href="https://confluence.atlassian.com/jirasoftwareserver/constructing-cron-expressions-for-a-filter-subscription-939938814.html"
                         >
                           {I18n.getText(
                             'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.advanced.description',
