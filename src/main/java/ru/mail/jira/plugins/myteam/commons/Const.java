@@ -9,7 +9,7 @@ public class Const {
       "По вашему обращению была создана задача: {{issueKey}}";
   public static final String DEFAULT_ISSUE_SUMMARY_TEMPLATE = "Обращение от {{author}}";
   // MarkDown2 quotes
-  public static final String DEFAULT_ISSUE_QUOTE_MESSAGE_TEMPLATE = "\n> {{message}}";
+  public static final String DEFAULT_ISSUE_QUOTE_MESSAGE_TEMPLATE = "\n> {{message}}\n";
   public static final String SCHEDULE_PREFIX = "myteamSchedule";
   public static final String SCHEDULE_ID =
       "ru.mail.jira.plugins.calendar.myteamSchedule:scheduleId";
