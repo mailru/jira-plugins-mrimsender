@@ -11,10 +11,9 @@ public class CreateIssueByReplyRuleTest {
   @Test
   public void testReplaceIssueDescriptionPattern() {
     assertEquals(
-        "{quote} 123$ {quote}",
+        "\n> 123$",
         StringUtils.replace(DEFAULT_ISSUE_QUOTE_MESSAGE_TEMPLATE, "{{message}}", "123$"));
     assertEquals(
-        "{quote} 123$ {quote} 123$",
-        StringUtils.replace("{quote} {{message}} {quote} {{message}}", "{{message}}", "123$"));
+        "> 123$\n123$", StringUtils.replace("> {{message}}\n{{message}}", "{{message}}", "123$"));
   }
 }
