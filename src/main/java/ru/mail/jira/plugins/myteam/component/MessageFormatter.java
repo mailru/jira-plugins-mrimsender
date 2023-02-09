@@ -808,6 +808,12 @@ public class MessageFormatter {
             inputText,
             Pattern.compile("\\{\\{([^}?\\n]+)}}"),
             (input) -> "±`" + input.group(1) + "±`");
+    // Quote
+    inputText =
+        convertToMarkdown(
+            inputText,
+            Pattern.compile("\\{[Qq]uote}([^+]*?)\\{[Qq]uote}", Pattern.MULTILINE),
+            (input) -> "\n> " + input.group(1).replaceAll("\n", "\n> ") + "\n");
     // mentionPattern
     inputText =
         convertToMarkdown(

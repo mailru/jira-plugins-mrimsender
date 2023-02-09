@@ -265,6 +265,42 @@ public class MessageFormatterTest {
   }
 
   @Test
+  public void testQuote() throws GenericEntityException {
+    GenericValue changeLog = mock(GenericValue.class);
+    List<GenericValue> changeLogRelated = new ArrayList<>();
+    GenericValue descriptionField = Mockito.mock(GenericValue.class);
+    when(descriptionField.getString("field")).thenReturn("description");
+    when(descriptionField.getString("newstring"))
+        .thenReturn(
+            "_Lorem_ {quote}ipsum dolor{quote} sit amet, -consectetur adipiscing- elit, sed* do eiusmod tempor incididunt ut *labore* -et [dolore|http://example.com] magna aliqua-. Ut enim ad minim veniam, *quis* +nostrud exercitation ullamco+ {{labo-ris}} *nisi ut aliquip* ex ea commodo * +consequat. Duis+ aute iru-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, -sunt in culpa qui officia- *deserunt mollit* anim id est -laborum-.\n"
+                + "\n"
+                + "\n"
+                + "{quote}asdf asdf asdf\n"
+                + "wad dwadaw\n"
+                + "asdf asd{quote}"
+                + "\n"
+                + "+asdadda+ asd asd. asd\n"
+                + "asdasd as. a sd +aasdad+");
+    changeLogRelated.add(descriptionField);
+    when(changeLog.getRelated("ChildChangeItem")).thenReturn(changeLogRelated);
+    when(this.mockedIssueEvent.getChangeLog()).thenReturn(changeLog);
+    String testedHeader = "null\nSummary\n\n";
+    String testedContent =
+        "_Lorem_ \n> ipsum dolor\n sit amet, ~consectetur adipiscing~ elit, sed\\* do eiusmod tempor incididunt ut *labore* ~et [dolore](http://example.com) magna aliqua~. Ut enim ad minim veniam, *quis* __nostrud exercitation ullamco__ `labo\\-ris` *nisi ut aliquip* ex ea commodo \\* __consequat. Duis__ aute iru\\-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, ~sunt in culpa qui officia~ *deserunt mollit* anim id est ~laborum~.\n"
+            + "\n"
+            + "\n"
+            + "\n> asdf asdf asdf\n> "
+            + "wad dwadaw\n> "
+            + "asdf asd\n"
+            + "\n"
+            + "__asdadda__ asd asd. asd\n"
+            + "asdasd as. a sd __aasdad__";
+    assertEquals(
+        testedHeader + testedContent,
+        this.messageFormatter.formatEvent(recipient, this.mockedIssueEvent));
+  }
+
+  @Test
   public void testMultiLineCode() throws GenericEntityException {
     GenericValue changeLog = mock(GenericValue.class);
     List<GenericValue> changeLogRelated = new ArrayList<>();
