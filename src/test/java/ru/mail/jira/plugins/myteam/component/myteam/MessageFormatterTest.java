@@ -286,11 +286,11 @@ public class MessageFormatterTest {
     when(this.mockedIssueEvent.getChangeLog()).thenReturn(changeLog);
     String testedHeader = "null\nSummary\n\n";
     String testedContent =
-        "_Lorem_ \n> ipsum dolor\n sit amet, ~consectetur adipiscing~ elit, sed\\* do eiusmod tempor incididunt ut *labore* ~et [dolore](http://example.com) magna aliqua~. Ut enim ad minim veniam, *quis* __nostrud exercitation ullamco__ `labo\\-ris` *nisi ut aliquip* ex ea commodo \\* __consequat. Duis__ aute iru\\-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, ~sunt in culpa qui officia~ *deserunt mollit* anim id est ~laborum~.\n"
+        "_Lorem_ \n>ipsum dolor\n sit amet, ~consectetur adipiscing~ elit, sed\\* do eiusmod tempor incididunt ut *labore* ~et [dolore](http://example.com) magna aliqua~. Ut enim ad minim veniam, *quis* __nostrud exercitation ullamco__ `labo\\-ris` *nisi ut aliquip* ex ea commodo \\* __consequat. Duis__ aute iru\\-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, ~sunt in culpa qui officia~ *deserunt mollit* anim id est ~laborum~.\n"
             + "\n"
             + "\n"
-            + "\n> asdf asdf asdf\n> "
-            + "wad dwadaw\n> "
+            + "\n>asdf asdf asdf\n>"
+            + "wad dwadaw\n>"
             + "asdf asd\n"
             + "\n"
             + "__asdadda__ asd asd. asd\n"

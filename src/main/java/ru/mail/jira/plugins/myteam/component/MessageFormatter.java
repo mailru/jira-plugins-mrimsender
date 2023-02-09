@@ -813,7 +813,7 @@ public class MessageFormatter {
         convertToMarkdown(
             inputText,
             Pattern.compile("\\{[Qq]uote}([^+]*?)\\{[Qq]uote}", Pattern.MULTILINE),
-            (input) -> "\n> " + input.group(1).replaceAll("\n", "\n> ") + "\n");
+            (input) -> "\n>" + input.group(1).replaceAll("\n", "\n>") + "\n");
     // mentionPattern
     inputText =
         convertToMarkdown(
