@@ -6,6 +6,7 @@
     <meta name="admin.active.tab" content="ru.mail.jira.plugins.myteam:myteam-configuration-link" />
     $webResourceManager.requireResource( "jira.webresources:autocomplete" ) ## User picker
     $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+    $webResourceManager.requireResource("jira.webresources:jira-fields") ## Group picker
     $webResourceManager.requireResource( "ru.mail.jira.plugins.myteam:configuration-page-resource" )
 </head>
 <body>
@@ -13,7 +14,6 @@
 
 #if( $saved )
     <div class="aui-message aui-message-success">
-        <span class="aui-icon icon-success"></span>
         <p>$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.saved" )</p>
     </div>
 #end
@@ -109,6 +109,13 @@
         <label for="notifiedUsers">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.notifiedUsers" )</label>
         #userPicker( $action, "notifiedUsers", "$!notifiedUsers", true, false, false, true, false )
         #fieldError( "notifiedUsers" )
+    </div>
+
+    <div class="field-group aui-field-grouppicker">
+        <label for="subscriptionsExcludingGroups">$i18n.getText( "ru.mail.jira.plugins.myteam.configuration.subscriptionsExcludingGroups" )</label>
+        #groupPicker( $action, "subscriptionsExcludingGroups", "$!subscriptionsExcludingGroups", true, $null, $null )
+        <div class="description">$i18n.getText("ru.mail.jira.plugins.myteam.configuration.subscriptionsExcludingGroupsDescription")</div>
+        #fieldError( "subscriptionsExcludingGroups" )
     </div>
     <div class="buttons-container">
         <div class="buttons">

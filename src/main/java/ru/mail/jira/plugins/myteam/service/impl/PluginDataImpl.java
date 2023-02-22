@@ -20,6 +20,8 @@ public class PluginDataImpl implements PluginData {
   private static final String TOKEN_FILE_PATH = PLUGIN_PREFIX + "tokenFilePath";
   private static final String ENABLED_BY_DEFAULT = PLUGIN_PREFIX + "enabledByDefault";
   private static final String NOTIFIED_USER_KEYS = PLUGIN_PREFIX + "notifiedUserKeys";
+  private static final String SUBSCRIPTIONS_EXCLUDING_GROUPS =
+      PLUGIN_PREFIX + "subscriptionsExcludingGroups";
   private static final String MAIN_NODE_ID = PLUGIN_PREFIX + "mainNodeId";
   private static final String BOT_API_URL = PLUGIN_PREFIX + "botApiUrl";
   private static final String BOT_NAME = PLUGIN_PREFIX + "botName";
@@ -90,6 +92,20 @@ public class PluginDataImpl implements PluginData {
   @Override
   public void setNotifiedUserKeys(List<String> notifiedUserKeys) {
     pluginSettingsFactory.createGlobalSettings().put(NOTIFIED_USER_KEYS, notifiedUserKeys);
+  }
+
+  @Override
+  public List<String> getSubscriptionsExcludingGroups() {
+    //noinspection unchecked
+    return (List<String>)
+        pluginSettingsFactory.createGlobalSettings().get(SUBSCRIPTIONS_EXCLUDING_GROUPS);
+  }
+
+  @Override
+  public void setSubscriptionsExcludingGroups(List<String> subscriptionsExcludingGroups) {
+    pluginSettingsFactory
+        .createGlobalSettings()
+        .put(SUBSCRIPTIONS_EXCLUDING_GROUPS, subscriptionsExcludingGroups);
   }
 
   @Override
