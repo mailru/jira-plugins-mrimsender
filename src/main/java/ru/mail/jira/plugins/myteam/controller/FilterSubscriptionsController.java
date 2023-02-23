@@ -40,6 +40,7 @@ import ru.mail.jira.plugins.myteam.db.model.FilterSubscription;
 import ru.mail.jira.plugins.myteam.db.model.RecipientsType;
 import ru.mail.jira.plugins.myteam.db.repository.FilterSubscriptionRepository;
 import ru.mail.jira.plugins.myteam.service.FilterSubscriptionService;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @Controller
 @Path("/subscriptions")
@@ -53,6 +54,7 @@ public class FilterSubscriptionsController {
   private final FilterSubscriptionService filterSubscriptionService;
   private final FilterSubscriptionRepository filterSubscriptionRepository;
   private final PermissionHelper permissionHelper;
+  private final PluginData pluginData;
 
   @Autowired
   public FilterSubscriptionsController(
@@ -63,7 +65,8 @@ public class FilterSubscriptionsController {
       SearchRequestService searchRequestService,
       FilterSubscriptionService filterSubscriptionService,
       FilterSubscriptionRepository filterSubscriptionRepository,
-      PermissionHelper permissionHelper) {
+      PermissionHelper permissionHelper,
+      PluginData pluginData) {
     this.groupManager = groupManager;
     this.groupPickerSearchService = groupPickerSearchService;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
@@ -72,6 +75,7 @@ public class FilterSubscriptionsController {
     this.filterSubscriptionService = filterSubscriptionService;
     this.filterSubscriptionRepository = filterSubscriptionRepository;
     this.permissionHelper = permissionHelper;
+    this.pluginData = pluginData;
   }
 
   @GET
@@ -141,7 +145,7 @@ public class FilterSubscriptionsController {
 
   @POST
   @Path("{id}/run")
-  public void runSubscription(@PathParam("id") int id) throws Exception {
+  public void runSubscription(@PathParam("id") int id) {
     ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
     if (loggedInUser == null) {
       throw new SecurityException();
@@ -206,7 +210,7 @@ public class FilterSubscriptionsController {
           .collect(Collectors.toList());
     } else {
       return groupManager.getGroupNamesForUser(loggedInUser).stream()
-          .filter(name -> name.contains(query))
+          .filter(name -> name.contains(query) && !isGroupExcluded(name))
           .limit(10)
           .map(GroupDto::new)
           .collect(Collectors.toList());
@@ -222,5 +226,9 @@ public class FilterSubscriptionsController {
     }
 
     return new FilterSubscriptionPermissionsDto(permissionHelper.isJiraAdmin(loggedInUser));
+  }
+
+  private boolean isGroupExcluded(String group) {
+    return pluginData.getSubscriptionsExcludingGroups().contains(group);
   }
 }

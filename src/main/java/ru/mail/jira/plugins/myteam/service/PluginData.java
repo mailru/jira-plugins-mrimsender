@@ -26,6 +26,10 @@ public interface PluginData {
 
   void setNotifiedUserKeys(List<String> notifiedUserKeys);
 
+  List<String> getSubscriptionsExcludingGroups();
+
+  void setSubscriptionsExcludingGroups(List<String> subscriptionsExcludingGroups);
+
   @Nullable
   String getMainNodeId();
 

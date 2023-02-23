@@ -47,6 +47,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   private String profileLink;
   private boolean enabledByDefault;
   private String notifiedUsers;
+  private String subscriptionsExcludingGroups;
 
   private List<String> notifiedUserKeys;
   private Set<Long> excludingProjectIds;
@@ -65,6 +66,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     excludingProjectIds = pluginData.getExcludingProjectIds();
     chatCreationNotAllowedProjectIds = pluginData.getChatCreationBannedProjectIds();
     notifiedUsers = CommonUtils.convertUserKeysToJoinedString(pluginData.getNotifiedUserKeys());
+    subscriptionsExcludingGroups = CommonUtils.join(pluginData.getSubscriptionsExcludingGroups());
     return INPUT;
   }
 
@@ -95,6 +97,7 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
     pluginData.setExcludingProjectIds(excludingProjectIds);
     pluginData.setChatCreationBannedProjectIds(chatCreationNotAllowedProjectIds);
     pluginData.setNotifiedUserKeys(notifiedUserKeys);
+    pluginData.setSubscriptionsExcludingGroups(CommonUtils.split(subscriptionsExcludingGroups));
 
     saved = true;
     notifiedUsers = CommonUtils.convertUserKeysToJoinedString(notifiedUserKeys);
@@ -301,5 +304,15 @@ public class MyteamConfigurationAction extends JiraWebActionSupport {
   @SuppressWarnings("UnusedDeclaration")
   public void setNotifiedUsers(String notifiedUsers) {
     this.notifiedUsers = notifiedUsers;
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public String getSubscriptionsExcludingGroups() {
+    return subscriptionsExcludingGroups;
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public void setSubscriptionsExcludingGroups(String subscriptionsExcludingGroups) {
+    this.subscriptionsExcludingGroups = subscriptionsExcludingGroups;
   }
 }
