@@ -21,6 +21,8 @@ import ru.mail.jira.plugins.myteam.bot.configuration.createissue.FieldInputMessa
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.FillingIssueFieldState;
 
 public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
+  private static final int SUMMARY_LIMIT = 255;
+  private static final int DESCRIPTION_LIMIT = 32767;
 
   private final I18nResolver i18nResolver;
   private final VersionManager versionManager;
@@ -131,11 +133,13 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
 
     // no preprocessing for description and summary fields needed
     if (field.getId().equals(IssueFieldConstants.DESCRIPTION)) {
-      return new String[] {fieldValue};
+      return new String[] {
+        fieldValue.substring(0, Math.min(fieldValue.length(), DESCRIPTION_LIMIT))
+      };
     }
 
     if (field.getId().equals(IssueFieldConstants.SUMMARY)) {
-      return new String[] {fieldValue.substring(0, Math.min(fieldValue.length(), 255))};
+      return new String[] {fieldValue.substring(0, Math.min(fieldValue.length(), SUMMARY_LIMIT))};
     }
 
     List<String> fieldValues =
