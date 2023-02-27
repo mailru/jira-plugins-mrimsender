@@ -130,9 +130,12 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
     if (fieldValue == null) return new String[0];
 
     // no preprocessing for description and summary fields needed
-    if (field.getId().equals(IssueFieldConstants.DESCRIPTION)
-        || field.getId().equals(IssueFieldConstants.SUMMARY)) {
+    if (field.getId().equals(IssueFieldConstants.DESCRIPTION)) {
       return new String[] {fieldValue};
+    }
+
+    if (field.getId().equals(IssueFieldConstants.SUMMARY)) {
+      return new String[] {fieldValue.substring(0, Math.min(fieldValue.length(), 255))};
     }
 
     List<String> fieldValues =
