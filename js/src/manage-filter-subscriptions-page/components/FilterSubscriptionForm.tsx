@@ -265,7 +265,6 @@ function FilterSubscriptionForm({
                       }
                       onChange={fieldProps.onChange}
                     />
-                    {console.log(fieldProps)}
                     {(fieldProps.value?.value || currentValue?.filter?.id) && (
                       <HelperMessage>
                         <a

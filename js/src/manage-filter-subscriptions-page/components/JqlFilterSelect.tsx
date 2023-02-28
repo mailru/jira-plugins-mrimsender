@@ -36,12 +36,21 @@ export const createFilterOption = (filter: JqlFilter): OptionType => {
 };
 
 const loadFilters = async (query: string): Promise<Array<OptionType>> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     loadJqlFilters(query)
       .then((response) => {
         resolve(response.data.map(createFilterOption));
       })
-      .catch(reject);
+      .catch((e) => {
+        resolve([
+          {
+            value: 'error',
+            label: e.response.data.error,
+            isDisabled: true,
+            owner: false,
+          },
+        ]);
+      });
   });
 };
 
