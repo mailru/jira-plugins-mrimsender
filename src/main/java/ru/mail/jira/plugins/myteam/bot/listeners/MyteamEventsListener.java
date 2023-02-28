@@ -53,9 +53,7 @@ public class MyteamEventsListener {
             this.jiraBotTaskExecutor,
             (exception, context) -> {
               log.error(
-                  "Exception occurred in subscriber = {}",
-                  context.getSubscriber().toString(),
-                  exception);
+                  "Exception occurred in subscriber = {}", context.getSubscriber(), exception);
               SentryClient.capture(exception);
             });
     this.asyncEventBus.register(this);

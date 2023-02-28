@@ -24,14 +24,7 @@ import com.atlassian.sal.api.message.I18nResolver;
 import com.atlassian.velocity.VelocityManager;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.jetbrains.annotations.NotNull;
@@ -188,10 +181,14 @@ public class AccessRequestService {
             .filter(Objects::nonNull)
             .forEach(
                 user -> {
-                  if (configuration.isSendMessage())
-                    sendMessage(user, loggedInUser, issue, accessRequestDto.getMessage());
-                  if (configuration.isSendEmail())
-                    sendEmail(user, loggedInUser, issue, accessRequestDto.getMessage());
+                  try {
+                    if (configuration.isSendMessage())
+                      sendMessage(user, loggedInUser, issue, accessRequestDto.getMessage());
+                    if (configuration.isSendEmail())
+                      sendEmail(user, loggedInUser, issue, accessRequestDto.getMessage());
+                  } catch (Exception e) {
+                    SentryClient.capture(e, Map.of("user", user.getKey()));
+                  }
                 });
       }
     }
@@ -264,7 +261,10 @@ public class AccessRequestService {
       userChatService.sendMessageText(
           to.getEmailAddress(), messageFormatter.formatAccessRequestMessage(from, issue, message));
     } catch (Exception e) {
-      SentryClient.capture(e);
+      SentryClient.capture(
+          e,
+          Map.of(
+              "to", to.getEmailAddress(), "from", from.getEmailAddress(), "issue", issue.getKey()));
     }
   }
 
