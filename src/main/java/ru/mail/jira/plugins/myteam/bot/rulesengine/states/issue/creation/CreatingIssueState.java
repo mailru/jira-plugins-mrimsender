@@ -10,7 +10,6 @@ import java.util.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
@@ -26,7 +25,6 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
 @Slf4j
 public class CreatingIssueState extends BotState implements CancelableState {
   private static final String DELIMITER_STR = "----------";
-  private static final int DISPLAY_CHARS_LIMIT = 5000;
 
   @Getter @Setter private Project project;
 
@@ -118,11 +116,6 @@ public class CreatingIssueState extends BotState implements CancelableState {
         .orElseGet(() -> fieldValues.size() - 1);
   }
 
-  private String formatFieldValue(@NotNull String value) {
-    if (value.length() < DISPLAY_CHARS_LIMIT) return value;
-    return value.substring(0, DISPLAY_CHARS_LIMIT) + "...";
-  }
-
   private String formatIssueCreationFields(Map<Field, String> fieldValuesMap) {
     StringJoiner sj = new StringJoiner("\n");
 
@@ -139,7 +132,9 @@ public class CreatingIssueState extends BotState implements CancelableState {
                 String.join(
                     " : ",
                     userChatService.getRawText(field.getNameKey()),
-                    value.isEmpty() ? "-" : formatFieldValue(value))));
+                    value.isEmpty()
+                        ? "-"
+                        : userChatService.getMessageFormatter().limitFieldValue(value))));
     return sj.toString();
   }
 

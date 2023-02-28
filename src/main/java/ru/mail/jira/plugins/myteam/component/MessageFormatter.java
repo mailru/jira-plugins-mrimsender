@@ -60,6 +60,7 @@ public class MessageFormatter {
   public static final int LIST_PAGE_SIZE = 15;
   public static final int MAX_MESSAGE_COUNT = 50;
   public static final String DELIMITER_STR = "----------";
+  private static final int DISPLAY_FIELD_CHARS_LIMIT = 5000;
 
   private final ApplicationProperties applicationProperties;
   private final DateTimeFormatter dateTimeFormatter;
@@ -224,9 +225,10 @@ public class MessageFormatter {
     }
     appendField(sb, i18nResolver.getRawText("issue.field.attachment"), issue.getAttachments());
 
-    if (!StringUtils.isBlank(issue.getDescription())) {
+    String description = issue.getDescription();
+    if (StringUtils.isNotBlank(description)) {
       sb.append("\n\n")
-          .append(makeMyteamMarkdownFromJira(issue.getDescription(), useMentionFormat));
+          .append(makeMyteamMarkdownFromJira(limitFieldValue(description), useMentionFormat));
     }
 
     return sb.toString();
@@ -894,7 +896,7 @@ public class MessageFormatter {
           String newString = StringUtils.defaultString(changeItem.getString("newstring"));
 
           if ("description".equals(field)) {
-            changedDescription = newString;
+            changedDescription = limitFieldValue(newString);
             continue;
           }
           if ("WorklogTimeSpent".equals(field)
@@ -973,5 +975,10 @@ public class MessageFormatter {
         SentryClient.capture(e);
       }
     return sb.toString();
+  }
+
+  public String limitFieldValue(@NotNull String value) {
+    if (value.length() < DISPLAY_FIELD_CHARS_LIMIT) return value;
+    return value.substring(0, DISPLAY_FIELD_CHARS_LIMIT) + "...";
   }
 }
