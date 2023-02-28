@@ -1,6 +1,7 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.controller;
 
+import com.atlassian.gzipfilter.org.apache.commons.lang.StringEscapeUtils;
 import com.atlassian.jira.bc.JiraServiceContextImpl;
 import com.atlassian.jira.bc.filter.SearchRequestService;
 import com.atlassian.jira.bc.group.search.GroupPickerSearchService;
@@ -9,11 +10,14 @@ import com.atlassian.jira.bc.user.search.UserSearchService;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.sharing.SharedEntityColumn;
+import com.atlassian.jira.sharing.index.QueryBuilder;
+import com.atlassian.jira.sharing.search.SearchParseException;
 import com.atlassian.jira.sharing.search.SharedEntitySearchContext;
 import com.atlassian.jira.sharing.search.SharedEntitySearchParameters;
 import com.atlassian.jira.sharing.search.SharedEntitySearchParametersBuilder;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.message.I18nResolver;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +34,7 @@ import javax.ws.rs.core.MediaType;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import ru.mail.jira.plugins.commons.RestFieldException;
 import ru.mail.jira.plugins.myteam.component.PermissionHelper;
 import ru.mail.jira.plugins.myteam.controller.dto.FilterSubscriptionDto;
 import ru.mail.jira.plugins.myteam.controller.dto.FilterSubscriptionPermissionsDto;
@@ -48,6 +53,7 @@ import ru.mail.jira.plugins.myteam.service.PluginData;
 public class FilterSubscriptionsController {
   private final GroupManager groupManager;
   private final GroupPickerSearchService groupPickerSearchService;
+  private final I18nResolver i18nResolver;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final UserSearchService userSearchService;
   private final SearchRequestService searchRequestService;
@@ -60,6 +66,7 @@ public class FilterSubscriptionsController {
   public FilterSubscriptionsController(
       @ComponentImport GroupManager groupManager,
       @ComponentImport GroupPickerSearchService groupPickerSearchService,
+      @ComponentImport I18nResolver i18nResolver,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       UserSearchService userSearchService,
       SearchRequestService searchRequestService,
@@ -69,6 +76,7 @@ public class FilterSubscriptionsController {
       PluginData pluginData) {
     this.groupManager = groupManager;
     this.groupPickerSearchService = groupPickerSearchService;
+    this.i18nResolver = i18nResolver;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.userSearchService = userSearchService;
     this.searchRequestService = searchRequestService;
@@ -163,18 +171,31 @@ public class FilterSubscriptionsController {
     if (loggedInUser == null) {
       throw new SecurityException();
     }
-    SharedEntitySearchParametersBuilder builder =
-        new SharedEntitySearchParametersBuilder()
-            .setName(StringUtils.isBlank(query) ? StringUtils.EMPTY : query)
-            .setTextSearchMode(SharedEntitySearchParameters.TextSearchMode.WILDCARD)
-            .setEntitySearchContext(SharedEntitySearchContext.USE)
-            .setSortColumn(SharedEntityColumn.OWNER, true);
-    return searchRequestService
-        .search(new JiraServiceContextImpl(loggedInUser), builder.toSearchParameters(), 0, 100)
-        .getResults()
-        .stream()
-        .map(searchRequest -> new JqlFilterDto(searchRequest, loggedInUser))
-        .collect(Collectors.toList());
+
+    try {
+      SharedEntitySearchParameters searchParameters =
+          new SharedEntitySearchParametersBuilder()
+              .setName(
+                  StringUtils.isBlank(query)
+                      ? StringUtils.EMPTY
+                      : StringEscapeUtils.escapeJava(query))
+              .setTextSearchMode(SharedEntitySearchParameters.TextSearchMode.WILDCARD)
+              .setEntitySearchContext(SharedEntitySearchContext.USE)
+              .setSortColumn(SharedEntityColumn.OWNER, true)
+              .toSearchParameters();
+
+      QueryBuilder.validate(searchParameters);
+
+      return searchRequestService
+          .search(new JiraServiceContextImpl(loggedInUser), searchParameters, 0, 100)
+          .getResults()
+          .stream()
+          .map(searchRequest -> new JqlFilterDto(searchRequest, loggedInUser))
+          .collect(Collectors.toList());
+    } catch (SearchParseException e) {
+      throw new RestFieldException(
+          i18nResolver.getText("common.sharing.exception.search.parse"), "filter");
+    }
   }
 
   @GET
