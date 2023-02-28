@@ -132,7 +132,9 @@ public class CreatingIssueState extends BotState implements CancelableState {
                 String.join(
                     " : ",
                     userChatService.getRawText(field.getNameKey()),
-                    value.isEmpty() ? "-" : value)));
+                    value.isEmpty()
+                        ? "-"
+                        : userChatService.getMessageFormatter().limitFieldValue(value))));
     return sj.toString();
   }
 
