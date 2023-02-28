@@ -24,7 +24,7 @@ public class UserData {
   private final UserPropertyManager userPropertyManager;
   private final UserSearchService userSearchService;
   private final Cache<String, ApplicationUser> userByMrimLoginCache =
-      Caffeine.newBuilder().expireAfterWrite(8, TimeUnit.HOURS).build();
+      Caffeine.newBuilder().expireAfterAccess(8, TimeUnit.HOURS).build();
 
   @Autowired
   public UserData(
@@ -41,9 +41,13 @@ public class UserData {
   }
 
   public boolean isEnabled(ApplicationUser user) {
-    String enabled = userPropertyManager.getPropertySet(user).getString(IS_ENABLED_USER_PROPERTY);
-    if (enabled == null) return pluginData.isEnabledByDefault();
-    return Boolean.parseBoolean(enabled);
+    try {
+      String enabled = userPropertyManager.getPropertySet(user).getString(IS_ENABLED_USER_PROPERTY);
+      if (enabled == null) return pluginData.isEnabledByDefault();
+      return Boolean.parseBoolean(enabled);
+    } catch (Exception e) {
+      return pluginData.isEnabledByDefault();
+    }
   }
 
   public void setEnabled(ApplicationUser user, boolean enabled) {
@@ -53,11 +57,15 @@ public class UserData {
   }
 
   public boolean isCreateChatsWithUserAllowed(ApplicationUser user) {
-    String isAllowed =
-        userPropertyManager.getPropertySet(user).getString(IS_CREATE_CHATS_WITH_USER_ALLOWED);
-    // ALLOWED BY DEFAULT
-    if (isAllowed == null) return true;
-    return Boolean.parseBoolean(isAllowed);
+    try {
+      String isAllowed =
+          userPropertyManager.getPropertySet(user).getString(IS_CREATE_CHATS_WITH_USER_ALLOWED);
+      // ALLOWED BY DEFAULT
+      if (isAllowed == null) return true;
+      return Boolean.parseBoolean(isAllowed);
+    } catch (Exception e) {
+      return true;
+    }
   }
 
   public void setCreateChatsWithUserAllowed(ApplicationUser user, boolean isAllowed) {
@@ -76,7 +84,6 @@ public class UserData {
         mrimLogin,
         (login) ->
             StreamSupport.stream(userSearchService.findUsersByEmail(login).spliterator(), false)
-                .filter(ApplicationUser::isActive)
                 .findFirst()
                 .orElse(null));
   }

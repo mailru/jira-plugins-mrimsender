@@ -18,10 +18,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.Sets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -128,7 +125,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
         sendMessage(recipients, issueEvent, issueEvent.getIssue().getKey());
       }
     } catch (Exception e) {
-      SentryClient.capture(e);
+      SentryClient.capture(e, Map.of("issueKey", issueEvent.getIssue().getKey()));
       log.error("onIssueEvent({})", issueEvent, e);
     }
   }
@@ -195,8 +192,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
                       recipient.getEmailAddress(), message, getAllIssueButtons(issueKey)));
             }
           } catch (Exception e) {
-            SentryClient.capture(event.toString());
-            SentryClient.capture(e);
+            SentryClient.capture(e, Map.of("issueKey", issueKey, "recipient", recipient.getKey()));
           } finally {
             jiraAuthenticationContext.setLoggedInUser(contextUser);
           }
