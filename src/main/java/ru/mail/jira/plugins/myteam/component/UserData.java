@@ -41,9 +41,13 @@ public class UserData {
   }
 
   public boolean isEnabled(ApplicationUser user) {
-    String enabled = userPropertyManager.getPropertySet(user).getString(IS_ENABLED_USER_PROPERTY);
-    if (enabled == null) return pluginData.isEnabledByDefault();
-    return Boolean.parseBoolean(enabled);
+    try {
+      String enabled = userPropertyManager.getPropertySet(user).getString(IS_ENABLED_USER_PROPERTY);
+      if (enabled == null) return pluginData.isEnabledByDefault();
+      return Boolean.parseBoolean(enabled);
+    } catch (Exception e) {
+      return true;
+    }
   }
 
   public void setEnabled(ApplicationUser user, boolean enabled) {
