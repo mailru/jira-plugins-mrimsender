@@ -271,7 +271,7 @@ public class FilterSubscriptionService {
         return;
       }
 
-      if (subscription.isSeparateIssues() && subscriber != null) {
+      if (subscription.isSeparateIssues()) {
         sendMessage(
             messageFormatter.formatIssueFilterSubscription(
                 searchRequest.getName(), searchRequest.getId(), searchResults.getTotal()),
@@ -280,7 +280,7 @@ public class FilterSubscriptionService {
             null);
         for (Issue issue : searchResults.getResults()) {
           sendMessage(
-              messageFormatter.createIssueSummary(issue, subscriber), subscriber, chatId, issue);
+              messageFormatter.createIssueSummary(issue, jqlUser), subscriber, chatId, issue);
         }
       } else {
         sendMessage(

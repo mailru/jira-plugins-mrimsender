@@ -723,7 +723,6 @@ function FilterSubscriptionForm({
                   'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues',
                 )}
                 defaultIsChecked={currentValue?.separateIssues}
-                isDisabled={recipientsType === 'CHAT'}
               >
                 {({ fieldProps }) => (
                   <>
@@ -735,7 +734,6 @@ function FilterSubscriptionForm({
                       )}
                       size="medium"
                       onChange={fieldProps.onChange}
-                      isDisabled={recipientsType === 'CHAT'}
                     />
                     {recipientsType === 'CHAT' && (
                       <ErrorMessage>
