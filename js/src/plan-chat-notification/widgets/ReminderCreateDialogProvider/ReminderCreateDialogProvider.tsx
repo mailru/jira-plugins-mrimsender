@@ -1,7 +1,7 @@
 import { Modal, StatusesContext } from '@atlascommunity/atlas-ui'
 import { I18n } from '@atlassian/wrm-react-i18n'
 import { DateInput, FormItem, Spinner, Textarea } from '@vkontakte/vkui'
-
+import AJS from 'AJS'
 import React, {
   createContext,
   Suspense,
@@ -51,9 +51,12 @@ const ReminderCreateDialogProvider = ({
   const { addStatus } = useContext(StatusesContext)
 
   const onSubmit = handleSubmit((data) => {
-    addReminder(data as any)
+    addReminder({
+      ...(data as any),
+      ...{ issueKey: AJS.Meta.get('issue-key') },
+    })
       .then(() => {
-        addStatus('Remind has been set', 'success')
+        addStatus('Reminder has been set', 'success')
         onClose()
       })
       .catch((e) => {
