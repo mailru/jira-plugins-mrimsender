@@ -25,7 +25,7 @@ public class ReminderController {
   @POST
   @RequiresXsrfCheck
   @Path("")
-  public int createChatSettings(final ReminderDto reminder) {
+  public int createReminder(final ReminderDto reminder) {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     return reminderService.addReminder(reminder, user);
   }

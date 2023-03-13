@@ -142,7 +142,6 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
               "issueKey", issueKey != null ? issueKey : StringUtils.EMPTY));
     } finally {
       reminderRepository.delete(r);
-      System.out.println(r.getIssueKey());
     }
   }
 
@@ -168,7 +167,7 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
     calendar.add(Calendar.DAY_OF_YEAR, 1);
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    List<String> args = Arrays.asList(issueKey, format.format(calendar.getTime()));
+    List<String> args = new ArrayList<>(Arrays.asList(issueKey, format.format(calendar.getTime())));
 
     if (r.getDescription() != null && r.getDescription().trim().length() > 0) {
       args.add(r.getDescription());
