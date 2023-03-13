@@ -2,15 +2,16 @@
 package ru.mail.jira.plugins.myteam.controller.dto;
 
 import java.util.Date;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.db.model.Reminder;
 
+@SuppressWarnings({"MissingSummary", "NullAway", "CanIgnoreReturnValueSuggester"})
 @Getter
 @Setter
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class ReminderDto {
   int id;
   @Nullable String issueKey;

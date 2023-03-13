@@ -9,24 +9,29 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
+import com.atlassian.sal.api.message.I18nResolver;
 import com.atlassian.scheduler.JobRunnerResponse;
 import com.atlassian.scheduler.SchedulerService;
 import com.atlassian.scheduler.config.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.ReminderGenerator;
 import ru.mail.jira.plugins.myteam.controller.dto.ReminderDto;
 import ru.mail.jira.plugins.myteam.db.model.Reminder;
 import ru.mail.jira.plugins.myteam.db.repository.ReminderRepository;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.service.ReminderService;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
@@ -41,6 +46,7 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
 
   private final SchedulerService schedulerService;
   private final TimeZoneManager timeZoneManager;
+  private final I18nResolver i18nResolver;
   private final UserChatService userChatService;
   private final MessageFormatter messageFormatter;
   private final ReminderRepository reminderRepository;
@@ -49,12 +55,14 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
   public ReminderServiceImpl(
       @ComponentImport SchedulerService schedulerService,
       @ComponentImport TimeZoneManager timeZoneManager,
+      @ComponentImport I18nResolver i18nResolver,
       @ComponentImport IssueService issueService,
       UserChatService userChatService,
       MessageFormatter messageFormatter,
       ReminderRepository reminderRepository) {
     this.schedulerService = schedulerService;
     this.timeZoneManager = timeZoneManager;
+    this.i18nResolver = i18nResolver;
     this.userChatService = userChatService;
     this.messageFormatter = messageFormatter;
     this.reminderRepository = reminderRepository;
@@ -62,9 +70,9 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
   }
 
   @Override
-  public int addReminder(ReminderDto reminder, ApplicationUser user) {
+  public int addReminder(ReminderDto reminder, @Nullable ApplicationUser user) {
     IssueService.IssueResult res = issueService.getIssue(user, reminder.getIssueKey());
-    if (!res.isValid()) {
+    if (!res.isValid() || user == null) {
       throw new IssuePermissionException();
     }
 
@@ -122,7 +130,8 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
                 issue.getSummary(),
                 issueKey,
                 messageFormatter.createMarkdownIssueShortLink(issueKey),
-                r.getDescription()));
+                r.getDescription()),
+            getMsgButtons(issueKey, r));
       }
     } catch (Exception e) {
       SentryClient.capture(
@@ -144,5 +153,33 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
   public void destroy() {
     schedulerService.unscheduleJob(JOB_ID);
     schedulerService.unregisterJobRunner(JOB_RUNNER_KEY);
+  }
+
+  private List<List<InlineKeyboardMarkupButton>> getMsgButtons(String issueKey, Reminder r) {
+    List<InlineKeyboardMarkupButton> buttons = new ArrayList<>();
+    buttons.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getRawText(
+                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.text"),
+            String.join("-", CommandRuleType.Issue.getName(), issueKey)));
+
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(r.getDate());
+    calendar.add(Calendar.DAY_OF_YEAR, 1);
+    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    List<String> args = Arrays.asList(issueKey, format.format(calendar.getTime()));
+
+    if (r.getDescription() != null && r.getDescription().trim().length() > 0) {
+      args.add(r.getDescription());
+    }
+
+    buttons.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getRawText(
+                "ru.mail.jira.plugins.myteam.mrimsenderEventListener.remindTomorrow.text"),
+            String.join("-", CommandRuleType.IssueRemind.getName(), RuleType.joinArgs(args))));
+
+    return Collections.singletonList(buttons);
   }
 }
