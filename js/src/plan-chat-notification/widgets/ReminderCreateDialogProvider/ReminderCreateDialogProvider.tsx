@@ -12,7 +12,6 @@ import React, {
 import { useForm, Controller } from 'react-hook-form'
 import './ReminderCreateDialogProvider.pcss'
 import '@vkontakte/vkui/dist/vkui.css'
-import '@atlascommunity/atlas-ui/style.css'
 import addReminder from './api/reminderApi'
 
 type ShowDialogHandler = () => void
