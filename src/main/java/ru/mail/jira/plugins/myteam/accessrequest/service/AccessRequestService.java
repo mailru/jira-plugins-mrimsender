@@ -49,6 +49,8 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
 @Validated
 @SuppressWarnings("NullAway")
 public class AccessRequestService {
+  private static final int SEND_ACCESS_REQUEST_NAX_USER_COUNT = 50;
+
   private final AccessRequestConfigurationRepository accessRequestConfigurationRepository;
   private final AccessRequestHistoryRepository accessRequestHistoryRepository;
   private final DtoUtils dtoUtils;
@@ -178,7 +180,8 @@ public class AccessRequestService {
       if (configuration != null) {
         accessRequestDto.getUsers().stream()
             .map(dto -> userManager.getUserByKey(dto.getUserKey()))
-            .filter(Objects::nonNull)
+            .filter(user -> user != null && user.isActive())
+            .limit(SEND_ACCESS_REQUEST_NAX_USER_COUNT)
             .forEach(
                 user -> {
                   try {
