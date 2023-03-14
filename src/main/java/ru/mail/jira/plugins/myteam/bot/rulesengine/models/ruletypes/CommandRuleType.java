@@ -7,6 +7,7 @@ public enum CommandRuleType implements RuleType {
   Help("help"),
   Menu("menu"),
   Issue("issue"),
+  IssueRemind("issue_remind"),
   SearchByJql("jql"),
   WatchingIssues("watching"),
   AssignedIssues("assigned"),
@@ -25,10 +26,5 @@ public enum CommandRuleType implements RuleType {
 
   CommandRuleType(String name) {
     this.name = name;
-  }
-
-  @Override
-  public boolean equalsName(String otherName) {
-    return name.equals(otherName);
   }
 }

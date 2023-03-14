@@ -12,14 +12,16 @@ module.exports = {
     },
   },
   'wrm/context-path': {
-    dependency: 'com.atlassian.plugins.atlassian-plugins-webresource-plugin:context-path',
+    dependency:
+      'com.atlassian.plugins.atlassian-plugins-webresource-plugin:context-path',
     import: {
       amd: 'wrm/context-path',
       var: 'AJS.contextPath',
     },
   },
   'wrm/format': {
-    dependency: 'com.atlassian.plugins.atlassian-plugins-webresource-plugin:format',
+    dependency:
+      'com.atlassian.plugins.atlassian-plugins-webresource-plugin:format',
     import: {
       var: 'require("wrm/format")',
       amd: 'wrm/format',
@@ -54,10 +56,18 @@ module.exports = {
     },
   },
   'wrm/i18n': {
-    dependency: 'com.atlassian.plugins.atlassian-plugins-webresource-plugin:i18n',
+    dependency:
+      'com.atlassian.plugins.atlassian-plugins-webresource-plugin:i18n',
     import: {
       var: 'require("wrm/i18n")',
       amd: 'wrm/i18n',
     },
   },
-};
+  'jira/util/urls': {
+    dependency: 'jira.webresources:jira-urlhelpers',
+    import: {
+      var: "require('jira/util/urls')",
+      amd: 'jira/util/urls',
+    },
+  },
+}

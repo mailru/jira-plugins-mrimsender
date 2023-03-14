@@ -8,6 +8,7 @@ const WebpackBar = require('webpackbar');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const { DuplicatesPlugin } = require('inspectpack/plugin');
 const WRM_DEPENDENCIES_CONFIG = require(`./wrm-dependencies-conf.js`);
+const postcssImportResolver = require('postcss-import-resolver')
 
 const PLUGIN_NAME = 'myteam.bot';
 const PLUGIN_KEY = 'ru.mail.jira.plugins.myteam'; // current plugin key
@@ -17,11 +18,14 @@ const BUNDLE_OUTPUT_DIR_NAME = 'webpack_bundles'; // directory which contains al
 const FRONTEND_TARGET_DIR = path.join(MVN_OUTPUT_DIR, ...PLUGIN_KEY.split('.'), BUNDLE_OUTPUT_DIR_NAME); // jira target dir for bundle outputs
 
 //so this is an object which module.exports should return
+const alias = {};
+
 const config = {
   target: 'web',
   context: FRONTEND_SRC_DIR, // directory where to look for all entries
   entry: {
     'create-chat-panel': [path.join(FRONTEND_SRC_DIR, 'create-chat-panel', 'index.tsx')], // build entry point
+    'plan-chat-notification':[path.join(FRONTEND_SRC_DIR, 'plan-chat-notification', 'index.tsx')], // build entry point
     'chat-settings-panel': [path.join(FRONTEND_SRC_DIR, 'chat-settings-panel', 'index.tsx')],
     'project-chat-settings-panel': [path.join(FRONTEND_SRC_DIR, 'project-chat-settings-panel', 'index.tsx')],
     'manage-filter-subscriptions-page': [path.join(FRONTEND_SRC_DIR, 'manage-filter-subscriptions-page', 'index.tsx')],
@@ -31,9 +35,19 @@ const config = {
   module: {
     rules: [
       {
+        test: /\.m?js/,
+        resolve: {
+          fullySpecified: false,
+        },
+      },
+      {
         // more info about ts-loader configuration here: https://github.com/TypeStrong/ts-loader
         test: /\.(ts|tsx)$/, // compiles all TypeScript files
-        use: ['babel-loader', 'ts-loader'], // TypeScript loader for webpack
+        use: ['babel-loader',  {
+            loader: 'ts-loader',
+            options: { compilerOptions: { noEmit: false } },
+          },
+], // TypeScript loader for webpack
         exclude: /node_modules/, // excludes node_modules directory
       },
       {
@@ -44,6 +58,25 @@ const config = {
           },
         ],
       },
+      {
+        test: /\.(pcss|css)$/i,
+        use: [
+          { loader: 'style-loader' },
+          { loader: 'css-loader' },
+          {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                plugins: {
+                  'postcss-import': {
+                    resolve: postcssImportResolver({ alias }),
+                  },
+                },
+              },
+            },
+          },
+        ]
+      }
     ],
   },
   plugins: [
@@ -56,6 +89,7 @@ const config = {
         'chat-settings-panel': [PLUGIN_KEY + '.' + 'chat.settings.panel'], // Specify in which web-resource context to include entrypoint resources
         'project-chat-settings-panel': [PLUGIN_KEY + '.' + 'project.chat.settings.panel'],
         'create-chat-panel': ['jira.browse.project', 'jira.navigator.advanced'],
+        'plan-chat-notification': ['jira.browse.project', 'jira.navigator.advanced'],
         'manage-filter-subscriptions-page': [PLUGIN_KEY + '.' + 'manage.filter.subscriptions.page'],
         'access-request-configuration-page': [PLUGIN_KEY + '.' + 'access.request.configuration.page'],
         'access-request-page': [PLUGIN_KEY + '.' + 'access.request.page'],
