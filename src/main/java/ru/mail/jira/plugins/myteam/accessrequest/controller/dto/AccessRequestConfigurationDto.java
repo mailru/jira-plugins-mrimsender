@@ -9,8 +9,10 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.commons.dto.jira.UserDto;
+import ru.mail.jira.plugins.myteam.accessrequest.controller.validation.annotation.GroupsUserCountValidation;
 import ru.mail.jira.plugins.myteam.accessrequest.controller.validation.annotation.OneNotFalseValidation;
 import ru.mail.jira.plugins.myteam.accessrequest.controller.validation.annotation.OneNotNullValidation;
+import ru.mail.jira.plugins.myteam.accessrequest.controller.validation.annotation.ProjectRolesUserCountValidation;
 
 @SuppressWarnings("NullAway")
 @Getter
@@ -22,6 +24,7 @@ import ru.mail.jira.plugins.myteam.accessrequest.controller.validation.annotatio
 @OneNotFalseValidation(
     fields = {"sendEmail", "sendMessage"},
     errorField = "notifications")
+@ProjectRolesUserCountValidation
 public class AccessRequestConfigurationDto {
   @Nullable @XmlElement private Integer id;
 
@@ -29,7 +32,7 @@ public class AccessRequestConfigurationDto {
 
   @Nullable @XmlElement private List<UserDto> users;
 
-  @Nullable @XmlElement private List<String> groups;
+  @GroupsUserCountValidation @Nullable @XmlElement private List<String> groups;
 
   @Nullable @XmlElement private List<ProjectRoleDto> projectRoles;
 
