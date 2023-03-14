@@ -126,4 +126,9 @@
         <condition class="com.atlassian.jira.plugin.webfragment.conditions.CanAdministerProjectCondition"/>
         <link linkId="access-request-config-link">/secure/AccessRequestConfiguration.jspa?project=$project.key</link>
     </web-item>
+
+    <web-item name="Reminder Item" key="reminder-menu-item"  section="operations-voteswatchers" weight="100">
+        <label>Add Reminder</label>
+        <link linkId="myteam-chat-notification-action"/>
+    </web-item>
 </web>

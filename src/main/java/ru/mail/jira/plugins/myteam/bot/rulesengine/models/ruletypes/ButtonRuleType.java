@@ -20,9 +20,4 @@ public enum ButtonRuleType implements RuleType {
   ButtonRuleType(String name) {
     this.name = name;
   }
-
-  @Override
-  public boolean equalsName(String otherName) {
-    return name.equals(otherName);
-  }
 }

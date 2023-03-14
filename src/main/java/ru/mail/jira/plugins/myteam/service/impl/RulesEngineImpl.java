@@ -6,6 +6,7 @@ import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.RulesEngineParameters;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.core.RulesEngine;
@@ -22,6 +23,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.editing.
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.CommonButtonsService;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNoPermissionErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNotFoundErrorRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.UnknownErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CreateIssueByReplyRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.SearchByJqlIssuesRule;
@@ -34,10 +36,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.EmptyState;
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
-import ru.mail.jira.plugins.myteam.service.IssueCreationService;
-import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
-import ru.mail.jira.plugins.myteam.service.IssueService;
-import ru.mail.jira.plugins.myteam.service.UserChatService;
+import ru.mail.jira.plugins.myteam.service.*;
 
 @Component
 @ExportAsService(LifecycleAware.class)
@@ -54,6 +53,7 @@ public class RulesEngineImpl
   private final IssueService issueService;
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final IssueTextConverter issueTextConverter;
+  private final ReminderService reminderService;
 
   public RulesEngineImpl(
       CommonButtonsService commonButtonsService,
@@ -61,13 +61,15 @@ public class RulesEngineImpl
       UserChatService userChatService,
       IssueService issueService,
       IssueCreationSettingsService issueCreationSettingsService,
-      IssueTextConverter issueTextConverter) {
+      IssueTextConverter issueTextConverter,
+      ReminderService reminderService) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
     this.issueService = issueService;
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.issueTextConverter = issueTextConverter;
+    this.reminderService = reminderService;
 
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
@@ -110,6 +112,8 @@ public class RulesEngineImpl
     commandsRuleEngine.registerRule(new AssignIssueCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(
         new ViewIssueCommandRule(userChatService, this, commonButtonsService, issueService));
+    commandsRuleEngine.registerRule(
+        new IssueRemindCommandRule(userChatService, this, reminderService));
     commandsRuleEngine.registerRule(new WatchIssueCommandRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(new IssueTransitionRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(
@@ -155,6 +159,7 @@ public class RulesEngineImpl
         new SelectAdditionalFieldRule(userChatService, this, issueCreationService));
 
     // Errors
+    errorsRuleEngine.registerRule(new UnknownErrorRule(userChatService, this));
     errorsRuleEngine.registerRule(new IssueNotFoundErrorRule(userChatService, this));
     errorsRuleEngine.registerRule(new IssueNoPermissionErrorRule(userChatService, this));
   }
@@ -186,12 +191,19 @@ public class RulesEngineImpl
   }
 
   @Override
-  public void fireError(ErrorRuleType errorType, MyteamEvent event, Exception e) {
+  public void fireError(ErrorRuleType errorType, MyteamEvent event, @Nullable Exception e) {
     Facts facts = new Facts();
     facts.add(new Fact<>("error", errorType));
     facts.add(new Fact<>("event", event));
-    facts.add(new Fact<>("exception", e));
+    if (e != null) {
+      facts.add(new Fact<>("exception", e));
+    }
     errorsRuleEngine.fire(facts);
+  }
+
+  @Override
+  public void fireError(ErrorRuleType errorType, MyteamEvent event) {
+    fireError(errorType, event, null);
   }
 
   private Facts formBasicFacts(MyteamEvent event, String args) {

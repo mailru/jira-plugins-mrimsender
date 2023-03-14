@@ -19,9 +19,4 @@ public enum StateActionRuleType implements RuleType {
   StateActionRuleType(String name) {
     this.name = name;
   }
-
-  @Override
-  public boolean equalsName(String otherName) {
-    return name.equals(otherName);
-  }
 }
