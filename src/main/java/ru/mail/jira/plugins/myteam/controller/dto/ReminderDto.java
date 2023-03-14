@@ -15,7 +15,7 @@ import ru.mail.jira.plugins.myteam.db.model.Reminder;
 public class ReminderDto {
   int id;
   @Nullable String issueKey;
-  @Nullable private String VKteamsUserId;
+  @Nullable private String userEmail;
   @Nullable private Date date;
   @Nullable private String description;
 
@@ -23,7 +23,7 @@ public class ReminderDto {
     this.id = entity.getID();
     this.issueKey = entity.getIssueKey();
     this.date = entity.getDate();
-    this.VKteamsUserId = entity.getVKteamsUserId();
+    this.userEmail = entity.getUserEmail();
     this.description = entity.getDescription();
   }
 }

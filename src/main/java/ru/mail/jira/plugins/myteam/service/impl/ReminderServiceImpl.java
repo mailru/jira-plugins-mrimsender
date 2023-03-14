@@ -76,7 +76,7 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
       throw new IssuePermissionException();
     }
 
-    reminder.setVKteamsUserId(user.getEmailAddress());
+    reminder.setUserEmail(user.getEmailAddress());
     return reminderRepository.create(reminder).getID();
   }
 
@@ -101,7 +101,7 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
       JobConfig jobConfig =
           JobConfig.forJobRunnerKey(JOB_RUNNER_KEY)
               .withSchedule(
-                  Schedule.forCronExpression("0 * * ? * *", timeZoneManager.getDefaultTimezone()))
+                  Schedule.forCronExpression("* * * * *", timeZoneManager.getDefaultTimezone()))
               .withRunMode(RunMode.RUN_ONCE_PER_CLUSTER);
       schedulerService.scheduleJob(JOB_ID, jobConfig);
     } catch (Exception e) {
@@ -110,7 +110,7 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
   }
 
   private void sendMessage(Reminder r) {
-    String chatId = r.getVKteamsUserId();
+    String chatId = r.getUserEmail();
     String issueKey = r.getIssueKey();
 
     IssueService.IssueResult res =

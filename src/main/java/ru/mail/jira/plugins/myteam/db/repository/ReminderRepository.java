@@ -30,7 +30,7 @@ public class ReminderRepository extends PagingAndSortingRepository<Reminder, Rem
     entity.setIssueKey(dto.getIssueKey());
     entity.setDate(dto.getDate());
     entity.setDescription(dto.getDescription());
-    entity.setVKteamsUserId(dto.getVKteamsUserId());
+    entity.setUserEmail(dto.getUserEmail());
   }
 
   @Override

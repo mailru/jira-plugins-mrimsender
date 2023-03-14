@@ -66,7 +66,7 @@ public class IssueRemindCommandRule extends BaseRule {
     }
 
     builder.issueKey(parsedArgs.get(0));
-    builder.VKteamsUserId(event.getUserId());
+    builder.userEmail(event.getUserId());
 
     if (parsedArgs.size() == 3) {
       builder.description(parsedArgs.get(2));
