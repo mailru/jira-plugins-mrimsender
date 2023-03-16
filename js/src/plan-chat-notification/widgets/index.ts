@@ -1,5 +1,6 @@
-/* eslint-disable import/prefer-default-export */
 export {
   useReminderDialog,
-  default as ReminderCreateDialogProvider,
-} from './ReminderCreateDialogProvider/ReminderCreateDialogProvider'
+  ReminderCreateDialogProvider,
+} from './ReminderCreateDialogProvider'
+
+export { MessageProvider } from './MessageProvider'

@@ -1,8 +1,15 @@
-import { AppProvider } from '@atlascommunity/atlas-ui'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { I18n } from '@atlassian/wrm-react-i18n'
-import { ReminderCreateDialogProvider, useReminderDialog } from './widgets'
+
+import { AppRoot } from '@vkontakte/vkui'
+import {
+  MessageProvider,
+  ReminderCreateDialogProvider,
+  useReminderDialog,
+} from './widgets'
+import '@vkontakte/vkui/dist/vkui.css'
+// import '@atlascommunity/atlas-ui/style.css'
 
 const PANEL_CONTAINER_ID_SELECTOR = 'myteam-chat-notification-action'
 
@@ -18,13 +25,16 @@ const MenuItem = () => {
 
 export default function init(): void {
   const root = document.getElementById(PANEL_CONTAINER_ID_SELECTOR)
-
   ReactDOM.render(
-    <AppProvider isStatusesEnable appMode="partial">
-      <ReminderCreateDialogProvider>
-        <MenuItem />
-      </ReminderCreateDialogProvider>
-    </AppProvider>,
+    <AppRoot mode="embedded">
+      {/* // <AppProvider appMode="embedded"> */}
+      <MessageProvider>
+        <ReminderCreateDialogProvider>
+          <MenuItem />
+        </ReminderCreateDialogProvider>
+      </MessageProvider>
+    </AppRoot>,
+    // </AppProvider>,
     root
   )
 }
