@@ -13,14 +13,14 @@ import com.atlassian.sal.api.message.I18nResolver;
 import com.atlassian.scheduler.JobRunnerResponse;
 import com.atlassian.scheduler.SchedulerService;
 import com.atlassian.scheduler.config.*;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
@@ -37,12 +37,11 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Component
 @ExportAsService
+@Slf4j
 public class ReminderServiceImpl implements LifecycleAware, DisposableBean, ReminderService {
   private static final JobRunnerKey JOB_RUNNER_KEY =
       JobRunnerKey.of(ReminderService.class.getName());
   private static final JobId JOB_ID = JobId.of(ReminderService.class.getName());
-
-  private static final Logger log = LoggerFactory.getLogger(ReminderService.class);
 
   private final SchedulerService schedulerService;
   private final TimeZoneManager timeZoneManager;
@@ -101,11 +100,11 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
       JobConfig jobConfig =
           JobConfig.forJobRunnerKey(JOB_RUNNER_KEY)
               .withSchedule(
-                  Schedule.forCronExpression("* * * * *", timeZoneManager.getDefaultTimezone()))
+                  Schedule.forCronExpression("0 * * ? * * *", timeZoneManager.getDefaultTimezone()))
               .withRunMode(RunMode.RUN_ONCE_PER_CLUSTER);
       schedulerService.scheduleJob(JOB_ID, jobConfig);
     } catch (Exception e) {
-      log.error("Error while initializing event publisher for contragents", e);
+      log.error("Error while initializing reminder cron", e);
     }
   }
 
@@ -165,9 +164,13 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
     Calendar calendar = Calendar.getInstance();
     calendar.setTime(r.getDate());
     calendar.add(Calendar.DAY_OF_YEAR, 1);
-    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    List<String> args = new ArrayList<>(Arrays.asList(issueKey, format.format(calendar.getTime())));
+    List<String> args =
+        new ArrayList<>(
+            Arrays.asList(
+                issueKey,
+                DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(
+                    ZonedDateTime.ofInstant(calendar.toInstant(), ZoneId.systemDefault()))));
 
     if (r.getDescription() != null && r.getDescription().trim().length() > 0) {
       args.add(r.getDescription());
