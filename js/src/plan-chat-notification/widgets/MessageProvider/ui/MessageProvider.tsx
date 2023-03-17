@@ -11,56 +11,38 @@ import React, {
 
 import './MessageProvider.pcss'
 
-export type MessageType = 'neutral' | 'positive' | 'negative'
-
 type MessageContextType = {
   message: string
   setMessage: Dispatch<SetStateAction<string>>
-  messageType: MessageType
-  setMessageType: Dispatch<SetStateAction<MessageType>>
-  setIsVisible: Dispatch<SetStateAction<boolean>>
 }
 
 export const MessageContext = createContext<MessageContextType | null>(null)
 
 const MessageProvider = ({ children }: { children: ReactNode }) => {
   const [message, setMessage] = useState('')
-  const [messageType, setMessageType] = useState<MessageType>('neutral')
-  const [isVisible, setIsVisible] = useState(false)
 
-  // eslint-disable-next-line consistent-return
+  const [snackbar, setSnackbar] = React.useState<ReactNode>(null)
+
   useEffect(() => {
-    if (isVisible) {
-      const timer = setTimeout(() => {
-        setIsVisible(false)
-        setMessage('')
-        setMessageType('neutral')
-      }, 5000)
-      return () => clearTimeout(timer)
-    }
-  }, [isVisible])
+    setSnackbar(
+      <Snackbar className="status-message" onClose={() => setSnackbar(null)}>
+        {message}
+      </Snackbar>
+    )
+  }, [message])
 
   const messageContextValue = useMemo(
     () => ({
       message,
       setMessage,
-      messageType,
-      setMessageType,
-      setIsVisible,
     }),
-    [message, setMessage, messageType, setMessageType, setIsVisible]
+    [message, setMessage]
   )
-
-  const classes = ['status-message', messageType].join(' ')
 
   return (
     <MessageContext.Provider value={messageContextValue}>
       {children}
-      {isVisible ? (
-        <Snackbar className={classes} onClose={() => setIsVisible(false)}>
-          {message}
-        </Snackbar>
-      ) : null}
+      {snackbar}
     </MessageContext.Provider>
   )
 }

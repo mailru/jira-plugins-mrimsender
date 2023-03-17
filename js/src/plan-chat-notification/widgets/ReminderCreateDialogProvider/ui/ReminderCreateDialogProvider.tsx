@@ -49,14 +49,13 @@ const ReminderCreateDialogProvider = ({
       ...{ issueKey: AJS.Meta.get('issue-key') },
     })
       .then(() => {
-        showMessage('Reminder has been set', 'positive')
+        showMessage('Reminder has been set')
         onClose()
       })
       .catch((e) => {
         showMessage(
           `Error creating reminder.
-        ${e.message}`,
-          'negative'
+        ${e.message}`
         )
       })
   })
