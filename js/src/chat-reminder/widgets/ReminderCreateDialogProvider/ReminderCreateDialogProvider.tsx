@@ -5,7 +5,7 @@ import { DateInput, FormItem, Textarea } from '@vkontakte/vkui'
 import AJS from 'AJS'
 import React, { createContext, useContext, useMemo, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
-import { useMessage } from '../../MessageProvider'
+import { useMessage } from '../MessageProvider'
 
 import './ReminderCreateDialogProvider.pcss'
 
@@ -53,13 +53,14 @@ const ReminderCreateDialogProvider = ({
         ...{ issueKey: AJS.Meta.get('issue-key') },
       })
       .then(() => {
-        showMessage('Reminder has been set')
+        showMessage(
+          I18n.getText('ru.mail.jira.plugins.myteam.reminder.create.success')
+        )
         onClose()
       })
-      .catch((e) => {
+      .catch(() => {
         showMessage(
-          `Error creating reminder.
-      ${e.message}`
+          I18n.getText('ru.mail.jira.plugins.myteam.reminder.create.error')
         )
       })
   })

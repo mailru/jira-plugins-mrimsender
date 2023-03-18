@@ -3,7 +3,7 @@ import AJS from 'AJS'
 import { IReminder } from '@shared/reminder/types'
 import { Icon16Delete } from '@vkontakte/icons'
 import { Headline } from '@vkontakte/vkui'
-
+import { I18n } from '@atlassian/wrm-react-i18n'
 import { useDeleteReminder, useIssueReminders } from '@shared/reminder/query'
 import './IssueReminders.pcss'
 
@@ -12,7 +12,7 @@ const Reminder = ({
   onDelete,
 }: {
   reminder: IReminder
-  onDelete: (id: number) => void
+  onDelete: (reminder: IReminder) => void
 }) => (
   <li key={reminder.id}>
     {new Date(reminder.date)
@@ -26,7 +26,7 @@ const Reminder = ({
         hour12: false,
       })
       .replace(':00 GMT', '')}
-    <Icon16Delete onClick={() => onDelete(reminder.id)} />
+    <Icon16Delete onClick={() => onDelete(reminder)} />
   </li>
 )
 
@@ -41,7 +41,7 @@ const IssueReminders = () => {
   return (
     <>
       <Headline className="remiders-header" weight="1" level="2">
-        Reminders
+        {I18n.getText('ru.mail.jira.plugins.myteam.reminders.title')}
       </Headline>
       <ul className="issue-reminders-list">
         {data?.map((reminder) => (

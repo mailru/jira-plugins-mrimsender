@@ -9,17 +9,20 @@ import { AxiosError } from 'axios'
 
 import reminderKeys from './keys'
 
-const useDeleteReminder = (): UseMutationResult<void, AxiosError, number> => {
+const useDeleteReminder = (): UseMutationResult<
+  void,
+  AxiosError,
+  IReminder
+> => {
   const queryClient = useQueryClient()
 
-  return useMutation((id: number) => deleteReminder(id), {
-    onSuccess: (_, id) => {
+  return useMutation((reminder: IReminder) => deleteReminder(reminder.id), {
+    onSuccess: (_, r) => {
       const previousGroups: IReminder[] =
-        queryClient.getQueryData([reminderKeys.all]) || []
-      queryClient.setQueryData(
-        [reminderKeys.all],
-        [...previousGroups.filter((r) => r.id !== id)]
-      )
+        queryClient.getQueryData(reminderKeys.issueReminders(r.issueKey)) || []
+      queryClient.setQueryData(reminderKeys.issueReminders(r.issueKey), [
+        ...previousGroups.filter((r1) => r1.id !== r.id),
+      ])
     },
   })
 }

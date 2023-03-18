@@ -24,11 +24,13 @@ const MessageProvider = ({ children }: { children: ReactNode }) => {
   const [snackbar, setSnackbar] = React.useState<ReactNode>(null)
 
   useEffect(() => {
-    setSnackbar(
-      <Snackbar className="status-message" onClose={() => setSnackbar(null)}>
-        {message}
-      </Snackbar>
-    )
+    if (message && message.trim().length > 0) {
+      setSnackbar(
+        <Snackbar className="status-message" onClose={() => setSnackbar(null)}>
+          {message}
+        </Snackbar>
+      )
+    }
   }, [message])
 
   const messageContextValue = useMemo(

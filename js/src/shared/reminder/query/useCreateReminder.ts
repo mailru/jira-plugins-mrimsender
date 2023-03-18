@@ -17,9 +17,10 @@ const useCreateReminder = (): UseMutationResult<number, AxiosError, Params> => {
     onSuccess: (id) => {
       getReminder(id).then((r) => {
         const previousGroups: Array<IReminder> =
-          queryClient.getQueryData([reminderKeys.all]) || []
+          queryClient.getQueryData(reminderKeys.issueReminders(r.issueKey)) ||
+          []
         queryClient.setQueryData(
-          [reminderKeys.all],
+          reminderKeys.issueReminders(r.issueKey),
           // @ts-ignore
           [...previousGroups, r].sort((a, b) => a.date - b.date)
         )
