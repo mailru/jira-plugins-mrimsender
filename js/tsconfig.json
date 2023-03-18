@@ -1,5 +1,11 @@
 {
   "extends": "@atlascommunity/tsconfig-base",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["./src/shared/*"]
+    }
+  },
   "include": [
     "./typings/*.d.ts",
     "./node_modules/@atlaskit/theme/**/*.d.ts",

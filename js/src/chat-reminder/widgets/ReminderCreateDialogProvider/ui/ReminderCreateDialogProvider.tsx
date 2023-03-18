@@ -1,11 +1,12 @@
 import { Modal } from '@atlascommunity/atlas-ui'
 import { I18n } from '@atlassian/wrm-react-i18n'
+import { useCreateReminder } from '@shared/reminder/query'
 import { DateInput, FormItem, Textarea } from '@vkontakte/vkui'
 import AJS from 'AJS'
 import React, { createContext, useContext, useMemo, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { useMessage } from '../../MessageProvider'
-import addReminder from '../api/reminderApi'
+
 import './ReminderCreateDialogProvider.pcss'
 
 type ShowDialogHandler = () => void
@@ -43,11 +44,14 @@ const ReminderCreateDialogProvider = ({
 
   const { showMessage } = useMessage()
 
+  const addReminderMutation = useCreateReminder()
+
   const onSubmit = handleSubmit((data) => {
-    addReminder({
-      ...(data as any),
-      ...{ issueKey: AJS.Meta.get('issue-key') },
-    })
+    addReminderMutation
+      .mutateAsync({
+        ...(data as any),
+        ...{ issueKey: AJS.Meta.get('issue-key') },
+      })
       .then(() => {
         showMessage('Reminder has been set')
         onClose()
@@ -55,7 +59,7 @@ const ReminderCreateDialogProvider = ({
       .catch((e) => {
         showMessage(
           `Error creating reminder.
-        ${e.message}`
+      ${e.message}`
         )
       })
   })

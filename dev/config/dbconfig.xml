@@ -6,7 +6,7 @@
   <database-type>h2</database-type>
   <schema-name>PUBLIC</schema-name>
   <jdbc-datasource>
-    <url>jdbc:h2:retry:./target/jira/home/database/h2db</url>
+    <url>jdbc:h2:retry:/Users/n.udalov/Projects/jira-plugins-mrimsender/target/jira/home/database/h2db</url>
     <driver-class>org.h2.Driver</driver-class>
     <username>sa</username>
     <password></password>

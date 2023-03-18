@@ -44,4 +44,9 @@ public class ReminderRepository extends PagingAndSortingRepository<Reminder, Rem
             .where("date <= ?", Date.from(date.atZone(ZoneId.systemDefault()).toInstant()));
     return ao.find(Reminder.class, query);
   }
+
+  public Reminder[] getIssueReminders(String issueKey) {
+    Query query = Query.select().where("ISSUE_KEY = ?", issueKey).order("DATE ASC");
+    return ao.find(Reminder.class, query);
+  }
 }
