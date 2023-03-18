@@ -18,6 +18,8 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
+import javax.naming.NoPermissionException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -77,6 +79,40 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
 
     reminder.setUserEmail(user.getEmailAddress());
     return reminderRepository.create(reminder).getID();
+  }
+
+  @Override
+  public List<ReminderDto> getIssueReminders(String issueKey, ApplicationUser user) {
+    IssueService.IssueResult res = issueService.getIssue(user, issueKey);
+    if (!res.isValid() || user == null) {
+      throw new IssuePermissionException();
+    }
+
+    return Arrays.stream(reminderRepository.getIssueReminders(issueKey, user.getEmailAddress()))
+        .map(ReminderDto::new)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public void deleteReminder(Integer id, ApplicationUser user) throws NoPermissionException {
+    Reminder reminder =
+        reminderRepository
+            .findById(id)
+            .filter(r -> r.getUserEmail().equals(user.getEmailAddress()))
+            .orElseThrow(NoPermissionException::new);
+
+    reminderRepository.delete(reminder);
+  }
+
+  @Override
+  public ReminderDto getReminder(Integer id, ApplicationUser user) throws NoPermissionException {
+    Reminder reminder =
+        reminderRepository
+            .findById(id)
+            .filter(r -> r.getUserEmail().equals(user.getEmailAddress()))
+            .orElseThrow(NoPermissionException::new);
+
+    return new ReminderDto(reminder);
   }
 
   @Override

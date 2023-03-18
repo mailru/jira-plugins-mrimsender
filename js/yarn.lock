@@ -1628,10 +1628,22 @@
   resolved "https://registry.yarnpkg.com/@remix-run/router/-/router-1.3.3.tgz#d6d531d69c0fa3a44fda7dc00b20d49b44549164"
   integrity sha512-YRHie1yQEj0kqqCTCJEfHqYSSNlZQ696QJG+MMiW4mxSl9I0ojz/eRhJS4fs88Z5i6D1SmoF9d3K99/QOhI8/w==
 
+"@swc/helpers@^0.4.14":
+  version "0.4.14"
+  resolved "https://registry.yarnpkg.com/@swc/helpers/-/helpers-0.4.14.tgz#1352ac6d95e3617ccb7c1498ff019654f1e12a74"
+  integrity sha512-4C7nX/dvpzB7za4Ql9K81xK3HPxCpHMgwTZVyf+9JQ6VUbn9jjZVN7/Nkdz/Ugzs2CSjqnL/UPXroiVBVHUWUw==
+  dependencies:
+    tslib "^2.4.0"
+
 "@tanstack/query-core@4.26.1":
   version "4.26.1"
   resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-4.26.1.tgz#7a441086c4d3d79e1d156c0a355bd3567213626e"
   integrity sha512-Zrx2pVQUP4ndnsu6+K/m8zerXSVY8QM+YSbxA1/jbBY21GeCd5oKfYl92oXPK0hPEUtoNuunIdiq0ZMqLos+Zg==
+
+"@tanstack/query-core@4.27.0":
+  version "4.27.0"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-4.27.0.tgz#96bcef499008ea080b66611d029655e3ffdf8bea"
+  integrity sha512-sm+QncWaPmM73IPwFlmWSKPqjdTXZeFf/7aEmWh00z7yl2FjqophPt0dE1EHW9P1giMC5rMviv7OUbSDmWzXXA==
 
 "@tanstack/react-query@^4.16.1":
   version "4.26.1"
@@ -1639,6 +1651,14 @@
   integrity sha512-i3dnz4TOARGIXrXQ5P7S25Zfi4noii/bxhcwPurh2nrf5EUCcAt/95TB2HSmMweUBx206yIMWUMEQ7ptd6zwDg==
   dependencies:
     "@tanstack/query-core" "4.26.1"
+    use-sync-external-store "^1.2.0"
+
+"@tanstack/react-query@^4.27.0":
+  version "4.27.0"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query/-/react-query-4.27.0.tgz#624da94e2e44e08f846f8caf91320bf93bd72ac7"
+  integrity sha512-9S49LTFenWbxVHx0iR6qUXP+MKL5kwz/mV9pzfNXvdIM1R0vT+hiecCCL+ox/tD2glAQ51JHHMffQaRuH7wYRA==
+  dependencies:
+    "@tanstack/query-core" "4.27.0"
     use-sync-external-store "^1.2.0"
 
 "@types/anymatch@*":
@@ -1953,12 +1973,26 @@
     "@typescript-eslint/types" "5.54.1"
     eslint-visitor-keys "^3.3.0"
 
+"@vkontakte/icons-sprite@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@vkontakte/icons-sprite/-/icons-sprite-1.0.1.tgz#ed6ecff0a62b15e417f0628691440f87d576549e"
+  integrity sha512-qS5Iu4aGqfkZQcxIt1PTSUN/uXiLtXWuuZlQlkkAKLjjRmvEjwYWYlhR+bq0MSXLQU7++oN+qZ1xBUmzF80NpQ==
+  dependencies:
+    "@swc/helpers" "^0.4.14"
+
 "@vkontakte/icons@^1.201.0":
   version "1.213.0"
   resolved "https://registry.yarnpkg.com/@vkontakte/icons/-/icons-1.213.0.tgz#5da609b6a99eca9aa595f1aa2d4340437104a30f"
   integrity sha512-9fV6TWXpZKb3GXZZdBaSKk9+31roMR6Rih7xZOgAJoO+mhAYpJnDPWM95A1xpn2wJ561UoizflKbEpWMmdb4Pg==
   dependencies:
     svg-baker-runtime "1.4.7"
+
+"@vkontakte/icons@^2.22.0":
+  version "2.22.0"
+  resolved "https://registry.yarnpkg.com/@vkontakte/icons/-/icons-2.22.0.tgz#e6fe9229fcb468f62829965bbea07f0a28ba4c14"
+  integrity sha512-AXKUXna59y2NL55XNYAmFUMyQ3dxXn6mNWWerYPlnoHGYR40bY4U5OSadx8EHq8IWU2dwuiZQZ5MIgilHcwI/w==
+  dependencies:
+    "@vkontakte/icons-sprite" "^1.0.1"
 
 "@vkontakte/vk-bridge@^2.7.0":
   version "2.7.2"

@@ -39,6 +39,8 @@
     "@emotion/cache": "^10.0.29",
     "@emotion/core": "^10.1.1",
     "@emotion/styled": "^10.0.27",
+    "@tanstack/react-query": "^4.27.0",
+    "@vkontakte/icons": "^2.22.0",
     "@vkontakte/vkui": "^4.42.2",
     "axios": "^0.25.0",
     "dompurify": "^2.3.6",

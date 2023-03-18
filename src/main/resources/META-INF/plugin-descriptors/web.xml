@@ -106,7 +106,7 @@
     <web-panel key="myteam-chat-creation-panel" location="atl.jira.view.issue.right.context" weight="200">
         <condition class="ru.mail.jira.plugins.myteam.commons.conditions.MyteamCreateChatPanelCondition"/>
         <label key="ru.mail.jira.plugins.myteam.createChat.panel"/>
-        <resource name="view" type="static"><![CDATA[<div id="myteam-chat-creation-panel-container">MyTeam chat creation panel container here</div>]]></resource>
+        <resource name="view" type="static"><![CDATA[<div id="myteam-chat-creation-panel-container">MyTeam chat creation panel container here</div><div id="myteam-chat-reminders-list"></div>]]></resource>
         <resource type="download" name="icon" location="/ru/mail/jira/plugins/myteam/images/myteam.ico"/>
     </web-panel>
 
@@ -129,6 +129,6 @@
 
     <web-item name="Reminder Item" key="reminder-menu-item"  section="operations-voteswatchers" weight="100">
         <label>Add Reminder</label>
-        <link linkId="myteam-chat-notification-action"/>
+        <link linkId="myteam-chat-reminder-action"/>
     </web-item>
 </web>

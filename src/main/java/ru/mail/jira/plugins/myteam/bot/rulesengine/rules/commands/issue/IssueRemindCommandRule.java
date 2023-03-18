@@ -3,8 +3,9 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue;
 
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -57,13 +58,10 @@ public class IssueRemindCommandRule extends BaseRule {
 
     ReminderDto.ReminderDtoBuilder builder = ReminderDto.builder();
 
-    try {
-      SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-      builder.date(format.parse(parsedArgs.get(1)));
-    } catch (ParseException e) {
-      rulesEngine.fireError(ErrorRuleType.UnknownError, event, e);
-      answerButtonCallback(event);
-    }
+    builder.date(
+        Date.from(
+            ZonedDateTime.parse(parsedArgs.get(1), DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                .toInstant()));
 
     builder.issueKey(parsedArgs.get(0));
     builder.userEmail(event.getUserId());
