@@ -88,7 +88,7 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
       throw new IssuePermissionException();
     }
 
-    return Arrays.stream(reminderRepository.getIssueReminders(issueKey))
+    return Arrays.stream(reminderRepository.getIssueReminders(issueKey, user.getEmailAddress()))
         .map(ReminderDto::new)
         .collect(Collectors.toList());
   }

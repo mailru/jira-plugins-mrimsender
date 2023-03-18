@@ -45,8 +45,9 @@ public class ReminderRepository extends PagingAndSortingRepository<Reminder, Rem
     return ao.find(Reminder.class, query);
   }
 
-  public Reminder[] getIssueReminders(String issueKey) {
-    Query query = Query.select().where("ISSUE_KEY = ?", issueKey).order("DATE ASC");
+  public Reminder[] getIssueReminders(String issueKey, String email) {
+    Query query =
+        Query.select().where("ISSUE_KEY = ? AND USER_EMAIL = ?", issueKey, email).order("DATE ASC");
     return ao.find(Reminder.class, query);
   }
 }
