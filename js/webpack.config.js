@@ -126,7 +126,7 @@ const config = {
           PLUGIN_KEY + '.' + 'project.chat.settings.panel',
         ],
         'create-chat-panel': ['jira.browse.project', 'jira.navigator.advanced'],
-        'chat-reminder': ['jira.browse.project', 'jira.navigator.advanced'],
+        'chat-reminder': ['atl.general'],
         'manage-filter-subscriptions-page': [
           PLUGIN_KEY + '.' + 'manage.filter.subscriptions.page',
         ],
