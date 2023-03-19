@@ -1,101 +1,101 @@
-import { action, makeObservable, observable } from 'mobx';
-import LoadingService from './LoadingService';
-import { ChatCreationData, ChatInfoType } from './types';
+import { action, makeObservable, observable } from 'mobx'
+import LoadingService from './LoadingService'
+import { ChatCreationData, ChatInfoType } from './types'
 
 export default class ChatPanelStore {
-  readonly issueKey: string;
+  readonly issueKey: string
 
-  readonly loadingService: LoadingService;
+  readonly loadingService: LoadingService
 
   constructor(issueKey: string) {
-    makeObservable(this);
-    this.issueKey = issueKey;
-    this.loadingService = new LoadingService();
-    this.loadPanelData();
+    makeObservable(this)
+    this.issueKey = issueKey
+    this.loadingService = new LoadingService()
+    this.loadPanelData()
   }
 
   @observable
-  dialogData: ChatCreationData | null = null;
+  dialogData: ChatCreationData | null = null
 
   @observable.ref
-  error: Error | null = null;
+  error: Error | null = null
 
   @observable
-  isLoading = false;
+  isLoading = false
 
   @observable
-  isDialogDataLoading = false;
+  isDialogDataLoading = false
 
   @observable
-  isCreateChatDialogOpen = false;
+  isCreateChatDialogOpen = false
 
   @observable
-  chatAlreadyExist = false;
+  chatAlreadyExist = false
 
   @observable.ref
-  chatInfo: ChatInfoType | null = null;
+  chatInfo: ChatInfoType | null = null
 
   @action('loadPanelData')
   loadPanelData = () => {
-    this.isLoading = true;
+    this.isLoading = true
     this.loadingService
       .loadChatPanelData(this.issueKey)
       .then(
         action((chatInfo: ChatInfoType) => {
           if (chatInfo != null) {
-            this.chatAlreadyExist = true;
-            this.chatInfo = chatInfo;
+            this.chatAlreadyExist = true
+            this.chatInfo = chatInfo
           }
         }),
         action((reason: JQueryXHR) => {
           this.error = new Error(
-            `An error in loadChatPanelData status=${reason.status} statusText=${reason.statusText}`,
-          );
-        }),
+            `An error in loadChatPanelData status=${reason.status} statusText=${reason.statusText}`
+          )
+        })
       )
       .finally(
         action(() => {
-          this.isLoading = false;
-        }),
-      );
-  };
+          this.isLoading = false
+        })
+      )
+  }
 
   @action('loadDialogData')
   loadDialogData = async (): Promise<void> => {
     try {
       const chatCreationData = await this.loadingService.loadChatCreationData(
-        this.issueKey,
-      );
+        this.issueKey
+      )
       if (chatCreationData != null) {
-        this.dialogData = chatCreationData;
+        this.dialogData = chatCreationData
       }
     } catch (e: any) {
       this.error = new Error(
-        `An error in loadDialogData status=${e.status} statusText=${e.statusText}`,
-      );
+        `An error in loadDialogData status=${e.status} statusText=${e.statusText}`
+      )
     }
-  };
+  }
 
   @action('openCreateChatDialog')
   openCreateChatDialog = () => {
-    this.isDialogDataLoading = true;
+    this.isDialogDataLoading = true
     this.loadDialogData()
       .then(
         action(() => {
-          this.isCreateChatDialogOpen = true;
-        }),
+          this.isCreateChatDialogOpen = true
+        })
       )
       .finally(
         action(() => {
-          this.isDialogDataLoading = false;
-        }),
-      );
-  };
+          this.isDialogDataLoading = false
+        })
+      )
+  }
 
   @action('closeCreateChatDialog')
   closeCreateChatDialog = () => {
-    this.isCreateChatDialogOpen = false;
-  };
+    this.isCreateChatDialogOpen = false
+  }
 
   @action('createChat')
   createChat = (name: string, members: number[]) => {
@@ -103,19 +103,19 @@ export default class ChatPanelStore {
       this.setChatInfo,
       action((reason: JQueryXHR) => {
         this.error = new Error(
-          `An error in createChat status=${reason.status} statusText=${reason.statusText}`,
-        );
-      }),
-    );
-  };
+          `An error in createChat status=${reason.status} statusText=${reason.statusText}`
+        )
+      })
+    )
+  }
 
   @action('setChatInfo')
   setChatInfo = (chatInfo: ChatInfoType) => {
     if (chatInfo != null) {
-      this.chatAlreadyExist = true;
-      this.chatInfo = chatInfo;
+      this.chatAlreadyExist = true
+      this.chatInfo = chatInfo
     } else {
-      this.error = new Error('chat info is empty inside setChatInfo method');
+      this.error = new Error('chat info is empty inside setChatInfo method')
     }
-  };
+  }
 }

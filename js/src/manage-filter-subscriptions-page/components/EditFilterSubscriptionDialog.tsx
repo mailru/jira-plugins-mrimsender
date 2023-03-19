@@ -1,24 +1,24 @@
-import Button from '@atlaskit/button';
+import Button from '@atlaskit/button'
 import Modal, {
   ModalBody,
   ModalFooter,
   ModalHeader,
   ModalTitle,
   ModalTransition,
-} from '@atlaskit/modal-dialog';
-import React, { ReactElement } from 'react';
-import { I18n } from '@atlassian/wrm-react-i18n';
-import SectionMessage from '@atlaskit/section-message';
-import FilterSubscriptionForm, { FORM_ID } from './FilterSubscriptionForm';
-import { ErrorData, FilterSubscription } from '../../shared/types';
+} from '@atlaskit/modal-dialog'
+import React, { ReactElement } from 'react'
+import { I18n } from '@atlassian/wrm-react-i18n'
+import SectionMessage from '@atlaskit/section-message'
+import FilterSubscriptionForm, { FORM_ID } from './FilterSubscriptionForm'
+import { ErrorData, FilterSubscription } from '../../shared/types'
 
 type Props = {
-  isOpen: boolean;
-  currentValue: FilterSubscription;
-  onClose: () => void;
-  onSaveSuccess: (subscription: FilterSubscription) => void;
-  editingError?: ErrorData;
-};
+  isOpen: boolean
+  currentValue: FilterSubscription
+  onClose: () => void
+  onSaveSuccess: (subscription: FilterSubscription) => void
+  editingError?: ErrorData
+}
 
 function EditFilterSubscriptionDialog({
   isOpen,
@@ -34,7 +34,7 @@ function EditFilterSubscriptionDialog({
           <ModalHeader>
             <ModalTitle>
               {I18n.getText(
-                'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.edit',
+                'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.edit'
               )}
             </ModalTitle>
           </ModalHeader>
@@ -61,7 +61,7 @@ function EditFilterSubscriptionDialog({
               form={FORM_ID}
               appearance="subtle"
               onClick={() => {
-                onClose();
+                onClose()
               }}
             >
               {I18n.getText('common.forms.cancel')}
@@ -70,11 +70,11 @@ function EditFilterSubscriptionDialog({
         </Modal>
       )}
     </ModalTransition>
-  );
+  )
 }
 
 EditFilterSubscriptionDialog.defaultProps = {
   editingError: undefined,
-};
+}
 
-export default EditFilterSubscriptionDialog;
+export default EditFilterSubscriptionDialog

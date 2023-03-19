@@ -13,13 +13,6 @@ import com.atlassian.sal.api.message.I18nResolver;
 import com.atlassian.scheduler.JobRunnerResponse;
 import com.atlassian.scheduler.SchedulerService;
 import com.atlassian.scheduler.config.*;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
-import javax.naming.NoPermissionException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -36,6 +29,15 @@ import ru.mail.jira.plugins.myteam.db.repository.ReminderRepository;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.service.ReminderService;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
+
+import javax.naming.NoPermissionException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @ExportAsService
@@ -197,16 +199,12 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
                 "ru.mail.jira.plugins.myteam.mrimsenderEventListener.quickViewButton.text"),
             String.join("-", CommandRuleType.Issue.getName(), issueKey)));
 
-    Calendar calendar = Calendar.getInstance();
-    calendar.setTime(r.getDate());
-    calendar.add(Calendar.DAY_OF_YEAR, 1);
-
     List<String> args =
         new ArrayList<>(
             Arrays.asList(
                 issueKey,
                 DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(
-                    ZonedDateTime.ofInstant(calendar.toInstant(), ZoneId.systemDefault()))));
+                    ZonedDateTime.ofInstant(r.getDate().toInstant().plus(1, ChronoUnit.DAYS), ZoneId.systemDefault()))));
 
     if (r.getDescription() != null && r.getDescription().trim().length() > 0) {
       args.add(r.getDescription());

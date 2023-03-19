@@ -1,27 +1,27 @@
-import Button from '@atlaskit/button';
+import Button from '@atlaskit/button'
 import Modal, {
   ModalBody,
   ModalFooter,
   ModalHeader,
   ModalTitle,
   ModalTransition,
-} from '@atlaskit/modal-dialog';
-import SectionMessage from '@atlaskit/section-message';
-import React, { ReactElement } from 'react';
-import { I18n } from '@atlassian/wrm-react-i18n';
-import { IssueCreationSettings } from '../../types';
+} from '@atlaskit/modal-dialog'
+import SectionMessage from '@atlaskit/section-message'
+import React, { ReactElement } from 'react'
+import { I18n } from '@atlassian/wrm-react-i18n'
+import { IssueCreationSettings } from '../../types'
 import EditIssueCreationSettingsForm, {
   FORM_ID,
-} from '../EditIssueCreationSettingsForm';
-import { createChatIssueCreationSettings } from '../../api/SettingsApiClient';
-import { useTimeoutState } from '../../hooks';
+} from '../EditIssueCreationSettingsForm'
+import { createChatIssueCreationSettings } from '../../api/SettingsApiClient'
+import { useTimeoutState } from '../../hooks'
 
 type Props = {
-  chatId: string;
-  isOpen: boolean;
-  onClose: () => void;
-  onSaveSuccess: () => void;
-};
+  chatId: string
+  isOpen: boolean
+  onClose: () => void
+  onSaveSuccess: () => void
+}
 
 enum Status {
   Success,
@@ -32,7 +32,7 @@ enum Status {
 const DEFAULT_SETTINGS: Partial<IssueCreationSettings> = {
   enabled: true,
   tag: 'task',
-};
+}
 
 function NewIssueCreationSettingsDialog({
   isOpen,
@@ -41,9 +41,9 @@ function NewIssueCreationSettingsDialog({
   onSaveSuccess,
 }: Props): ReactElement {
   const [statusState, setStatus] = useTimeoutState<{
-    status: Status | null;
-    error?: string;
-  }>({ status: Status.None });
+    status: Status | null
+    error?: string
+  }>({ status: Status.None })
 
   return (
     <ModalTransition>
@@ -69,23 +69,23 @@ function NewIssueCreationSettingsDialog({
             <EditIssueCreationSettingsForm
               defaultSettings={DEFAULT_SETTINGS}
               onCancel={() => {
-                onClose();
+                onClose()
               }}
               onSave={(settings) => {
                 if (chatId) {
                   const issueCreationSettings =
-                    settings as IssueCreationSettings;
-                  issueCreationSettings.chatId = chatId;
+                    settings as IssueCreationSettings
+                  issueCreationSettings.chatId = chatId
                   createChatIssueCreationSettings(issueCreationSettings)
                     .then(() => {
-                      onSaveSuccess();
+                      onSaveSuccess()
                     })
                     .catch((e) => {
                       setStatus(
                         { status: Status.Error, error: e.response.data.error },
-                        5000,
-                      );
-                    });
+                        5000
+                      )
+                    })
                 }
               }}
             />
@@ -98,8 +98,8 @@ function NewIssueCreationSettingsDialog({
               form={FORM_ID}
               appearance="subtle"
               onClick={() => {
-                onClose();
-                setStatus({ status: Status.None }, 0);
+                onClose()
+                setStatus({ status: Status.None }, 0)
               }}
             >
               {I18n.getText('common.forms.cancel')}
@@ -108,7 +108,7 @@ function NewIssueCreationSettingsDialog({
         </Modal>
       )}
     </ModalTransition>
-  );
+  )
 }
 
-export default NewIssueCreationSettingsDialog;
+export default NewIssueCreationSettingsDialog

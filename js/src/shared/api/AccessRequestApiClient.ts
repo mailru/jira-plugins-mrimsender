@@ -1,5 +1,5 @@
-import axios, { AxiosResponse } from 'axios';
-import contextPath from 'wrm/context-path';
+import axios, { AxiosResponse } from 'axios'
+import contextPath from 'wrm/context-path'
 import {
   AccessRequest,
   AccessRequestConfiguration,
@@ -7,111 +7,111 @@ import {
   Group,
   ProjectRole,
   User,
-} from '../types';
+} from '../types'
 
 export const getAccessRequest = (issueKey: string): Promise<AccessRequest> =>
   axios
     .get(`${contextPath()}/rest/myteam/1.0/accessRequest`, {
       params: { issueKey },
     })
-    .then((response) => response.data);
+    .then((response) => response.data)
 
 export const sendAccessRequest = (
   issueKey: string,
-  accessRequest: AccessRequest,
+  accessRequest: AccessRequest
 ): Promise<any> =>
   axios
     .post(`${contextPath()}/rest/myteam/1.0/accessRequest`, accessRequest, {
       params: { issueKey },
     })
-    .then((response) => response.data);
+    .then((response) => response.data)
 
 export const getAccessRequestConfiguration = (
-  projectKey: string,
+  projectKey: string
 ): Promise<AccessRequestConfiguration> =>
   axios
     .get(
-      `${contextPath()}/rest/myteam/1.0/accessRequest/configuration/${projectKey}`,
+      `${contextPath()}/rest/myteam/1.0/accessRequest/configuration/${projectKey}`
     )
-    .then((response) => response.data);
+    .then((response) => response.data)
 
 export const createAccessRequestConfiguration = (
-  configuration: AccessRequestConfiguration,
+  configuration: AccessRequestConfiguration
 ) =>
   axios
     .post(
       `${contextPath()}/rest/myteam/1.0/accessRequest/configuration/${
         configuration.projectKey
       }`,
-      configuration,
+      configuration
     )
-    .then((response) => response.data);
+    .then((response) => response.data)
 
 export const updateAccessRequestConfiguration = (
   configuration: AccessRequestConfiguration,
-  configurationId: number,
+  configurationId: number
 ) =>
   axios
     .put(
       `${contextPath()}/rest/myteam/1.0/accessRequest/configuration/${
         configuration.projectKey
       }/${configurationId}`,
-      configuration,
+      configuration
     )
-    .then((response) => response.data);
+    .then((response) => response.data)
 
 export const deleteAccessRequestConfiguration = (
   projectKey: string,
-  configurationId: number,
+  configurationId: number
 ): Promise<any> =>
   axios
     .delete(
-      `${contextPath()}/rest/myteam/1.0/accessRequest/configuration/${projectKey}/${configurationId}`,
+      `${contextPath()}/rest/myteam/1.0/accessRequest/configuration/${projectKey}/${configurationId}`
     )
-    .then((response) => response.data);
+    .then((response) => response.data)
 
 export const loadJiraUsers = (
-  query: string,
+  query: string
 ): Promise<AxiosResponse<ReadonlyArray<User>>> => {
   return axios.get(
     `${contextPath()}/rest/myteam/1.0/accessRequest/configuration/users`,
     {
       params: { query },
-    },
-  );
-};
+    }
+  )
+}
 
 export const loadJiraGroups = (
-  query: string,
+  query: string
 ): Promise<AxiosResponse<ReadonlyArray<Group>>> => {
   return axios.get(
     `${contextPath()}/rest/myteam/1.0/accessRequest/configuration/groups`,
     {
       params: { query },
-    },
-  );
-};
+    }
+  )
+}
 
 export const loadProjectRoles = (
   projectKey: string,
-  query: string,
+  query: string
 ): Promise<AxiosResponse<ReadonlyArray<ProjectRole>>> => {
   return axios.get(
     `${contextPath()}/rest/myteam/1.0/accessRequest/configuration/projectRoles`,
     {
       params: { projectKey, query },
-    },
-  );
-};
+    }
+  )
+}
 
 export const loadUserFields = (
   projectKey: string,
-  query: string,
+  query: string
 ): Promise<AxiosResponse<ReadonlyArray<Field>>> => {
   return axios.get(
     `${contextPath()}/rest/myteam/1.0/accessRequest/configuration/userFields`,
     {
       params: { projectKey, query },
-    },
-  );
-};
+    }
+  )
+}

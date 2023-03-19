@@ -3,6 +3,7 @@ import { I18n } from '@atlassian/wrm-react-i18n'
 import { useCreateReminder } from '@shared/reminder/query'
 import { DateInput, FormItem, Textarea } from '@vkontakte/vkui'
 import AJS from 'AJS'
+import moment from 'jira/moment'
 import React, { createContext, useContext, useMemo, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { useMessage } from '../MessageProvider'
@@ -100,8 +101,14 @@ const ReminderCreateDialogProvider = ({
             name="date"
             rules={{ required: true }}
             control={control}
+            defaultValue={moment().add(1, 'day').toDate()}
             render={({ field: { ref, ...rest } }) => (
-              <DateInput enableTime disablePast {...rest} />
+              <DateInput
+                enableTime
+                disablePast
+                calendarPlacement="right-end"
+                {...rest}
+              />
             )}
           />
         </FormItem>

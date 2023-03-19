@@ -1,37 +1,37 @@
-import React, { ReactElement, useState } from 'react';
-import styled from 'styled-components';
-import { I18n } from '@atlassian/wrm-react-i18n';
-import PersonIcon from '@atlaskit/icon/glyph/person';
-import PeopleGroupIcon from '@atlaskit/icon/glyph/people-group';
-import PeopleIcon from '@atlaskit/icon/glyph/people';
-import AppAccessIcon from '@atlaskit/icon/glyph/app-access';
-import Button from '@atlaskit/button';
-import Spinner from '@atlaskit/spinner';
-import CreateConfigurationDialog from './CreateConfigurationDialog';
-import AccessRequestImage from '../../assets/access-request.png';
+import React, { ReactElement, useState } from 'react'
+import styled from 'styled-components'
+import { I18n } from '@atlassian/wrm-react-i18n'
+import PersonIcon from '@atlaskit/icon/glyph/person'
+import PeopleGroupIcon from '@atlaskit/icon/glyph/people-group'
+import PeopleIcon from '@atlaskit/icon/glyph/people'
+import AppAccessIcon from '@atlaskit/icon/glyph/app-access'
+import Button from '@atlaskit/button'
+import Spinner from '@atlaskit/spinner'
+import CreateConfigurationDialog from './CreateConfigurationDialog'
+import AccessRequestImage from '../../assets/access-request.png'
 import {
   useAccessRequestConfigurationDelete,
   useAccessRequestConfigurationMutation,
   useGetAccessRequestConfiguration,
-} from '../../shared/hooks';
-import EditConfigurationDialog from './EditConfigurationDialog';
-import ConfirmationDialog from '../../shared/components/dialogs/ConfirmationDialog';
+} from '../../shared/hooks'
+import EditConfigurationDialog from './EditConfigurationDialog'
+import ConfirmationDialog from '../../shared/components/dialogs/ConfirmationDialog'
 
 type Props = {
-  projectKey: string | null;
-};
+  projectKey: string | null
+}
 
 const Container = styled.div`
   h2 {
     margin-bottom: 20px;
   }
-`;
+`
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-`;
+`
 
 const Left = styled.div`
   display: flex;
@@ -40,7 +40,7 @@ const Left = styled.div`
   h1 {
     margin: 0;
   }
-`;
+`
 
 const Right = styled.div`
   display: flex;
@@ -49,7 +49,7 @@ const Right = styled.div`
   button {
     margin-right: 5px;
   }
-`;
+`
 
 const EmptyPageContainer = styled.div`
   margin: 48px auto;
@@ -63,15 +63,15 @@ const EmptyPageContainer = styled.div`
   p {
     margin-bottom: 24px;
   }
-`;
+`
 
 const PageDescription = styled.div`
   padding-block: 10px;
-`;
+`
 
 const Recipients = styled.div`
   margin-bottom: 20px;
-`;
+`
 
 const Recipient = styled.div`
   display: flex;
@@ -81,11 +81,11 @@ const Recipient = styled.div`
   div:last-child {
     margin-left: 5px;
   }
-`;
+`
 
 const Notifications = styled.div`
   margin-bottom: 20px;
-`;
+`
 
 function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
   if (projectKey == null)
@@ -93,22 +93,22 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
       <EmptyPageContainer>
         <h2>
           {I18n.getText(
-            'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.error.project',
+            'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.error.project'
           )}
         </h2>
       </EmptyPageContainer>
-    );
+    )
 
   const [isOpenCreateConfigurationDialog, setIsOpenCreateConfigurationDialog] =
-    useState<boolean>(false);
+    useState<boolean>(false)
   const [isOpenEditConfigurationDialog, setIsOpenEditConfigurationDialog] =
-    useState<boolean>(false);
+    useState<boolean>(false)
   const [isOpenDeleteConfigurationDialog, setIsOpenDeleteConfigurationDialog] =
-    useState<boolean>(false);
+    useState<boolean>(false)
 
-  const configuration = useGetAccessRequestConfiguration(projectKey);
-  const configurationMutation = useAccessRequestConfigurationMutation();
-  const deleteConfiguration = useAccessRequestConfigurationDelete();
+  const configuration = useGetAccessRequestConfiguration(projectKey)
+  const configurationMutation = useAccessRequestConfigurationMutation()
+  const deleteConfiguration = useAccessRequestConfigurationDelete()
 
   return (
     <Container>
@@ -116,7 +116,7 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
         <Left>
           <h1>
             {I18n.getText(
-              'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.title',
+              'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.title'
             )}
           </h1>
         </Left>
@@ -137,13 +137,13 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
         <div>
           <PageDescription>
             {I18n.getText(
-              'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.description',
+              'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.description'
             )}
           </PageDescription>
           <Recipients>
             <h2>
               {I18n.getText(
-                'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.table.participants',
+                'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.table.participants'
               )}
             </h2>
             {configuration.data.users?.map(({ userKey, displayName }) => (
@@ -174,7 +174,7 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
               <Recipient
                 key={id}
                 title={I18n.getText(
-                  'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.userFields',
+                  'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.userFields'
                 )}
               >
                 <PeopleIcon size="small" label="" />
@@ -185,20 +185,20 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
           <Notifications>
             <h2>
               {I18n.getText(
-                'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.table.notifications',
+                'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.table.notifications'
               )}
             </h2>
             {configuration.data.sendEmail && (
               <div>
                 {I18n.getText(
-                  'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.table.notifications.sendEmail',
+                  'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.table.notifications.sendEmail'
                 )}
               </div>
             )}
             {configuration.data.sendMessage && (
               <div>
                 {I18n.getText(
-                  'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.table.notifications.sendMessage',
+                  'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.table.notifications.sendMessage'
                 )}
               </div>
             )}
@@ -215,12 +215,12 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
           />
           <h2>
             {I18n.getText(
-              'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.empty.title',
+              'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.empty.title'
             )}
           </h2>
           <p>
             {I18n.getText(
-              'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.empty.description',
+              'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.empty.description'
             )}
           </p>
           <Button
@@ -228,7 +228,7 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
             onClick={() => setIsOpenCreateConfigurationDialog(true)}
           >
             {I18n.getText(
-              'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.button.configure',
+              'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.button.configure'
             )}
           </Button>
         </EmptyPageContainer>
@@ -237,14 +237,14 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
         projectKey={projectKey}
         isOpen={isOpenCreateConfigurationDialog}
         onClose={() => {
-          setIsOpenCreateConfigurationDialog(false);
-          configurationMutation.reset();
+          setIsOpenCreateConfigurationDialog(false)
+          configurationMutation.reset()
         }}
         onSaveSuccess={(config) =>
           configurationMutation.mutate(config, {
             onSuccess: () => {
-              setIsOpenCreateConfigurationDialog(false);
-              configuration.refetch();
+              setIsOpenCreateConfigurationDialog(false)
+              configuration.refetch()
             },
           })
         }
@@ -256,16 +256,16 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
           isOpen={isOpenEditConfigurationDialog}
           currentValue={configuration.data}
           onClose={() => {
-            setIsOpenEditConfigurationDialog(false);
-            configurationMutation.reset();
+            setIsOpenEditConfigurationDialog(false)
+            configurationMutation.reset()
           }}
           onSaveSuccess={(config) => {
             configurationMutation.mutate(config, {
               onSuccess: () => {
-                configuration.refetch();
-                setIsOpenEditConfigurationDialog(false);
+                configuration.refetch()
+                setIsOpenEditConfigurationDialog(false)
               },
-            });
+            })
           }}
           editingError={configurationMutation.error?.response?.data}
         />
@@ -273,10 +273,10 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
       <ConfirmationDialog
         isOpen={isOpenDeleteConfigurationDialog}
         title={I18n.getText(
-          'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.delete.title',
+          'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.delete.title'
         )}
         body={I18n.getText(
-          'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.delete.description',
+          'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.delete.description'
         )}
         onOk={() => {
           if (configuration.data?.id) {
@@ -287,17 +287,17 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
               },
               {
                 onSuccess: () => {
-                  setIsOpenDeleteConfigurationDialog(false);
-                  configuration.refetch();
+                  setIsOpenDeleteConfigurationDialog(false)
+                  configuration.refetch()
                 },
-              },
-            );
+              }
+            )
           }
         }}
         onCancel={() => setIsOpenDeleteConfigurationDialog(false)}
       />
     </Container>
-  );
+  )
 }
 
-export default AccessRequestConfiguration;
+export default AccessRequestConfiguration

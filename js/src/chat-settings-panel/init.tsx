@@ -1,19 +1,19 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { CacheProvider, css, Global } from '@emotion/core';
-import createCache from '@emotion/cache';
-import ChatIssueCreationSettings from './components/ChatIssueCreationSettings';
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { CacheProvider, css, Global } from '@emotion/core'
+import createCache from '@emotion/cache'
+import ChatIssueCreationSettings from './components/ChatIssueCreationSettings'
 
-const PANEL_CONTAINER_ID_SELECTOR = 'myteam-chat-settings-container';
+const PANEL_CONTAINER_ID_SELECTOR = 'myteam-chat-settings-container'
 
 export default function init(): void {
   const emotionCache = createCache({
     key: 'myteam-styles',
-  });
+  })
 
-  const root = document.getElementById(PANEL_CONTAINER_ID_SELECTOR);
+  const root = document.getElementById(PANEL_CONTAINER_ID_SELECTOR)
 
-  const chatId = new URLSearchParams(window.location.search).get('chatId');
+  const chatId = new URLSearchParams(window.location.search).get('chatId')
 
   ReactDOM.render(
     <CacheProvider value={emotionCache}>
@@ -29,6 +29,6 @@ export default function init(): void {
       />
       <ChatIssueCreationSettings chatId={chatId} />
     </CacheProvider>,
-    root,
-  );
+    root
+  )
 }

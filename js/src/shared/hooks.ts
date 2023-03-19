@@ -1,18 +1,18 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react'
 import {
   QueryObserverResult,
   useMutation,
   UseMutationResult,
   useQuery,
-} from 'react-query';
-import { AxiosError } from 'axios';
+} from 'react-query'
+import { AxiosError } from 'axios'
 import {
   AccessRequest,
   AccessRequestConfiguration,
   ErrorData,
   FilterSubscription,
   FilterSubscriptionsPermissions,
-} from './types';
+} from './types'
 import {
   createSubscription,
   deleteSubscription,
@@ -20,7 +20,7 @@ import {
   getSubscriptionsPermissions,
   runSubscription,
   updateSubscription,
-} from './api/SubscriptionsApiClient';
+} from './api/SubscriptionsApiClient'
 import {
   createAccessRequestConfiguration,
   deleteAccessRequestConfiguration,
@@ -28,44 +28,44 @@ import {
   getAccessRequestConfiguration,
   sendAccessRequest,
   updateAccessRequestConfiguration,
-} from './api/AccessRequestApiClient';
+} from './api/AccessRequestApiClient'
 
 export const useTimeoutState = <T>(
-  defaultState: T,
+  defaultState: T
 ): [T, (action: React.SetStateAction<T>, timeout: number) => void] => {
-  const [state, setState] = React.useState<T>(defaultState);
+  const [state, setState] = React.useState<T>(defaultState)
   const [currentTimeoutId, setCurrentTimeoutId] =
-    React.useState<NodeJS.Timeout>();
+    React.useState<NodeJS.Timeout>()
 
   const setTimeoutState = React.useCallback(
     (action: React.SetStateAction<T>, timeout: number) => {
       if (currentTimeoutId != null) {
-        clearTimeout(currentTimeoutId);
+        clearTimeout(currentTimeoutId)
       }
 
-      setState(action);
+      setState(action)
 
-      const id = setTimeout(() => setState(defaultState), timeout ?? 4000);
-      setCurrentTimeoutId(id as any);
+      const id = setTimeout(() => setState(defaultState), timeout ?? 4000)
+      setCurrentTimeoutId(id as any)
     },
-    [currentTimeoutId, defaultState],
-  );
-  return [state, setTimeoutState];
-};
+    [currentTimeoutId, defaultState]
+  )
+  return [state, setTimeoutState]
+}
 
 export const usePrevious = <T>(value: T): T | undefined => {
-  const ref = useRef<T>();
+  const ref = useRef<T>()
   useEffect(() => {
-    ref.current = value;
-  });
-  return ref.current;
-};
+    ref.current = value
+  })
+  return ref.current
+}
 
 export const useGetSubscriptions = (params?: {
-  subscribers?: Array<String>;
-  filterId?: number;
-  recipientsType?: string;
-  recipients?: Array<String>;
+  subscribers?: Array<String>
+  filterId?: number
+  recipientsType?: string
+  recipients?: Array<String>
 }): QueryObserverResult<FilterSubscription[], AxiosError> =>
   useQuery<FilterSubscription[], AxiosError>(
     ['getSubscriptions', params],
@@ -73,8 +73,8 @@ export const useGetSubscriptions = (params?: {
     {
       refetchOnWindowFocus: false,
       retry: false,
-    },
-  );
+    }
+  )
 
 export const useSubscriptionMutation = (): UseMutationResult<
   undefined,
@@ -84,20 +84,20 @@ export const useSubscriptionMutation = (): UseMutationResult<
   useMutation((subscription: FilterSubscription) =>
     subscription.id
       ? updateSubscription(subscription, subscription.id)
-      : createSubscription(subscription),
-  );
+      : createSubscription(subscription)
+  )
 
 export const useSubscriptionDelete = (): UseMutationResult<
   undefined,
   AxiosError,
   number
-> => useMutation((id: number) => deleteSubscription(id));
+> => useMutation((id: number) => deleteSubscription(id))
 
 export const useRunSubscriptionMutation = (): UseMutationResult<
   undefined,
   AxiosError,
   number
-> => useMutation((id: number) => runSubscription(id));
+> => useMutation((id: number) => runSubscription(id))
 
 export const useGetSubscriptionsPermissions = (): QueryObserverResult<
   FilterSubscriptionsPermissions,
@@ -109,11 +109,11 @@ export const useGetSubscriptionsPermissions = (): QueryObserverResult<
     {
       refetchOnWindowFocus: false,
       retry: false,
-    },
-  );
+    }
+  )
 
 export const useGetAccessRequest = (
-  issueKey: string,
+  issueKey: string
 ): QueryObserverResult<AccessRequest, AxiosError> =>
   useQuery<AccessRequest, AxiosError>(
     ['getAccessRequestConfiguration', issueKey],
@@ -121,8 +121,8 @@ export const useGetAccessRequest = (
     {
       refetchOnWindowFocus: false,
       retry: false,
-    },
-  );
+    }
+  )
 
 export const useAccessRequestMutation = (): UseMutationResult<
   undefined,
@@ -134,13 +134,13 @@ export const useAccessRequestMutation = (): UseMutationResult<
       issueKey,
       accessRequest,
     }: {
-      issueKey: string;
-      accessRequest: AccessRequest;
-    }) => sendAccessRequest(issueKey, accessRequest),
-  );
+      issueKey: string
+      accessRequest: AccessRequest
+    }) => sendAccessRequest(issueKey, accessRequest)
+  )
 
 export const useGetAccessRequestConfiguration = (
-  projectKey: string,
+  projectKey: string
 ): QueryObserverResult<AccessRequestConfiguration, AxiosError> =>
   useQuery<AccessRequestConfiguration, AxiosError>(
     ['getAccessRequestConfiguration', projectKey],
@@ -148,8 +148,8 @@ export const useGetAccessRequestConfiguration = (
     {
       refetchOnWindowFocus: false,
       retry: false,
-    },
-  );
+    }
+  )
 
 export const useAccessRequestConfigurationMutation = (): UseMutationResult<
   undefined,
@@ -159,17 +159,17 @@ export const useAccessRequestConfigurationMutation = (): UseMutationResult<
   useMutation((configuration: AccessRequestConfiguration) =>
     configuration.id
       ? updateAccessRequestConfiguration(configuration, configuration.id)
-      : createAccessRequestConfiguration(configuration),
-  );
+      : createAccessRequestConfiguration(configuration)
+  )
 
 export const useAccessRequestConfigurationDelete = (): UseMutationResult<
   undefined,
   AxiosError,
   {
-    projectKey: string;
-    id: number;
+    projectKey: string
+    id: number
   }
 > =>
   useMutation(({ projectKey, id }: { projectKey: string; id: number }) =>
-    deleteAccessRequestConfiguration(projectKey, id),
-  );
+    deleteAccessRequestConfiguration(projectKey, id)
+  )

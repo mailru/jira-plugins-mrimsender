@@ -1,24 +1,24 @@
-import Button from '@atlaskit/button';
+import Button from '@atlaskit/button'
 import Modal, {
   ModalBody,
   ModalFooter,
   ModalHeader,
   ModalTitle,
   ModalTransition,
-} from '@atlaskit/modal-dialog';
-import React, { ReactElement, useMemo } from 'react';
-import { I18n } from '@atlassian/wrm-react-i18n';
-import SectionMessage from '@atlaskit/section-message';
-import ConfigurationForm, { FORM_ID } from './ConfigurationForm';
-import { AccessRequestConfiguration, ErrorData } from '../../shared/types';
+} from '@atlaskit/modal-dialog'
+import React, { ReactElement, useMemo } from 'react'
+import { I18n } from '@atlassian/wrm-react-i18n'
+import SectionMessage from '@atlaskit/section-message'
+import ConfigurationForm, { FORM_ID } from './ConfigurationForm'
+import { AccessRequestConfiguration, ErrorData } from '../../shared/types'
 
 type Props = {
-  projectKey: string;
-  isOpen: boolean;
-  onClose: () => void;
-  onSaveSuccess: (configuration: AccessRequestConfiguration) => void;
-  creationError?: ErrorData;
-};
+  projectKey: string
+  isOpen: boolean
+  onClose: () => void
+  onSaveSuccess: (configuration: AccessRequestConfiguration) => void
+  creationError?: ErrorData
+}
 
 function CreateConfigurationDialog({
   projectKey,
@@ -28,19 +28,19 @@ function CreateConfigurationDialog({
   creationError,
 }: Props): ReactElement {
   const CreationError = useMemo(() => {
-    if (!creationError) return null;
+    if (!creationError) return null
 
-    const { error, fieldErrors } = creationError;
-    const hasError = error && fieldErrors === undefined;
+    const { error, fieldErrors } = creationError
+    const hasError = error && fieldErrors === undefined
 
-    if (!hasError) return null;
+    if (!hasError) return null
 
     return (
       <SectionMessage appearance="error">
         <p>{error}</p>
       </SectionMessage>
-    );
-  }, [creationError]);
+    )
+  }, [creationError])
 
   return (
     <ModalTransition>
@@ -49,7 +49,7 @@ function CreateConfigurationDialog({
           <ModalHeader>
             <ModalTitle>
               {I18n.getText(
-                'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.create.title',
+                'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.create.title'
               )}
             </ModalTitle>
           </ModalHeader>
@@ -73,11 +73,11 @@ function CreateConfigurationDialog({
         </Modal>
       )}
     </ModalTransition>
-  );
+  )
 }
 
 CreateConfigurationDialog.defaultProps = {
   creationError: undefined,
-};
+}
 
-export default CreateConfigurationDialog;
+export default CreateConfigurationDialog

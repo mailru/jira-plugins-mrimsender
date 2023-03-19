@@ -1,25 +1,25 @@
-import Button from '@atlaskit/button';
+import Button from '@atlaskit/button'
 import Modal, {
   ModalBody,
   ModalFooter,
   ModalHeader,
   ModalTitle,
   ModalTransition,
-} from '@atlaskit/modal-dialog';
-import React, { ReactElement } from 'react';
-import { I18n } from '@atlassian/wrm-react-i18n';
-import SectionMessage from '@atlaskit/section-message';
-import ConfigurationForm, { FORM_ID } from './ConfigurationForm';
-import { AccessRequestConfiguration, ErrorData } from '../../shared/types';
+} from '@atlaskit/modal-dialog'
+import React, { ReactElement } from 'react'
+import { I18n } from '@atlassian/wrm-react-i18n'
+import SectionMessage from '@atlaskit/section-message'
+import ConfigurationForm, { FORM_ID } from './ConfigurationForm'
+import { AccessRequestConfiguration, ErrorData } from '../../shared/types'
 
 type Props = {
-  projectKey: string;
-  isOpen: boolean;
-  currentValue: AccessRequestConfiguration;
-  onClose: () => void;
-  onSaveSuccess: (configuration: AccessRequestConfiguration) => void;
-  editingError?: ErrorData;
-};
+  projectKey: string
+  isOpen: boolean
+  currentValue: AccessRequestConfiguration
+  onClose: () => void
+  onSaveSuccess: (configuration: AccessRequestConfiguration) => void
+  editingError?: ErrorData
+}
 
 function EditConfigurationDialog({
   projectKey,
@@ -36,7 +36,7 @@ function EditConfigurationDialog({
           <ModalHeader>
             <ModalTitle>
               {I18n.getText(
-                'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.edit.title',
+                'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.edit.title'
               )}
             </ModalTitle>
           </ModalHeader>
@@ -67,11 +67,11 @@ function EditConfigurationDialog({
         </Modal>
       )}
     </ModalTransition>
-  );
+  )
 }
 
 EditConfigurationDialog.defaultProps = {
   editingError: undefined,
-};
+}
 
-export default EditConfigurationDialog;
+export default EditConfigurationDialog

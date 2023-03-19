@@ -70,4 +70,11 @@ module.exports = {
       amd: 'jira/util/urls',
     },
   },
+  'jira/moment': {
+    dependency: 'jira.webresources:momentjs',
+    import: {
+      var: 'require("jira/moment")',
+      amd: 'jira/moment',
+    },
+  },
 }

@@ -1,63 +1,63 @@
-import React, { ReactElement, useEffect, useState } from 'react';
-import Textfield from '@atlaskit/textfield';
-import { Checkbox } from '@atlaskit/checkbox';
+import React, { ReactElement, useEffect, useState } from 'react'
+import Textfield from '@atlaskit/textfield'
+import { Checkbox } from '@atlaskit/checkbox'
 import Form, {
   CheckboxField,
   ErrorMessage,
   Field,
   HelperMessage,
-} from '@atlaskit/form';
-import styled from '@emotion/styled';
-import Select, { ValueType, OptionType, OptionsType } from '@atlaskit/select';
-import Events from 'jira/util/events';
-import Types from 'jira/util/events/types';
-import Reasons from 'jira/util/events/reasons';
-import TextArea from '@atlaskit/textarea';
-import { loadIssueForm } from '../api/CommonApiClient';
-import LoadableComponent from './LoadableComponent';
-import IssueTypeSelect from '../../chat-settings-panel/components/IssueTypeSelect';
-import ProjectSelect from '../../chat-settings-panel/components/ProjectSelect';
-import LabelsSelect from '../../chat-settings-panel/components/LabelsSelect';
+} from '@atlaskit/form'
+import styled from '@emotion/styled'
+import Select, { ValueType, OptionType, OptionsType } from '@atlaskit/select'
+import Events from 'jira/util/events'
+import Types from 'jira/util/events/types'
+import Reasons from 'jira/util/events/reasons'
+import TextArea from '@atlaskit/textarea'
+import { loadIssueForm } from '../api/CommonApiClient'
+import LoadableComponent from './LoadableComponent'
+import IssueTypeSelect from '../../chat-settings-panel/components/IssueTypeSelect'
+import ProjectSelect from '../../chat-settings-panel/components/ProjectSelect'
+import LabelsSelect from '../../chat-settings-panel/components/LabelsSelect'
 import {
   FieldHtml,
   FieldParam,
   IssueCreationSettings,
   LoadableDataState,
-} from '../types';
+} from '../types'
 
-type EditableSettings = Partial<Omit<IssueCreationSettings, 'id' | 'chatId'>>;
+type EditableSettings = Partial<Omit<IssueCreationSettings, 'id' | 'chatId'>>
 
 type Props = {
-  defaultSettings: EditableSettings;
-  onSave: (settings: EditableSettings) => void;
-  onCancel?: () => void;
-};
+  defaultSettings: EditableSettings
+  onSave: (settings: EditableSettings) => void
+  onCancel?: () => void
+}
 
-type MainState = { projectKey?: string; issueTypeId?: string };
+type MainState = { projectKey?: string; issueTypeId?: string }
 
 type FormState = Omit<
   EditableSettings,
   'labels' | 'issueTypeId' | 'projectKey'
 > & {
-  issueTypeId: OptionType;
-  projectKey: OptionType;
-  labels: ReadonlyArray<OptionType>;
-};
+  issueTypeId: OptionType
+  projectKey: OptionType
+  labels: ReadonlyArray<OptionType>
+}
 
-export const FORM_ID = 'issue-create-chat-settings';
+export const FORM_ID = 'issue-create-chat-settings'
 
 const HintBeforeTagInput = styled.span`
   margin-left: 7px;
   opacity: 0.6;
   font-size: large;
   font-weight: 500;
-`;
+`
 
 const Container = styled.div`
   form > * {
     margin-bottom: 10px;
   }
-`;
+`
 
 const LineHelperMessage = styled.div`
   font-size: 0.8571428571428571em;
@@ -69,30 +69,30 @@ const LineHelperMessage = styled.div`
   justify-content: baseline;
   color: var(--ds-text-subtlest, #6b778c);
   white-space: pre-line;
-`;
+`
 
 const validateNotNull = (value?: unknown) => {
   if (value) {
-    return undefined;
+    return undefined
   }
-  return 'Необходимо заполнить поле';
-};
+  return 'Необходимо заполнить поле'
+}
 
 const createOption = (value?: string) => {
-  if (!value) return null;
+  if (!value) return null
   return {
     label: value,
     value,
-  };
-};
+  }
+}
 
 const getFormValues = (): Array<FieldParam> => {
-  const values = $(`#${FORM_ID}`).serialize();
-  const queryPairs = values.split('&');
+  const values = $(`#${FORM_ID}`).serialize()
+  const queryPairs = values.split('&')
   return queryPairs
     .map((q) => {
-      const split = q.split('=');
-      return { field: split[0], value: split[1] };
+      const split = q.split('=')
+      return { field: split[0], value: split[1] }
     })
     .filter(
       (f) =>
@@ -102,9 +102,9 @@ const getFormValues = (): Array<FieldParam> => {
           'tag',
           'addReporterInWatchers',
           'creationByAllMembers',
-        ].includes(f.field),
-    );
-};
+        ].includes(f.field)
+    )
+}
 
 const isIgnoredField = (id: string): boolean => {
   return [
@@ -120,13 +120,13 @@ const isIgnoredField = (id: string): boolean => {
     'timetracking', // unsupported
     'issuelinks', // unsupported
     'security', // TODO fix unknown error: For input string: ""
-  ].includes(id);
-};
+  ].includes(id)
+}
 
 const renderMainFields = (
   settings: EditableSettings,
   selectedMainData: MainState,
-  setSelectedMainData: (mainData: MainState) => void,
+  setSelectedMainData: (mainData: MainState) => void
 ) => {
   return (
     <>
@@ -158,8 +158,8 @@ const renderMainFields = (
             <ProjectSelect
               onChange={(value: OptionType | null) => {
                 if (value)
-                  setSelectedMainData({ projectKey: String(value.value) });
-                onChange(value);
+                  setSelectedMainData({ projectKey: String(value.value) })
+                onChange(value)
               }}
               defaultProjectKey={settings.projectKey}
               validationState={error ? 'error' : 'default'}
@@ -192,8 +192,8 @@ const renderMainFields = (
                   setSelectedMainData({
                     ...selectedMainData,
                     issueTypeId: String(value.value),
-                  });
-                onChange(value);
+                  })
+                onChange(value)
               }}
             />
             {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -236,8 +236,8 @@ const renderMainFields = (
         )}
       </Field>
     </>
-  );
-};
+  )
+}
 
 const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
   return (
@@ -276,7 +276,7 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
                 },
                 { label: 'Инициатор создания задачи', value: 'INITIATOR' },
               ].find(
-                (value) => value.value === (settings.reporter || 'INITIATOR'),
+                (value) => value.value === (settings.reporter || 'INITIATOR')
               )}
               options={[
                 {
@@ -356,8 +356,8 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
         )}
       </Field>
     </>
-  );
-};
+  )
+}
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 const renderAdditionalFields = (state: LoadableDataState<Array<FieldHtml>>) => {
@@ -371,14 +371,14 @@ const renderAdditionalFields = (state: LoadableDataState<Array<FieldHtml>>) => {
         {state.data && state.data.length > 0
           ? [...state.data]
               .sort((a, b) => {
-                const isRequired = a.required ? -1 : 1;
+                const isRequired = a.required ? -1 : 1
                 if (a.label < b.label) {
-                  return isRequired || -1;
+                  return isRequired || -1
                 }
                 if (a.label > b.label) {
-                  return isRequired || 1;
+                  return isRequired || 1
                 }
-                return a.label > b.label ? -1 : 1;
+                return a.label > b.label ? -1 : 1
               })
               .map((f) => {
                 return (
@@ -387,13 +387,13 @@ const renderAdditionalFields = (state: LoadableDataState<Array<FieldHtml>>) => {
                     key={f.id}
                     dangerouslySetInnerHTML={{ __html: f.editHtml }}
                   />
-                );
+                )
               })
           : null}
       </LoadableComponent>
     </>
-  );
-};
+  )
+}
 
 function EditIssueCreationSettingsForm({
   defaultSettings,
@@ -402,40 +402,40 @@ function EditIssueCreationSettingsForm({
   const [selectedMainData, setSelectedMainData] = useState<MainState>({
     projectKey: defaultSettings.projectKey,
     issueTypeId: defaultSettings.issueTypeId,
-  });
+  })
 
   const [requiredFieldsState, setRequiredFieldsState] = useState<
     LoadableDataState<Array<FieldHtml>>
   >({
     isLoading: false,
-  });
+  })
 
   useEffect(() => {
     if (selectedMainData.issueTypeId && selectedMainData.projectKey) {
-      setRequiredFieldsState({ isLoading: true });
+      setRequiredFieldsState({ isLoading: true })
       loadIssueForm(
         selectedMainData.issueTypeId,
         selectedMainData.projectKey,
-        defaultSettings.additionalFields || [],
+        defaultSettings.additionalFields || []
       )
         .then(({ data }) => {
           setRequiredFieldsState({
             isLoading: false,
             data: data.fields.filter((f) => !isIgnoredField(f.id)),
-          });
+          })
           Events.trigger(Types.NEW_CONTENT_ADDED, [
             $('form.aui'),
             Reasons.dialogReady,
-          ]);
+          ])
         })
         .catch((e) => {
           setRequiredFieldsState({
             isLoading: false,
             error: JSON.stringify(e),
-          });
-        });
+          })
+        })
     }
-  }, [selectedMainData]);
+  }, [selectedMainData])
 
   return (
     <Container>
@@ -468,7 +468,7 @@ function EditIssueCreationSettingsForm({
             issueTypeId: String(issueTypeId.value),
             labels: labels ? labels.map((l) => String(l.value)) : [],
             additionalFields: getFormValues(),
-          });
+          })
         }}
       >
         {({ formProps }) => (
@@ -483,7 +483,7 @@ function EditIssueCreationSettingsForm({
               {renderMainFields(
                 defaultSettings,
                 selectedMainData,
-                setSelectedMainData,
+                setSelectedMainData
               )}
 
               {renderAdditionalSettings(defaultSettings)}
@@ -494,11 +494,11 @@ function EditIssueCreationSettingsForm({
         )}
       </Form>
     </Container>
-  );
+  )
 }
 
 EditIssueCreationSettingsForm.defaultProps = {
   onCancel: undefined,
-};
+}
 
-export default EditIssueCreationSettingsForm;
+export default EditIssueCreationSettingsForm

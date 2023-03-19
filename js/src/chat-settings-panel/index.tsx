@@ -1,6 +1,6 @@
-import AJS from 'AJS';
-import init from './init';
+import AJS from 'AJS'
+import init from './init'
 
 AJS.toInit(() => {
-  init();
-});
+  init()
+})

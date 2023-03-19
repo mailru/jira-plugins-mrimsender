@@ -1,32 +1,32 @@
-import Button from '@atlaskit/button';
+import Button from '@atlaskit/button'
 import Modal, {
   ModalBody,
   ModalFooter,
   ModalHeader,
   ModalTitle,
   ModalTransition,
-} from '@atlaskit/modal-dialog';
-import SectionMessage from '@atlaskit/section-message';
-import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import { I18n } from '@atlassian/wrm-react-i18n';
+} from '@atlaskit/modal-dialog'
+import SectionMessage from '@atlaskit/section-message'
+import React, { ReactElement, useLayoutEffect, useState } from 'react'
+import { I18n } from '@atlassian/wrm-react-i18n'
 import {
   loadChatIssueCreationSettingsById,
   updateChatIssueCreationSettings,
-} from '../../api/SettingsApiClient';
-import { IssueCreationSettings, LoadableDataState } from '../../types';
+} from '../../api/SettingsApiClient'
+import { IssueCreationSettings, LoadableDataState } from '../../types'
 import EditIssueCreationSettingsForm, {
   FORM_ID,
-} from '../EditIssueCreationSettingsForm';
-import LoadableComponent from '../LoadableComponent';
-import { useTimeoutState } from '../../hooks';
+} from '../EditIssueCreationSettingsForm'
+import LoadableComponent from '../LoadableComponent'
+import { useTimeoutState } from '../../hooks'
 
 type Props = {
-  settingsId: number;
+  settingsId: number
 
-  isOpen: boolean;
-  onClose: () => void;
-  onSaveSuccess: () => void;
-};
+  isOpen: boolean
+  onClose: () => void
+  onSaveSuccess: () => void
+}
 
 enum Status {
   Success,
@@ -42,24 +42,24 @@ function EditIssueCreationSettingsDialog({
 }: Props): ReactElement {
   const [settings, setSettings] = useState<
     LoadableDataState<IssueCreationSettings>
-  >({ isLoading: false });
+  >({ isLoading: false })
   const [statusState, setStatus] = useTimeoutState<{
-    status: Status | null;
-    error?: string;
-  }>({ status: Status.None });
+    status: Status | null
+    error?: string
+  }>({ status: Status.None })
   useLayoutEffect(() => {
     if (settingsId) {
-      setSettings({ isLoading: true });
+      setSettings({ isLoading: true })
       loadChatIssueCreationSettingsById(settingsId)
         .then((response) =>
-          setSettings({ isLoading: false, data: response.data }),
+          setSettings({ isLoading: false, data: response.data })
         )
         .catch((e) => {
-          console.error(e);
-          setSettings({ isLoading: false, error: JSON.stringify(e) });
-        });
+          console.error(e)
+          setSettings({ isLoading: false, error: JSON.stringify(e) })
+        })
     }
-  }, []);
+  }, [])
   return (
     <ModalTransition>
       {isOpen && (
@@ -90,7 +90,7 @@ function EditIssueCreationSettingsDialog({
               <EditIssueCreationSettingsForm
                 defaultSettings={settings.data || {}}
                 onCancel={() => {
-                  onClose();
+                  onClose()
                 }}
                 onSave={(newSettings) =>
                   settings.data &&
@@ -99,7 +99,7 @@ function EditIssueCreationSettingsDialog({
                     ...newSettings,
                   })
                     .then(() => {
-                      onSaveSuccess();
+                      onSaveSuccess()
                     })
                     .catch((e) => {
                       setStatus(
@@ -107,8 +107,8 @@ function EditIssueCreationSettingsDialog({
                           status: Status.Error,
                           error: e.response.data.error,
                         },
-                        5000,
-                      );
+                        5000
+                      )
                     })
                 }
               />
@@ -122,8 +122,8 @@ function EditIssueCreationSettingsDialog({
               form={FORM_ID}
               appearance="subtle"
               onClick={() => {
-                onClose();
-                setStatus({ status: Status.None }, 0);
+                onClose()
+                setStatus({ status: Status.None }, 0)
               }}
             >
               {I18n.getText('common.forms.cancel')}
@@ -132,7 +132,7 @@ function EditIssueCreationSettingsDialog({
         </Modal>
       )}
     </ModalTransition>
-  );
+  )
 }
 
-export default EditIssueCreationSettingsDialog;
+export default EditIssueCreationSettingsDialog

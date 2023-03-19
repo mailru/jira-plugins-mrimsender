@@ -1,47 +1,47 @@
 /* eslint-disable  sonarjs/cognitive-complexity */
-import React, { ReactElement } from 'react';
+import React, { ReactElement } from 'react'
 import Form, {
   CheckboxField,
   ErrorMessage,
   Field,
   Fieldset,
-} from '@atlaskit/form';
-import styled from '@emotion/styled';
-import { Checkbox } from '@atlaskit/checkbox';
-import { I18n } from '@atlassian/wrm-react-i18n';
-import { OptionsType, OptionType } from '@atlaskit/select';
-import UsersSelect, { createUserOption } from './UsersSelect';
-import GroupsSelect, { createGroupOption } from './GroupsSelect';
-import { AccessRequestConfiguration, ErrorData } from '../../shared/types';
+} from '@atlaskit/form'
+import styled from '@emotion/styled'
+import { Checkbox } from '@atlaskit/checkbox'
+import { I18n } from '@atlassian/wrm-react-i18n'
+import { OptionsType, OptionType } from '@atlaskit/select'
+import UsersSelect, { createUserOption } from './UsersSelect'
+import GroupsSelect, { createGroupOption } from './GroupsSelect'
+import { AccessRequestConfiguration, ErrorData } from '../../shared/types'
 import ProjectRolesSelect, {
   createProjectRoleOption,
-} from './ProjectRolesSelect';
-import UserFieldsSelect, { createUserFieldOption } from './UserFieldsSelect';
+} from './ProjectRolesSelect'
+import UserFieldsSelect, { createUserFieldOption } from './UserFieldsSelect'
 
 type Props = {
-  projectKey: string;
-  currentValue?: AccessRequestConfiguration;
-  onSave: (configuration: AccessRequestConfiguration) => void;
-  onCancel?: () => void;
-  submitError?: ErrorData;
-};
+  projectKey: string
+  currentValue?: AccessRequestConfiguration
+  onSave: (configuration: AccessRequestConfiguration) => void
+  onCancel?: () => void
+  submitError?: ErrorData
+}
 
-export const FORM_ID = 'myteam-access-request-configuration-form';
+export const FORM_ID = 'myteam-access-request-configuration-form'
 
 type FormState = {
-  users?: OptionType[];
-  groups?: OptionType[];
-  roles?: OptionType[];
-  userFields?: OptionType[];
-  sendEmail: boolean;
-  sendMessage: boolean;
-};
+  users?: OptionType[]
+  groups?: OptionType[]
+  roles?: OptionType[]
+  userFields?: OptionType[]
+  sendEmail: boolean
+  sendMessage: boolean
+}
 
 const Container = styled.div`
   form > * {
     margin-bottom: 10px;
   }
-`;
+`
 
 function ConfigurationForm({
   projectKey,
@@ -49,13 +49,13 @@ function ConfigurationForm({
   onSave,
   submitError,
 }: Props): ReactElement {
-  const usersError = submitError?.fieldErrors?.users?.messages[0];
-  const groupsError = submitError?.fieldErrors?.groups?.messages[0];
-  const projectRolesError = submitError?.fieldErrors?.projectRoles?.messages[0];
-  const userFieldsError = submitError?.fieldErrors?.userFields?.messages[0];
-  const participantsError = submitError?.fieldErrors?.participants?.messages[0];
+  const usersError = submitError?.fieldErrors?.users?.messages[0]
+  const groupsError = submitError?.fieldErrors?.groups?.messages[0]
+  const projectRolesError = submitError?.fieldErrors?.projectRoles?.messages[0]
+  const userFieldsError = submitError?.fieldErrors?.userFields?.messages[0]
+  const participantsError = submitError?.fieldErrors?.participants?.messages[0]
   const notificationsError =
-    submitError?.fieldErrors?.notifications?.messages[0];
+    submitError?.fieldErrors?.notifications?.messages[0]
   return (
     <Container>
       <Form
@@ -78,8 +78,8 @@ function ConfigurationForm({
             })),
             sendEmail: formState.sendEmail,
             sendMessage: formState.sendMessage,
-          };
-          onSave(configuration);
+          }
+          onSave(configuration)
         }}
       >
         {({ formProps }) => (
@@ -92,7 +92,7 @@ function ConfigurationForm({
             <div className="form-body">
               <div>
                 {I18n.getText(
-                  'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.userFields.description',
+                  'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.userFields.description'
                 )}
               </div>
               <Fieldset>
@@ -106,7 +106,7 @@ function ConfigurationForm({
                       <UsersSelect
                         id={fieldProps.id}
                         selectedValue={currentValue?.users?.map(
-                          createUserOption,
+                          createUserOption
                         )}
                         onChange={fieldProps.onChange}
                       />
@@ -126,7 +126,7 @@ function ConfigurationForm({
                       <GroupsSelect
                         id={fieldProps.id}
                         selectedValue={currentValue?.groups?.map(
-                          createGroupOption,
+                          createGroupOption
                         )}
                         onChange={fieldProps.onChange}
                       />
@@ -140,7 +140,7 @@ function ConfigurationForm({
                   name="roles"
                   label={I18n.getText('admin.projects.project.roles')}
                   defaultValue={currentValue?.projectRoles?.map(
-                    createProjectRoleOption,
+                    createProjectRoleOption
                   )}
                 >
                   {({ fieldProps, error }) => (
@@ -148,7 +148,7 @@ function ConfigurationForm({
                       <ProjectRolesSelect
                         id={fieldProps.id}
                         selectedValue={currentValue?.projectRoles?.map(
-                          createProjectRoleOption,
+                          createProjectRoleOption
                         )}
                         onChange={fieldProps.onChange}
                         projectKey={projectKey}
@@ -164,10 +164,10 @@ function ConfigurationForm({
                 <Field<OptionsType>
                   name="userFields"
                   label={I18n.getText(
-                    'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.userFields',
+                    'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.userFields'
                   )}
                   defaultValue={currentValue?.userFields?.map(
-                    createUserFieldOption,
+                    createUserFieldOption
                   )}
                 >
                   {({ fieldProps, error }) => (
@@ -175,7 +175,7 @@ function ConfigurationForm({
                       <UserFieldsSelect
                         id={fieldProps.id}
                         selectedValue={currentValue?.userFields?.map(
-                          createUserFieldOption,
+                          createUserFieldOption
                         )}
                         onChange={fieldProps.onChange}
                         projectKey={projectKey}
@@ -194,7 +194,7 @@ function ConfigurationForm({
                 <CheckboxField
                   name="sendEmail"
                   label={I18n.getText(
-                    'admin.schemes.notifications.notifications',
+                    'admin.schemes.notifications.notifications'
                   )}
                   defaultIsChecked={currentValue && currentValue.sendEmail}
                 >
@@ -203,7 +203,7 @@ function ConfigurationForm({
                       id={fieldProps.id}
                       defaultChecked={currentValue && currentValue.sendEmail}
                       label={I18n.getText(
-                        'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.sendEmail',
+                        'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.sendEmail'
                       )}
                       size="medium"
                       onChange={fieldProps.onChange}
@@ -219,7 +219,7 @@ function ConfigurationForm({
                       id={fieldProps.id}
                       defaultChecked={currentValue?.sendMessage}
                       label={I18n.getText(
-                        'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.sendMessage',
+                        'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.sendMessage'
                       )}
                       size="medium"
                       onChange={fieldProps.onChange}
@@ -235,13 +235,13 @@ function ConfigurationForm({
         )}
       </Form>
     </Container>
-  );
+  )
 }
 
 ConfigurationForm.ConfigurationForm = {
   currentValue: undefined,
   onCancel: undefined,
   submitError: undefined,
-};
+}
 
-export default ConfigurationForm;
+export default ConfigurationForm

@@ -1,11 +1,11 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { CacheProvider } from '@emotion/core';
-import createCache from '@emotion/cache';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import AccessRequest from './components/AccessRequest';
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { CacheProvider } from '@emotion/core'
+import createCache from '@emotion/cache'
+import { QueryClient, QueryClientProvider } from 'react-query'
+import AccessRequest from './components/AccessRequest'
 
-const PANEL_CONTAINER_ID_SELECTOR = 'myteam-access-request-container';
+const PANEL_CONTAINER_ID_SELECTOR = 'myteam-access-request-container'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,15 +16,15 @@ const queryClient = new QueryClient({
       refetchInterval: false,
     },
   },
-});
+})
 
 export default function init(): void {
   const emotionCache = createCache({
     key: 'myteam-access-request-styles',
-  });
+  })
 
-  const root = document.getElementById(PANEL_CONTAINER_ID_SELECTOR);
-  const issueKey = new URLSearchParams(window.location.search).get('issueKey');
+  const root = document.getElementById(PANEL_CONTAINER_ID_SELECTOR)
+  const issueKey = new URLSearchParams(window.location.search).get('issueKey')
 
   ReactDOM.render(
     <CacheProvider value={emotionCache}>
@@ -32,6 +32,6 @@ export default function init(): void {
         <AccessRequest issueKey={issueKey} />
       </QueryClientProvider>
     </CacheProvider>,
-    root,
-  );
+    root
+  )
 }

@@ -1,68 +1,68 @@
 /* eslint-disable  sonarjs/cognitive-complexity */
-import React, { ReactElement, useState } from 'react';
+import React, { ReactElement, useState } from 'react'
 import Form, {
   CheckboxField,
   ErrorMessage,
   Field,
   Fieldset,
   HelperMessage,
-} from '@atlaskit/form';
-import styled from '@emotion/styled';
-import { Checkbox } from '@atlaskit/checkbox';
-import { I18n } from '@atlassian/wrm-react-i18n';
-import Select, { OptionsType, OptionType, ValueType } from '@atlaskit/select';
-import { RadioGroup } from '@atlaskit/radio';
-import Textfield from '@atlaskit/textfield';
-import contextPath from 'wrm/context-path';
-import JqlFilterSelect, { createFilterOption } from './JqlFilterSelect';
-import UsersSelect, { createUserOption } from './UsersSelect';
-import GroupsSelect, { createGroupOption } from './GroupsSelect';
-import ChatsSelect, { createChatOption } from './ChatsSelect';
-import { ErrorData, FilterSubscription } from '../../shared/types';
-import { useGetSubscriptionsPermissions } from '../../shared/hooks';
-import RecipientsSelect, { recipientsTypeOptions } from './RecipientsSelect';
+} from '@atlaskit/form'
+import styled from '@emotion/styled'
+import { Checkbox } from '@atlaskit/checkbox'
+import { I18n } from '@atlassian/wrm-react-i18n'
+import Select, { OptionsType, OptionType, ValueType } from '@atlaskit/select'
+import { RadioGroup } from '@atlaskit/radio'
+import Textfield from '@atlaskit/textfield'
+import contextPath from 'wrm/context-path'
+import JqlFilterSelect, { createFilterOption } from './JqlFilterSelect'
+import UsersSelect, { createUserOption } from './UsersSelect'
+import GroupsSelect, { createGroupOption } from './GroupsSelect'
+import ChatsSelect, { createChatOption } from './ChatsSelect'
+import { ErrorData, FilterSubscription } from '../../shared/types'
+import { useGetSubscriptionsPermissions } from '../../shared/hooks'
+import RecipientsSelect, { recipientsTypeOptions } from './RecipientsSelect'
 
 type Props = {
-  currentValue?: FilterSubscription;
-  onSave: (subscription: FilterSubscription) => void;
-  onCancel?: () => void;
-  submitError?: ErrorData;
-};
+  currentValue?: FilterSubscription
+  onSave: (subscription: FilterSubscription) => void
+  onCancel?: () => void
+  submitError?: ErrorData
+}
 
-export const FORM_ID = 'myteam-filter-subscription-form';
+export const FORM_ID = 'myteam-filter-subscription-form'
 
 type FormState = {
-  filter?: OptionType;
-  recipientsType?: OptionType;
-  users?: OptionType[];
-  groups?: OptionType[];
-  chats?: OptionType[];
-  scheduleMode: string;
-  hours?: OptionType;
-  minutes?: OptionType;
-  weekDays?: string[];
-  monthDay?: OptionType;
-  advanced?: string;
-  type?: string;
-  emailOnEmpty: boolean;
-  separateIssues: boolean;
-};
+  filter?: OptionType
+  recipientsType?: OptionType
+  users?: OptionType[]
+  groups?: OptionType[]
+  chats?: OptionType[]
+  scheduleMode: string
+  hours?: OptionType
+  minutes?: OptionType
+  weekDays?: string[]
+  monthDay?: OptionType
+  advanced?: string
+  type?: string
+  emailOnEmpty: boolean
+  separateIssues: boolean
+}
 
 const Container = styled.div`
   form > * {
     margin-bottom: 10px;
   }
-`;
+`
 
 const TimeInterval = styled.div`
   display: flex;
   align-items: end;
-`;
+`
 
 const SmallSelect = styled.div`
   width: 200px;
   margin-right: 10px;
-`;
+`
 
 const scheduleOptions = [
   {
@@ -85,16 +85,16 @@ const scheduleOptions = [
     label: I18n.getText('cron.editor.advanced'),
     value: 'advanced',
   },
-];
+]
 
 const hourOptions = [...Array(24).keys()].map((hour) => ({
   label: hour.toString(),
   value: hour,
-}));
+}))
 const minutesOptions = [...Array(12).keys()].map((key) => ({
   label: (key * 5).toString(),
   value: key * 5,
-}));
+}))
 
 const weekdaysOptions = [
   {
@@ -125,50 +125,50 @@ const weekdaysOptions = [
     label: I18n.getText('cron.editor.sunday'),
     value: '1',
   },
-];
+]
 
 const monthDayOptions = [...Array(32).keys()].map((monthDay) => ({
   label: monthDay.toString(),
   value: monthDay,
-}));
+}))
 
 export const typeOptions = [
   {
     name: 'type',
     label: I18n.getText(
-      'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.type.all',
+      'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.type.all'
     ),
     value: 'ALL',
   },
   {
     name: 'type',
     label: I18n.getText(
-      'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.type.created',
+      'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.type.created'
     ),
     value: 'CREATED',
   },
   {
     name: 'type',
     label: I18n.getText(
-      'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.type.updated',
+      'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.type.updated'
     ),
     value: 'UPDATED',
   },
   {
     name: 'type',
     label: I18n.getText(
-      'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.type.createdAndUpdated',
+      'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.type.createdAndUpdated'
     ),
     value: 'CREATED_AND_UPDATED',
   },
-];
+]
 
 const validateNotNull = (value?: unknown) => {
   if (value) {
-    return undefined;
+    return undefined
   }
-  return I18n.getText('common.forms.requiredfields');
-};
+  return I18n.getText('common.forms.requiredfields')
+}
 
 function FilterSubscriptionForm({
   currentValue,
@@ -176,13 +176,13 @@ function FilterSubscriptionForm({
   submitError,
 }: Props): ReactElement {
   const [recipientsType, setRecipientsType] = useState<string | undefined>(
-    currentValue?.recipientsType,
-  );
+    currentValue?.recipientsType
+  )
   const [scheduleMode, setScheduleMode] = useState<string | undefined>(
-    currentValue?.scheduleMode,
-  );
+    currentValue?.scheduleMode
+  )
 
-  const permission = useGetSubscriptionsPermissions();
+  const permission = useGetSubscriptionsPermissions()
 
   return (
     <Container>
@@ -231,8 +231,8 @@ function FilterSubscriptionForm({
             lastRun: currentValue?.lastRun,
             separateIssues: formState.separateIssues,
             emailOnEmpty: formState.emailOnEmpty,
-          };
-          onSave(subscription);
+          }
+          onSave(subscription)
         }}
       >
         {({ formProps }) => (
@@ -275,7 +275,7 @@ function FilterSubscriptionForm({
                           }`}
                         >
                           {I18n.getText(
-                            'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.filter.description',
+                            'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.filter.description'
                           )}
                         </a>
                       </HelperMessage>
@@ -293,7 +293,7 @@ function FilterSubscriptionForm({
                   name="recipientsType"
                   label={I18n.getText('filtersubscription.field.recipients')}
                   defaultValue={recipientsTypeOptions.find(
-                    ({ value }) => value === recipientsType,
+                    ({ value }) => value === recipientsType
                   )}
                   isRequired
                   validate={validateNotNull}
@@ -304,8 +304,8 @@ function FilterSubscriptionForm({
                         id={fieldProps.id}
                         selectedValue={recipientsType}
                         onChange={(value) => {
-                          setRecipientsType(value?.value);
-                          fieldProps.onChange(value);
+                          setRecipientsType(value?.value)
+                          fieldProps.onChange(value)
                         }}
                       />
                       {(error || submitError?.fieldErrors?.recipientsType) && (
@@ -335,14 +335,14 @@ function FilterSubscriptionForm({
                         <UsersSelect
                           id={fieldProps.id}
                           selectedValue={currentValue?.users?.map(
-                            createUserOption,
+                            createUserOption
                           )}
                           onChange={fieldProps.onChange}
                         />
                         {!permission.data?.jiraAdmin && (
                           <HelperMessage>
                             {I18n.getText(
-                              'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.users.message',
+                              'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.users.message'
                             )}
                           </HelperMessage>
                         )}
@@ -370,7 +370,7 @@ function FilterSubscriptionForm({
                         <GroupsSelect
                           id={fieldProps.id}
                           selectedValue={currentValue?.groups?.map(
-                            createGroupOption,
+                            createGroupOption
                           )}
                           onChange={fieldProps.onChange}
                         />
@@ -398,7 +398,7 @@ function FilterSubscriptionForm({
                         <ChatsSelect
                           id={fieldProps.id}
                           selectedValue={currentValue?.chats?.map(
-                            createChatOption,
+                            createChatOption
                           )}
                           onChange={fieldProps.onChange}
                         />
@@ -426,8 +426,8 @@ function FilterSubscriptionForm({
                       options={scheduleOptions}
                       value={scheduleMode}
                       onChange={(event) => {
-                        setScheduleMode(event.currentTarget.value);
-                        fieldProps.onChange(event);
+                        setScheduleMode(event.currentTarget.value)
+                        fieldProps.onChange(event)
                       }}
                     />
                     {(error || submitError?.fieldErrors?.scheduleMode) && (
@@ -447,13 +447,13 @@ function FilterSubscriptionForm({
                         <Field<ValueType<OptionType>>
                           name="hours"
                           label={I18n.getText(
-                            'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval',
+                            'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval'
                           )}
                           defaultValue={
                             currentValue?.hours !== undefined
                               ? hourOptions.find(
                                   (option) =>
-                                    option.value === currentValue?.hours,
+                                    option.value === currentValue?.hours
                                 )
                               : undefined
                           }
@@ -470,12 +470,12 @@ function FilterSubscriptionForm({
                                 inputId={fieldProps.id}
                                 defaultValue={hourOptions.find(
                                   (option) =>
-                                    option.value === currentValue?.hours,
+                                    option.value === currentValue?.hours
                                 )}
                                 options={hourOptions}
                                 onChange={fieldProps.onChange}
                                 placeholder={I18n.getText(
-                                  'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.hours',
+                                  'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.hours'
                                 )}
                                 menuPortalTarget={document.body}
                                 styles={{
@@ -503,7 +503,7 @@ function FilterSubscriptionForm({
                             currentValue?.minutes !== undefined
                               ? minutesOptions.find(
                                   (option) =>
-                                    option.value === currentValue?.minutes,
+                                    option.value === currentValue?.minutes
                                 )
                               : undefined
                           }
@@ -519,12 +519,12 @@ function FilterSubscriptionForm({
                                 inputId={fieldProps.id}
                                 defaultValue={minutesOptions.find(
                                   (option) =>
-                                    option.value === currentValue?.minutes,
+                                    option.value === currentValue?.minutes
                                 )}
                                 options={minutesOptions}
                                 onChange={fieldProps.onChange}
                                 placeholder={I18n.getText(
-                                  'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.minutes',
+                                  'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.minutes'
                                 )}
                                 menuPortalTarget={document.body}
                                 styles={{
@@ -592,7 +592,7 @@ function FilterSubscriptionForm({
                     defaultValue={
                       currentValue?.monthDay !== undefined
                         ? monthDayOptions.find(
-                            (option) => option.value === currentValue?.monthDay,
+                            (option) => option.value === currentValue?.monthDay
                           )
                         : undefined
                     }
@@ -607,12 +607,12 @@ function FilterSubscriptionForm({
                         <Select
                           inputId={fieldProps.id}
                           defaultValue={monthDayOptions.find(
-                            (option) => option.value === currentValue?.monthDay,
+                            (option) => option.value === currentValue?.monthDay
                           )}
                           options={monthDayOptions}
                           onChange={fieldProps.onChange}
                           placeholder={I18n.getText(
-                            'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.dayOfTheMonth',
+                            'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.dayOfTheMonth'
                           )}
                           menuPortalTarget={document.body}
                           styles={{
@@ -634,7 +634,7 @@ function FilterSubscriptionForm({
                 <Field
                   name="advanced"
                   label={I18n.getText(
-                    'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval',
+                    'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval'
                   )}
                   defaultValue={currentValue?.advanced}
                   isRequired={scheduleMode === 'advanced'}
@@ -650,7 +650,7 @@ function FilterSubscriptionForm({
                         onChange={fieldProps.onChange}
                         autoComplete="off"
                         placeholder={I18n.getText(
-                          'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.advanced',
+                          'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.advanced'
                         )}
                       />
                       <HelperMessage>
@@ -660,7 +660,7 @@ function FilterSubscriptionForm({
                           href="https://confluence.atlassian.com/jirasoftwareserver/constructing-cron-expressions-for-a-filter-subscription-939938814.html"
                         >
                           {I18n.getText(
-                            'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.advanced.description',
+                            'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.interval.advanced.description'
                           )}
                         </a>
                       </HelperMessage>
@@ -677,7 +677,7 @@ function FilterSubscriptionForm({
               <Field
                 name="type"
                 label={I18n.getText(
-                  'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.type',
+                  'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.type'
                 )}
                 defaultValue={currentValue?.type}
                 isRequired
@@ -701,7 +701,7 @@ function FilterSubscriptionForm({
               <CheckboxField
                 name="emailOnEmpty"
                 label={I18n.getText(
-                  'admin.schemes.notifications.notifications',
+                  'admin.schemes.notifications.notifications'
                 )}
                 defaultIsChecked={currentValue && currentValue.emailOnEmpty}
               >
@@ -710,7 +710,7 @@ function FilterSubscriptionForm({
                     id={fieldProps.id}
                     defaultChecked={currentValue && currentValue.emailOnEmpty}
                     label={I18n.getText(
-                      'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.emailOnEmpty.label',
+                      'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.emailOnEmpty.label'
                     )}
                     size="medium"
                     onChange={fieldProps.onChange}
@@ -720,7 +720,7 @@ function FilterSubscriptionForm({
               <CheckboxField
                 name="separateIssues"
                 label={I18n.getText(
-                  'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues',
+                  'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues'
                 )}
                 defaultIsChecked={currentValue?.separateIssues}
               >
@@ -730,7 +730,7 @@ function FilterSubscriptionForm({
                       id={fieldProps.id}
                       defaultChecked={currentValue?.separateIssues}
                       label={I18n.getText(
-                        'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues.label',
+                        'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues.label'
                       )}
                       size="medium"
                       onChange={fieldProps.onChange}
@@ -738,13 +738,13 @@ function FilterSubscriptionForm({
                     {recipientsType === 'CHAT' && (
                       <ErrorMessage>
                         {I18n.getText(
-                          'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues.warning',
+                          'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues.warning'
                         )}
                       </ErrorMessage>
                     )}
                     <HelperMessage>
                       {I18n.getText(
-                        'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues.description',
+                        'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.separateIssues.description'
                       )}
                     </HelperMessage>
                   </>
@@ -755,13 +755,13 @@ function FilterSubscriptionForm({
         )}
       </Form>
     </Container>
-  );
+  )
 }
 
 FilterSubscriptionForm.defaultProps = {
   currentValue: undefined,
   onCancel: undefined,
   submitError: undefined,
-};
+}
 
-export default FilterSubscriptionForm;
+export default FilterSubscriptionForm

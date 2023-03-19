@@ -1,25 +1,25 @@
-import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import { AsyncSelect, OptionType, SelectProps } from '@atlaskit/select';
-import { usePrevious } from '../../shared/hooks';
+import React, { ReactElement, useLayoutEffect, useState } from 'react'
+import { AsyncSelect, OptionType, SelectProps } from '@atlaskit/select'
+import { usePrevious } from '../../shared/hooks'
 import {
   IssueTypeData,
   loadProjectData,
-} from '../../shared/api/CommonApiClient';
+} from '../../shared/api/CommonApiClient'
 
 type Props = SelectProps<OptionType> & {
-  className?: string;
-  projectKey?: string;
-  defaultIssueTypeId?: string;
-  onChange: (value: OptionType | null) => void;
-};
+  className?: string
+  projectKey?: string
+  defaultIssueTypeId?: string
+  onChange: (value: OptionType | null) => void
+}
 
 const mapIssueTypesToOptions = (
-  projects: ReadonlyArray<IssueTypeData>,
+  projects: ReadonlyArray<IssueTypeData>
 ): Array<OptionType> => {
   return projects.map((issueType) => {
-    return { label: issueType.name, value: issueType.id };
-  });
-};
+    return { label: issueType.name, value: issueType.id }
+  })
+}
 
 const filterOptions = (options: Array<OptionType>) => {
   return (inputValue: string) =>
@@ -34,11 +34,11 @@ const filterOptions = (options: Array<OptionType>) => {
               .indexOf(inputValue.toLocaleLowerCase()) !== -1 ||
             String(o.value)
               .toLocaleLowerCase()
-              .indexOf(inputValue.toLocaleLowerCase()) !== -1,
-        ),
-      );
-    });
-};
+              .indexOf(inputValue.toLocaleLowerCase()) !== -1
+        )
+      )
+    })
+}
 
 function IssueTypeSelect({
   id,
@@ -47,40 +47,40 @@ function IssueTypeSelect({
   defaultIssueTypeId,
   onChange,
 }: Props): ReactElement {
-  const [issueTypes, setIssueTypes] = useState<Array<OptionType>>([]);
-  const [value, setValue] = useState<OptionType | null>();
+  const [issueTypes, setIssueTypes] = useState<Array<OptionType>>([])
+  const [value, setValue] = useState<OptionType | null>()
 
   const prevProps = usePrevious<
     Pick<Props, 'defaultIssueTypeId' | 'projectKey'>
   >({
     defaultIssueTypeId,
     projectKey,
-  });
+  })
 
   const handleChange = (selectValue: OptionType | null) => {
-    setValue(selectValue);
-    onChange(selectValue);
-  };
+    setValue(selectValue)
+    onChange(selectValue)
+  }
 
   useLayoutEffect(() => {
     if (projectKey) {
       loadProjectData(projectKey).then(({ data }) => {
-        const options = mapIssueTypesToOptions(data.issueTypes);
-        setIssueTypes(options);
+        const options = mapIssueTypesToOptions(data.issueTypes)
+        setIssueTypes(options)
 
         if (prevProps?.projectKey && prevProps.projectKey !== projectKey) {
           // reset value on project change
-          handleChange(null);
+          handleChange(null)
         } else {
           // on first init
           const selectedValues = options.filter(
-            (o) => o.value === defaultIssueTypeId,
-          );
-          handleChange(selectedValues[0]);
+            (o) => o.value === defaultIssueTypeId
+          )
+          handleChange(selectedValues[0])
         }
-      });
+      })
     }
-  }, [defaultIssueTypeId, projectKey]);
+  }, [defaultIssueTypeId, projectKey])
 
   return (
     <AsyncSelect
@@ -92,13 +92,13 @@ function IssueTypeSelect({
       defaultOptions={issueTypes}
       loadOptions={filterOptions(issueTypes)}
     />
-  );
+  )
 }
 
 IssueTypeSelect.defaultProps = {
   className: undefined,
   projectKey: undefined,
   defaultIssueTypeId: undefined,
-};
+}
 
-export default IssueTypeSelect;
+export default IssueTypeSelect

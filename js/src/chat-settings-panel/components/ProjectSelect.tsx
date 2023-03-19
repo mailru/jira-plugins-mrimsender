@@ -1,21 +1,21 @@
-import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import { AsyncSelect, OptionType, SelectProps } from '@atlaskit/select';
-import { loadProjects, ProjectData } from '../../shared/api/CommonApiClient';
+import React, { ReactElement, useLayoutEffect, useState } from 'react'
+import { AsyncSelect, OptionType, SelectProps } from '@atlaskit/select'
+import { loadProjects, ProjectData } from '../../shared/api/CommonApiClient'
 
 type Props = SelectProps<OptionType> & {
-  className?: string;
-  defaultProjectKey?: string;
-  id: string;
-  onChange: (value: OptionType | null) => void;
-};
+  className?: string
+  defaultProjectKey?: string
+  id: string
+  onChange: (value: OptionType | null) => void
+}
 
 const mapProjectsToOptions = (
-  projects: ReadonlyArray<ProjectData>,
+  projects: ReadonlyArray<ProjectData>
 ): Array<OptionType> => {
   return projects.map((project) => {
-    return { label: `${project.name} (${project.key})`, value: project.key };
-  });
-};
+    return { label: `${project.name} (${project.key})`, value: project.key }
+  })
+}
 
 const filterOptions = (options: Array<OptionType>) => {
   return (inputValue: string) =>
@@ -30,11 +30,11 @@ const filterOptions = (options: Array<OptionType>) => {
               .indexOf(inputValue.toLocaleLowerCase()) !== -1 ||
             String(o.value)
               .toLocaleLowerCase()
-              .indexOf(inputValue.toLocaleLowerCase()) !== -1,
-        ),
-      );
-    });
-};
+              .indexOf(inputValue.toLocaleLowerCase()) !== -1
+        )
+      )
+    })
+}
 
 function ProjectSelect({
   id,
@@ -42,30 +42,30 @@ function ProjectSelect({
   defaultProjectKey,
   onChange,
 }: Props): ReactElement {
-  const [projects, setProjects] = useState<Array<OptionType>>([]);
-  const [value, setValue] = useState<OptionType | null>();
+  const [projects, setProjects] = useState<Array<OptionType>>([])
+  const [value, setValue] = useState<OptionType | null>()
 
   const updateValue = (selectValue: OptionType | null): void => {
-    setValue(selectValue);
-    onChange(selectValue);
-  };
+    setValue(selectValue)
+    onChange(selectValue)
+  }
 
   useLayoutEffect(() => {
     loadProjects().then(({ data }) => {
-      const options = mapProjectsToOptions(data);
-      setProjects(options);
+      const options = mapProjectsToOptions(data)
+      setProjects(options)
 
       const selectedValues = options.filter(
-        (o) => o.value === defaultProjectKey,
-      );
+        (o) => o.value === defaultProjectKey
+      )
 
       if (selectedValues.length) {
-        updateValue(selectedValues[0]);
+        updateValue(selectedValues[0])
       }
 
-      setProjects(mapProjectsToOptions(data));
-    });
-  }, [defaultProjectKey]);
+      setProjects(mapProjectsToOptions(data))
+    })
+  }, [defaultProjectKey])
 
   return (
     <AsyncSelect
@@ -77,12 +77,12 @@ function ProjectSelect({
       defaultOptions={projects}
       loadOptions={filterOptions(projects)}
     />
-  );
+  )
 }
 
 ProjectSelect.defaultProps = {
   className: undefined,
   defaultProjectKey: undefined,
-};
+}
 
-export default ProjectSelect;
+export default ProjectSelect

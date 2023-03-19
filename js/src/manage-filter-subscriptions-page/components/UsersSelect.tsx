@@ -1,33 +1,33 @@
-import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import { AsyncSelect, OptionsType, OptionType } from '@atlaskit/select';
-import { I18n } from '@atlassian/wrm-react-i18n';
-import { loadJiraUsers } from '../../shared/api/CommonApiClient';
-import { User } from '../../shared/types';
+import React, { ReactElement, useLayoutEffect, useState } from 'react'
+import { AsyncSelect, OptionsType, OptionType } from '@atlaskit/select'
+import { I18n } from '@atlassian/wrm-react-i18n'
+import { loadJiraUsers } from '../../shared/api/CommonApiClient'
+import { User } from '../../shared/types'
 
 type Props = {
-  selectedValue?: OptionsType;
-  id: string;
-  onChange: (value: OptionsType) => void;
-  isMulti?: boolean;
-  placeholder?: string;
-};
+  selectedValue?: OptionsType
+  id: string
+  onChange: (value: OptionsType) => void
+  isMulti?: boolean
+  placeholder?: string
+}
 
 export const createUserOption = (user: User): OptionType => {
   return {
     label: user.displayName,
     value: user.userKey,
-  };
-};
+  }
+}
 
 const loadUsers = async (query?: string): Promise<OptionType[]> => {
   return new Promise((resolve, reject) => {
     loadJiraUsers(query === undefined ? '' : query)
       .then((response) => {
-        resolve(response.data.map(createUserOption));
+        resolve(response.data.map(createUserOption))
       })
-      .catch(reject);
-  });
-};
+      .catch(reject)
+  })
+}
 
 function UsersSelect({
   id,
@@ -37,18 +37,18 @@ function UsersSelect({
 }: Props): ReactElement {
   const [currentValue, setCurrentValue] = useState<
     OptionsType | OptionType | null
-  >();
+  >()
 
   const handleChange = (value: OptionsType): void => {
-    setCurrentValue(value);
-    onChange(value);
-  };
+    setCurrentValue(value)
+    onChange(value)
+  }
 
   useLayoutEffect(() => {
     if (selectedValue) {
-      setCurrentValue(selectedValue);
+      setCurrentValue(selectedValue)
     }
-  }, [selectedValue]);
+  }, [selectedValue])
 
   return (
     <AsyncSelect
@@ -64,12 +64,12 @@ function UsersSelect({
       menuPortalTarget={document.body}
       styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
     />
-  );
+  )
 }
 
 UsersSelect.defaultProps = {
   selectedValue: undefined,
   placeholder: I18n.getText('admin.common.words.users'),
-};
+}
 
-export default UsersSelect;
+export default UsersSelect

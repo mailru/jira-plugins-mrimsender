@@ -1,54 +1,54 @@
-import React, { ReactElement } from 'react';
+import React, { ReactElement } from 'react'
 import Modal, {
   ModalFooter,
   ModalHeader,
   ModalTitle,
   ModalTransition,
-} from '@atlaskit/modal-dialog';
-import { I18n } from '@atlassian/wrm-react-i18n';
-import Form, { ErrorMessage, Field } from '@atlaskit/form';
-import Textfield from '@atlaskit/textfield';
-import Button, { ButtonGroup } from '@atlaskit/button';
-import { ValueType } from '@atlaskit/select';
-import UserPicker, { OptionData, Value } from '@atlaskit/user-picker';
-import styled from 'styled-components';
-import { ChatCreationData } from '../stores/types';
+} from '@atlaskit/modal-dialog'
+import { I18n } from '@atlassian/wrm-react-i18n'
+import Form, { ErrorMessage, Field } from '@atlaskit/form'
+import Textfield from '@atlaskit/textfield'
+import Button, { ButtonGroup } from '@atlaskit/button'
+import { ValueType } from '@atlaskit/select'
+import UserPicker, { OptionData, Value } from '@atlaskit/user-picker'
+import styled from 'styled-components'
+import { ChatCreationData } from '../stores/types'
 
 type Props = {
-  chatCreationData: ChatCreationData;
-  isOpen: boolean;
-  onClose: () => void;
-  createChat(name: string, memberIds: number[]): void;
-  loadUsers(): Promise<OptionData | OptionData[]>;
-};
+  chatCreationData: ChatCreationData
+  isOpen: boolean
+  onClose: () => void
+  createChat(name: string, memberIds: number[]): void
+  loadUsers(): Promise<OptionData | OptionData[]>
+}
 
 type CreateChatDialogFormValuesType = {
-  'chat-name': string;
+  'chat-name': string
   // eslint-disable-next-line sonarjs/no-duplicate-string
-  'chat-members': ValueType<OptionData, true>; // eslint-disable sonarjs/no-duplicate-string
-};
+  'chat-members': ValueType<OptionData, true> // eslint-disable sonarjs/no-duplicate-string
+}
 
 const ModalBody = styled.div`
   overflow-x: visible;
   padding: 0 20px;
-`;
+`
 
 const validateChatName = (value?: string) => {
   if (!value || value.trim().length === 0) {
-    return 'TOO_SHORT';
+    return 'TOO_SHORT'
   }
-  return undefined;
-};
+  return undefined
+}
 
 const validateChatMembers = (value?: ValueType<OptionData, true>) => {
   if (!value || value.length <= 1) {
-    return 'TOO_SHORT';
+    return 'TOO_SHORT'
   }
   if (value && value.length > 30) {
-    return 'TOO_MORE';
+    return 'TOO_MORE'
   }
-  return undefined;
-};
+  return undefined
+}
 
 export default function CreateChatDialog({
   isOpen,
@@ -71,10 +71,10 @@ export default function CreateChatDialog({
                 createChat(
                   values['chat-name'],
                   values['chat-members'].map((member) =>
-                    Number.parseInt(member.id, 10),
-                  ),
-                );
-                onClose();
+                    Number.parseInt(member.id, 10)
+                  )
+                )
+                onClose()
               }
             }}
           >
@@ -84,14 +84,14 @@ export default function CreateChatDialog({
                 <ModalHeader>
                   <ModalTitle>
                     {I18n.getText(
-                      'ru.mail.jira.plugins.myteam.createChat.panel.title',
+                      'ru.mail.jira.plugins.myteam.createChat.panel.title'
                     )}
                   </ModalTitle>
                 </ModalHeader>
                 <ModalBody>
                   <Field
                     label={I18n.getText(
-                      'ru.mail.jira.plugins.myteam.createChat.panel.name',
+                      'ru.mail.jira.plugins.myteam.createChat.panel.name'
                     )}
                     name="chat-name"
                     defaultValue={chatCreationData.name}
@@ -104,7 +104,7 @@ export default function CreateChatDialog({
                         {error === 'TOO_SHORT' && !valid && (
                           <ErrorMessage>
                             {I18n.getText(
-                              'ru.mail.jira.plugins.myteam.createChat.panel.error.empty_name',
+                              'ru.mail.jira.plugins.myteam.createChat.panel.error.empty_name'
                             )}
                           </ErrorMessage>
                         )}
@@ -114,7 +114,7 @@ export default function CreateChatDialog({
                   <Field<ValueType<OptionData, true>>
                     name="chat-members"
                     label={I18n.getText(
-                      'ru.mail.jira.plugins.myteam.createChat.panel.members',
+                      'ru.mail.jira.plugins.myteam.createChat.panel.members'
                     )}
                     defaultValue={chatCreationData.members}
                     validate={validateChatMembers}
@@ -127,7 +127,7 @@ export default function CreateChatDialog({
                           width="100%"
                           value={rest.value as Value}
                           onChange={(value) => {
-                            rest.onChange(value as ValueType<OptionData, true>);
+                            rest.onChange(value as ValueType<OptionData, true>)
                           }}
                           inputId={id}
                           loadOptions={loadUsers}
@@ -137,14 +137,14 @@ export default function CreateChatDialog({
                         {error === 'TOO_SHORT' && !valid && (
                           <ErrorMessage>
                             {I18n.getText(
-                              'ru.mail.jira.plugins.myteam.createChat.panel.error.empty_members',
+                              'ru.mail.jira.plugins.myteam.createChat.panel.error.empty_members'
                             )}
                           </ErrorMessage>
                         )}
                         {error === 'TOO_MORE' && !valid && (
                           <ErrorMessage>
                             {I18n.getText(
-                              'ru.mail.jira.plugins.myteam.createChat.panel.error.more_members',
+                              'ru.mail.jira.plugins.myteam.createChat.panel.error.more_members'
                             )}
                           </ErrorMessage>
                         )}
@@ -169,5 +169,5 @@ export default function CreateChatDialog({
         </Modal>
       )}
     </ModalTransition>
-  );
+  )
 }

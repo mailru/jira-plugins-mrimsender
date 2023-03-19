@@ -1,46 +1,46 @@
 /* eslint-disable react/jsx-props-no-spreading */
-import React, { ReactElement, useState } from 'react';
-import styled from 'styled-components';
-import { I18n } from '@atlassian/wrm-react-i18n';
-import contextPath from 'wrm/context-path';
+import React, { ReactElement, useState } from 'react'
+import styled from 'styled-components'
+import { I18n } from '@atlassian/wrm-react-i18n'
+import contextPath from 'wrm/context-path'
 import DropdownMenu, {
   DropdownItem,
   DropdownItemGroup,
-} from '@atlaskit/dropdown-menu';
-import Button from '@atlaskit/button';
-import MoreIcon from '@atlaskit/icon/glyph/more';
-import PersonIcon from '@atlaskit/icon/glyph/person';
-import PeopleGroupIcon from '@atlaskit/icon/glyph/people-group';
-import DynamicTable from '@atlaskit/dynamic-table';
-import { OptionsType, OptionType } from '@atlaskit/select';
-import MyteamImage from '../../assets/myteam.png';
+} from '@atlaskit/dropdown-menu'
+import Button from '@atlaskit/button'
+import MoreIcon from '@atlaskit/icon/glyph/more'
+import PersonIcon from '@atlaskit/icon/glyph/person'
+import PeopleGroupIcon from '@atlaskit/icon/glyph/people-group'
+import DynamicTable from '@atlaskit/dynamic-table'
+import { OptionsType, OptionType } from '@atlaskit/select'
+import MyteamImage from '../../assets/myteam.png'
 import {
   useGetSubscriptions,
   useRunSubscriptionMutation,
   useSubscriptionDelete,
   useSubscriptionMutation,
-} from '../../shared/hooks';
-import { FilterSubscription } from '../../shared/types';
-import ConfirmationDialog from '../../shared/components/dialogs/ConfirmationDialog';
-import CreateFilterSubscriptionDialog from './CreateFilterSubscriptionDialog';
-import EditFilterSubscriptionDialog from './EditFilterSubscriptionDialog';
-import { typeOptions } from './FilterSubscriptionForm';
-import UsersSelect from './UsersSelect';
-import JqlFilterSelect from './JqlFilterSelect';
-import RecipientsSelect from './RecipientsSelect';
-import GroupsSelect from './GroupsSelect';
-import ChatsSelect from './ChatsSelect';
+} from '../../shared/hooks'
+import { FilterSubscription } from '../../shared/types'
+import ConfirmationDialog from '../../shared/components/dialogs/ConfirmationDialog'
+import CreateFilterSubscriptionDialog from './CreateFilterSubscriptionDialog'
+import EditFilterSubscriptionDialog from './EditFilterSubscriptionDialog'
+import { typeOptions } from './FilterSubscriptionForm'
+import UsersSelect from './UsersSelect'
+import JqlFilterSelect from './JqlFilterSelect'
+import RecipientsSelect from './RecipientsSelect'
+import GroupsSelect from './GroupsSelect'
+import ChatsSelect from './ChatsSelect'
 
 const Page = styled.div`
   background-color: #fff;
   padding: 20px;
-`;
+`
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-`;
+`
 
 const Left = styled.div`
   display: flex;
@@ -49,31 +49,31 @@ const Left = styled.div`
   h1 {
     margin: 0;
   }
-`;
+`
 
 const Logo = styled.img`
   padding-right: 5px;
   vertical-align: middle;
-`;
+`
 
 const PageDescription = styled.div`
   padding-block: 10px;
-`;
+`
 
 const FiltersBlock = styled.div`
   padding-bottom: 10px;
   display: flex;
   align-items: center;
-`;
+`
 
 const SmallSelect = styled.div`
   width: 200px;
   margin-right: 10px;
-`;
+`
 
 const Cell = styled.div`
   margin-block: 5px;
-`;
+`
 
 const Recipient = styled.div`
   display: flex;
@@ -83,13 +83,13 @@ const Recipient = styled.div`
   div:last-child {
     margin-left: 5px;
   }
-`;
+`
 
 const tableHead = {
   cells: [
     {
       content: I18n.getText(
-        'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscriber',
+        'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscriber'
       ),
       key: 'subscriber',
       isSortable: false,
@@ -101,7 +101,7 @@ const tableHead = {
     },
     {
       content: I18n.getText(
-        'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscribed',
+        'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscribed'
       ),
       key: 'subscribed',
       isSortable: false,
@@ -123,7 +123,7 @@ const tableHead = {
     },
     {
       content: I18n.getText(
-        'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.type',
+        'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.field.type'
       ),
       key: 'type',
       isSortable: false,
@@ -134,15 +134,15 @@ const tableHead = {
       isSortable: false,
     },
   ],
-};
+}
 
 type BuildRowsProps = {
-  subscriptions?: FilterSubscription[];
-  selectSubscription: (subscription: FilterSubscription) => void;
-  runSubscription: (subscriptionId: number) => void;
-  openEditDialog: (open: boolean) => void;
-  openDeleteDialog: (open: boolean) => void;
-};
+  subscriptions?: FilterSubscription[]
+  selectSubscription: (subscription: FilterSubscription) => void
+  runSubscription: (subscriptionId: number) => void
+  openEditDialog: (open: boolean) => void
+  openDeleteDialog: (open: boolean) => void
+}
 
 const buildRows = ({
   subscriptions,
@@ -212,7 +212,7 @@ const buildRows = ({
                 <Recipient
                   key={chat}
                   title={I18n.getText(
-                    'ru.mail.jira.plugins.myteam.createChat.panel',
+                    'ru.mail.jira.plugins.myteam.createChat.panel'
                   )}
                 >
                   <img height={16} src={MyteamImage} alt="Myteam logo icon" />
@@ -274,7 +274,7 @@ const buildRows = ({
                 <DropdownItem
                   onClick={() => {
                     if (subscription.id) {
-                      runSubscription(subscription.id);
+                      runSubscription(subscription.id)
                     }
                   }}
                 >
@@ -282,16 +282,16 @@ const buildRows = ({
                 </DropdownItem>
                 <DropdownItem
                   onClick={() => {
-                    selectSubscription(subscription);
-                    openEditDialog(true);
+                    selectSubscription(subscription)
+                    openEditDialog(true)
                   }}
                 >
                   {I18n.getText('common.words.edit')}
                 </DropdownItem>
                 <DropdownItem
                   onClick={() => {
-                    selectSubscription(subscription);
-                    openDeleteDialog(true);
+                    selectSubscription(subscription)
+                    openDeleteDialog(true)
                   }}
                 >
                   {I18n.getText('common.words.delete')}
@@ -302,38 +302,38 @@ const buildRows = ({
         ),
       },
     ],
-  }));
-};
+  }))
+}
 
 function ManageFilterSubscriptions(): ReactElement {
   const [openCreateSubscriptionDialog, setOpenCreateSubscriptionDialog] =
-    useState<boolean>(false);
+    useState<boolean>(false)
   const [openEditSubscriptionDialog, setOpenEditSubscriptionDialog] =
-    useState<boolean>(false);
+    useState<boolean>(false)
   const [openDeleteSubscriptionDialog, setOpenDeleteSubscriptionDialog] =
-    useState<boolean>(false);
+    useState<boolean>(false)
   const [selectedSubscription, setSelectedSubscription] =
-    useState<FilterSubscription>();
+    useState<FilterSubscription>()
 
-  const [filterSubscribers, setFilterSubscribers] = useState<OptionsType>();
-  const [filter, setFilter] = useState<OptionType | null>();
-  const [recipientsType, setRecipientsType] = useState<string | undefined>();
-  const [users, setUsers] = useState<OptionsType>();
-  const [groups, setGroups] = useState<OptionsType>();
-  const [chats, setChats] = useState<OptionsType>();
+  const [filterSubscribers, setFilterSubscribers] = useState<OptionsType>()
+  const [filter, setFilter] = useState<OptionType | null>()
+  const [recipientsType, setRecipientsType] = useState<string | undefined>()
+  const [users, setUsers] = useState<OptionsType>()
+  const [groups, setGroups] = useState<OptionsType>()
+  const [chats, setChats] = useState<OptionsType>()
 
   const getRecipients = () => {
     if (recipientsType === 'USER') {
-      return users?.map((user) => user.value.toString());
+      return users?.map((user) => user.value.toString())
     }
     if (recipientsType === 'GROUP') {
-      return groups?.map((group) => group.value.toString());
+      return groups?.map((group) => group.value.toString())
     }
     if (recipientsType === 'CHAT') {
-      return chats?.map((chat) => chat.value.toString());
+      return chats?.map((chat) => chat.value.toString())
     }
-    return undefined;
-  };
+    return undefined
+  }
 
   const subscriptions = useGetSubscriptions({
     subscribers: filterSubscribers?.map(({ value }) => value.toString()),
@@ -343,18 +343,18 @@ function ManageFilterSubscriptions(): ReactElement {
         : undefined,
     recipientsType,
     recipients: getRecipients(),
-  });
-  const deleteSubscription = useSubscriptionDelete();
-  const subscriptionMutation = useSubscriptionMutation();
-  const runSubscriptionMutation = useRunSubscriptionMutation();
+  })
+  const deleteSubscription = useSubscriptionDelete()
+  const subscriptionMutation = useSubscriptionMutation()
+  const runSubscriptionMutation = useRunSubscriptionMutation()
 
   const runSubscription = (subscriptionId: number) => {
     runSubscriptionMutation.mutate(subscriptionId, {
       onSuccess: () => {
-        subscriptions.refetch();
+        subscriptions.refetch()
       },
-    });
-  };
+    })
+  }
 
   return (
     <Page>
@@ -363,7 +363,7 @@ function ManageFilterSubscriptions(): ReactElement {
           <Logo height={48} src={MyteamImage} alt="Myteam logo" />
           <h1>
             {I18n.getText(
-              'ru.mail.jira.plugins.myteam.subscriptions.page.title',
+              'ru.mail.jira.plugins.myteam.subscriptions.page.title'
             )}
           </h1>
         </Left>
@@ -373,7 +373,7 @@ function ManageFilterSubscriptions(): ReactElement {
       </Header>
       <PageDescription>
         {I18n.getText(
-          'ru.mail.jira.plugins.myteam.subscriptions.page.description',
+          'ru.mail.jira.plugins.myteam.subscriptions.page.description'
         )}
       </PageDescription>
       <FiltersBlock>
@@ -383,7 +383,7 @@ function ManageFilterSubscriptions(): ReactElement {
             selectedValue={filterSubscribers}
             onChange={setFilterSubscribers}
             placeholder={I18n.getText(
-              'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscriber',
+              'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscriber'
             )}
           />
         </SmallSelect>
@@ -401,10 +401,10 @@ function ManageFilterSubscriptions(): ReactElement {
             id="recipients"
             selectedValue={recipientsType}
             onChange={(value) => {
-              setRecipientsType(value?.value);
+              setRecipientsType(value?.value)
             }}
             placeholder={I18n.getText(
-              'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscribed',
+              'ru.mail.jira.plugins.myteam.subscriptions.page.table.subscribed'
             )}
             isClearable
           />
@@ -440,7 +440,7 @@ function ManageFilterSubscriptions(): ReactElement {
         emptyView={
           <h2>
             {I18n.getText(
-              'ru.mail.jira.plugins.myteam.subscriptions.page.empty',
+              'ru.mail.jira.plugins.myteam.subscriptions.page.empty'
             )}
           </h2>
         }
@@ -449,16 +449,16 @@ function ManageFilterSubscriptions(): ReactElement {
       <CreateFilterSubscriptionDialog
         isOpen={openCreateSubscriptionDialog}
         onClose={() => {
-          setOpenCreateSubscriptionDialog(false);
-          subscriptionMutation.reset();
+          setOpenCreateSubscriptionDialog(false)
+          subscriptionMutation.reset()
         }}
         onSaveSuccess={(subscription) => {
           subscriptionMutation.mutate(subscription, {
             onSuccess: () => {
-              setOpenCreateSubscriptionDialog(false);
-              subscriptions.refetch();
+              setOpenCreateSubscriptionDialog(false)
+              subscriptions.refetch()
             },
-          });
+          })
         }}
         creationError={subscriptionMutation.error?.response?.data}
       />
@@ -467,16 +467,16 @@ function ManageFilterSubscriptions(): ReactElement {
           isOpen={openEditSubscriptionDialog}
           currentValue={selectedSubscription}
           onClose={() => {
-            setOpenEditSubscriptionDialog(false);
-            subscriptionMutation.reset();
+            setOpenEditSubscriptionDialog(false)
+            subscriptionMutation.reset()
           }}
           onSaveSuccess={(subscription) => {
             subscriptionMutation.mutate(subscription, {
               onSuccess: () => {
-                subscriptions.refetch();
-                setOpenEditSubscriptionDialog(false);
+                subscriptions.refetch()
+                setOpenEditSubscriptionDialog(false)
               },
-            });
+            })
           }}
           editingError={subscriptionMutation.error?.response?.data}
         />
@@ -484,25 +484,25 @@ function ManageFilterSubscriptions(): ReactElement {
       <ConfirmationDialog
         isOpen={openDeleteSubscriptionDialog}
         title={I18n.getText(
-          'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.delete',
+          'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.delete'
         )}
         body={I18n.getText(
-          'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.delete.description',
+          'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.delete.description'
         )}
         onOk={() => {
           if (selectedSubscription && selectedSubscription.id) {
             deleteSubscription.mutate(selectedSubscription.id, {
               onSuccess: () => {
-                setOpenDeleteSubscriptionDialog(false);
-                subscriptions.refetch();
+                setOpenDeleteSubscriptionDialog(false)
+                subscriptions.refetch()
               },
-            });
+            })
           }
         }}
         onCancel={() => setOpenDeleteSubscriptionDialog(false)}
       />
     </Page>
-  );
+  )
 }
 
-export default ManageFilterSubscriptions;
+export default ManageFilterSubscriptions

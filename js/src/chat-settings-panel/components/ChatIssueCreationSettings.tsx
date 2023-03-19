@@ -1,23 +1,23 @@
-import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import styled from 'styled-components';
-import EditIcon from '@atlaskit/icon/glyph/edit';
-import TrashIcon from '@atlaskit/icon/glyph/trash';
-import Button from '@atlaskit/button';
-import { I18n } from '@atlassian/wrm-react-i18n';
+import React, { ReactElement, useLayoutEffect, useState } from 'react'
+import styled from 'styled-components'
+import EditIcon from '@atlaskit/icon/glyph/edit'
+import TrashIcon from '@atlaskit/icon/glyph/trash'
+import Button from '@atlaskit/button'
+import { I18n } from '@atlassian/wrm-react-i18n'
 import {
   deleteChatIssueCreationSettings,
   loadChatIssueCreationSettings,
-} from '../../shared/api/SettingsApiClient';
-import { IssueCreationSettings, LoadableDataState } from '../../shared/types';
-import EditIssueCreationSettingsDialog from '../../shared/components/dialogs/EditIssueCreationSettingsDialog';
-import ChatName from '../../shared/components/ChatName';
-import LoadableComponent from '../../shared/components/LoadableComponent';
-import NewIssueCreationSettingsDialog from '../../shared/components/dialogs/NewIssueCreationSettingsDialog';
-import ConfirmationDialog from '../../shared/components/dialogs/ConfirmationDialog';
+} from '../../shared/api/SettingsApiClient'
+import { IssueCreationSettings, LoadableDataState } from '../../shared/types'
+import EditIssueCreationSettingsDialog from '../../shared/components/dialogs/EditIssueCreationSettingsDialog'
+import ChatName from '../../shared/components/ChatName'
+import LoadableComponent from '../../shared/components/LoadableComponent'
+import NewIssueCreationSettingsDialog from '../../shared/components/dialogs/NewIssueCreationSettingsDialog'
+import ConfirmationDialog from '../../shared/components/dialogs/ConfirmationDialog'
 
 type Props = {
-  chatId: string | null;
-};
+  chatId: string | null
+}
 
 const Settings = styled.div`
   background-color: #f4f5f7;
@@ -31,18 +31,18 @@ const Settings = styled.div`
     margin-bottom: 10px;
     font-weight: 700;
   }
-`;
+`
 const TitleContainer = styled.div`
   display: flex;
   justify-content: space-between;
-`;
+`
 
 const ClickableEditIconContainer = styled.span`
   cursor: pointer;
   &:hover * {
     color: #005be6;
   }
-`;
+`
 
 const ClickableRemoveIconContainer = styled.span`
   cursor: pointer;
@@ -50,12 +50,12 @@ const ClickableRemoveIconContainer = styled.span`
   &:hover * {
     color: #bf2600;
   }
-`;
+`
 
 const SpaceBetweenRow = styled.div`
   justify-content: space-between;
   display: flex;
-`;
+`
 
 const Field = styled.div`
   margin: 5px 0 0 5px;
@@ -63,7 +63,7 @@ const Field = styled.div`
     font-weight: 600;
     padding-right: 5px;
   }
-`;
+`
 
 const Container = styled.div`
   max-width: 600px;
@@ -72,12 +72,12 @@ const Container = styled.div`
   & > ${TitleContainer} {
     margin-bottom: 20px;
   }
-`;
+`
 
 const renderSettingsElement = (
   settings: IssueCreationSettings,
   onEdit: (settingsId: number) => void,
-  onDelete: (settingsId: number) => void,
+  onDelete: (settingsId: number) => void
 ) => {
   return (
     <Settings>
@@ -117,51 +117,51 @@ const renderSettingsElement = (
         <span>{settings.labels ? settings.labels.join(', ') : ''}</span>
       </Field>
     </Settings>
-  );
-};
+  )
+}
 
 function ChatIssueCreationSettings({ chatId }: Props): ReactElement {
   const [settings, setSettings] = useState<
     LoadableDataState<Array<IssueCreationSettings>>
   >({
     isLoading: false,
-  });
+  })
   const [editSettingsDialogState, setEditSettingsDialogState] = useState<{
-    isOpen: boolean;
-    settingsId?: number;
+    isOpen: boolean
+    settingsId?: number
   }>({
     isOpen: false,
-  });
+  })
 
   const [newSettingsDialogState, setNewSettingsDialogState] = useState<{
-    isOpen: boolean;
+    isOpen: boolean
   }>({
     isOpen: false,
-  });
+  })
 
   const [confirmationDialogState, setConfirmationDialogState] = useState<{
-    isOpen: boolean;
-    settingsId?: number;
+    isOpen: boolean
+    settingsId?: number
   }>({
     isOpen: false,
-  });
+  })
 
   const loadSettings = () => {
     if (chatId) {
       loadChatIssueCreationSettings(chatId)
         .then((response) =>
-          setSettings({ data: response.data, isLoading: false }),
+          setSettings({ data: response.data, isLoading: false })
         )
         .catch((e) => {
-          console.error(e);
-          setSettings({ isLoading: false, error: JSON.stringify(e) });
-        });
+          console.error(e)
+          setSettings({ isLoading: false, error: JSON.stringify(e) })
+        })
     }
-  };
+  }
 
-  useLayoutEffect(loadSettings, []);
+  useLayoutEffect(loadSettings, [])
 
-  const firstSettings = settings.data ? settings.data[0] : null;
+  const firstSettings = settings.data ? settings.data[0] : null
 
   return (
     <Container>
@@ -189,9 +189,9 @@ function ChatIssueCreationSettings({ chatId }: Props): ReactElement {
               (settingsId) =>
                 setEditSettingsDialogState({ isOpen: true, settingsId }),
               (settingsId) => {
-                setConfirmationDialogState({ settingsId, isOpen: true });
-              },
-            ),
+                setConfirmationDialogState({ settingsId, isOpen: true })
+              }
+            )
           )
         ) : (
           <h4>Нет настроек для данного чата</h4>
@@ -202,8 +202,8 @@ function ChatIssueCreationSettings({ chatId }: Props): ReactElement {
             isOpen={editSettingsDialogState.isOpen}
             onClose={() => setEditSettingsDialogState({ isOpen: false })}
             onSaveSuccess={() => {
-              setEditSettingsDialogState({ isOpen: false });
-              loadSettings();
+              setEditSettingsDialogState({ isOpen: false })
+              loadSettings()
             }}
           />
         ) : null}
@@ -214,8 +214,8 @@ function ChatIssueCreationSettings({ chatId }: Props): ReactElement {
             isOpen={newSettingsDialogState.isOpen}
             onClose={() => setNewSettingsDialogState({ isOpen: false })}
             onSaveSuccess={() => {
-              setNewSettingsDialogState({ isOpen: false });
-              loadSettings();
+              setNewSettingsDialogState({ isOpen: false })
+              loadSettings()
             }}
           />
         ) : null}
@@ -226,20 +226,20 @@ function ChatIssueCreationSettings({ chatId }: Props): ReactElement {
           onOk={() => {
             if (confirmationDialogState.settingsId) {
               deleteChatIssueCreationSettings(
-                confirmationDialogState.settingsId,
+                confirmationDialogState.settingsId
               ).then(() => {
-                loadSettings();
-                setConfirmationDialogState({ isOpen: false });
-              });
+                loadSettings()
+                setConfirmationDialogState({ isOpen: false })
+              })
             }
           }}
           onCancel={() => {
-            setConfirmationDialogState({ isOpen: false });
+            setConfirmationDialogState({ isOpen: false })
           }}
         />
       </LoadableComponent>
     </Container>
-  );
+  )
 }
 
-export default ChatIssueCreationSettings;
+export default ChatIssueCreationSettings

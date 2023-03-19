@@ -1,25 +1,25 @@
-import React, { Fragment, ReactElement } from 'react';
-import styled from 'styled-components';
-import { I18n } from '@atlassian/wrm-react-i18n';
-import Spinner from '@atlaskit/spinner';
-import contextPath from 'wrm/context-path';
-import Form, { Field, FormFooter, HelperMessage } from '@atlaskit/form';
-import TextArea from '@atlaskit/textarea';
-import Button from '@atlaskit/button';
-import Avatar, { AvatarItem } from '@atlaskit/avatar';
-import SectionMessage from '@atlaskit/section-message';
+import React, { Fragment, ReactElement } from 'react'
+import styled from 'styled-components'
+import { I18n } from '@atlassian/wrm-react-i18n'
+import Spinner from '@atlaskit/spinner'
+import contextPath from 'wrm/context-path'
+import Form, { Field, FormFooter, HelperMessage } from '@atlaskit/form'
+import TextArea from '@atlaskit/textarea'
+import Button from '@atlaskit/button'
+import Avatar, { AvatarItem } from '@atlaskit/avatar'
+import SectionMessage from '@atlaskit/section-message'
 import {
   useAccessRequestMutation,
   useGetAccessRequest,
-} from '../../shared/hooks';
+} from '../../shared/hooks'
 
 type Props = {
-  issueKey: string | null;
-};
+  issueKey: string | null
+}
 
 type FormState = {
-  message: string;
-};
+  message: string
+}
 
 const Container = styled.div`
   box-sizing: border-box;
@@ -38,19 +38,19 @@ const Container = styled.div`
   form {
     margin-top: 20px;
   }
-`;
+`
 
 const Head = styled.h1`
   a {
     margin-right: 5px;
   }
-`;
+`
 
 const EmptyPageContainer = styled.div`
   margin: 48px auto;
   text-align: center;
   width: 500px;
-`;
+`
 
 function AccessRequest({ issueKey }: Props): ReactElement {
   if (issueKey == null)
@@ -58,14 +58,14 @@ function AccessRequest({ issueKey }: Props): ReactElement {
       <EmptyPageContainer>
         <h2>
           {I18n.getText(
-            'ru.mail.jira.plugins.myteam.accessRequest.page.error.issueKey',
+            'ru.mail.jira.plugins.myteam.accessRequest.page.error.issueKey'
           )}
         </h2>
       </EmptyPageContainer>
-    );
+    )
 
-  const accessRequest = useGetAccessRequest(issueKey);
-  const accessRequestMutation = useAccessRequestMutation();
+  const accessRequest = useGetAccessRequest(issueKey)
+  const accessRequestMutation = useAccessRequestMutation()
 
   return (
     <Container>
@@ -78,18 +78,18 @@ function AccessRequest({ issueKey }: Props): ReactElement {
       ) : accessRequest.data ? (
         <Form
           onSubmit={(formState: FormState) => {
-            const { data, refetch } = accessRequest;
+            const { data, refetch } = accessRequest
 
-            const isRequestNeeded = issueKey && data;
-            if (!isRequestNeeded) return;
+            const isRequestNeeded = issueKey && data
+            if (!isRequestNeeded) return
 
-            const { users, sent } = data;
-            const { message } = formState;
+            const { users, sent } = data
+            const { message } = formState
 
             accessRequestMutation.mutate(
               { issueKey, accessRequest: { users, message, sent } },
-              { onSuccess: refetch },
-            );
+              { onSuccess: refetch }
+            )
           }}
         >
           {({ formProps }) => (
@@ -102,12 +102,12 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                   <SectionMessage appearance="success">
                     <p>
                       {I18n.getText(
-                        'ru.mail.jira.plugins.myteam.accessRequest.page.send.success',
+                        'ru.mail.jira.plugins.myteam.accessRequest.page.send.success'
                       )}
                     </p>
                     <p>
                       {I18n.getText(
-                        'ru.mail.jira.plugins.myteam.accessRequest.page.send.next',
+                        'ru.mail.jira.plugins.myteam.accessRequest.page.send.next'
                       )}
                     </p>
                   </SectionMessage>
@@ -115,7 +115,7 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                 <Field
                   name="users"
                   label={I18n.getText(
-                    'ru.mail.jira.plugins.myteam.accessRequest.page.field.users',
+                    'ru.mail.jira.plugins.myteam.accessRequest.page.field.users'
                   )}
                 >
                   {({ fieldProps }: any) => (
@@ -130,11 +130,11 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                             primaryText={displayName}
                             secondaryText={email}
                           />
-                        ),
+                        )
                       )}
                       <HelperMessage>
                         {I18n.getText(
-                          'ru.mail.jira.plugins.myteam.accessRequest.page.field.users.description',
+                          'ru.mail.jira.plugins.myteam.accessRequest.page.field.users.description'
                         )}
                       </HelperMessage>
                     </>
@@ -143,7 +143,7 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                 <Field
                   name="message"
                   label={I18n.getText(
-                    'ru.mail.jira.plugins.myteam.accessRequest.page.field.message',
+                    'ru.mail.jira.plugins.myteam.accessRequest.page.field.message'
                   )}
                   defaultValue={accessRequest.data?.message}
                   isDisabled={
@@ -155,7 +155,7 @@ function AccessRequest({ issueKey }: Props): ReactElement {
                       <TextArea {...fieldProps} />
                       <HelperMessage>
                         {I18n.getText(
-                          'ru.mail.jira.plugins.myteam.accessRequest.page.field.message.description',
+                          'ru.mail.jira.plugins.myteam.accessRequest.page.field.message.description'
                         )}
                       </HelperMessage>
                     </>
@@ -180,13 +180,13 @@ function AccessRequest({ issueKey }: Props): ReactElement {
         <EmptyPageContainer>
           <h2>
             {I18n.getText(
-              'ru.mail.jira.plugins.myteam.accessRequest.page.error.accessRequest',
+              'ru.mail.jira.plugins.myteam.accessRequest.page.error.accessRequest'
             )}
           </h2>
         </EmptyPageContainer>
       )}
     </Container>
-  );
+  )
 }
 
-export default AccessRequest;
+export default AccessRequest

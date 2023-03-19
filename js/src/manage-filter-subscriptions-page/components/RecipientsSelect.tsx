@@ -1,14 +1,14 @@
-import React, { ReactElement, useLayoutEffect, useState } from 'react';
-import Select from '@atlaskit/select';
-import { I18n } from '@atlassian/wrm-react-i18n';
+import React, { ReactElement, useLayoutEffect, useState } from 'react'
+import Select from '@atlaskit/select'
+import { I18n } from '@atlassian/wrm-react-i18n'
 
 type Props = {
-  id: string;
-  selectedValue?: string;
-  onChange: (value: { label: any; value: string } | null) => void;
-  placeholder?: string;
-  isClearable?: boolean;
-};
+  id: string
+  selectedValue?: string
+  onChange: (value: { label: any; value: string } | null) => void
+  placeholder?: string
+  isClearable?: boolean
+}
 
 export const recipientsTypeOptions = [
   {
@@ -23,7 +23,7 @@ export const recipientsTypeOptions = [
     label: I18n.getText('ru.mail.jira.plugins.myteam.createChat.panel'),
     value: 'CHAT',
   },
-];
+]
 
 function RecipientsSelect({
   id,
@@ -33,22 +33,22 @@ function RecipientsSelect({
   isClearable,
 }: Props): ReactElement {
   const [currentValue, setCurrentValue] = useState<{
-    label: any;
-    value: string;
-  } | null>();
+    label: any
+    value: string
+  } | null>()
 
   const handleChange = (value: { label: any; value: string } | null): void => {
-    setCurrentValue(value);
-    onChange(value);
-  };
+    setCurrentValue(value)
+    onChange(value)
+  }
 
   useLayoutEffect(() => {
     if (selectedValue) {
       setCurrentValue(
-        recipientsTypeOptions.find(({ value }) => value === selectedValue),
-      );
+        recipientsTypeOptions.find(({ value }) => value === selectedValue)
+      )
     }
-  }, [selectedValue]);
+  }, [selectedValue])
 
   return (
     <Select
@@ -63,13 +63,13 @@ function RecipientsSelect({
         menuPortal: (base) => ({ ...base, zIndex: 9999 }),
       }}
     />
-  );
+  )
 }
 
 RecipientsSelect.defaultProps = {
   selectedValue: undefined,
   placeholder: undefined,
   isClearable: false,
-};
+}
 
-export default RecipientsSelect;
+export default RecipientsSelect

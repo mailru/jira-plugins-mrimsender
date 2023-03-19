@@ -1,14 +1,14 @@
-import styled from '@emotion/styled';
-import React, { ReactElement } from 'react';
+import styled from '@emotion/styled'
+import React, { ReactElement } from 'react'
 
 type Props = {
-  className?: string;
-  chatTitle: string;
-  href?: string;
-  disabled?: boolean;
-  target?: string;
-  rel?: string;
-};
+  className?: string
+  chatTitle: string
+  href?: string
+  disabled?: boolean
+  target?: string
+  rel?: string
+}
 
 const TitleLink = styled.span`
   font-weight: 700;
@@ -19,7 +19,7 @@ const TitleLink = styled.span`
     opacity: 0.6;
     text-decoration: none;
   }
-`;
+`
 
 export default function ChatName({
   className,
@@ -40,7 +40,7 @@ export default function ChatName({
         {chatTitle}
       </a>
     </TitleLink>
-  );
+  )
 }
 
 ChatName.defaultProps = {
@@ -49,4 +49,4 @@ ChatName.defaultProps = {
   disabled: undefined,
   target: undefined,
   rel: undefined,
-};
+}
