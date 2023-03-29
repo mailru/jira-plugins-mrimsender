@@ -3,8 +3,8 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue;
 
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import org.jeasy.rules.annotation.Action;
@@ -51,23 +51,20 @@ public class IssueRemindCommandRule extends BaseRule {
 
     rulesEngine.fireError(ErrorRuleType.UnknownError, event);
 
-    if (parsedArgs.size() < 2 || user == null) {
+    if (parsedArgs.size() < 1 || user == null) {
       rulesEngine.fireError(ErrorRuleType.UnknownError, event);
       answerButtonCallback(event);
     }
 
     ReminderDto.ReminderDtoBuilder builder = ReminderDto.builder();
 
-    builder.date(
-        Date.from(
-            ZonedDateTime.parse(parsedArgs.get(1), DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                .toInstant()));
+    builder.date(Date.from(Instant.now().plus(1, ChronoUnit.DAYS)));
 
     builder.issueKey(parsedArgs.get(0));
     builder.userEmail(event.getUserId());
 
-    if (parsedArgs.size() == 3) {
-      builder.description(parsedArgs.get(2));
+    if (parsedArgs.size() == 2) {
+      builder.description(parsedArgs.get(1));
     }
 
     reminderService.addReminder(builder.build(), user);
