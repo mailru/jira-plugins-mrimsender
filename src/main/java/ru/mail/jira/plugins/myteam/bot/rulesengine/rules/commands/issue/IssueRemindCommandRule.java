@@ -2,6 +2,11 @@
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue;
 
 import com.atlassian.jira.user.ApplicationUser;
+import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.List;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -16,12 +21,6 @@ import ru.mail.jira.plugins.myteam.controller.dto.ReminderDto;
 import ru.mail.jira.plugins.myteam.service.ReminderService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
 
 @SuppressWarnings("UnusedVariable")
 @Rule(name = "issue remind", description = "Remind issue by key, date and text")
@@ -77,5 +76,4 @@ public class IssueRemindCommandRule extends BaseRule {
 
     answerButtonCallback(event);
   }
-
 }
