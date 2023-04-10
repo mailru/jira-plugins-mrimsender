@@ -4,6 +4,7 @@ import contextPath from 'wrm/context-path'
 import { FieldHtml, FieldParam, Group, JqlFilter, User } from '../types'
 import { collectFieldsData } from '../utils'
 import getCancelTokenHandler from './AxiosUtils'
+import urls from 'jira/util/urls'
 
 export type IssueTypeData = { name: string; id: string }
 
@@ -44,7 +45,7 @@ export const loadIssueForm = (
     loadProjectData(projectKey).then(({ data: project }) => {
       axios
         .post(
-          `${contextPath()}/secure/QuickCreateIssue!default.jspa?decorator=none`,
+          `${contextPath()}/secure/QuickCreateIssue!default.jspa?decorator=none&atl_token=${urls.atl_token()}`,
           qs.stringify(
             {
               pid: project.id,

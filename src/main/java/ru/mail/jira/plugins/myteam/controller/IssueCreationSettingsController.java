@@ -6,10 +6,10 @@ import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Controller;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.SettingsTagAlreadyExistsException;
@@ -19,7 +19,6 @@ import ru.mail.jira.plugins.myteam.service.IssueCreationSettingsService;
 
 @Controller
 @Path("/issueCreation")
-@Produces(MediaType.APPLICATION_JSON)
 public class IssueCreationSettingsController {
 
   private final IssueCreationSettingsService issueCreationSettingsService;
@@ -78,7 +77,6 @@ public class IssueCreationSettingsController {
   @POST
   @RequiresXsrfCheck
   @Path("/settings")
-  @Consumes(MediaType.APPLICATION_JSON)
   @Nullable
   public Integer createChatSettings(final IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException, PermissionException {
@@ -92,11 +90,10 @@ public class IssueCreationSettingsController {
   @PUT
   @RequiresXsrfCheck
   @Path("/settings/{id}")
-  @Consumes(MediaType.APPLICATION_JSON)
   @Nullable
   public IssueCreationSettingsDto updateChatSettings(
       @PathParam("id") final int id, final IssueCreationSettingsDto settings)
-      throws PermissionException, SettingsTagAlreadyExistsException {
+      throws PermissionException, SettingsTagAlreadyExistsException, UnsupportedEncodingException {
     IssueCreationSettingsDto originalSettings = issueCreationSettingsService.getSettings(id);
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     permissionHelper.checkChatAdminPermissions(
