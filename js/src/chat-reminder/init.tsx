@@ -2,7 +2,6 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { I18n } from '@atlassian/wrm-react-i18n'
 
-import { AppRoot } from '@vkontakte/vkui'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   IssueReminders,
@@ -32,13 +31,11 @@ export default function init(): void {
   const reminderListRoot = document.getElementById(REMINDER_LIST_SELECTOR)
   ReactDOM.render(
     <QueryClientProvider client={queryClient}>
-      <AppRoot mode="embedded">
-        <MessageProvider>
-          <ReminderCreateDialogProvider>
-            <MenuItem />
-          </ReminderCreateDialogProvider>
-        </MessageProvider>
-      </AppRoot>
+      <MessageProvider>
+        <ReminderCreateDialogProvider>
+          <MenuItem />
+        </ReminderCreateDialogProvider>
+      </MessageProvider>
     </QueryClientProvider>,
     menuItemRoot
   )
