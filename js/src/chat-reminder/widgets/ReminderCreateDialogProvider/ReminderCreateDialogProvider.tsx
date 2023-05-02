@@ -86,6 +86,7 @@ const ReminderCreateDialogProvider = ({
           {
             id: 'cancel',
             label: I18n.getText('common.words.cancel'),
+            mode: 'tertiary',
             onClick: onClose,
           },
         ]}
