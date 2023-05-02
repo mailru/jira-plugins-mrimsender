@@ -10,7 +10,6 @@ import {
   ReminderCreateDialogProvider,
   useReminderDialog,
 } from './widgets'
-import '@vkontakte/vkui/dist/vkui.css'
 
 const MENU_ITEM_ID_SELECTOR = 'myteam-chat-reminder-action'
 
