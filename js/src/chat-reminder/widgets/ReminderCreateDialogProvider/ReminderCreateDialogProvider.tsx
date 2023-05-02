@@ -75,6 +75,8 @@ const ReminderCreateDialogProvider = ({
         isOpen={isOpen}
         onClose={onClose}
         hasCloseButton={false}
+        zIndex={100}
+        width={340}
         actions={[
           {
             id: 'add',
@@ -84,6 +86,7 @@ const ReminderCreateDialogProvider = ({
           {
             id: 'cancel',
             label: I18n.getText('common.words.cancel'),
+            mode: 'tertiary',
             onClick: onClose,
           },
         ]}
