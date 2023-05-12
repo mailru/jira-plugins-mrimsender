@@ -26,7 +26,6 @@ const renderMenuItem = (menuItemRoot: Element) => {
     )
 }
 
-let rendered = false;
 
 export default function init(): void {
 
@@ -37,12 +36,11 @@ export default function init(): void {
     if (viewIssueMenuItemRoot) {
         renderMenuItem(viewIssueMenuItemRoot);
     } else {
-        JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function (e: any, context: any, reason: any) {
+        JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function () {
             const boardMenuItemRoot = document.querySelector(BOARD_MENU_ITEM_ID_SELECTOR)
 
-            if (boardMenuItemRoot && boardMenuItemRoot.parentElement && !rendered) {
+            if (boardMenuItemRoot && boardMenuItemRoot.parentElement && document.getElementsByClassName("reminder-menu-item").length === 0) {
                 renderMenuItem(boardMenuItemRoot.parentElement);
-                rendered = true;
             }
         });
     }
