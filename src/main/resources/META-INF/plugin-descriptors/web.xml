@@ -130,5 +130,6 @@
     <web-item name="Reminder Item" key="reminder-menu-item"  section="operations-voteswatchers" weight="100">
         <label>Add Reminder</label>
         <link linkId="myteam-chat-reminder-action"/>
+        <styleClass>myteam-chat-reminder-action</styleClass>
     </web-item>
 </web>
