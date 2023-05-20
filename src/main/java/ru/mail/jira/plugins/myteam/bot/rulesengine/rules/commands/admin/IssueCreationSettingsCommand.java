@@ -39,8 +39,12 @@ public class IssueCreationSettingsCommand extends ChatAdminRule {
     if (!isGroup) {
       return false;
     }
-    checkAdminRules(event);
-    return NAME.equalsName(command);
+    if (NAME.equalsName(command)) {
+      checkAdminRules(event);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   @Action

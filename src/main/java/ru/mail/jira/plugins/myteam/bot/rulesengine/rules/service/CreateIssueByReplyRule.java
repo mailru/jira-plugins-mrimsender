@@ -79,14 +79,18 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       throws AdminRulesRequiredException {
     IssueCreationSettingsDto settings =
         issueCreationSettingsService.getSettingsFromCache(event.getChatId(), tag);
-    if (settings != null && !settings.getCreationByAllMembers()) {
-      checkAdminRules(event);
-    }
 
-    return isGroup
+    if (isGroup
         && NAME.equalsName(command)
         && event instanceof ChatMessageEvent
-        && settings != null;
+        && settings != null) {
+      if (!settings.getCreationByAllMembers()) {
+        checkAdminRules(event);
+      }
+      return true;
+    } else {
+      return false;
+    }
   }
 
   @Action
