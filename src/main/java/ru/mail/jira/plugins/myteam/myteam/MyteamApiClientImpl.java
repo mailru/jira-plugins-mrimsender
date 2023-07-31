@@ -82,8 +82,8 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
     retryClient
         .config()
-        .connectTimeout(3_000)
-        .socketTimeout(2_000)
+        .connectTimeout(2_000)
+        .socketTimeout(2_500)
         .setObjectMapper(new JacksonObjectMapper())
         .httpClient(new ApacheClient(apacheClient, retryClient.config()));
 

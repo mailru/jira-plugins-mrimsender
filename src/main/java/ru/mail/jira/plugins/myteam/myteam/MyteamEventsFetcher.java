@@ -58,8 +58,8 @@ public class MyteamEventsFetcher {
                 }
               },
               0,
-              1,
-              TimeUnit.SECONDS);
+              500,
+              TimeUnit.MILLISECONDS);
       log.debug("IcqEventsFetcher started");
     }
   }
@@ -67,7 +67,7 @@ public class MyteamEventsFetcher {
   public void fetchIcqEvents() {
     try {
       log.debug("IcqEventsFetcher fetch icq events started  lastEventId={}...", lastEventId);
-      HttpResponse<FetchResponse> httpResponse = myteamApiClient.getEvents(lastEventId, 15);
+      HttpResponse<FetchResponse> httpResponse = myteamApiClient.getEvents(lastEventId, 2);
       if (httpResponse.getStatus() == 200) {
         log.debug("IcqEventsFetcher handle icq events started ...");
         // TODO зачем тут атомик ? forEach же не параллельный ...
