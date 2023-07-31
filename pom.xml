@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.github.atlascommunity</groupId>
         <artifactId>parent</artifactId>
-        <version>3.3.11</version>
+        <version>3.4.3</version>
     </parent>
 
     <groupId>ru.mail.jira.plugins</groupId>
@@ -15,7 +15,7 @@
         <name>VK</name>
         <url>https://vk.company</url>
     </organization>
-    <name>VK Plugin: Myteam bot Notifications</name>
+    <name>VK Plugin: VKteams bot Notifications</name>
     <description>Send notifications on issue changes and work with issues using Myteam instant messenger</description>
     <packaging>atlassian-plugin</packaging>
     <modelVersion>4.0.0</modelVersion>
@@ -24,7 +24,7 @@
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
-            <version>2.8.1</version>
+            <version>3.1.6</version>
         </dependency>
         <dependency>
             <groupId>org.jeasy</groupId>
