@@ -13,7 +13,7 @@ import Events from 'jira/util/events'
 import Types from 'jira/util/events/types'
 import Reasons from 'jira/util/events/reasons'
 import TextArea from '@atlaskit/textarea'
-import { UserPicker } from '@atlascommunity/atlas-ui'
+import { IUserPickerItem, UserPicker } from '@atlascommunity/atlas-ui'
 import { getUsersByQuery, loadIssueForm } from '../api/CommonApiClient'
 import LoadableComponent from './LoadableComponent'
 import IssueTypeSelect from '../../chat-settings-panel/components/IssueTypeSelect'
@@ -241,6 +241,22 @@ const renderMainFields = (
 }
 
 const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
+  const defaultAssignee = [
+    {
+      value: 'INITIATOR',
+      label: 'Инициатор создания задачи',
+      id: 'INITIATOR',
+      email: '',
+      name: 'Инициатор создания задачи',
+    },
+    {
+      value: 'MESSAGE_AUTHOR',
+      label: 'Автор оригинального сообщения',
+      id: 'MESSAGE_AUTHOR',
+      email: '',
+      name: 'Автор оригинального сообщения',
+    },
+  ] as IUserPickerItem[]
   return (
     <>
       <h3>Дополнительные настройки</h3>
@@ -319,36 +335,40 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
               hasFetchAfterOpen
               value={settings.assignee}
               options={
-                settings.assignee
+                settings.assignee &&
+                settings.assignee != 'MESSAGE_AUTHOR' &&
+                settings.assignee != 'INITIATOR'
                   ? [
                       {
                         value: settings.assignee,
                         label: settings.assignee,
                         id: settings.assignee,
                         name: settings.assignee,
-                        email: settings.assignee,
-                        avatarImgSrc: settings.assignee,
+                        email: '',
+                        avatarImgSrc: '',
                       },
                     ]
-                  : undefined
+                  : defaultAssignee
               }
               onChange={(value) => {
                 onChange((value as any).value)
-                console.log(value, 'EXECUTOR')
               }}
               queryKey={['users']}
               searchMinLength={1}
               fetchOptions={(q) =>
-                getUsersByQuery(q).then((res) =>
-                  res.map((u) => ({
-                    value: u.name, // Or any other appropriate value for the user
-                    label: u.displayName, // Or any other appropriate label for the user
-                    id: u.name,
-                    name: u.displayName,
-                    email: u.email || '',
-                    avatarImgSrc: u.avatarUrl,
-                  }))
-                )
+                getUsersByQuery(q).then((res) => {
+                  return [
+                    ...defaultAssignee,
+                    ...res.map((u) => ({
+                      value: u.name, // Or any other appropriate value for the user
+                      label: u.displayName, // Or any other appropriate label for the user
+                      id: u.name,
+                      name: u.displayName,
+                      email: u.email || '',
+                      avatarImgSrc: u.avatarUrl,
+                    })),
+                  ]
+                })
               }
             />
             {error && <ErrorMessage>{error}</ErrorMessage>}
