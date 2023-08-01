@@ -1,11 +1,11 @@
 import axios, { AxiosResponse } from 'axios'
 import qs from 'qs'
 import contextPath from 'wrm/context-path'
+import urls from 'jira/util/urls'
 import { FieldHtml, FieldParam, Group, JqlFilter, User } from '../types'
 import { collectFieldsData } from '../utils'
 import getCancelTokenHandler from './AxiosUtils'
-import urls from 'jira/util/urls'
-import {IUser} from "@atlascommunity/atlas-ui";
+import { IUser } from './types'
 
 export type IssueTypeData = { name: string; id: string }
 
@@ -100,15 +100,12 @@ export const loadJiraGroups = (
   })
 }
 
-
-
 export const getUsersByQuery = (searchString = ''): Promise<IUser[]> =>
-    axios
-        .get(`${contextPath()}/rest/api/2/groupuserpicker`, {
-            params: {
-                query: searchString,
-                showAvatar: true,
-            },
-        })
-        .then((response) => response.data.users.users)
-
+  axios
+    .get(`${contextPath()}/rest/api/2/groupuserpicker`, {
+      params: {
+        query: searchString,
+        showAvatar: true,
+      },
+    })
+    .then((response) => response.data.users.users)

@@ -14,8 +14,7 @@ import Types from 'jira/util/events/types'
 import Reasons from 'jira/util/events/reasons'
 import TextArea from '@atlaskit/textarea'
 import { UserPicker } from '@atlascommunity/atlas-ui'
-import { IAsyncSelectOptionSingle } from '@atlascommunity/atlas-ui/src/shared/ui/AsyncSelect/types'
-import {getUsersByQuery, loadIssueForm, loadJiraUsers} from '../api/CommonApiClient'
+import { getUsersByQuery, loadIssueForm } from '../api/CommonApiClient'
 import LoadableComponent from './LoadableComponent'
 import IssueTypeSelect from '../../chat-settings-panel/components/IssueTypeSelect'
 import ProjectSelect from '../../chat-settings-panel/components/ProjectSelect'
@@ -310,33 +309,37 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
       </CheckboxField>
       <Field
         label="Исполнитель"
-        name="executor"
-        defaultValue={settings.executor}
+        name="assignee"
+        defaultValue={settings.assignee}
         validate={validateNotNull}
       >
         {({ fieldProps: { id, onChange }, error }) => (
           <>
             <UserPicker
               hasFetchAfterOpen
-              value={settings.executor}
-              options={[
-                  {
-                      value: settings.executor || '',
-                      label: settings.executor|| '',
-                      id: settings.executor|| '',
-                      name: settings.executor|| '',
-                      email: settings.executor|| '',
-                      avatarImgSrc: settings.executor|| '',
-                  },
-              ]}
+              value={settings.assignee}
+              options={
+                settings.assignee
+                  ? [
+                      {
+                        value: settings.assignee,
+                        label: settings.assignee,
+                        id: settings.assignee,
+                        name: settings.assignee,
+                        email: settings.assignee,
+                        avatarImgSrc: settings.assignee,
+                      },
+                    ]
+                  : undefined
+              }
               onChange={(value) => {
-                onChange((value as IAsyncSelectOptionSingle).value as any)
-                console.log(settings.executor, 'EXECUTOR')
+                onChange((value as any).value)
+                console.log(value, 'EXECUTOR')
               }}
               queryKey={['users']}
               searchMinLength={1}
               fetchOptions={(q) =>
-                  getUsersByQuery(q).then((res) =>
+                getUsersByQuery(q).then((res) =>
                   res.map((u) => ({
                     value: u.name, // Or any other appropriate value for the user
                     label: u.displayName, // Or any other appropriate label for the user
@@ -494,7 +497,7 @@ function EditIssueCreationSettingsForm({
           labels,
           creationByAllMembers,
           reporter,
-          executor,
+          assignee,
           addReporterInWatchers,
           creationSuccessTemplate,
           issueSummaryTemplate,
@@ -505,7 +508,7 @@ function EditIssueCreationSettingsForm({
             tag,
             creationByAllMembers,
             reporter,
-            executor,
+            assignee,
             addReporterInWatchers,
             creationSuccessTemplate,
             issueSummaryTemplate: issueSummaryTemplate

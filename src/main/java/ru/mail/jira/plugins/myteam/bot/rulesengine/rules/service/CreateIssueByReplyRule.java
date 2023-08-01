@@ -145,6 +145,9 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
           issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
           getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), null));
 
+      fieldValues.put(
+          issueCreationService.getField(IssueFieldConstants.ASSIGNEE), settings.getAssignee());
+
       if (settings.getLabels() != null) {
         fieldValues.put(
             issueCreationService.getField(IssueFieldConstants.LABELS),

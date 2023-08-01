@@ -44,7 +44,7 @@ public class IssueCreationSettingsRepository
           entity.setCreationSuccessTemplate(dto.getCreationSuccessTemplate());
           entity.setIssueSummaryTemplate(dto.getIssueSummaryTemplate());
           entity.setIssueQuoteMessageTemplate(dto.getIssueQuoteMessageTemplate());
-          entity.setExecutor(dto.getExecutor());
+          entity.setAssignee(dto.getAssignee());
           entity.setLabels(
               (dto.getLabels() == null || dto.getLabels().size() == 0)
                   ? null
