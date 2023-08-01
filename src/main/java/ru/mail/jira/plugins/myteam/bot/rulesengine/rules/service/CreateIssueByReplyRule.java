@@ -163,7 +163,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
         fieldValues.put(
             issueCreationService.getField(IssueFieldConstants.ASSIGNEE), assigneeUsername);
       }
-      
+
       if (settings.getLabels() != null) {
         fieldValues.put(
             issueCreationService.getField(IssueFieldConstants.LABELS),
