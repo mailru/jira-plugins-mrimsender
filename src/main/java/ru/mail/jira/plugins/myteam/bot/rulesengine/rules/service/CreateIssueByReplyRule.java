@@ -146,22 +146,24 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
           getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), null));
 
       String assigneeValue = settings.getAssignee();
-      @Nullable ApplicationUser assigneeUser = null;
+      if (assigneeValue != null) {
+        @Nullable ApplicationUser assigneeUser = null;
 
-      switch (assigneeValue) {
-        case "MESSAGE_AUTHOR":
-          assigneeUser =
-              userChatService.getJiraUserFromUserChatId(firstMessageReporter.getUserId());
-          break;
-        case "INITIATOR":
-          assigneeUser = initiator;
-          break;
+        switch (assigneeValue) {
+          case "MESSAGE_AUTHOR":
+            assigneeUser =
+                userChatService.getJiraUserFromUserChatId(firstMessageReporter.getUserId());
+            break;
+          case "INITIATOR":
+            assigneeUser = initiator;
+            break;
+        }
+
+        String assigneeUsername = assigneeUser != null ? assigneeUser.getUsername() : assigneeValue;
+        fieldValues.put(
+            issueCreationService.getField(IssueFieldConstants.ASSIGNEE), assigneeUsername);
       }
-
-      String assigneeUsername = assigneeUser != null ? assigneeUser.getUsername() : assigneeValue;
-      fieldValues.put(
-          issueCreationService.getField(IssueFieldConstants.ASSIGNEE), assigneeUsername);
-
+      
       if (settings.getLabels() != null) {
         fieldValues.put(
             issueCreationService.getField(IssueFieldConstants.LABELS),
