@@ -39,6 +39,7 @@ public class IssueCreationSettingsDto {
   @XmlElement private Boolean canEdit;
   @XmlElement private Boolean creationByAllMembers;
   @XmlElement private IssueReporter reporter;
+  @XmlElement private String executor;
   @XmlElement private Boolean addReporterInWatchers;
   @XmlElement private List<String> labels;
   @XmlElement private List<AdditionalIssueFieldDto> additionalFields;
@@ -50,6 +51,7 @@ public class IssueCreationSettingsDto {
     this.tag = entity.getTag();
     this.creationByAllMembers = entity.isCreationByAllMembers();
     this.reporter = entity.getReporter();
+    this.executor = entity.getExecutor();
     this.addReporterInWatchers = entity.isAddReporterInWatchers();
     this.projectKey = entity.getProjectKey();
     this.issueTypeId = entity.getIssueTypeId();
@@ -74,6 +76,7 @@ public class IssueCreationSettingsDto {
     this.tag = entity.getTag();
     this.creationByAllMembers = entity.isCreationByAllMembers();
     this.reporter = entity.getReporter();
+    this.executor = entity.getExecutor();
     this.addReporterInWatchers = entity.isAddReporterInWatchers();
     this.projectKey = entity.getProjectKey();
     this.issueTypeId = entity.getIssueTypeId();

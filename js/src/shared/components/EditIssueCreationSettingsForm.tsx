@@ -13,7 +13,9 @@ import Events from 'jira/util/events'
 import Types from 'jira/util/events/types'
 import Reasons from 'jira/util/events/reasons'
 import TextArea from '@atlaskit/textarea'
-import { loadIssueForm } from '../api/CommonApiClient'
+import { UserPicker } from '@atlascommunity/atlas-ui'
+import { IAsyncSelectOptionSingle } from '@atlascommunity/atlas-ui/src/shared/ui/AsyncSelect/types'
+import {getUsersByQuery, loadIssueForm, loadJiraUsers} from '../api/CommonApiClient'
 import LoadableComponent from './LoadableComponent'
 import IssueTypeSelect from '../../chat-settings-panel/components/IssueTypeSelect'
 import ProjectSelect from '../../chat-settings-panel/components/ProjectSelect'
@@ -306,6 +308,50 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
           />
         )}
       </CheckboxField>
+      <Field
+        label="Исполнитель"
+        name="executor"
+        defaultValue={settings.executor}
+        validate={validateNotNull}
+      >
+        {({ fieldProps: { id, onChange }, error }) => (
+          <>
+            <UserPicker
+              hasFetchAfterOpen
+              value={settings.executor}
+              options={[
+                  {
+                      value: settings.executor || '',
+                      label: settings.executor|| '',
+                      id: settings.executor|| '',
+                      name: settings.executor|| '',
+                      email: settings.executor|| '',
+                      avatarImgSrc: settings.executor|| '',
+                  },
+              ]}
+              onChange={(value) => {
+                onChange((value as IAsyncSelectOptionSingle).value as any)
+                console.log(settings.executor, 'EXECUTOR')
+              }}
+              queryKey={['users']}
+              searchMinLength={1}
+              fetchOptions={(q) =>
+                  getUsersByQuery(q).then((res) =>
+                  res.map((u) => ({
+                    value: u.name, // Or any other appropriate value for the user
+                    label: u.displayName, // Or any other appropriate label for the user
+                    id: u.name,
+                    name: u.displayName,
+                    email: u.email || '',
+                    avatarImgSrc: u.avatarUrl,
+                  }))
+                )
+              }
+            />
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+          </>
+        )}
+      </Field>
       <h3>Шаблоны</h3>
       <LineHelperMessage>{`Текст шаблона может содержать ключи для автоподстановки, где {{key}} будет заменен на соответствующее значение.`}</LineHelperMessage>
       <Field
@@ -448,6 +494,7 @@ function EditIssueCreationSettingsForm({
           labels,
           creationByAllMembers,
           reporter,
+          executor,
           addReporterInWatchers,
           creationSuccessTemplate,
           issueSummaryTemplate,
@@ -458,6 +505,7 @@ function EditIssueCreationSettingsForm({
             tag,
             creationByAllMembers,
             reporter,
+            executor,
             addReporterInWatchers,
             creationSuccessTemplate,
             issueSummaryTemplate: issueSummaryTemplate

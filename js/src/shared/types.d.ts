@@ -16,6 +16,8 @@ export type IssueCreationSettings = {
   additionalFields: Array<FieldParam>
   creationByAllMembers: boolean
   reporter: 'INITIATOR' | 'MESSAGE_AUTHOR'
+
+  executor: string
   addReporterInWatchers: boolean
 }
 
@@ -73,6 +75,7 @@ export type FilterSubscriptionsPermissions = {
 export type User = {
   userKey: string
   displayName: string
+  name: string
   avatarUrl?: string
   email?: string
 }
