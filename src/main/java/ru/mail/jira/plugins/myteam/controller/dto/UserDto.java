@@ -18,9 +18,14 @@ public class UserDto {
   @NotNull @XmlElement private String userKey;
 
   @NotNull @XmlElement private String displayName;
+  @NotNull @XmlElement private String name;
+
+  @NotNull @XmlElement private String email;
 
   public UserDto(ApplicationUser user) {
     this.userKey = user.getKey();
     this.displayName = user.getDisplayName();
+    this.email = user.getEmailAddress();
+    this.name = user.getName();
   }
 }

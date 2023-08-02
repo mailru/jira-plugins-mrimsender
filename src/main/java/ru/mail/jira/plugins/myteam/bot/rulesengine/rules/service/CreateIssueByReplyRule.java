@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service;
 
 import static ru.mail.jira.plugins.myteam.commons.Const.*;
 
+import com.atlassian.jira.exception.NotFoundException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.MutableIssue;
@@ -144,6 +145,35 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       fieldValues.put(
           issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
           getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), null));
+
+      String assigneeValue = settings.getAssignee();
+      if (assigneeValue != null) {
+        switch (assigneeValue) {
+          case "MESSAGE_AUTHOR":
+            @Nullable
+            ApplicationUser assigneeUser =
+                userChatService.getJiraUserFromUserChatId(firstMessageReporter.getUserId());
+            if (assigneeUser != null) {
+              fieldValues.put(
+                  issueCreationService.getField(IssueFieldConstants.ASSIGNEE),
+                  assigneeUser.getUsername());
+            } else
+              throw new NotFoundException(
+                  String.format("User `%s` not found", firstMessageReporter.getUserId()));
+
+            break;
+          case "INITIATOR":
+            fieldValues.put(
+                issueCreationService.getField(IssueFieldConstants.ASSIGNEE),
+                initiator.getUsername());
+            break;
+          case "AUTO":
+            break;
+          default:
+            fieldValues.put(
+                issueCreationService.getField(IssueFieldConstants.ASSIGNEE), assigneeValue);
+        }
+      }
 
       if (settings.getLabels() != null) {
         fieldValues.put(
