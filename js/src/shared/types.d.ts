@@ -17,7 +17,7 @@ export type IssueCreationSettings = {
   creationByAllMembers: boolean
   reporter: 'INITIATOR' | 'MESSAGE_AUTHOR'
 
-  assignee: string
+  assignee: 'INITIATOR' | 'MESSAGE_AUTHOR' | 'AUTO' | string
   addReporterInWatchers: boolean
 }
 

@@ -241,7 +241,15 @@ const renderMainFields = (
 }
 
 const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
+
   const defaultAssignee = [
+    {
+      value: 'AUTO',
+      label: 'Автор назначается автоматически',
+      id: 'AUTO',
+      email: '',
+      name: 'Автор назначается автоматически',
+    },
     {
       value: 'INITIATOR',
       label: 'Инициатор создания задачи',
@@ -326,18 +334,21 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
       <Field
         label="Исполнитель"
         name="assignee"
-        defaultValue={settings.assignee}
+        isRequired
+        defaultValue={settings.assignee || 'AUTO'}
         validate={validateNotNull}
       >
-        {({ fieldProps: { id, onChange }, error }) => (
+        {({ fieldProps: {  onChange }, error }) => (
           <>
             <UserPicker
               hasFetchAfterOpen
+              hasClearButton={false}
               value={settings.assignee}
               options={
                 settings.assignee &&
                 settings.assignee != 'MESSAGE_AUTHOR' &&
-                settings.assignee != 'INITIATOR'
+                settings.assignee != 'INITIATOR' &&
+                settings.assignee != 'AUTO'
                   ? [
                       {
                         value: settings.assignee,
@@ -371,6 +382,9 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
                 })
               }
             />
+            <LineHelperMessage>
+            Хотите назначить определенного пользователя? Просто начните вводить его имя.
+            </LineHelperMessage>
             {error && <ErrorMessage>{error}</ErrorMessage>}
           </>
         )}

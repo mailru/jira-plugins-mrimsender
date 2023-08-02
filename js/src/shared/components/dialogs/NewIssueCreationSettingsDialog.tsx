@@ -32,6 +32,7 @@ enum Status {
 const DEFAULT_SETTINGS: Partial<IssueCreationSettings> = {
   enabled: true,
   tag: 'task',
+  assignee: 'AUTO',
 }
 
 function NewIssueCreationSettingsDialog({
