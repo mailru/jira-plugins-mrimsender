@@ -277,7 +277,8 @@ public class MessageFormatter {
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink,
               formatUser(issue.getAssignee(), "common.concepts.unassigned", useMentionFormat)));
-    } else if (EventType.ISSUE_RESOLVED_ID.equals(eventTypeId) || EventType.ISSUE_CLOSED_ID.equals(eventTypeId)) {
+    } else if (EventType.ISSUE_RESOLVED_ID.equals(eventTypeId)
+        || EventType.ISSUE_CLOSED_ID.equals(eventTypeId)) {
       Resolution resolution = issue.getResolution();
       sb.append(
           i18nResolver.getText(
@@ -287,7 +288,8 @@ public class MessageFormatter {
               resolution != null
                   ? resolution.getNameTranslation(i18nHelper)
                   : i18nResolver.getText("common.resolution.unresolved")));
-    } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId) || EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
+    } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)
+        || EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
               i18nKey,
@@ -305,9 +307,7 @@ public class MessageFormatter {
     } else {
       sb.append(
           i18nResolver.getText(
-              i18nKey,
-              formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
+              i18nKey, formatUser(user, "common.words.anonymous", useMentionFormat), issueLink));
     }
     sb.append("\n").append(shieldText(issue.getSummary()));
 
@@ -918,7 +918,6 @@ public class MessageFormatter {
     return value.substring(0, DISPLAY_FIELD_CHARS_LIMIT) + "...";
   }
 
-
   @NotNull
   private static Map<Long, String> getEventTypeMap() {
     Map<Long, String> eventTypeMap = new HashMap<>();
@@ -938,5 +937,4 @@ public class MessageFormatter {
     eventTypeMap.put(EventType.ISSUE_WORKLOG_DELETED_ID, "worklogDeleted");
     return eventTypeMap;
   }
-
 }
