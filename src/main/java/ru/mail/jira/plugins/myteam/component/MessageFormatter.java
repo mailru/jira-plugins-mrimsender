@@ -263,120 +263,49 @@ public class MessageFormatter {
     StringBuilder sb = new StringBuilder();
 
     boolean useMentionFormat = !recipient.equals(user);
+
     Long eventTypeId = issueEvent.getEventTypeId();
-    if (EventType.ISSUE_CREATED_ID.equals(eventTypeId)) {
+    Map<Long, String> eventTypeMap = getEventTypeMap();
+
+    String eventTypeKey = eventTypeMap.getOrDefault(eventTypeId, "updated");
+    String i18nKey = "ru.mail.jira.plugins.myteam.notification." + eventTypeKey;
+
+    if (EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.created",
-              formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
-    } else if (EventType.ISSUE_UPDATED_ID.equals(eventTypeId)
-        || EventType.ISSUE_COMMENT_DELETED_ID.equals(eventTypeId)
-        || EventType.ISSUE_GENERICEVENT_ID.equals(eventTypeId)) {
-      // {0} обновил запрос [ {1} ]
-      sb.append(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.updated",
-              formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
-    } else if (EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.assigned",
+              i18nKey,
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink,
               formatUser(issue.getAssignee(), "common.concepts.unassigned", useMentionFormat)));
-    } else if (EventType.ISSUE_RESOLVED_ID.equals(eventTypeId)) {
+    } else if (EventType.ISSUE_RESOLVED_ID.equals(eventTypeId) || EventType.ISSUE_CLOSED_ID.equals(eventTypeId)) {
       Resolution resolution = issue.getResolution();
       sb.append(
           i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.resolved",
+              i18nKey,
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink,
               resolution != null
                   ? resolution.getNameTranslation(i18nHelper)
                   : i18nResolver.getText("common.resolution.unresolved")));
-    } else if (EventType.ISSUE_CLOSED_ID.equals(eventTypeId)) {
-      Resolution resolution = issue.getResolution();
+    } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId) || EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.closed",
+              i18nKey,
+              String.format(
+                  "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
+                  jiraBaseUrl,
+                  issue.getKey(),
+                  issueEvent.getComment().getId(),
+                  issueEvent.getComment().getId()),
+              getIssueLink(issue.getKey()),
+              issue.getSummary(),
               formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink,
-              resolution != null
-                  ? resolution.getNameTranslation(i18nHelper)
-                  : i18nResolver.getText("common.resolution.unresolved")));
-    } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)
-        || EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)
-                  ? "ru.mail.jira.plugins.myteam.notification.commented"
-                  : "ru.mail.jira.plugins.myteam.notification.commentEdited",
-              formatUser(user, "common.words.anonymous", useMentionFormat),
-              "["
-                  + i18nResolver.getText("ru.mail.jira.plugins.myteam.notification.comment")
-                  + "]("
-                  + String.format(
-                      "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
-                      jiraBaseUrl,
-                      issue.getKey(),
-                      issueEvent.getComment().getId(),
-                      issueEvent.getComment().getId())
-                  + ")",
-              issueLink));
-    } else if (EventType.ISSUE_REOPENED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.reopened",
-              formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
-    } else if (EventType.ISSUE_DELETED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.deleted",
-              formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
-    } else if (EventType.ISSUE_MOVED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.moved",
-              formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
-    } else if (EventType.ISSUE_WORKLOGGED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.worklogged",
-              formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
-    } else if (EventType.ISSUE_WORKSTARTED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.workStarted",
-              formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
-    } else if (EventType.ISSUE_WORKSTOPPED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.workStopped",
-              formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
-    } else if (EventType.ISSUE_WORKLOG_UPDATED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.worklogUpdated",
-              formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
-    } else if (EventType.ISSUE_WORKLOG_DELETED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.worklogDeleted",
-              formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
+              makeMyteamMarkdownFromJira(issueEvent.getComment().getBody(), useMentionFormat)));
+      return sb.toString();
     } else {
       sb.append(
           i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.updated",
+              i18nKey,
               formatUser(user, "common.words.anonymous", useMentionFormat),
               issueLink));
     }
@@ -988,4 +917,26 @@ public class MessageFormatter {
     if (value.length() < DISPLAY_FIELD_CHARS_LIMIT) return value;
     return value.substring(0, DISPLAY_FIELD_CHARS_LIMIT) + "...";
   }
+
+
+  @NotNull
+  private static Map<Long, String> getEventTypeMap() {
+    Map<Long, String> eventTypeMap = new HashMap<>();
+    eventTypeMap.put(EventType.ISSUE_CREATED_ID, "created");
+    eventTypeMap.put(EventType.ISSUE_ASSIGNED_ID, "assigned");
+    eventTypeMap.put(EventType.ISSUE_RESOLVED_ID, "resolved");
+    eventTypeMap.put(EventType.ISSUE_CLOSED_ID, "closed");
+    eventTypeMap.put(EventType.ISSUE_COMMENTED_ID, "commented");
+    eventTypeMap.put(EventType.ISSUE_COMMENT_EDITED_ID, "commentEdited");
+    eventTypeMap.put(EventType.ISSUE_REOPENED_ID, "reopened");
+    eventTypeMap.put(EventType.ISSUE_DELETED_ID, "deleted");
+    eventTypeMap.put(EventType.ISSUE_MOVED_ID, "moved");
+    eventTypeMap.put(EventType.ISSUE_WORKLOGGED_ID, "worklogged");
+    eventTypeMap.put(EventType.ISSUE_WORKSTARTED_ID, "workStarted");
+    eventTypeMap.put(EventType.ISSUE_WORKSTOPPED_ID, "workStopped");
+    eventTypeMap.put(EventType.ISSUE_WORKLOG_UPDATED_ID, "worklogUpdated");
+    eventTypeMap.put(EventType.ISSUE_WORKLOG_DELETED_ID, "worklogDeleted");
+    return eventTypeMap;
+  }
+
 }
