@@ -293,15 +293,15 @@ public class MessageFormatter {
       sb.append(
           i18nResolver.getText(
               i18nKey,
+              getIssueLink(issue.getKey()),
+              issue.getSummary(),
+              formatUser(user, "common.words.anonymous", useMentionFormat),
               String.format(
                   "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
                   jiraBaseUrl,
                   issue.getKey(),
                   issueEvent.getComment().getId(),
                   issueEvent.getComment().getId()),
-              getIssueLink(issue.getKey()),
-              issue.getSummary(),
-              formatUser(user, "common.words.anonymous", useMentionFormat),
               makeMyteamMarkdownFromJira(issueEvent.getComment().getBody(), useMentionFormat)));
       return sb.toString();
     } else {
