@@ -306,17 +306,24 @@ public class MessageFormatter {
               resolution != null
                   ? resolution.getNameTranslation(i18nHelper)
                   : i18nResolver.getText("common.resolution.unresolved")));
-    } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)) {
+    } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)
+        || EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
       sb.append(
           i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.commented",
+              EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)
+                  ? "ru.mail.jira.plugins.myteam.notification.commented"
+                  : "ru.mail.jira.plugins.myteam.notification.commentEdited",
               formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
-    } else if (EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.notification.commentEdited",
-              formatUser(user, "common.words.anonymous", useMentionFormat),
+              "["
+                  + i18nResolver.getText("ru.mail.jira.plugins.myteam.notification.comment")
+                  + "]("
+                  + String.format(
+                      "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
+                      jiraBaseUrl,
+                      issue.getKey(),
+                      issueEvent.getComment().getId(),
+                      issueEvent.getComment().getId())
+                  + ")",
               issueLink));
     } else if (EventType.ISSUE_REOPENED_ID.equals(eventTypeId)) {
       sb.append(
