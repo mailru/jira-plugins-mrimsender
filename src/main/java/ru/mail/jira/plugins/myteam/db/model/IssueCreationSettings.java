@@ -50,6 +50,11 @@ public interface IssueCreationSettings extends Entity {
 
   void setReporter(IssueReporter issueReporter);
 
+  @Nullable
+  String getAssignee();
+
+  void setAssignee(String assignee);
+
   boolean isAddReporterInWatchers();
 
   void setAddReporterInWatchers(boolean addReporterInWatchers);

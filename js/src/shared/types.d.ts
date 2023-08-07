@@ -16,6 +16,8 @@ export type IssueCreationSettings = {
   additionalFields: Array<FieldParam>
   creationByAllMembers: boolean
   reporter: 'INITIATOR' | 'MESSAGE_AUTHOR'
+
+  assignee: 'INITIATOR' | 'MESSAGE_AUTHOR' | 'AUTO' | string
   addReporterInWatchers: boolean
 }
 

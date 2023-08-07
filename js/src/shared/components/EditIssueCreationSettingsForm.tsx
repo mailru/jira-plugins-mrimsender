@@ -13,7 +13,8 @@ import Events from 'jira/util/events'
 import Types from 'jira/util/events/types'
 import Reasons from 'jira/util/events/reasons'
 import TextArea from '@atlaskit/textarea'
-import { loadIssueForm } from '../api/CommonApiClient'
+import { IUserPickerItem, UserPicker } from '@atlascommunity/atlas-ui'
+import { getUsersByQuery, loadIssueForm } from '../api/CommonApiClient'
 import LoadableComponent from './LoadableComponent'
 import IssueTypeSelect from '../../chat-settings-panel/components/IssueTypeSelect'
 import ProjectSelect from '../../chat-settings-panel/components/ProjectSelect'
@@ -240,6 +241,30 @@ const renderMainFields = (
 }
 
 const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
+
+  const defaultAssignee = [
+    {
+      value: 'AUTO',
+      label: 'Автор назначается автоматически',
+      id: 'AUTO',
+      email: '',
+      name: 'Автор назначается автоматически',
+    },
+    {
+      value: 'INITIATOR',
+      label: 'Инициатор создания задачи',
+      id: 'INITIATOR',
+      email: '',
+      name: 'Инициатор создания задачи',
+    },
+    {
+      value: 'MESSAGE_AUTHOR',
+      label: 'Автор оригинального сообщения',
+      id: 'MESSAGE_AUTHOR',
+      email: '',
+      name: 'Автор оригинального сообщения',
+    },
+  ] as IUserPickerItem[]
   return (
     <>
       <h3>Дополнительные настройки</h3>
@@ -306,6 +331,64 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
           />
         )}
       </CheckboxField>
+      <Field
+        label="Исполнитель"
+        name="assignee"
+        isRequired
+        defaultValue={settings.assignee || 'AUTO'}
+        validate={validateNotNull}
+      >
+        {({ fieldProps: {  onChange }, error }) => (
+          <>
+            <UserPicker
+              hasFetchAfterOpen
+              hasClearButton={false}
+              value={settings.assignee}
+              options={
+                settings.assignee &&
+                settings.assignee != 'MESSAGE_AUTHOR' &&
+                settings.assignee != 'INITIATOR' &&
+                settings.assignee != 'AUTO'
+                  ? [
+                      {
+                        value: settings.assignee,
+                        label: settings.assignee,
+                        id: settings.assignee,
+                        name: settings.assignee,
+                        email: '',
+                        avatarImgSrc: '',
+                      },
+                    ]
+                  : defaultAssignee
+              }
+              onChange={(value) => {
+                onChange((value as any).value)
+              }}
+              queryKey={['users']}
+              searchMinLength={1}
+              fetchOptions={(q) =>
+                getUsersByQuery(q).then((res) => {
+                  return [
+                    ...defaultAssignee,
+                    ...res.map((u) => ({
+                      value: u.name, // Or any other appropriate value for the user
+                      label: u.displayName, // Or any other appropriate label for the user
+                      id: u.name,
+                      name: u.displayName,
+                      email: u.email || '',
+                      avatarImgSrc: u.avatarUrl,
+                    })),
+                  ]
+                })
+              }
+            />
+            <LineHelperMessage>
+            Хотите назначить определенного пользователя? Просто начните вводить его имя.
+            </LineHelperMessage>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+          </>
+        )}
+      </Field>
       <h3>Шаблоны</h3>
       <LineHelperMessage>{`Текст шаблона может содержать ключи для автоподстановки, где {{key}} будет заменен на соответствующее значение.`}</LineHelperMessage>
       <Field
@@ -448,6 +531,7 @@ function EditIssueCreationSettingsForm({
           labels,
           creationByAllMembers,
           reporter,
+          assignee,
           addReporterInWatchers,
           creationSuccessTemplate,
           issueSummaryTemplate,
@@ -458,6 +542,7 @@ function EditIssueCreationSettingsForm({
             tag,
             creationByAllMembers,
             reporter,
+            assignee,
             addReporterInWatchers,
             creationSuccessTemplate,
             issueSummaryTemplate: issueSummaryTemplate
