@@ -361,12 +361,12 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
                     ]
                   : defaultAssignee
               }
-              onChange={(value) => {
+              onChange={(value: any) => {
                 onChange((value as any).value)
               }}
               queryKey={['users']}
               searchMinLength={1}
-              fetchOptions={(q) =>
+              fetchOptions={(q: string) =>
                 getUsersByQuery(q).then((res) => {
                   return [
                     ...defaultAssignee,
