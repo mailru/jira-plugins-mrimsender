@@ -29,25 +29,17 @@ const renderMenuItem = (menuItemRoot: Element) => {
 
 export default function init(): void {
 
-    const viewIssueMenuItemRoot = document.querySelector(MENU_ITEM_ID_SELECTOR)
+    JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function () {
+        const newRoot = document.querySelector(MENU_ITEM_ID_SELECTOR)
+        if (newRoot && newRoot.parentElement) {
+            renderMenuItem(newRoot.parentElement);
+        }
+        const boardMenuItemRoot = document.querySelector(BOARD_MENU_ITEM_ID_SELECTOR)
 
-    if (viewIssueMenuItemRoot) {
-        renderMenuItem(viewIssueMenuItemRoot);
-        JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function () {
-            const newRoot = document.querySelector(MENU_ITEM_ID_SELECTOR)
-            if (newRoot && newRoot.parentElement) {
-                renderMenuItem(newRoot.parentElement);
-            }
-        });
-    } else {
-        JIRA.bind(JIRA.Events.NEW_CONTENT_ADDED, function () {
-            const boardMenuItemRoot = document.querySelector(BOARD_MENU_ITEM_ID_SELECTOR)
-
-            if (boardMenuItemRoot && boardMenuItemRoot.parentElement && document.getElementsByClassName("reminder-menu-item").length === 0) {
-                renderMenuItem(boardMenuItemRoot.parentElement);
-            }
-        });
-    }
+        if (boardMenuItemRoot && boardMenuItemRoot.parentElement && document.getElementsByClassName("reminder-menu-item").length === 0) {
+            renderMenuItem(boardMenuItemRoot.parentElement);
+        }
+    });
 
     const reminderListRoot = document.getElementById(REMINDER_LIST_SELECTOR)
 
