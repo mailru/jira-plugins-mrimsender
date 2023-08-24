@@ -115,6 +115,7 @@ const isIgnoredField = (id: string): boolean => {
     'labels',
     'reporter',
     'description',
+    'assignee',
     'attachment',
     'duedate',
     'labels-textarea',

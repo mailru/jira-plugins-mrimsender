@@ -22,5 +22,6 @@
         <entity>ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestHistory</entity>
 
         <upgradeTask>ru.mail.jira.plugins.myteam.upgrades.Version2UpgradeTask</upgradeTask>
+        <upgradeTask>ru.mail.jira.plugins.myteam.upgrades.Version3UpgradeTask</upgradeTask>
     </ao>
 </atlassian-plugin>
