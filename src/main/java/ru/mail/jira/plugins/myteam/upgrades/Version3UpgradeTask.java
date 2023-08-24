@@ -32,7 +32,7 @@ public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
                         Query.select().where("FIELD_ID = ?", "assignee"))) {
 
                   IssueCreationSettings settings = field.getIssueCreationSettings();
-                  
+
                   settings.setAssignee(field.getValue());
                   settings.save();
 
