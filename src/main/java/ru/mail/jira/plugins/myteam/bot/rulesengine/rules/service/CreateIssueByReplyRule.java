@@ -168,6 +168,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                 initiator.getUsername());
             break;
           case "AUTO":
+            fieldValues.put(issueCreationService.getField(IssueFieldConstants.ASSIGNEE), "-1");
             break;
           default:
             fieldValues.put(
