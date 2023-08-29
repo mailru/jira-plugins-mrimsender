@@ -266,6 +266,7 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
       name: 'Автор оригинального сообщения',
     },
   ] as IUserPickerItem[]
+    const assingeeValue = settings.assignee === '-1' ?  'AUTO' : settings.assignee;
   return (
     <>
       <h3>Дополнительные настройки</h3>
@@ -344,18 +345,18 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
             <UserPicker
               hasFetchAfterOpen
               hasClearButton={false}
-              value={settings.assignee}
+              value={assingeeValue}
               options={
-                settings.assignee &&
-                settings.assignee != 'MESSAGE_AUTHOR' &&
-                settings.assignee != 'INITIATOR' &&
-                settings.assignee != 'AUTO'
+                assingeeValue &&
+                assingeeValue != 'MESSAGE_AUTHOR' &&
+                assingeeValue != 'INITIATOR' &&
+                assingeeValue != 'AUTO'
                   ? [
                       {
-                        value: settings.assignee,
-                        label: settings.assignee,
-                        id: settings.assignee,
-                        name: settings.assignee,
+                        value: assingeeValue,
+                        label: assingeeValue,
+                        id: assingeeValue,
+                        name: assingeeValue,
                         email: '',
                         avatarImgSrc: '',
                       },
