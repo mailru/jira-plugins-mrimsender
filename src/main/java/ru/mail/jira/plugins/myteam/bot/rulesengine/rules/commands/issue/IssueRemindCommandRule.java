@@ -49,10 +49,8 @@ public class IssueRemindCommandRule extends BaseRule {
     ApplicationUser user = userChatService.getJiraUserFromUserChatId(event.getUserId());
     List<String> parsedArgs = RuleType.parseArgs(args);
 
-    rulesEngine.fireError(ErrorRuleType.UnknownError, event);
-
     if (parsedArgs.size() < 1 || user == null) {
-      rulesEngine.fireError(ErrorRuleType.UnknownError, event);
+      rulesEngine.fireError(ErrorRuleType.UnknownError, event, "Issue remind args error");
       answerButtonCallback(event);
     }
 

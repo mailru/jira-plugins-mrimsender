@@ -30,9 +30,10 @@ public class IssueNotFoundErrorRule extends BaseRule {
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("exception") Exception e)
       throws MyteamServerErrorException, IOException {
-    userChatService.sendMessageText(
-        event.getChatId(),
-        userChatService.getRawText(
-            "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.issueNotFound"));
+    String message = userChatService.getRawText("");
+    if (e.getLocalizedMessage() != null) {
+      message += "\n\n" + e.getLocalizedMessage();
+    }
+    userChatService.sendMessageText(event.getChatId(), message);
   }
 }

@@ -33,11 +33,14 @@ public class IssueNoPermissionErrorRule extends BaseRule {
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("exception") Exception e)
       throws UserNotFoundException, MyteamServerErrorException, IOException {
-    log.error(e.getLocalizedMessage(), e);
-
-    userChatService.sendMessageText(
-        event.getChatId(),
+    String message =
         userChatService.getRawText(
-            "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions"));
+            "ru.mail.jira.plugins.myteam.messageQueueProcessor.quickViewButton.noPermissions");
+    if (e.getLocalizedMessage() != null) {
+      message += "\n\n" + e.getLocalizedMessage();
+    }
+    userChatService.sendMessageText(event.getChatId(), message);
+
+    log.error(e.getLocalizedMessage(), e);
   }
 }

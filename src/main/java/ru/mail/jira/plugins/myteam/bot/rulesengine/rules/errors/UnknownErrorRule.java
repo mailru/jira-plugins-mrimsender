@@ -30,11 +30,12 @@ public class UnknownErrorRule extends BaseRule {
   @Action
   public void execute(@Fact("event") MyteamEvent event, @Fact("exception") Exception e)
       throws MyteamServerErrorException, IOException {
-    userChatService.sendMessageText(
-        event.getChatId(),
+    String message =
         userChatService.getRawText(
-                "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.unknownError")
-            + "\n\n"
-            + e.getLocalizedMessage());
+            "ru.mail.jira.plugins.myteam.myteamEventsListener.newIssueKeyMessage.error.unknownError");
+    if (e.getLocalizedMessage() != null) {
+      message += "\n\n" + e.getLocalizedMessage();
+    }
+    userChatService.sendMessageText(event.getChatId(), message);
   }
 }
