@@ -139,7 +139,9 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
     }
 
     if (field.getId().equals(IssueFieldConstants.SUMMARY)) {
-      return new String[] {fieldValue.substring(0, Math.min(fieldValue.length(), SUMMARY_LIMIT))};
+      return new String[] {
+        fieldValue.replaceAll("\n", " ").substring(0, Math.min(fieldValue.length(), SUMMARY_LIMIT))
+      };
     }
 
     List<String> fieldValues =
