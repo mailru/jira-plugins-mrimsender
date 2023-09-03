@@ -125,7 +125,9 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
               firstMessageReporter,
               event.getFrom(),
               tag);
-      fieldValues.put(issueCreationService.getField(IssueFieldConstants.SUMMARY), summary);
+      fieldValues.put(
+          issueCreationService.getField(IssueFieldConstants.SUMMARY),
+          summary.replaceAll("\n", " "));
 
       settings
           .getAdditionalFields()
