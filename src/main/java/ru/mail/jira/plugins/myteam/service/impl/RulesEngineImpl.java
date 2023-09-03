@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.core.RulesEngine;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.RuleEngineFiringException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons.*;
@@ -202,8 +203,8 @@ public class RulesEngineImpl
   }
 
   @Override
-  public void fireError(ErrorRuleType errorType, MyteamEvent event) {
-    fireError(errorType, event, null);
+  public void fireError(ErrorRuleType errorType, MyteamEvent event, String msg) {
+    fireError(errorType, event, new RuleEngineFiringException(msg));
   }
 
   private Facts formBasicFacts(MyteamEvent event, String args) {
