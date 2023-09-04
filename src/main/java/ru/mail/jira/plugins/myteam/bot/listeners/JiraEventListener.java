@@ -108,8 +108,23 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
                   context,
                   com.atlassian.jira.notification.type.NotificationType.from(
                       schemeEntity.getType()));
-          Set<NotificationRecipient> recipientsFromScheme =
-              notificationSchemeManager.getRecipients(issueEvent, schemeEntity);
+
+          Set<NotificationRecipient> recipientsFromScheme = new HashSet<>();
+
+          try {
+            recipientsFromScheme =
+                notificationSchemeManager.getRecipients(issueEvent, schemeEntity);
+          } catch (NullPointerException e) {
+            log.error(e.getLocalizedMessage(), e);
+            SentryClient.capture(
+                e,
+                Map.of(
+                    "error",
+                    String.format(
+                        "Error while retrieving issue \"%s\" notification recipients. (Possibly related to components)",
+                        issueEvent.getIssue().getKey())));
+          }
+
           recipientsFromScheme =
               Sets.newHashSet(
                   notificationFilterManager.recomputeRecipients(recipientsFromScheme, context));
