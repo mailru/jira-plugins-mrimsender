@@ -120,9 +120,9 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
                 e,
                 Map.of(
                     "error",
-                    String.format(
-                        "Error while retrieving issue \"%s\" notification recipients. (Possibly related to components)",
-                        issueEvent.getIssue().getKey())));
+                    "Error while retrieving issue notification recipients. (Possibly related to components)",
+                    "issueKey",
+                    issueEvent.getIssue().getKey()));
           }
 
           recipientsFromScheme =
