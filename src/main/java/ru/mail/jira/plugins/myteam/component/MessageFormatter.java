@@ -1,6 +1,8 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.component;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static ru.mail.jira.plugins.myteam.commons.Utils.shieldText;
 
 import com.atlassian.jira.config.properties.APKeys;
@@ -50,6 +52,8 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
+import ru.mail.jira.plugins.myteam.component.url.dto.Link;
+import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.service.PluginData;
@@ -61,6 +65,12 @@ public class MessageFormatter {
   public static final int MAX_MESSAGE_COUNT = 50;
   public static final String DELIMITER_STR = "----------";
   private static final int DISPLAY_FIELD_CHARS_LIMIT = 5000;
+
+  @SuppressWarnings("InlineFormatString")
+  private static final String DESCRIPTION_MARKDOWN_MASKED_LINK_TEMPLATE = "[%s|%s]";
+
+  @SuppressWarnings("InlineFormatString")
+  private static final String DESCRIPTION_MARKDOWN_UNMASKED_LINK_TEMPLATE = "[%s]";
 
   private final ApplicationProperties applicationProperties;
   private final DateTimeFormatter dateTimeFormatter;
@@ -146,7 +156,7 @@ public class MessageFormatter {
   }
 
   public static String getUserDisplayName(User user) {
-    return String.format(
+    return format(
             "%s %s", user.getFirstName(), user.getLastName() != null ? user.getLastName() : "")
         .trim();
   }
@@ -218,7 +228,7 @@ public class MessageFormatter {
       IssueSecurityLevel issueSecurityLevel =
           issueSecurityLevelManager.getSecurityLevel(issue.getSecurityLevelId());
       String value = issueSecurityLevel.getName();
-      if (!StringUtils.isBlank(issueSecurityLevel.getDescription()))
+      if (!isBlank(issueSecurityLevel.getDescription()))
         value += " " + issueSecurityLevel.getDescription();
       appendField(
           sb, i18nResolver.getRawText("issue.field.securitylevel"), shieldText(value), false);
@@ -235,22 +245,19 @@ public class MessageFormatter {
   }
 
   public String createIssueLink(String issueKey) {
-    return String.format(
-        "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
+    return format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
 
   public String createJqlLink(String jql) {
-    return String.format(
-        "%s/issues/?jql=%s", applicationProperties.getString(APKeys.JIRA_BASEURL), jql);
+    return format("%s/issues/?jql=%s", applicationProperties.getString(APKeys.JIRA_BASEURL), jql);
   }
 
   public String createFilterLink(Long id) {
-    return String.format(
-        "%s/issues/?filter=%s", applicationProperties.getString(APKeys.JIRA_BASEURL), id);
+    return format("%s/issues/?filter=%s", applicationProperties.getString(APKeys.JIRA_BASEURL), id);
   }
 
   public String createMarkdownIssueShortLink(String issueKey) {
-    return String.format(
+    return format(
         "[%s](%s/browse/%s)",
         issueKey, applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
@@ -296,7 +303,7 @@ public class MessageFormatter {
               getIssueLink(issue.getKey()),
               issue.getSummary(),
               formatUser(user, "common.words.anonymous", useMentionFormat),
-              String.format(
+              format(
                   "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
                   jiraBaseUrl,
                   issue.getKey(),
@@ -311,8 +318,7 @@ public class MessageFormatter {
     }
     sb.append("\n").append(shieldText(issue.getSummary()));
 
-    if (issueEvent.getWorklog() != null
-        && !StringUtils.isBlank(issueEvent.getWorklog().getComment()))
+    if (issueEvent.getWorklog() != null && !isBlank(issueEvent.getWorklog().getComment()))
       sb.append("\n\n").append(shieldText(issueEvent.getWorklog().getComment()));
 
     if (EventType.ISSUE_CREATED_ID.equals(eventTypeId))
@@ -323,8 +329,7 @@ public class MessageFormatter {
             issueEvent.getChangeLog(),
             EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId),
             useMentionFormat));
-    if (issueEvent.getComment() != null
-        && !StringUtils.isBlank(issueEvent.getComment().getBody())) {
+    if (issueEvent.getComment() != null && !isBlank(issueEvent.getComment().getBody())) {
       if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)
           && issueEvent.getComment().getBody().contains("[~" + recipient.getName() + "]")) {
         // do not send message when recipient mentioned in comment
@@ -350,7 +355,7 @@ public class MessageFormatter {
             issueLink));
     sb.append("\n").append(shieldText(issue.getSummary()));
 
-    if (!StringUtils.isBlank(mentionIssueEvent.getMentionText()))
+    if (!isBlank(mentionIssueEvent.getMentionText()))
       sb.append("\n\n")
           .append(makeMyteamMarkdownFromJira(mentionIssueEvent.getMentionText(), true));
 
@@ -402,8 +407,7 @@ public class MessageFormatter {
 
   private String getIssueLink(String key) {
     return markdownTextLink(
-        key,
-        String.format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), key));
+        key, format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), key));
   }
 
   public List<List<InlineKeyboardMarkupButton>> getCancelButton() {
@@ -654,7 +658,7 @@ public class MessageFormatter {
 
   private void appendField(
       StringBuilder sb, @Nullable String title, @Nullable String value, boolean appendEmpty) {
-    if (appendEmpty || !StringUtils.isBlank(value)) {
+    if (appendEmpty || !isBlank(value)) {
       if (sb.length() == 0) sb.append("\n");
       sb.append("\n").append(title).append(": ").append(StringUtils.defaultString(value));
     }
@@ -674,7 +678,7 @@ public class MessageFormatter {
           try {
             attachmentUrl =
                 new URI(
-                        String.format(
+                        format(
                             "%s/secure/attachment/%d/%s",
                             jiraBaseUrl, attachment.getId(), attachment.getFilename()),
                         false,
@@ -850,7 +854,7 @@ public class MessageFormatter {
                         markdownTextLink(
                             attachment.getFilename(),
                             new URI(
-                                    String.format(
+                                    format(
                                         "%s/secure/attachment/%d/%s",
                                         jiraBaseUrl, attachment.getId(), attachment.getFilename()),
                                     false,
@@ -904,7 +908,7 @@ public class MessageFormatter {
           appendField(sb, title, shieldText(newString), true);
         }
 
-        if (!StringUtils.isBlank(changedDescription))
+        if (!isBlank(changedDescription))
           sb.append("\n\n")
               .append(makeMyteamMarkdownFromJira(changedDescription, useMentionFormat));
       } catch (Exception e) {
@@ -916,6 +920,30 @@ public class MessageFormatter {
   public String limitFieldValue(@NotNull String value) {
     if (value.length() < DISPLAY_FIELD_CHARS_LIMIT) return value;
     return value.substring(0, DISPLAY_FIELD_CHARS_LIMIT) + "...";
+  }
+
+  public String formatLinks(final String messageBody, final LinksInMessage linksInMessage) {
+    if (linksInMessage.getLinks().isEmpty()) {
+      return messageBody;
+    }
+
+    final List<Link> links = linksInMessage.getLinks();
+    String formattedMesssageBody = messageBody;
+    for (final Link link : links) {
+      if (link.isMasked()) {
+        formattedMesssageBody =
+            formattedMesssageBody.replaceFirst(
+                Pattern.quote(link.getMask()),
+                format(DESCRIPTION_MARKDOWN_MASKED_LINK_TEMPLATE, link.getMask(), link.getLink()));
+      } else {
+        formattedMesssageBody =
+            formattedMesssageBody.replaceFirst(
+                link.getLink(),
+                format(DESCRIPTION_MARKDOWN_UNMASKED_LINK_TEMPLATE, link.getLink()));
+      }
+    }
+
+    return formattedMesssageBody;
   }
 
   @NotNull

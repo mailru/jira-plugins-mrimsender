@@ -20,6 +20,7 @@ public class Message {
   private long timestamp;
   private Chat chat;
   private List<Part> parts;
+  private TextFormatMetadata format;
 
   public List<Part> getParts() {
     return parts;

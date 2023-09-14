@@ -36,6 +36,8 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.jqlsearch.JqlInpu
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.EmptyState;
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
+import ru.mail.jira.plugins.myteam.component.url.UrlFinderInForward;
+import ru.mail.jira.plugins.myteam.component.url.UrlFinderInReply;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.service.*;
 
@@ -56,6 +58,9 @@ public class RulesEngineImpl
   private final IssueTextConverter issueTextConverter;
   private final ReminderService reminderService;
 
+  private final UrlFinderInReply urlFinderInReply;
+  private final UrlFinderInForward urlFinderInForward;
+
   public RulesEngineImpl(
       CommonButtonsService commonButtonsService,
       IssueCreationService issueCreationService,
@@ -63,7 +68,9 @@ public class RulesEngineImpl
       IssueService issueService,
       IssueCreationSettingsService issueCreationSettingsService,
       IssueTextConverter issueTextConverter,
-      ReminderService reminderService) {
+      ReminderService reminderService,
+      UrlFinderInReply urlFinderInReply,
+      UrlFinderInForward urlFinderInForward) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
@@ -71,6 +78,8 @@ public class RulesEngineImpl
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.issueTextConverter = issueTextConverter;
     this.reminderService = reminderService;
+    this.urlFinderInReply = urlFinderInReply;
+    this.urlFinderInForward = urlFinderInForward;
 
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
@@ -135,7 +144,9 @@ public class RulesEngineImpl
             issueCreationSettingsService,
             issueCreationService,
             issueService,
-            issueTextConverter));
+            issueTextConverter,
+            urlFinderInReply,
+            urlFinderInForward));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));

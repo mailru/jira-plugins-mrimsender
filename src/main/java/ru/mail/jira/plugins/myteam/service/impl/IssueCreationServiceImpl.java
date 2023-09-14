@@ -47,6 +47,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.Unsupported
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.UserData;
+import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 
 @Service
@@ -323,19 +324,39 @@ public class IssueCreationServiceImpl implements IssueCreationService, Lifecycle
   }
 
   @Override
+  public void addLinksToIssueFromMessage(
+      final Issue issue, final List<LinksInMessage> linksInMessages, final ApplicationUser user) {
+    linksInMessages.stream()
+        .flatMap(linksInMessage -> linksInMessage.getLinks().stream())
+        .distinct()
+        .forEach(
+            link ->
+                createRemoteIssueLink(
+                    new RemoteIssueLinkBuilder()
+                        .url(link.getLink())
+                        .title(link.isMasked() ? link.getMask() : link.getLink())
+                        .issueId(issue.getId()),
+                    user));
+  }
+
+  @Override
   public void addIssueChatLink(
       Issue issue, @Nullable String title, @Nullable String link, ApplicationUser user) {
-    RemoteIssueLinkBuilder linkBuilder = new RemoteIssueLinkBuilder();
+    createRemoteIssueLink(
+        new RemoteIssueLinkBuilder()
+            .url(link)
+            .title(
+                i18nResolver.getText(
+                    "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.createdInChat",
+                    removeAllEmojis(title)))
+            .issueId(issue.getId()),
+        user);
+  }
 
-    linkBuilder.url(link);
-    linkBuilder.title(
-        i18nResolver.getText(
-            "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.createdInChat",
-            removeAllEmojis(title)));
-    linkBuilder.issueId(issue.getId());
-
+  private void createRemoteIssueLink(
+      final RemoteIssueLinkBuilder remoteIssueLinkBuilder, final ApplicationUser user) {
     RemoteIssueLinkService.CreateValidationResult createValidationResult =
-        remoteIssueLinkService.validateCreate(user, linkBuilder.build());
+        remoteIssueLinkService.validateCreate(user, remoteIssueLinkBuilder.build());
 
     if (createValidationResult.isValid()) {
       remoteIssueLinkService.create(user, createValidationResult);

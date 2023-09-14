@@ -1,6 +1,7 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service;
 
+import static java.util.Collections.unmodifiableList;
 import static ru.mail.jira.plugins.myteam.commons.Const.*;
 
 import com.atlassian.jira.exception.NotFoundException;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeasy.rules.annotation.Action;
@@ -35,6 +37,9 @@ import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.url.UrlFinderInForward;
+import ru.mail.jira.plugins.myteam.component.url.UrlFinderInReply;
+import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
@@ -57,18 +62,25 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
   private final IssueService issueService;
   private final IssueTextConverter issueTextConverter;
 
+  private final UrlFinderInReply urlFinderInReply;
+  private final UrlFinderInForward urlFinderInForward;
+
   public CreateIssueByReplyRule(
       UserChatService userChatService,
       RulesEngine rulesEngine,
       IssueCreationSettingsService issueCreationSettingsService,
       IssueCreationService issueCreationService,
       IssueService issueService,
-      IssueTextConverter issueTextConverter) {
+      IssueTextConverter issueTextConverter,
+      UrlFinderInReply urlFinderInReply,
+      UrlFinderInForward urlFinderInForward) {
     super(userChatService, rulesEngine);
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.issueCreationService = issueCreationService;
     this.issueService = issueService;
     this.issueTextConverter = issueTextConverter;
+    this.urlFinderInReply = urlFinderInReply;
+    this.urlFinderInForward = urlFinderInForward;
   }
 
   @Condition
@@ -144,9 +156,11 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                 }
               });
 
+      DescriptionFieldInfoHolder descriptionFieldInfoHolder =
+          getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), null);
       fieldValues.put(
           issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
-          getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), null));
+          descriptionFieldInfoHolder.getDescription());
 
       String assigneeValue = settings.getAssignee();
       if (assigneeValue != null) {
@@ -201,8 +215,12 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       issueCreationService.addIssueChatLink(
           issue, settings.getChatTitle(), settings.getChatLink(), initiator);
 
+      issueCreationService.addLinksToIssueFromMessage(
+          issue, descriptionFieldInfoHolder.getLinksInMessages(), initiator);
+
       issueCreationService.updateIssueDescription(
-          getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), issue),
+          getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), issue)
+              .getDescription(),
           issue,
           reporterJiraUser);
 
@@ -261,10 +279,10 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
         .collect(Collectors.toList());
   }
 
-  private String getIssueDescription(
+  private DescriptionFieldInfoHolder getIssueDescription(
       ChatMessageEvent event, String template, @Nullable Issue issue) {
-    StringBuilder builder = new StringBuilder();
-
+    final StringBuilder builder = new StringBuilder();
+    final List<LinksInMessage> linksInMessages = new ArrayList<>();
     if (event.getMessageParts() != null) {
       event.getMessageParts().stream()
           .filter(part -> (part instanceof Reply || part instanceof Forward))
@@ -273,18 +291,30 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                 User user;
                 long timestamp;
                 String text;
+                LinksInMessage urls;
                 if (p instanceof Reply) {
-                  user = ((Reply) p).getMessage().getFrom();
-                  timestamp = ((Reply) p).getMessage().getTimestamp();
-                  text = ((Reply) p).getPayload().getMessage().getText();
+                  Reply reply = (Reply) p;
+                  user = reply.getMessage().getFrom();
+                  timestamp = reply.getMessage().getTimestamp();
+                  urls = urlFinderInReply.findUrls(reply);
+                  text = reply.getPayload().getMessage().getText();
                 } else {
-                  user = ((Forward) p).getMessage().getFrom();
-                  timestamp = ((Forward) p).getMessage().getTimestamp();
-                  text = ((Forward) p).getPayload().getMessage().getText();
+                  Forward forward = (Forward) p;
+                  user = forward.getMessage().getFrom();
+                  timestamp = forward.getMessage().getTimestamp();
+                  urls = urlFinderInForward.findUrls(forward);
+                  text = forward.getPayload().getMessage().getText();
                 }
+                linksInMessages.add(urls);
 
                 if (issue != null) {
-                  text = issueTextConverter.convertToJiraDescriptionStyle(p, issue);
+                  text =
+                      issueTextConverter.convertToJiraDescriptionStyle(
+                          p,
+                          issue,
+                          textFromPart -> messageFormatter.formatLinks(textFromPart, urls));
+                } else {
+                  text = messageFormatter.formatLinks(text, urls);
                 }
 
                 String resultTemplate = template;
@@ -308,7 +338,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                 builder.append("\n\n");
               });
     }
-    return builder.toString();
+    return new DescriptionFieldInfoHolder(builder.toString(), unmodifiableList(linksInMessages));
   }
 
   private String getIssueSummary(
@@ -344,5 +374,11 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
     }
 
     return result;
+  }
+
+  @Data
+  private static final class DescriptionFieldInfoHolder {
+    private final String description;
+    private final List<LinksInMessage> linksInMessages;
   }
 }

@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.component.myteam;
 
+import static java.util.Collections.emptyList;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -27,6 +28,8 @@ import org.mockito.Mockito;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.url.dto.Link;
+import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @SuppressWarnings({"MockNotUsedInProduction", "UnusedVariable"})
@@ -392,5 +395,41 @@ public class MessageFormatterTest {
     assertEquals(
         testedHeader + testedContent,
         this.messageFormatter.formatEvent(recipient, this.mockedIssueEvent));
+  }
+
+  @Test
+  public void formatLinksSuccessWithUrls() {
+    // GIVEN
+    String message = "mask(url) http://localost:2990";
+    List<Link> links = new ArrayList<>();
+    links.add(Link.of("https://some.domen", "mask(url)", true));
+    links.add(Link.of("http://localost:2990", "http://localost:2990", false));
+    // WHEN
+    String result = messageFormatter.formatLinks(message, LinksInMessage.of(links));
+    // THEN
+    assertEquals("[mask(url)|https://some.domen] [http://localost:2990]", result);
+  }
+
+  @Test
+  public void formatLinksSuccessWithUrlsWhenMaskHaveSpecialSymbolsForRegex() {
+    // GIVEN
+    String message = "mask(!&&!url!&!).-[] http://localost:2990";
+    List<Link> links = new ArrayList<>();
+    links.add(Link.of("https://some.domen", "mask(!&&!url!&!).-[]", true));
+    links.add(Link.of("http://localost:2990", "http://localost:2990", false));
+    // WHEN
+    String result = messageFormatter.formatLinks(message, LinksInMessage.of(links));
+    // THEN
+    assertEquals("[mask(!&&!url!&!).-[]|https://some.domen] [http://localost:2990]", result);
+  }
+
+  @Test
+  public void formatLinksSuccessWithoutUrls() {
+    // GIVEN
+    String message = "sometext";
+    // WHEN
+    String result = messageFormatter.formatLinks(message, LinksInMessage.of(emptyList()));
+    // THEN
+    assertEquals(message, result);
   }
 }
