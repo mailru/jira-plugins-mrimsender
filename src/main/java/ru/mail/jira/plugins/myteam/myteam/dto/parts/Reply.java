@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import ru.mail.jira.plugins.myteam.myteam.dto.TextFormatMetadata;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 
 @SuppressWarnings("NullAway")
@@ -33,5 +34,6 @@ public class Reply extends Part<Reply.Data> {
     private String text;
     private long timestamp;
     private List<Part> parts;
+    private TextFormatMetadata format;
   }
 }

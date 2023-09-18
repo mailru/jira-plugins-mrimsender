@@ -19,6 +19,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueCreati
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
+import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 
 public interface IssueCreationService {
   /**
@@ -58,6 +59,9 @@ public interface IssueCreationService {
   MutableIssue createIssue(
       String projectKey, String issueTypeId, Map<Field, String> fields, ApplicationUser user)
       throws IssueCreationValidationException, PermissionException, ProjectBannedException;
+
+  void addLinksToIssueFromMessage(
+      final Issue issue, final List<LinksInMessage> linksInMessages, final ApplicationUser user);
 
   void addIssueChatLink(
       Issue issue, @Nullable String title, @Nullable String link, ApplicationUser user)

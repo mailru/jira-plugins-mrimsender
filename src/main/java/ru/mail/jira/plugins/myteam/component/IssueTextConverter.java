@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import kong.unirest.HttpResponse;
@@ -115,15 +116,16 @@ public class IssueTextConverter {
     return ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis(outPutStrings.toString());
   }
 
-  public String convertToJiraDescriptionStyle(Part part, Issue issue) {
+  public String convertToJiraDescriptionStyle(
+      Part part, Issue issue, final Function<String, String> messageTextFormattingFunction) {
     List<Part> messageParts =
         part instanceof Reply
             ? ((Reply) part).getMessage().getParts()
             : ((Forward) part).getMessage().getParts();
     String text =
         part instanceof Reply
-            ? ((Reply) part).getMessage().getText()
-            : ((Forward) part).getMessage().getText();
+            ? messageTextFormattingFunction.apply(((Reply) part).getMessage().getText())
+            : messageTextFormattingFunction.apply(((Forward) part).getMessage().getText());
     StringBuilder outPutStrings = new StringBuilder();
     if (messageParts != null) {
       messageParts.forEach(
