@@ -19,7 +19,11 @@ public enum CommandRuleType implements RuleType {
   IssueCreationSettings("configure_task"),
   IssueTransition("transition"),
   CreateIssueByReply("createIssueByReply"),
-  ChatId("chatid");
+  ChatId("chatid"),
+
+  CommentIssueByMentionBot("commentIssueByMentionBot");
+
+
 
   @Getter(onMethod_ = {@Override})
   private final String name;

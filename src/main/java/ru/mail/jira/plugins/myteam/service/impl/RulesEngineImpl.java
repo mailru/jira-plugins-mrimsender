@@ -25,6 +25,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.Common
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNoPermissionErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNotFoundErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.UnknownErrorRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CommentIssueByMentionBotRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CreateIssueByReplyRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.SearchByJqlIssuesRule;
@@ -38,6 +39,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.EmptyState;
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
 import ru.mail.jira.plugins.myteam.component.url.UrlFinderInForward;
 import ru.mail.jira.plugins.myteam.component.url.UrlFinderInReply;
+import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.service.*;
 
@@ -60,17 +62,18 @@ public class RulesEngineImpl
 
   private final UrlFinderInReply urlFinderInReply;
   private final UrlFinderInForward urlFinderInForward;
+  private final MyteamApiClient myteamApiClient;
 
   public RulesEngineImpl(
-      CommonButtonsService commonButtonsService,
-      IssueCreationService issueCreationService,
-      UserChatService userChatService,
-      IssueService issueService,
-      IssueCreationSettingsService issueCreationSettingsService,
-      IssueTextConverter issueTextConverter,
-      ReminderService reminderService,
-      UrlFinderInReply urlFinderInReply,
-      UrlFinderInForward urlFinderInForward) {
+          CommonButtonsService commonButtonsService,
+          IssueCreationService issueCreationService,
+          UserChatService userChatService,
+          IssueService issueService,
+          IssueCreationSettingsService issueCreationSettingsService,
+          IssueTextConverter issueTextConverter,
+          ReminderService reminderService,
+          UrlFinderInReply urlFinderInReply,
+          UrlFinderInForward urlFinderInForward, MyteamApiClient myteamApiClient) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
@@ -80,6 +83,7 @@ public class RulesEngineImpl
     this.reminderService = reminderService;
     this.urlFinderInReply = urlFinderInReply;
     this.urlFinderInForward = urlFinderInForward;
+    this.myteamApiClient = myteamApiClient;
 
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
@@ -147,6 +151,7 @@ public class RulesEngineImpl
             issueTextConverter,
             urlFinderInReply,
             urlFinderInForward));
+    commandsRuleEngine.registerRule(new CommentIssueByMentionBotRule(userChatService, this, myteamApiClient, issueService));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));

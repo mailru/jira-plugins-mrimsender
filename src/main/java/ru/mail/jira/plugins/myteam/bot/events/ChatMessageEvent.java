@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.ToString;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
+import ru.mail.jira.plugins.myteam.myteam.dto.TextFormatMetadata;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
@@ -33,6 +34,22 @@ public class ChatMessageEvent extends MyteamEvent {
     message = newMessageEvent.getText();
     messageId = newMessageEvent.getMsgId();
     messageParts = newMessageEvent.getParts();
+    if (messageParts != null) {
+      hasForwards = messageParts.stream().anyMatch(part -> part instanceof Forward);
+      hasReply = messageParts.stream().anyMatch(part -> part instanceof Reply);
+      hasMentions = messageParts.stream().anyMatch(part -> part instanceof Mention);
+    } else {
+      hasForwards = false;
+      hasReply = false;
+      hasMentions = false;
+    }
+  }
+
+  public ChatMessageEvent(ChatMessageEvent chatMessageEvent) {
+    from = chatMessageEvent.getFrom();
+    message = chatMessageEvent.getMessage();
+    messageId = chatMessageEvent.getMessageId();
+    messageParts = chatMessageEvent.getMessageParts();
     if (messageParts != null) {
       hasForwards = messageParts.stream().anyMatch(part -> part instanceof Forward);
       hasReply = messageParts.stream().anyMatch(part -> part instanceof Reply);
