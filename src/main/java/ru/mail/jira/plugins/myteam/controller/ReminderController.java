@@ -1,6 +1,7 @@
 /* (C)2023 */
 package ru.mail.jira.plugins.myteam.controller;
 
+import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.xsrf.RequiresXsrfCheck;
 import com.atlassian.jira.user.ApplicationUser;
@@ -33,7 +34,8 @@ public class ReminderController {
 
   @GET
   @Path("")
-  public List<ReminderDto> getIssueReminders(@QueryParam("issueKey") final String issueKey) {
+  public List<ReminderDto> getIssueReminders(@QueryParam("issueKey") final String issueKey)
+      throws IssuePermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     return reminderService.getIssueReminders(issueKey, user);
   }

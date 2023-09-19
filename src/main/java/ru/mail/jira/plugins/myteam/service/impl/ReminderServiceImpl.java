@@ -80,7 +80,8 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
   }
 
   @Override
-  public List<ReminderDto> getIssueReminders(String issueKey, ApplicationUser user) {
+  public List<ReminderDto> getIssueReminders(String issueKey, ApplicationUser user)
+      throws IssuePermissionException {
     IssueService.IssueResult res = issueService.getIssue(user, issueKey);
     if (!res.isValid() || user == null) {
       throw new IssuePermissionException();
