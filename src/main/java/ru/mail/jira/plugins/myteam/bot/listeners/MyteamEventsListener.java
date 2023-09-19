@@ -1,8 +1,9 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.bot.listeners;
 
+import static ru.mail.jira.plugins.myteam.commons.Const.*;
+
 import com.atlassian.jira.user.ApplicationUser;
-import com.atlassian.jira.util.JiraKeyUtils;
 import com.atlassian.jira.util.thread.OffRequestThreadExecutor;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.google.common.base.Splitter;
@@ -24,8 +25,6 @@ import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
-
-import static ru.mail.jira.plugins.myteam.commons.Const.*;
 
 @Slf4j
 @Component
@@ -79,13 +78,12 @@ public class MyteamEventsListener {
             message = message.replaceAll(botMention, "").trim();
           }
 
-          if (message != null
-              && event.getChatType() == ChatType.GROUP) {
-              if (message.contains(COMMENT_ISSUE_BY_MENTION_BOT)) {
-                  handleCommentIssueCommandByMentionBot(event);
-              } else if (message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
-                  handleIssueCreationTag(event);
-              }
+          if (message != null && event.getChatType() == ChatType.GROUP) {
+            if (message.contains(COMMENT_ISSUE_BY_MENTION_BOT)) {
+              handleCommentIssueCommandByMentionBot(event);
+            } else if (message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
+              handleIssueCreationTag(event);
+            }
             return;
           }
 
@@ -97,11 +95,11 @@ public class MyteamEventsListener {
         });
   }
 
-    private void handleCommentIssueCommandByMentionBot(ChatMessageEvent event) {
-        rulesEngine.fireCommand(CommandRuleType.CommentIssueByMentionBot, event);
-    }
+  private void handleCommentIssueCommandByMentionBot(ChatMessageEvent event) {
+    rulesEngine.fireCommand(CommandRuleType.CommentIssueByMentionBot, event);
+  }
 
-    @Subscribe
+  @Subscribe
   public void handleButtonClickEvent(ButtonClickEvent event) throws UnirestException {
     @Nullable ApplicationUser user = userData.getUserByMrimLogin(event.getUserId());
 

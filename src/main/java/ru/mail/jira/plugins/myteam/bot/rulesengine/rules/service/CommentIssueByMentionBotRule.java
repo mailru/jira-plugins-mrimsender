@@ -1,7 +1,12 @@
 /* (C)2023 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service;
 
+import static ru.mail.jira.plugins.myteam.commons.Const.COMMENT_ISSUE_BY_MENTION_BOT;
+import static ru.mail.jira.plugins.myteam.i18n.JiraBotI18nProperties.*;
+
 import com.atlassian.jira.util.JiraKeyUtils;
+import java.util.List;
+import javax.naming.NoPermissionException;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
@@ -22,25 +27,17 @@ import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
-import javax.naming.NoPermissionException;
-import java.util.List;
-
-import static ru.mail.jira.plugins.myteam.commons.Const.COMMENT_ISSUE_BY_MENTION_BOT;
-import static ru.mail.jira.plugins.myteam.i18n.JiraBotI18nProperties.*;
-
-@Rule(
-    name = "Create comment by mention bot",
-    description = "Create comment by mention bot")
+@Rule(name = "Create comment by mention bot", description = "Create comment by mention bot")
 @Slf4j
 public class CommentIssueByMentionBotRule extends ChatAdminRule {
   private final MyteamApiClient myteamApiClient;
   private final IssueService issueService;
 
   public CommentIssueByMentionBotRule(
-          final UserChatService userChatService,
-          final RulesEngine rulesEngine,
-          final MyteamApiClient myteamApiClient,
-          final IssueService issueService) {
+      final UserChatService userChatService,
+      final RulesEngine rulesEngine,
+      final MyteamApiClient myteamApiClient,
+      final IssueService issueService) {
     super(userChatService, rulesEngine);
     this.myteamApiClient = myteamApiClient;
     this.issueService = issueService;
@@ -48,31 +45,31 @@ public class CommentIssueByMentionBotRule extends ChatAdminRule {
 
   @Condition
   public boolean isValid(
-          @Fact("command") String command,
-          @Fact("event") MyteamEvent event,
-          @Fact("isGroup") boolean isGroup,
-          @Fact("args") String tag)
-          throws AdminRulesRequiredException {
+      @Fact("command") String command,
+      @Fact("event") MyteamEvent event,
+      @Fact("isGroup") boolean isGroup,
+      @Fact("args") String tag)
+      throws AdminRulesRequiredException {
 
     return isValidReceivedCommandForRule(command, event, isGroup, tag);
   }
 
   @Action
   public void execute(@Fact("event") final ChatMessageEvent event) {
-    JiraKeyUtils.getIssueKeysFromString(event.getMessage())
-            .stream()
-            .findFirst()
-            .ifPresentOrElse(
-                    issueKey -> tryCommentIssue(issueKey, event),
-                    () -> sendMessageWithRawText(event, COMMENT_NO_HAS_ISSUE_KEY_IN_EVENT_MESSAGE_KEY)
-            );
+    JiraKeyUtils.getIssueKeysFromString(event.getMessage()).stream()
+        .findFirst()
+        .ifPresentOrElse(
+            issueKey -> tryCommentIssue(issueKey, event),
+            () -> sendMessageWithRawText(event, COMMENT_NO_HAS_ISSUE_KEY_IN_EVENT_MESSAGE_KEY));
   }
 
   private void tryCommentIssue(String issueKey, ChatMessageEvent event) {
     try {
-      // todo: нужно ли форматировать ссылки(под маской) в тексте коммента и что вообще в коммент попасть должно?
+      // todo: нужно ли форматировать ссылки(под маской) в тексте коммента и что вообще в коммент
+      // попасть должно?
       //  сообщения reply и forward брать?
-      issueService.commentIssue(issueKey, userChatService.getJiraUserFromUserChatId(event.getUserId()), event);
+      issueService.commentIssue(
+          issueKey, userChatService.getJiraUserFromUserChatId(event.getUserId()), event);
       sendMessageWithRawText(event, COMMENT_CREATED_SUCCESSFUL_MESSAGE_KEY);
     } catch (NoPermissionException e) {
       log.error("user with id [%s] has not permission create comment", e);
@@ -83,21 +80,21 @@ public class CommentIssueByMentionBotRule extends ChatAdminRule {
     }
   }
 
-  private boolean isValidReceivedCommandForRule(final String command,
-                                                final MyteamEvent event,
-                                                final boolean isGroup,
-                                                final String tag) {
+  private boolean isValidReceivedCommandForRule(
+      final String command, final MyteamEvent event, final boolean isGroup, final String tag) {
     if (!(event instanceof ChatMessageEvent)) {
       return false;
     }
-    return isGroup && CommandRuleType.CommentIssueByMentionBot.equalsName(command)
-            && COMMENT_ISSUE_BY_MENTION_BOT.equals(tag)
-            && isBotMentioned((ChatMessageEvent) event);
+    return isGroup
+        && CommandRuleType.CommentIssueByMentionBot.equalsName(command)
+        && COMMENT_ISSUE_BY_MENTION_BOT.equals(tag)
+        && isBotMentioned((ChatMessageEvent) event);
   }
 
   private boolean isBotMentioned(ChatMessageEvent chatMessageEvent) {
     String botId = myteamApiClient.getBotId();
-    return isBotMentionedInMainMessage(chatMessageEvent, botId) || isBotAuthorAtLeastReplyMessage(chatMessageEvent, botId);
+    return isBotMentionedInMainMessage(chatMessageEvent, botId)
+        || isBotAuthorAtLeastReplyMessage(chatMessageEvent, botId);
   }
 
   private boolean isBotMentionedInMainMessage(ChatMessageEvent event, String botId) {

@@ -33,7 +33,6 @@ public class NewMessageEvent extends IcqEvent<NewMessageEvent.Data> {
     return this.getPayload().parts;
   }
 
-
   @JsonIgnoreProperties(ignoreUnknown = true)
   static class Data {
     public long msgId;

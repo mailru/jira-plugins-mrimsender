@@ -65,15 +65,16 @@ public class RulesEngineImpl
   private final MyteamApiClient myteamApiClient;
 
   public RulesEngineImpl(
-          CommonButtonsService commonButtonsService,
-          IssueCreationService issueCreationService,
-          UserChatService userChatService,
-          IssueService issueService,
-          IssueCreationSettingsService issueCreationSettingsService,
-          IssueTextConverter issueTextConverter,
-          ReminderService reminderService,
-          UrlFinderInReply urlFinderInReply,
-          UrlFinderInForward urlFinderInForward, MyteamApiClient myteamApiClient) {
+      CommonButtonsService commonButtonsService,
+      IssueCreationService issueCreationService,
+      UserChatService userChatService,
+      IssueService issueService,
+      IssueCreationSettingsService issueCreationSettingsService,
+      IssueTextConverter issueTextConverter,
+      ReminderService reminderService,
+      UrlFinderInReply urlFinderInReply,
+      UrlFinderInForward urlFinderInForward,
+      MyteamApiClient myteamApiClient) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
@@ -151,7 +152,8 @@ public class RulesEngineImpl
             issueTextConverter,
             urlFinderInReply,
             urlFinderInForward));
-    commandsRuleEngine.registerRule(new CommentIssueByMentionBotRule(userChatService, this, myteamApiClient, issueService));
+    commandsRuleEngine.registerRule(
+        new CommentIssueByMentionBotRule(userChatService, this, myteamApiClient, issueService));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));

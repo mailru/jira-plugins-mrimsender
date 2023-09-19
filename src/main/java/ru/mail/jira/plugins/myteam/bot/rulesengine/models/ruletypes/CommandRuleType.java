@@ -23,8 +23,6 @@ public enum CommandRuleType implements RuleType {
 
   CommentIssueByMentionBot("commentIssueByMentionBot");
 
-
-
   @Getter(onMethod_ = {@Override})
   private final String name;
 
