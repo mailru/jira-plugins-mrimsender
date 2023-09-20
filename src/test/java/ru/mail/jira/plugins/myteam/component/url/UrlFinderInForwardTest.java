@@ -5,7 +5,9 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.myteam.component.url.dto.Link;
@@ -14,7 +16,6 @@ import ru.mail.jira.plugins.myteam.myteam.dto.Message;
 import ru.mail.jira.plugins.myteam.myteam.dto.TextFormatMetadata;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
 
-@SuppressWarnings("NullAway")
 public class UrlFinderInForwardTest {
 
   @Test
@@ -105,13 +106,13 @@ public class UrlFinderInForwardTest {
         urls.getLinks().stream().filter(Predicate.not(Link::isMasked)).findFirst().isPresent());
   }
 
-  private Forward createForward(String text, TextFormatMetadata textFormatMetadata) {
+  private Forward createForward(String text, @Nullable TextFormatMetadata textFormatMetadata) {
     Forward source = new Forward();
     Forward.Data payload = new Forward.Data();
     Message message = new Message();
     message.setText(text);
     payload.setMessage(message);
-    message.setFormat(textFormatMetadata);
+    Optional.ofNullable(textFormatMetadata).ifPresent(message::setFormat);
     source.setPayload(payload);
     return source;
   }

@@ -5,7 +5,9 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
 import org.mockito.Mockito;
 import ru.mail.jira.plugins.myteam.component.url.dto.Link;
@@ -13,13 +15,12 @@ import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.myteam.dto.TextFormatMetadata;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
 
-@SuppressWarnings("NullAway")
 public class UrlFinderInReplyTest {
 
   @Test
   public void findUrlsWhenMessageFormatForLinksIsNull() {
     // GIVEN
-    Reply source = createForward("some text", null);
+    Reply source = createReply("some text", null);
 
     UrlInStringFinder urlInStringFinder = Mockito.mock(UrlInStringFinder.class);
     UrlFinderInReply urlFinderInForward = new UrlFinderInReply(urlInStringFinder);
@@ -34,7 +35,7 @@ public class UrlFinderInReplyTest {
   @Test
   public void findUrlsWhenMessageTextHasOnlyUnmask() {
     // GIVEN
-    Reply source = createForward("http://link.domen", null);
+    Reply source = createReply("http://link.domen", null);
     UrlInStringFinder urlInStringFinder = Mockito.mock(UrlInStringFinder.class);
     UrlFinderInReply urlFinderInForward = new UrlFinderInReply(urlInStringFinder);
     when(urlInStringFinder.findUrls("http://link.domen"))
@@ -61,7 +62,7 @@ public class UrlFinderInReplyTest {
     linkMetadata.setUrl(url);
     textFormatMetadata.setLink(List.of(linkMetadata));
     String textAsMask = "mask";
-    Reply source = createForward(textAsMask, textFormatMetadata);
+    Reply source = createReply(textAsMask, textFormatMetadata);
     UrlInStringFinder urlInStringFinder = Mockito.mock(UrlInStringFinder.class);
     UrlFinderInReply urlFinderInForward = new UrlFinderInReply(urlInStringFinder);
     // WHEN
@@ -86,7 +87,7 @@ public class UrlFinderInReplyTest {
     linkMetadata.setUrl(urlForMask);
     textFormatMetadata.setLink(List.of(linkMetadata));
     String text = "mask https://someurl";
-    Reply source = createForward(text, textFormatMetadata);
+    Reply source = createReply(text, textFormatMetadata);
     UrlInStringFinder urlInStringFinder = Mockito.mock(UrlInStringFinder.class);
     UrlFinderInReply urlFinderInForward = new UrlFinderInReply(urlInStringFinder);
     when(urlInStringFinder.findUrls(text))
@@ -104,13 +105,13 @@ public class UrlFinderInReplyTest {
         urls.getLinks().stream().filter(Predicate.not(Link::isMasked)).findFirst().isPresent());
   }
 
-  private Reply createForward(String text, TextFormatMetadata textFormatMetadata) {
+  private Reply createReply(String text, @Nullable TextFormatMetadata textFormatMetadata) {
     Reply source = new Reply();
     Reply.Data payload = new Reply.Data();
     Reply.ReplyMessage message = new Reply.ReplyMessage();
     message.setText(text);
     payload.setMessage(message);
-    message.setFormat(textFormatMetadata);
+    Optional.ofNullable(textFormatMetadata).ifPresent(message::setFormat);
     source.setPayload(payload);
     return source;
   }
