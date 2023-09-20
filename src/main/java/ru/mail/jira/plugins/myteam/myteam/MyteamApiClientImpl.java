@@ -322,6 +322,12 @@ public class MyteamApiClientImpl implements MyteamApiClient {
       throws MyteamServerErrorException {
 
     if (response.getStatus() >= 500 || response.getBody() == null || !response.getBody().isOk()) {
+      Exception parsingException;
+      try {
+        parsingException = response.getParsingError().orElse(null);
+      } catch (Exception e) {
+        parsingException = e;
+      }
       MyteamServerErrorException newException =
           new MyteamServerErrorException(
               response.getStatus(),
@@ -330,12 +336,14 @@ public class MyteamApiClientImpl implements MyteamApiClient {
                   chatId,
                   response.getBody() != null
                       ? response.getBody().getDescription()
-                      : response
-                          .getParsingError()
-                          .map(UnirestParsingException::getOriginalBody)
-                          .orElse(""),
+                      : (parsingException instanceof UnirestParsingException
+                          ? response
+                              .getParsingError()
+                              .map(UnirestParsingException::getOriginalBody)
+                              .orElse("")
+                          : ""),
                   text),
-              response.getParsingError().orElse(null));
+              parsingException);
       log.error(
           "Error: {} while sending the message:\n{}",
           response.getBody() != null
