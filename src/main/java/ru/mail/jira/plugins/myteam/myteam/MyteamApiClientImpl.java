@@ -341,7 +341,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
                               .getParsingError()
                               .map(UnirestParsingException::getOriginalBody)
                               .orElse("")
-                          : ""),
+                          : parsingException != null ? parsingException.getLocalizedMessage() : null),
                   text),
               parsingException);
       log.error(
