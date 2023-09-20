@@ -37,6 +37,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.jqlsearch.JqlInpu
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.EmptyState;
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
+import ru.mail.jira.plugins.myteam.component.ReplyAndForwardMessagePartProcessor;
 import ru.mail.jira.plugins.myteam.component.url.UrlFinderInForward;
 import ru.mail.jira.plugins.myteam.component.url.UrlFinderInReply;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
@@ -57,11 +58,9 @@ public class RulesEngineImpl
   private final UserChatService userChatService;
   private final IssueService issueService;
   private final IssueCreationSettingsService issueCreationSettingsService;
-  private final IssueTextConverter issueTextConverter;
   private final ReminderService reminderService;
 
-  private final UrlFinderInReply urlFinderInReply;
-  private final UrlFinderInForward urlFinderInForward;
+  private final ReplyAndForwardMessagePartProcessor replyAndForwardMessagePartProcessor;
   private final MyteamApiClient myteamApiClient;
 
   public RulesEngineImpl(
@@ -74,16 +73,15 @@ public class RulesEngineImpl
       ReminderService reminderService,
       UrlFinderInReply urlFinderInReply,
       UrlFinderInForward urlFinderInForward,
+      ReplyAndForwardMessagePartProcessor replyAndForwardMessagePartProcessor,
       MyteamApiClient myteamApiClient) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
     this.issueService = issueService;
     this.issueCreationSettingsService = issueCreationSettingsService;
-    this.issueTextConverter = issueTextConverter;
     this.reminderService = reminderService;
-    this.urlFinderInReply = urlFinderInReply;
-    this.urlFinderInForward = urlFinderInForward;
+    this.replyAndForwardMessagePartProcessor = replyAndForwardMessagePartProcessor;
     this.myteamApiClient = myteamApiClient;
 
     RulesEngineParameters engineParams =
@@ -149,9 +147,7 @@ public class RulesEngineImpl
             issueCreationSettingsService,
             issueCreationService,
             issueService,
-            issueTextConverter,
-            urlFinderInReply,
-            urlFinderInForward));
+            replyAndForwardMessagePartProcessor));
     commandsRuleEngine.registerRule(
         new CommentIssueByMentionBotRule(userChatService, this, myteamApiClient, issueService));
 

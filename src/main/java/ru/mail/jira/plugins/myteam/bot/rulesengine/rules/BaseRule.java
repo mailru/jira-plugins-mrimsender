@@ -2,6 +2,7 @@
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
@@ -42,11 +43,12 @@ public class BaseRule {
           String.format(
               "error happened during send message to user with id [%s]", event.getUserId()),
           e);
+      throw new RuntimeException(e);
     }
   }
 
   public void sendMessageWithFormattedText(
-      final MyteamEvent event, final I18nProperty i18nProperty, final String data) {
+      final MyteamEvent event, final I18nProperty i18nProperty, @Nullable final String data) {
     try {
       userChatService.sendMessageText(
           event.getChatId(), userChatService.getText(i18nProperty.getMessageKey(), data));
@@ -55,6 +57,7 @@ public class BaseRule {
           String.format(
               "error happened during send message to user with id [%s]", event.getUserId()),
           e);
+      throw new RuntimeException(e);
     }
   }
 }

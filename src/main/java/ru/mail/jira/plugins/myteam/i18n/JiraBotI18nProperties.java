@@ -13,8 +13,10 @@ public enum JiraBotI18nProperties implements I18nProperty {
       "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.noPermissions"),
   COMMENT_VALIDATION_ERROR_MESSAGE_KEY(
       "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.commentCreated"),
-  COMMENT_NO_HAS_ISSUE_KEY_IN_EVENT_MESSAGE_KEY(
-      "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.commentCreated"),
+  COMMENT_NOT_HAS_ISSUE_KEY_IN_EVENT_MESSAGE_KEY(
+      "ru.mail.jira.plugins.myteam.messageQueueProcessor.comment.notHaveIssueKey"),
+  SEND_MESSAGE_WITH_ONE_ISSUE_KEY_MESSAGE_KEY(
+      "ru.mail.jira.plugins.myteam.messageQueueProcessor.response.sendMsgWithOneIssueKey"),
   ;
 
   private final String messageKey;

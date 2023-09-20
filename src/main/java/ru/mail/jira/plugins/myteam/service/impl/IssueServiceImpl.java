@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
@@ -48,7 +49,9 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueWatchi
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.commons.exceptions.ValidationException;
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
+import ru.mail.jira.plugins.myteam.component.ReplyAndForwardMessagePartProcessor;
 import ru.mail.jira.plugins.myteam.component.UserData;
+import ru.mail.jira.plugins.myteam.component.comment.create.CommentCreateArg;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
@@ -71,6 +74,8 @@ public class IssueServiceImpl implements IssueService {
   private final PluginData pluginData;
   private final String JIRA_BASE_URL;
 
+  private final ReplyAndForwardMessagePartProcessor messagePartProcessor;
+
   public IssueServiceImpl(
       @ComponentImport com.atlassian.jira.bc.issue.IssueService jiraIssueService,
       @ComponentImport IssueManager issueManager,
@@ -86,7 +91,8 @@ public class IssueServiceImpl implements IssueService {
       @ComponentImport ApplicationProperties applicationProperties,
       UserData userData,
       IssueTextConverter issueTextConverter,
-      PluginData pluginData) {
+      PluginData pluginData,
+      ReplyAndForwardMessagePartProcessor messagePartProcessor) {
     this.jiraIssueService = jiraIssueService;
     this.issueManager = issueManager;
     this.permissionManager = permissionManager;
@@ -102,6 +108,7 @@ public class IssueServiceImpl implements IssueService {
     this.issueTextConverter = issueTextConverter;
     this.pluginData = pluginData;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
+    this.messagePartProcessor = messagePartProcessor;
     this.workflowActionsBean = new WorkflowActionsBean();
   }
 
@@ -202,29 +209,51 @@ public class IssueServiceImpl implements IssueService {
       throws NoPermissionException, ValidationException {
 
     Issue commentedIssue = issueManager.getIssueByCurrentKey(issueKey);
-    if (user != null && commentedIssue != null) {
-      if (permissionManager.hasPermission(ProjectPermissions.ADD_COMMENTS, commentedIssue, user)) {
-
-        CommentService.CommentParameters commentParameters =
-            CommentService.CommentParameters.builder()
-                .author(user)
-                .body(issueTextConverter.convertToJiraCommentStyle(event, user, commentedIssue))
-                .issue(commentedIssue)
-                .build();
-        CommentService.CommentCreateValidationResult validationResult =
-            commentService.validateCommentCreate(user, commentParameters);
-        if (validationResult.isValid()) {
-          commentService.create(user, validationResult, true);
-        } else {
-          StringJoiner joiner = new StringJoiner(" ");
-          validationResult.getErrorCollection().getErrorMessages().forEach(joiner::add);
-          throw new ValidationException(joiner.toString());
-        }
-      } else {
-        throw new NoPermissionException(
-            "User " + user + " can't create comment for issue " + issueKey);
-      }
+    if (user == null || commentedIssue == null) {
+      return;
     }
+
+    if (!permissionManager.hasPermission(ProjectPermissions.ADD_COMMENTS, commentedIssue, user)) {
+      throw new NoPermissionException(
+          "User " + user + " can't create comment for issue " + issueKey);
+    }
+    createComment(
+        commentedIssue,
+        user,
+        issueTextConverter.convertToJiraCommentStyle(event, user, commentedIssue));
+  }
+
+  @Override
+  public void commentIssue(@NotNull final CommentCreateArg commentCreateArg)
+      throws NoPermissionException, ValidationException {
+
+    if (!permissionManager.hasPermission(
+        ProjectPermissions.ADD_COMMENTS,
+        commentCreateArg.getIssueToComment(),
+        commentCreateArg.getCommentAuthor())) {
+      throw new NoPermissionException(
+          "User "
+              + commentCreateArg.getCommentAuthor()
+              + " can't create comment for issue "
+              + commentCreateArg.getIssueToComment().getKey());
+    }
+
+    final String body =
+        messagePartProcessor
+            .convertMessagesFromReplyAndForwardMessages(
+                commentCreateArg::getMessageParts,
+                commentCreateArg.getIssueToComment(),
+                commentCreateArg.getCommentTemplate())
+            .map(markdownFieldValueHolder -> new StringBuilder(markdownFieldValueHolder.getValue()))
+            .map(
+                stringBuilder ->
+                    stringBuilder
+                        .append("\n\n")
+                        .append(commentCreateArg.getFormattedMainMessage())
+                        .toString())
+            .orElse(commentCreateArg.getFormattedMainMessage());
+
+    createComment(commentCreateArg.getIssueToComment(), commentCreateArg.getCommentAuthor(), body);
   }
 
   @Override
@@ -350,5 +379,27 @@ public class IssueServiceImpl implements IssueService {
 
   private boolean isProjectExcluded(Long projectId) {
     return pluginData.getExcludingProjectIds().contains(projectId);
+  }
+
+  private void createComment(
+      @NotNull final Issue commentedIssue,
+      @NotNull final ApplicationUser user,
+      @Nullable final String body)
+      throws ValidationException {
+    CommentService.CommentParameters commentParameters =
+        CommentService.CommentParameters.builder()
+            .author(user)
+            .body(body)
+            .issue(commentedIssue)
+            .build();
+    CommentService.CommentCreateValidationResult validationResult =
+        commentService.validateCommentCreate(user, commentParameters);
+    if (validationResult.isValid()) {
+      commentService.create(user, validationResult, true);
+    } else {
+      StringJoiner joiner = new StringJoiner(" ");
+      validationResult.getErrorCollection().getErrorMessages().forEach(joiner::add);
+      throw new ValidationException(joiner.toString());
+    }
   }
 }

@@ -116,7 +116,7 @@ public class IssueTextConverter {
     return ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis(outPutStrings.toString());
   }
 
-  public String convertToJiraDescriptionStyle(
+  public String convertToJiraDescriptionAndCommentMarkdownStyle(
       Part part, Issue issue, final Function<String, String> messageTextFormattingFunction) {
     List<Part> messageParts =
         part instanceof Reply

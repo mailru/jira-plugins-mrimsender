@@ -18,6 +18,7 @@ import com.opensymphony.workflow.loader.ActionDescriptor;
 import java.util.Collection;
 import java.util.List;
 import javax.naming.NoPermissionException;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.AssigneeChangeValidationException;
@@ -25,6 +26,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueTransi
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.commons.exceptions.ValidationException;
+import ru.mail.jira.plugins.myteam.component.comment.create.CommentCreateArg;
 
 public interface IssueService {
 
@@ -53,6 +55,9 @@ public interface IssueService {
 
   void commentIssue(
       @Nullable String issueKey, @Nullable ApplicationUser user, ChatMessageEvent event)
+      throws NoPermissionException, ValidationException;
+
+  void commentIssue(@NotNull final CommentCreateArg commentCreateArg)
       throws NoPermissionException, ValidationException;
 
   void changeIssueStatus(Issue issue, int transitionId, @Nullable ApplicationUser user)

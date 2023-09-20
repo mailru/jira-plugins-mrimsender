@@ -79,7 +79,7 @@ public class MyteamEventsListener {
           }
 
           if (message != null && event.getChatType() == ChatType.GROUP) {
-            if (message.contains(COMMENT_ISSUE_BY_MENTION_BOT)) {
+            if (message.startsWith(COMMENT_ISSUE_BY_MENTION_BOT)) {
               handleCommentIssueCommandByMentionBot(event);
             } else if (message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
               handleIssueCreationTag(event);
