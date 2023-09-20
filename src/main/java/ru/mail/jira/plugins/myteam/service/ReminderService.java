@@ -10,7 +10,8 @@ import ru.mail.jira.plugins.myteam.controller.dto.ReminderDto;
 public interface ReminderService {
   int addReminder(ReminderDto reminder, @Nullable ApplicationUser user);
 
-  List<ReminderDto> getIssueReminders(String issueKey, ApplicationUser user);
+  List<ReminderDto> getIssueReminders(String issueKey, ApplicationUser user)
+      throws NoPermissionException;
 
   void deleteReminder(Integer id, ApplicationUser user) throws NoPermissionException;
 
