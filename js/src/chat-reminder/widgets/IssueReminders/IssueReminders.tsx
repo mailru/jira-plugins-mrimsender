@@ -6,6 +6,7 @@ import { Headline } from '@vkontakte/vkui'
 import { I18n } from '@atlassian/wrm-react-i18n'
 import { useDeleteReminder, useIssueReminders } from '@shared/reminder/query'
 import './IssueReminders.pcss'
+import { ErrorView } from '../../../create-chat-panel/views/ErrorView'
 
 const Reminder = ({
   reminder,
@@ -31,8 +32,26 @@ const Reminder = ({
 )
 
 const IssueReminders = () => {
-  const { data } = useIssueReminders(AJS.Meta.get('issue-key'))
+  const { data, isError } = useIssueReminders(AJS.Meta.get('issue-key'))
   const deleteReminderMutation = useDeleteReminder()
+
+  if (isError) {
+    return (
+      <>
+        <Headline className="remiders-header" weight="1" level="2">
+          {I18n.getText('ru.mail.jira.plugins.myteam.reminders.title')}
+        </Headline>
+        <ErrorView
+          error={{
+            name: 'reminders-error',
+            message: I18n.getText(
+              'ru.mail.jira.plugins.myteam.reminders.error'
+            ),
+          }}
+        />
+      </>
+    )
+  }
 
   if (!data || data.length === 0) {
     return null
