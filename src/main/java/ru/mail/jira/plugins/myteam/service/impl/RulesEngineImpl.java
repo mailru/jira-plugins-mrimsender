@@ -36,10 +36,8 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuesearch.Issue
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.jqlsearch.JqlInputRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.EmptyState;
-import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
-import ru.mail.jira.plugins.myteam.component.ReplyAndForwardMessagePartProcessor;
-import ru.mail.jira.plugins.myteam.component.url.UrlFinderInForward;
-import ru.mail.jira.plugins.myteam.component.url.UrlFinderInReply;
+import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
+import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.service.*;
@@ -60,8 +58,10 @@ public class RulesEngineImpl
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final ReminderService reminderService;
 
-  private final ReplyAndForwardMessagePartProcessor replyAndForwardMessagePartProcessor;
+  private final EventMessagesTextConverter eventMessagesTextConverter;
   private final MyteamApiClient myteamApiClient;
+
+  private final MyteamChatRepository myteamChatRepository;
 
   public RulesEngineImpl(
       CommonButtonsService commonButtonsService,
@@ -69,20 +69,19 @@ public class RulesEngineImpl
       UserChatService userChatService,
       IssueService issueService,
       IssueCreationSettingsService issueCreationSettingsService,
-      IssueTextConverter issueTextConverter,
       ReminderService reminderService,
-      UrlFinderInReply urlFinderInReply,
-      UrlFinderInForward urlFinderInForward,
-      ReplyAndForwardMessagePartProcessor replyAndForwardMessagePartProcessor,
-      MyteamApiClient myteamApiClient) {
+      EventMessagesTextConverter eventMessagesTextConverter,
+      MyteamApiClient myteamApiClient,
+      MyteamChatRepository myteamChatRepository) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
     this.issueService = issueService;
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.reminderService = reminderService;
-    this.replyAndForwardMessagePartProcessor = replyAndForwardMessagePartProcessor;
+    this.eventMessagesTextConverter = eventMessagesTextConverter;
     this.myteamApiClient = myteamApiClient;
+    this.myteamChatRepository = myteamChatRepository;
 
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
@@ -147,9 +146,15 @@ public class RulesEngineImpl
             issueCreationSettingsService,
             issueCreationService,
             issueService,
-            replyAndForwardMessagePartProcessor));
+            eventMessagesTextConverter));
     commandsRuleEngine.registerRule(
-        new CommentIssueByMentionBotRule(userChatService, this, myteamApiClient, issueService));
+        new CommentIssueByMentionBotRule(
+            userChatService,
+            this,
+            myteamApiClient,
+            issueService,
+            eventMessagesTextConverter,
+            myteamChatRepository));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));

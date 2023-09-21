@@ -50,67 +50,9 @@ public class IssueTextConverter {
     StringBuilder outPutStrings = new StringBuilder(message);
     if (parts != null) {
       parts.forEach(
-          part -> {
-            CommentaryParts currentPartClass = CommentaryParts.fromPartClass(part.getClass());
-            if (currentPartClass == null) {
-              return;
-            }
-
-            switch (currentPartClass) {
-              case File:
-                File file = (File) part;
-                try {
-                  HttpResponse<FileResponse> response = myteamApiClient.getFile(file.getFileId());
-                  FileResponse fileInfo = response.getBody();
-                  try (InputStream attachment = myteamApiClient.loadUrlFile(fileInfo.getUrl())) {
-                    boolean isUploaded =
-                        uploadAttachment(attachment, fileInfo, commentedUser, commentedIssue);
-                    if (isUploaded) {
-                      outPutStrings.setLength(0);
-                      outPutStrings.append(
-                          buildAttachmentLink(
-                              file.getFileId(), fileInfo.getType(), fileInfo.getFilename(), null));
-                      outPutStrings.append(message);
-                    }
-                    if (fileInfo.getType().equals("image")) {
-                      outPutStrings.append(
-                          String.format(
-                              "https://files-n.internal.myteam.mail.ru/get/%s\n",
-                              file.getFileId()));
-                    }
-                    if (file.getCaption() != null) {
-                      outPutStrings.append(String.format("%s\n", file.getCaption()));
-                    }
-                  }
-                } catch (UnirestException | IOException | MyteamServerErrorException e) {
-                  SentryClient.capture(e);
-                  log.error(
-                      "Unable to create attachment for comment on Issue {}",
-                      commentedIssue.getKey(),
-                      e);
-                }
-                break;
-              case Mention:
-                Mention mention = (Mention) part;
-                ApplicationUser user = userData.getUserByMrimLogin(mention.getUserId());
-                if (user != null) {
-                  String replacedMention =
-                      replaceMention(outPutStrings, mention.getUserId(), user.getName());
-                  outPutStrings.setLength(0);
-                  outPutStrings.append(replacedMention);
-                } else {
-                  String errorMessage =
-                      String.format(
-                          "Unable change Myteam mention to Jira's mention, because can't find user with id: %s",
-                          mention.getUserId());
-                  SentryClient.capture(errorMessage);
-                  log.error(errorMessage);
-                }
-                break;
-              default:
-                break;
-            }
-          });
+          part ->
+              addMentionsAndAttachmentsToIssue(
+                  part, outPutStrings, commentedUser, commentedIssue, message));
     }
 
     return ru.mail.jira.plugins.myteam.commons.Utils.removeAllEmojis(outPutStrings.toString());
@@ -225,6 +167,92 @@ public class IssueTextConverter {
       }
       return String.format(
           "%s\n%s", matcher.replaceAll(String.format(linkFormat, fileName)), myteamFileUrl);
+    }
+  }
+
+  public String convertToJiraCommentStyle(
+      ChatMessageEvent event,
+      String mainMessageTextWithFormattedUnmaskedUrls,
+      ApplicationUser commentAuthor,
+      Issue issueToComment) {
+    List<Part> parts = event.getMessageParts();
+    StringBuilder outPutStrings = new StringBuilder(mainMessageTextWithFormattedUnmaskedUrls);
+    if (parts != null) {
+      parts.stream()
+          .filter(part -> part instanceof File || part instanceof Mention)
+          .forEach(
+              part ->
+                  addMentionsAndAttachmentsToIssue(
+                      part,
+                      outPutStrings,
+                      commentAuthor,
+                      issueToComment,
+                      mainMessageTextWithFormattedUnmaskedUrls));
+    }
+    return outPutStrings.toString();
+  }
+
+  private void addMentionsAndAttachmentsToIssue(
+      Part part,
+      StringBuilder outPutStrings,
+      ApplicationUser commentAuthor,
+      Issue issueToComment,
+      String message) {
+    CommentaryParts currentPartClass = CommentaryParts.fromPartClass(part.getClass());
+    if (currentPartClass == null) {
+      return;
+    }
+
+    switch (currentPartClass) {
+      case File:
+        File file = (File) part;
+        try {
+          HttpResponse<FileResponse> response = myteamApiClient.getFile(file.getFileId());
+          FileResponse fileInfo = response.getBody();
+          try (InputStream attachment = myteamApiClient.loadUrlFile(fileInfo.getUrl())) {
+            boolean isUploaded =
+                uploadAttachment(attachment, fileInfo, commentAuthor, issueToComment);
+            if (isUploaded) {
+              outPutStrings.setLength(0);
+              outPutStrings.append(
+                  buildAttachmentLink(
+                      file.getFileId(), fileInfo.getType(), fileInfo.getFilename(), null));
+              outPutStrings.append(message);
+            }
+            if (fileInfo.getType().equals("image")) {
+              outPutStrings.append(
+                  String.format(
+                      "https://files-n.internal.myteam.mail.ru/get/%s\n", file.getFileId()));
+            }
+            if (file.getCaption() != null) {
+              outPutStrings.append(String.format("%s\n", file.getCaption()));
+            }
+          }
+        } catch (UnirestException | IOException | MyteamServerErrorException e) {
+          SentryClient.capture(e);
+          log.error(
+              "Unable to create attachment for comment on Issue {}", issueToComment.getKey(), e);
+        }
+        break;
+      case Mention:
+        Mention mention = (Mention) part;
+        ApplicationUser user = userData.getUserByMrimLogin(mention.getUserId());
+        if (user != null) {
+          String replacedMention =
+              replaceMention(outPutStrings, mention.getUserId(), user.getName());
+          outPutStrings.setLength(0);
+          outPutStrings.append(replacedMention);
+        } else {
+          String errorMessage =
+              String.format(
+                  "Unable change Myteam mention to Jira's mention, because can't find user with id: %s",
+                  mention.getUserId());
+          SentryClient.capture(errorMessage);
+          log.error(errorMessage);
+        }
+        break;
+      default:
+        break;
     }
   }
 }

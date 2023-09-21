@@ -32,8 +32,8 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.ChatAdminRule;
 import ru.mail.jira.plugins.myteam.commons.IssueReporter;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
-import ru.mail.jira.plugins.myteam.component.ReplyAndForwardMessagePartProcessor;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
@@ -55,7 +55,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
   private final IssueCreationService issueCreationService;
   private final IssueService issueService;
 
-  private final ReplyAndForwardMessagePartProcessor replyAndForwardMessagePartProcessor;
+  private final EventMessagesTextConverter eventMessagesTextConverter;
 
   public CreateIssueByReplyRule(
       UserChatService userChatService,
@@ -63,12 +63,12 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       IssueCreationSettingsService issueCreationSettingsService,
       IssueCreationService issueCreationService,
       IssueService issueService,
-      ReplyAndForwardMessagePartProcessor replyAndForwardMessagePartProcessor) {
+      EventMessagesTextConverter eventMessagesTextConverter) {
     super(userChatService, rulesEngine);
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.issueCreationService = issueCreationService;
     this.issueService = issueService;
-    this.replyAndForwardMessagePartProcessor = replyAndForwardMessagePartProcessor;
+    this.eventMessagesTextConverter = eventMessagesTextConverter;
   }
 
   @Condition
@@ -144,7 +144,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                 }
               });
 
-      ReplyAndForwardMessagePartProcessor.MarkdownFieldValueHolder markdownFieldValueHolder =
+      EventMessagesTextConverter.MarkdownFieldValueHolder markdownFieldValueHolder =
           getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), null);
       fieldValues.put(
           issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
@@ -266,11 +266,11 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
         .collect(Collectors.toList());
   }
 
-  private ReplyAndForwardMessagePartProcessor.MarkdownFieldValueHolder getIssueDescription(
+  private EventMessagesTextConverter.MarkdownFieldValueHolder getIssueDescription(
       ChatMessageEvent event, String template, @Nullable Issue issue) {
-    return replyAndForwardMessagePartProcessor
+    return eventMessagesTextConverter
         .convertMessagesFromReplyAndForwardMessages(event::getMessageParts, issue, template)
-        .orElse(new ReplyAndForwardMessagePartProcessor.MarkdownFieldValueHolder("", emptyList()));
+        .orElse(new EventMessagesTextConverter.MarkdownFieldValueHolder("", emptyList()));
   }
 
   private String getIssueSummary(

@@ -49,7 +49,6 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueWatchi
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.commons.exceptions.ValidationException;
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
-import ru.mail.jira.plugins.myteam.component.ReplyAndForwardMessagePartProcessor;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.component.comment.create.CommentCreateArg;
 import ru.mail.jira.plugins.myteam.service.IssueService;
@@ -74,8 +73,6 @@ public class IssueServiceImpl implements IssueService {
   private final PluginData pluginData;
   private final String JIRA_BASE_URL;
 
-  private final ReplyAndForwardMessagePartProcessor messagePartProcessor;
-
   public IssueServiceImpl(
       @ComponentImport com.atlassian.jira.bc.issue.IssueService jiraIssueService,
       @ComponentImport IssueManager issueManager,
@@ -91,8 +88,7 @@ public class IssueServiceImpl implements IssueService {
       @ComponentImport ApplicationProperties applicationProperties,
       UserData userData,
       IssueTextConverter issueTextConverter,
-      PluginData pluginData,
-      ReplyAndForwardMessagePartProcessor messagePartProcessor) {
+      PluginData pluginData) {
     this.jiraIssueService = jiraIssueService;
     this.issueManager = issueManager;
     this.permissionManager = permissionManager;
@@ -108,7 +104,6 @@ public class IssueServiceImpl implements IssueService {
     this.issueTextConverter = issueTextConverter;
     this.pluginData = pluginData;
     this.JIRA_BASE_URL = applicationProperties.getString(APKeys.JIRA_BASEURL);
-    this.messagePartProcessor = messagePartProcessor;
     this.workflowActionsBean = new WorkflowActionsBean();
   }
 
@@ -213,10 +208,7 @@ public class IssueServiceImpl implements IssueService {
       return;
     }
 
-    if (!permissionManager.hasPermission(ProjectPermissions.ADD_COMMENTS, commentedIssue, user)) {
-      throw new NoPermissionException(
-          "User " + user + " can't create comment for issue " + issueKey);
-    }
+    checkPermissionOnCreateComment(commentedIssue, user);
     createComment(
         commentedIssue,
         user,
@@ -226,34 +218,12 @@ public class IssueServiceImpl implements IssueService {
   @Override
   public void commentIssue(@NotNull final CommentCreateArg commentCreateArg)
       throws NoPermissionException, ValidationException {
-
-    if (!permissionManager.hasPermission(
-        ProjectPermissions.ADD_COMMENTS,
+    checkPermissionOnCreateComment(
+        commentCreateArg.getIssueToComment(), commentCreateArg.getCommentAuthor());
+    createComment(
         commentCreateArg.getIssueToComment(),
-        commentCreateArg.getCommentAuthor())) {
-      throw new NoPermissionException(
-          "User "
-              + commentCreateArg.getCommentAuthor()
-              + " can't create comment for issue "
-              + commentCreateArg.getIssueToComment().getKey());
-    }
-
-    final String body =
-        messagePartProcessor
-            .convertMessagesFromReplyAndForwardMessages(
-                commentCreateArg::getMessageParts,
-                commentCreateArg.getIssueToComment(),
-                commentCreateArg.getCommentTemplate())
-            .map(markdownFieldValueHolder -> new StringBuilder(markdownFieldValueHolder.getValue()))
-            .map(
-                stringBuilder ->
-                    stringBuilder
-                        .append("\n\n")
-                        .append(commentCreateArg.getFormattedMainMessage())
-                        .toString())
-            .orElse(commentCreateArg.getFormattedMainMessage());
-
-    createComment(commentCreateArg.getIssueToComment(), commentCreateArg.getCommentAuthor(), body);
+        commentCreateArg.getCommentAuthor(),
+        commentCreateArg.getBody());
   }
 
   @Override
@@ -400,6 +370,16 @@ public class IssueServiceImpl implements IssueService {
       StringJoiner joiner = new StringJoiner(" ");
       validationResult.getErrorCollection().getErrorMessages().forEach(joiner::add);
       throw new ValidationException(joiner.toString());
+    }
+  }
+
+  private void checkPermissionOnCreateComment(
+      final Issue issueToComment, final ApplicationUser commentAuthor)
+      throws NoPermissionException {
+    if (!permissionManager.hasPermission(
+        ProjectPermissions.ADD_COMMENTS, issueToComment, commentAuthor)) {
+      throw new NoPermissionException(
+          "User " + commentAuthor + " can't create comment for issue " + issueToComment.getKey());
     }
   }
 }

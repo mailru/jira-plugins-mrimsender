@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.ToString;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
+import ru.mail.jira.plugins.myteam.myteam.dto.EmptyFormatMetadata;
+import ru.mail.jira.plugins.myteam.myteam.dto.TextFormatMetadata;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
@@ -23,6 +25,7 @@ public class ChatMessageEvent extends MyteamEvent {
   private final boolean hasForwards;
   private final boolean hasReply;
   private final boolean hasMentions;
+  private final TextFormatMetadata format;
 
   public ChatMessageEvent(NewMessageEvent newMessageEvent) {
     super(
@@ -42,6 +45,10 @@ public class ChatMessageEvent extends MyteamEvent {
       hasReply = false;
       hasMentions = false;
     }
+    format =
+        newMessageEvent.getFormat() != null
+            ? newMessageEvent.getFormat()
+            : new EmptyFormatMetadata();
   }
 
   public ChatMessageEvent(ChatMessageEvent chatMessageEvent) {
@@ -58,5 +65,9 @@ public class ChatMessageEvent extends MyteamEvent {
       hasReply = false;
       hasMentions = false;
     }
+    format =
+        chatMessageEvent.getFormat() != null
+            ? chatMessageEvent.getFormat()
+            : new EmptyFormatMetadata();
   }
 }

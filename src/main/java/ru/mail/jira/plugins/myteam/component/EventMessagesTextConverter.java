@@ -7,18 +7,23 @@ import static ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CreateIs
 import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_QUOTE_MESSAGE_TEMPLATE;
 
 import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.user.ApplicationUser;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.TimeZone;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.component.url.UrlFinderInForward;
+import ru.mail.jira.plugins.myteam.component.url.UrlFinderInMainEvent;
 import ru.mail.jira.plugins.myteam.component.url.UrlFinderInReply;
 import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
@@ -27,23 +32,25 @@ import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Reply;
 
 @Component
-@Slf4j
-public class ReplyAndForwardMessagePartProcessor {
+public class EventMessagesTextConverter {
   private final UrlFinderInForward urlFinderInForward;
   private final UrlFinderInReply urlFinderInReply;
+
+  private final UrlFinderInMainEvent urlFinderInMainEvent;
   private final MessageFormatter messageFormatter;
   private final IssueTextConverter issueTextConverter;
 
-  public ReplyAndForwardMessagePartProcessor(
+  public EventMessagesTextConverter(
       final UrlFinderInForward urlFinderInForward,
       final UrlFinderInReply urlFinderInReply,
+      UrlFinderInMainEvent urlFinderInMainEvent,
       MessageFormatter messageFormatter,
       IssueTextConverter issueTextConverter) {
     this.urlFinderInForward = urlFinderInForward;
     this.urlFinderInReply = urlFinderInReply;
+    this.urlFinderInMainEvent = urlFinderInMainEvent;
     this.messageFormatter = messageFormatter;
     this.issueTextConverter = issueTextConverter;
-    log.error("AACZXCZCZXCZXCXZCZ");
   }
 
   public Optional<MarkdownFieldValueHolder> convertMessagesFromReplyAndForwardMessages(
@@ -59,7 +66,6 @@ public class ReplyAndForwardMessagePartProcessor {
   private MarkdownFieldValueHolder convertToJiraMarkdownStyle(
       List<Part> parts, @Nullable String template, @Nullable Issue issue) {
     StringBuilder builder = new StringBuilder();
-    log.error("ASDASDASDASDASDASDASDSDASDSA");
     final List<LinksInMessage> linksInMessages = new ArrayList<>();
     List<Part> replyOrForwardMessages =
         parts.stream()
@@ -117,6 +123,19 @@ public class ReplyAndForwardMessagePartProcessor {
           builder.append("\n\n");
         });
     return new MarkdownFieldValueHolder(builder.toString(), linksInMessages);
+  }
+
+  public String convertToJiraMarkdownStyleMainMessage(
+      ChatMessageEvent event, ApplicationUser commentAuthor, Issue issueToComment) {
+    final String mainMessageText = event.getMessage();
+    final LinksInMessage linksInMessage = urlFinderInMainEvent.findUrls(event);
+    final String mainMessageTextWithUrls =
+        messageFormatter.formatLinks(mainMessageText, linksInMessage);
+    if (event.getMessageParts() != null) {
+      return issueTextConverter.convertToJiraCommentStyle(
+          event, mainMessageTextWithUrls, commentAuthor, issueToComment);
+    }
+    return mainMessageTextWithUrls;
   }
 
   @Data
