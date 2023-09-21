@@ -78,7 +78,9 @@ public class MyteamEventsListener {
             message = message.replaceAll(botMention, "").trim();
           }
 
-          if (message != null && message.startsWith(COMMENT_ISSUE_COMMAND)) {
+          if (message != null
+              && event.getChatType() == ChatType.GROUP
+              && message.startsWith(COMMENT_ISSUE_COMMAND)) {
             handleCommentIssueCommandByMentionBot(event);
             return;
           }

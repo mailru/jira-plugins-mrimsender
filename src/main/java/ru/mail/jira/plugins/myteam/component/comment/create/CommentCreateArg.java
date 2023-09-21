@@ -3,10 +3,12 @@ package ru.mail.jira.plugins.myteam.component.comment.create;
 
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
-@Data
+@Getter
+@AllArgsConstructor
 public final class CommentCreateArg {
 
   @NotNull private final Issue issueToComment;

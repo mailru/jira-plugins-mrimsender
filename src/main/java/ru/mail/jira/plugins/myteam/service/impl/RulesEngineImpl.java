@@ -25,7 +25,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.Common
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNoPermissionErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNotFoundErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.UnknownErrorRule;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CommentIssueByMentionBotRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CommentIssueCommandBotRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CreateIssueByReplyRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.SearchByJqlIssuesRule;
@@ -148,7 +148,7 @@ public class RulesEngineImpl
             issueService,
             eventMessagesTextConverter));
     commandsRuleEngine.registerRule(
-        new CommentIssueByMentionBotRule(
+        new CommentIssueCommandBotRule(
             userChatService,
             this,
             myteamApiClient,

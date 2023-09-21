@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.ToString;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
-import ru.mail.jira.plugins.myteam.myteam.dto.EmptyFormatMetadata;
 import ru.mail.jira.plugins.myteam.myteam.dto.TextFormatMetadata;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.events.NewMessageEvent;
@@ -45,10 +44,7 @@ public class ChatMessageEvent extends MyteamEvent {
       hasReply = false;
       hasMentions = false;
     }
-    format =
-        newMessageEvent.getFormat() != null
-            ? newMessageEvent.getFormat()
-            : new EmptyFormatMetadata();
+    format = newMessageEvent.getFormat();
   }
 
   public ChatMessageEvent(ChatMessageEvent chatMessageEvent) {
@@ -65,9 +61,6 @@ public class ChatMessageEvent extends MyteamEvent {
       hasReply = false;
       hasMentions = false;
     }
-    format =
-        chatMessageEvent.getFormat() != null
-            ? chatMessageEvent.getFormat()
-            : new EmptyFormatMetadata();
+    format = chatMessageEvent.getFormat();
   }
 }

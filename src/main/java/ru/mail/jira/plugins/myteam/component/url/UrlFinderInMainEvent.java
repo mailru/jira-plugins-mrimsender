@@ -1,9 +1,9 @@
 /* (C)2023 */
 package ru.mail.jira.plugins.myteam.component.url;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.component.url.dto.Link;
 import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
-import ru.mail.jira.plugins.myteam.myteam.dto.EmptyFormatMetadata;
 import ru.mail.jira.plugins.myteam.myteam.dto.TextFormatMetadata;
 
 @Component
@@ -24,18 +23,23 @@ public class UrlFinderInMainEvent extends AbstractUrlFinder<LinksInMessage, Chat
 
   @Override
   public LinksInMessage findUrls(ChatMessageEvent source) {
-    if (source.getFormat() == null || source.getFormat() instanceof EmptyFormatMetadata) {
-      return LinksInMessage.of(super.findUnmaskedUrls(source::getMessage));
-    }
-
     return findAllLinks(source);
   }
 
   private LinksInMessage findAllLinks(final ChatMessageEvent source) {
+    if (source.getFormat() == null) {
+      return LinksInMessage.of(super.findUnmaskedUrls(source::getMessage));
+    }
+
+    if (source.getFormat().getLink() == null) {
+      return LinksInMessage.of(super.findUnmaskedUrls(source::getMessage));
+    }
+
+    final List<TextFormatMetadata.Link> linksMetadata = source.getFormat().getLink();
     return LinksInMessage.of(
         Stream.concat(
                 super.findUnmaskedUrls(source::getMessage).stream(),
-                Optional.ofNullable(source.getFormat().getLink()).orElse(emptyList()).stream()
+                linksMetadata.stream()
                     .filter(Objects::nonNull)
                     .map(maskedLinkMetadata -> mapLinkMetadataToLink(maskedLinkMetadata, source)))
             .collect(toUnmodifiableList()));

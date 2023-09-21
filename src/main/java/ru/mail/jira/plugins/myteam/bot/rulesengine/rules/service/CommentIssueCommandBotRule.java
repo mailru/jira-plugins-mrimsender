@@ -5,6 +5,7 @@ import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.JiraKeyUtils;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,11 +23,11 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleT
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.ChatAdminRule;
 import ru.mail.jira.plugins.myteam.commons.Const;
+import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.commons.exceptions.ValidationException;
 import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
 import ru.mail.jira.plugins.myteam.component.comment.create.CommentCreateArg;
 import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
-import ru.mail.jira.plugins.myteam.i18n.JiraBotI18nProperties;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
@@ -34,14 +35,14 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Rule(name = "Create comment by mention bot", description = "Create comment by mention bot")
 @Slf4j
-public class CommentIssueByMentionBotRule extends ChatAdminRule {
+public class CommentIssueCommandBotRule extends ChatAdminRule {
   private final MyteamApiClient myteamApiClient;
   private final IssueService issueService;
 
   private final EventMessagesTextConverter messagePartProcessor;
   private final MyteamChatRepository myteamChatRepository;
 
-  public CommentIssueByMentionBotRule(
+  public CommentIssueCommandBotRule(
       final UserChatService userChatService,
       final RulesEngine rulesEngine,
       final MyteamApiClient myteamApiClient,
@@ -57,14 +58,18 @@ public class CommentIssueByMentionBotRule extends ChatAdminRule {
 
   @Condition
   public boolean isValid(
-      @Fact("command") String command, @Fact("event") MyteamEvent event, @Fact("args") String tag)
+      @Fact("command") String command,
+      @Fact("event") MyteamEvent event,
+      @Fact("isGroup") boolean isGroup,
+      @Fact("args") String tag)
       throws AdminRulesRequiredException {
 
-    return isValidReceivedCommandForRule(command, event, tag);
+    return isValidReceivedCommandForRule(command, event, isGroup, tag);
   }
 
   @Action
-  public void execute(@Fact("event") final ChatMessageEvent event) {
+  public void execute(@Fact("event") final ChatMessageEvent event)
+      throws MyteamServerErrorException, IOException {
     ApplicationUser jiraUserFromUserChatId =
         userChatService.getJiraUserFromUserChatId(event.getUserId());
     if (Objects.isNull(jiraUserFromUserChatId)) {
@@ -74,20 +79,22 @@ public class CommentIssueByMentionBotRule extends ChatAdminRule {
         JiraKeyUtils.getIssueKeysFromString(event.getMessage());
     log.error("issue key extracted: {}", issueKeysFromString);
     if (issueKeysFromString.size() == 0) {
-      Optional.ofNullable(myteamChatRepository.findChatByChatId(event.getChatId()))
-          .flatMap(myteamChatMeta -> findIssueByKey(myteamChatMeta.getIssueKey(), event))
-          .ifPresent(
-              issueForCommenting ->
-                  tryCommentIssue(issueForCommenting, event, jiraUserFromUserChatId));
+      Optional<Issue> issueOptional =
+          Optional.ofNullable(myteamChatRepository.findChatByChatId(event.getChatId()))
+              .flatMap(myteamChatMeta -> findIssueByKey(myteamChatMeta.getIssueKey(), event));
+      if (issueOptional.isPresent()) {
+        tryCommentIssue(issueOptional.get(), event, jiraUserFromUserChatId);
+      }
       return;
     }
 
-    issueKeysFromString.stream()
-        .findFirst()
-        .flatMap(issueKey -> findIssueByKey(issueKey, event))
-        .ifPresent(
-            issueForCommenting ->
-                tryCommentIssue(issueForCommenting, event, jiraUserFromUserChatId));
+    Optional<Issue> issueOptional =
+        issueKeysFromString.stream()
+            .findFirst()
+            .flatMap(issueKey -> findIssueByKey(issueKey, event));
+    if (issueOptional.isPresent()) {
+      tryCommentIssue(issueOptional.get(), event, jiraUserFromUserChatId);
+    }
   }
 
   private Optional<Issue> findIssueByKey(
@@ -103,21 +110,30 @@ public class CommentIssueByMentionBotRule extends ChatAdminRule {
   private void tryCommentIssue(
       @NotNull final Issue issue,
       @NotNull ChatMessageEvent event,
-      @NotNull ApplicationUser commentAuthor) {
+      @NotNull ApplicationUser commentAuthor)
+      throws MyteamServerErrorException, IOException {
     try {
       final CommentCreateArg commentCreateArg =
           new CommentCreateArg(
               issue, commentAuthor, createCommentBodyFromEvent(event, issue, commentAuthor));
       issueService.commentIssue(commentCreateArg);
-      sendMessageWithRawText(event, JiraBotI18nProperties.COMMENT_CREATED_SUCCESSFUL_MESSAGE_KEY);
+      userChatService.sendMessageText(
+          event.getChatId(),
+          userChatService.getRawText(
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.commentCreated"));
     } catch (NoPermissionException e) {
       log.error("user with id [%s] has not permission create comment", e);
-      sendMessageWithRawText(
-          event, JiraBotI18nProperties.CREATE_COMMENT_NOT_HAVE_PERMISSION_MESSAGE_KEY);
+      userChatService.sendMessageText(
+          event.getChatId(),
+          userChatService.getRawText(
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.noPermissions"));
     } catch (ValidationException e) {
       log.error("user with id [%s] sent not valid comment", e);
-      sendMessageWithFormattedText(
-          event, JiraBotI18nProperties.COMMENT_VALIDATION_ERROR_MESSAGE_KEY, e.getMessage());
+      userChatService.sendMessageText(
+          event.getChatId(),
+          userChatService.getText(
+              "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.commentValidationFailed",
+              e.getMessage()));
     }
   }
 
@@ -171,12 +187,11 @@ public class CommentIssueByMentionBotRule extends ChatAdminRule {
   }
 
   private boolean isValidReceivedCommandForRule(
-      final String command, final MyteamEvent event, final String tag) {
-    if (!(event instanceof ChatMessageEvent)) {
-      return false;
-    }
-    return CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
+      final String command, final MyteamEvent event, boolean isGroup, final String tag) {
+    return isGroup
+        && CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
         && "".equals(tag)
+        && event instanceof ChatMessageEvent
         && (isBotMentioned((ChatMessageEvent) event)
             || isEventFromChatLinkedToIssue((ChatMessageEvent) event));
   }
