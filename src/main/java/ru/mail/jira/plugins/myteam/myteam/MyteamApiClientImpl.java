@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import kong.unirest.*;
 import kong.unirest.apache.ApacheClient;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.ServiceUnavailableRetryStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -413,7 +414,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
             .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
             .field("token", apiToken)
             .field("chatId", chatId)
-            .field("text", (text != null ? text.substring(0, MAX_TEXT_LENGTH - 3) + "..." : null));
+            .field("text", (text != null ? StringUtils.substring(text, 0, MAX_TEXT_LENGTH - 3) + "..." : null));
 
     if (isMarkdown) {
       req.field("parseMode", "MarkdownV2");
