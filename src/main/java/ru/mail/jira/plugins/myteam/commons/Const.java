@@ -5,7 +5,7 @@ public class Const {
 
   public static final String CHAT_COMMAND_PREFIX = "/";
   public static final String ISSUE_CREATION_BY_REPLY_PREFIX = "#";
-  public static final String COMMENT_ISSUE_BY_MENTION_BOT = "#comment";
+  public static final String COMMENT_ISSUE_COMMAND = "#comment";
   public static final String DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE =
       "По вашему обращению была создана задача: {{issueKey}}";
   public static final String DEFAULT_ISSUE_SUMMARY_TEMPLATE = "Обращение от {{author}}";

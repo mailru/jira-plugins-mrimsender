@@ -4,6 +4,7 @@ package ru.mail.jira.plugins.myteam.myteam.dto.events;
 import java.util.List;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import ru.mail.jira.plugins.myteam.myteam.dto.Chat;
+import ru.mail.jira.plugins.myteam.myteam.dto.TextFormatMetadata;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Part;
 
@@ -33,6 +34,10 @@ public class NewMessageEvent extends IcqEvent<NewMessageEvent.Data> {
     return this.getPayload().parts;
   }
 
+  public TextFormatMetadata getFormat() {
+    return this.getPayload().format;
+  }
+
   @JsonIgnoreProperties(ignoreUnknown = true)
   static class Data {
     public long msgId;
@@ -41,6 +46,7 @@ public class NewMessageEvent extends IcqEvent<NewMessageEvent.Data> {
     public Chat chat;
     public User from;
     public List<Part> parts;
+    public TextFormatMetadata format;
 
     @Override
     public String toString() {

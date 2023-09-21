@@ -78,12 +78,15 @@ public class MyteamEventsListener {
             message = message.replaceAll(botMention, "").trim();
           }
 
-          if (message != null && event.getChatType() == ChatType.GROUP) {
-            if (message.startsWith(COMMENT_ISSUE_BY_MENTION_BOT)) {
-              handleCommentIssueCommandByMentionBot(event);
-            } else if (message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
-              handleIssueCreationTag(event);
-            }
+          if (message != null && message.startsWith(COMMENT_ISSUE_COMMAND)) {
+            handleCommentIssueCommandByMentionBot(event);
+            return;
+          }
+
+          if (message != null
+              && event.getChatType() == ChatType.GROUP
+              && message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
+            handleIssueCreationTag(event);
             return;
           }
 

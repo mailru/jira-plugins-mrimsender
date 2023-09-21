@@ -407,7 +407,7 @@ public class MessageFormatterTest {
     // WHEN
     String result = messageFormatter.formatLinks(message, LinksInMessage.of(links));
     // THEN
-    assertEquals("[mask(url)|https://some.domen] [http://localost:2990]", result);
+    assertEquals("[mask(url)|https://some.domen] http://localost:2990", result);
   }
 
   @Test
@@ -420,7 +420,7 @@ public class MessageFormatterTest {
     // WHEN
     String result = messageFormatter.formatLinks(message, LinksInMessage.of(links));
     // THEN
-    assertEquals("[mask(!&&!url!&!).-[]|https://some.domen] [http://localost:2990]", result);
+    assertEquals("[mask(!&&!url!&!).-[]|https://some.domen] http://localost:2990", result);
   }
 
   @Test

@@ -70,7 +70,7 @@ public class MessageFormatter {
   private static final String DESCRIPTION_MARKDOWN_MASKED_LINK_TEMPLATE = "[%s|%s]";
 
   @SuppressWarnings("InlineFormatString")
-  private static final String DESCRIPTION_MARKDOWN_UNMASKED_LINK_TEMPLATE = "[%s]";
+  private static final String DESCRIPTION_MARKDOWN_UNMASKED_LINK_TEMPLATE = "%s";
 
   private final ApplicationProperties applicationProperties;
   private final DateTimeFormatter dateTimeFormatter;
