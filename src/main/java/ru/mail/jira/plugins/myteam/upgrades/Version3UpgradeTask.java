@@ -24,22 +24,22 @@ public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
       ao.migrate(IssueCreationSettings.class);
       log.info("Run upgrade task to version 3");
       ao.executeInTransaction(
-              (TransactionCallback<Void>)
-                      () -> {
-                        for (AdditionalIssueField field :
-                                ao.find(
-                                        AdditionalIssueField.class,
-                                        Query.select().where("FIELD_ID = ?", "assignee"))) {
+          (TransactionCallback<Void>)
+              () -> {
+                for (AdditionalIssueField field :
+                    ao.find(
+                        AdditionalIssueField.class,
+                        Query.select().where("FIELD_ID = ?", "assignee"))) {
 
-                          IssueCreationSettings settings = field.getIssueCreationSettings();
+                  IssueCreationSettings settings = field.getIssueCreationSettings();
 
-                          settings.setAssignee(field.getValue());
-                          settings.save();
+                  settings.setAssignee(field.getValue());
+                  settings.save();
 
-                          ao.delete(field);
-                        }
-                        return null;
-                      });
+                  ao.delete(field);
+                }
+                return null;
+              });
     }
   }
 }
