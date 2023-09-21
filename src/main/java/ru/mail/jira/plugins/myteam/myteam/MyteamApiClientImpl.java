@@ -40,6 +40,8 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   private String botApiUrl;
   private String botId;
 
+  private static final int MAX_TEXT_LENGTH = 20000;
+
   @Autowired
   public MyteamApiClientImpl(PluginData pluginData) {
     this.objectMapper = new ObjectMapper();
@@ -411,7 +413,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
             .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
             .field("token", apiToken)
             .field("chatId", chatId)
-            .field("text", text);
+            .field("text", (text != null ? text.substring(0, MAX_TEXT_LENGTH - 3) + "..." : null));
 
     if (isMarkdown) {
       req.field("parseMode", "MarkdownV2");
