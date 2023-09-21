@@ -77,7 +77,6 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
     }
     final List<String> issueKeysFromString =
         JiraKeyUtils.getIssueKeysFromString(event.getMessage());
-    log.error("issue key extracted: {}", issueKeysFromString);
     if (issueKeysFromString.size() == 0) {
       Optional<Issue> issueOptional =
           Optional.ofNullable(myteamChatRepository.findChatByChatId(event.getChatId()))
