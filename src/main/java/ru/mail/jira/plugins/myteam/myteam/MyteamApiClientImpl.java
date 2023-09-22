@@ -416,11 +416,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
             .field("chatId", chatId)
             .field(
                 "text",
-                (text != null
-                    ? ((text.length() > MAX_TEXT_LENGTH)
-                        ? (StringUtils.substring(text, 0, MAX_TEXT_LENGTH - 3) + "...")
-                        : text)
-                    : null));
+                (text != null ? StringUtils.abbreviate(text, "...", 0, MAX_TEXT_LENGTH) : null));
 
     if (isMarkdown) {
       req.field("parseMode", "MarkdownV2");
