@@ -414,7 +414,13 @@ public class MyteamApiClientImpl implements MyteamApiClient {
             .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
             .field("token", apiToken)
             .field("chatId", chatId)
-            .field("text", (text != null ? StringUtils.substring(text, 0, MAX_TEXT_LENGTH - 3) + "..." : null));
+            .field(
+                "text",
+                (text != null
+                    ? ((text.length() > MAX_TEXT_LENGTH)
+                        ? (StringUtils.substring(text, 0, MAX_TEXT_LENGTH - 3) + "...")
+                        : text)
+                    : null));
 
     if (isMarkdown) {
       req.field("parseMode", "MarkdownV2");
