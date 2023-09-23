@@ -64,7 +64,12 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
       @Fact("args") String tag)
       throws AdminRulesRequiredException {
 
-    return isValidReceivedCommandForRule(command, event, isGroup, tag);
+    return isGroup
+            && CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
+            && "".equals(tag)
+            && event instanceof ChatMessageEvent
+            && (isBotMentioned((ChatMessageEvent) event)
+            || isEventFromChatLinkedToIssue((ChatMessageEvent) event));
   }
 
   @Action
@@ -165,34 +170,10 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
 
   private String removeBotMentionAndCommandAndCommentedIssueWithKeyFromMainMessage(
       String formattedMainMessage, Issue issue) {
-    return removeCommentedIssueWithKeyFromMainMessage(
-        removeCommentCommandFromMainMessage(removeBotMentionsFromMainMessage(formattedMainMessage)),
-        issue.getKey());
-  }
-
-  private String removeBotMentionsFromMainMessage(String formattedMainMessage) {
-    return formattedMainMessage
-        .replaceAll(String.format("@\\[%s\\]", myteamApiClient.getBotId()), "")
-        .trim();
-  }
-
-  private String removeCommentCommandFromMainMessage(String formattedMainMessage) {
-    return formattedMainMessage.replaceFirst(Const.COMMENT_ISSUE_COMMAND, "").trim();
-  }
-
-  private String removeCommentedIssueWithKeyFromMainMessage(
-      String formattedMainMessage, @NotNull String issueKey) {
-    return formattedMainMessage.replaceFirst(issueKey, "").trim();
-  }
-
-  private boolean isValidReceivedCommandForRule(
-      final String command, final MyteamEvent event, boolean isGroup, final String tag) {
-    return isGroup
-        && CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
-        && "".equals(tag)
-        && event instanceof ChatMessageEvent
-        && (isBotMentioned((ChatMessageEvent) event)
-            || isEventFromChatLinkedToIssue((ChatMessageEvent) event));
+    return formattedMainMessage.replaceAll(String.format("@\\[%s\\]", myteamApiClient.getBotId()), "")
+            .replaceFirst(Const.COMMENT_ISSUE_COMMAND, "")
+            .replaceFirst(issue.getKey(), "")
+            .trim();
   }
 
   private boolean isBotMentioned(final ChatMessageEvent chatMessageEvent) {
