@@ -65,10 +65,10 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
       throws AdminRulesRequiredException {
 
     return isGroup
-            && CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
-            && "".equals(tag)
-            && event instanceof ChatMessageEvent
-            && (isBotMentioned((ChatMessageEvent) event)
+        && CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
+        && "".equals(tag)
+        && event instanceof ChatMessageEvent
+        && (isBotMentioned((ChatMessageEvent) event)
             || isEventFromChatLinkedToIssue((ChatMessageEvent) event));
   }
 
@@ -170,10 +170,11 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
 
   private String removeBotMentionAndCommandAndCommentedIssueWithKeyFromMainMessage(
       String formattedMainMessage, Issue issue) {
-    return formattedMainMessage.replaceAll(String.format("@\\[%s\\]", myteamApiClient.getBotId()), "")
-            .replaceFirst(Const.COMMENT_ISSUE_COMMAND, "")
-            .replaceFirst(issue.getKey(), "")
-            .trim();
+    return formattedMainMessage
+        .replaceAll(String.format("@\\[%s\\]", myteamApiClient.getBotId()), "")
+        .replaceFirst(Const.COMMENT_ISSUE_COMMAND, "")
+        .replaceFirst(issue.getKey(), "")
+        .trim();
   }
 
   private boolean isBotMentioned(final ChatMessageEvent chatMessageEvent) {
