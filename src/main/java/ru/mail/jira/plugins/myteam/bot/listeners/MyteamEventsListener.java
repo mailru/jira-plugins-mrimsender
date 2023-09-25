@@ -78,13 +78,6 @@ public class MyteamEventsListener {
             message = message.replaceAll(botMention, "").trim();
           }
 
-          //          if (message != null
-          //              && event.getChatType() == ChatType.GROUP
-          //              && message.startsWith(COMMENT_ISSUE_COMMAND)) {
-          //            handleCommentIssueCommandByMentionBot(event);
-          //            return;
-          //          }
-
           if (message != null
               && event.getChatType() == ChatType.GROUP
               && message.startsWith(ISSUE_CREATION_BY_REPLY_PREFIX)) {
@@ -99,10 +92,6 @@ public class MyteamEventsListener {
           handleStateAction(event);
         });
   }
-
-  //  private void handleCommentIssueCommandByMentionBot(ChatMessageEvent event) {
-  //    rulesEngine.fireCommand(CommandRuleType.CommentIssueByMentionBot, event);
-  //  }
 
   @Subscribe
   public void handleButtonClickEvent(ButtonClickEvent event) throws UnirestException {

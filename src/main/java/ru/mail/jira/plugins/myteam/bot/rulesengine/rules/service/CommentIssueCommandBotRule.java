@@ -39,6 +39,8 @@ import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
+import static ru.mail.jira.plugins.myteam.commons.Const.CHAT_COMMAND_PREFIX;
+
 @Rule(name = "Create comment by mention bot", description = "Create comment by mention bot")
 @Slf4j
 public class CommentIssueCommandBotRule extends ChatAdminRule {
@@ -47,6 +49,8 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
 
   private final EventMessagesTextConverter messagePartProcessor;
   private final MyteamChatRepository myteamChatRepository;
+
+  private static final String COMMENT_COMMAND = CHAT_COMMAND_PREFIX + CommandRuleType.CommentIssueByMentionBot.getName();
 
   public CommentIssueCommandBotRule(
       final UserChatService userChatService,
@@ -70,15 +74,12 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
       @Fact("args") String args)
       throws AdminRulesRequiredException {
 
-    boolean result =
-        isGroup
+    return isGroup
             && CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
             && event instanceof ChatMessageEvent
             && (isBotMentioned((ChatMessageEvent) event)
-                || isEventFromChatLinkedToIssue((ChatMessageEvent) event)
-                || isEventSendFromCommandStateRule(args));
-    log.debug("RESULT: " + result);
-    return result;
+            || isEventFromChatLinkedToIssue((ChatMessageEvent) event)
+            || isEventSendFromCommandStateRule(args));
   }
 
   @Action
@@ -213,7 +214,7 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
       String formattedMainMessage, Issue issue) {
     return formattedMainMessage
         .replaceAll(String.format("@\\[%s\\]", myteamApiClient.getBotId()), "")
-        .replaceFirst(Const.COMMENT_ISSUE_COMMAND, "")
+        .replaceFirst(CommentIssueCommandBotRule.COMMENT_COMMAND, "")
         .replaceFirst(issue.getKey(), "")
         .trim();
   }

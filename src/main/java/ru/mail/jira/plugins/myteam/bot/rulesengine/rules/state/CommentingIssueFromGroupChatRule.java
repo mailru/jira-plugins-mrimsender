@@ -44,7 +44,7 @@ public class CommentingIssueFromGroupChatRule extends ChatAdminRule {
       final String arg = jsonObject.toString();
       ChatMessageEvent chatMessageEvent =
           ((CommentingIssueFromGroupChatState) state).getChatMessageEvent();
-      userChatService.deleteState(event.getChatId(), state);
+      userChatService.deleteState(chatMessageEvent.getChatId());
       rulesEngine.fireCommand(CommandRuleType.CommentIssueByMentionBot, chatMessageEvent, arg);
     }
   }
