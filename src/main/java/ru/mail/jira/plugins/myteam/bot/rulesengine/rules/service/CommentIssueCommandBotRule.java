@@ -6,27 +6,33 @@ import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.JiraKeyUtils;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
+import kong.unirest.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.AdminRulesRequiredException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.ChatAdminRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.states.CommentingIssueFromGroupChatState;
 import ru.mail.jira.plugins.myteam.commons.Const;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.commons.exceptions.ValidationException;
 import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
 import ru.mail.jira.plugins.myteam.component.comment.create.CommentCreateArg;
+import ru.mail.jira.plugins.myteam.db.model.MyteamChatMeta;
 import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.service.IssueService;
@@ -61,31 +67,66 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
       @Fact("command") String command,
       @Fact("event") MyteamEvent event,
       @Fact("isGroup") boolean isGroup,
-      @Fact("args") String tag)
+      @Fact("args") String args)
       throws AdminRulesRequiredException {
 
-    return isGroup
+    boolean result =
+        isGroup
             && CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
-            && "".equals(tag)
             && event instanceof ChatMessageEvent
             && (isBotMentioned((ChatMessageEvent) event)
-            || isEventFromChatLinkedToIssue((ChatMessageEvent) event));
+                || isEventFromChatLinkedToIssue((ChatMessageEvent) event)
+                || isEventSendFromCommandStateRule(args));
+    log.debug("RESULT: " + result);
+    return result;
   }
 
   @Action
-  public void execute(@Fact("event") final ChatMessageEvent event)
+  public void execute(@Fact("event") final ChatMessageEvent event, @Fact("args") String args)
       throws MyteamServerErrorException, IOException {
     ApplicationUser jiraUserFromUserChatId =
         userChatService.getJiraUserFromUserChatId(event.getUserId());
     if (Objects.isNull(jiraUserFromUserChatId)) {
       return;
     }
+
+    final String issueKeySentFromCommandStateRule = getIssueKeySentFromCommandStateRule(args);
+    if (issueKeySentFromCommandStateRule != null) {
+      final Optional<Issue> issueOptional =
+          Optional.ofNullable(findIssueByKey(issueKeySentFromCommandStateRule, event))
+              .flatMap(issue -> issue);
+      if (issueOptional.isPresent()) {
+        tryCommentIssue(issueOptional.get(), event, jiraUserFromUserChatId);
+      }
+      return;
+    }
+
     final List<String> issueKeysFromString =
         JiraKeyUtils.getIssueKeysFromString(event.getMessage());
+
     if (issueKeysFromString.size() == 0) {
-      Optional<Issue> issueOptional =
-          Optional.ofNullable(myteamChatRepository.findChatByChatId(event.getChatId()))
-              .flatMap(myteamChatMeta -> findIssueByKey(myteamChatMeta.getIssueKey(), event));
+      MyteamChatMeta[] chatByChatId = myteamChatRepository.findChatByChatId(event.getChatId());
+      if (chatByChatId == null || chatByChatId.length == 0) {
+        return;
+      }
+      if (chatByChatId.length > 1) {
+        CommentingIssueFromGroupChatState commentingIssueFromGroupChatRule =
+            new CommentingIssueFromGroupChatState(event);
+        commentingIssueFromGroupChatRule.setWaiting(true);
+        userChatService.setState(event.getChatId(), commentingIssueFromGroupChatRule);
+        userChatService.sendMessageText(
+            event.getChatId(),
+            userChatService.getText(
+                "ru.mail.jira.plugins.myteam.messageQueueProcessor.comment.chatHasManyLinkedIssues",
+                Arrays.stream(chatByChatId)
+                    .map(MyteamChatMeta::getIssueKey)
+                    .collect(Collectors.joining(", "))));
+        return;
+      }
+
+      final Optional<Issue> issueOptional =
+          Optional.ofNullable(findIssueByKey(chatByChatId[0].getIssueKey(), event))
+              .flatMap(issue -> issue);
       if (issueOptional.isPresent()) {
         tryCommentIssue(issueOptional.get(), event, jiraUserFromUserChatId);
       }
@@ -170,10 +211,11 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
 
   private String removeBotMentionAndCommandAndCommentedIssueWithKeyFromMainMessage(
       String formattedMainMessage, Issue issue) {
-    return formattedMainMessage.replaceAll(String.format("@\\[%s\\]", myteamApiClient.getBotId()), "")
-            .replaceFirst(Const.COMMENT_ISSUE_COMMAND, "")
-            .replaceFirst(issue.getKey(), "")
-            .trim();
+    return formattedMainMessage
+        .replaceAll(String.format("@\\[%s\\]", myteamApiClient.getBotId()), "")
+        .replaceFirst(Const.COMMENT_ISSUE_COMMAND, "")
+        .replaceFirst(issue.getKey(), "")
+        .trim();
   }
 
   private boolean isBotMentioned(final ChatMessageEvent chatMessageEvent) {
@@ -182,11 +224,30 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
   }
 
   private boolean isEventFromChatLinkedToIssue(final ChatMessageEvent chatMessageEvent) {
-    return myteamChatRepository.findChatByChatId(chatMessageEvent.getChatId()) != null;
+    MyteamChatMeta[] chatByChatId =
+        myteamChatRepository.findChatByChatId(chatMessageEvent.getChatId());
+    return chatByChatId != null && chatByChatId.length > 1;
   }
 
   private boolean isBotMentionedInMainMessage(final ChatMessageEvent event, final String botId) {
     String botMentionFormatInMessage = String.format("@[%s]", botId);
     return event.getMessage().contains(botMentionFormatInMessage);
+  }
+
+  private boolean isEventSendFromCommandStateRule(final String arg) {
+    try {
+      return new JSONObject(arg).getBoolean("issueKeyReceivedFromNewEvent");
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  @Nullable
+  private String getIssueKeySentFromCommandStateRule(final String arg) {
+    try {
+      return new JSONObject(arg).getString("issueKey");
+    } catch (Exception e) {
+      return null;
+    }
   }
 }

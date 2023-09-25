@@ -174,6 +174,11 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
+  public void deleteState(String chatId, BotState prevState) {
+    stateManager.deleteState(chatId, prevState);
+  }
+
+  @Override
   public HttpResponse<MessageResponse> editMessageText(
       String chatId,
       long messageId,

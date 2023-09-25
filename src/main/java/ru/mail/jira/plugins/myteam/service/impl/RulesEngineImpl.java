@@ -29,6 +29,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CommentIssueCom
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CreateIssueByReplyRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.SearchByJqlIssuesRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.CommentingIssueFromGroupChatRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.assignissue.AssignIssueInputRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuecomment.IssueCommentInputRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuecreation.*;
@@ -136,6 +137,14 @@ public class RulesEngineImpl
         new FieldValueEditRule(userChatService, this, issueCreationService));
     commandsRuleEngine.registerRule(
         new FieldValueSelectRule(userChatService, this, issueCreationService));
+    commandsRuleEngine.registerRule(
+        new CommentIssueCommandBotRule(
+            userChatService,
+            this,
+            myteamApiClient,
+            issueService,
+            eventMessagesTextConverter,
+            myteamChatRepository));
 
     // Service
     commandsRuleEngine.registerRule(new SearchByJqlIssuesRule(userChatService, this, issueService));
@@ -147,14 +156,6 @@ public class RulesEngineImpl
             issueCreationService,
             issueService,
             eventMessagesTextConverter));
-    commandsRuleEngine.registerRule(
-        new CommentIssueCommandBotRule(
-            userChatService,
-            this,
-            myteamApiClient,
-            issueService,
-            eventMessagesTextConverter,
-            myteamChatRepository));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));
@@ -166,6 +167,8 @@ public class RulesEngineImpl
     stateActionsRuleEngine.registerRule(new IssueKeyInputRule(userChatService, this));
     stateActionsRuleEngine.registerRule(
         new AssignIssueInputRule(userChatService, this, issueService));
+    stateActionsRuleEngine.registerRule(
+        new CommentingIssueFromGroupChatRule(userChatService, this));
 
     commandsRuleEngine.registerRule(
         new IssueTypeSelectButtonRule(userChatService, this, issueService));

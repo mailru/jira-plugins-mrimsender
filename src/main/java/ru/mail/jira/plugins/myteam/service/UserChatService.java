@@ -83,4 +83,6 @@ public interface UserChatService {
   void setState(String chatId, BotState state, boolean deletePrevious);
 
   void revertState(String chatId);
+
+  void deleteState(String chatId, BotState prevState);
 }

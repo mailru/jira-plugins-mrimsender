@@ -44,12 +44,7 @@ public class MyteamChatRepository {
   }
 
   @Nullable
-  public MyteamChatMeta findChatByChatId(@Nonnull String chatId) {
-    MyteamChatMeta[] myteamChatMetasEntities =
-        ao.find(MyteamChatMeta.class, Query.select().where("CHAT_ID = ?", chatId));
-    if (myteamChatMetasEntities != null && myteamChatMetasEntities.length > 0) {
-      return myteamChatMetasEntities[0];
-    }
-    return null;
+  public MyteamChatMeta[] findChatByChatId(@Nonnull String chatId) {
+    return ao.find(MyteamChatMeta.class, Query.select().where("CHAT_ID = ?", chatId));
   }
 }
