@@ -1,6 +1,8 @@
 /* (C)2023 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service;
 
+import static ru.mail.jira.plugins.myteam.commons.Const.CHAT_COMMAND_PREFIX;
+
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.user.ApplicationUser;
@@ -39,8 +41,6 @@ import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
-import static ru.mail.jira.plugins.myteam.commons.Const.CHAT_COMMAND_PREFIX;
-
 @Rule(name = "Create comment by mention bot", description = "Create comment by mention bot")
 @Slf4j
 public class CommentIssueCommandBotRule extends ChatAdminRule {
@@ -50,7 +50,8 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
   private final EventMessagesTextConverter messagePartProcessor;
   private final MyteamChatRepository myteamChatRepository;
 
-  private static final String COMMENT_COMMAND = CHAT_COMMAND_PREFIX + CommandRuleType.CommentIssueByMentionBot.getName();
+  private static final String COMMENT_COMMAND =
+      CHAT_COMMAND_PREFIX + CommandRuleType.CommentIssueByMentionBot.getName();
 
   public CommentIssueCommandBotRule(
       final UserChatService userChatService,
@@ -75,9 +76,9 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
       throws AdminRulesRequiredException {
 
     return isGroup
-            && CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
-            && event instanceof ChatMessageEvent
-            && (isBotMentioned((ChatMessageEvent) event)
+        && CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
+        && event instanceof ChatMessageEvent
+        && (isBotMentioned((ChatMessageEvent) event)
             || isEventFromChatLinkedToIssue((ChatMessageEvent) event)
             || isEventSendFromCommandStateRule(args));
   }
