@@ -51,9 +51,10 @@ public class CommentingIssueFromGroupChatRule extends ChatAdminRule {
   public void execute(@Fact("state") BotState state, @Fact("event") ChatMessageEvent event) {
     if (state instanceof CommentingIssueFromGroupChatState) {
       final String messageWithoutMentionBot =
-          event.getMessage()
-                  .replaceAll(String.format("@\\[%s\\]", myteamApiClient.getBotId()), "")
-                  .trim();
+          event
+              .getMessage()
+              .replaceAll(String.format("@\\[%s\\]", myteamApiClient.getBotId()), "")
+              .trim();
       final String issueKey =
           JiraKeyUtils.getIssueKeysFromString(messageWithoutMentionBot.toUpperCase()).stream()
               .findFirst()
