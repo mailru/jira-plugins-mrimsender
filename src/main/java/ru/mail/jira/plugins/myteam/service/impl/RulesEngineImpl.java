@@ -168,7 +168,7 @@ public class RulesEngineImpl
     stateActionsRuleEngine.registerRule(
         new AssignIssueInputRule(userChatService, this, issueService));
     stateActionsRuleEngine.registerRule(
-        new CommentingIssueFromGroupChatRule(userChatService, this));
+        new CommentingIssueFromGroupChatRule(userChatService, this, myteamApiClient));
 
     commandsRuleEngine.registerRule(
         new IssueTypeSelectButtonRule(userChatService, this, issueService));

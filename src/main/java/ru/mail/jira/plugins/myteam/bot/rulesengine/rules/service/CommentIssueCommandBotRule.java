@@ -39,8 +39,6 @@ import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
-import static ru.mail.jira.plugins.myteam.commons.Const.CHAT_COMMAND_PREFIX;
-
 @Rule(name = "Create comment by mention bot", description = "Create comment by mention bot")
 @Slf4j
 public class CommentIssueCommandBotRule extends ChatAdminRule {
@@ -50,7 +48,8 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
   private final EventMessagesTextConverter messagePartProcessor;
   private final MyteamChatRepository myteamChatRepository;
 
-  private static final String COMMENT_COMMAND = CHAT_COMMAND_PREFIX + CommandRuleType.CommentIssueByMentionBot.getName();
+  private static final String COMMENT_COMMAND =
+      Const.CHAT_COMMAND_PREFIX + CommandRuleType.CommentIssueByMentionBot.getName();
 
   public CommentIssueCommandBotRule(
       final UserChatService userChatService,
@@ -75,9 +74,9 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
       throws AdminRulesRequiredException {
 
     return isGroup
-            && CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
-            && event instanceof ChatMessageEvent
-            && (isBotMentioned((ChatMessageEvent) event)
+        && CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
+        && event instanceof ChatMessageEvent
+        && (isBotMentioned((ChatMessageEvent) event)
             || isEventFromChatLinkedToIssue((ChatMessageEvent) event)
             || isEventSendFromCommandStateRule(args));
   }
@@ -212,10 +211,12 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
 
   private String removeBotMentionAndCommandAndCommentedIssueWithKeyFromMainMessage(
       String formattedMainMessage, Issue issue) {
+    String issueKey = issue.getKey();
     return formattedMainMessage
         .replaceAll(String.format("@\\[%s\\]", myteamApiClient.getBotId()), "")
         .replaceFirst(CommentIssueCommandBotRule.COMMENT_COMMAND, "")
-        .replaceFirst(issue.getKey(), "")
+        .replaceFirst(issueKey, "")
+        .replaceFirst(issueKey.toLowerCase(), "")
         .trim();
   }
 
@@ -227,7 +228,7 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
   private boolean isEventFromChatLinkedToIssue(final ChatMessageEvent chatMessageEvent) {
     MyteamChatMeta[] chatByChatId =
         myteamChatRepository.findChatByChatId(chatMessageEvent.getChatId());
-    return chatByChatId != null && chatByChatId.length > 1;
+    return chatByChatId != null && chatByChatId.length > 0;
   }
 
   private boolean isBotMentionedInMainMessage(final ChatMessageEvent event, final String botId) {
