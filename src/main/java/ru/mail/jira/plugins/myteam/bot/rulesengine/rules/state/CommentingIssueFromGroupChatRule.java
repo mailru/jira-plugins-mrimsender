@@ -59,7 +59,7 @@ public class CommentingIssueFromGroupChatRule extends ChatAdminRule {
               .findFirst()
               .orElse("");
       final JSONObject jsonWithIssueKeyAndFlagToCheckByFiringRule =
-          new JSONObject(Map.of("issueKey", issueKey, "issueKeyReceivedFromNewEvent", true));
+          new JSONObject(Map.of("issueKey", issueKey));
       final String arg = jsonWithIssueKeyAndFlagToCheckByFiringRule.toString();
       ChatMessageEvent chatMessageEvent =
           ((CommentingIssueFromGroupChatState) state).getChatMessageEvent();

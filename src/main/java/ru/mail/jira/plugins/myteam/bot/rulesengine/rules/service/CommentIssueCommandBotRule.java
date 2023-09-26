@@ -78,7 +78,7 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
         && event instanceof ChatMessageEvent
         && (isBotMentioned((ChatMessageEvent) event)
             || isEventFromChatLinkedToIssue((ChatMessageEvent) event)
-            || isEventSendFromCommandStateRule(args));
+            || getIssueKeySentFromCommandStateRule(args) != null);
   }
 
   @Action
@@ -234,14 +234,6 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
   private boolean isBotMentionedInMainMessage(final ChatMessageEvent event, final String botId) {
     String botMentionFormatInMessage = String.format("@[%s]", botId);
     return event.getMessage().contains(botMentionFormatInMessage);
-  }
-
-  private boolean isEventSendFromCommandStateRule(final String arg) {
-    try {
-      return new JSONObject(arg).getBoolean("issueKeyReceivedFromNewEvent");
-    } catch (Exception e) {
-      return false;
-    }
   }
 
   @Nullable
