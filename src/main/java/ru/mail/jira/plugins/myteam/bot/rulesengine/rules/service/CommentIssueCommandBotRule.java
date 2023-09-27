@@ -27,6 +27,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.AdminRulesR
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.ChatAdminRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.CommentIssueButtonsService;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.CommentingIssueFromGroupChatState;
 import ru.mail.jira.plugins.myteam.commons.Const;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
@@ -45,9 +46,9 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
 public class CommentIssueCommandBotRule extends ChatAdminRule {
   private final MyteamApiClient myteamApiClient;
   private final IssueService issueService;
-
   private final EventMessagesTextConverter messagePartProcessor;
   private final MyteamChatRepository myteamChatRepository;
+  private final CommentIssueButtonsService commentIssueButtonsService;
 
   private static final String COMMENT_COMMAND =
       Const.CHAT_COMMAND_PREFIX + CommandRuleType.CommentIssueByMentionBot.getName();
@@ -58,12 +59,14 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
       final MyteamApiClient myteamApiClient,
       final IssueService issueService,
       final EventMessagesTextConverter messagePartProcessor,
-      final MyteamChatRepository myteamChatRepository) {
+      final MyteamChatRepository myteamChatRepository,
+      final CommentIssueButtonsService commentIssueButtonsService) {
     super(userChatService, rulesEngine);
     this.myteamApiClient = myteamApiClient;
     this.issueService = issueService;
     this.messagePartProcessor = messagePartProcessor;
     this.myteamChatRepository = myteamChatRepository;
+    this.commentIssueButtonsService = commentIssueButtonsService;
   }
 
   @Condition
@@ -101,13 +104,11 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
             new CommentingIssueFromGroupChatState(event);
         commentingIssueFromGroupChatRule.setWaiting(true);
         userChatService.setState(event.getChatId(), commentingIssueFromGroupChatRule);
-        userChatService.sendMessageText(
-            event.getChatId(),
-            userChatService.getText(
-                "ru.mail.jira.plugins.myteam.messageQueueProcessor.comment.chatHasManyLinkedIssues",
-                Arrays.stream(chatByChatId)
-                    .map(MyteamChatMeta::getIssueKey)
-                    .collect(Collectors.joining(", "))));
+        commentIssueButtonsService.sendMessageWithButtonsToCommentIssue(
+            event,
+            Arrays.stream(chatByChatId)
+                .map(MyteamChatMeta::getIssueKey)
+                .collect(Collectors.toUnmodifiableList()));
         return;
       }
 

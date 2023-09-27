@@ -21,6 +21,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.admin.IssueCre
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.*;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.editing.IssueTransitionRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.editing.IssueTransitionSelectRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.CommentIssueButtonsService;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.CommonButtonsService;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNoPermissionErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNotFoundErrorRule;
@@ -108,6 +109,7 @@ public class RulesEngineImpl
     commandsRuleEngine.registerRule(
         new CreateIssueRule(userChatService, this, issueService, issueCreationService));
     commandsRuleEngine.registerRule(new ViewCommentsRule(userChatService, this, issueService));
+    commandsRuleEngine.registerRule(new CommentingIssueFromGroupChatRule(userChatService, this));
 
     // Admin Group Commands
 
@@ -144,7 +146,8 @@ public class RulesEngineImpl
             myteamApiClient,
             issueService,
             eventMessagesTextConverter,
-            myteamChatRepository));
+            myteamChatRepository,
+            new CommentIssueButtonsService(userChatService)));
 
     // Service
     commandsRuleEngine.registerRule(new SearchByJqlIssuesRule(userChatService, this, issueService));
@@ -167,8 +170,6 @@ public class RulesEngineImpl
     stateActionsRuleEngine.registerRule(new IssueKeyInputRule(userChatService, this));
     stateActionsRuleEngine.registerRule(
         new AssignIssueInputRule(userChatService, this, issueService));
-    stateActionsRuleEngine.registerRule(
-        new CommentingIssueFromGroupChatRule(userChatService, this, myteamApiClient));
 
     commandsRuleEngine.registerRule(
         new IssueTypeSelectButtonRule(userChatService, this, issueService));
