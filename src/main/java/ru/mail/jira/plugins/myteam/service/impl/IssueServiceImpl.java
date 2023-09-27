@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -216,11 +217,14 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public void commentIssue(@NotNull final CommentCreateArg commentCreateArg)
+  public Comment commentIssue(@NotNull final CommentCreateArg commentCreateArg)
       throws NoPermissionException, ValidationException {
     checkPermissionOnCreateComment(
         commentCreateArg.getIssueToComment(), commentCreateArg.getCommentAuthor());
-    createComment(
+    if (StringUtils.isBlank(commentCreateArg.getBody())) {
+      throw new ValidationException("Comment body cannot be empty");
+    }
+    return createComment(
         commentCreateArg.getIssueToComment(),
         commentCreateArg.getCommentAuthor(),
         commentCreateArg.getBody());
@@ -351,7 +355,7 @@ public class IssueServiceImpl implements IssueService {
     return pluginData.getExcludingProjectIds().contains(projectId);
   }
 
-  private void createComment(
+  private Comment createComment(
       @NotNull final Issue commentedIssue,
       @NotNull final ApplicationUser user,
       @Nullable final String body)
@@ -365,7 +369,7 @@ public class IssueServiceImpl implements IssueService {
     CommentService.CommentCreateValidationResult validationResult =
         commentService.validateCommentCreate(user, commentParameters);
     if (validationResult.isValid()) {
-      commentService.create(user, validationResult, true);
+      return commentService.create(user, validationResult, true);
     } else {
       StringJoiner joiner = new StringJoiner(" ");
       validationResult.getErrorCollection().getErrorMessages().forEach(joiner::add);

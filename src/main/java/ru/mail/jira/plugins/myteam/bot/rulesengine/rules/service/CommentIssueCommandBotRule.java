@@ -3,17 +3,18 @@ package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service;
 
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.JiraKeyUtils;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
 import kong.unirest.json.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -69,43 +70,29 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
   public boolean isValid(
       @Fact("command") String command,
       @Fact("event") MyteamEvent event,
-      @Fact("isGroup") boolean isGroup,
-      @Fact("args") String args)
+      @Fact("isGroup") boolean isGroup)
       throws AdminRulesRequiredException {
 
     return isGroup
         && CommandRuleType.CommentIssueByMentionBot.getName().equals(command)
-        && event instanceof ChatMessageEvent
-        && (isBotMentioned((ChatMessageEvent) event)
-            || isEventFromChatLinkedToIssue((ChatMessageEvent) event)
-            || getIssueKeySentFromCommandStateRule(args) != null);
+        && event instanceof ChatMessageEvent;
   }
 
   @Action
   public void execute(@Fact("event") final ChatMessageEvent event, @Fact("args") String args)
       throws MyteamServerErrorException, IOException {
-    ApplicationUser jiraUserFromUserChatId =
+    final ApplicationUser jiraUserFromUserChatId =
         userChatService.getJiraUserFromUserChatId(event.getUserId());
     if (Objects.isNull(jiraUserFromUserChatId)) {
       return;
     }
 
-    final String issueKeySentFromCommandStateRule = getIssueKeySentFromCommandStateRule(args);
-    if (issueKeySentFromCommandStateRule != null) {
-      final Optional<Issue> issueOptional =
-          Optional.ofNullable(findIssueByKey(issueKeySentFromCommandStateRule, event))
-              .flatMap(issue -> issue);
-      if (issueOptional.isPresent()) {
-        tryCommentIssue(issueOptional.get(), event, jiraUserFromUserChatId);
-      }
-      return;
-    }
+    Optional<String> issueKeyOptional =
+        getIssueKeyFromEventOrCommandArgFiredFromRuleState(event, args);
 
-    final List<String> issueKeysFromString =
-        JiraKeyUtils.getIssueKeysFromString(event.getMessage());
-
-    if (issueKeysFromString.size() == 0) {
-      MyteamChatMeta[] chatByChatId = myteamChatRepository.findChatByChatId(event.getChatId());
+    if (issueKeyOptional.isEmpty()) {
+      final MyteamChatMeta[] chatByChatId =
+          myteamChatRepository.findChatByChatId(event.getChatId());
       if (chatByChatId == null || chatByChatId.length == 0) {
         return;
       }
@@ -124,19 +111,10 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
         return;
       }
 
-      final Optional<Issue> issueOptional =
-          Optional.ofNullable(findIssueByKey(chatByChatId[0].getIssueKey(), event))
-              .flatMap(issue -> issue);
-      if (issueOptional.isPresent()) {
-        tryCommentIssue(issueOptional.get(), event, jiraUserFromUserChatId);
-      }
-      return;
+      issueKeyOptional = Optional.of(chatByChatId[0].getIssueKey());
     }
 
-    Optional<Issue> issueOptional =
-        issueKeysFromString.stream()
-            .findFirst()
-            .flatMap(issueKey -> findIssueByKey(issueKey, event));
+    Optional<Issue> issueOptional = findIssueByKey(issueKeyOptional.get(), event);
     if (issueOptional.isPresent()) {
       tryCommentIssue(issueOptional.get(), event, jiraUserFromUserChatId);
     }
@@ -161,11 +139,9 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
       final CommentCreateArg commentCreateArg =
           new CommentCreateArg(
               issue, commentAuthor, createCommentBodyFromEvent(event, issue, commentAuthor));
-      issueService.commentIssue(commentCreateArg);
-      userChatService.sendMessageText(
-          event.getChatId(),
-          userChatService.getRawText(
-              "ru.mail.jira.plugins.myteam.messageQueueProcessor.commentButton.commentCreated"));
+      final Comment comment = issueService.commentIssue(commentCreateArg);
+      final String issueCommentAsLink = messagePartProcessor.getIssueCommentAsLink(issue, comment);
+      userChatService.sendMessageText(event.getChatId(), issueCommentAsLink);
     } catch (NoPermissionException e) {
       log.error("user with id [%s] has not permission create comment", e);
       userChatService.sendMessageText(
@@ -220,28 +196,28 @@ public class CommentIssueCommandBotRule extends ChatAdminRule {
         .trim();
   }
 
-  private boolean isBotMentioned(final ChatMessageEvent chatMessageEvent) {
-    String botId = myteamApiClient.getBotId();
-    return isBotMentionedInMainMessage(chatMessageEvent, botId);
-  }
-
-  private boolean isEventFromChatLinkedToIssue(final ChatMessageEvent chatMessageEvent) {
-    MyteamChatMeta[] chatByChatId =
-        myteamChatRepository.findChatByChatId(chatMessageEvent.getChatId());
-    return chatByChatId != null && chatByChatId.length > 0;
-  }
-
-  private boolean isBotMentionedInMainMessage(final ChatMessageEvent event, final String botId) {
-    String botMentionFormatInMessage = String.format("@[%s]", botId);
-    return event.getMessage().contains(botMentionFormatInMessage);
-  }
-
   @Nullable
   private String getIssueKeySentFromCommandStateRule(final String arg) {
     try {
-      return new JSONObject(arg).getString("issueKey");
+      String issueKey = new JSONObject(arg).getString("issueKey");
+      if (StringUtils.isEmpty(issueKey)) {
+        return null;
+      }
+      return issueKey;
     } catch (Exception e) {
       return null;
     }
+  }
+
+  private Optional<String> getIssueKeyFromEventOrCommandArgFiredFromRuleState(
+      ChatMessageEvent event, String args) {
+    Optional<String> issueKeySentFromCommandStateRule =
+        Optional.ofNullable(getIssueKeySentFromCommandStateRule(args));
+    if (issueKeySentFromCommandStateRule.isEmpty()) {
+      issueKeySentFromCommandStateRule =
+          JiraKeyUtils.getIssueKeysFromString(event.getMessage()).stream().findFirst();
+    }
+
+    return issueKeySentFromCommandStateRule;
   }
 }

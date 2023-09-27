@@ -57,7 +57,7 @@ public interface IssueService {
       @Nullable String issueKey, @Nullable ApplicationUser user, ChatMessageEvent event)
       throws NoPermissionException, ValidationException;
 
-  void commentIssue(@NotNull final CommentCreateArg commentCreateArg)
+  Comment commentIssue(@NotNull final CommentCreateArg commentCreateArg)
       throws NoPermissionException, ValidationException;
 
   void changeIssueStatus(Issue issue, int transitionId, @Nullable ApplicationUser user)

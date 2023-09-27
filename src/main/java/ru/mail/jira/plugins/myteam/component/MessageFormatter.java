@@ -16,6 +16,7 @@ import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.attachment.Attachment;
+import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.fields.*;
 import com.atlassian.jira.issue.fields.screen.FieldScreen;
 import com.atlassian.jira.issue.fields.screen.FieldScreenManager;
@@ -340,6 +341,15 @@ public class MessageFormatter {
           .append(makeMyteamMarkdownFromJira(issueEvent.getComment().getBody(), useMentionFormat));
     }
     return sb.toString();
+  }
+
+  @Nullable
+  public String formatJiraIssueCommentToLink(final Issue issue, final Comment comment) {
+    return i18nResolver.getText(
+        "ru.mail.jira.plugins.myteam.comment.issue.commentCreated",
+        format(
+            "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
+            jiraBaseUrl, issue.getKey(), comment.getId(), comment.getId()));
   }
 
   public String formatEvent(MentionIssueEvent mentionIssueEvent) {

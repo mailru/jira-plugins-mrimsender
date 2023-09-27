@@ -46,21 +46,4 @@ public class ChatMessageEvent extends MyteamEvent {
     }
     format = newMessageEvent.getFormat();
   }
-
-  public ChatMessageEvent(ChatMessageEvent chatMessageEvent) {
-    from = chatMessageEvent.getFrom();
-    message = chatMessageEvent.getMessage();
-    messageId = chatMessageEvent.getMessageId();
-    messageParts = chatMessageEvent.getMessageParts();
-    if (messageParts != null) {
-      hasForwards = messageParts.stream().anyMatch(part -> part instanceof Forward);
-      hasReply = messageParts.stream().anyMatch(part -> part instanceof Reply);
-      hasMentions = messageParts.stream().anyMatch(part -> part instanceof Mention);
-    } else {
-      hasForwards = false;
-      hasReply = false;
-      hasMentions = false;
-    }
-    format = chatMessageEvent.getFormat();
-  }
 }

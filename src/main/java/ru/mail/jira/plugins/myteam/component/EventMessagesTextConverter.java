@@ -7,6 +7,7 @@ import static ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CreateIs
 import static ru.mail.jira.plugins.myteam.commons.Const.DEFAULT_ISSUE_QUOTE_MESSAGE_TEMPLATE;
 
 import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.user.ApplicationUser;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -136,6 +137,11 @@ public class EventMessagesTextConverter {
           event, mainMessageTextWithUrls, commentAuthor, issueToComment);
     }
     return mainMessageTextWithUrls;
+  }
+
+  @Nullable
+  public String getIssueCommentAsLink(final Issue issue, final Comment comment) {
+    return messageFormatter.formatJiraIssueCommentToLink(issue, comment);
   }
 
   @Data
