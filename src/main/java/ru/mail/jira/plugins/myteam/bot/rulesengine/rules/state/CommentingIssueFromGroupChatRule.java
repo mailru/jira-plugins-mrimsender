@@ -2,6 +2,8 @@
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state;
 
 import com.atlassian.jira.util.JiraKeyUtils;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 import kong.unirest.json.JSONObject;
 import org.jeasy.rules.annotation.Action;
@@ -16,6 +18,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleT
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.ChatAdminRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.CommentingIssueFromGroupChatState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
+import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
@@ -50,15 +53,20 @@ public class CommentingIssueFromGroupChatRule extends ChatAdminRule {
   }
 
   @Action
-  public void execute(@Fact("state") BotState state, @Fact("args") String issueKey) {
-    if (state instanceof CommentingIssueFromGroupChatState) {
-      final JSONObject jsonWithIssueKeyAndFlagToCheckByFiringRule =
-          new JSONObject(Map.of("issueKey", issueKey));
-      final String arg = jsonWithIssueKeyAndFlagToCheckByFiringRule.toString();
-      ChatMessageEvent chatMessageEvent =
-          ((CommentingIssueFromGroupChatState) state).getChatMessageEvent();
-      userChatService.deleteState(chatMessageEvent.getChatId());
+  public void execute(
+      @Fact("state") CommentingIssueFromGroupChatState state,
+      @Fact("event") ButtonClickEvent event,
+      @Fact("args") String issueKey)
+      throws MyteamServerErrorException, IOException {
+    try {
+      final JSONObject jsonWithIssueKey = new JSONObject(Map.of("issueKey", issueKey));
+      final String arg = jsonWithIssueKey.toString();
+      final ChatMessageEvent chatMessageEvent = state.getChatMessageEvent();
+      userChatService.deleteState(state.getChatMessageEvent().getChatId());
       rulesEngine.fireCommand(CommandRuleType.CommentIssueByMentionBot, chatMessageEvent, arg);
+    } finally {
+      userChatService.deleteMessages(
+          event.getChatId(), Collections.singletonList(event.getMsgId()));
     }
   }
 }
