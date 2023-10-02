@@ -274,6 +274,7 @@ public class ChatCreationController {
           && createChatResponse.getBody().getSn() != null) {
         String chatId = createChatResponse.getBody().getSn();
         myteamChatRepository.persistChat(chatId, issueKey);
+        sendFirstMessageWithCommandsInCreatedChat(chatId);
         myteamEventsListener.publishEvent(
             new JiraIssueViewEvent(chatId, issueKey, loggedInUser, true));
 
@@ -318,5 +319,13 @@ public class ChatCreationController {
                     user.getId(),
                     avatarService.getAvatarURL(loggedInUser, user, Avatar.Size.LARGE).toString()))
         .collect(Collectors.toList());
+  }
+
+  private void sendFirstMessageWithCommandsInCreatedChat(String chatId) {
+    try {
+      myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText("ru.mail.jira.plugins.myteam.myteamEventsListener.groupChat.all.commands"));
+    } catch (Exception e) {
+      log.error("error happened during send message with command in chat", e);
+    }
   }
 }
