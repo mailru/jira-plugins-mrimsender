@@ -323,7 +323,10 @@ public class ChatCreationController {
 
   private void sendFirstMessageWithCommandsInCreatedChat(String chatId) {
     try {
-      myteamApiClient.sendMessageText(chatId, i18nResolver.getRawText("ru.mail.jira.plugins.myteam.myteamEventsListener.groupChat.all.commands"));
+      myteamApiClient.sendMessageText(
+          chatId,
+          i18nResolver.getRawText(
+              "ru.mail.jira.plugins.myteam.myteamEventsListener.groupChat.all.commands"));
     } catch (Exception e) {
       log.error("error happened during send message with command in chat", e);
     }
