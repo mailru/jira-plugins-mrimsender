@@ -393,6 +393,18 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     return botId;
   }
 
+  @Override
+  public void pinMessage(long msgId, String chatId) throws MyteamServerErrorException {
+    HttpResponse<StatusResponse> response =
+        retryClient
+            .get(botApiUrl + "/chats/pinMessage")
+            .queryString("token", apiToken)
+            .queryString("chatId", chatId)
+            .queryString("msgId", msgId)
+            .asObject(StatusResponse.class);
+    checkMyteamServerErrorException(response, "pinMessage");
+  }
+
   private void updateBotMetaInfo() {
     try {
       BotMetaInfo botMetaInfo = getSelfInfo().getBody();

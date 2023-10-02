@@ -75,4 +75,6 @@ public interface MyteamApiClient {
   HttpResponse<BotMetaInfo> getSelfInfo() throws UnirestException, MyteamServerErrorException;
 
   String getBotId();
+
+  void pinMessage(long msgId, String chatId) throws MyteamServerErrorException;
 }

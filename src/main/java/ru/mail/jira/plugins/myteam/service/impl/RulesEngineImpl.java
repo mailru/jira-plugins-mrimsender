@@ -17,6 +17,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons.*;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.ChatIdCommandRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.HelpCommandRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.MenuCommandRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.PinMessageCommandRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.admin.IssueCreationSettingsCommand;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.*;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.editing.IssueTransitionRule;
@@ -148,6 +149,8 @@ public class RulesEngineImpl
             eventMessagesTextConverter,
             myteamChatRepository,
             new CommentIssueButtonsService(userChatService)));
+    commandsRuleEngine.registerRule(
+        new PinMessageCommandRule(userChatService, this, myteamApiClient));
 
     // Service
     commandsRuleEngine.registerRule(new SearchByJqlIssuesRule(userChatService, this, issueService));

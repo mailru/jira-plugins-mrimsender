@@ -21,7 +21,9 @@ public enum CommandRuleType implements RuleType {
   CreateIssueByReply("createIssueByReply"),
   ChatId("chatid"),
 
-  CommentIssueByMentionBot("comment");
+  CommentIssueByMentionBot("comment"),
+
+  PinMessage("pin");
 
   @Getter(onMethod_ = {@Override})
   private final String name;
