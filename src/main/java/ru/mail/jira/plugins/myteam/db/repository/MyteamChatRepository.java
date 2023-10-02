@@ -42,4 +42,9 @@ public class MyteamChatRepository {
     }
     return null;
   }
+
+  @Nullable
+  public MyteamChatMeta[] findChatByChatId(@Nonnull String chatId) {
+    return ao.find(MyteamChatMeta.class, Query.select().where("CHAT_ID = ?", chatId));
+  }
 }

@@ -39,6 +39,8 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
@@ -49,6 +51,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBann
 import ru.mail.jira.plugins.myteam.commons.exceptions.ValidationException;
 import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
 import ru.mail.jira.plugins.myteam.component.UserData;
+import ru.mail.jira.plugins.myteam.component.comment.create.CommentCreateArg;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
@@ -202,29 +205,29 @@ public class IssueServiceImpl implements IssueService {
       throws NoPermissionException, ValidationException {
 
     Issue commentedIssue = issueManager.getIssueByCurrentKey(issueKey);
-    if (user != null && commentedIssue != null) {
-      if (permissionManager.hasPermission(ProjectPermissions.ADD_COMMENTS, commentedIssue, user)) {
-
-        CommentService.CommentParameters commentParameters =
-            CommentService.CommentParameters.builder()
-                .author(user)
-                .body(issueTextConverter.convertToJiraCommentStyle(event, user, commentedIssue))
-                .issue(commentedIssue)
-                .build();
-        CommentService.CommentCreateValidationResult validationResult =
-            commentService.validateCommentCreate(user, commentParameters);
-        if (validationResult.isValid()) {
-          commentService.create(user, validationResult, true);
-        } else {
-          StringJoiner joiner = new StringJoiner(" ");
-          validationResult.getErrorCollection().getErrorMessages().forEach(joiner::add);
-          throw new ValidationException(joiner.toString());
-        }
-      } else {
-        throw new NoPermissionException(
-            "User " + user + " can't create comment for issue " + issueKey);
-      }
+    if (user == null || commentedIssue == null) {
+      return;
     }
+
+    checkPermissionOnCreateComment(commentedIssue, user);
+    createComment(
+        commentedIssue,
+        user,
+        issueTextConverter.convertToJiraCommentStyle(event, user, commentedIssue));
+  }
+
+  @Override
+  public Comment commentIssue(@NotNull final CommentCreateArg commentCreateArg)
+      throws NoPermissionException, ValidationException {
+    checkPermissionOnCreateComment(
+        commentCreateArg.getIssueToComment(), commentCreateArg.getCommentAuthor());
+    if (StringUtils.isBlank(commentCreateArg.getBody())) {
+      throw new ValidationException("Comment body cannot be empty");
+    }
+    return createComment(
+        commentCreateArg.getIssueToComment(),
+        commentCreateArg.getCommentAuthor(),
+        commentCreateArg.getBody());
   }
 
   @Override
@@ -350,5 +353,37 @@ public class IssueServiceImpl implements IssueService {
 
   private boolean isProjectExcluded(Long projectId) {
     return pluginData.getExcludingProjectIds().contains(projectId);
+  }
+
+  private Comment createComment(
+      @NotNull final Issue commentedIssue,
+      @NotNull final ApplicationUser user,
+      @Nullable final String body)
+      throws ValidationException {
+    CommentService.CommentParameters commentParameters =
+        CommentService.CommentParameters.builder()
+            .author(user)
+            .body(body)
+            .issue(commentedIssue)
+            .build();
+    CommentService.CommentCreateValidationResult validationResult =
+        commentService.validateCommentCreate(user, commentParameters);
+    if (validationResult.isValid()) {
+      return commentService.create(user, validationResult, true);
+    } else {
+      StringJoiner joiner = new StringJoiner(" ");
+      validationResult.getErrorCollection().getErrorMessages().forEach(joiner::add);
+      throw new ValidationException(joiner.toString());
+    }
+  }
+
+  private void checkPermissionOnCreateComment(
+      final Issue issueToComment, final ApplicationUser commentAuthor)
+      throws NoPermissionException {
+    if (!permissionManager.hasPermission(
+        ProjectPermissions.ADD_COMMENTS, issueToComment, commentAuthor)) {
+      throw new NoPermissionException(
+          "User " + commentAuthor + " can't create comment for issue " + issueToComment.getKey());
+    }
   }
 }

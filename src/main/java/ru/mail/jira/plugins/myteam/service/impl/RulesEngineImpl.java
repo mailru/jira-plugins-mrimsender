@@ -21,13 +21,16 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.admin.IssueCre
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.*;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.editing.IssueTransitionRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.issue.editing.IssueTransitionSelectRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.CommentIssueButtonsService;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.CommonButtonsService;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNoPermissionErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.IssueNotFoundErrorRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.errors.UnknownErrorRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CommentIssueCommandBotRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.CreateIssueByReplyRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.DefaultMessageRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.service.SearchByJqlIssuesRule;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.CommentingIssueFromGroupChatRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.assignissue.AssignIssueInputRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuecomment.IssueCommentInputRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuecreation.*;
@@ -35,9 +38,9 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuesearch.Issue
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.jqlsearch.JqlInputRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.EmptyState;
-import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
-import ru.mail.jira.plugins.myteam.component.url.UrlFinderInForward;
-import ru.mail.jira.plugins.myteam.component.url.UrlFinderInReply;
+import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
+import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
+import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
 import ru.mail.jira.plugins.myteam.service.*;
 
@@ -55,11 +58,12 @@ public class RulesEngineImpl
   private final UserChatService userChatService;
   private final IssueService issueService;
   private final IssueCreationSettingsService issueCreationSettingsService;
-  private final IssueTextConverter issueTextConverter;
   private final ReminderService reminderService;
 
-  private final UrlFinderInReply urlFinderInReply;
-  private final UrlFinderInForward urlFinderInForward;
+  private final EventMessagesTextConverter eventMessagesTextConverter;
+  private final MyteamApiClient myteamApiClient;
+
+  private final MyteamChatRepository myteamChatRepository;
 
   public RulesEngineImpl(
       CommonButtonsService commonButtonsService,
@@ -67,19 +71,19 @@ public class RulesEngineImpl
       UserChatService userChatService,
       IssueService issueService,
       IssueCreationSettingsService issueCreationSettingsService,
-      IssueTextConverter issueTextConverter,
       ReminderService reminderService,
-      UrlFinderInReply urlFinderInReply,
-      UrlFinderInForward urlFinderInForward) {
+      EventMessagesTextConverter eventMessagesTextConverter,
+      MyteamApiClient myteamApiClient,
+      MyteamChatRepository myteamChatRepository) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
     this.issueService = issueService;
     this.issueCreationSettingsService = issueCreationSettingsService;
-    this.issueTextConverter = issueTextConverter;
     this.reminderService = reminderService;
-    this.urlFinderInReply = urlFinderInReply;
-    this.urlFinderInForward = urlFinderInForward;
+    this.eventMessagesTextConverter = eventMessagesTextConverter;
+    this.myteamApiClient = myteamApiClient;
+    this.myteamChatRepository = myteamChatRepository;
 
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
@@ -105,6 +109,7 @@ public class RulesEngineImpl
     commandsRuleEngine.registerRule(
         new CreateIssueRule(userChatService, this, issueService, issueCreationService));
     commandsRuleEngine.registerRule(new ViewCommentsRule(userChatService, this, issueService));
+    commandsRuleEngine.registerRule(new CommentingIssueFromGroupChatRule(userChatService, this));
 
     // Admin Group Commands
 
@@ -134,6 +139,15 @@ public class RulesEngineImpl
         new FieldValueEditRule(userChatService, this, issueCreationService));
     commandsRuleEngine.registerRule(
         new FieldValueSelectRule(userChatService, this, issueCreationService));
+    commandsRuleEngine.registerRule(
+        new CommentIssueCommandBotRule(
+            userChatService,
+            this,
+            myteamApiClient,
+            issueService,
+            eventMessagesTextConverter,
+            myteamChatRepository,
+            new CommentIssueButtonsService(userChatService)));
 
     // Service
     commandsRuleEngine.registerRule(new SearchByJqlIssuesRule(userChatService, this, issueService));
@@ -144,9 +158,7 @@ public class RulesEngineImpl
             issueCreationSettingsService,
             issueCreationService,
             issueService,
-            issueTextConverter,
-            urlFinderInReply,
-            urlFinderInForward));
+            eventMessagesTextConverter));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));

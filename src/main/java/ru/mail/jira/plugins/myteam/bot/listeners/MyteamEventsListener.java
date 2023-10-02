@@ -1,8 +1,7 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.bot.listeners;
 
-import static ru.mail.jira.plugins.myteam.commons.Const.CHAT_COMMAND_PREFIX;
-import static ru.mail.jira.plugins.myteam.commons.Const.ISSUE_CREATION_BY_REPLY_PREFIX;
+import static ru.mail.jira.plugins.myteam.commons.Const.*;
 
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.thread.OffRequestThreadExecutor;
