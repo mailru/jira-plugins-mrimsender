@@ -93,7 +93,10 @@ public class IssueTextConverter {
                     if (isUploaded) {
                       outPutStrings.append(
                           buildAttachmentLink(
-                              file.getFileId(), fileInfo.getType(), fileInfo.getFilename(), formattedText));
+                              file.getFileId(),
+                              fileInfo.getType(),
+                              fileInfo.getFilename(),
+                              formattedText));
                     } else {
                       outPutStrings.append(formattedText);
                     }
@@ -108,7 +111,8 @@ public class IssueTextConverter {
                 ApplicationUser user = userData.getUserByMrimLogin(mention.getUserId());
                 outPutStrings.setLength(0);
                 if (user != null) {
-                  outPutStrings.append(replaceMention(formattedText, mention.getUserId(), user.getName()));
+                  outPutStrings.append(
+                      replaceMention(formattedText, mention.getUserId(), user.getName()));
                 } else {
                   outPutStrings.append(
                       replaceMention(formattedText, mention.getUserId(), mention.getFirstName()));
