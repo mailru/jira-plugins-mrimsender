@@ -3,13 +3,16 @@ package ru.mail.jira.plugins.myteam.db.model;
 
 import net.java.ao.Entity;
 import net.java.ao.OneToMany;
-import net.java.ao.schema.Indexed;
-import net.java.ao.schema.StringLength;
-import net.java.ao.schema.Table;
+import net.java.ao.schema.*;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.commons.IssueReporter;
 
 @Table("MYTEAM_ISSUE_CFG")
+@Indexes(
+  @Index(
+          name = "chat_id_tag",
+          methodNames = {"setChatId", "setTag"})
+)
 public interface IssueCreationSettings extends Entity {
   @Indexed
   String getChatId();

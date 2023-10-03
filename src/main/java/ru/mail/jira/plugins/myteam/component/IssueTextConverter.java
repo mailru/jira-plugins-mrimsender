@@ -116,12 +116,6 @@ public class IssueTextConverter {
                 } else {
                   outPutStrings.append(
                       replaceMention(formattedText, mention.getUserId(), mention.getFirstName()));
-                  String errorMessage =
-                      String.format(
-                          "Unable change Myteam mention to Jira's mention, because can't find user with id: %s",
-                          mention.getUserId());
-                  SentryClient.capture(errorMessage);
-                  log.error(errorMessage);
                 }
                 break;
               default:
