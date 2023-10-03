@@ -62,6 +62,8 @@ public class PinMessageCommandRule extends ChatAdminRule {
             .orElse(new ArrayList<>());
     if (replies.size() == 1) {
       myteamApiClient.pinMessage(replies.get(0).getMessage().getMsgId(), event.getChatId());
+      myteamApiClient.deleteMessages(
+          event.getChatId(), Collections.singletonList(event.getMessageId()));
     } else {
       userChatService.sendMessageText(
           event.getChatId(),
