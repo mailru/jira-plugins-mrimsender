@@ -70,6 +70,7 @@ public class IssueTextConverter {
             : messageTextFormattingFunction.apply(((Forward) part).getMessage().getText());
     StringBuilder outPutStrings = new StringBuilder();
     if (messageParts != null) {
+      outPutStrings.append(text);
       messageParts.forEach(
           messagePart -> {
             CommentaryParts currentPartClass =
@@ -78,6 +79,7 @@ public class IssueTextConverter {
               return;
             }
 
+            String formattedText = outPutStrings.toString();
             switch (currentPartClass) {
               case File:
                 File file = (File) messagePart;
@@ -87,12 +89,16 @@ public class IssueTextConverter {
                   try (InputStream attachment = myteamApiClient.loadUrlFile(fileInfo.getUrl())) {
                     boolean isUploaded =
                         uploadAttachment(attachment, fileInfo, issue.getReporterUser(), issue);
+                    outPutStrings.setLength(0);
                     if (isUploaded) {
                       outPutStrings.append(
                           buildAttachmentLink(
-                              file.getFileId(), fileInfo.getType(), fileInfo.getFilename(), text));
+                              file.getFileId(),
+                              fileInfo.getType(),
+                              fileInfo.getFilename(),
+                              formattedText));
                     } else {
-                      outPutStrings.append(text);
+                      outPutStrings.append(formattedText);
                     }
                   }
                 } catch (UnirestException | IOException | MyteamServerErrorException e) {
@@ -103,11 +109,13 @@ public class IssueTextConverter {
               case Mention:
                 Mention mention = (Mention) messagePart;
                 ApplicationUser user = userData.getUserByMrimLogin(mention.getUserId());
+                outPutStrings.setLength(0);
                 if (user != null) {
-                  outPutStrings.append(replaceMention(text, mention.getUserId(), user.getName()));
+                  outPutStrings.append(
+                      replaceMention(formattedText, mention.getUserId(), user.getName()));
                 } else {
                   outPutStrings.append(
-                      replaceMention(text, mention.getUserId(), mention.getFirstName()));
+                      replaceMention(formattedText, mention.getUserId(), mention.getFirstName()));
                   String errorMessage =
                       String.format(
                           "Unable change Myteam mention to Jira's mention, because can't find user with id: %s",
