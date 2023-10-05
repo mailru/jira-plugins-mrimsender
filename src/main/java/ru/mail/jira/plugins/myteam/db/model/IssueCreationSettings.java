@@ -9,10 +9,9 @@ import ru.mail.jira.plugins.myteam.commons.IssueReporter;
 
 @Table("MYTEAM_ISSUE_CFG")
 @Indexes(
-  @Index(
-          name = "chat_id_tag",
-          methodNames = {"setChatId", "setTag"})
-)
+    @Index(
+        name = "chat_id_tag",
+        methodNames = {"setChatId", "setTag"}))
 public interface IssueCreationSettings extends Entity {
   @Indexed
   String getChatId();

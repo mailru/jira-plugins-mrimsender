@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 
 import { configure } from 'mobx'
-import legacyIssueApi from 'jira/issues/search/legacyissue'
+import JIRA from 'JIRA'
 import EventTypes from 'jira/util/events/types'
 import Events from 'jira/util/events'
 import { CacheProvider, EmotionCache } from '@emotion/core'
@@ -36,7 +36,7 @@ function renderMyteamChatPanel(
   reactDomRoot: HTMLElement,
   emotionCache: EmotionCache
 ) {
-  const issueKey: string = legacyIssueApi.getIssueKey()
+  const issueKey: string = JIRA.Issue.getIssueKey()
   const memoizedStore = createStore(issueKey)
   ReactDOM.render(
     <CacheProvider value={emotionCache}>

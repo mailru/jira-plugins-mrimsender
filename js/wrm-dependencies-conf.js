@@ -27,13 +27,6 @@ module.exports = {
       amd: 'wrm/format',
     },
   },
-  'jira/issues/search/legacyissue': {
-    dependency: 'com.atlassian.jira.jira-issue-nav-plugin:issuenav-legacy',
-    import: {
-      var: "require('jira/issues/search/legacyissue')",
-      amd: 'jira/issues/search/legacyissue',
-    },
-  },
   'jira/util/events': {
     dependency: 'jira.webresources:jira-events',
     import: {
