@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import AJS from 'AJS'
 
 import { configure } from 'mobx'
 import JIRA from 'JIRA'
@@ -36,7 +37,13 @@ function renderMyteamChatPanel(
   reactDomRoot: HTMLElement,
   emotionCache: EmotionCache
 ) {
-  const issueKey: string = JIRA.Issue.getIssueKey()
+  let issueKey: string = JIRA.Issue.getIssueKey()
+  if (!issueKey) {
+    issueKey = AJS.$("meta[name='ajs-issue-key']").attr("content")
+    if (!issueKey) {
+      issueKey = AJS.$("#key-val").text()
+    }
+  }
   const memoizedStore = createStore(issueKey)
   ReactDOM.render(
     <CacheProvider value={emotionCache}>
