@@ -270,7 +270,9 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       ChatMessageEvent event, String template, @Nullable Issue issue) {
     return eventMessagesTextConverter
         .convertMessagesFromReplyAndForwardMessages(event::getMessageParts, issue, template)
-        .orElse(new EventMessagesTextConverter.MarkdownFieldValueHolder("", emptyList()));
+        .orElse(
+            new EventMessagesTextConverter.MarkdownFieldValueHolder(
+                "Описание не заполнено", emptyList()));
   }
 
   private String getIssueSummary(
