@@ -21,6 +21,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.CreatingIssueState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.FillingIssueFieldState;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -108,11 +109,16 @@ public class ShowIssueCreationProgressRule extends BaseRule {
                   userChatService.getRawText(
                       "ru.mail.jira.plugins.myteam.myteamEventsListener.cancelIssueCreationButton.text"));
 
+      final String shieldMsg = Utils.shieldText(msg);
       if (event instanceof ButtonClickEvent) {
         userChatService.editMessageText(
-            chatId, ((ButtonClickEvent) event).getMsgId(), msg, buttons);
+            chatId,
+            ((ButtonClickEvent) event).getMsgId(),
+            shieldMsg != null ? shieldMsg : msg,
+            buttons);
       } else {
-        userChatService.sendMessageText(event.getChatId(), msg, buttons);
+        userChatService.sendMessageText(
+            event.getChatId(), shieldMsg != null ? shieldMsg : msg, buttons);
       }
     }
 

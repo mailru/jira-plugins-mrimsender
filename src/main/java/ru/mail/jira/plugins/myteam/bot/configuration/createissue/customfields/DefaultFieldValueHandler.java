@@ -53,14 +53,15 @@ public class DefaultFieldValueHandler implements CreateIssueFieldValueHandler {
   }
 
   private String getInsertFieldMessage(FillingIssueFieldState state) {
+    final String fieldNameKey = state.getField().getNameKey().toLowerCase();
     if (isArrayLikeField(state.getField())) {
       return i18nResolver.getText(
           "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.arrayMessage",
-          i18nResolver.getRawText(state.getField().getNameKey()).toLowerCase());
+          i18nResolver.getRawText(fieldNameKey));
     }
     return i18nResolver.getText(
         "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.insertIssueField.message",
-        i18nResolver.getRawText(state.getField().getNameKey()).toLowerCase());
+        i18nResolver.getRawText(fieldNameKey));
   }
 
   @Override
