@@ -73,6 +73,7 @@ public class MessageFormatter {
   public static final String DELIMITER_STR = "----------";
   private static final int DISPLAY_FIELD_CHARS_LIMIT = 5000;
   private static final int MAX_WHITESPACE_PRESERVATION_LENGTH = 20;
+
   @SuppressWarnings("InlineFormatString")
   private static final String DESCRIPTION_MARKDOWN_MASKED_LINK_TEMPLATE = "[%s|%s]";
 
