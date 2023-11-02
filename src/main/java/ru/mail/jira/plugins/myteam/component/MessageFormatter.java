@@ -1081,7 +1081,7 @@ public class MessageFormatter {
       diffBuilder.append(" "); // ensure visual spacing
     }
 
-    return diffBuilder.toString().replaceAll("<br>", "\n");
+    return diffBuilder.toString().replaceAll("<br>", "\n").replaceAll("&nbsp;", "");
   }
 
   /**
