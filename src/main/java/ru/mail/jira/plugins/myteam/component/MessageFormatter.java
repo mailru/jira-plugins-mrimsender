@@ -5,6 +5,11 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static ru.mail.jira.plugins.myteam.commons.Utils.shieldText;
 
+import com.atlassian.diff.CharacterChunk;
+import com.atlassian.diff.DiffChunk;
+import com.atlassian.diff.DiffType;
+import com.atlassian.diff.DiffViewBean;
+import com.atlassian.diff.WordChunk;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.datetime.DateTimeFormatter;
@@ -35,6 +40,7 @@ import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
+import com.opensymphony.util.TextUtils;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
@@ -66,7 +72,7 @@ public class MessageFormatter {
   public static final int MAX_MESSAGE_COUNT = 50;
   public static final String DELIMITER_STR = "----------";
   private static final int DISPLAY_FIELD_CHARS_LIMIT = 5000;
-
+  private static final int MAX_WHITESPACE_PRESERVATION_LENGTH = 20;
   @SuppressWarnings("InlineFormatString")
   private static final String DESCRIPTION_MARKDOWN_MASKED_LINK_TEMPLATE = "[%s|%s]";
 
@@ -85,6 +91,8 @@ public class MessageFormatter {
   private final UserManager userManager;
   private final AttachmentManager attachmentManager;
   private final PluginData pluginData;
+
+  private final List<Pattern> patternsToExcludeDescriptionForDiff;
 
   @Autowired
   public MessageFormatter(
@@ -111,6 +119,7 @@ public class MessageFormatter {
     this.userManager = userManager;
     this.attachmentManager = attachmentManager;
     this.pluginData = pluginData;
+    patternsToExcludeDescriptionForDiff = initPatternsToExcludeDescriptionForDiff();
   }
 
   public static void addRowWithButton(
@@ -739,7 +748,7 @@ public class MessageFormatter {
   }
 
   @Nullable
-  private String makeMyteamMarkdownFromJira(String inputText, boolean useMentionFormat) {
+  private String makeMyteamMarkdownFromJira(@Nullable String inputText, boolean useMentionFormat) {
     if (inputText == null) {
       return null;
     }
@@ -834,18 +843,23 @@ public class MessageFormatter {
     return inputText;
   }
 
+  @SuppressWarnings("UnusedVariable")
   private String formatChangeLog(
       GenericValue changeLog, boolean ignoreAssigneeField, boolean useMentionFormat) {
     StringBuilder sb = new StringBuilder();
     if (changeLog != null)
       try {
         String changedDescription = null;
-
+        String oldDesc = null;
+        boolean oldOrNewDescHasComplexFormatting = false;
         for (GenericValue changeItem : changeLog.getRelated("ChildChangeItem")) {
           String field = StringUtils.defaultString(changeItem.getString("field"));
           String newString = StringUtils.defaultString(changeItem.getString("newstring"));
 
           if ("description".equals(field)) {
+            oldDesc = StringUtils.defaultString(changeItem.getString("oldstring"));
+            oldOrNewDescHasComplexFormatting = checkDescOnComplexJiraWikiStyles(oldDesc, newString);
+            oldDesc = limitFieldValue(oldDesc);
             changedDescription = limitFieldValue(newString);
             continue;
           }
@@ -897,30 +911,58 @@ public class MessageFormatter {
             title = i18nResolver.getText("ru.mail.jira.plugins.myteam.notification.deleted", title);
           }
 
+          String oldString = StringUtils.defaultString(changeItem.getString("oldstring"));
           if (fieldManager.isNavigableField(field)) {
             final NavigableField navigableField = fieldManager.getNavigableField(field);
             if (navigableField != null) {
               if (navigableField instanceof UserField) {
-                sb.append("\n")
-                    .append(title)
-                    .append(": ")
-                    .append(
-                        formatUser(
-                            userManager.getUserByKey(changeItem.getString("newvalue")),
-                            "common.words.anonymous",
-                            true));
+                appendFieldOldAndNewValue(
+                    sb,
+                    title,
+                    formatUser(
+                        userManager.getUserByKey(changeItem.getString("oldvalue")),
+                        "common.words.anonymous",
+                        true),
+                    formatUser(
+                        userManager.getUserByKey(changeItem.getString("newvalue")),
+                        "common.words.anonymous",
+                        true),
+                    true);
                 continue;
               }
               newString = navigableField.prettyPrintChangeHistory(newString);
+              oldString = navigableField.prettyPrintChangeHistory(oldString);
             }
           }
-
-          appendField(sb, title, shieldText(newString), true);
+          appendFieldOldAndNewValue(sb, title, shieldText(oldString), shieldText(newString), true);
         }
 
         if (!isBlank(changedDescription))
-          sb.append("\n\n")
-              .append(makeMyteamMarkdownFromJira(changedDescription, useMentionFormat));
+          if (oldOrNewDescHasComplexFormatting) {
+            sb.append("\n\n")
+                .append(makeMyteamMarkdownFromJira(changedDescription, useMentionFormat));
+          } else {
+            sb.append("\n\n");
+            if (isBlank(oldDesc)) {
+              sb.append(
+                  StringUtils.defaultString(
+                      makeMyteamMarkdownFromJira(changedDescription, useMentionFormat), ""));
+            } else {
+              String diff =
+                  buildDiffString(
+                      StringUtils.defaultString(
+                          makeMyteamMarkdownFromJira(oldDesc, useMentionFormat), ""),
+                      StringUtils.defaultString(
+                          makeMyteamMarkdownFromJira(changedDescription, useMentionFormat), ""));
+              sb.append(diff)
+                  .append("\n\n")
+                  .append(">___")
+                  .append(
+                      i18nResolver.getText(
+                          "ru.mail.jira.plugins.myteam.notify.diff.description.field"))
+                  .append("___");
+            }
+          }
       } catch (Exception e) {
         SentryClient.capture(e);
       }
@@ -956,6 +998,146 @@ public class MessageFormatter {
     return formattedMesssageBody;
   }
 
+  private void appendFieldOldAndNewValue(
+      StringBuilder sb,
+      @Nullable String title,
+      @Nullable String oldValue,
+      @Nullable String value,
+      boolean appendEmpty) {
+    if (appendEmpty || !isBlank(value) || !isBlank(oldValue)) {
+      if (sb.length() == 0) {
+        sb.append("\n");
+      }
+      if (oldValue == null) {
+        oldValue = "";
+      }
+      if (value == null) {
+        value = "";
+      }
+      sb.append("\n").append(title).append(": ");
+      if (oldValue.isEmpty()) {
+        sb.append("*" + value + "*");
+      } else if (value.isEmpty()) {
+        sb.append("~" + oldValue + "~");
+      } else {
+        sb.append(oldValue.isEmpty() ? "" : "~" + oldValue + "~")
+            .append(" ")
+            .append(value.isEmpty() ? "" : "*" + value + "*");
+      }
+    }
+  }
+
+  /**
+   * @see com.atlassian.jira.web.action.util.DiffViewRenderer#getUnifiedHtml(DiffViewBean, String,
+   *     String) reused method for converting JIRA markup to VKTeams markup
+   * @param firstString original string
+   * @param secondString new string
+   * @return diff inline
+   */
+  @NotNull
+  private String buildDiffString(@NotNull String firstString, @NotNull String secondString) {
+    DiffViewBean diffViewBean = DiffViewBean.createWordLevelDiff(firstString, secondString);
+    StringBuilder html = new StringBuilder();
+    String removedStyle = "~";
+    String addedStyle = "*";
+    for (DiffChunk chunk : diffViewBean.getUnifiedChunks()) {
+      if (chunk.getType() == DiffType.CHANGED_WORDS) {
+        WordChunk wordChunk = (WordChunk) chunk;
+        for (CharacterChunk charChunk : wordChunk.getCharacterChunks()) {
+
+          if (charChunk.getType() == DiffType.DELETED_CHARACTERS) {
+            html.append(removedStyle);
+          } else if (charChunk.getType() == DiffType.ADDED_CHARACTERS) {
+            html.append(addedStyle);
+          }
+          html.append(print(charChunk.getText()));
+          if (charChunk.getType() == DiffType.DELETED_CHARACTERS) {
+            html.append(removedStyle);
+          } else if (charChunk.getType() == DiffType.ADDED_CHARACTERS) {
+            html.append(addedStyle);
+          }
+        }
+      } else if (chunk
+          .getType()
+          .getClassName()
+          .equals("unchanged")) // probably dead code, but copied from old line-diff.vm
+      {
+        html.append(print(chunk.getText()));
+      } else {
+
+        if (chunk.getType() == DiffType.DELETED_WORDS) {
+          html.append(removedStyle);
+        } else if (chunk.getType() == DiffType.ADDED_WORDS) {
+          html.append(addedStyle);
+        }
+        html.append(print(chunk.getText()));
+        if (chunk.getType() == DiffType.DELETED_WORDS) {
+          html.append(removedStyle);
+        } else if (chunk.getType() == DiffType.ADDED_WORDS) {
+          html.append(addedStyle);
+        }
+      }
+      html.append(" "); // ensure visual spacing
+    }
+
+    return html.toString().replaceAll("<br>", "\n");
+  }
+
+  /**
+   * @see com.atlassian.jira.web.action.util.DiffViewRenderer#print(String) reused method for
+   *     converting JIRA markup to VKTeams markup
+   * @param string some string to build general diff string
+   * @return input string without newline chars
+   */
+  private static String print(String string) {
+    // 1. Encode html special characters so they look nice
+    string = TextUtils.htmlEncode(string, false);
+
+    // 2. replace new line characters with a line break html character
+    string = string.replaceAll("(\\r\\n|\\n|\\r)", "<br>");
+
+    // 3. preserve whitespace blocks up greater than 2 up to a threshold
+    // (MAX_WHITESPACE_PRESERVATION_LENGTH)
+    StringBuffer result = new StringBuffer();
+    Matcher matcher = Pattern.compile("(\\s{2,})").matcher(string);
+
+    while (matcher.find()) {
+      String match = matcher.group(0);
+      int length = match.length();
+
+      // replace up to MAX_WHITESPACE_PRESERVATION_LENGTH with "&nbsp;" and then the rest are normal
+      // spaces
+      String replacement =
+          StringUtils.repeat("&nbsp;", Math.min(length, MAX_WHITESPACE_PRESERVATION_LENGTH))
+              + StringUtils.repeat(" ", Math.max(0, length - MAX_WHITESPACE_PRESERVATION_LENGTH));
+
+      // replace the result while maintaining correct index's for the next replacement
+      matcher.appendReplacement(result, replacement);
+    }
+
+    return matcher.appendTail(result).toString();
+  }
+
+  private boolean checkDescOnComplexJiraWikiStyles(String oldDesc, String newDesc) {
+    boolean oldOrNewDescHasComplexFormatting = false;
+    for (Pattern pattern : patternsToExcludeDescriptionForDiff) {
+      if (checkDescOnComplexJiraWikiStyles(oldDesc, pattern)
+          || checkDescOnComplexJiraWikiStyles(newDesc, pattern)) {
+        oldOrNewDescHasComplexFormatting = true;
+        break;
+      }
+    }
+
+    return oldOrNewDescHasComplexFormatting;
+  }
+
+  private boolean checkDescOnComplexJiraWikiStyles(String inputText, Pattern pattern) {
+    while (pattern.matcher(inputText).find()) {
+      return true;
+    }
+    return false;
+  }
+
   @NotNull
   private static Map<Long, String> getEventTypeMap() {
     Map<Long, String> eventTypeMap = new HashMap<>();
@@ -974,5 +1156,23 @@ public class MessageFormatter {
     eventTypeMap.put(EventType.ISSUE_WORKLOG_UPDATED_ID, "worklogUpdated");
     eventTypeMap.put(EventType.ISSUE_WORKLOG_DELETED_ID, "worklogDeleted");
     return eventTypeMap;
+  }
+
+  @NotNull
+  private List<Pattern> initPatternsToExcludeDescriptionForDiff() {
+    final List<Pattern> patterns = new ArrayList<>();
+    // quotes in desc
+    patterns.add(Pattern.compile("\\{[Qq]uote}([^+]*?)\\{[Qq]uote}", Pattern.MULTILINE));
+    // code block in desc
+    patterns.add(Pattern.compile("\\{[Cc]ode:([a-z]+?)}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE));
+    patterns.add(Pattern.compile("\\{[Cc]ode}([^+]*?)\\{[Cc]ode}", Pattern.MULTILINE));
+    // strikethrough text in desc
+    patterns.add(Pattern.compile("(^|\\s)-([^- \\n].*?[^- \\n])-($|\\s|\\.)"));
+    // bold text in desc
+    patterns.add(Pattern.compile("(^|\\s)\\*([^* \\n].*?[^* \\n])\\*($|\\s|\\.)"));
+    // ordered/unordered lists
+    patterns.add(Pattern.compile("^((?:#|-|\\+|\\*)+) (.*)$", Pattern.MULTILINE));
+
+    return Collections.unmodifiableList(patterns);
   }
 }
