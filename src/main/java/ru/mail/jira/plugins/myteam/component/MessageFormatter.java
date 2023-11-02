@@ -1037,7 +1037,7 @@ public class MessageFormatter {
   @NotNull
   private String buildDiffString(@NotNull String firstString, @NotNull String secondString) {
     DiffViewBean diffViewBean = DiffViewBean.createWordLevelDiff(firstString, secondString);
-    StringBuilder html = new StringBuilder();
+    StringBuilder diffBuilder = new StringBuilder();
     String removedStyle = "~";
     String addedStyle = "*";
     for (DiffChunk chunk : diffViewBean.getUnifiedChunks()) {
@@ -1046,15 +1046,15 @@ public class MessageFormatter {
         for (CharacterChunk charChunk : wordChunk.getCharacterChunks()) {
 
           if (charChunk.getType() == DiffType.DELETED_CHARACTERS) {
-            html.append(removedStyle);
+            diffBuilder.append(removedStyle);
           } else if (charChunk.getType() == DiffType.ADDED_CHARACTERS) {
-            html.append(addedStyle);
+            diffBuilder.append(addedStyle);
           }
-          html.append(print(charChunk.getText()));
+          diffBuilder.append(print(charChunk.getText()));
           if (charChunk.getType() == DiffType.DELETED_CHARACTERS) {
-            html.append(removedStyle);
+            diffBuilder.append(removedStyle);
           } else if (charChunk.getType() == DiffType.ADDED_CHARACTERS) {
-            html.append(addedStyle);
+            diffBuilder.append(addedStyle);
           }
         }
       } else if (chunk
@@ -1062,25 +1062,25 @@ public class MessageFormatter {
           .getClassName()
           .equals("unchanged")) // probably dead code, but copied from old line-diff.vm
       {
-        html.append(print(chunk.getText()));
+        diffBuilder.append(print(chunk.getText()));
       } else {
 
         if (chunk.getType() == DiffType.DELETED_WORDS) {
-          html.append(removedStyle);
+          diffBuilder.append(removedStyle);
         } else if (chunk.getType() == DiffType.ADDED_WORDS) {
-          html.append(addedStyle);
+          diffBuilder.append(addedStyle);
         }
-        html.append(print(chunk.getText()));
+        diffBuilder.append(print(chunk.getText()));
         if (chunk.getType() == DiffType.DELETED_WORDS) {
-          html.append(removedStyle);
+          diffBuilder.append(removedStyle);
         } else if (chunk.getType() == DiffType.ADDED_WORDS) {
-          html.append(addedStyle);
+          diffBuilder.append(addedStyle);
         }
       }
-      html.append(" "); // ensure visual spacing
+      diffBuilder.append(" "); // ensure visual spacing
     }
 
-    return html.toString().replaceAll("<br>", "\n");
+    return diffBuilder.toString().replaceAll("<br>", "\n");
   }
 
   /**
