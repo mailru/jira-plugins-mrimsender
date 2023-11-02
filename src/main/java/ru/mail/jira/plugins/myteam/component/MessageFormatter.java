@@ -935,12 +935,7 @@ public class MessageFormatter {
               oldString = navigableField.prettyPrintChangeHistory(oldString);
             }
           }
-          if (("Fix Version".equals(field) || "Component".equals(field) || "Version".equals(field))
-              && changeItem.get("oldvalue") != null
-              && changeItem.get("newvalue") == null) {
-            appendFieldOldAndNewValue(sb, title, shieldText(oldString), "", true);
-            continue;
-          }
+
           appendFieldOldAndNewValue(sb, title, shieldText(oldString), shieldText(newString), true);
         }
 
