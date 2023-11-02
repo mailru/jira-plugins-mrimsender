@@ -844,7 +844,6 @@ public class MessageFormatter {
     return inputText;
   }
 
-  @SuppressWarnings("UnusedVariable")
   private String formatChangeLog(
       GenericValue changeLog, boolean ignoreAssigneeField, boolean useMentionFormat) {
     StringBuilder sb = new StringBuilder();
@@ -905,14 +904,15 @@ public class MessageFormatter {
           if (!"custom".equalsIgnoreCase(changeItem.getString("fieldtype")))
             title = i18nResolver.getText("issue.field." + field.replaceAll(" ", "").toLowerCase());
 
+          String oldString = StringUtils.defaultString(changeItem.getString("oldstring"));
           if (("Fix Version".equals(field) || "Component".equals(field) || "Version".equals(field))
               && changeItem.get("oldvalue") != null
               && changeItem.get("newvalue") == null) {
-            newString = changeItem.getString("oldstring");
             title = i18nResolver.getText("ru.mail.jira.plugins.myteam.notification.deleted", title);
+            appendFieldOldAndNewValue(sb, title, shieldText(oldString), "", true);
+            continue;
           }
 
-          String oldString = StringUtils.defaultString(changeItem.getString("oldstring"));
           if (fieldManager.isNavigableField(field)) {
             final NavigableField navigableField = fieldManager.getNavigableField(field);
             if (navigableField != null) {
@@ -934,6 +934,12 @@ public class MessageFormatter {
               newString = navigableField.prettyPrintChangeHistory(newString);
               oldString = navigableField.prettyPrintChangeHistory(oldString);
             }
+          }
+          if (("Fix Version".equals(field) || "Component".equals(field) || "Version".equals(field))
+              && changeItem.get("oldvalue") != null
+              && changeItem.get("newvalue") == null) {
+            appendFieldOldAndNewValue(sb, title, shieldText(oldString), "", true);
+            continue;
           }
           appendFieldOldAndNewValue(sb, title, shieldText(oldString), shieldText(newString), true);
         }
