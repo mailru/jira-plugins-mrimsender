@@ -23,7 +23,6 @@ import com.atlassian.sal.api.message.I18nResolver;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.ofbiz.core.entity.GenericEntityException;
@@ -33,8 +32,6 @@ import ru.mail.jira.plugins.myteam.component.url.dto.Link;
 import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
-// todo: поправить тесты
-@Ignore
 @SuppressWarnings({"MockNotUsedInProduction", "UnusedVariable"})
 public class MessageFormatterTest {
 

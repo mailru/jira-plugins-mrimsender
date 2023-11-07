@@ -274,6 +274,86 @@ public class MessageFormatter {
   }
 
   @Nullable
+  public String formatEventWithDiff(ApplicationUser recipient, IssueEvent issueEvent) {
+    Issue issue = issueEvent.getIssue();
+    ApplicationUser user = issueEvent.getUser();
+    String issueLink = markdownTextLink(issue.getKey(), createIssueLink(issue.getKey()));
+    StringBuilder sb = new StringBuilder();
+
+    boolean useMentionFormat = !recipient.equals(user);
+
+    Long eventTypeId = issueEvent.getEventTypeId();
+    Map<Long, String> eventTypeMap = getEventTypeMap();
+
+    String eventTypeKey = eventTypeMap.getOrDefault(eventTypeId, "updated");
+    String i18nKey = "ru.mail.jira.plugins.myteam.notification." + eventTypeKey;
+
+    if (EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId)) {
+      sb.append(
+          i18nResolver.getText(
+              i18nKey,
+              formatUser(user, "common.words.anonymous", useMentionFormat),
+              issueLink,
+              formatUser(issue.getAssignee(), "common.concepts.unassigned", useMentionFormat)));
+    } else if (EventType.ISSUE_RESOLVED_ID.equals(eventTypeId)
+        || EventType.ISSUE_CLOSED_ID.equals(eventTypeId)) {
+      Resolution resolution = issue.getResolution();
+      sb.append(
+          i18nResolver.getText(
+              i18nKey,
+              formatUser(user, "common.words.anonymous", useMentionFormat),
+              issueLink,
+              resolution != null
+                  ? resolution.getNameTranslation(i18nHelper)
+                  : i18nResolver.getText("common.resolution.unresolved")));
+    } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)
+        || EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
+      sb.append(
+          i18nResolver.getText(
+              i18nKey,
+              getIssueLink(issue.getKey()),
+              issue.getSummary(),
+              formatUser(user, "common.words.anonymous", useMentionFormat),
+              format(
+                  "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
+                  jiraBaseUrl,
+                  issue.getKey(),
+                  issueEvent.getComment().getId(),
+                  issueEvent.getComment().getId()),
+              makeMyteamMarkdownFromJira(issueEvent.getComment().getBody(), useMentionFormat)));
+      return sb.toString();
+    } else {
+      sb.append(
+          i18nResolver.getText(
+              i18nKey, formatUser(user, "common.words.anonymous", useMentionFormat), issueLink));
+    }
+    sb.append("\n").append(shieldText(issue.getSummary()));
+
+    if (issueEvent.getWorklog() != null && !isBlank(issueEvent.getWorklog().getComment()))
+      sb.append("\n\n").append(shieldText(issueEvent.getWorklog().getComment()));
+
+    if (EventType.ISSUE_CREATED_ID.equals(eventTypeId))
+      sb.append(formatSystemFields(recipient, issue, useMentionFormat));
+
+    sb.append(
+        formatChangeLogWithDiff(
+            issueEvent.getChangeLog(),
+            EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId),
+            useMentionFormat));
+    if (issueEvent.getComment() != null && !isBlank(issueEvent.getComment().getBody())) {
+      if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)
+          && issueEvent.getComment().getBody().contains("[~" + recipient.getName() + "]")) {
+        // do not send message when recipient mentioned in comment
+        return null;
+      }
+
+      sb.append("\n\n")
+          .append(makeMyteamMarkdownFromJira(issueEvent.getComment().getBody(), useMentionFormat));
+    }
+    return sb.toString();
+  }
+
+  @Nullable
   public String formatEvent(ApplicationUser recipient, IssueEvent issueEvent) {
     Issue issue = issueEvent.getIssue();
     ApplicationUser user = issueEvent.getUser();
@@ -844,7 +924,7 @@ public class MessageFormatter {
     return inputText;
   }
 
-  private String formatChangeLog(
+  private String formatChangeLogWithDiff(
       GenericValue changeLog, boolean ignoreAssigneeField, boolean useMentionFormat) {
     StringBuilder sb = new StringBuilder();
     if (changeLog != null)
@@ -965,6 +1045,99 @@ public class MessageFormatter {
                   .append("___");
             }
           }
+      } catch (Exception e) {
+        SentryClient.capture(e);
+      }
+    return sb.toString();
+  }
+
+  private String formatChangeLog(
+      GenericValue changeLog, boolean ignoreAssigneeField, boolean useMentionFormat) {
+    StringBuilder sb = new StringBuilder();
+    if (changeLog != null)
+      try {
+        String changedDescription = null;
+
+        for (GenericValue changeItem : changeLog.getRelated("ChildChangeItem")) {
+          String field = StringUtils.defaultString(changeItem.getString("field"));
+          String newString = StringUtils.defaultString(changeItem.getString("newstring"));
+
+          if ("description".equals(field)) {
+            changedDescription = limitFieldValue(newString);
+            continue;
+          }
+          if ("WorklogTimeSpent".equals(field)
+              || "WorklogId".equals(field)
+              || ("assignee".equals(field) && ignoreAssigneeField)) continue;
+
+          String title = field;
+          if ("Attachment".equals(field)) {
+            String attachmentId = changeItem.getString("newvalue");
+            if (StringUtils.isNotEmpty(attachmentId)) {
+              Attachment attachment = attachmentManager.getAttachment(Long.valueOf(attachmentId));
+              try {
+                sb.append("\n\n")
+                    .append(
+                        markdownTextLink(
+                            attachment.getFilename(),
+                            new URI(
+                                    format(
+                                        "%s/secure/attachment/%d/%s",
+                                        jiraBaseUrl, attachment.getId(), attachment.getFilename()),
+                                    false,
+                                    StandardCharsets.UTF_8.toString())
+                                .getEscapedURI()));
+              } catch (URIException e) {
+                SentryClient.capture(e);
+                log.error(
+                    "Can't find attachment id:{} name:{}",
+                    changeItem.getString("newvalue"),
+                    changeItem.getString("newstring"),
+                    e);
+              }
+            } else {
+              sb.append("\n\n")
+                  .append(
+                      i18nResolver.getText(
+                          "ru.mail.jira.plugins.myteam.notification.attachmentDeleted",
+                          changeItem.getString("oldstring")));
+            }
+            continue;
+          }
+          if (!"custom".equalsIgnoreCase(changeItem.getString("fieldtype")))
+            title = i18nResolver.getText("issue.field." + field.replaceAll(" ", "").toLowerCase());
+
+          if (("Fix Version".equals(field) || "Component".equals(field) || "Version".equals(field))
+              && changeItem.get("oldvalue") != null
+              && changeItem.get("newvalue") == null) {
+            newString = changeItem.getString("oldstring");
+            title = i18nResolver.getText("ru.mail.jira.plugins.myteam.notification.deleted", title);
+          }
+
+          if (fieldManager.isNavigableField(field)) {
+            final NavigableField navigableField = fieldManager.getNavigableField(field);
+            if (navigableField != null) {
+              if (navigableField instanceof UserField) {
+                sb.append("\n")
+                    .append(title)
+                    .append(": ")
+                    .append(
+                        formatUser(
+                            userManager.getUserByKey(changeItem.getString("newvalue")),
+                            "common.words.anonymous",
+                            true));
+                continue;
+              }
+              newString = navigableField.prettyPrintChangeHistory(newString);
+            }
+          }
+
+          appendField(sb, title, shieldText(newString), true);
+        }
+
+        if (!isBlank(changedDescription))
+          sb.append("\n\n")
+              .append(makeMyteamMarkdownFromJira(changedDescription, useMentionFormat));
       } catch (Exception e) {
         SentryClient.capture(e);
       }
