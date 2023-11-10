@@ -80,6 +80,9 @@ public class MessageFormatter {
   @SuppressWarnings("InlineFormatString")
   private static final String DESCRIPTION_MARKDOWN_UNMASKED_LINK_TEMPLATE = "%s";
 
+  private static final List<Pattern> patternsToExcludeDescriptionForDiff =
+      initPatternsToExcludeDescriptionForDiff();
+
   private final ApplicationProperties applicationProperties;
   private final DateTimeFormatter dateTimeFormatter;
   private final FieldManager fieldManager;
@@ -92,8 +95,6 @@ public class MessageFormatter {
   private final UserManager userManager;
   private final AttachmentManager attachmentManager;
   private final PluginData pluginData;
-
-  private final List<Pattern> patternsToExcludeDescriptionForDiff;
 
   @Autowired
   public MessageFormatter(
@@ -120,7 +121,6 @@ public class MessageFormatter {
     this.userManager = userManager;
     this.attachmentManager = attachmentManager;
     this.pluginData = pluginData;
-    patternsToExcludeDescriptionForDiff = initPatternsToExcludeDescriptionForDiff();
   }
 
   public static void addRowWithButton(
@@ -1173,7 +1173,24 @@ public class MessageFormatter {
     return formattedMesssageBody;
   }
 
-  private void appendFieldOldAndNewValue(
+  private static boolean checkDescOnComplexJiraWikiStyles(String oldDesc, String newDesc) {
+    boolean oldOrNewDescHasComplexFormatting = false;
+    for (Pattern pattern : patternsToExcludeDescriptionForDiff) {
+      if (checkDescOnComplexJiraWikiStyles(oldDesc, pattern)
+          || checkDescOnComplexJiraWikiStyles(newDesc, pattern)) {
+        oldOrNewDescHasComplexFormatting = true;
+        break;
+      }
+    }
+
+    return oldOrNewDescHasComplexFormatting;
+  }
+
+  private static boolean checkDescOnComplexJiraWikiStyles(String inputText, Pattern pattern) {
+    return pattern.matcher(inputText).find();
+  }
+
+  private static void appendFieldOldAndNewValue(
       StringBuilder sb,
       @Nullable String title,
       @Nullable String oldValue,
@@ -1210,7 +1227,7 @@ public class MessageFormatter {
    * @return diff inline
    */
   @NotNull
-  private String buildDiffString(@NotNull String firstString, @NotNull String secondString) {
+  private static String buildDiffString(@NotNull String firstString, @NotNull String secondString) {
     DiffViewBean diffViewBean = DiffViewBean.createWordLevelDiff(firstString, secondString);
     StringBuilder diffBuilder = new StringBuilder();
     String removedStyle = "~";
@@ -1293,26 +1310,6 @@ public class MessageFormatter {
     return matcher.appendTail(result).toString();
   }
 
-  private boolean checkDescOnComplexJiraWikiStyles(String oldDesc, String newDesc) {
-    boolean oldOrNewDescHasComplexFormatting = false;
-    for (Pattern pattern : patternsToExcludeDescriptionForDiff) {
-      if (checkDescOnComplexJiraWikiStyles(oldDesc, pattern)
-          || checkDescOnComplexJiraWikiStyles(newDesc, pattern)) {
-        oldOrNewDescHasComplexFormatting = true;
-        break;
-      }
-    }
-
-    return oldOrNewDescHasComplexFormatting;
-  }
-
-  private boolean checkDescOnComplexJiraWikiStyles(String inputText, Pattern pattern) {
-    while (pattern.matcher(inputText).find()) {
-      return true;
-    }
-    return false;
-  }
-
   @NotNull
   private static Map<Long, String> getEventTypeMap() {
     Map<Long, String> eventTypeMap = new HashMap<>();
@@ -1334,7 +1331,7 @@ public class MessageFormatter {
   }
 
   @NotNull
-  private List<Pattern> initPatternsToExcludeDescriptionForDiff() {
+  private static List<Pattern> initPatternsToExcludeDescriptionForDiff() {
     final List<Pattern> patterns = new ArrayList<>();
     // quotes in desc
     patterns.add(Pattern.compile("\\{[Qq]uote}([^+]*?)\\{[Qq]uote}", Pattern.MULTILINE));
