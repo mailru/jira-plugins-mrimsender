@@ -1,12 +1,11 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.component;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.atlassian.jira.config.LocaleManager;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.datetime.DateTimeFormatter;
 import com.atlassian.jira.event.issue.IssueEvent;
@@ -30,9 +29,9 @@ import org.ofbiz.core.entity.GenericValue;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @SuppressWarnings({"MockNotUsedInProduction", "UnusedVariable"})
-public class MessageFormatterShowDiffTest {
+class JiraEventToChatMessageConverterTest {
 
-  private MessageFormatter messageFormatter;
+  private JiraEventToChatMessageConverter jiraEventToChatMessageConverter;
   private IssueEvent mockedIssueEvent;
   private ApplicationUser recipient;
 
@@ -48,12 +47,6 @@ public class MessageFormatterShowDiffTest {
         Mockito.mock(IssueTypeScreenSchemeManager.class);
     FieldScreenManager fieldScreenManager = Mockito.mock(FieldScreenManager.class);
     I18nResolver i18nResolver = Mockito.mock(I18nResolver.class);
-    LocaleManager localeManager = Mockito.mock(LocaleManager.class);
-    //    ProjectManager projectManager = Mockito.mock(ProjectManager.class);
-    //    IssueTypeManager issueTypeManager = Mockito.mock(IssueTypeManager.class);
-    //    ProjectComponentManager projectComponentManager =
-    // Mockito.mock(ProjectComponentManager.class);
-    //    VersionManager versionManager = Mockito.mock(VersionManager.class);
     UserManager userManager = Mockito.mock(UserManager.class);
     ApplicationUser mentionUser = Mockito.mock(ApplicationUser.class);
     when(mentionUser.getEmailAddress()).thenReturn("i.pupkin@domain");
@@ -61,19 +54,27 @@ public class MessageFormatterShowDiffTest {
     when(userManager.getUserByName("i.pupkin@domain")).thenReturn(mentionUser);
     AttachmentManager attachmentManager = Mockito.mock(AttachmentManager.class);
     PluginData pluginData = Mockito.mock(PluginData.class);
-    this.messageFormatter =
-        new MessageFormatter(
-            applicationProperties,
-            dateTimeFormatter,
-            fieldManager,
-            issueSecurityLevelManager,
-            i18nHelper,
-            issueTypeScreenSchemeManager,
-            fieldScreenManager,
-            i18nResolver,
-            userManager,
+    this.jiraEventToChatMessageConverter =
+        new JiraEventToChatMessageConverter(
+            new MessageFormatter(
+                applicationProperties,
+                dateTimeFormatter,
+                fieldManager,
+                issueSecurityLevelManager,
+                i18nHelper,
+                issueTypeScreenSchemeManager,
+                fieldScreenManager,
+                i18nResolver,
+                pluginData,
+                mock(JiraMarkdownToChatMarkdownConverter.class)),
+            new JiraMarkdownToChatMarkdownConverter(userManager, i18nHelper, pluginData),
+            new DiffFieldChatMessageGenerator(),
             attachmentManager,
-            pluginData);
+            applicationProperties,
+            i18nResolver,
+            i18nHelper,
+            fieldManager,
+            userManager);
     IssueEvent event = Mockito.mock(IssueEvent.class);
     Issue mockedIssue = Mockito.mock(Issue.class);
     ApplicationUser assigneedUser = Mockito.mock(ApplicationUser.class);
@@ -88,6 +89,91 @@ public class MessageFormatterShowDiffTest {
         .thenReturn("help description message");
     this.mockedIssueEvent = event;
     this.recipient = assigneedUser;
+  }
+
+  @Test
+  void testsingleLineCodeWithoutDiff() throws GenericEntityException {
+    // GIVEN
+    GenericValue changeLog = mock(GenericValue.class);
+    List<GenericValue> changeLogRelated = new ArrayList<>();
+    GenericValue descriptionField = Mockito.mock(GenericValue.class);
+    when(descriptionField.getString("field")).thenReturn("description");
+    when(descriptionField.getString("newstring"))
+        .thenReturn(
+            "_Lorem_ ipsum dolor sit amet, -consectetur adipiscing- elit, sed* do eiusmod tempor incididunt ut *labore* -et [dolore|http://example.com] magna aliqua-. Ut enim ad minim veniam, *quis* +nostrud exercitation ullamco+ {{labo-ris}} *nisi ut aliquip* ex ea commodo * +consequat. Duis+ aute iru-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, -sunt in culpa qui officia- *deserunt mollit* anim id est -laborum-.\n"
+                + "\n"
+                + "\n"
+                + "{{asdf asdf asdf\n"
+                + "asdf asd}}"
+                + "\n"
+                + "+asdadda+ asd asd. asd\n"
+                + "asdasd as. a sd +aasdad+");
+    changeLogRelated.add(descriptionField);
+    when(changeLog.getRelated("ChildChangeItem")).thenReturn(changeLogRelated);
+    when(this.mockedIssueEvent.getChangeLog()).thenReturn(changeLog);
+    String testedHeader = "null\nSummary\n\n";
+    String testedContent =
+        "_Lorem_ ipsum dolor sit amet, ~consectetur adipiscing~ elit, sed\\* do eiusmod tempor incididunt ut *labore* ~et [dolore](http://example.com) magna aliqua~. Ut enim ad minim veniam, *quis* __nostrud exercitation ullamco__ `labo\\-ris` *nisi ut aliquip* ex ea commodo \\* __consequat. Duis__ aute iru\\-re dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. *Excepteur sint occaecat cupidatat* non proident, ~sunt in culpa qui officia~ *deserunt mollit* anim id est ~laborum~.\n"
+            + "\n"
+            + "\n"
+            + "\\{\\{asdf asdf asdf\n"
+            + "asdf asd\\}\\}"
+            + "\n"
+            + "__asdadda__ asd asd. asd\n"
+            + "asdasd as. a sd __aasdad__";
+
+    // WHEN
+    String result =
+        this.jiraEventToChatMessageConverter.formatEventWithDiff(recipient, this.mockedIssueEvent);
+
+    // THEN
+    assertEquals(testedHeader + testedContent, result);
+  }
+
+  @Test
+  void JD1784TaskTestTrue() throws GenericEntityException {
+    // GIVEN
+    GenericValue changeLog = mock(GenericValue.class);
+    List<GenericValue> changeLogRelated = new ArrayList<>();
+    GenericValue descriptionField = Mockito.mock(GenericValue.class);
+    when(descriptionField.getString("field")).thenReturn("description");
+    when(descriptionField.getString("newstring"))
+        .thenReturn("Начало предложения -какой либо текст для проверки- ДОЛЖНО");
+    changeLogRelated.add(descriptionField);
+    when(changeLog.getRelated("ChildChangeItem")).thenReturn(changeLogRelated);
+    when(this.mockedIssueEvent.getChangeLog()).thenReturn(changeLog);
+    String testedHeader = "null\nSummary\n\n";
+    String testedContent = "Начало предложения ~какой либо текст для проверки~ ДОЛЖНО";
+
+    // WHEN
+    String result =
+        this.jiraEventToChatMessageConverter.formatEventWithDiff(recipient, this.mockedIssueEvent);
+
+    // THEN
+    assertEquals(testedHeader + testedContent, result);
+  }
+
+  @Test
+  void JD1784TaskTestFalse() throws GenericEntityException {
+    // GIVEN
+    GenericValue changeLog = mock(GenericValue.class);
+    List<GenericValue> changeLogRelated = new ArrayList<>();
+    GenericValue descriptionField = Mockito.mock(GenericValue.class);
+    when(descriptionField.getString("field")).thenReturn("description");
+    when(descriptionField.getString("newstring"))
+        .thenReturn("Начало предложения - какой либо текст для проверки - НЕДОЛЖНО");
+    changeLogRelated.add(descriptionField);
+    when(changeLog.getRelated("ChildChangeItem")).thenReturn(changeLogRelated);
+    when(this.mockedIssueEvent.getChangeLog()).thenReturn(changeLog);
+    String testedHeader = "null\nSummary\n\n";
+    String testedContent = "Начало предложения \\- какой либо текст для проверки \\- НЕДОЛЖНО";
+
+    // WHEN
+    String result =
+        this.jiraEventToChatMessageConverter.formatEventWithDiff(recipient, this.mockedIssueEvent);
+
+    // THEN
+    assertEquals(testedHeader + testedContent, result);
   }
 
   @Test
@@ -124,7 +210,7 @@ public class MessageFormatterShowDiffTest {
 
     // WHEN
     String actualResult =
-        this.messageFormatter.formatEventWithDiff(recipient, this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.formatEventWithDiff(recipient, this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -162,7 +248,7 @@ public class MessageFormatterShowDiffTest {
 
     // WHEN
     String actualResult =
-        this.messageFormatter.formatEventWithDiff(recipient, this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.formatEventWithDiff(recipient, this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -204,7 +290,7 @@ public class MessageFormatterShowDiffTest {
 
     // WHEN
     String actualResult =
-        this.messageFormatter.formatEventWithDiff(recipient, this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.formatEventWithDiff(recipient, this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -248,7 +334,7 @@ public class MessageFormatterShowDiffTest {
 
     // WHEN
     String actualResult =
-        this.messageFormatter.formatEventWithDiff(recipient, this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.formatEventWithDiff(recipient, this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -292,7 +378,7 @@ public class MessageFormatterShowDiffTest {
 
     // WHEN
     String actualResult =
-        this.messageFormatter.formatEventWithDiff(recipient, this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.formatEventWithDiff(recipient, this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -332,7 +418,7 @@ public class MessageFormatterShowDiffTest {
 
     // WHEN
     String actualResult =
-        this.messageFormatter.formatEventWithDiff(recipient, this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.formatEventWithDiff(recipient, this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -372,7 +458,7 @@ public class MessageFormatterShowDiffTest {
 
     // WHEN
     String actualResult =
-        this.messageFormatter.formatEventWithDiff(recipient, this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.formatEventWithDiff(recipient, this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -428,7 +514,7 @@ public class MessageFormatterShowDiffTest {
 
     // WHEN
     String actualResult =
-        this.messageFormatter.formatEventWithDiff(recipient, this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.formatEventWithDiff(recipient, this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
