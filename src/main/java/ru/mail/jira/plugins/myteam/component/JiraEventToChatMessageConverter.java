@@ -338,12 +338,13 @@ public class JiraEventToChatMessageConverter {
 
   private String appendDescription(
       final boolean oldOrNewDescHasComplexFormatting,
-      final String oldDesc,
+      @Nullable final String oldDesc,
       final String changedDescription,
       final boolean useMentionFormat) {
     if (oldOrNewDescHasComplexFormatting) {
-      return jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-          changedDescription, useMentionFormat);
+      return StringUtils.defaultString(
+          jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
+              changedDescription, useMentionFormat));
     } else {
       if (isBlank(oldDesc)) {
         return StringUtils.defaultString(
