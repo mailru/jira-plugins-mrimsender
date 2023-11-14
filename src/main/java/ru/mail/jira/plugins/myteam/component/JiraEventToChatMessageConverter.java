@@ -41,6 +41,8 @@ public class JiraEventToChatMessageConverter {
   private static final List<Pattern> PATTERNS_TO_EXCLUDE_DESCRIPTION_FOR_DIFF =
       initPatternsToExcludeDescriptionForDiff();
   private static final Map<Long, String> EVENT_TYPE_MAP = getEventTypeMap();
+
+  private static final String I18N_PART_KEY = "ru.mail.jira.plugins.myteam.notification.";
   private final MessageFormatter messageFormatter;
   private final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter;
   private final DiffFieldChatMessageGenerator diffFieldChatMessageGenerator;
@@ -99,55 +101,27 @@ public class JiraEventToChatMessageConverter {
   public String formatEventWithDiff(final ApplicationUser recipient, final IssueEvent issueEvent) {
     final Issue issue = issueEvent.getIssue();
     final ApplicationUser user = issueEvent.getUser();
-    final String issueLink =
-        messageFormatter.markdownTextLink(
-            issue.getKey(), messageFormatter.createIssueLink(issue.getKey()));
     final StringBuilder sb = new StringBuilder();
 
     final boolean useMentionFormat = !recipient.equals(user);
 
     final Long eventTypeId = issueEvent.getEventTypeId();
 
-    final String eventTypeKey = EVENT_TYPE_MAP.getOrDefault(eventTypeId, "updated");
-    final String i18nKey = "ru.mail.jira.plugins.myteam.notification." + eventTypeKey;
+    final String i18nKey = I18N_PART_KEY + EVENT_TYPE_MAP.getOrDefault(eventTypeId, "updated");
 
     if (EventType.ISSUE_ASSIGNED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              i18nKey,
-              messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink,
-              messageFormatter.formatUser(
-                  issue.getAssignee(), "common.concepts.unassigned", useMentionFormat)));
+      sb.append(appendAssigneeOnIssueAssignedEvent(issue, i18nKey, user, useMentionFormat));
     } else if (EventType.ISSUE_RESOLVED_ID.equals(eventTypeId)
         || EventType.ISSUE_CLOSED_ID.equals(eventTypeId)) {
-      Resolution resolution = issue.getResolution();
-      sb.append(
-          i18nResolver.getText(
-              i18nKey,
-              messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink,
-              resolution != null
-                  ? resolution.getNameTranslation(i18nHelper)
-                  : i18nResolver.getText("common.resolution.unresolved")));
+      sb.append(appendStringOnIssueResoledOrCloseEvent(issue, i18nKey, user, useMentionFormat));
     } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)
         || EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
-      sb.append(
-          i18nResolver.getText(
-              i18nKey,
-              messageFormatter.getIssueLink(issue.getKey()),
-              issue.getSummary(),
-              messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
-              format(
-                  "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
-                  applicationProperties.getString(APKeys.JIRA_BASEURL),
-                  issue.getKey(),
-                  issueEvent.getComment().getId(),
-                  issueEvent.getComment().getId()),
-              jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-                  issueEvent.getComment().getBody(), useMentionFormat)));
+      sb.append(appendStringOnIssueCommentedOrCommentEditedEvent(issueEvent, i18nKey, user, useMentionFormat));
       return sb.toString();
     } else {
+      String issueLink =
+              messageFormatter.markdownTextLink(
+                      issue.getKey(), messageFormatter.createIssueLink(issue.getKey()));
       sb.append(
           i18nResolver.getText(
               i18nKey,
@@ -156,11 +130,13 @@ public class JiraEventToChatMessageConverter {
     }
     sb.append("\n").append(shieldText(issue.getSummary()));
 
-    if (issueEvent.getWorklog() != null && !isBlank(issueEvent.getWorklog().getComment()))
-      sb.append("\n\n").append(shieldText(issueEvent.getWorklog().getComment()));
+    if (issueEvent.getWorklog() != null && !isBlank(issueEvent.getWorklog().getComment())) {
+        sb.append("\n\n").append(shieldText(issueEvent.getWorklog().getComment()));
+    }
 
-    if (EventType.ISSUE_CREATED_ID.equals(eventTypeId))
-      sb.append(messageFormatter.formatSystemFields(recipient, issue, useMentionFormat));
+    if (EventType.ISSUE_CREATED_ID.equals(eventTypeId)) {
+        sb.append(messageFormatter.formatSystemFields(recipient, issue, useMentionFormat));
+    }
 
     sb.append(
         formatChangeLogWithDiff(
@@ -182,142 +158,226 @@ public class JiraEventToChatMessageConverter {
     return sb.toString();
   }
 
+  @NotNull
+  private String appendAssigneeOnIssueAssignedEvent(final Issue issue,
+                                                    final String eventTypeKey,
+                                                    final ApplicationUser user,
+                                                    final boolean useMentionFormat) {
+    String issueLink = messageFormatter.markdownTextLink(
+            issue.getKey(), messageFormatter.createIssueLink(issue.getKey()));
+    return i18nResolver.getText(
+            I18N_PART_KEY + eventTypeKey,
+            messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
+            issueLink,
+            messageFormatter.formatUser(
+                    issue.getAssignee(), "common.concepts.unassigned", useMentionFormat));
+  }
+
+  @NotNull
+  private String appendStringOnIssueResoledOrCloseEvent(final Issue issue,
+                                                        final String i18nKey,
+                                                        final ApplicationUser user,
+                                                        final boolean useMentionFormat) {
+    final Resolution resolution = issue.getResolution();
+    final String issueLink = messageFormatter.markdownTextLink(
+            issue.getKey(), messageFormatter.createIssueLink(issue.getKey()));
+    return i18nResolver.getText(
+            i18nKey,
+            messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
+            issueLink,
+            resolution != null
+                    ? resolution.getNameTranslation(i18nHelper)
+                    : i18nResolver.getText("common.resolution.unresolved"));
+  }
+
+  @Nullable
+  private String appendStringOnIssueCommentedOrCommentEditedEvent(final IssueEvent issueEvent,
+                                                                  final String i18nKey,
+                                                                  final ApplicationUser user,
+                                                                  final boolean useMentionFormat) {
+    final Issue issue = issueEvent.getIssue();
+    return i18nResolver.getText(
+            i18nKey,
+            messageFormatter.getIssueLink(issue.getKey()),
+            issue.getSummary(),
+            messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
+            format(
+                    "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
+                    applicationProperties.getString(APKeys.JIRA_BASEURL),
+                    issue.getKey(),
+                    issueEvent.getComment().getId(),
+                    issueEvent.getComment().getId()),
+            jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
+                    issueEvent.getComment().getBody(), useMentionFormat));
+  }
+
   private String formatChangeLogWithDiff(
       final GenericValue changeLog,
       final boolean ignoreAssigneeField,
       final boolean useMentionFormat) {
+    if (changeLog == null) {
+      return "";
+    }
     final StringBuilder sb = new StringBuilder();
-    if (changeLog != null)
-      try {
-        String changedDescription = null;
-        String oldDesc = null;
-        boolean oldOrNewDescHasComplexFormatting = false;
-        for (GenericValue changeItem : changeLog.getRelated("ChildChangeItem")) {
-          String field = StringUtils.defaultString(changeItem.getString("field"));
-          String newString = StringUtils.defaultString(changeItem.getString("newstring"));
+    try {
+      String jiraBaseUrl = applicationProperties.getString(APKeys.JIRA_BASEURL);
+      String changedDescription = null;
+      String oldDesc = null;
+      boolean oldOrNewDescHasComplexFormatting = false;
+      for (GenericValue changeItem : changeLog.getRelated("ChildChangeItem")) {
+        String field = StringUtils.defaultString(changeItem.getString("field"));
+        String newString = StringUtils.defaultString(changeItem.getString("newstring"));
 
-          if ("description".equals(field)) {
-            oldDesc = StringUtils.defaultString(changeItem.getString("oldstring"));
-            oldOrNewDescHasComplexFormatting = checkDescOnComplexJiraWikiStyles(oldDesc, newString);
-            oldDesc = messageFormatter.limitFieldValue(oldDesc);
-            changedDescription = messageFormatter.limitFieldValue(newString);
-            continue;
-          }
-          if ("WorklogTimeSpent".equals(field)
-              || "WorklogId".equals(field)
-              || ("assignee".equals(field) && ignoreAssigneeField)) continue;
-
-          String title = field;
-          if ("Attachment".equals(field)) {
-            String attachmentId = changeItem.getString("newvalue");
-            if (StringUtils.isNotEmpty(attachmentId)) {
-              Attachment attachment = attachmentManager.getAttachment(Long.valueOf(attachmentId));
-              String jiraBaseUrl = applicationProperties.getString(APKeys.JIRA_BASEURL);
-              try {
-                sb.append("\n\n")
-                    .append(
-                        messageFormatter.markdownTextLink(
-                            attachment.getFilename(),
-                            new URI(
-                                    format(
-                                        "%s/secure/attachment/%d/%s",
-                                        jiraBaseUrl, attachment.getId(), attachment.getFilename()),
-                                    false,
-                                    StandardCharsets.UTF_8.toString())
-                                .getEscapedURI()));
-              } catch (URIException e) {
-                SentryClient.capture(e);
-                log.error(
-                    "Can't find attachment id:{} name:{}",
-                    changeItem.getString("newvalue"),
-                    changeItem.getString("newstring"),
-                    e);
-              }
-            } else {
-              sb.append("\n\n")
-                  .append(
-                      i18nResolver.getText(
-                          "ru.mail.jira.plugins.myteam.notification.attachmentDeleted",
-                          changeItem.getString("oldstring")));
-            }
-            continue;
-          }
-          if (!"custom".equalsIgnoreCase(changeItem.getString("fieldtype")))
-            title = i18nResolver.getText("issue.field." + field.replaceAll(" ", "").toLowerCase());
-
-          String oldString = StringUtils.defaultString(changeItem.getString("oldstring"));
-          if (("Fix Version".equals(field) || "Component".equals(field) || "Version".equals(field))
-              && changeItem.get("oldvalue") != null
-              && changeItem.get("newvalue") == null) {
-            title = i18nResolver.getText("ru.mail.jira.plugins.myteam.notification.deleted", title);
-            appendFieldOldAndNewValue(sb, title, shieldText(oldString), "", true);
-            continue;
-          }
-
-          if (fieldManager.isNavigableField(field)) {
-            final NavigableField navigableField = fieldManager.getNavigableField(field);
-            if (navigableField != null) {
-              if (navigableField instanceof UserField) {
-                appendFieldOldAndNewValue(
-                    sb,
-                    title,
-                    messageFormatter.formatUser(
-                        userManager.getUserByKey(changeItem.getString("oldvalue")),
-                        "common.words.anonymous",
-                        true),
-                    messageFormatter.formatUser(
-                        userManager.getUserByKey(changeItem.getString("newvalue")),
-                        "common.words.anonymous",
-                        true),
-                    true);
-                continue;
-              }
-              newString = navigableField.prettyPrintChangeHistory(newString);
-              oldString = navigableField.prettyPrintChangeHistory(oldString);
-            }
-          }
-
-          appendFieldOldAndNewValue(sb, title, shieldText(oldString), shieldText(newString), true);
+        if ("description".equals(field)) {
+          oldDesc = StringUtils.defaultString(changeItem.getString("oldstring"));
+          oldOrNewDescHasComplexFormatting = checkDescOnComplexJiraWikiStyles(oldDesc, newString);
+          oldDesc = messageFormatter.limitFieldValue(oldDesc);
+          changedDescription = messageFormatter.limitFieldValue(newString);
+          continue;
         }
 
-        if (!isBlank(changedDescription))
-          if (oldOrNewDescHasComplexFormatting) {
-            sb.append("\n\n")
-                .append(
-                    jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-                        changedDescription, useMentionFormat));
-          } else {
-            sb.append("\n\n");
-            if (isBlank(oldDesc)) {
-              sb.append(
-                  StringUtils.defaultString(
-                      jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-                          changedDescription, useMentionFormat),
-                      ""));
-            } else {
-              String diff =
-                  diffFieldChatMessageGenerator.buildDiffString(
-                      StringUtils.defaultString(
-                          jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-                              oldDesc, useMentionFormat),
-                          ""),
-                      StringUtils.defaultString(
-                          jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-                              changedDescription, useMentionFormat),
-                          ""));
-              sb.append(diff)
-                  .append("\n\n")
-                  .append(">___")
-                  .append(
-                      i18nResolver.getText(
-                          "ru.mail.jira.plugins.myteam.notify.diff.description.field"))
-                  .append("___");
+        if ("WorklogTimeSpent".equals(field)
+            || "WorklogId".equals(field)
+            || ("assignee".equals(field) && ignoreAssigneeField)) {
+            continue;
+        }
+
+        if ("Attachment".equals(field)) {
+          sb.append("\n\n").append(appendAttachmentFromChangedItem(changeItem, jiraBaseUrl));
+          continue;
+        }
+
+        String title = field;
+        if (!"custom".equalsIgnoreCase(changeItem.getString("fieldtype"))) {
+            title = i18nResolver.getText("issue.field." + field.replaceAll(" ", "").toLowerCase());
+        }
+
+        String oldString = StringUtils.defaultString(changeItem.getString("oldstring"));
+        if (("Fix Version".equals(field) || "Component".equals(field) || "Version".equals(field))
+            && changeItem.get("oldvalue") != null
+            && changeItem.get("newvalue") == null) {
+          title = i18nResolver.getText("ru.mail.jira.plugins.myteam.notification.deleted", title);
+          appendFieldOldAndNewValue(sb, title, shieldText(oldString), "", true);
+          continue;
+        }
+
+        if (fieldManager.isNavigableField(field)) {
+          final NavigableField navigableField = fieldManager.getNavigableField(field);
+          if (navigableField != null) {
+            if (navigableField instanceof UserField) {
+              appendNavigableUserField(sb, title, changeItem);
+              continue;
             }
+            newString = navigableField.prettyPrintChangeHistory(newString);
+            oldString = navigableField.prettyPrintChangeHistory(oldString);
           }
-      } catch (Exception e) {
-        SentryClient.capture(e);
+        }
+
+        appendFieldOldAndNewValue(sb, title, shieldText(oldString), shieldText(newString), true);
       }
+
+      if (!isBlank(changedDescription)) {
+        sb.append("\n\n").append(appendDescription(oldOrNewDescHasComplexFormatting, oldDesc, changedDescription, useMentionFormat));
+      }
+    } catch (Exception e) {
+      SentryClient.capture(e);
+    }
     return sb.toString();
+  }
+
+  @NotNull
+  private String appendAttachmentFromChangedItem(final GenericValue changeItem, String jiraBaseUrl) {
+    String attachmentId = changeItem.getString("newvalue");
+    if (StringUtils.isNotEmpty(attachmentId)) {
+      Attachment attachment = attachmentManager.getAttachment(Long.valueOf(attachmentId));
+      return tryAppendNotNullAttachment(jiraBaseUrl, attachment, changeItem);
+    } else {
+      return i18nResolver.getText(
+              "ru.mail.jira.plugins.myteam.notification.attachmentDeleted",
+              changeItem.getString("oldstring"));
+    }
+  }
+
+  @NotNull
+  private String tryAppendNotNullAttachment(final String jiraBaseUrl, final Attachment attachment, final GenericValue changeItem) {
+    try {
+      return messageFormatter.markdownTextLink(
+              attachment.getFilename(),
+              new URI(
+                      format(
+                              "%s/secure/attachment/%d/%s",
+                              jiraBaseUrl, attachment.getId(), attachment.getFilename()),
+                      false,
+                      StandardCharsets.UTF_8.toString())
+                      .getEscapedURI());
+    } catch (URIException e) {
+      SentryClient.capture(e);
+      log.error(
+              "Can't find attachment id:{} name:{}",
+              changeItem.getString("newvalue"),
+              changeItem.getString("newstring"),
+              e);
+      return "";
+    }
+  }
+
+  private String appendDescription(final boolean oldOrNewDescHasComplexFormatting,
+                                   final String oldDesc,
+                                   final String changedDescription,
+                                   final boolean useMentionFormat) {
+    if (oldOrNewDescHasComplexFormatting) {
+      return jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
+              changedDescription, useMentionFormat);
+    } else {
+      if (isBlank(oldDesc)) {
+        return StringUtils.defaultString(
+                jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
+                        changedDescription, useMentionFormat),
+                "");
+      } else {
+        return appendDescriptionWithDiff(oldDesc, changedDescription, useMentionFormat);
+      }
+    }
+  }
+
+  private void appendNavigableUserField(final StringBuilder sb,
+                                        final String title,
+                                        final GenericValue changeItem) {
+    appendFieldOldAndNewValue(
+            sb,
+            title,
+            messageFormatter.formatUser(
+                    userManager.getUserByKey(changeItem.getString("oldvalue")),
+                    "common.words.anonymous",
+                    true),
+            messageFormatter.formatUser(
+                    userManager.getUserByKey(changeItem.getString("newvalue")),
+                    "common.words.anonymous",
+                    true),
+            true);
+
+  }
+
+  @NotNull
+  private String appendDescriptionWithDiff(final String oldDesc,
+                                           final String changedDescription,
+                                           final boolean useMentionFormat) {
+    String diff =
+            diffFieldChatMessageGenerator.buildDiffString(
+                    StringUtils.defaultString(
+                            jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
+                                    oldDesc, useMentionFormat),
+                            ""),
+                    StringUtils.defaultString(
+                            jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
+                                    changedDescription, useMentionFormat),
+                            ""));
+    return diff +
+            "\n\n" +
+            ">___" +
+            i18nResolver.getText(
+                    "ru.mail.jira.plugins.myteam.notify.diff.description.field") +
+            "___";
   }
 
   private static boolean checkDescOnComplexJiraWikiStyles(
