@@ -144,6 +144,14 @@ public class EventMessagesTextConverter {
     return messageFormatter.formatJiraIssueCommentToLink(issue, comment);
   }
 
+  @NotNull
+  public String convertToJiraMarkdownStyleMainMessage(ChatMessageEvent event) {
+    final String mainMessageText = event.getMessage();
+    final LinksInMessage linksInMessage = urlFinderInMainEvent.findUrls(event);
+    return issueTextConverter.replaceChatUserMentionToJiraUserMention(
+        messageFormatter.formatLinks(mainMessageText, linksInMessage), event);
+  }
+
   @Data
   public static final class MarkdownFieldValueHolder {
     private final String value;

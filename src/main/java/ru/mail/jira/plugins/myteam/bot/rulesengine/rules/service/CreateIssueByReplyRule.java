@@ -10,17 +10,20 @@ import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
@@ -50,6 +53,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
   public static final DateTimeFormatter DATE_TIME_FORMATTER =
       DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+  private static final Splitter NEW_LINE_SPLITTER = Splitter.on("\n");
 
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final IssueCreationService issueCreationService;
@@ -118,7 +122,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
       HashMap<Field, String> fieldValues = new HashMap<>();
 
-      String summary =
+      SummaryAndDescriptionStatusFromMainMessage summary =
           getIssueSummary(
               event,
               settings.getIssueSummaryTemplate(),
@@ -127,7 +131,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
               tag);
       fieldValues.put(
           issueCreationService.getField(IssueFieldConstants.SUMMARY),
-          summary.replaceAll("\n", " "));
+          summary.summary.replaceAll("\n", " "));
 
       settings
           .getAdditionalFields()
@@ -146,9 +150,22 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
       EventMessagesTextConverter.MarkdownFieldValueHolder markdownFieldValueHolder =
           getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), null);
-      fieldValues.put(
-          issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
-          markdownFieldValueHolder.getValue());
+      if (summary.descEmpty) {
+        fieldValues.put(
+            issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
+            markdownFieldValueHolder.getValue());
+      } else {
+        String description =
+            Arrays.stream(
+                    replaceBotMentionAndCommand(
+                            eventMessagesTextConverter.convertToJiraMarkdownStyleMainMessage(event),
+                            tag)
+                        .split("\n"))
+                .skip(1)
+                .collect(Collectors.joining("\n"));
+        fieldValues.put(
+            issueCreationService.getField(IssueFieldConstants.DESCRIPTION), description);
+      }
 
       String assigneeValue = settings.getAssignee();
       if (assigneeValue != null) {
@@ -203,13 +220,12 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       issueCreationService.addIssueChatLink(
           issue, settings.getChatTitle(), settings.getChatLink(), initiator);
 
-      issueCreationService.addLinksToIssueFromMessage(
-          issue, markdownFieldValueHolder.getLinksInMessages(), initiator);
-
-      issueCreationService.updateIssueDescription(
-          getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), issue).getValue(),
-          issue,
-          reporterJiraUser);
+      if (summary.descEmpty) {
+        issueCreationService.updateIssueDescription(
+            getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), issue).getValue(),
+            issue,
+            reporterJiraUser);
+      }
 
       if (settings.getAddReporterInWatchers()) {
         reporters.stream() // add watchers
@@ -220,7 +236,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
       userChatService.sendMessageText(
           event.getChatId(),
-          getCreationSuccessMessage(settings.getCreationSuccessTemplate(), issue, summary));
+          getCreationSuccessMessage(settings.getCreationSuccessTemplate(), issue, summary.summary));
     } catch (Exception e) {
       log.error(e.getLocalizedMessage(), e);
       SentryClient.capture(e);
@@ -275,7 +291,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                 "Описание не заполнено", emptyList()));
   }
 
-  private String getIssueSummary(
+  private SummaryAndDescriptionStatusFromMainMessage getIssueSummary(
       ChatMessageEvent event,
       String template,
       User firstMessageReporter,
@@ -284,13 +300,20 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
     String message = event.getMessage();
 
-    String botMention = String.format("@\\[%s\\]", userChatService.getBotId());
-    message = message.replaceAll(botMention, "").trim();
-
-    String comment =
-        StringUtils.substringAfter(message, ISSUE_CREATION_BY_REPLY_PREFIX + tag).trim();
+    String comment = replaceBotMentionAndCommand(message, tag);
     if (comment.length() != 0) {
-      return comment;
+      if (!event.isHasForwards() && !event.isHasReply()) {
+        List<String> split = NEW_LINE_SPLITTER.splitToList(comment);
+        String summary;
+        if (split.size() != 0) {
+          summary = split.get(0);
+        } else {
+          summary = comment;
+        }
+        return new SummaryAndDescriptionStatusFromMainMessage(summary, false);
+      } else {
+        return new SummaryAndDescriptionStatusFromMainMessage(comment, true);
+      }
     }
 
     String result = template;
@@ -307,6 +330,19 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       result = result.replaceAll(String.format("\\{\\{%s\\}\\}", entry.getKey()), entry.getValue());
     }
 
-    return result;
+    return new SummaryAndDescriptionStatusFromMainMessage(result, true);
+  }
+
+  private String replaceBotMentionAndCommand(String message, String tag) {
+    String botId = userChatService.getBotId();
+    String botMention = String.format("@\\[%s\\]", botId);
+    message = message.replaceAll(botMention, "").trim();
+    return StringUtils.substringAfter(message, ISSUE_CREATION_BY_REPLY_PREFIX + tag).trim();
+  }
+
+  @RequiredArgsConstructor
+  private static class SummaryAndDescriptionStatusFromMainMessage {
+    @NotNull private final String summary;
+    private final boolean descEmpty;
   }
 }

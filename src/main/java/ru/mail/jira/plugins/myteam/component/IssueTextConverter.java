@@ -257,4 +257,36 @@ public class IssueTextConverter {
         break;
     }
   }
+
+  public String replaceChatUserMentionToJiraUserMention(
+      String messageText, ChatMessageEvent event) {
+    if (event.getMessageParts() == null || event.isHasForwards()) {
+      return messageText;
+    }
+    if (!event.isHasMentions()) {
+      return messageText;
+    }
+
+    StringBuilder outPutStrings = new StringBuilder(messageText);
+    for (Part messagePart : event.getMessageParts()) {
+      if (!(messagePart instanceof Mention)) {
+        continue;
+      }
+      Mention mention = (Mention) messagePart;
+      ApplicationUser user = userData.getUserByMrimLogin(mention.getUserId());
+      if (user != null) {
+        String replacedMention = replaceMention(outPutStrings, mention.getUserId(), user.getName());
+        outPutStrings.setLength(0);
+        outPutStrings.append(replacedMention);
+      } else {
+        String errorMessage =
+            String.format(
+                "Unable change Myteam mention to Jira's mention, because can't find user with id: %s",
+                mention.getUserId());
+        SentryClient.capture(errorMessage);
+        log.error(errorMessage);
+      }
+    }
+    return outPutStrings.toString();
+  }
 }
