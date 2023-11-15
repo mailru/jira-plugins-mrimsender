@@ -145,11 +145,16 @@ public class EventMessagesTextConverter {
   }
 
   @NotNull
-  public String convertToJiraMarkdownStyleMainMessage(ChatMessageEvent event) {
+  public String convertToJiraMarkdownStyleMainMessage(
+      ChatMessageEvent event, LinksInMessage linksInMessage) {
     final String mainMessageText = event.getMessage();
-    final LinksInMessage linksInMessage = urlFinderInMainEvent.findUrls(event);
     return issueTextConverter.replaceChatUserMentionToJiraUserMention(
         messageFormatter.formatLinks(mainMessageText, linksInMessage), event);
+  }
+
+  @NotNull
+  public LinksInMessage findLinksInMainMessage(ChatMessageEvent event) {
+    return urlFinderInMainEvent.findUrls(event);
   }
 
   @Data

@@ -37,6 +37,7 @@ import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
 import ru.mail.jira.plugins.myteam.myteam.dto.parts.Forward;
@@ -150,15 +151,18 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
       EventMessagesTextConverter.MarkdownFieldValueHolder markdownFieldValueHolder =
           getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), null);
+      LinksInMessage linksInMessageInMainMessage = null;
       if (summary.descEmpty) {
         fieldValues.put(
             issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
             markdownFieldValueHolder.getValue());
       } else {
+        linksInMessageInMainMessage = eventMessagesTextConverter.findLinksInMainMessage(event);
         String description =
             Arrays.stream(
                     replaceBotMentionAndCommand(
-                            eventMessagesTextConverter.convertToJiraMarkdownStyleMainMessage(event),
+                            eventMessagesTextConverter.convertToJiraMarkdownStyleMainMessage(
+                                event, linksInMessageInMainMessage),
                             tag)
                         .split("\n"))
                 .skip(1)
@@ -220,11 +224,19 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       issueCreationService.addIssueChatLink(
           issue, settings.getChatTitle(), settings.getChatLink(), initiator);
 
+      issueCreationService.addLinksToIssueFromMessage(
+          issue, markdownFieldValueHolder.getLinksInMessages(), initiator);
+
       if (summary.descEmpty) {
         issueCreationService.updateIssueDescription(
             getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), issue).getValue(),
             issue,
             reporterJiraUser);
+        issueCreationService.addLinksToIssueFromMessage(
+            issue, markdownFieldValueHolder.getLinksInMessages(), initiator);
+      } else {
+        issueCreationService.addLinksToIssueFromMessage(
+            issue, Collections.singletonList(linksInMessageInMainMessage), initiator);
       }
 
       if (settings.getAddReporterInWatchers()) {
