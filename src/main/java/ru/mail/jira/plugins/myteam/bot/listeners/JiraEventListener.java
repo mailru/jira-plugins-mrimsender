@@ -30,7 +30,7 @@ import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
-import ru.mail.jira.plugins.myteam.component.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.JiraEventToChatMessageConverter;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
@@ -44,10 +44,10 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   private final PermissionManager permissionManager;
   private final ProjectRoleManager projectRoleManager;
   private final UserData userData;
-  private final MessageFormatter messageFormatter;
   private final MyteamEventsListener myteamEventsListener;
   private final I18nResolver i18nResolver;
   private final JiraAuthenticationContext jiraAuthenticationContext;
+  private final JiraEventToChatMessageConverter jiraEventToChatMessageConverter;
 
   @Autowired
   public JiraEventListener(
@@ -59,9 +59,9 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
       @ComponentImport ProjectRoleManager projectRoleManager,
       @ComponentImport I18nResolver i18nResolver,
       UserData userData,
-      MessageFormatter messageFormatter,
       MyteamEventsListener myteamEventsListener,
-      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
+      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+      JiraEventToChatMessageConverter jiraEventToChatMessageConverter) {
     this.eventPublisher = eventPublisher;
     this.groupManager = groupManager;
     this.notificationFilterManager = notificationFilterManager;
@@ -69,10 +69,10 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     this.permissionManager = permissionManager;
     this.projectRoleManager = projectRoleManager;
     this.userData = userData;
-    this.messageFormatter = messageFormatter;
     this.myteamEventsListener = myteamEventsListener;
     this.i18nResolver = i18nResolver;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
+    this.jiraEventToChatMessageConverter = jiraEventToChatMessageConverter;
   }
 
   @Override
@@ -197,9 +197,12 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
           try {
             String message = null;
             if (event instanceof IssueEvent)
-              message = messageFormatter.formatEventWithDiff(recipient, (IssueEvent) event);
+              message =
+                  jiraEventToChatMessageConverter.formatEventWithDiff(
+                      recipient, (IssueEvent) event);
             if (event instanceof MentionIssueEvent)
-              message = messageFormatter.formatEvent((MentionIssueEvent) event);
+              message =
+                  jiraEventToChatMessageConverter.formatMentionEvent((MentionIssueEvent) event);
 
             if (message != null) {
               myteamEventsListener.publishEvent(
