@@ -19,6 +19,7 @@ export type IssueCreationSettings = {
 
   assignee: 'INITIATOR' | 'MESSAGE_AUTHOR' | 'AUTO' | string
   addReporterInWatchers: boolean
+  allowedCreateChatLink: boolean
 }
 
 export type FieldHtml = {

@@ -103,6 +103,7 @@ const getFormValues = (): Array<FieldParam> => {
           'tag',
           'addReporterInWatchers',
           'creationByAllMembers',
+          'allowedCreateChatLink',
         ].includes(f.field)
     )
 }
@@ -270,6 +271,21 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
   return (
     <>
       <h3>Дополнительные настройки</h3>
+        <CheckboxField
+            name="allowedCreateChatLink"
+            defaultIsChecked={settings.allowedCreateChatLink}
+        >
+            {({ fieldProps }) => (
+                <Checkbox
+                    label="Разрешить связывать задачу с чатом"
+                    size="large"
+                    defaultChecked={settings.allowedCreateChatLink}
+                    // eslint-disable-next-line react/jsx-props-no-spreading
+                    {...fieldProps}
+                />
+            )}
+        </CheckboxField>
+
       <CheckboxField
         name="creationByAllMembers"
         defaultIsChecked={settings.creationByAllMembers}
@@ -531,6 +547,7 @@ function EditIssueCreationSettingsForm({
           projectKey,
           tag,
           labels,
+          allowedCreateChatLink,
           creationByAllMembers,
           reporter,
           assignee,
@@ -542,6 +559,7 @@ function EditIssueCreationSettingsForm({
           onSave({
             enabled,
             tag,
+            allowedCreateChatLink,
             creationByAllMembers,
             reporter,
             assignee,

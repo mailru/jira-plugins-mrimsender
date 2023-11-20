@@ -81,4 +81,8 @@ public interface IssueCreationSettings extends Entity {
 
   @OneToMany
   AdditionalIssueField[] getAdditionalFields();
+
+  void setAllowedCreateChatLink(boolean allowedCreateChatLink);
+
+  boolean isAllowedCreateChatLink();
 }
