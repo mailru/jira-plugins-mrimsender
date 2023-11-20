@@ -18,18 +18,18 @@ public class Version4UpgradeTask implements ActiveObjectsUpgradeTask {
   @Override
   public void upgrade(ModelVersion currentVersion, final ActiveObjects ao) {
     log.info("Current version " + currentVersion.toString());
-        if (currentVersion.isOlderThan(getModelVersion())) {
-          ao.migrate(IssueCreationSettings.class);
-          log.info("Run upgrade task to version 4");
-          ao.executeInTransaction(
-              (TransactionCallback<Void>)
-                  () -> {
-                    for (IssueCreationSettings settings : ao.find(IssueCreationSettings.class)) {
-                      settings.setAllowedCreateChatLink(Boolean.TRUE);
-                      settings.save();
-                    }
-                    return null;
-                  });
-        }
+    if (currentVersion.isOlderThan(getModelVersion())) {
+      ao.migrate(IssueCreationSettings.class);
+      log.info("Run upgrade task to version 4");
+      ao.executeInTransaction(
+          (TransactionCallback<Void>)
+              () -> {
+                for (IssueCreationSettings settings : ao.find(IssueCreationSettings.class)) {
+                  settings.setAllowedCreateChatLink(Boolean.TRUE);
+                  settings.save();
+                }
+                return null;
+              });
+    }
   }
 }
