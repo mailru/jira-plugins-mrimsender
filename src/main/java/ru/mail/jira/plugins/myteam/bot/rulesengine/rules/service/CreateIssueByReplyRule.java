@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -151,22 +152,19 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
       EventMessagesTextConverter.MarkdownFieldValueHolder markdownFieldValueHolder =
           getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), null);
-      LinksInMessage linksInMessageInMainMessage = null;
-      if (summary.descEmpty) {
+      LinksInMessage linksInMessageInMainMessage =
+          eventMessagesTextConverter.findLinksInMainMessage(event);
+      String description;
+      String descFromMainMessage =
+          createFirstPartOfDescriptionByMainMessageText(event, linksInMessageInMainMessage, tag);
+      if (summary.addDescFromParts) {
+        description =
+            buildFullDescFromMainAndReplyMessages(
+                descFromMainMessage, markdownFieldValueHolder.getValue());
         fieldValues.put(
-            issueCreationService.getField(IssueFieldConstants.DESCRIPTION),
-            markdownFieldValueHolder.getValue());
+            issueCreationService.getField(IssueFieldConstants.DESCRIPTION), description);
       } else {
-        linksInMessageInMainMessage = eventMessagesTextConverter.findLinksInMainMessage(event);
-        String description =
-            Arrays.stream(
-                    replaceBotMentionAndCommand(
-                            eventMessagesTextConverter.convertToJiraMarkdownStyleMainMessage(
-                                event, linksInMessageInMainMessage),
-                            tag)
-                        .split("\n"))
-                .skip(1)
-                .collect(Collectors.joining("\n"));
+        description = descFromMainMessage;
         fieldValues.put(
             issueCreationService.getField(IssueFieldConstants.DESCRIPTION), description);
       }
@@ -224,16 +222,21 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       issueCreationService.addIssueChatLink(
           issue, settings.getChatTitle(), settings.getChatLink(), initiator);
 
-      issueCreationService.addLinksToIssueFromMessage(
-          issue, markdownFieldValueHolder.getLinksInMessages(), initiator);
-
-      if (summary.descEmpty) {
+      if (summary.addDescFromParts) {
         issueCreationService.updateIssueDescription(
-            getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), issue).getValue(),
+            buildFullDescFromMainAndReplyMessages(
+                descFromMainMessage,
+                getIssueDescription(event, settings.getIssueQuoteMessageTemplate(), issue)
+                    .getValue()),
             issue,
             reporterJiraUser);
         issueCreationService.addLinksToIssueFromMessage(
-            issue, markdownFieldValueHolder.getLinksInMessages(), initiator);
+            issue,
+            Stream.concat(
+                    Stream.of(linksInMessageInMainMessage),
+                    markdownFieldValueHolder.getLinksInMessages().stream())
+                .collect(Collectors.toList()),
+            initiator);
       } else {
         issueCreationService.addLinksToIssueFromMessage(
             issue, Collections.singletonList(linksInMessageInMainMessage), initiator);
@@ -314,17 +317,17 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
     String comment = replaceBotMentionAndCommand(message, tag);
     if (comment.length() != 0) {
+      List<String> split = NEW_LINE_SPLITTER.splitToList(comment);
+      String summary;
+      if (split.size() != 0) {
+        summary = split.get(0);
+      } else {
+        summary = comment;
+      }
       if (!event.isHasForwards() && !event.isHasReply()) {
-        List<String> split = NEW_LINE_SPLITTER.splitToList(comment);
-        String summary;
-        if (split.size() != 0) {
-          summary = split.get(0);
-        } else {
-          summary = comment;
-        }
         return new SummaryAndDescriptionStatusFromMainMessage(summary, false);
       } else {
-        return new SummaryAndDescriptionStatusFromMainMessage(comment, true);
+        return new SummaryAndDescriptionStatusFromMainMessage(summary, true);
       }
     }
 
@@ -352,9 +355,32 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
     return StringUtils.substringAfter(message, ISSUE_CREATION_BY_REPLY_PREFIX + tag).trim();
   }
 
+  private String createFirstPartOfDescriptionByMainMessageText(
+      final ChatMessageEvent event, final LinksInMessage linksInMessage, final String tag) {
+    return Arrays.stream(
+            replaceBotMentionAndCommand(
+                    eventMessagesTextConverter.convertToJiraMarkdownStyleMainMessage(
+                        event, linksInMessage),
+                    tag)
+                .split("\n"))
+        .skip(1)
+        .collect(Collectors.joining("\n"));
+  }
+
+  private String buildFullDescFromMainAndReplyMessages(
+      final String descFromMainMessage, final String fromReplyMessage) {
+    if (StringUtils.isBlank(descFromMainMessage)) {
+      return fromReplyMessage;
+    } else if (StringUtils.isBlank(fromReplyMessage)) {
+      return descFromMainMessage;
+    } else {
+      return descFromMainMessage + "\n\n" + fromReplyMessage;
+    }
+  }
+
   @RequiredArgsConstructor
   private static class SummaryAndDescriptionStatusFromMainMessage {
     @NotNull private final String summary;
-    private final boolean descEmpty;
+    private final boolean addDescFromParts;
   }
 }
