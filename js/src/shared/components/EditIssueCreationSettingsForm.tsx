@@ -243,7 +243,6 @@ const renderMainFields = (
 }
 
 const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
-
   const defaultAssignee = [
     {
       value: 'AUTO',
@@ -267,24 +266,24 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
       name: 'Автор оригинального сообщения',
     },
   ] as IUserPickerItem[]
-    const assingeeValue = settings.assignee === '-1' ?  'AUTO' : settings.assignee;
+  const assingeeValue = settings.assignee === '-1' ? 'AUTO' : settings.assignee
   return (
     <>
       <h3>Дополнительные настройки</h3>
-        <CheckboxField
-            name="allowedCreateChatLink"
-            defaultIsChecked={settings.allowedCreateChatLink}
-        >
-            {({ fieldProps }) => (
-                <Checkbox
-                    label="Разрешить связывать задачу с чатом"
-                    size="large"
-                    defaultChecked={settings.allowedCreateChatLink}
-                    // eslint-disable-next-line react/jsx-props-no-spreading
-                    {...fieldProps}
-                />
-            )}
-        </CheckboxField>
+      <CheckboxField
+        name="allowedCreateChatLink"
+        defaultIsChecked={settings.allowedCreateChatLink}
+      >
+        {({ fieldProps }) => (
+          <Checkbox
+            label="Разрешить связывать задачу с чатом"
+            size="large"
+            defaultChecked={settings.allowedCreateChatLink}
+            // eslint-disable-next-line react/jsx-props-no-spreading
+            {...fieldProps}
+          />
+        )}
+      </CheckboxField>
 
       <CheckboxField
         name="creationByAllMembers"
@@ -356,7 +355,7 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
         defaultValue={settings.assignee || 'AUTO'}
         validate={validateNotNull}
       >
-        {({ fieldProps: {  onChange }, error }) => (
+        {({ fieldProps: { onChange }, error }) => (
           <>
             <UserPicker
               hasFetchAfterOpen
@@ -401,7 +400,8 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
               }
             />
             <LineHelperMessage>
-            Хотите назначить определенного пользователя? Просто начните вводить его имя.
+              Хотите назначить определенного пользователя? Просто начните
+              вводить его имя.
             </LineHelperMessage>
             {error && <ErrorMessage>{error}</ErrorMessage>}
           </>
