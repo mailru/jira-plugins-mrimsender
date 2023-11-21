@@ -246,10 +246,10 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
   const defaultAssignee = [
     {
       value: 'AUTO',
-      label: 'Автор назначается автоматически',
+      label: 'Исполнитель назначается автоматически',
       id: 'AUTO',
       email: '',
-      name: 'Автор назначается автоматически',
+      name: 'Исполнитель назначается автоматически',
     },
     {
       value: 'INITIATOR',
