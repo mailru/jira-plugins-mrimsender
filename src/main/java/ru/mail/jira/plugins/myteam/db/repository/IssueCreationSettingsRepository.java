@@ -49,6 +49,7 @@ public class IssueCreationSettingsRepository
               (dto.getLabels() == null || dto.getLabels().size() == 0)
                   ? null
                   : String.join(IssueCreationSettingsDto.LABELS_DELIMITER, dto.getLabels()));
+          entity.setAllowedCreateChatLink(Boolean.TRUE.equals(dto.getAllowedCreateChatLink()));
 
           if (dto.getAdditionalFields() != null) {
             Map<String, AdditionalIssueField> entityAdditionalFields = new HashMap<>();

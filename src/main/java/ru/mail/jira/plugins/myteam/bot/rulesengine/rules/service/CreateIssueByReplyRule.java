@@ -200,8 +200,10 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                   ? reporterJiraUser
                   : initiator);
 
-      issueCreationService.addIssueChatLink(
-          issue, settings.getChatTitle(), settings.getChatLink(), initiator);
+      if (Boolean.TRUE.equals(settings.getAllowedCreateChatLink())) {
+        issueCreationService.addIssueChatLink(
+            issue, settings.getChatTitle(), settings.getChatLink(), initiator);
+      }
 
       issueCreationService.addLinksToIssueFromMessage(
           issue, markdownFieldValueHolder.getLinksInMessages(), initiator);

@@ -44,9 +44,7 @@ const renderListener = () => {
   if (newRoot && newRoot.parentElement) {
     renderMenuItem(newRoot.parentElement)
   }
-  const boardMenuItemRoot = document.querySelector(
-    BOARD_MENU_ITEM_ID_SELECTOR
-  )
+  const boardMenuItemRoot = document.querySelector(BOARD_MENU_ITEM_ID_SELECTOR)
 
   if (
     boardMenuItemRoot &&

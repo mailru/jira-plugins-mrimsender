@@ -43,6 +43,7 @@ public class IssueCreationSettingsDto {
   @XmlElement private Boolean addReporterInWatchers;
   @XmlElement private List<String> labels;
   @XmlElement private List<AdditionalIssueFieldDto> additionalFields;
+  @XmlElement private Boolean allowedCreateChatLink;
 
   public IssueCreationSettingsDto(IssueCreationSettings entity) {
     this.id = entity.getID();
@@ -66,6 +67,7 @@ public class IssueCreationSettingsDto {
         Arrays.stream(entity.getAdditionalFields())
             .map(AdditionalIssueFieldDto::new)
             .collect(Collectors.toList());
+    this.allowedCreateChatLink = entity.isAllowedCreateChatLink();
   }
 
   public IssueCreationSettingsDto(IssueCreationSettings entity, @Nullable String chatLink) {
@@ -92,5 +94,6 @@ public class IssueCreationSettingsDto {
             .map(AdditionalIssueFieldDto::new)
             .collect(Collectors.toList());
     this.chatLink = chatLink;
+    this.allowedCreateChatLink = entity.isAllowedCreateChatLink();
   }
 }

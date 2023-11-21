@@ -39,9 +39,9 @@ function renderMyteamChatPanel(
 ) {
   let issueKey: string = JIRA.Issue.getIssueKey()
   if (!issueKey) {
-    issueKey = AJS.$("meta[name='ajs-issue-key']").attr("content")
+    issueKey = AJS.$("meta[name='ajs-issue-key']").attr('content')
     if (!issueKey) {
-      issueKey = AJS.$("#key-val").text()
+      issueKey = AJS.$('#key-val').text()
     }
   }
   const memoizedStore = createStore(issueKey)
