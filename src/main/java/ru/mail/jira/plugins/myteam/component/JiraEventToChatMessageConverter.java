@@ -163,14 +163,14 @@ public class JiraEventToChatMessageConverter {
   @NotNull
   private String appendAssigneeOnIssueAssignedEvent(
       final Issue issue,
-      final String eventTypeKey,
+      final String i18nKey,
       final ApplicationUser user,
       final boolean useMentionFormat) {
     String issueLink =
         messageFormatter.markdownTextLink(
             issue.getKey(), messageFormatter.createIssueLink(issue.getKey()));
     return i18nResolver.getText(
-        I18N_PART_KEY + eventTypeKey,
+        i18nKey,
         messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
         issueLink,
         messageFormatter.formatUser(
