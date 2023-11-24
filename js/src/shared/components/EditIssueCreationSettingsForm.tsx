@@ -243,30 +243,36 @@ const renderMainFields = (
 }
 
 const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
+  const automaticAssigneeLabel = 'Исполнитель назначается автоматически'
+  const auto = 'AUTO'
+  const initiatorLabel = 'Инициатор создания задачи'
+  const initiator = 'INITIATOR'
+  const messageAuthor = 'Автор оригинального сообщения'
+  const messageAuthorId = 'MESSAGE_AUTHOR'
   const defaultAssignee = [
     {
-      value: 'AUTO',
-      label: 'Исполнитель назначается автоматически',
-      id: 'AUTO',
+      value: auto,
+      label: automaticAssigneeLabel,
+      id: auto,
       email: '',
-      name: 'Исполнитель назначается автоматически',
+      name: automaticAssigneeLabel,
     },
     {
-      value: 'INITIATOR',
-      label: 'Инициатор создания задачи',
-      id: 'INITIATOR',
+      value: initiator,
+      label: initiatorLabel,
+      id: initiator,
       email: '',
-      name: 'Инициатор создания задачи',
+      name: initiatorLabel,
     },
     {
-      value: 'MESSAGE_AUTHOR',
-      label: 'Автор оригинального сообщения',
-      id: 'MESSAGE_AUTHOR',
+      value: messageAuthorId,
+      label: messageAuthor,
+      id: messageAuthorId,
       email: '',
-      name: 'Автор оригинального сообщения',
+      name: messageAuthor,
     },
   ] as IUserPickerItem[]
-  const assingeeValue = settings.assignee === '-1' ? 'AUTO' : settings.assignee
+  const assingeeValue = settings.assignee === '-1' ? auto : settings.assignee
   return (
     <>
       <h3>Дополнительные настройки</h3>
@@ -303,7 +309,7 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
       <Field
         label="Автор задачи"
         name="reporter"
-        defaultValue={settings.reporter || 'INITIATOR'}
+        defaultValue={settings.reporter || initiator}
         isRequired
         validate={validateNotNull}
       >
@@ -313,19 +319,19 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
               inputId={id}
               defaultValue={[
                 {
-                  label: 'Автор оригинального сообщения',
-                  value: 'MESSAGE_AUTHOR',
+                  label: messageAuthor,
+                  value: messageAuthorId,
                 },
-                { label: 'Инициатор создания задачи', value: 'INITIATOR' },
+                { label: initiatorLabel, value: initiator },
               ].find(
-                (value) => value.value === (settings.reporter || 'INITIATOR')
+                (value) => value.value === (settings.reporter || initiator)
               )}
               options={[
                 {
-                  label: 'Автор оригинального сообщения',
-                  value: 'MESSAGE_AUTHOR',
+                  label: messageAuthor,
+                  value: messageAuthorId,
                 },
-                { label: 'Инициатор создания задачи', value: 'INITIATOR' },
+                { label: initiatorLabel, value: initiator },
               ]}
               placeholder="Автор задачи"
               onChange={(value: any) => value && onChange(value.value)}
@@ -352,7 +358,7 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
         label="Исполнитель"
         name="assignee"
         isRequired
-        defaultValue={settings.assignee || 'AUTO'}
+        defaultValue={settings.assignee || auto}
         validate={validateNotNull}
       >
         {({ fieldProps: { onChange }, error }) => (
@@ -363,9 +369,9 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
               value={assingeeValue}
               options={
                 assingeeValue &&
-                assingeeValue != 'MESSAGE_AUTHOR' &&
-                assingeeValue != 'INITIATOR' &&
-                assingeeValue != 'AUTO'
+                assingeeValue !== messageAuthorId &&
+                assingeeValue !== initiator &&
+                assingeeValue !== auto
                   ? [
                       {
                         value: assingeeValue,
@@ -536,7 +542,7 @@ function EditIssueCreationSettingsForm({
           })
         })
     }
-  }, [selectedMainData])
+  }, [selectedMainData, defaultSettings.additionalFields])
 
   return (
     <Container>
