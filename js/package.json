@@ -104,6 +104,9 @@
   "optionalDependencies": {
     "fsevents": "^2.1.3"
   },
+  "peerDependencies": {
+    "@vkontakte/vkui": "^5.5.1"
+  },
   "babel": {
     "plugins": [
       [
