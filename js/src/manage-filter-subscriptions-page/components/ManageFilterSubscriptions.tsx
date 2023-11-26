@@ -306,11 +306,11 @@ const buildRows = ({
 }
 
 function ManageFilterSubscriptions(): ReactElement {
-  const [openCreateSubscriptionDialog, setOpenCreateSubscriptionDialog] =
+  const [isOpenCreateSubscriptionDialog, setOpenCreateSubscriptionDialog] =
     useState<boolean>(false)
-  const [openEditSubscriptionDialog, setOpenEditSubscriptionDialog] =
+  const [isOpenEditSubscriptionDialog, setOpenEditSubscriptionDialog] =
     useState<boolean>(false)
-  const [openDeleteSubscriptionDialog, setOpenDeleteSubscriptionDialog] =
+  const [isOpenDeleteSubscriptionDialog, setOpenDeleteSubscriptionDialog] =
     useState<boolean>(false)
   const [selectedSubscription, setSelectedSubscription] =
     useState<FilterSubscription>()
@@ -447,7 +447,7 @@ function ManageFilterSubscriptions(): ReactElement {
         loadingSpinnerSize="large"
       />
       <CreateFilterSubscriptionDialog
-        isOpen={openCreateSubscriptionDialog}
+        isOpen={isOpenCreateSubscriptionDialog}
         onClose={() => {
           setOpenCreateSubscriptionDialog(false)
           subscriptionMutation.reset()
@@ -464,7 +464,7 @@ function ManageFilterSubscriptions(): ReactElement {
       />
       {selectedSubscription && selectedSubscription.id && (
         <EditFilterSubscriptionDialog
-          isOpen={openEditSubscriptionDialog}
+          isOpen={isOpenEditSubscriptionDialog}
           currentValue={selectedSubscription}
           onClose={() => {
             setOpenEditSubscriptionDialog(false)
@@ -482,7 +482,7 @@ function ManageFilterSubscriptions(): ReactElement {
         />
       )}
       <ConfirmationDialog
-        isOpen={openDeleteSubscriptionDialog}
+        isOpen={isOpenDeleteSubscriptionDialog}
         title={I18n.getText(
           'ru.mail.jira.plugins.myteam.subscriptions.page.subscription.delete'
         )}

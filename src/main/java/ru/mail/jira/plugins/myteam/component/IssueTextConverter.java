@@ -84,8 +84,10 @@ public class IssueTextConverter {
               case File:
                 File file = (File) messagePart;
                 try {
+                  log.info("file id {} from event", file.getFileId());
                   HttpResponse<FileResponse> response = myteamApiClient.getFile(file.getFileId());
                   FileResponse fileInfo = response.getBody();
+                  log.info("file url {} for load file from VK Teams", fileInfo.getUrl());
                   try (InputStream attachment = myteamApiClient.loadUrlFile(fileInfo.getUrl())) {
                     boolean isUploaded =
                         uploadAttachment(attachment, fileInfo, issue.getReporterUser(), issue);
@@ -104,6 +106,14 @@ public class IssueTextConverter {
                 } catch (UnirestException | IOException | MyteamServerErrorException e) {
                   SentryClient.capture(e);
                   log.error("Unable to add attachment to Issue {}", issue.getKey(), e);
+                } catch (Exception e) {
+                  outPutStrings.append(file.getFileId());
+                  SentryClient.capture(e);
+                  log.error(
+                      String.format(
+                          "Unresolved exception by loading file with id %s for issue with key %s",
+                          file.getFileId(), issue.getKey()),
+                      e);
                 }
                 break;
               case Mention:
@@ -209,8 +219,10 @@ public class IssueTextConverter {
       case File:
         File file = (File) part;
         try {
+          log.info("file id {} from event", file.getFileId());
           HttpResponse<FileResponse> response = myteamApiClient.getFile(file.getFileId());
           FileResponse fileInfo = response.getBody();
+          log.info("file url {} for load file from VK Teams", fileInfo.getUrl());
           try (InputStream attachment = myteamApiClient.loadUrlFile(fileInfo.getUrl())) {
             boolean isUploaded =
                 uploadAttachment(attachment, fileInfo, commentAuthor, issueToComment);
@@ -234,6 +246,14 @@ public class IssueTextConverter {
           SentryClient.capture(e);
           log.error(
               "Unable to create attachment for comment on Issue {}", issueToComment.getKey(), e);
+        } catch (Exception e) {
+          outPutStrings.append(file.getFileId());
+          SentryClient.capture(e);
+          log.error(
+              String.format(
+                  "Unresolved exception by loading file with id %s for issue with key %s",
+                  file.getFileId(), issueToComment.getKey()),
+              e);
         }
         break;
       case Mention:

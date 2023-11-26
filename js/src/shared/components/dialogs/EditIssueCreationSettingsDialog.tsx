@@ -59,7 +59,7 @@ function EditIssueCreationSettingsDialog({
           setSettings({ isLoading: false, error: JSON.stringify(e) })
         })
     }
-  }, [])
+  }, [settingsId])
   return (
     <ModalTransition>
       {isOpen && (

@@ -3,6 +3,10 @@ import contextPath from 'wrm/context-path'
 import qs from 'qs'
 import { FilterSubscription, FilterSubscriptionsPermissions } from '../types'
 
+export const subscriptionsPath = (): string => {
+  return `${contextPath()}/rest/myteam/1.0/subscriptions`
+}
+
 export const getCurrentUserSubscriptions = (params?: {
   subscribers?: Array<String>
   filterId?: number
@@ -10,7 +14,7 @@ export const getCurrentUserSubscriptions = (params?: {
   recipients?: Array<String>
 }): Promise<FilterSubscription[]> =>
   axios
-    .get(`${contextPath()}/rest/myteam/1.0/subscriptions`, {
+    .get(`${subscriptionsPath()}`, {
       params,
       paramsSerializer: (params) => {
         return qs.stringify(params, { arrayFormat: 'repeat' })
@@ -20,7 +24,7 @@ export const getCurrentUserSubscriptions = (params?: {
 
 export const createSubscription = (subscription: FilterSubscription) =>
   axios
-    .post(`${contextPath()}/rest/myteam/1.0/subscriptions`, subscription)
+    .post(`${subscriptionsPath()}`, subscription)
     .then((response) => response.data)
 
 export const updateSubscription = (
@@ -28,22 +32,17 @@ export const updateSubscription = (
   subscriptionId: number
 ) =>
   axios
-    .put(
-      `${contextPath()}/rest/myteam/1.0/subscriptions/${subscriptionId}`,
-      subscription
-    )
+    .put(`${subscriptionsPath()}/${subscriptionId}`, subscription)
     .then((response) => response.data)
 
 export const deleteSubscription = (subscriptionId: number): Promise<any> =>
   axios
-    .delete(`${contextPath()}/rest/myteam/1.0/subscriptions/${subscriptionId}`)
+    .delete(`${subscriptionsPath()}/${subscriptionId}`)
     .then((response) => response.data)
 
 export const runSubscription = (subscriptionId: number): Promise<any> =>
   axios
-    .post(
-      `${contextPath()}/rest/myteam/1.0/subscriptions/${subscriptionId}/run`
-    )
+    .post(`${subscriptionsPath()}/${subscriptionId}`)
     .then((response) => response.data)
 
 export const getSubscriptionsPermissions =
