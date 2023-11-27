@@ -187,7 +187,8 @@ public class AccessRequestService {
                 user -> {
                   try {
                     if (configuration.isSendMessage())
-                      sendMessageWithAnswer(user, loggedInUser, issue, accessRequestDto.getMessage());
+                      sendMessageWithAnswer(
+                          user, loggedInUser, issue, accessRequestDto.getMessage());
                     if (configuration.isSendEmail())
                       sendEmail(user, loggedInUser, issue, accessRequestDto.getMessage());
                   } catch (Exception e) {
@@ -277,35 +278,30 @@ public class AccessRequestService {
     }
   }
 
-  private void sendMessageWithAnswer(ApplicationUser to, ApplicationUser from, Issue issue, String message) {
+  private void sendMessageWithAnswer(
+      ApplicationUser to, ApplicationUser from, Issue issue, String message) {
     try {
       userChatService.sendMessageText(
-              to.getEmailAddress(),
-              messageFormatter.formatAccessRequestMessage(from, issue, message),
-              getReplyButtons()
-      );
+          to.getEmailAddress(),
+          messageFormatter.formatAccessRequestMessage(from, issue, message),
+          getReplyButtons());
     } catch (Exception e) {
       SentryClient.capture(
-              e,
-              Map.of(
-                      "to", to.getEmailAddress(), "from", from.getEmailAddress(), "issue", issue.getKey()));
+          e,
+          Map.of(
+              "to", to.getEmailAddress(), "from", from.getEmailAddress(), "issue", issue.getKey()));
     }
   }
 
   private List<List<InlineKeyboardMarkupButton>> getReplyButtons() {
     String cancelTitle =
-            userChatService.getRawText(
-                    "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text");
+        userChatService.getRawText(
+            "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text");
 
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
 
     buttons.add(MessageFormatter.getCancelButtonRow(cancelTitle));
-    buttons.get(0).add(
-            InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-                    "Reply",
-                    "Reply"
-            )
-    );
+    buttons.get(0).add(InlineKeyboardMarkupButton.buildButtonWithoutUrl("Reply", "Reply"));
     return buttons;
   }
 
