@@ -19,8 +19,8 @@ export const getCurrentUserSubscriptions = (params?: {
   axios
     .get(ENDPOINTS.SUBSCRIPTION, {
       params,
-      paramsSerializer: (params) => {
-        return qs.stringify(params, { arrayFormat: 'repeat' })
+      paramsSerializer: (paramsSerializer) => {
+        return qs.stringify(paramsSerializer, { arrayFormat: 'repeat' })
       },
     })
     .then((response) => response.data)

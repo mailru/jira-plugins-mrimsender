@@ -1,7 +1,7 @@
-import React, { ReactElement, useLayoutEffect, useState } from 'react'
+import React, { ReactElement, useState } from 'react'
 import { AsyncSelect, OptionsType, OptionType } from '@atlaskit/select'
 import { I18n } from '@atlassian/wrm-react-i18n'
-import { Field, ProjectRole } from '../../shared/types'
+import { Field } from '../../shared/types'
 import { loadUserFields } from '../../shared/api/AccessRequestApiClient'
 
 type Props = {
