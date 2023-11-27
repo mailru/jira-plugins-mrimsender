@@ -3,8 +3,11 @@ import contextPath from 'wrm/context-path'
 import qs from 'qs'
 import { FilterSubscription, FilterSubscriptionsPermissions } from '../types'
 
-export const subscriptionsPath = (): string => {
-  return `${contextPath()}/rest/myteam/1.0/subscriptions`
+const ENDPOINTS = {
+  SUBSCRIPTION: `${contextPath()}/rest/myteam/1.0/subscriptions`,
+  SUB_URL_BUILD: function build(endpointParam: any): string {
+    return `${this.SUBSCRIPTION}/${endpointParam}`
+  },
 }
 
 export const getCurrentUserSubscriptions = (params?: {
@@ -14,7 +17,7 @@ export const getCurrentUserSubscriptions = (params?: {
   recipients?: Array<String>
 }): Promise<FilterSubscription[]> =>
   axios
-    .get(`${subscriptionsPath()}`, {
+    .get(ENDPOINTS.SUBSCRIPTION, {
       params,
       paramsSerializer: (params) => {
         return qs.stringify(params, { arrayFormat: 'repeat' })
@@ -24,7 +27,7 @@ export const getCurrentUserSubscriptions = (params?: {
 
 export const createSubscription = (subscription: FilterSubscription) =>
   axios
-    .post(`${subscriptionsPath()}`, subscription)
+    .post(ENDPOINTS.SUBSCRIPTION, subscription)
     .then((response) => response.data)
 
 export const updateSubscription = (
@@ -32,21 +35,21 @@ export const updateSubscription = (
   subscriptionId: number
 ) =>
   axios
-    .put(`${subscriptionsPath()}/${subscriptionId}`, subscription)
+    .put(ENDPOINTS.SUB_URL_BUILD(subscriptionId), subscription)
     .then((response) => response.data)
 
 export const deleteSubscription = (subscriptionId: number): Promise<any> =>
   axios
-    .delete(`${subscriptionsPath()}/${subscriptionId}`)
+    .delete(ENDPOINTS.SUB_URL_BUILD(subscriptionId))
     .then((response) => response.data)
 
 export const runSubscription = (subscriptionId: number): Promise<any> =>
   axios
-    .post(`${subscriptionsPath()}/${subscriptionId}`)
+    .post(ENDPOINTS.SUB_URL_BUILD(`${subscriptionId}/run`))
     .then((response) => response.data)
 
 export const getSubscriptionsPermissions =
   (): Promise<FilterSubscriptionsPermissions> =>
     axios
-      .get(`${contextPath()}/rest/myteam/1.0/subscriptions/permissions`)
+      .get(ENDPOINTS.SUB_URL_BUILD('permissions'))
       .then((response) => response.data)
