@@ -40,6 +40,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.jqlsearch.JqlInpu
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.EmptyState;
 import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
+import ru.mail.jira.plugins.myteam.component.JiraMarkdownToChatMarkdownConverter;
 import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
@@ -65,6 +66,7 @@ public class RulesEngineImpl
   private final MyteamApiClient myteamApiClient;
 
   private final MyteamChatRepository myteamChatRepository;
+  private final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter;
 
   public RulesEngineImpl(
       CommonButtonsService commonButtonsService,
@@ -75,7 +77,8 @@ public class RulesEngineImpl
       ReminderService reminderService,
       EventMessagesTextConverter eventMessagesTextConverter,
       MyteamApiClient myteamApiClient,
-      MyteamChatRepository myteamChatRepository) {
+      MyteamChatRepository myteamChatRepository,
+      JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
@@ -85,6 +88,7 @@ public class RulesEngineImpl
     this.eventMessagesTextConverter = eventMessagesTextConverter;
     this.myteamApiClient = myteamApiClient;
     this.myteamChatRepository = myteamChatRepository;
+    this.jiraMarkdownToChatMarkdownConverter = jiraMarkdownToChatMarkdownConverter;
 
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
@@ -109,7 +113,9 @@ public class RulesEngineImpl
     commandsRuleEngine.registerRule(new CommentIssueRule(userChatService, this));
     commandsRuleEngine.registerRule(
         new CreateIssueRule(userChatService, this, issueService, issueCreationService));
-    commandsRuleEngine.registerRule(new ViewCommentsRule(userChatService, this, issueService));
+    commandsRuleEngine.registerRule(
+        new ViewCommentsRule(
+            userChatService, this, issueService, jiraMarkdownToChatMarkdownConverter));
     commandsRuleEngine.registerRule(new CommentingIssueFromGroupChatRule(userChatService, this));
 
     // Admin Group Commands

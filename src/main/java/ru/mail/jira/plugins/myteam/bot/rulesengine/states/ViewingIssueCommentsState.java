@@ -12,14 +12,15 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import ru.mail.jira.plugins.myteam.bot.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.core.Pager;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ErrorRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.PageableState;
-import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.component.JiraMarkdownToChatMarkdownConverter;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.service.IssueService;
@@ -38,18 +39,21 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
   private final RulesEngine rulesEngine;
   private final MessageFormatter messageFormatter;
   private final Pager pager;
+  private final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter;
 
   public ViewingIssueCommentsState(
       String issueKey,
       IssueService issueService,
       UserChatService userChatService,
-      RulesEngine rulesEngine) {
+      RulesEngine rulesEngine,
+      JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter) {
     super();
     this.issueKey = issueKey;
     this.issueService = issueService;
     this.userChatService = userChatService;
     this.rulesEngine = rulesEngine;
     this.messageFormatter = userChatService.getMessageFormatter();
+    this.jiraMarkdownToChatMarkdownConverter = jiraMarkdownToChatMarkdownConverter;
     pager = new Pager(0, COMMENT_LIST_PAGE_SIZE);
   }
 
@@ -123,7 +127,10 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
                         "\\[",
                         comment.getAuthorFullName(),
                         "\\] ",
-                        Utils.shieldText(comment.getBody())))
+                        StringUtils.defaultString(
+                            jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
+                                comment.getBody(), false)),
+                        ""))
             .collect(Collectors.toList()),
         pageNumber,
         total,

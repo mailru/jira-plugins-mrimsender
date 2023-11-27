@@ -11,6 +11,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.ViewingIssueCommentsState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.component.JiraMarkdownToChatMarkdownConverter;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
@@ -20,11 +21,16 @@ public class ViewCommentsRule extends BaseRule {
 
   static final RuleType NAME = ButtonRuleType.ViewComments;
   private final IssueService issueService;
+  private final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter;
 
   public ViewCommentsRule(
-      UserChatService userChatService, RulesEngine rulesEngine, IssueService issueService) {
+      UserChatService userChatService,
+      RulesEngine rulesEngine,
+      IssueService issueService,
+      JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter) {
     super(userChatService, rulesEngine);
     this.issueService = issueService;
+    this.jiraMarkdownToChatMarkdownConverter = jiraMarkdownToChatMarkdownConverter;
   }
 
   @Condition
@@ -36,7 +42,12 @@ public class ViewCommentsRule extends BaseRule {
   public void execute(@Fact("event") ButtonClickEvent event, @Fact("args") String issueKey)
       throws MyteamServerErrorException {
     ViewingIssueCommentsState newState =
-        new ViewingIssueCommentsState(issueKey, issueService, userChatService, rulesEngine);
+        new ViewingIssueCommentsState(
+            issueKey,
+            issueService,
+            userChatService,
+            rulesEngine,
+            jiraMarkdownToChatMarkdownConverter);
     userChatService.setState(event.getChatId(), newState);
     newState.updatePage(event, false);
   }
