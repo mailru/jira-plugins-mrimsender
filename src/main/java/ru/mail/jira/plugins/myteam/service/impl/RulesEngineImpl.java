@@ -111,7 +111,7 @@ public class RulesEngineImpl
         new CreateIssueRule(userChatService, this, issueService, issueCreationService));
     commandsRuleEngine.registerRule(new ViewCommentsRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(new CommentingIssueFromGroupChatRule(userChatService, this));
-
+    commandsRuleEngine.registerRule(new ReplyRule(userChatService, this));
     // Admin Group Commands
 
     commandsRuleEngine.registerRule(
