@@ -159,7 +159,7 @@ function ChatIssueCreationSettings({ chatId }: Props): ReactElement {
     }
   }
 
-  useLayoutEffect(loadSettings, [])
+  useLayoutEffect(loadSettings, [chatId])
 
   const firstSettings = settings.data ? settings.data[0] : null
 

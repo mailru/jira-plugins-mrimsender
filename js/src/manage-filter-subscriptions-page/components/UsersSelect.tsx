@@ -8,7 +8,6 @@ type Props = {
   selectedValue?: OptionsType
   id: string
   onChange: (value: OptionsType) => void
-  isMulti?: boolean
   placeholder?: string
 }
 

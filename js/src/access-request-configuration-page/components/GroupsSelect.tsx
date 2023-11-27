@@ -1,4 +1,4 @@
-import React, { ReactElement, useLayoutEffect, useState } from 'react'
+import React, { ReactElement, useState } from 'react'
 import { AsyncSelect, OptionsType, OptionType } from '@atlaskit/select'
 import { I18n } from '@atlassian/wrm-react-i18n'
 import { loadJiraGroups } from '../../shared/api/AccessRequestApiClient'
