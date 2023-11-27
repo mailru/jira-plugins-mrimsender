@@ -83,6 +83,12 @@ public class AccessRequestConfigurationRepository
               .map(this::buildUserFieldDto)
               .collect(Collectors.toList()));
     }
+    if (StringUtils.isNotBlank(entity.getVotersKeys())) {
+      dto.setVotersFields(
+          CommonUtils.split(entity.getVotersKeys()).stream()
+              .map(key -> dtoUtils.buildUserDto(userManager.getUserByKey(key)))
+              .collect(Collectors.toList()));
+    }
     dto.setSendEmail(entity.isSendEmail());
     dto.setSendMessage(entity.isSendMessage());
     return dto;

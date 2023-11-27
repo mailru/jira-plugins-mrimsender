@@ -43,6 +43,7 @@ import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestHistoryRepos
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.MyteamAuditService;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Component
@@ -186,7 +187,7 @@ public class AccessRequestService {
                 user -> {
                   try {
                     if (configuration.isSendMessage())
-                      sendMessage(user, loggedInUser, issue, accessRequestDto.getMessage());
+                      sendMessageWithAnswer(user, loggedInUser, issue, accessRequestDto.getMessage());
                     if (configuration.isSendEmail())
                       sendEmail(user, loggedInUser, issue, accessRequestDto.getMessage());
                   } catch (Exception e) {
@@ -211,7 +212,12 @@ public class AccessRequestService {
 
   public AccessRequestConfiguration createAccessRequestConfiguration(
       @Valid AccessRequestConfigurationDto configurationDto) {
-    return accessRequestConfigurationRepository.create(configurationDto);
+    try {
+      return accessRequestConfigurationRepository.create(configurationDto);
+    } catch (Exception err) {
+      System.out.println(err.getMessage());
+      return null;
+    }
   }
 
   public AccessRequestConfiguration updateAccessRequestConfiguration(
@@ -269,6 +275,38 @@ public class AccessRequestService {
           Map.of(
               "to", to.getEmailAddress(), "from", from.getEmailAddress(), "issue", issue.getKey()));
     }
+  }
+
+  private void sendMessageWithAnswer(ApplicationUser to, ApplicationUser from, Issue issue, String message) {
+    try {
+      userChatService.sendMessageText(
+              to.getEmailAddress(),
+              messageFormatter.formatAccessRequestMessage(from, issue, message),
+              getReplyButtons()
+      );
+    } catch (Exception e) {
+      SentryClient.capture(
+              e,
+              Map.of(
+                      "to", to.getEmailAddress(), "from", from.getEmailAddress(), "issue", issue.getKey()));
+    }
+  }
+
+  private List<List<InlineKeyboardMarkupButton>> getReplyButtons() {
+    String cancelTitle =
+            userChatService.getRawText(
+                    "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text");
+
+    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+
+    buttons.add(MessageFormatter.getCancelButtonRow(cancelTitle));
+    buttons.get(0).add(
+            InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+                    "Reply",
+                    "Reply"
+            )
+    );
+    return buttons;
   }
 
   private void sendEmail(

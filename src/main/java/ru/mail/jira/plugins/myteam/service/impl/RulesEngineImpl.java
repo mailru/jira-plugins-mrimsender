@@ -123,7 +123,7 @@ public class RulesEngineImpl
         new ViewCommentsRule(
             userChatService, this, issueService, jiraMarkdownToChatMarkdownConverter));
     commandsRuleEngine.registerRule(new CommentingIssueFromGroupChatRule(userChatService, this));
-
+    commandsRuleEngine.registerRule(new ReplyRule(userChatService, this));
     // Admin Group Commands
 
     commandsRuleEngine.registerRule(
