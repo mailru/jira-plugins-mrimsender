@@ -41,7 +41,7 @@ public class ReminderRepository extends PagingAndSortingRepository<Reminder, Rem
   public Reminder[] getRemindersBeforeDate(LocalDateTime date) {
     Query query =
         Query.select()
-            .where("date <= ?", Date.from(date.atZone(ZoneId.systemDefault()).toInstant()));
+            .where("DATE <= ?", Date.from(date.atZone(ZoneId.systemDefault()).toInstant()));
     return ao.find(Reminder.class, query);
   }
 
