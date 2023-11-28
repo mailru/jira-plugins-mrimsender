@@ -21,7 +21,7 @@ public class Version3UpgradeTask implements ActiveObjectsUpgradeTask {
   public void upgrade(ModelVersion currentVersion, final ActiveObjects ao) {
     log.info("Current version " + currentVersion.toString());
     if (currentVersion.isOlderThan(getModelVersion())) {
-      ao.migrate(IssueCreationSettings.class);
+      ao.migrate(IssueCreationSettings.class, AdditionalIssueField.class);
       log.info("Run upgrade task to version 3");
       ao.executeInTransaction(
           (TransactionCallback<Void>)
