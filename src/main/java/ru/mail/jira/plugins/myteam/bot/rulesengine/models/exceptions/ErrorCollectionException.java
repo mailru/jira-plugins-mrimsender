@@ -12,8 +12,9 @@ public abstract class ErrorCollectionException extends Exception {
 
     super(
         String.format(
-            "%s%n%n%s",
+            "%s%n%s%n%n%s",
             message,
+            errors.getReasons().stream().map(Enum::name).collect(Collectors.joining("\n")),
             errors.getErrors().keySet().stream()
                 .map(e -> String.format("%s: %s", e, errors.getErrors().get(e)))
                 .collect(Collectors.joining("\n"))));
