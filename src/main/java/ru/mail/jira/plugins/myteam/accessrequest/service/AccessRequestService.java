@@ -40,8 +40,8 @@ import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestConfiguratio
 import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestConfigurationRepository;
 import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestHistory;
 import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestHistoryRepository;
-import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.MyteamAuditService;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
