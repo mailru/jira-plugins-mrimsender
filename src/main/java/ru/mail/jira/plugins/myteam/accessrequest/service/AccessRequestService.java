@@ -41,6 +41,7 @@ import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestConfiguratio
 import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestHistory;
 import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestHistoryRepository;
 import ru.mail.jira.plugins.myteam.commons.Utils;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.MyteamAuditService;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -266,17 +267,20 @@ public class AccessRequestService {
         .isBefore(LocalDateTime.now(ZoneId.systemDefault()));
   }
 
-  private void sendMessage(ApplicationUser to, ApplicationUser from, Issue issue, String message) {
-    try {
-      userChatService.sendMessageText(
-          to.getEmailAddress(), messageFormatter.formatAccessRequestMessage(from, issue, message));
-    } catch (Exception e) {
-      SentryClient.capture(
-          e,
-          Map.of(
-              "to", to.getEmailAddress(), "from", from.getEmailAddress(), "issue", issue.getKey()));
-    }
-  }
+  //  private void sendMessage(ApplicationUser to, ApplicationUser from, Issue issue, String
+  // message) {
+  //    try {
+  //      userChatService.sendMessageText(
+  //          to.getEmailAddress(), messageFormatter.formatAccessRequestMessage(from, issue,
+  // message));
+  //    } catch (Exception e) {
+  //      SentryClient.capture(
+  //          e,
+  //          Map.of(
+  //              "to", to.getEmailAddress(), "from", from.getEmailAddress(), "issue",
+  // issue.getKey()));
+  //    }
+  //  }
 
   private void sendMessageWithAnswer(
       ApplicationUser to, ApplicationUser from, Issue issue, String message) {
@@ -294,14 +298,17 @@ public class AccessRequestService {
   }
 
   private List<List<InlineKeyboardMarkupButton>> getReplyButtons() {
-    String cancelTitle =
-        userChatService.getRawText(
-            "ru.mail.jira.plugins.myteam.mrimsenderEventListener.cancelButton.text");
-
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
 
-    buttons.add(MessageFormatter.getCancelButtonRow(cancelTitle));
-    buttons.get(0).add(InlineKeyboardMarkupButton.buildButtonWithoutUrl("Reply", "Reply"));
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            "Разрешить", String.join("-", ButtonRuleType.AccessReply.getName(), "allow")));
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            "Запретить", String.join("-", ButtonRuleType.AccessReply.getName(), "forbid")));
+    buttons.add(buttonsRow);
+
     return buttons;
   }
 
