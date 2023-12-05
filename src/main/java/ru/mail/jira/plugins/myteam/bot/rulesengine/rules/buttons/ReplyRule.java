@@ -5,12 +5,9 @@ import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
-import ru.mail.jira.plugins.myteam.accessrequest.service.AccessRequestService;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.BaseRule;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.states.ReplyAccessState;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
@@ -29,17 +26,7 @@ public class ReplyRule extends BaseRule {
   }
 
   @Action
-  public void execute(@Fact("event") MyteamEvent event, @Fact("state") BotState state) {
-    ReplyAccessState replyAccessState = null;
-    if (state instanceof ReplyAccessState) {
-      replyAccessState = (ReplyAccessState) state;
-    }
-    if (replyAccessState == null) {
-      return;
-    }
-
-    AccessRequestService accessRequestService = replyAccessState.getAccessRequestService();
-
-    //        rulesEngine.fireCommand(CommandRuleType., event);
+  public void execute(@Fact("event") MyteamEvent event, @Fact("args") String command) {
+    System.out.println(command);
   }
 }
