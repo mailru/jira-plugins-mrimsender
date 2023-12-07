@@ -3,13 +3,9 @@ import { AsyncSelect, OptionsType, OptionType } from '@atlaskit/select'
 import { I18n } from '@atlassian/wrm-react-i18n'
 import { Field, ProjectRole } from '../../shared/types'
 import { loadUserFields } from '../../shared/api/AccessRequestApiClient'
+import {BaseFieldsSelectProps, BaseFieldSelect} from "./BaseFieldSelect";
 
-type Props = {
-  projectKey: string
-  selectedValue?: OptionsType
-  id: string
-  onChange: (value: OptionsType) => void
-}
+type Props = Omit<BaseFieldsSelectProps, "loadFields">
 
 export const createUserFieldOption = (role: Field): OptionType => {
   return {
@@ -32,33 +28,10 @@ const loadFields = async (
 }
 
 function UserFieldsSelect({
-  id,
-  onChange,
-  selectedValue,
-  projectKey,
+  ...rest
 }: Props): ReactElement {
-  const [currentValue, setCurrentValue] = useState<OptionsType | undefined>(
-    selectedValue
-  )
-
-  const handleChange = (value: OptionsType): void => {
-    setCurrentValue(value)
-    onChange(value)
-  }
-
   return (
-    <AsyncSelect
-      defaultOptions
-      onChange={handleChange}
-      inputId={id}
-      value={currentValue}
-      cacheOptions
-      loadOptions={(query?: string) => loadFields(projectKey, query)}
-      noOptionsMessage={() => I18n.getText('common.concepts.no.matches')}
-      isMulti
-      menuPortalTarget={document.body}
-      styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
-    />
+      <BaseFieldSelect {...rest} loadFields={loadFields}/>
   )
 }
 

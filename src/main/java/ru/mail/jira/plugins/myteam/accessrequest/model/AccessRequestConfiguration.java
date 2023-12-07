@@ -42,7 +42,7 @@ public interface AccessRequestConfiguration extends Entity {
   void setSendMessage(boolean sendMessage);
 
   @StringLength(StringLength.UNLIMITED)
-  String getVotersKeys();
+  String getAccessPermissionFields();
 
-  void setVotersKeys(String voters);
+  void setAccessPermissionFields(String accessPermissionField);
 }

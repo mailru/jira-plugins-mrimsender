@@ -115,4 +115,5 @@ export type AccessRequestConfiguration = {
   userFields?: Field[]
   sendEmail: boolean
   sendMessage: boolean
+  accessPermissionFields?: Field[]
 }
