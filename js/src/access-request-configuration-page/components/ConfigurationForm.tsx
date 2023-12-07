@@ -17,6 +17,8 @@ import ProjectRolesSelect, {
   createProjectRoleOption,
 } from './ProjectRolesSelect'
 import UserFieldsSelect, { createUserFieldOption } from './UserFieldsSelect'
+import AccessPermissonFieldsSelect from "./AccessPermissonFieldsSelect";
+import {fi} from "@atlaskit/user-picker/dist/types/i18n";
 
 type Props = {
   projectKey: string
@@ -33,6 +35,7 @@ type FormState = {
   groups?: OptionType[]
   roles?: OptionType[]
   userFields?: OptionType[]
+  accessPermissionFields?: OptionType[]
   sendEmail: boolean
   sendMessage: boolean
 }
@@ -54,6 +57,7 @@ function ConfigurationForm({
   const projectRolesError = submitError?.fieldErrors?.projectRoles?.messages[0]
   const userFieldsError = submitError?.fieldErrors?.userFields?.messages[0]
   const participantsError = submitError?.fieldErrors?.participants?.messages[0]
+  const accessPermissionFieldsError = submitError?.fieldErrors?.accessPermissionFields?.messages[0]
   const notificationsError =
     submitError?.fieldErrors?.notifications?.messages[0]
   return (
@@ -75,6 +79,10 @@ function ConfigurationForm({
             userFields: formState.userFields?.map((field) => ({
               id: field.value.toString(),
               name: field.label,
+            })),
+            accessPermissionFields: formState.accessPermissionFields?.map((field) => ({
+              id: field.value.toString(),
+              name: field.label
             })),
             sendEmail: formState.sendEmail,
             sendMessage: formState.sendMessage,
@@ -184,6 +192,31 @@ function ConfigurationForm({
                         <ErrorMessage>{error || userFieldsError}</ErrorMessage>
                       )}
                     </>
+                  )}
+                </Field>
+                <Field<OptionsType>
+                    name="accessPermissionFields"
+                    label={I18n.getText(
+                        'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.accessPermissionFields'
+                    )}
+                    defaultValue={currentValue?.accessPermissionFields?.map(
+                        createUserFieldOption
+                    )}
+                >
+                  {({ fieldProps, error }) => (
+                      <>
+                        <AccessPermissonFieldsSelect
+                            id={fieldProps.id}
+                            selectedValue={currentValue?.accessPermissionFields?.map(
+                                createUserFieldOption
+                            )}
+                            onChange={fieldProps.onChange}
+                            projectKey={projectKey}
+                        />
+                        {(error || accessPermissionFieldsError) && (
+                            <ErrorMessage>{error || accessPermissionFieldsError}</ErrorMessage>
+                        )}
+                      </>
                   )}
                 </Field>
                 {participantsError && (

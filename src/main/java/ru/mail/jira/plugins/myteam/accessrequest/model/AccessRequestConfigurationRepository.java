@@ -83,10 +83,10 @@ public class AccessRequestConfigurationRepository
               .map(this::buildUserFieldDto)
               .collect(Collectors.toList()));
     }
-    if (StringUtils.isNotBlank(entity.getVotersKeys())) {
-      dto.setVotersFields(
-          CommonUtils.split(entity.getVotersKeys()).stream()
-              .map(key -> dtoUtils.buildUserDto(userManager.getUserByKey(key)))
+    if (StringUtils.isNotBlank(entity.getAccessPermissionFields())) {
+      dto.setAccessPermissionFields(
+          CommonUtils.split(entity.getAccessPermissionFields()).stream()
+              .map(this::buildUserFieldDto)
               .collect(Collectors.toList()));
     }
     dto.setSendEmail(entity.isSendEmail());
@@ -111,6 +111,12 @@ public class AccessRequestConfigurationRepository
     if (dto.getUserFields() != null)
       entity.setUserFieldIds(
           dto.getUserFields().stream().map(UserFieldDto::getId).collect(Collectors.joining(",")));
+    if (dto.getAccessPermissionFields() != null) {
+      entity.setAccessPermissionFields(
+          dto.getAccessPermissionFields().stream()
+              .map(UserFieldDto::getId)
+              .collect(Collectors.joining(",")));
+    }
     entity.setSendEmail(dto.isSendEmail());
     entity.setSendMessage(dto.isSendMessage());
   }
