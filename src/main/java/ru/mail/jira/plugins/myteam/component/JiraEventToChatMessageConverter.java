@@ -381,13 +381,13 @@ public class JiraEventToChatMessageConverter {
         diffFieldChatMessageGenerator.buildDiffString(
             StringUtils.defaultString(
                 jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-                    oldDesc, useMentionFormat),
+                    Utils.shieldText(oldDesc), useMentionFormat),
                 ""),
             StringUtils.defaultString(
                 jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-                    changedDescription, useMentionFormat),
+                    Utils.shieldText(changedDescription), useMentionFormat),
                 ""));
-    return Utils.shieldText(diff)
+    return diff
         + "\n\n"
         + ">___"
         + i18nResolver.getText("ru.mail.jira.plugins.myteam.notify.diff.description.field")
