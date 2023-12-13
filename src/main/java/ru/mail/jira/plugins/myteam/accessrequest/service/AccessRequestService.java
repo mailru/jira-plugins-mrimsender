@@ -25,7 +25,6 @@ import com.atlassian.velocity.VelocityManager;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import kong.unirest.HttpResponse;
@@ -195,7 +194,8 @@ public class AccessRequestService {
                 user -> {
                   try {
                     if (configuration.isSendMessage())
-                      userIdsInfo.add(Pair.of(user, sendMessageTemporary(user, loggedInUser, issue)));
+                      userIdsInfo.add(
+                          Pair.of(user, sendMessageTemporary(user, loggedInUser, issue)));
                     if (configuration.isSendEmail())
                       sendEmail(user, loggedInUser, issue, accessRequestDto.getMessage());
                   } catch (Exception e) {
