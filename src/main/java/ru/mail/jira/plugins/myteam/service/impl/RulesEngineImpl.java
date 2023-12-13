@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
+import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import org.jeasy.rules.api.Fact;
@@ -8,6 +9,7 @@ import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.RulesEngineParameters;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.myteam.accessrequest.service.AccessRequestService;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.core.RulesEngine;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.RuleEngineFiringException;
@@ -60,6 +62,8 @@ public class RulesEngineImpl
   private final IssueService issueService;
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final ReminderService reminderService;
+  private final AccessRequestService accessRequestService;
+  private final ProjectManager projectManager;
 
   private final EventMessagesTextConverter eventMessagesTextConverter;
   private final MyteamApiClient myteamApiClient;
@@ -73,6 +77,8 @@ public class RulesEngineImpl
       IssueService issueService,
       IssueCreationSettingsService issueCreationSettingsService,
       ReminderService reminderService,
+      AccessRequestService accessRequestService,
+      ProjectManager projectManager,
       EventMessagesTextConverter eventMessagesTextConverter,
       MyteamApiClient myteamApiClient,
       MyteamChatRepository myteamChatRepository) {
@@ -82,6 +88,8 @@ public class RulesEngineImpl
     this.issueService = issueService;
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.reminderService = reminderService;
+    this.accessRequestService = accessRequestService;
+    this.projectManager = projectManager;
     this.eventMessagesTextConverter = eventMessagesTextConverter;
     this.myteamApiClient = myteamApiClient;
     this.myteamChatRepository = myteamChatRepository;
@@ -111,7 +119,8 @@ public class RulesEngineImpl
         new CreateIssueRule(userChatService, this, issueService, issueCreationService));
     commandsRuleEngine.registerRule(new ViewCommentsRule(userChatService, this, issueService));
     commandsRuleEngine.registerRule(new CommentingIssueFromGroupChatRule(userChatService, this));
-    commandsRuleEngine.registerRule(new ReplyRule(userChatService, this));
+    commandsRuleEngine.registerRule(
+        new ReplyRule(userChatService, this, accessRequestService, projectManager));
     // Admin Group Commands
 
     commandsRuleEngine.registerRule(

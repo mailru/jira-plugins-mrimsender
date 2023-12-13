@@ -25,8 +25,11 @@ import com.atlassian.velocity.VelocityManager;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
+import kong.unirest.HttpResponse;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -41,10 +44,13 @@ import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestConfiguratio
 import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestHistory;
 import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestHistoryRepository;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons.ReplyRule;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.MyteamAuditService;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
+import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Component
@@ -180,6 +186,9 @@ public class AccessRequestService {
       AccessRequestConfiguration configuration =
           accessRequestConfigurationRepository.getAccessRequestConfiguration(issue.getProjectId());
       if (configuration != null) {
+        AtomicReference<Long> msgIdTemporary = new AtomicReference<>();
+        StringBuilder sb = new StringBuilder();
+        List<Pair<ApplicationUser, Long>> userIdsInfo = new ArrayList<>();
         accessRequestDto.getUsers().stream()
             .map(dto -> userManager.getUserByKey(dto.getUserKey()))
             .filter(user -> user != null && user.isActive())
@@ -187,15 +196,30 @@ public class AccessRequestService {
             .forEach(
                 user -> {
                   try {
-                    if (configuration.isSendMessage())
-                      sendMessageWithAnswer(
-                          user, loggedInUser, issue, accessRequestDto.getMessage());
+                    if (configuration.isSendMessage()) {
+                      msgIdTemporary.set(sendMessageTemporary(user, loggedInUser, issue));
+                      sb.append(formatMsgIdTemporary(msgIdTemporary.get()));
+                      userIdsInfo.add(Pair.of(user, msgIdTemporary.get()));
+                    }
                     if (configuration.isSendEmail())
                       sendEmail(user, loggedInUser, issue, accessRequestDto.getMessage());
                   } catch (Exception e) {
                     SentryClient.capture(e, Map.of("user", user.getKey()));
                   }
                 });
+
+        if (configuration.isSendMessage()) {
+          String replyIds = sb.toString();
+          for (Pair<ApplicationUser, Long> useridInfo : userIdsInfo) {
+            sendMessageWithAnswer(
+                useridInfo.getKey(),
+                loggedInUser,
+                useridInfo.getValue(),
+                issue,
+                accessRequestDto.getMessage(),
+                replyIds);
+          }
+        }
       }
     }
 
@@ -282,13 +306,40 @@ public class AccessRequestService {
   //    }
   //  }
 
-  private void sendMessageWithAnswer(
-      ApplicationUser to, ApplicationUser from, Issue issue, String message) {
+  private String formatMsgIdTemporary(Long msgId) {
+    if (msgId == null) return "";
+    return "-" + Long.toString(msgId);
+  }
+
+  private Long sendMessageTemporary(ApplicationUser to, ApplicationUser from, Issue issue) {
     try {
-      userChatService.sendMessageText(
+      HttpResponse<MessageResponse> response =
+          userChatService.sendMessageText(to.getEmailAddress(), "Access Request Formatting...");
+      if (response.isSuccess()) {
+        return response.getBody().getMsgId();
+      }
+    } catch (Exception e) {
+      SentryClient.capture(
+          e,
+          Map.of(
+              "to", to.getEmailAddress(), "from", from.getEmailAddress(), "issue", issue.getKey()));
+    }
+    return null;
+  }
+
+  private void sendMessageWithAnswer(
+      ApplicationUser to,
+      ApplicationUser from,
+      Long msgId,
+      Issue issue,
+      String message,
+      String replyIdsArgs) {
+    try {
+      userChatService.editMessageText(
           to.getEmailAddress(),
+          msgId,
           messageFormatter.formatAccessRequestMessage(from, issue, message),
-          getReplyButtons());
+          getReplyButtons(Objects.requireNonNull(issue.getProjectObject()).getKey(), replyIdsArgs));
     } catch (Exception e) {
       SentryClient.capture(
           e,
@@ -297,16 +348,34 @@ public class AccessRequestService {
     }
   }
 
-  private List<List<InlineKeyboardMarkupButton>> getReplyButtons() {
+  private List<List<InlineKeyboardMarkupButton>> getReplyButtons(
+      String projectKey, String replyIdsArgs) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
 
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            "Разрешить", String.join("-", ButtonRuleType.AccessReply.getName(), "allow")));
+            i18nResolver.getRawText(
+                "ru.mail.jira.plugins.myteam.accessRequest.configuration.rule.type.allow"),
+            String.join(
+                "-",
+                ButtonRuleType.AccessReply.getName(),
+                RuleType.joinArgs(List.of(ReplyRule.COMMAND_ALLOW, projectKey, replyIdsArgs)))));
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            "Запретить", String.join("-", ButtonRuleType.AccessReply.getName(), "forbid")));
+            i18nResolver.getRawText(
+                "ru.mail.jira.plugins.myteam.accessRequest.configuration.rule.type.forbid"),
+            String.join(
+                "-",
+                ButtonRuleType.AccessReply.getName(),
+                RuleType.joinArgs(List.of(ReplyRule.COMMAND_FORBID, projectKey, replyIdsArgs)))));
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            "Вывод id",
+            String.join(
+                "-",
+                ButtonRuleType.AccessReply.getName(),
+                RuleType.joinArgs(List.of(ReplyRule.COMMAND_DEV, projectKey)))));
     buttons.add(buttonsRow);
 
     return buttons;
