@@ -34,7 +34,6 @@ import org.jetbrains.annotations.Nullable;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
-import ru.mail.jira.plugins.myteam.commons.Utils;
 
 @Component
 @Slf4j
@@ -381,11 +380,11 @@ public class JiraEventToChatMessageConverter {
         diffFieldChatMessageGenerator.buildDiffString(
             StringUtils.defaultString(
                 jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-                    Utils.shieldText(oldDesc), useMentionFormat),
+                    oldDesc, useMentionFormat),
                 ""),
             StringUtils.defaultString(
                 jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-                    Utils.shieldText(changedDescription), useMentionFormat),
+                    changedDescription, useMentionFormat),
                 ""));
     return diff
         + "\n\n"

@@ -2,7 +2,6 @@
 package ru.mail.jira.plugins.myteam.component;
 
 import com.atlassian.diff.*;
-import com.opensymphony.util.TextUtils;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
@@ -97,12 +96,12 @@ public class DiffFieldChatMessageGenerator {
    */
   private static String print(String string) {
     // 1. Encode html special characters so they look nice
-    string = TextUtils.htmlEncode(string, false);
+    //    string = TextUtils.htmlEncode(string, false);
 
     // 2. replace new line characters with a line break html character
     string = string.replaceAll("(\\r\\n|\\n|\\r)", "<br>");
 
-    // 3. preserve whitespace blocks up greater than 2 up to a threshold
+    // 2. preserve whitespace blocks up greater than 2 up to a threshold
     // (MAX_WHITESPACE_PRESERVATION_LENGTH)
     final StringBuffer result = new StringBuffer();
     final Matcher matcher = Pattern.compile("(\\s{2,})").matcher(string);
