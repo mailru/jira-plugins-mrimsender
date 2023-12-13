@@ -186,6 +186,7 @@ public class AccessRequestService {
       AccessRequestConfiguration configuration =
           accessRequestConfigurationRepository.getAccessRequestConfiguration(issue.getProjectId());
       if (configuration != null) {
+        AtomicReference<Long> msgIdTemporary = new AtomicReference<>();
         List<Pair<ApplicationUser, Long>> userIdsInfo = new ArrayList<>();
         accessRequestDto.getUsers().stream()
             .map(dto -> userManager.getUserByKey(dto.getUserKey()))
@@ -194,8 +195,10 @@ public class AccessRequestService {
             .forEach(
                 user -> {
                   try {
-                    if (configuration.isSendMessage())
-                      userIdsInfo.add(Pair.of(user, sendMessageTemporary(user, loggedInUser, issue)));
+                    if (configuration.isSendMessage()) {
+                      msgIdTemporary.set(sendMessageTemporary(user, loggedInUser, issue));
+                      userIdsInfo.add(Pair.of(user, msgIdTemporary.get()));
+                    }
                     if (configuration.isSendEmail())
                       sendEmail(user, loggedInUser, issue, accessRequestDto.getMessage());
                   } catch (Exception e) {
@@ -206,7 +209,6 @@ public class AccessRequestService {
         if (configuration.isSendMessage()) {
           List<String> replyIds =
               userIdsInfo.stream()
-                  .filter(pair -> pair.getRight() != null)
                   .map(pair -> pair.getRight().toString())
                   .collect(Collectors.toList());
           for (Pair<ApplicationUser, Long> useridInfo : userIdsInfo) {

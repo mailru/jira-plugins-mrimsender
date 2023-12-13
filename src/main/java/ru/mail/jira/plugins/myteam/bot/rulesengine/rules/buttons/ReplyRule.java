@@ -52,7 +52,6 @@ public class ReplyRule extends BaseRule {
     String projectKey = parsedArgs.get(1);
     List<String> replyIds = RuleType.parseArgs(parsedArgs.get(2));
 
-
     Project project = projectManager.getProjectByCurrentKey(projectKey);
     AccessRequestConfigurationDto accessRequestConfigurationDto =
         accessRequestService.getAccessRequestConfiguration(project);
@@ -61,7 +60,7 @@ public class ReplyRule extends BaseRule {
       //      accessRequestConfigurationDto.getUsers().stream()
       //              .map(dto -> user)
     }
-    
+
     if (command.equals(COMMAND_ALLOW)) {
     } else if (command.equals(COMMAND_FORBID)) {
     } else if (command.equals(COMMAND_DEV)) {
