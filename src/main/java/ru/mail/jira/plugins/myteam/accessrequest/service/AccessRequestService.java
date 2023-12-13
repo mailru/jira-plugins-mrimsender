@@ -187,7 +187,6 @@ public class AccessRequestService {
           accessRequestConfigurationRepository.getAccessRequestConfiguration(issue.getProjectId());
       if (configuration != null) {
         AtomicReference<Long> msgIdTemporary = new AtomicReference<>();
-        StringBuilder sb = new StringBuilder();
         List<Pair<ApplicationUser, Long>> userIdsInfo = new ArrayList<>();
         accessRequestDto.getUsers().stream()
             .map(dto -> userManager.getUserByKey(dto.getUserKey()))
@@ -198,7 +197,6 @@ public class AccessRequestService {
                   try {
                     if (configuration.isSendMessage()) {
                       msgIdTemporary.set(sendMessageTemporary(user, loggedInUser, issue));
-                      sb.append(formatMsgIdTemporary(msgIdTemporary.get()));
                       userIdsInfo.add(Pair.of(user, msgIdTemporary.get()));
                     }
                     if (configuration.isSendEmail())
@@ -209,7 +207,7 @@ public class AccessRequestService {
                 });
 
         if (configuration.isSendMessage()) {
-          String replyIds = sb.toString();
+          List<String> replyIds = userIdsInfo.stream().map(pair -> pair.getRight().toString()).collect(Collectors.toList());
           for (Pair<ApplicationUser, Long> useridInfo : userIdsInfo) {
             sendMessageWithAnswer(
                 useridInfo.getKey(),
@@ -217,7 +215,7 @@ public class AccessRequestService {
                 useridInfo.getValue(),
                 issue,
                 accessRequestDto.getMessage(),
-                replyIds);
+                RuleType.joinArgs(replyIds));
           }
         }
       }
@@ -305,11 +303,6 @@ public class AccessRequestService {
   // issue.getKey()));
   //    }
   //  }
-
-  private String formatMsgIdTemporary(Long msgId) {
-    if (msgId == null) return "";
-    return "-" + Long.toString(msgId);
-  }
 
   private Long sendMessageTemporary(ApplicationUser to, ApplicationUser from, Issue issue) {
     try {
