@@ -95,10 +95,7 @@ public class DiffFieldChatMessageGenerator {
    * @return input string without newline chars
    */
   private static String print(String string) {
-    // 1. Encode html special characters so they look nice
-    //    string = TextUtils.htmlEncode(string, false);
-
-    // 2. replace new line characters with a line break html character
+    // 1. replace new line characters with a line break html character
     string = string.replaceAll("(\\r\\n|\\n|\\r)", "<br>");
 
     // 2. preserve whitespace blocks up greater than 2 up to a threshold
