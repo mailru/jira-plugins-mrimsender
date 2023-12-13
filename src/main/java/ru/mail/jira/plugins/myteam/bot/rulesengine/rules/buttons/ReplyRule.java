@@ -50,6 +50,8 @@ public class ReplyRule extends BaseRule {
     List<String> parsedArgs = RuleType.parseArgs(args);
     String command = parsedArgs.get(0);
     String projectKey = parsedArgs.get(1);
+    List<String> replyIds = RuleType.parseArgs(parsedArgs.get(2));
+
 
     Project project = projectManager.getProjectByCurrentKey(projectKey);
     AccessRequestConfigurationDto accessRequestConfigurationDto =
@@ -59,17 +61,9 @@ public class ReplyRule extends BaseRule {
       //      accessRequestConfigurationDto.getUsers().stream()
       //              .map(dto -> user)
     }
-
-    //    accessRequestService.getAccessRequestConfiguration(event.)
-    //    projectManager.getProjectByCurrentKey()
-    //    accessRequestService.getAccessRequestConfiguration()
+    
     if (command.equals(COMMAND_ALLOW)) {
-      System.out.println(projectKey);
-      System.out.println(accessRequestService);
-      System.out.println(projectManager);
-
     } else if (command.equals(COMMAND_FORBID)) {
-      System.out.println(projectKey);
     } else if (command.equals(COMMAND_DEV)) {
       userChatService.sendMessageText(event.getChatId(), Long.toString(event.getMsgId()));
       userChatService.answerCallbackQuery(event.getQueryId());
