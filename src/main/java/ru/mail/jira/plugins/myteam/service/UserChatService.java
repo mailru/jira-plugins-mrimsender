@@ -43,7 +43,8 @@ public interface UserChatService {
       String chatId, String message, @Nullable List<List<InlineKeyboardMarkupButton>> buttons)
       throws MyteamServerErrorException, IOException;
 
-  void sendMessageText(String chatId, @Nullable String message)
+  @Nullable
+  HttpResponse<MessageResponse> sendMessageText(String chatId, @Nullable String message)
       throws MyteamServerErrorException, IOException;
 
   boolean deleteMessages(String chatId, List<Long> messagesId)

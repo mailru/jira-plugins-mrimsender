@@ -128,14 +128,14 @@ public class UserChatServiceImpl implements UserChatService {
   public HttpResponse<MessageResponse> sendMessageText(
       String chatId, String message, @Nullable List<List<InlineKeyboardMarkupButton>> buttons)
       throws MyteamServerErrorException, IOException {
-    myteamClient.sendMessageText(chatId, message, buttons);
-    return null;
+    return myteamClient.sendMessageText(chatId, message, buttons);
   }
 
   @Override
-  public void sendMessageText(String chatId, @Nullable String message)
+  @Nullable
+  public HttpResponse<MessageResponse> sendMessageText(String chatId, @Nullable String message)
       throws MyteamServerErrorException, IOException {
-    myteamClient.sendMessageText(chatId, message);
+    return myteamClient.sendMessageText(chatId, message);
   }
 
   @Override
