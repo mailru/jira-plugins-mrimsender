@@ -207,7 +207,10 @@ public class AccessRequestService {
                 });
 
         if (configuration.isSendMessage()) {
-          List<String> replyIds = userIdsInfo.stream().map(pair -> pair.getRight().toString()).collect(Collectors.toList());
+          List<String> replyIds =
+              userIdsInfo.stream()
+                  .map(pair -> pair.getRight().toString())
+                  .collect(Collectors.toList());
           for (Pair<ApplicationUser, Long> useridInfo : userIdsInfo) {
             sendMessageWithAnswer(
                 useridInfo.getKey(),
