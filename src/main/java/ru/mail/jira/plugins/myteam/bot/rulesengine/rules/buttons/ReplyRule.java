@@ -5,6 +5,8 @@ import com.atlassian.jira.project.Project;
 import com.atlassian.jira.project.ProjectManager;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -22,9 +24,9 @@ import ru.mail.jira.plugins.myteam.service.UserChatService;
 @Rule(name = "reply", description = "reply user access")
 public class ReplyRule extends BaseRule {
 
+  public static final String USER_REPLY_DATA_DELIMITER = ":";
   public static final String COMMAND_ALLOW = "allow";
   public static final String COMMAND_FORBID = "forbid";
-  public static final String COMMAND_DEV = "dev";
   static final ButtonRuleType NAME = ButtonRuleType.AccessReply;
   private final AccessRequestService accessRequestService;
   private final ProjectManager projectManager;
@@ -50,22 +52,28 @@ public class ReplyRule extends BaseRule {
     List<String> parsedArgs = RuleType.parseArgs(args);
     String command = parsedArgs.get(0);
     String projectKey = parsedArgs.get(1);
-    List<String> replyIds = RuleType.parseArgs(parsedArgs.get(2));
+    List<Pair<String, String>> repliesData =
+        RuleType.parseArgs(parsedArgs.get(2)).stream()
+            .map(this::getUserReplyParams)
+            .collect(Collectors.toList());
 
     Project project = projectManager.getProjectByCurrentKey(projectKey);
     AccessRequestConfigurationDto accessRequestConfigurationDto =
         accessRequestService.getAccessRequestConfiguration(project);
 
     if (accessRequestConfigurationDto != null) {
-      //      accessRequestConfigurationDto.getUsers().stream()
-      //              .map(dto -> user)
-    }
+      String message = accessRequestService.getReplyAdminMessage(command);
 
-    if (command.equals(COMMAND_ALLOW)) {
-    } else if (command.equals(COMMAND_FORBID)) {
-    } else if (command.equals(COMMAND_DEV)) {
-      userChatService.sendMessageText(event.getChatId(), Long.toString(event.getMsgId()));
+      for (Pair<String, String> replyData : repliesData) {
+        userChatService.editMessageText(
+            replyData.getKey(), Long.parseLong(replyData.getRight()), message, null);
+      }
       userChatService.answerCallbackQuery(event.getQueryId());
     }
+  }
+
+  private Pair<String, String> getUserReplyParams(String data) {
+    String[] splitData = data.split(USER_REPLY_DATA_DELIMITER, 2);
+    return Pair.of(splitData[0], splitData[1]);
   }
 }

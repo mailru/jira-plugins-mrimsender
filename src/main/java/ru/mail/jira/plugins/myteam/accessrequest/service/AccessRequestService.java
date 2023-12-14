@@ -12,6 +12,7 @@ import com.atlassian.jira.issue.watchers.WatcherManager;
 import com.atlassian.jira.mail.Email;
 import com.atlassian.jira.mail.builder.EmailBuilder;
 import com.atlassian.jira.project.Project;
+import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
@@ -74,6 +75,7 @@ public class AccessRequestService {
   private final UserManager userManager;
   private final VelocityManager velocityManager;
   private final WatcherManager watcherManager;
+  private final JiraAuthenticationContext jiraAuthenticationContext;
 
   public AccessRequestService(
       AccessRequestConfigurationRepository accessRequestConfigurationRepository,
@@ -91,7 +93,8 @@ public class AccessRequestService {
       @ComponentImport ProjectRoleManager projectRoleManager,
       @ComponentImport UserManager userManager,
       @ComponentImport VelocityManager velocityManager,
-      @ComponentImport WatcherManager watcherManager) {
+      @ComponentImport WatcherManager watcherManager,
+      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
     this.accessRequestConfigurationRepository = accessRequestConfigurationRepository;
     this.accessRequestHistoryRepository = accessRequestHistoryRepository;
     this.dtoUtils = dtoUtils;
@@ -108,6 +111,7 @@ public class AccessRequestService {
     this.velocityManager = velocityManager;
     this.watcherManager = watcherManager;
     this.userChatService = userChatService;
+    this.jiraAuthenticationContext = jiraAuthenticationContext;
   }
 
   @Nullable
@@ -207,7 +211,7 @@ public class AccessRequestService {
           List<String> replyIds =
               userIdsInfo.stream()
                   .filter(pair -> pair.getRight() != null)
-                  .map(pair -> pair.getRight().toString())
+                  .map(pair -> pair.getKey().getEmailAddress() + ":" + pair.getRight().toString())
                   .collect(Collectors.toList());
           for (Pair<ApplicationUser, Long> useridInfo : userIdsInfo) {
             sendMessageWithAnswer(
@@ -252,6 +256,13 @@ public class AccessRequestService {
 
   public void deleteAccessRequestConfiguration(int configurationId) {
     accessRequestConfigurationRepository.deleteById(configurationId);
+  }
+
+  public String getReplyAdminMessage(String command) {
+    ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
+    return messageFormatter.formatAccessReplyMessage(command, loggedInUser);
+    //    AccessRequestConfiguration configuration =
+    //            accessRequestConfigurationRepository.getAccessRequestConfiguration(projectId);
   }
 
   private Set<ApplicationUser> getUsersFromProjectRole(@NotNull Project project, Long roleId) {
@@ -349,7 +360,7 @@ public class AccessRequestService {
 
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getRawText(
+            i18nResolver.getText(
                 "ru.mail.jira.plugins.myteam.accessRequest.configuration.rule.type.allow"),
             String.join(
                 "-",
@@ -357,19 +368,12 @@ public class AccessRequestService {
                 RuleType.joinArgs(List.of(ReplyRule.COMMAND_ALLOW, projectKey, replyIdsArgs)))));
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            i18nResolver.getRawText(
+            i18nResolver.getText(
                 "ru.mail.jira.plugins.myteam.accessRequest.configuration.rule.type.forbid"),
             String.join(
                 "-",
                 ButtonRuleType.AccessReply.getName(),
                 RuleType.joinArgs(List.of(ReplyRule.COMMAND_FORBID, projectKey, replyIdsArgs)))));
-    buttonsRow.add(
-        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
-            "Вывод id",
-            String.join(
-                "-",
-                ButtonRuleType.AccessReply.getName(),
-                RuleType.joinArgs(List.of(ReplyRule.COMMAND_DEV, projectKey)))));
     buttons.add(buttonsRow);
 
     return buttons;
