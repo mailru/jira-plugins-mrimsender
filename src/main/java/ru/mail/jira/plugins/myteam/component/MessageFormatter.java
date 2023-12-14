@@ -532,6 +532,16 @@ public class MessageFormatter {
     return sb.toString();
   }
 
+  public String formatAccessReplyMessage(String command, @NotNull ApplicationUser user) {
+    String formatUser = formatUser(user, "common.words.anonymous", true);
+    // TODO fix other users
+    return i18nResolver.getText(
+        String.format("ru.mail.jira.plugins.myteam.accessRequest.page.message.reply.%s", command),
+        formatUser,
+        formatUser,
+        formatUser);
+  }
+
   public String formatAccessRequestMessage(
       @NotNull ApplicationUser user, @NotNull Issue issue, @Nullable String message) {
     StringBuilder sb = new StringBuilder();

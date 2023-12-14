@@ -6,6 +6,7 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -119,8 +120,8 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
-  public String getText(String key, @Nullable String param) {
-    return i18nResolver.getText(key, param);
+  public String getText(String key, @Nullable Serializable... params) {
+    return i18nResolver.getText(key, params);
   }
 
   @Override
