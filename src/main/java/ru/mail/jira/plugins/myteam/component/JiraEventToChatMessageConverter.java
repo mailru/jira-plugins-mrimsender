@@ -8,7 +8,6 @@ import static ru.mail.jira.plugins.myteam.commons.Utils.shieldText;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.event.issue.IssueEvent;
-import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.event.type.EventType;
 import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
@@ -24,6 +23,7 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.URI;
@@ -43,6 +43,8 @@ public class JiraEventToChatMessageConverter {
   private static final Map<Long, String> EVENT_TYPE_MAP = getEventTypeMap();
 
   private static final String I18N_PART_KEY = "ru.mail.jira.plugins.myteam.notification.";
+  private static final String MENTION_UPDATED_ISSUE_I18N_KEY =
+      "ru.mail.jira.plugins.myteam.notification.updated.and.mentioned";
   private final MessageFormatter messageFormatter;
   private final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter;
   private final DiffFieldChatMessageGenerator diffFieldChatMessageGenerator;
@@ -75,28 +77,6 @@ public class JiraEventToChatMessageConverter {
     this.userManager = userManager;
   }
 
-  public String formatMentionEvent(final MentionIssueEvent mentionIssueEvent) {
-    final Issue issue = mentionIssueEvent.getIssue();
-    final ApplicationUser user = mentionIssueEvent.getFromUser();
-    final String issueLink = messageFormatter.getIssueLink(issue.getKey());
-
-    final StringBuilder sb = new StringBuilder();
-    sb.append(
-        i18nResolver.getText(
-            "ru.mail.jira.plugins.myteam.notification.mentioned",
-            messageFormatter.formatUser(user, "common.words.anonymous", true),
-            issueLink));
-    sb.append("\n").append(shieldText(issue.getSummary()));
-
-    if (!isBlank(mentionIssueEvent.getMentionText()))
-      sb.append("\n\n")
-          .append(
-              jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-                  mentionIssueEvent.getMentionText(), true));
-
-    return sb.toString();
-  }
-
   @Nullable
   public String formatEventWithDiff(final ApplicationUser recipient, final IssueEvent issueEvent) {
     final Issue issue = issueEvent.getIssue();
@@ -118,17 +98,26 @@ public class JiraEventToChatMessageConverter {
         || EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
       sb.append(
           appendStringOnIssueCommentedOrCommentEditedEvent(
-              issueEvent, i18nKey, user, useMentionFormat));
+              issueEvent, i18nKey, user, useMentionFormat, recipient));
       return sb.toString();
     } else {
       String issueLink =
           messageFormatter.markdownTextLink(
               issue.getKey(), messageFormatter.createIssueLink(issue.getKey()));
-      sb.append(
-          i18nResolver.getText(
-              i18nKey,
-              messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
+      if (checkThatNotifyUserIsMentionedInJiraMarkdownFieldText(
+          StringUtils.defaultString(issue.getDescription(), ""), recipient)) {
+        sb.append(
+            i18nResolver.getText(
+                MENTION_UPDATED_ISSUE_I18N_KEY,
+                messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
+                issueLink));
+      } else {
+        sb.append(
+            i18nResolver.getText(
+                i18nKey,
+                messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
+                issueLink));
+      }
     }
     sb.append("\n").append(shieldText(issue.getSummary()));
 
@@ -201,10 +190,21 @@ public class JiraEventToChatMessageConverter {
       final IssueEvent issueEvent,
       final String i18nKey,
       final ApplicationUser user,
-      final boolean useMentionFormat) {
+      final boolean useMentionFormat,
+      final ApplicationUser recipient) {
     final Issue issue = issueEvent.getIssue();
+    final String commentBody = issueEvent.getComment().getBody();
+    String definedI18nKeyOnMentionedCommented = i18nKey;
+
+    if (useMentionFormat
+        && checkThatNotifyUserIsMentionedInJiraMarkdownFieldText(commentBody, recipient)) {
+      definedI18nKeyOnMentionedCommented =
+          Objects.equals(issueEvent.getEventTypeId(), EventType.ISSUE_COMMENTED_ID)
+              ? "ru.mail.jira.plugins.myteam.notification.commented.and.mentioned"
+              : "ru.mail.jira.plugins.myteam.notification.commented.edited.and.mentioned";
+    }
     return i18nResolver.getText(
-        i18nKey,
+        definedI18nKeyOnMentionedCommented,
         messageFormatter.getIssueLink(issue.getKey()),
         issue.getSummary(),
         messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
@@ -215,7 +215,7 @@ public class JiraEventToChatMessageConverter {
             issueEvent.getComment().getId(),
             issueEvent.getComment().getId()),
         jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-            issueEvent.getComment().getBody(), useMentionFormat));
+            commentBody, useMentionFormat));
   }
 
   private String formatChangeLogWithDiff(
@@ -439,6 +439,17 @@ public class JiraEventToChatMessageConverter {
             .append(value.isEmpty() ? "" : diffFieldChatMessageGenerator.markNewValue(value));
       }
     }
+  }
+
+  private static boolean checkThatNotifyUserIsMentionedInJiraMarkdownFieldText(
+      @NotNull final String jiraMarkdownFieldText, @NotNull final ApplicationUser notifyUser) {
+    final Matcher matcher = JiraMarkdownTextPattern.MENTION_PATTERN.matcher(jiraMarkdownFieldText);
+    while (matcher.find()) {
+      if (matcher.group(1).equals(notifyUser.getUsername())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @NotNull

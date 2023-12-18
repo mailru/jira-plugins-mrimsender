@@ -4,7 +4,6 @@ package ru.mail.jira.plugins.myteam.bot.listeners;
 import com.atlassian.event.api.EventListener;
 import com.atlassian.event.api.EventPublisher;
 import com.atlassian.jira.event.issue.IssueEvent;
-import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.notification.*;
 import com.atlassian.jira.permission.ProjectPermissions;
@@ -145,26 +144,6 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     }
   }
 
-  @SuppressWarnings("unused")
-  @EventListener
-  public void onMentionIssueEvent(MentionIssueEvent mentionIssueEvent) {
-    try {
-      List<ApplicationUser> recipients = new ArrayList<>();
-      for (ApplicationUser user : mentionIssueEvent.getToUsers()) {
-        if (mentionIssueEvent.getCurrentRecipients() != null
-            && !mentionIssueEvent
-                .getCurrentRecipients()
-                .contains(new NotificationRecipient(user))) {
-          recipients.add(user);
-        }
-      }
-      sendMessage(recipients, mentionIssueEvent, mentionIssueEvent.getIssue().getKey());
-    } catch (Exception e) {
-      SentryClient.capture(e);
-      log.error(e.getMessage(), e);
-    }
-  }
-
   private boolean canSendEventToUser(ApplicationUser user, IssueEvent issueEvent) {
     ProjectRole projectRole = null;
     String groupName = null;
@@ -187,7 +166,8 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
         || projectRoleManager.isUserInProjectRole(user, projectRole, issue.getProjectObject());
   }
 
-  private void sendMessage(Collection<ApplicationUser> recipients, Object event, String issueKey) {
+  private void sendMessage(
+      Collection<ApplicationUser> recipients, IssueEvent event, String issueKey) {
     for (ApplicationUser recipient : recipients) {
       if (recipient.isActive() && userData.isEnabled(recipient)) {
         if (StringUtils.isNotBlank(recipient.getEmailAddress())) {
@@ -195,15 +175,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
           ApplicationUser contextUser = jiraAuthenticationContext.getLoggedInUser();
           jiraAuthenticationContext.setLoggedInUser(recipient);
           try {
-            String message = null;
-            if (event instanceof IssueEvent)
-              message =
-                  jiraEventToChatMessageConverter.formatEventWithDiff(
-                      recipient, (IssueEvent) event);
-            if (event instanceof MentionIssueEvent)
-              message =
-                  jiraEventToChatMessageConverter.formatMentionEvent((MentionIssueEvent) event);
-
+            String message = jiraEventToChatMessageConverter.formatEventWithDiff(recipient, event);
             if (message != null) {
               myteamEventsListener.publishEvent(
                   new JiraNotifyEvent(
