@@ -1,7 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
-import com.atlassian.jira.project.ProjectManager;
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import org.jeasy.rules.api.Fact;
@@ -66,8 +65,6 @@ public class RulesEngineImpl
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final ReminderService reminderService;
   private final AccessRequestService accessRequestService;
-  private final ProjectManager projectManager;
-
   private final EventMessagesTextConverter eventMessagesTextConverter;
   private final MyteamApiClient myteamApiClient;
 
@@ -84,7 +81,6 @@ public class RulesEngineImpl
       IssueCreationSettingsService issueCreationSettingsService,
       ReminderService reminderService,
       AccessRequestService accessRequestService,
-      ProjectManager projectManager,
       EventMessagesTextConverter eventMessagesTextConverter,
       MyteamApiClient myteamApiClient,
       MyteamChatRepository myteamChatRepository,
@@ -97,7 +93,6 @@ public class RulesEngineImpl
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.reminderService = reminderService;
     this.accessRequestService = accessRequestService;
-    this.projectManager = projectManager;
     this.eventMessagesTextConverter = eventMessagesTextConverter;
     this.myteamApiClient = myteamApiClient;
     this.myteamChatRepository = myteamChatRepository;
@@ -131,8 +126,7 @@ public class RulesEngineImpl
         new ViewCommentsRule(
             userChatService, this, issueService, jiraMarkdownToChatMarkdownConverter));
     commandsRuleEngine.registerRule(new CommentingIssueFromGroupChatRule(userChatService, this));
-    commandsRuleEngine.registerRule(
-        new ReplyRule(userChatService, this, accessRequestService, projectManager));
+    commandsRuleEngine.registerRule(new ReplyRule(userChatService, this, accessRequestService));
     // Admin Group Commands
 
     commandsRuleEngine.registerRule(
