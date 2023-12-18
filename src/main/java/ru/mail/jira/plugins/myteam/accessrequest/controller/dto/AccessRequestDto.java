@@ -1,6 +1,7 @@
 /* (C)2022 */
 package ru.mail.jira.plugins.myteam.accessrequest.controller.dto;
 
+import java.util.Date;
 import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import lombok.Getter;
@@ -24,4 +25,10 @@ public class AccessRequestDto {
   @Nullable @XmlElement private String requesterKey;
 
   @Nullable @XmlElement private Long issueId;
+
+  @Nullable @XmlElement private Boolean replyStatus;
+
+  @Nullable @XmlElement private UserDto replyAdmin;
+
+  @Nullable @XmlElement private Date replyDate;
 }
