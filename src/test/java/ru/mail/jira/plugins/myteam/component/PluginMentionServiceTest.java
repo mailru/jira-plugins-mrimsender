@@ -1,4 +1,10 @@
+/* (C)2023 */
 package ru.mail.jira.plugins.myteam.component;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.changehistory.ChangeHistory;
@@ -7,188 +13,181 @@ import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.history.ChangeItemBean;
 import com.atlassian.jira.mention.MentionFinderImpl;
 import com.atlassian.jira.user.ApplicationUser;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 
 class PluginMentionServiceTest {
 
-    @SuppressWarnings("NullAway")
-    private PluginMentionService pluginMentionService;
-    @SuppressWarnings("NullAway")
-    private ChangeHistoryManager changeHistoryManager;
+  @SuppressWarnings("NullAway")
+  private PluginMentionService pluginMentionService;
 
+  @SuppressWarnings("NullAway")
+  private ChangeHistoryManager changeHistoryManager;
 
-    @SuppressWarnings("NullAway")
-    private ApplicationUser recipient;
+  @SuppressWarnings("NullAway")
+  private ApplicationUser recipient;
 
+  @BeforeEach
+  void setUp() {
+    ChangeHistoryManager changeHistoryManager = mock(ChangeHistoryManager.class);
+    this.changeHistoryManager = changeHistoryManager;
+    pluginMentionService = new PluginMentionService(new MentionFinderImpl(), changeHistoryManager);
+    ApplicationUser recipient = mock(ApplicationUser.class);
+    when(recipient.getUsername()).thenReturn("admin");
+    this.recipient = recipient;
+  }
 
-    @BeforeEach
-    void setUp() {
-        ChangeHistoryManager changeHistoryManager = mock(ChangeHistoryManager.class);
-        this.changeHistoryManager = changeHistoryManager;
-        pluginMentionService = new PluginMentionService(new MentionFinderImpl(), changeHistoryManager);
-        ApplicationUser recipient = mock(ApplicationUser.class);
-        when(recipient.getUsername()).thenReturn("admin");
-        this.recipient = recipient;
-    }
+  @Test
+  void checkMentionUserInDescriptionWhenDescriptionIsNull() {
+    // GIVEN
+    Issue issue = mock(Issue.class);
+    when(issue.getDescription()).thenReturn(null);
+    when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of());
 
+    // WHEN
+    boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, true);
 
-    @Test
-    void checkMentionUserInDescriptionWhenDescriptionIsNull() {
-        // GIVEN
-        Issue issue = mock(Issue.class);
-        when(issue.getDescription()).thenReturn(null);
-        when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of());
+    // THEN
+    assertFalse(result);
+  }
 
-        // WHEN
-        boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, true);
+  @Test
+  void checkMentionUserInDescriptionWhenNewDescriptionHasMentionIfOldDescHasNotMention() {
+    // GIVEN
+    Issue issue = mock(Issue.class);
+    when(issue.getDescription()).thenReturn("[~admin]");
+    ApplicationUser recipient = mock(ApplicationUser.class);
+    when(recipient.getUsername()).thenReturn("admin");
+    ChangeHistory changeHistory = mock(ChangeHistory.class);
+    ChangeItemBean changeItemBean = mock(ChangeItemBean.class);
+    when(changeItemBean.getField()).thenReturn("description");
+    when(changeItemBean.getFromString()).thenReturn("oldDescValue");
 
-        // THEN
-        assertFalse(result);
-    }
+    when(changeHistory.getChangeItemBeans()).thenReturn(List.of(changeItemBean));
+    when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of(changeHistory));
 
-    @Test
-    void checkMentionUserInDescriptionWhenNewDescriptionHasMentionIfOldDescHasNotMention() {
-        // GIVEN
-        Issue issue = mock(Issue.class);
-        when(issue.getDescription()).thenReturn("[~admin]");
-        ApplicationUser recipient = mock(ApplicationUser.class);
-        when(recipient.getUsername()).thenReturn("admin");
-        ChangeHistory changeHistory = mock(ChangeHistory.class);
-        ChangeItemBean changeItemBean = mock(ChangeItemBean.class);
-        when(changeItemBean.getField()).thenReturn("description");
-        when(changeItemBean.getFromString()).thenReturn("oldDescValue");
+    // WHEN
+    boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, true);
 
-        when(changeHistory.getChangeItemBeans()).thenReturn(List.of(changeItemBean));
-        when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of(changeHistory));
+    // THEN
+    assertTrue(result);
+  }
 
-        // WHEN
-        boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, true);
+  @Test
+  void
+      checkMentionUserInDescriptionWhenNewDescriptionHasMentionAndChangesHistoryNotHasDescriptionAsChangesOnIssue() {
+    // GIVEN
+    Issue issue = mock(Issue.class);
+    when(issue.getDescription()).thenReturn("[~admin]");
+    ApplicationUser recipient = mock(ApplicationUser.class);
+    when(recipient.getUsername()).thenReturn("admin");
+    ChangeHistory changeHistory = mock(ChangeHistory.class);
+    ChangeItemBean changeItemBean = mock(ChangeItemBean.class);
+    when(changeItemBean.getField()).thenReturn("customfield_10000");
 
-        // THEN
-        assertTrue(result);
-    }
+    when(changeHistory.getChangeItemBeans()).thenReturn(List.of(changeItemBean));
+    when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of(changeHistory));
 
-    @Test
-    void checkMentionUserInDescriptionWhenNewDescriptionHasMentionAndChangesHistoryNotHasDescriptionAsChangesOnIssue() {
-        // GIVEN
-        Issue issue = mock(Issue.class);
-        when(issue.getDescription()).thenReturn("[~admin]");
-        ApplicationUser recipient = mock(ApplicationUser.class);
-        when(recipient.getUsername()).thenReturn("admin");
-        ChangeHistory changeHistory = mock(ChangeHistory.class);
-        ChangeItemBean changeItemBean = mock(ChangeItemBean.class);
-        when(changeItemBean.getField()).thenReturn("customfield_10000");
+    // WHEN
+    boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, true);
 
-        when(changeHistory.getChangeItemBeans()).thenReturn(List.of(changeItemBean));
-        when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of(changeHistory));
+    // THEN
+    assertFalse(result);
+  }
 
-        // WHEN
-        boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, true);
+  @Test
+  void checkMentionUserInDescriptionWhenNewDescriptionHasMentionAndComputePreviousValueIsFalse() {
+    // GIVEN
+    Issue issue = mock(Issue.class);
+    when(issue.getDescription()).thenReturn("[~admin]");
 
-        // THEN
-        assertFalse(result);
-    }
+    boolean computePreviousValue = false;
+    // WHEN
+    boolean result =
+        pluginMentionService.checkMentionUserInDescription(issue, recipient, computePreviousValue);
 
-    @Test
-    void checkMentionUserInDescriptionWhenNewDescriptionHasMentionAndComputePreviousValueIsFalse() {
-        // GIVEN
-        Issue issue = mock(Issue.class);
-        when(issue.getDescription()).thenReturn("[~admin]");
+    // THEN
+    assertTrue(result);
+  }
 
-        boolean computePreviousValue = false;
-        // WHEN
-        boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, computePreviousValue);
+  @Test
+  void checkMentionUserInDescriptionWhenNewDescriptionHasMentionIfOldDescHasMention() {
+    // GIVEN
+    Issue issue = mock(Issue.class);
+    when(issue.getDescription()).thenReturn("[~admin]");
+    ChangeHistory changeHistory = mock(ChangeHistory.class);
+    ChangeItemBean changeItemBean = mock(ChangeItemBean.class);
+    when(changeItemBean.getField()).thenReturn("description");
+    when(changeItemBean.getFromString()).thenReturn("[~admin]");
 
-        // THEN
-        assertTrue(result);
-    }
+    when(changeHistory.getChangeItemBeans()).thenReturn(List.of(changeItemBean));
+    when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of(changeHistory));
 
-    @Test
-    void checkMentionUserInDescriptionWhenNewDescriptionHasMentionIfOldDescHasMention() {
-        // GIVEN
-        Issue issue = mock(Issue.class);
-        when(issue.getDescription()).thenReturn("[~admin]");
-        ChangeHistory changeHistory = mock(ChangeHistory.class);
-        ChangeItemBean changeItemBean = mock(ChangeItemBean.class);
-        when(changeItemBean.getField()).thenReturn("description");
-        when(changeItemBean.getFromString()).thenReturn("[~admin]");
+    // WHEN
+    boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, true);
 
-        when(changeHistory.getChangeItemBeans()).thenReturn(List.of(changeItemBean));
-        when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of(changeHistory));
+    // THEN
+    assertFalse(result);
+  }
 
-        // WHEN
-        boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, true);
+  @Test
+  void checkMentionUserInCommentWhenNewCommentAndOriginalCommentAreNull() {
+    // GIVEN
+    Comment comment = null;
+    Comment originalComment = null;
 
-        // THEN
-        assertFalse(result);
-    }
+    // WHEN
+    boolean result =
+        pluginMentionService.checkMentionUserInComment(recipient, comment, originalComment);
 
-    @Test
-    void checkMentionUserInCommentWhenNewCommentAndOriginalCommentAreNull() {
-        // GIVEN
-        Comment comment = null;
-        Comment originalComment = null;
+    // THEN
+    assertFalse(result);
+  }
 
-        // WHEN
-        boolean result = pluginMentionService.checkMentionUserInComment(recipient, comment, originalComment);
+  @Test
+  void checkMentionUserInCommentWhenNewCommentHasMentionAndOriginalCommentIsNull() {
+    // GIVEN
+    Comment newComment = mock(Comment.class);
+    when(newComment.getBody()).thenReturn("[~admin]");
 
-        // THEN
-        assertFalse(result);
-    }
+    // WHEN
+    boolean result = pluginMentionService.checkMentionUserInComment(recipient, newComment, null);
 
-    @Test
-    void checkMentionUserInCommentWhenNewCommentHasMentionAndOriginalCommentIsNull() {
-        // GIVEN
-        Comment newComment = mock(Comment.class);
-        when(newComment.getBody()).thenReturn("[~admin]");
+    // THEN
+    assertTrue(result);
+  }
 
-        // WHEN
-        boolean result = pluginMentionService.checkMentionUserInComment(recipient, newComment, null);
+  @Test
+  void checkMentionUserInCommentWhenNewCommentHasMentionAndOldCommentHasNotMention() {
+    // GIVEN
+    Comment newComment = mock(Comment.class);
+    when(newComment.getBody()).thenReturn("text\n\n\n\n\ntext123123__0[~admin]text");
+    Comment originalComment = mock(Comment.class);
+    when(originalComment.getBody()).thenReturn("some text");
 
-        // THEN
-        assertTrue(result);
-    }
+    // WHEN
+    boolean result =
+        pluginMentionService.checkMentionUserInComment(recipient, newComment, originalComment);
 
-    @Test
-    void checkMentionUserInCommentWhenNewCommentHasMentionAndOldCommentHasNotMention() {
-        // GIVEN
-        Comment newComment = mock(Comment.class);
-        when(newComment.getBody()).thenReturn("text\n\n\n\n\ntext123123__0[~admin]text");
-        Comment originalComment = mock(Comment.class);
-        when(originalComment.getBody()).thenReturn("some text");
+    // THEN
+    assertTrue(result);
+  }
 
-        // WHEN
-        boolean result = pluginMentionService.checkMentionUserInComment(recipient, newComment, originalComment);
+  @Test
+  void checkMentionUserInCommentWhenNewCommentHasMentionAndOldCommentHasMention() {
+    // GIVEN
+    Comment newComment = mock(Comment.class);
+    when(newComment.getBody()).thenReturn("text\n\n\n\n\ntext123123__0[~admin]text");
+    Comment originalComment = mock(Comment.class);
+    when(originalComment.getBody())
+        .thenReturn("text\n\n\n\n\ntext123123__0[~admin]\n\n\n\n45645654text");
 
-        // THEN
-        assertTrue(result);
-    }
+    // WHEN
+    boolean result =
+        pluginMentionService.checkMentionUserInComment(recipient, newComment, originalComment);
 
-    @Test
-    void checkMentionUserInCommentWhenNewCommentHasMentionAndOldCommentHasMention() {
-        // GIVEN
-        Comment newComment = mock(Comment.class);
-        when(newComment.getBody()).thenReturn("text\n\n\n\n\ntext123123__0[~admin]text");
-        Comment originalComment = mock(Comment.class);
-        when(originalComment.getBody()).thenReturn("text\n\n\n\n\ntext123123__0[~admin]\n\n\n\n45645654text");
-
-        // WHEN
-        boolean result = pluginMentionService.checkMentionUserInComment(recipient, newComment, originalComment);
-
-        // THEN
-        assertFalse(result);
-    }
-
-
+    // THEN
+    assertFalse(result);
+  }
 }
