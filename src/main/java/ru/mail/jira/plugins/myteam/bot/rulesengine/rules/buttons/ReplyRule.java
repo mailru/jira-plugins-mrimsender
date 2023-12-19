@@ -1,11 +1,14 @@
 /* (C)2023 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons;
 
+import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -20,6 +23,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
@@ -38,13 +42,16 @@ public class ReplyRule extends BaseRule {
 
   static final ButtonRuleType NAME = ButtonRuleType.AccessReply;
   private final AccessRequestService accessRequestService;
+  private final IssueService issueService;
 
   public ReplyRule(
       UserChatService userChatService,
       RulesEngine rulesEngine,
-      AccessRequestService accessRequestService) {
+      AccessRequestService accessRequestService,
+      IssueService issueService) {
     super(userChatService, rulesEngine);
     this.accessRequestService = accessRequestService;
+    this.issueService = issueService;
   }
 
   @Condition
@@ -66,15 +73,24 @@ public class ReplyRule extends BaseRule {
 
     if (accessRequestDto == null) return;
 
-    String message = "";
-    if (accessRequestDto.getReplyStatus() == null) {
-      updateAccessRequest(accessRequestDto, replyCommand, userKey, historyId);
-      message = messageFormatter.formatAccessReplyMessage(replyCommand);
-    } else {
-      message = messageFormatter.formatProcessedReplyMessage(accessRequestDto.getReplyStatus());
-    }
-
     try {
+      Issue issue = issueService.getIssue(Objects.requireNonNull(accessRequestDto.getIssueId()));
+      ApplicationUser requester =
+          accessRequestService.getAccessUserByKey(
+              Objects.requireNonNull(accessRequestDto.getRequesterKey()));
+
+      String message = "";
+      if (accessRequestDto.getReplyStatus() == null) {
+        updateAccessRequest(accessRequestDto, replyCommand, userKey, historyId);
+        message = messageFormatter.formatAccessReplyMessage(requester, issue, replyCommand);
+      } else {
+        ApplicationUser responder =
+            accessRequestService.getAccessUserByKey(
+                Objects.requireNonNull(accessRequestDto.getReplyAdmin()).getUserKey());
+        message =
+            messageFormatter.formatProcessedReplyMessage(
+                responder, requester, issue, accessRequestDto.getReplyStatus());
+      }
       userChatService.editMessageText(event.getChatId(), event.getMsgId(), message, null);
     } catch (Exception e) {
       SentryClient.capture(e, Map.of("user", event.getUserId()));

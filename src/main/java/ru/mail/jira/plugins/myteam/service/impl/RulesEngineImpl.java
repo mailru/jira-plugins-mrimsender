@@ -126,9 +126,9 @@ public class RulesEngineImpl
         new ViewCommentsRule(
             userChatService, this, issueService, jiraMarkdownToChatMarkdownConverter));
     commandsRuleEngine.registerRule(new CommentingIssueFromGroupChatRule(userChatService, this));
-    commandsRuleEngine.registerRule(new ReplyRule(userChatService, this, accessRequestService));
+    commandsRuleEngine.registerRule(
+        new ReplyRule(userChatService, this, accessRequestService, issueService));
     // Admin Group Commands
-
     commandsRuleEngine.registerRule(
         new IssueCreationSettingsCommand(userChatService, this, issueService));
 

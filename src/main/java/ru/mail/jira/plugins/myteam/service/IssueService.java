@@ -33,6 +33,8 @@ public interface IssueService {
   Issue getIssueByUser(String issueKey, @Nullable ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException;
 
+  Issue getIssue(Long issueId) throws IssueNotFoundException;
+
   Issue getIssue(String issueKey) throws IssueNotFoundException;
 
   boolean isUserWatching(Issue issue, ApplicationUser user);

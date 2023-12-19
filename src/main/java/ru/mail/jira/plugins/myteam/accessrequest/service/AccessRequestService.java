@@ -241,6 +241,11 @@ public class AccessRequestService {
     return accessRequestConfigurationRepository.update(configurationId, configurationDto);
   }
 
+  @Nullable
+  public ApplicationUser getAccessUserByKey(String userKey) {
+    return userManager.getUserByKey(userKey);
+  }
+
   public void deleteAccessRequestConfiguration(int configurationId) {
     accessRequestConfigurationRepository.deleteById(configurationId);
   }

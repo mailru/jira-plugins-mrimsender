@@ -346,6 +346,15 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
+  public Issue getIssue(Long issueId) throws IssueNotFoundException {
+    Issue issue = issueManager.getIssueObject(issueId);
+    if (issue == null) {
+      throw new IssueNotFoundException(String.format("Issue with id %s was not found", issueId));
+    }
+    return issue;
+  }
+
+  @Override
   public List<Comment> getIssueComments(String issueKey, ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException {
     return commentService.getCommentsForUser(user, getIssueByUser(issueKey, user));
