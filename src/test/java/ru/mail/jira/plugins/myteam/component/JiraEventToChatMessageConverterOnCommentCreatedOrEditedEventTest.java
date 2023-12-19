@@ -18,6 +18,8 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.sal.api.message.I18nResolver;
+import java.util.Collections;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -65,6 +67,10 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
   @SuppressWarnings("NullAway")
   private UserManager userManager;
 
+  @Mock
+  @SuppressWarnings("NullAway")
+  private PluginMentionService pluginMentionService;
+
   @InjectMocks
   @SuppressWarnings("NullAway")
   private JiraEventToChatMessageConverter jiraEventToChatMessageConverter;
@@ -83,6 +89,8 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
         .thenReturn("http://localhost:8080/browse/someKey");
 
     IssueEvent commentCreatedEventWithMentionInCommentBody = mock(IssueEvent.class);
+    when(commentCreatedEventWithMentionInCommentBody.getParams())
+        .thenReturn(Collections.emptyMap());
     when(commentCreatedEventWithMentionInCommentBody.getIssue())
         .thenReturn(issue)
         .thenReturn(issue);
@@ -94,7 +102,10 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     when(commentCreatedEventWithMentionInCommentBody.getEventTypeId())
         .thenReturn(EventType.ISSUE_COMMENTED_ID);
 
-    when(recipient.getUsername()).thenReturn("userToNotify");
+    when(pluginMentionService.checkMentionUserInComment(
+            eq(recipient), eq(comment), nullable(Comment.class)))
+        .thenReturn(true);
+
     String createdCommentBody = "Comment with mention [~userToNotify]";
     String convertedCreatedCommentBody =
         "Comment with mention ±@\\±[notifiedUser@example\\.org\\±]";
@@ -126,7 +137,6 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     assertEquals(expectedResult, messageText);
 
     verify(commentCreatedEventWithMentionInCommentBody, times(2)).getEventTypeId();
-    verify(recipient).getUsername();
     verify(jiraMarkdownToChatMarkdownConverter)
         .makeMyteamMarkdownFromJira(eq(createdCommentBody), eq(true));
     verify(messageFormatter).getIssueLink(eq("someKey"));
@@ -147,6 +157,8 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
         .thenReturn("http://localhost:8080/browse/someKey");
 
     IssueEvent commentCreatedEventWithMentionInCommentBody = mock(IssueEvent.class);
+    when(commentCreatedEventWithMentionInCommentBody.getParams())
+        .thenReturn(Collections.emptyMap());
     when(commentCreatedEventWithMentionInCommentBody.getIssue())
         .thenReturn(issue)
         .thenReturn(issue);
@@ -158,7 +170,6 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     when(commentCreatedEventWithMentionInCommentBody.getEventTypeId())
         .thenReturn(EventType.ISSUE_COMMENTED_ID);
 
-    when(recipient.getUsername()).thenReturn("otherUserToNotify");
     String createdCommentBody = "Comment with mention [~userToNotify]";
     String convertedCreatedCommentBody =
         "Comment with mention ±@\\±[notifiedUser@example\\.org\\±]";
@@ -179,6 +190,10 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
             anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(expectedResult);
 
+    when(pluginMentionService.checkMentionUserInComment(
+            eq(recipient), eq(comment), nullable(Comment.class)))
+        .thenReturn(false);
+
     // WHEN
     String messageText =
         jiraEventToChatMessageConverter.formatEventWithDiff(
@@ -190,7 +205,6 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     assertEquals(expectedResult, messageText);
 
     verify(commentCreatedEventWithMentionInCommentBody, times(1)).getEventTypeId();
-    verify(recipient).getUsername();
     verify(jiraMarkdownToChatMarkdownConverter)
         .makeMyteamMarkdownFromJira(eq(createdCommentBody), eq(true));
     verify(messageFormatter).getIssueLink(eq("someKey"));
@@ -211,6 +225,9 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
         .thenReturn("http://localhost:8080/browse/someKey");
 
     IssueEvent commentCreatedEventWithMentionInCommentBody = mock(IssueEvent.class);
+    Comment originalComment = mock(Comment.class);
+    when(commentCreatedEventWithMentionInCommentBody.getParams())
+        .thenReturn(Map.of("originalcomment", originalComment));
     when(commentCreatedEventWithMentionInCommentBody.getIssue())
         .thenReturn(issue)
         .thenReturn(issue);
@@ -222,7 +239,10 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     when(commentCreatedEventWithMentionInCommentBody.getEventTypeId())
         .thenReturn(EventType.ISSUE_COMMENT_EDITED_ID);
 
-    when(recipient.getUsername()).thenReturn("userToNotify");
+    when(pluginMentionService.checkMentionUserInComment(
+            eq(recipient), eq(comment), eq(originalComment)))
+        .thenReturn(true);
+
     String createdCommentBody = "Comment with mention [~userToNotify]";
     String convertedCreatedCommentBody =
         "Comment with mention ±@\\±[notifiedUser@example\\.org\\±]";
@@ -254,7 +274,6 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     assertEquals(expectedResult, messageText);
 
     verify(commentCreatedEventWithMentionInCommentBody, times(2)).getEventTypeId();
-    verify(recipient).getUsername();
     verify(jiraMarkdownToChatMarkdownConverter)
         .makeMyteamMarkdownFromJira(eq(createdCommentBody), eq(true));
     verify(messageFormatter).getIssueLink(eq("someKey"));
@@ -275,6 +294,9 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
         .thenReturn("http://localhost:8080/browse/someKey");
 
     IssueEvent commentCreatedEventWithMentionInCommentBody = mock(IssueEvent.class);
+    Comment originalComment = mock(Comment.class);
+    when(commentCreatedEventWithMentionInCommentBody.getParams())
+        .thenReturn(Map.of("originalcomment", originalComment));
     when(commentCreatedEventWithMentionInCommentBody.getIssue())
         .thenReturn(issue)
         .thenReturn(issue);
@@ -286,7 +308,6 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     when(commentCreatedEventWithMentionInCommentBody.getEventTypeId())
         .thenReturn(EventType.ISSUE_COMMENT_EDITED_ID);
 
-    when(recipient.getUsername()).thenReturn("otheruUserToNotify");
     String createdCommentBody = "Comment with mention [~userToNotify]";
     String convertedCreatedCommentBody =
         "Comment with mention ±@\\±[notifiedUser@example\\.org\\±]";
@@ -307,6 +328,10 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
             anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(expectedResult);
 
+    when(pluginMentionService.checkMentionUserInComment(
+            eq(recipient), eq(comment), eq(originalComment)))
+        .thenReturn(false);
+
     // WHEN
     String messageText =
         jiraEventToChatMessageConverter.formatEventWithDiff(
@@ -318,7 +343,6 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     assertEquals(expectedResult, messageText);
 
     verify(commentCreatedEventWithMentionInCommentBody, times(1)).getEventTypeId();
-    verify(recipient).getUsername();
     verify(jiraMarkdownToChatMarkdownConverter)
         .makeMyteamMarkdownFromJira(eq(createdCommentBody), eq(true));
     verify(messageFormatter).getIssueLink(eq("someKey"));

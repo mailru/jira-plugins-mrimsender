@@ -12,6 +12,7 @@ import com.atlassian.jira.event.type.EventType;
 import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.attachment.Attachment;
+import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.NavigableField;
 import com.atlassian.jira.issue.fields.UserField;
@@ -23,7 +24,6 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.httpclient.URI;
@@ -45,6 +45,11 @@ public class JiraEventToChatMessageConverter {
   private static final String I18N_PART_KEY = "ru.mail.jira.plugins.myteam.notification.";
   private static final String MENTION_UPDATED_ISSUE_I18N_KEY =
       "ru.mail.jira.plugins.myteam.notification.updated.and.mentioned";
+
+  private static final String DEFAULT_EVENT_I18N_KEY =
+      "ru.mail.jira.plugins.myteam.notification.updated";
+
+  private static final String EVENT_ORIGINAL_COMMENT_PARAMETER = "originalcomment";
   private final MessageFormatter messageFormatter;
   private final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter;
   private final DiffFieldChatMessageGenerator diffFieldChatMessageGenerator;
@@ -56,6 +61,8 @@ public class JiraEventToChatMessageConverter {
   private final FieldManager fieldManager;
   private final UserManager userManager;
 
+  private final PluginMentionService pluginMentionService;
+
   public JiraEventToChatMessageConverter(
       final MessageFormatter messageFormatter,
       final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter,
@@ -65,7 +72,8 @@ public class JiraEventToChatMessageConverter {
       @ComponentImport final I18nResolver i18nResolver,
       @ComponentImport final I18nHelper i18nHelper,
       @ComponentImport final FieldManager fieldManager,
-      @ComponentImport final UserManager userManager) {
+      @ComponentImport final UserManager userManager,
+      final PluginMentionService pluginMentionService) {
     this.messageFormatter = messageFormatter;
     this.jiraMarkdownToChatMarkdownConverter = jiraMarkdownToChatMarkdownConverter;
     this.diffFieldChatMessageGenerator = diffFieldChatMessageGenerator;
@@ -75,6 +83,7 @@ public class JiraEventToChatMessageConverter {
     this.i18nHelper = i18nHelper;
     this.fieldManager = fieldManager;
     this.userManager = userManager;
+    this.pluginMentionService = pluginMentionService;
   }
 
   @Nullable
@@ -104,8 +113,8 @@ public class JiraEventToChatMessageConverter {
       String issueLink =
           messageFormatter.markdownTextLink(
               issue.getKey(), messageFormatter.createIssueLink(issue.getKey()));
-      if (checkThatNotifyUserIsMentionedInJiraMarkdownFieldText(
-          StringUtils.defaultString(issue.getDescription(), ""), recipient)) {
+      if (DEFAULT_EVENT_I18N_KEY.equals(i18nKey)
+          && pluginMentionService.checkMentionUserInDescription(issue, recipient, true)) {
         sb.append(
             i18nResolver.getText(
                 MENTION_UPDATED_ISSUE_I18N_KEY,
@@ -197,7 +206,10 @@ public class JiraEventToChatMessageConverter {
     String definedI18nKeyOnMentionedCommented = i18nKey;
 
     if (useMentionFormat
-        && checkThatNotifyUserIsMentionedInJiraMarkdownFieldText(commentBody, recipient)) {
+        && pluginMentionService.checkMentionUserInComment(
+            recipient,
+            issueEvent.getComment(),
+            (Comment) issueEvent.getParams().get(EVENT_ORIGINAL_COMMENT_PARAMETER))) {
       definedI18nKeyOnMentionedCommented =
           Objects.equals(issueEvent.getEventTypeId(), EventType.ISSUE_COMMENTED_ID)
               ? "ru.mail.jira.plugins.myteam.notification.commented.and.mentioned"
@@ -439,17 +451,6 @@ public class JiraEventToChatMessageConverter {
             .append(value.isEmpty() ? "" : diffFieldChatMessageGenerator.markNewValue(value));
       }
     }
-  }
-
-  private static boolean checkThatNotifyUserIsMentionedInJiraMarkdownFieldText(
-      @NotNull final String jiraMarkdownFieldText, @NotNull final ApplicationUser notifyUser) {
-    final Matcher matcher = JiraMarkdownTextPattern.MENTION_PATTERN.matcher(jiraMarkdownFieldText);
-    while (matcher.find()) {
-      if (matcher.group(1).equals(notifyUser.getUsername())) {
-        return true;
-      }
-    }
-    return false;
   }
 
   @NotNull
