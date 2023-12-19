@@ -13,6 +13,8 @@ import com.atlassian.jira.event.type.EventType;
 import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.attachment.Attachment;
+import com.atlassian.jira.issue.comments.Comment;
+import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.issue.fields.FieldManager;
 import com.atlassian.jira.issue.fields.NavigableField;
 import com.atlassian.jira.issue.fields.UserField;
@@ -202,6 +204,14 @@ public class JiraEventToChatMessageConverter {
       final String i18nKey,
       final ApplicationUser user,
       final boolean useMentionFormat) {
+    String messageText;
+    if (EventType.ISSUE_COMMENT_EDITED_ID.equals(issueEvent.getEventTypeId())) {
+      messageText = appendEditedCommentWithDiff(issueEvent, useMentionFormat);
+    } else {
+      messageText =
+          jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
+              issueEvent.getComment().getBody(), useMentionFormat);
+    }
     final Issue issue = issueEvent.getIssue();
     return i18nResolver.getText(
         i18nKey,
@@ -214,8 +224,46 @@ public class JiraEventToChatMessageConverter {
             issue.getKey(),
             issueEvent.getComment().getId(),
             issueEvent.getComment().getId()),
-        jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-            issueEvent.getComment().getBody(), useMentionFormat));
+        messageText);
+  }
+
+  @Nullable
+  private String appendEditedCommentWithDiff(
+      @NotNull final IssueEvent issueEvent, final boolean useMentionFormat) {
+    final String messageText;
+    final Object origCommentObj =
+        issueEvent.getParams().get(CommentManager.EVENT_ORIGINAL_COMMENT_PARAMETER);
+    if (origCommentObj instanceof Comment) {
+      messageText = appendEditedCommentWithDiff(issueEvent, useMentionFormat, (Comment) origCommentObj);
+    } else {
+      messageText =
+          jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
+              issueEvent.getComment().getBody(), useMentionFormat);
+    }
+    return messageText;
+  }
+
+  @Nullable
+  private String appendEditedCommentWithDiff(@NotNull final IssueEvent issueEvent, final boolean useMentionFormat,  final Comment origCommentObj) {
+    final String messageText;
+    final String originalCommentBody = origCommentObj.getBody();
+    final String newCommentBody = issueEvent.getComment().getBody();
+
+    if (checkTextOnComplexJiraWikiStyles(originalCommentBody, newCommentBody)) {
+      messageText =
+          jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
+              newCommentBody, useMentionFormat);
+    } else {
+      messageText =
+          diffFieldChatMessageGenerator.buildDiffString(
+              StringUtils.defaultString(
+                  jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
+                      originalCommentBody, useMentionFormat)),
+              StringUtils.defaultString(
+                  jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
+                      newCommentBody, useMentionFormat)));
+    }
+    return messageText;
   }
 
   private String formatChangeLogWithDiff(
@@ -237,7 +285,7 @@ public class JiraEventToChatMessageConverter {
 
         if ("description".equals(field)) {
           oldDesc = StringUtils.defaultString(changeItem.getString("oldstring"));
-          oldOrNewDescHasComplexFormatting = checkDescOnComplexJiraWikiStyles(oldDesc, newString);
+          oldOrNewDescHasComplexFormatting = checkTextOnComplexJiraWikiStyles(oldDesc, newString);
           oldDesc = messageFormatter.limitFieldValue(oldDesc);
           changedDescription = messageFormatter.limitFieldValue(newString);
           continue;
@@ -393,12 +441,12 @@ public class JiraEventToChatMessageConverter {
         + "___";
   }
 
-  private static boolean checkDescOnComplexJiraWikiStyles(
+  private static boolean checkTextOnComplexJiraWikiStyles(
       final String oldDesc, final String newDesc) {
     boolean oldOrNewDescHasComplexFormatting = false;
     for (final Pattern pattern : PATTERNS_TO_EXCLUDE_DESCRIPTION_FOR_DIFF) {
-      if (checkDescOnComplexJiraWikiStyles(oldDesc, pattern)
-          || checkDescOnComplexJiraWikiStyles(newDesc, pattern)) {
+      if (checkTextOnComplexJiraWikiStyles(oldDesc, pattern)
+          || checkTextOnComplexJiraWikiStyles(newDesc, pattern)) {
         oldOrNewDescHasComplexFormatting = true;
         break;
       }
@@ -407,7 +455,7 @@ public class JiraEventToChatMessageConverter {
     return oldOrNewDescHasComplexFormatting;
   }
 
-  private static boolean checkDescOnComplexJiraWikiStyles(
+  private static boolean checkTextOnComplexJiraWikiStyles(
       final String inputText, final Pattern pattern) {
     return pattern.matcher(inputText).find();
   }
