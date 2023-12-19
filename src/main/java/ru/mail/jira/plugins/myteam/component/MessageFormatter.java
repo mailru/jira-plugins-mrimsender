@@ -533,22 +533,27 @@ public class MessageFormatter {
     return sb.toString();
   }
 
-  public String formatAccessReplyMessage(ReplyRule.ReplyCommands replyCommand) {
+  public String formatAccessReplyMessage(
+      @Nullable ApplicationUser requester, Issue issue, ReplyRule.ReplyCommands replyCommand) {
     String command =
         replyCommand.equals(ReplyRule.ReplyCommands.COMMAND_ALLOW) ? "allow" : "forbid";
     return i18nResolver.getText(
         String.format("ru.mail.jira.plugins.myteam.accessRequest.page.message.reply.%s", command),
-        "user",
-        "user");
+        requester != null ? formatUser(requester, "common.words.anonymous", true) : "[unknown]",
+        markdownTextLink(issue.getKey(), createIssueLink(issue.getKey())));
   }
 
-  public String formatProcessedReplyMessage(Boolean replyDtoStatus) {
+  public String formatProcessedReplyMessage(
+      @Nullable ApplicationUser responder,
+      @Nullable ApplicationUser requester,
+      Issue issue,
+      boolean replyDtoStatus) {
     String command = replyDtoStatus ? "allowed" : "forbade";
     return i18nResolver.getText(
         String.format("ru.mail.jira.plugins.myteam.accessRequest.page.message.reply.%s", command),
-        "user",
-        "user",
-        "user");
+        responder != null ? formatUser(responder, "common.words.anonymous", true) : "[unknown]",
+        requester != null ? formatUser(requester, "common.words.anonymous", true) : "[unknown]",
+        markdownTextLink(issue.getKey(), createIssueLink(issue.getKey())));
   }
 
   public String formatAccessRequestMessage(
