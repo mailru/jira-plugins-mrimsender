@@ -36,8 +36,6 @@ public class ReplyRule extends BaseRule {
     COMMAND_FORBID
   }
 
-  public static final String COMMAND_ALLOW = "allow";
-  public static final String COMMAND_FORBID = "forbid";
   static final ButtonRuleType NAME = ButtonRuleType.AccessReply;
   private final AccessRequestService accessRequestService;
 
@@ -68,30 +66,20 @@ public class ReplyRule extends BaseRule {
 
     if (accessRequestDto == null) return;
 
+    String message = "";
     if (accessRequestDto.getReplyStatus() == null) {
       updateAccessRequest(accessRequestDto, replyCommand, userKey, historyId);
+      message = messageFormatter.formatAccessReplyMessage(replyCommand);
     } else {
-      ReplyCommands prevReplyCommand =
-          accessRequestDto.getReplyStatus()
-              ? ReplyCommands.COMMAND_ALLOW
-              : ReplyCommands.COMMAND_FORBID;
-      replyAdminUsers(prevReplyCommand, event.getChatId());
+      message = messageFormatter.formatProcessedReplyMessage(accessRequestDto.getReplyStatus());
+    }
+
+    try {
+      userChatService.editMessageText(event.getChatId(), event.getMsgId(), message, null);
+    } catch (Exception e) {
+      SentryClient.capture(e, Map.of("user", event.getUserId()));
     }
     userChatService.answerCallbackQuery(event.getQueryId());
-  }
-
-  private void replyAdminUsers(ReplyCommands replyCommands, String chatId) {
-    String message = "";
-    if (replyCommands.equals(ReplyCommands.COMMAND_ALLOW)) {
-      message = "Пользователь уже добавлен";
-    } else {
-      message = "Пользователь уже отклонен";
-    }
-    try {
-      userChatService.sendMessageText(chatId, message);
-    } catch (Exception e) {
-      SentryClient.capture(e, Map.of("user", chatId));
-    }
   }
 
   private void updateAccessRequest(

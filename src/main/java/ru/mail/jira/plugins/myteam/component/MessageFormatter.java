@@ -44,6 +44,7 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons.ReplyRule;
 import ru.mail.jira.plugins.myteam.component.url.dto.Link;
 import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -532,14 +533,22 @@ public class MessageFormatter {
     return sb.toString();
   }
 
-  public String formatAccessReplyMessage(String command, @NotNull ApplicationUser user) {
-    String formatUser = formatUser(user, "common.words.anonymous", true);
-    // TODO fix other users
+  public String formatAccessReplyMessage(ReplyRule.ReplyCommands replyCommand) {
+    String command =
+        replyCommand.equals(ReplyRule.ReplyCommands.COMMAND_ALLOW) ? "allow" : "forbid";
     return i18nResolver.getText(
         String.format("ru.mail.jira.plugins.myteam.accessRequest.page.message.reply.%s", command),
-        formatUser,
-        formatUser,
-        formatUser);
+        "user",
+        "user");
+  }
+
+  public String formatProcessedReplyMessage(Boolean replyDtoStatus) {
+    String command = replyDtoStatus ? "allowed" : "forbade";
+    return i18nResolver.getText(
+        String.format("ru.mail.jira.plugins.myteam.accessRequest.page.message.reply.%s", command),
+        "user",
+        "user",
+        "user");
   }
 
   public String formatAccessRequestMessage(
