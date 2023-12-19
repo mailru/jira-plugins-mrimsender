@@ -12,7 +12,6 @@ import com.atlassian.jira.issue.watchers.WatcherManager;
 import com.atlassian.jira.mail.Email;
 import com.atlassian.jira.mail.builder.EmailBuilder;
 import com.atlassian.jira.project.Project;
-import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
@@ -72,7 +71,6 @@ public class AccessRequestService {
   private final UserManager userManager;
   private final VelocityManager velocityManager;
   private final WatcherManager watcherManager;
-  private final JiraAuthenticationContext jiraAuthenticationContext;
 
   public AccessRequestService(
       AccessRequestConfigurationRepository accessRequestConfigurationRepository,
@@ -90,8 +88,7 @@ public class AccessRequestService {
       @ComponentImport ProjectRoleManager projectRoleManager,
       @ComponentImport UserManager userManager,
       @ComponentImport VelocityManager velocityManager,
-      @ComponentImport WatcherManager watcherManager,
-      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
+      @ComponentImport WatcherManager watcherManager) {
     this.accessRequestConfigurationRepository = accessRequestConfigurationRepository;
     this.accessRequestHistoryRepository = accessRequestHistoryRepository;
     this.dtoUtils = dtoUtils;
@@ -108,7 +105,6 @@ public class AccessRequestService {
     this.velocityManager = velocityManager;
     this.watcherManager = watcherManager;
     this.userChatService = userChatService;
-    this.jiraAuthenticationContext = jiraAuthenticationContext;
   }
 
   @Nullable
@@ -247,13 +243,6 @@ public class AccessRequestService {
 
   public void deleteAccessRequestConfiguration(int configurationId) {
     accessRequestConfigurationRepository.deleteById(configurationId);
-  }
-
-  public String getReplyAdminMessage(String command) {
-    ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
-    return messageFormatter.formatAccessReplyMessage(command, loggedInUser);
-    //    AccessRequestConfiguration configuration =
-    //            accessRequestConfigurationRepository.getAccessRequestConfiguration(projectId);
   }
 
   private Set<ApplicationUser> getUsersFromProjectRole(@NotNull Project project, Long roleId) {
