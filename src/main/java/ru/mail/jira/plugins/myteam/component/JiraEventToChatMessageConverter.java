@@ -234,7 +234,8 @@ public class JiraEventToChatMessageConverter {
     final Object origCommentObj =
         issueEvent.getParams().get(CommentManager.EVENT_ORIGINAL_COMMENT_PARAMETER);
     if (origCommentObj instanceof Comment) {
-      messageText = appendEditedCommentWithDiff(issueEvent, useMentionFormat, (Comment) origCommentObj);
+      messageText =
+          appendEditedCommentWithDiff(issueEvent, useMentionFormat, (Comment) origCommentObj);
     } else {
       messageText =
           jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
@@ -244,7 +245,10 @@ public class JiraEventToChatMessageConverter {
   }
 
   @Nullable
-  private String appendEditedCommentWithDiff(@NotNull final IssueEvent issueEvent, final boolean useMentionFormat,  final Comment origCommentObj) {
+  private String appendEditedCommentWithDiff(
+      @NotNull final IssueEvent issueEvent,
+      final boolean useMentionFormat,
+      final Comment origCommentObj) {
     final String messageText;
     final String originalCommentBody = origCommentObj.getBody();
     final String newCommentBody = issueEvent.getComment().getBody();
