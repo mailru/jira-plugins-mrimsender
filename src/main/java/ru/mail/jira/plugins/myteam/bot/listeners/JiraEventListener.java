@@ -35,8 +35,8 @@ import ru.mail.jira.plugins.myteam.bot.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.component.JiraEventToChatMessageConverter;
-import ru.mail.jira.plugins.myteam.component.UserMentionService;
 import ru.mail.jira.plugins.myteam.component.UserData;
+import ru.mail.jira.plugins.myteam.component.UserMentionService;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
 @Component
