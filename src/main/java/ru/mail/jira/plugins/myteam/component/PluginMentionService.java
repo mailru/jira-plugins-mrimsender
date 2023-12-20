@@ -1,7 +1,6 @@
 /* (C)2023 */
 package ru.mail.jira.plugins.myteam.component;
 
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toSet;
 
 import com.atlassian.jira.issue.Issue;
@@ -12,8 +11,10 @@ import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.history.ChangeItemBean;
 import com.atlassian.jira.mention.MentionFinder;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.google.common.collect.Iterables;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -28,21 +29,21 @@ public class PluginMentionService {
   private final MentionFinder mentionFinder;
   private final ChangeHistoryManager changeHistoryManager;
 
+  private final UserManager userManager;
+
   public PluginMentionService(
       @ComponentImport final MentionFinder mentionFinder,
-      @ComponentImport final ChangeHistoryManager changeHistoryManager) {
+      @ComponentImport final ChangeHistoryManager changeHistoryManager,
+      UserManager userManager) {
     this.mentionFinder = mentionFinder;
     this.changeHistoryManager = changeHistoryManager;
+    this.userManager = userManager;
   }
 
-  public boolean checkMentionUserInDescription(
-      @NotNull final Issue issue,
-      @NotNull final ApplicationUser mentionedUser,
-      final boolean computePreviousValue) {
-    final String userNameToSearchInMentionText = mentionedUser.getUsername();
-    final Set<String> mentionedUsers =
-        getUsersMentionedInText(
-            StringUtils.defaultString(issue.getDescription()), userNameToSearchInMentionText);
+  public Set<ApplicationUser> getMentionedUsersInDescription(
+      @NotNull final Issue issue, final boolean computePreviousValue) {
+    final Set<ApplicationUser> mentionedUsers =
+        getUsersMentionedInText(StringUtils.defaultString(issue.getDescription()));
 
     boolean containsDescriptionChanges = false;
     if (computePreviousValue) {
@@ -53,10 +54,8 @@ public class PluginMentionService {
         final List<ChangeItemBean> changeItemBeans = last.getChangeItemBeans();
         for (ChangeItemBean changeItemBean : changeItemBeans) {
           if (changeItemBean.getField().equals(IssueFieldConstants.DESCRIPTION)) {
-            final Set<String> lastMentionedUsers =
-                getUsersMentionedInText(
-                    StringUtils.defaultString(changeItemBean.getFromString()),
-                    userNameToSearchInMentionText);
+            final Set<ApplicationUser> lastMentionedUsers =
+                getUsersMentionedInText(StringUtils.defaultString(changeItemBean.getFromString()));
             mentionedUsers.removeAll(lastMentionedUsers);
             containsDescriptionChanges = true;
             break;
@@ -68,47 +67,40 @@ public class PluginMentionService {
     }
 
     if (!mentionedUsers.isEmpty() && containsDescriptionChanges) {
-      return true;
+      return mentionedUsers;
     }
-    return false;
-  }
-
-  public boolean checkMentionUserInComment(
-      @NotNull final ApplicationUser mentionedUser,
-      @Nullable final Comment comment,
-      @Nullable final Comment originalComment) {
-    return getCommentMentions(mentionedUser.getUsername(), comment, originalComment).size() != 0;
+    return Collections.emptySet();
   }
 
   @NotNull
-  private Set<String> getCommentMentions(
-      @NotNull final String findUserName,
-      @Nullable final Comment comment,
-      @Nullable final Comment originalComment) {
-    // in the case of an edit, lets pass along the original comment since we can't get it any other
-    // way. Change history doesn't do comments.
+  public Set<ApplicationUser> getMentionedUserInComment(@Nullable Comment comment) {
+    return getMentionedUserInEditedComment(comment, null);
+  }
+
+  @NotNull
+  public Set<ApplicationUser> getMentionedUserInEditedComment(
+      @Nullable final Comment comment, @Nullable final Comment originalComment) {
     if (comment == null) {
-      return emptySet();
+      return Collections.emptySet();
     }
-    final Set<String> mentionedUsers =
-        getUsersMentionedInText(StringUtils.defaultString(comment.getBody()), findUserName);
+    final Set<ApplicationUser> mentionedUsers =
+        getUsersMentionedInText(StringUtils.defaultString(comment.getBody()));
     if (originalComment != null) {
       // if a comment was edited strip out any users that were already mentioned previously in this
       // comment
-      final Set<String> originalMentionedUsers =
-          getUsersMentionedInText(
-              StringUtils.defaultString(originalComment.getBody()), findUserName);
+      final Set<ApplicationUser> originalMentionedUsers =
+          getUsersMentionedInText(StringUtils.defaultString(originalComment.getBody()));
       mentionedUsers.removeAll(originalMentionedUsers);
     }
     return mentionedUsers;
   }
 
-  private Set<String> getUsersMentionedInText(
-      @NotNull final String mentionText, final String findUserName) {
+  private Set<ApplicationUser> getUsersMentionedInText(@NotNull final String mentionText) {
     return StreamSupport.stream(
             mentionFinder.getMentionedUsernames(mentionText).spliterator(), false)
         .filter(Objects::nonNull)
-        .filter(mentionUserName -> mentionUserName.equals(findUserName))
+        .map(userManager::getUserByName)
+        .filter(Objects::nonNull)
         .collect(toSet());
   }
 }

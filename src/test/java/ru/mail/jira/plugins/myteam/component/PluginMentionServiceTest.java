@@ -13,10 +13,13 @@ import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.history.ChangeItemBean;
 import com.atlassian.jira.mention.MentionFinderImpl;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.user.util.UserManager;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("MockNotUsedInProduction")
 class PluginMentionServiceTest {
 
   @SuppressWarnings("NullAway")
@@ -26,16 +29,16 @@ class PluginMentionServiceTest {
   private ChangeHistoryManager changeHistoryManager;
 
   @SuppressWarnings("NullAway")
-  private ApplicationUser recipient;
+  private UserManager userManager;
 
   @BeforeEach
   void setUp() {
     ChangeHistoryManager changeHistoryManager = mock(ChangeHistoryManager.class);
     this.changeHistoryManager = changeHistoryManager;
-    pluginMentionService = new PluginMentionService(new MentionFinderImpl(), changeHistoryManager);
-    ApplicationUser recipient = mock(ApplicationUser.class);
-    when(recipient.getUsername()).thenReturn("admin");
-    this.recipient = recipient;
+    UserManager userManager = mock(UserManager.class);
+    this.userManager = userManager;
+    pluginMentionService =
+        new PluginMentionService(new MentionFinderImpl(), changeHistoryManager, userManager);
   }
 
   @Test
@@ -46,10 +49,10 @@ class PluginMentionServiceTest {
     when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of());
 
     // WHEN
-    boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, true);
+    Set<ApplicationUser> result = pluginMentionService.getMentionedUsersInDescription(issue, true);
 
     // THEN
-    assertFalse(result);
+    assertTrue(result.isEmpty());
   }
 
   @Test
@@ -66,12 +69,15 @@ class PluginMentionServiceTest {
 
     when(changeHistory.getChangeItemBeans()).thenReturn(List.of(changeItemBean));
     when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of(changeHistory));
+    ApplicationUser mentionedUser = mock(ApplicationUser.class);
+    when(userManager.getUserByName(eq("admin"))).thenReturn(mentionedUser);
 
     // WHEN
-    boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, true);
+    Set<ApplicationUser> result = pluginMentionService.getMentionedUsersInDescription(issue, true);
 
     // THEN
-    assertTrue(result);
+    assertFalse(result.isEmpty());
+    assertEquals(Set.of(mentionedUser), result);
   }
 
   @Test
@@ -88,12 +94,13 @@ class PluginMentionServiceTest {
 
     when(changeHistory.getChangeItemBeans()).thenReturn(List.of(changeItemBean));
     when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of(changeHistory));
+    when(userManager.getUserByName(eq("admin"))).thenReturn(mock(ApplicationUser.class));
 
     // WHEN
-    boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, true);
+    Set<ApplicationUser> result = pluginMentionService.getMentionedUsersInDescription(issue, true);
 
     // THEN
-    assertFalse(result);
+    assertTrue(result.isEmpty());
   }
 
   @Test
@@ -103,12 +110,17 @@ class PluginMentionServiceTest {
     when(issue.getDescription()).thenReturn("[~admin]");
 
     boolean computePreviousValue = false;
+
+    ApplicationUser mentionedUser = mock(ApplicationUser.class);
+    when(userManager.getUserByName(eq("admin"))).thenReturn(mentionedUser);
+
     // WHEN
-    boolean result =
-        pluginMentionService.checkMentionUserInDescription(issue, recipient, computePreviousValue);
+    Set<ApplicationUser> result =
+        pluginMentionService.getMentionedUsersInDescription(issue, computePreviousValue);
 
     // THEN
-    assertTrue(result);
+    assertFalse(result.isEmpty());
+    assertEquals(Set.of(mentionedUser), result);
   }
 
   @Test
@@ -124,11 +136,13 @@ class PluginMentionServiceTest {
     when(changeHistory.getChangeItemBeans()).thenReturn(List.of(changeItemBean));
     when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of(changeHistory));
 
+    when(userManager.getUserByName(eq("admin"))).thenReturn(mock(ApplicationUser.class));
+
     // WHEN
-    boolean result = pluginMentionService.checkMentionUserInDescription(issue, recipient, true);
+    Set<ApplicationUser> result = pluginMentionService.getMentionedUsersInDescription(issue, true);
 
     // THEN
-    assertFalse(result);
+    assertTrue(result.isEmpty());
   }
 
   @Test
@@ -138,11 +152,11 @@ class PluginMentionServiceTest {
     Comment originalComment = null;
 
     // WHEN
-    boolean result =
-        pluginMentionService.checkMentionUserInComment(recipient, comment, originalComment);
+    Set<ApplicationUser> result =
+        pluginMentionService.getMentionedUserInEditedComment(comment, originalComment);
 
     // THEN
-    assertFalse(result);
+    assertTrue(result.isEmpty());
   }
 
   @Test
@@ -150,12 +164,15 @@ class PluginMentionServiceTest {
     // GIVEN
     Comment newComment = mock(Comment.class);
     when(newComment.getBody()).thenReturn("[~admin]");
+    ApplicationUser mentionedUser = mock(ApplicationUser.class);
+    when(userManager.getUserByName(eq("admin"))).thenReturn(mentionedUser);
 
     // WHEN
-    boolean result = pluginMentionService.checkMentionUserInComment(recipient, newComment, null);
+    Set<ApplicationUser> result = pluginMentionService.getMentionedUserInComment(newComment);
 
     // THEN
-    assertTrue(result);
+    assertFalse(result.isEmpty());
+    assertEquals(Set.of(mentionedUser), result);
   }
 
   @Test
@@ -165,13 +182,16 @@ class PluginMentionServiceTest {
     when(newComment.getBody()).thenReturn("text\n\n\n\n\ntext123123__0[~admin]text");
     Comment originalComment = mock(Comment.class);
     when(originalComment.getBody()).thenReturn("some text");
+    ApplicationUser mentionedUser = mock(ApplicationUser.class);
+    when(userManager.getUserByName(eq("admin"))).thenReturn(mentionedUser);
 
     // WHEN
-    boolean result =
-        pluginMentionService.checkMentionUserInComment(recipient, newComment, originalComment);
+    Set<ApplicationUser> result =
+        pluginMentionService.getMentionedUserInEditedComment(newComment, originalComment);
 
     // THEN
-    assertTrue(result);
+    assertFalse(result.isEmpty());
+    assertEquals(Set.of(mentionedUser), result);
   }
 
   @Test
@@ -183,11 +203,13 @@ class PluginMentionServiceTest {
     when(originalComment.getBody())
         .thenReturn("text\n\n\n\n\ntext123123__0[~admin]\n\n\n\n45645654text");
 
+    ApplicationUser mentionedUser = mock(ApplicationUser.class);
+    when(userManager.getUserByName(eq("admin"))).thenReturn(mentionedUser);
     // WHEN
-    boolean result =
-        pluginMentionService.checkMentionUserInComment(recipient, newComment, originalComment);
+    Set<ApplicationUser> result =
+        pluginMentionService.getMentionedUserInEditedComment(newComment, originalComment);
 
     // THEN
-    assertFalse(result);
+    assertTrue(result.isEmpty());
   }
 }
