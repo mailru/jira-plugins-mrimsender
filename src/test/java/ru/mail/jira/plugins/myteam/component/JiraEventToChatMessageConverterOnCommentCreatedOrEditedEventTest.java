@@ -118,7 +118,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     // WHEN
     String messageText =
         jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, true),
+            MentionedApplicationUser.mentionedUser(recipient),
             commentCreatedEventWithMentionInCommentBody);
 
     // THEN
@@ -126,7 +126,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     assertFalse(messageText.isEmpty());
     assertEquals(expectedResult, messageText);
 
-    verify(commentCreatedEventWithMentionInCommentBody, times(2)).getEventTypeId();
+    verify(commentCreatedEventWithMentionInCommentBody, times(3)).getEventTypeId();
     verify(jiraMarkdownToChatMarkdownConverter)
         .makeMyteamMarkdownFromJira(eq(createdCommentBody), eq(true));
     verify(messageFormatter).getIssueLink(eq("someKey"));
@@ -181,7 +181,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     // WHEN
     String messageText =
         jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false),
+            MentionedApplicationUser.notMentionedUser(recipient),
             commentCreatedEventWithMentionInCommentBody);
 
     // THEN
@@ -189,7 +189,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     assertFalse(messageText.isEmpty());
     assertEquals(expectedResult, messageText);
 
-    verify(commentCreatedEventWithMentionInCommentBody, times(1)).getEventTypeId();
+    verify(commentCreatedEventWithMentionInCommentBody, times(2)).getEventTypeId();
     verify(jiraMarkdownToChatMarkdownConverter)
         .makeMyteamMarkdownFromJira(eq(createdCommentBody), eq(true));
     verify(messageFormatter).getIssueLink(eq("someKey"));
@@ -244,7 +244,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     // WHEN
     String messageText =
         jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, true),
+            MentionedApplicationUser.mentionedUser(recipient),
             commentCreatedEventWithMentionInCommentBody);
 
     // THEN
@@ -252,7 +252,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     assertFalse(messageText.isEmpty());
     assertEquals(expectedResult, messageText);
 
-    verify(commentCreatedEventWithMentionInCommentBody, times(2)).getEventTypeId();
+    verify(commentCreatedEventWithMentionInCommentBody, times(3)).getEventTypeId();
     verify(jiraMarkdownToChatMarkdownConverter)
         .makeMyteamMarkdownFromJira(eq(createdCommentBody), eq(true));
     verify(messageFormatter).getIssueLink(eq("someKey"));
@@ -308,7 +308,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     // WHEN
     String messageText =
         jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false),
+            MentionedApplicationUser.notMentionedUser(recipient),
             commentCreatedEventWithMentionInCommentBody);
 
     // THEN
@@ -316,7 +316,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     assertFalse(messageText.isEmpty());
     assertEquals(expectedResult, messageText);
 
-    verify(commentCreatedEventWithMentionInCommentBody, times(1)).getEventTypeId();
+    verify(commentCreatedEventWithMentionInCommentBody, times(2)).getEventTypeId();
     verify(jiraMarkdownToChatMarkdownConverter)
         .makeMyteamMarkdownFromJira(eq(createdCommentBody), eq(true));
     verify(messageFormatter).getIssueLink(eq("someKey"));

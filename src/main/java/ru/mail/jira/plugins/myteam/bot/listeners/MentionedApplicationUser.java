@@ -13,12 +13,13 @@ public class MentionedApplicationUser {
   private final ApplicationUser applicationUser;
   private final boolean mentioned;
 
-
-  public static MentionedApplicationUser mentionedUser(@NotNull final ApplicationUser applicationUser) {
+  public static MentionedApplicationUser mentionedUser(
+      @NotNull final ApplicationUser applicationUser) {
     return new MentionedApplicationUser(applicationUser, true);
   }
 
-  public static MentionedApplicationUser notMentionedUser(@NotNull final ApplicationUser applicationUser) {
+  public static MentionedApplicationUser notMentionedUser(
+      @NotNull final ApplicationUser applicationUser) {
     return new MentionedApplicationUser(applicationUser, false);
   }
 }

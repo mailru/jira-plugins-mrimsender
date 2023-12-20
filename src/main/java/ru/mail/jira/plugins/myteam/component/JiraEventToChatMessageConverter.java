@@ -212,16 +212,16 @@ public class JiraEventToChatMessageConverter {
           jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
               issueEvent.getComment().getBody(), useMentionFormat);
     }
-  String definedI18nKeyOnMentionedCommented = i18nKey;
+    String definedI18nKeyOnMentionedCommented = i18nKey;
 
-  if (useMentionFormat && mentionedApplicationUser.isMentioned()) {
+    if (useMentionFormat && mentionedApplicationUser.isMentioned()) {
       definedI18nKeyOnMentionedCommented =
-      Objects.equals(issueEvent.getEventTypeId(), EventType.ISSUE_COMMENTED_ID)
-          ? "ru.mail.jira.plugins.myteam.notification.commented.and.mentioned"
-          : "ru.mail.jira.plugins.myteam.notification.commented.edited.and.mentioned";
-  }
-      final Issue issue = issueEvent.getIssue();
-      return i18nResolver.getText(
+          Objects.equals(issueEvent.getEventTypeId(), EventType.ISSUE_COMMENTED_ID)
+              ? "ru.mail.jira.plugins.myteam.notification.commented.and.mentioned"
+              : "ru.mail.jira.plugins.myteam.notification.commented.edited.and.mentioned";
+    }
+    final Issue issue = issueEvent.getIssue();
+    return i18nResolver.getText(
         definedI18nKeyOnMentionedCommented,
         messageFormatter.getIssueLink(issue.getKey()),
         issue.getSummary(),

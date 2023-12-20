@@ -131,7 +131,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String result =
         this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false), this.mockedIssueEvent);
+            MentionedApplicationUser.notMentionedUser(recipient), this.mockedIssueEvent);
 
     // THEN
     assertEquals(testedHeader + testedContent, result);
@@ -155,7 +155,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String result =
         this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false), this.mockedIssueEvent);
+            MentionedApplicationUser.notMentionedUser(recipient), this.mockedIssueEvent);
 
     // THEN
     assertEquals(testedHeader + testedContent, result);
@@ -179,7 +179,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String result =
         this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false), this.mockedIssueEvent);
+            MentionedApplicationUser.notMentionedUser(recipient), this.mockedIssueEvent);
 
     // THEN
     assertEquals(testedHeader + testedContent, result);
@@ -220,7 +220,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String actualResult =
         this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false), this.mockedIssueEvent);
+            MentionedApplicationUser.notMentionedUser(recipient), this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -259,7 +259,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String actualResult =
         this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false), this.mockedIssueEvent);
+            MentionedApplicationUser.notMentionedUser(recipient), this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -302,7 +302,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String actualResult =
         this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false), this.mockedIssueEvent);
+            MentionedApplicationUser.notMentionedUser(recipient), this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -347,7 +347,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String actualResult =
         this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false), this.mockedIssueEvent);
+            MentionedApplicationUser.notMentionedUser(recipient), this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -392,7 +392,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String actualResult =
         this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false), this.mockedIssueEvent);
+            MentionedApplicationUser.notMentionedUser(recipient), this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -433,7 +433,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String actualResult =
         this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false), this.mockedIssueEvent);
+            MentionedApplicationUser.notMentionedUser(recipient), this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -474,7 +474,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String actualResult =
         this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false), this.mockedIssueEvent);
+            MentionedApplicationUser.notMentionedUser(recipient), this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -531,7 +531,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String actualResult =
         this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, false), this.mockedIssueEvent);
+            MentionedApplicationUser.notMentionedUser(recipient), this.mockedIssueEvent);
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -567,7 +567,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String result =
         jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, true), mockedIssueEvent);
+            MentionedApplicationUser.mentionedUser(recipient), mockedIssueEvent);
 
     // THEN
     assertEquals(expected, result);
@@ -601,7 +601,7 @@ class JiraEventToChatMessageConverterTest {
     // WHEN
     String result =
         jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.of(recipient, true), mockedIssueEvent);
+            MentionedApplicationUser.mentionedUser(recipient), mockedIssueEvent);
 
     // THEN
     assertEquals(expected, result);
