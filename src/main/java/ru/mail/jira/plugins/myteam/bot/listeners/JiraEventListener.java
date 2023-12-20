@@ -102,7 +102,8 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     try {
       if (issueEvent.isSendMail()) {
 
-        Set<ApplicationUser> mentionedUsers = resolveMentionedUsersInIssueEvent(issueEvent);
+        Set<ApplicationUser> mentionedPossibleRecipients =
+            resolvePossibleRecipientsMentionedInIssueEvent(issueEvent);
 
         Set<NotificationRecipient> notificationRecipients = Sets.newHashSet();
         try {
@@ -144,11 +145,11 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
           notificationRecipients.addAll(recipientsFromScheme);
         }
 
-        Set<MentionedApplicationUser> mentionedApplicationUsers =
-            getRecipientFilteredByPermissionsAndMentions(
-                issueEvent, mentionedUsers, notificationRecipients);
+        Set<IssueEventRecipient> recipients =
+            getRecipientsFilteredByPermissionsAndMentions(
+                issueEvent, mentionedPossibleRecipients, notificationRecipients);
 
-        sendMessage(mentionedApplicationUsers, issueEvent, issueEvent.getIssue().getKey());
+        sendMessage(recipients, issueEvent, issueEvent.getIssue().getKey());
       }
     } catch (Exception e) {
       SentryClient.capture(e, Map.of("issueKey", issueEvent.getIssue().getKey()));
@@ -179,9 +180,9 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   }
 
   private void sendMessage(
-      Collection<MentionedApplicationUser> recipients, IssueEvent event, String issueKey) {
-    for (MentionedApplicationUser mentionedApplicationUser : recipients) {
-      ApplicationUser recipient = mentionedApplicationUser.getApplicationUser();
+      Collection<IssueEventRecipient> recipients, IssueEvent event, String issueKey) {
+    for (IssueEventRecipient issueEventRecipient : recipients) {
+      ApplicationUser recipient = issueEventRecipient.getRecipient();
       if (recipient.isActive() && userData.isEnabled(recipient)) {
         if (StringUtils.isNotBlank(recipient.getEmailAddress())) {
 
@@ -189,8 +190,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
           jiraAuthenticationContext.setLoggedInUser(recipient);
           try {
             String message =
-                jiraEventToChatMessageConverter.formatEventWithDiff(
-                    mentionedApplicationUser, event);
+                jiraEventToChatMessageConverter.formatEventWithDiff(issueEventRecipient, event);
             if (message != null) {
               myteamEventsListener.publishEvent(
                   new JiraNotifyEvent(
@@ -254,7 +254,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   }
 
   @NotNull
-  private Set<ApplicationUser> resolveMentionedUsersInIssueEvent(
+  private Set<ApplicationUser> resolvePossibleRecipientsMentionedInIssueEvent(
       @NotNull final IssueEvent issueEvent) {
     Long eventTypeId = issueEvent.getEventTypeId();
     Set<ApplicationUser> mentionedUsers;
@@ -280,35 +280,32 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   }
 
   @NotNull
-  private Set<MentionedApplicationUser> getRecipientFilteredByPermissionsAndMentions(
+  private Set<IssueEventRecipient> getRecipientsFilteredByPermissionsAndMentions(
       @NotNull final IssueEvent issueEvent,
-      @NotNull final Set<ApplicationUser> mentionedUsers,
+      @NotNull final Set<ApplicationUser> mentionedPossibleRecipients,
       @NotNull final Set<NotificationRecipient> notificationRecipients) {
-    Map<String, ApplicationUser> mentionedUsersMap =
-        mentionedUsers.stream()
+    Map<String, ApplicationUser> mentionedPossibleRecipientsMap =
+        mentionedPossibleRecipients.stream()
             .filter(mentionedUser -> canSendEventToUser(mentionedUser, issueEvent))
             .collect(Collectors.toMap(ApplicationUser::getKey, Function.identity()));
 
-    Set<ApplicationUser> recipients =
+    Set<ApplicationUser> filteredRecipientsByPermissions =
         notificationRecipients.stream()
             .map(NotificationRecipient::getUser)
             .filter(user -> canSendEventToUser(user, issueEvent))
             .collect(Collectors.toSet());
 
-    Set<MentionedApplicationUser> mentionedApplicationUsers = new HashSet<>();
-    for (ApplicationUser recipient : recipients) {
-      ApplicationUser mentionedUser = mentionedUsersMap.remove(recipient.getKey());
-      if (mentionedUser == null) {
-        mentionedApplicationUsers.add(MentionedApplicationUser.notMentionedUser(recipient));
-      } else {
-        mentionedApplicationUsers.add(MentionedApplicationUser.mentionedUser(recipient));
-      }
+    Set<IssueEventRecipient> recipients = new HashSet<>();
+    for (ApplicationUser recipient : filteredRecipientsByPermissions) {
+      ApplicationUser mentionedUser = mentionedPossibleRecipientsMap.remove(recipient.getKey());
+      boolean mentioned = mentionedUser != null;
+      IssueEventRecipient.of(recipient, mentioned);
     }
 
-    mentionedApplicationUsers.addAll(
-        mentionedUsersMap.values().stream()
-            .map(MentionedApplicationUser::mentionedUser)
+    recipients.addAll(
+        mentionedPossibleRecipientsMap.values().stream()
+            .map(lostMentionRecipient -> IssueEventRecipient.of(lostMentionRecipient, true))
             .collect(Collectors.toSet()));
-    return mentionedApplicationUsers;
+    return recipients;
   }
 }

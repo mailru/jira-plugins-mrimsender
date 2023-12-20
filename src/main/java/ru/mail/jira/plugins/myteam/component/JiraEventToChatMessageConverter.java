@@ -35,7 +35,7 @@ import org.jetbrains.annotations.Nullable;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
-import ru.mail.jira.plugins.myteam.bot.listeners.MentionedApplicationUser;
+import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
 
 @Component
 @Slf4j
@@ -85,12 +85,12 @@ public class JiraEventToChatMessageConverter {
 
   @Nullable
   public String formatEventWithDiff(
-      final MentionedApplicationUser mentionedApplicationUser, final IssueEvent issueEvent) {
+      final IssueEventRecipient issueEventRecipient, final IssueEvent issueEvent) {
     final Issue issue = issueEvent.getIssue();
     final ApplicationUser user = issueEvent.getUser();
     final StringBuilder sb = new StringBuilder();
 
-    ApplicationUser recipient = mentionedApplicationUser.getApplicationUser();
+    ApplicationUser recipient = issueEventRecipient.getRecipient();
     final boolean useMentionFormat = !recipient.equals(user);
 
     final Long eventTypeId = issueEvent.getEventTypeId();
@@ -106,13 +106,13 @@ public class JiraEventToChatMessageConverter {
         || EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
       sb.append(
           appendStringOnIssueCommentedOrCommentEditedEvent(
-              issueEvent, i18nKey, user, useMentionFormat, mentionedApplicationUser));
+              issueEvent, i18nKey, user, useMentionFormat, issueEventRecipient));
       return sb.toString();
     } else {
       String issueLink =
           messageFormatter.markdownTextLink(
               issue.getKey(), messageFormatter.createIssueLink(issue.getKey()));
-      if (DEFAULT_EVENT_I18N_KEY.equals(i18nKey) && mentionedApplicationUser.isMentioned()) {
+      if (DEFAULT_EVENT_I18N_KEY.equals(i18nKey) && issueEventRecipient.isMentioned()) {
         sb.append(
             i18nResolver.getText(
                 MENTION_UPDATED_ISSUE_I18N_KEY,
@@ -135,7 +135,7 @@ public class JiraEventToChatMessageConverter {
     if (EventType.ISSUE_CREATED_ID.equals(eventTypeId)) {
       sb.append(
           messageFormatter.formatSystemFields(
-              mentionedApplicationUser.getApplicationUser(), issue, useMentionFormat));
+              issueEventRecipient.getRecipient(), issue, useMentionFormat));
     }
 
     sb.append(
@@ -148,7 +148,7 @@ public class JiraEventToChatMessageConverter {
           && issueEvent
               .getComment()
               .getBody()
-              .contains("[~" + mentionedApplicationUser.getApplicationUser().getName() + "]")) {
+              .contains("[~" + issueEventRecipient.getRecipient().getName() + "]")) {
         // do not send message when applicationUserWrapper mentioned in comment
         return null;
       }
@@ -203,7 +203,7 @@ public class JiraEventToChatMessageConverter {
       final String i18nKey,
       final ApplicationUser user,
       final boolean useMentionFormat,
-      final MentionedApplicationUser mentionedApplicationUser) {
+      final IssueEventRecipient issueEventRecipient) {
     String messageText;
     if (EventType.ISSUE_COMMENT_EDITED_ID.equals(issueEvent.getEventTypeId())) {
       messageText = appendEditedCommentWithDiff(issueEvent, useMentionFormat);
@@ -214,7 +214,7 @@ public class JiraEventToChatMessageConverter {
     }
     String definedI18nKeyOnMentionedCommented = i18nKey;
 
-    if (useMentionFormat && mentionedApplicationUser.isMentioned()) {
+    if (useMentionFormat && issueEventRecipient.isMentioned()) {
       definedI18nKeyOnMentionedCommented =
           Objects.equals(issueEvent.getEventTypeId(), EventType.ISSUE_COMMENTED_ID)
               ? "ru.mail.jira.plugins.myteam.notification.commented.and.mentioned"

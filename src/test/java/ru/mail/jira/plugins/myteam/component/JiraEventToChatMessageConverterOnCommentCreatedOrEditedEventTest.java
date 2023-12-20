@@ -24,7 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
-import ru.mail.jira.plugins.myteam.bot.listeners.MentionedApplicationUser;
+import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
 
 @SuppressWarnings({"MockNotUsedInProduction", "UnusedVariable"})
 @ExtendWith(MockitoExtension.class)
@@ -118,8 +118,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     // WHEN
     String messageText =
         jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.mentionedUser(recipient),
-            commentCreatedEventWithMentionInCommentBody);
+            IssueEventRecipient.of(recipient, true), commentCreatedEventWithMentionInCommentBody);
 
     // THEN
     assertNotNull(messageText);
@@ -181,8 +180,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     // WHEN
     String messageText =
         jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.notMentionedUser(recipient),
-            commentCreatedEventWithMentionInCommentBody);
+            IssueEventRecipient.of(recipient, false), commentCreatedEventWithMentionInCommentBody);
 
     // THEN
     assertNotNull(messageText);
@@ -244,8 +242,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     // WHEN
     String messageText =
         jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.mentionedUser(recipient),
-            commentCreatedEventWithMentionInCommentBody);
+            IssueEventRecipient.of(recipient, true), commentCreatedEventWithMentionInCommentBody);
 
     // THEN
     assertNotNull(messageText);
@@ -308,8 +305,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     // WHEN
     String messageText =
         jiraEventToChatMessageConverter.formatEventWithDiff(
-            MentionedApplicationUser.notMentionedUser(recipient),
-            commentCreatedEventWithMentionInCommentBody);
+            IssueEventRecipient.of(recipient, false), commentCreatedEventWithMentionInCommentBody);
 
     // THEN
     assertNotNull(messageText);
