@@ -35,7 +35,7 @@ import ru.mail.jira.plugins.myteam.bot.events.JiraNotifyEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.component.JiraEventToChatMessageConverter;
-import ru.mail.jira.plugins.myteam.component.PluginMentionService;
+import ru.mail.jira.plugins.myteam.component.UserMentionService;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
@@ -56,7 +56,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final JiraEventToChatMessageConverter jiraEventToChatMessageConverter;
 
-  private final PluginMentionService pluginMentionService;
+  private final UserMentionService userMentionService;
 
   @Autowired
   public JiraEventListener(
@@ -71,7 +71,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
       MyteamEventsListener myteamEventsListener,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       JiraEventToChatMessageConverter jiraEventToChatMessageConverter,
-      PluginMentionService pluginMentionService) {
+      UserMentionService userMentionService) {
     this.eventPublisher = eventPublisher;
     this.groupManager = groupManager;
     this.notificationFilterManager = notificationFilterManager;
@@ -83,7 +83,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     this.i18nResolver = i18nResolver;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.jiraEventToChatMessageConverter = jiraEventToChatMessageConverter;
-    this.pluginMentionService = pluginMentionService;
+    this.userMentionService = userMentionService;
   }
 
   @Override
@@ -260,15 +260,15 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     Set<ApplicationUser> mentionedUsers;
     if (EventType.ISSUE_UPDATED_ID.equals(eventTypeId)) {
       mentionedUsers =
-          pluginMentionService.getMentionedUsersInDescription(issueEvent.getIssue(), true);
+          userMentionService.getMentionedUsersInDescription(issueEvent.getIssue(), true);
     } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)) {
-      mentionedUsers = pluginMentionService.getMentionedUserInComment(issueEvent.getComment());
+      mentionedUsers = userMentionService.getMentionedUserInComment(issueEvent.getComment());
     } else if (EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
       Object origCommentObject =
           issueEvent.getParams().get(CommentManager.EVENT_ORIGINAL_COMMENT_PARAMETER);
       if (origCommentObject instanceof Comment) {
         mentionedUsers =
-            pluginMentionService.getMentionedUserInEditedComment(
+            userMentionService.getMentionedUserInEditedComment(
                 issueEvent.getComment(), (Comment) origCommentObject);
       } else {
         mentionedUsers = Collections.emptySet();

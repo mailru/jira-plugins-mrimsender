@@ -20,10 +20,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("MockNotUsedInProduction")
-class PluginMentionServiceTest {
+class UserMentionServiceTest {
 
   @SuppressWarnings("NullAway")
-  private PluginMentionService pluginMentionService;
+  private UserMentionService userMentionService;
 
   @SuppressWarnings("NullAway")
   private ChangeHistoryManager changeHistoryManager;
@@ -37,8 +37,8 @@ class PluginMentionServiceTest {
     this.changeHistoryManager = changeHistoryManager;
     UserManager userManager = mock(UserManager.class);
     this.userManager = userManager;
-    pluginMentionService =
-        new PluginMentionService(new MentionFinderImpl(), changeHistoryManager, userManager);
+    userMentionService =
+        new UserMentionService(new MentionFinderImpl(), changeHistoryManager, userManager);
   }
 
   @Test
@@ -49,7 +49,7 @@ class PluginMentionServiceTest {
     when(changeHistoryManager.getChangeHistories(eq(issue))).thenReturn(List.of());
 
     // WHEN
-    Set<ApplicationUser> result = pluginMentionService.getMentionedUsersInDescription(issue, true);
+    Set<ApplicationUser> result = userMentionService.getMentionedUsersInDescription(issue, true);
 
     // THEN
     assertTrue(result.isEmpty());
@@ -73,7 +73,7 @@ class PluginMentionServiceTest {
     when(userManager.getUserByName(eq("admin"))).thenReturn(mentionedUser);
 
     // WHEN
-    Set<ApplicationUser> result = pluginMentionService.getMentionedUsersInDescription(issue, true);
+    Set<ApplicationUser> result = userMentionService.getMentionedUsersInDescription(issue, true);
 
     // THEN
     assertFalse(result.isEmpty());
@@ -97,7 +97,7 @@ class PluginMentionServiceTest {
     when(userManager.getUserByName(eq("admin"))).thenReturn(mock(ApplicationUser.class));
 
     // WHEN
-    Set<ApplicationUser> result = pluginMentionService.getMentionedUsersInDescription(issue, true);
+    Set<ApplicationUser> result = userMentionService.getMentionedUsersInDescription(issue, true);
 
     // THEN
     assertTrue(result.isEmpty());
@@ -116,7 +116,7 @@ class PluginMentionServiceTest {
 
     // WHEN
     Set<ApplicationUser> result =
-        pluginMentionService.getMentionedUsersInDescription(issue, computePreviousValue);
+        userMentionService.getMentionedUsersInDescription(issue, computePreviousValue);
 
     // THEN
     assertFalse(result.isEmpty());
@@ -139,7 +139,7 @@ class PluginMentionServiceTest {
     when(userManager.getUserByName(eq("admin"))).thenReturn(mock(ApplicationUser.class));
 
     // WHEN
-    Set<ApplicationUser> result = pluginMentionService.getMentionedUsersInDescription(issue, true);
+    Set<ApplicationUser> result = userMentionService.getMentionedUsersInDescription(issue, true);
 
     // THEN
     assertTrue(result.isEmpty());
@@ -153,7 +153,7 @@ class PluginMentionServiceTest {
 
     // WHEN
     Set<ApplicationUser> result =
-        pluginMentionService.getMentionedUserInEditedComment(comment, originalComment);
+        userMentionService.getMentionedUserInEditedComment(comment, originalComment);
 
     // THEN
     assertTrue(result.isEmpty());
@@ -168,7 +168,7 @@ class PluginMentionServiceTest {
     when(userManager.getUserByName(eq("admin"))).thenReturn(mentionedUser);
 
     // WHEN
-    Set<ApplicationUser> result = pluginMentionService.getMentionedUserInComment(newComment);
+    Set<ApplicationUser> result = userMentionService.getMentionedUserInComment(newComment);
 
     // THEN
     assertFalse(result.isEmpty());
@@ -187,7 +187,7 @@ class PluginMentionServiceTest {
 
     // WHEN
     Set<ApplicationUser> result =
-        pluginMentionService.getMentionedUserInEditedComment(newComment, originalComment);
+        userMentionService.getMentionedUserInEditedComment(newComment, originalComment);
 
     // THEN
     assertFalse(result.isEmpty());
@@ -207,7 +207,7 @@ class PluginMentionServiceTest {
     when(userManager.getUserByName(eq("admin"))).thenReturn(mentionedUser);
     // WHEN
     Set<ApplicationUser> result =
-        pluginMentionService.getMentionedUserInEditedComment(newComment, originalComment);
+        userMentionService.getMentionedUserInEditedComment(newComment, originalComment);
 
     // THEN
     assertTrue(result.isEmpty());

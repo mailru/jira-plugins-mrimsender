@@ -25,13 +25,13 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PluginMentionService {
+public class UserMentionService {
   private final MentionFinder mentionFinder;
   private final ChangeHistoryManager changeHistoryManager;
 
   private final UserManager userManager;
 
-  public PluginMentionService(
+  public UserMentionService(
       @ComponentImport final MentionFinder mentionFinder,
       @ComponentImport final ChangeHistoryManager changeHistoryManager,
       UserManager userManager) {
