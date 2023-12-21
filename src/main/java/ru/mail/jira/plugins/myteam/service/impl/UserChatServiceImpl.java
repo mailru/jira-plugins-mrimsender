@@ -10,29 +10,40 @@ import com.atlassian.sal.api.message.I18nResolver;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
+import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.LinkIssueWithChatException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.PermissionHelper;
 import ru.mail.jira.plugins.myteam.component.UserData;
+import ru.mail.jira.plugins.myteam.db.model.MyteamChatMeta;
 import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
+import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.GroupChatInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
 import ru.mail.jira.plugins.myteam.service.IssueService;
+import ru.mail.jira.plugins.myteam.service.PluginData;
 import ru.mail.jira.plugins.myteam.service.StateManager;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
+import ru.mail.jira.plugins.myteam.service.model.MyteamChatMetaDto;
 
 @Service
+@Slf4j
 public class UserChatServiceImpl implements UserChatService {
 
   private final UserData userData;
@@ -47,6 +58,8 @@ public class UserChatServiceImpl implements UserChatService {
   @Getter(onMethod_ = {@Override})
   private final MessageFormatter messageFormatter;
 
+  private final PluginData pluginData;
+
   public UserChatServiceImpl(
       MyteamApiClient myteamApiClient,
       UserData userData,
@@ -56,7 +69,8 @@ public class UserChatServiceImpl implements UserChatService {
       IssueService issueService,
       MyteamChatRepository myteamChatRepository,
       @ComponentImport I18nResolver i18nResolver,
-      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
+      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
+      PluginData pluginData) {
     this.myteamClient = myteamApiClient;
     this.userData = userData;
     this.permissionHelper = permissionHelper;
@@ -66,6 +80,7 @@ public class UserChatServiceImpl implements UserChatService {
     this.issueService = issueService;
     this.myteamChatRepository = myteamChatRepository;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
+    this.pluginData = pluginData;
   }
 
   @Override
@@ -205,5 +220,83 @@ public class UserChatServiceImpl implements UserChatService {
   @Override
   public String getBotId() {
     return myteamClient.getBotId();
+  }
+
+  @NotNull
+  @Override
+  public MyteamChatMetaDto unsafeLinkChat(String chatId, String issueKey) {
+    MyteamChatMeta chatMeta = myteamChatRepository.persistChat(chatId, issueKey);
+    return MyteamChatMetaDto.of(chatMeta.getID(), chatMeta.getChatId(), chatMeta.getIssueKey());
+  }
+
+  @Nullable
+  @Override
+  public MyteamChatMetaDto findChatByIssueKey(@NotNull String issueKey) {
+    MyteamChatMeta chatByIssueKey = myteamChatRepository.findChatByIssueKey(issueKey);
+    if (chatByIssueKey == null) {
+      return null;
+    }
+
+    return MyteamChatMetaDto.of(
+        chatByIssueKey.getID(), chatByIssueKey.getChatId(), chatByIssueKey.getIssueKey());
+  }
+
+  @Override
+  public String createChat(
+      final String chatName,
+      @Nullable final String about,
+      final List<ChatMemberId> members,
+      final boolean isPublic) {
+    try {
+      final HttpResponse<CreateChatResponse> createChatResponse =
+          myteamClient.createChat(
+              pluginData.getToken(), chatName, StringUtils.defaultString(about), members, isPublic);
+
+      if (createChatResponse.getStatus() == 200
+          && createChatResponse.getBody() != null
+          && createChatResponse.getBody().getSn() != null) {
+        String chatId = createChatResponse.getBody().getSn();
+        sendFirstMessageWithCommandsInCreatedChat(chatId);
+        return chatId;
+      }
+
+      createChatResponse
+          .getParsingError()
+          .ifPresent(
+              e ->
+                  SentryClient.capture(
+                      e,
+                      Map.of(
+                          "statusCode",
+                          String.valueOf(createChatResponse.getStatus()),
+                          "chatName",
+                          chatName,
+                          "about",
+                          StringUtils.defaultString(about),
+                          "chatMembers",
+                          members.toString(),
+                          "publicChat",
+                          String.valueOf(isPublic))));
+      log.error("Exception during chat creation chat sn not found");
+
+      throw new RuntimeException(
+          String.format(
+              "Exception during chat creation chat sn not found. Response code: %s",
+              createChatResponse.getStatus()));
+    } catch (IOException | UnirestException | MyteamServerErrorException e) {
+      log.error("Exception during chat creation", e);
+      throw new RuntimeException("Exception during chat creation", e);
+    }
+  }
+
+  private void sendFirstMessageWithCommandsInCreatedChat(String chatId) {
+    try {
+      myteamClient.sendMessageText(
+          chatId,
+          i18nResolver.getRawText(
+              "ru.mail.jira.plugins.myteam.myteamEventsListener.groupChat.all.commands"));
+    } catch (Exception e) {
+      log.error("error happened during send message with command in chat", e);
+    }
   }
 }
