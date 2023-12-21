@@ -19,7 +19,7 @@ import ru.mail.jira.plugins.myteam.accessrequest.controller.validation.annotatio
 @Setter
 @NoArgsConstructor
 @OneNotNullValidation(
-    fields = {"users", "groups", "projectRoles", "userFields", "accessPermissionFields"},
+    fields = {"users", "groups", "projectRoles", "userFields"},
     errorField = "participants")
 @OneNotFalseValidation(
     fields = {"sendEmail", "sendMessage"},
@@ -42,5 +42,5 @@ public class AccessRequestConfigurationDto {
 
   @XmlElement private boolean sendMessage;
 
-  @Nullable @XmlElement private List<UserFieldDto> accessPermissionFields;
+  @NotNull @XmlElement private List<UserFieldDto> accessPermissionFields;
 }
