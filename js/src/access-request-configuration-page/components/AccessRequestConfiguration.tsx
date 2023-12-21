@@ -5,6 +5,7 @@ import PersonIcon from '@atlaskit/icon/glyph/person'
 import PeopleGroupIcon from '@atlaskit/icon/glyph/people-group'
 import PeopleIcon from '@atlaskit/icon/glyph/people'
 import AppAccessIcon from '@atlaskit/icon/glyph/app-access'
+import UnlockFilledIcon from '@atlaskit/icon/glyph/unlock-filled'
 import Button from '@atlaskit/button'
 import Spinner from '@atlaskit/spinner'
 import CreateConfigurationDialog from './CreateConfigurationDialog'
@@ -181,6 +182,17 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
                 <div>{name}</div>
               </Recipient>
             ))}
+              {configuration.data.accessPermissionFields?.map(({ id, name }) => (
+                  <Recipient
+                      key={id}
+                      title={I18n.getText(
+                          'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.userFields'
+                      )}
+                  >
+                      <UnlockFilledIcon size="small" label="" />
+                      <div>{name}</div>
+                  </Recipient>
+              ))}
           </Recipients>
           <Notifications>
             <h2>

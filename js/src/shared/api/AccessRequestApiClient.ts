@@ -115,14 +115,3 @@ export const loadUserFields = (
     }
   )
 }
-
-// TODO fix duplicate request
-export const loadAccessPermissionFields = (
-    projectKey: string,
-    query: string
-) => axios.get<ReadonlyArray<Field>>(
-    `${contextPath()}/rest/myteam/1.0/accessRequest/configuration/userFields`,
-    {
-        params: { projectKey, query },
-    }
-)

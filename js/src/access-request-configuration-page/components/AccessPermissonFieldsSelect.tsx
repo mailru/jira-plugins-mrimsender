@@ -1,6 +1,6 @@
 import {OptionsType, OptionType} from "@atlaskit/select";
 import {Field} from "@shared/types";
-import {loadAccessPermissionFields} from "@shared/api/AccessRequestApiClient";
+import {loadUserFields} from "@shared/api/AccessRequestApiClient";
 import {BaseFieldSelect} from "./BaseFieldSelect";
 
 type Props = {
@@ -22,7 +22,7 @@ const loadFields = async (
     query?: string
 ): Promise<OptionType[]> => {
   return new Promise((resolve, reject) => {
-      loadAccessPermissionFields(projectKey, query === undefined ? '' : query)
+      loadUserFields(projectKey, query === undefined ? '' : query)
           .then((response) => {
               resolve(response.data.map(createAccessPermissionFieldOption))
           })
