@@ -73,7 +73,6 @@ public class ReplyRule extends BaseRule {
     String userKey = parsedArgs.get(ReplyArgs.USERKEY_ARG.ordinal());
 
     AccessRequestDto accessRequestDto = accessRequestService.getAccessRequestHistoryDto(historyId);
-
     if (accessRequestDto == null) return;
 
     try {
@@ -82,7 +81,6 @@ public class ReplyRule extends BaseRule {
       AccessRequestConfigurationDto accessRequestConfigurationDto =
           accessRequestService.getAccessRequestConfigurationDto(
               Objects.requireNonNull(mutableIssue.getProjectId()));
-
       ApplicationUser requester =
           accessRequestService.getAccessUserByKey(
               Objects.requireNonNull(accessRequestDto.getRequesterKey()));
@@ -91,10 +89,9 @@ public class ReplyRule extends BaseRule {
       if (accessRequestDto.getReplyStatus() == null) {
         updateAccessRequest(accessRequestDto, replyCommand, userKey, historyId);
         if (replyCommand.equals(ReplyCommands.COMMAND_ALLOW))
-          Objects.requireNonNull(accessRequestConfigurationDto.getAccessPermissionFields())
-              .forEach(
-                  permissionField ->
-                      updateAccessIssueField(requester, permissionField, mutableIssue));
+          for (UserFieldDto permissionField :
+              Objects.requireNonNull(accessRequestConfigurationDto.getAccessPermissionFields()))
+            updateAccessIssueField(requester, permissionField, mutableIssue);
         message = messageFormatter.formatAccessReplyMessage(requester, mutableIssue, replyCommand);
       } else {
         ApplicationUser responder =
@@ -106,6 +103,8 @@ public class ReplyRule extends BaseRule {
       }
       userChatService.editMessageText(event.getChatId(), event.getMsgId(), message, null);
     } catch (Exception e) {
+      userChatService.sendMessageText(
+          event.getChatId(), messageFormatter.formatAccessReplyError(e));
       SentryClient.capture(e, Map.of("user", event.getUserId()));
     }
     userChatService.answerCallbackQuery(event.getQueryId());
@@ -131,7 +130,8 @@ public class ReplyRule extends BaseRule {
   }
 
   private void updateAccessIssueField(
-      ApplicationUser requester, UserFieldDto userFieldDto, MutableIssue mutableIssue) {
+      ApplicationUser requester, UserFieldDto userFieldDto, MutableIssue mutableIssue)
+      throws Exception {
     switch (userFieldDto.getId()) {
       case AccessRequestConfigurationRepository.ASSIGNEE:
         issueService.setAssigneeIssue(mutableIssue, requester);
@@ -143,7 +143,7 @@ public class ReplyRule extends BaseRule {
         issueService.watchIssue(mutableIssue, requester);
         break;
       default:
-        break;
+        throw new Exception("User field not recognized");
     }
   }
 }

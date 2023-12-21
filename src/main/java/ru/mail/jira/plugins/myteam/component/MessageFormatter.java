@@ -533,6 +533,11 @@ public class MessageFormatter {
     return sb.toString();
   }
 
+  public String formatAccessReplyError(Exception e) {
+    return i18nResolver.getText(
+        "ru.mail.jira.plugins.myteam.accessRequest.page.message.reply.error", e.getMessage());
+  }
+
   public String formatAccessReplyMessage(
       @Nullable ApplicationUser requester, Issue issue, ReplyRule.ReplyCommands replyCommand) {
     String command =
