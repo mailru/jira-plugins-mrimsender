@@ -1,8 +1,6 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
-import com.atlassian.jira.exception.IssueNotFoundException;
-import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
@@ -17,18 +15,14 @@ import kong.unirest.UnirestException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.commons.SentryClient;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.LinkIssueWithChatException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.PermissionHelper;
 import ru.mail.jira.plugins.myteam.component.UserData;
-import ru.mail.jira.plugins.myteam.db.model.MyteamChatMeta;
-import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatInfoResponse;
@@ -36,11 +30,9 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
 import ru.mail.jira.plugins.myteam.myteam.dto.chats.GroupChatInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
-import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 import ru.mail.jira.plugins.myteam.service.StateManager;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
-import ru.mail.jira.plugins.myteam.service.model.MyteamChatMetaDto;
 
 @Service
 @Slf4j
@@ -51,8 +43,6 @@ public class UserChatServiceImpl implements UserChatService {
   private final PermissionHelper permissionHelper;
   private final I18nResolver i18nResolver;
   private final StateManager stateManager;
-  private final IssueService issueService;
-  private final MyteamChatRepository myteamChatRepository;
   private final JiraAuthenticationContext jiraAuthenticationContext;
 
   @Getter(onMethod_ = {@Override})
@@ -66,8 +56,6 @@ public class UserChatServiceImpl implements UserChatService {
       PermissionHelper permissionHelper,
       MessageFormatter messageFormatter,
       StateManager stateManager,
-      IssueService issueService,
-      MyteamChatRepository myteamChatRepository,
       @ComponentImport I18nResolver i18nResolver,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       PluginData pluginData) {
@@ -77,8 +65,6 @@ public class UserChatServiceImpl implements UserChatService {
     this.i18nResolver = i18nResolver;
     this.messageFormatter = messageFormatter;
     this.stateManager = stateManager;
-    this.issueService = issueService;
-    this.myteamChatRepository = myteamChatRepository;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.pluginData = pluginData;
   }
@@ -205,48 +191,16 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
-  public void linkChat(String chatId, String issueKey)
-      throws IssueNotFoundException, LinkIssueWithChatException {
-    Issue issue = issueService.getIssue(issueKey);
-    if (issue != null) {
-      if (myteamChatRepository.findChatByIssueKey(issueKey) == null) {
-        myteamChatRepository.persistChat(chatId, issueKey);
-      } else {
-        throw new LinkIssueWithChatException("Issue already linked to the chat");
-      }
-    }
-  }
-
-  @Override
   public String getBotId() {
     return myteamClient.getBotId();
   }
 
-  @NotNull
-  @Override
-  public MyteamChatMetaDto unsafeLinkChat(String chatId, String issueKey) {
-    MyteamChatMeta chatMeta = myteamChatRepository.persistChat(chatId, issueKey);
-    return MyteamChatMetaDto.of(chatMeta.getID(), chatMeta.getChatId(), chatMeta.getIssueKey());
-  }
-
-  @Nullable
-  @Override
-  public MyteamChatMetaDto findChatByIssueKey(@NotNull String issueKey) {
-    MyteamChatMeta chatByIssueKey = myteamChatRepository.findChatByIssueKey(issueKey);
-    if (chatByIssueKey == null) {
-      return null;
-    }
-
-    return MyteamChatMetaDto.of(
-        chatByIssueKey.getID(), chatByIssueKey.getChatId(), chatByIssueKey.getIssueKey());
-  }
-
-  @Override
   public String createChat(
       final String chatName,
       @Nullable final String about,
       final List<ChatMemberId> members,
-      final boolean isPublic) {
+      final boolean isPublic,
+      final String issueKeyToLinkChat) {
     try {
       final HttpResponse<CreateChatResponse> createChatResponse =
           myteamClient.createChat(

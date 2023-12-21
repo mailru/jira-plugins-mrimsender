@@ -8,16 +8,12 @@ import java.util.Locale;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.LinkIssueWithChatException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
-import ru.mail.jira.plugins.myteam.myteam.dto.chats.ChatMemberId;
 import ru.mail.jira.plugins.myteam.myteam.dto.response.MessageResponse;
-import ru.mail.jira.plugins.myteam.service.model.MyteamChatMetaDto;
 
 public interface UserChatService {
 
@@ -63,8 +59,6 @@ public interface UserChatService {
   HttpResponse<JsonNode> answerCallbackQuery(String queryId)
       throws UnirestException, MyteamServerErrorException;
 
-  void linkChat(String chatId, String issueKey) throws LinkIssueWithChatException;
-
   String getBotId();
 
   boolean isChatAdmin(String chatId, String userId);
@@ -85,13 +79,4 @@ public interface UserChatService {
   void setState(String chatId, BotState state, boolean deletePrevious);
 
   void revertState(String chatId);
-
-  @NotNull
-  MyteamChatMetaDto unsafeLinkChat(String chatId, String issueKey);
-
-  @Nullable
-  MyteamChatMetaDto findChatByIssueKey(@NotNull String issueKey);
-
-  String createChat(
-      String name, @Nullable String about, List<ChatMemberId> members, boolean isPublic);
 }

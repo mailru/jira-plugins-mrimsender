@@ -35,17 +35,39 @@ Find chat entity in database by issue key. If entity is null then issue with inp
 ### Returns
 possible linked chat to issue
 
-createChat (List, String, String, boolean, String)
+linkChat (String, String)
 ----------------------------
-Send message to recipient with id in Mail.Ru Agent.
+Link issue with chat id from VK Teams
 ### Parameters
-- chatMembers: initial member in created chat
-- chatName: chat name
-- about: chat description
-- publicChat: public or not
-- issueKeyLinkToChat: issue key to link to created chat
+- chatId: chat id from VK Team
+- issueKey: issue key of issue to link chat from VK Team
 ### Returns
-created and linked chat to issue
+possible linked chat to issue
+### Throws
+if issue already to chat
 
+createChatByJiraApplicationUsers (List<com.atlassian.jira.user.ApplicationUser>, String, String, boolean, String)
+----------------------------
+Create chat in VK Teams
+### Parameters
+- jiraUserIds: chat members id (can only allowed to create chat with this user in list)
+- chatName: chat name
+- isPublic: flag to allow search chat in VK Teams
+- loggedInUser: jira user which start action
+- issueKeyLinkToChat: link issue with this key to created chat
+### Returns
+created chat metadata
+
+createChatByJiraUserIds (List<java.lang.Long>, String, String, boolean, String)
+----------------------------
+Create chat in VK Teams
+### Parameters
+- memberIds: chat members id (can only allowed to create chat with this user in list)
+- chatName: chat name
+- isPublic: flag to allow search chat in VK Teams
+- loggedInUser: jira user which start action
+- issueKeyLinkToChat: link issue with this key to created chat
+### Returns
+created chat metadata
 
 
