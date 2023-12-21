@@ -287,6 +287,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
         throw new IssueCreationValidationException(
             String.format("Unable to create issue in project %s", settings.getProjectKey()),
             reporterJiraUserOptional
+                .filter(reporterUser -> settings.getReporter() == IssueReporter.MESSAGE_AUTHOR)
                 .map(
                     reporterUser ->
                         new SimpleErrorCollection(
@@ -296,7 +297,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
                             ErrorCollection.Reason.FORBIDDEN))
                 .orElse(
                     new SimpleErrorCollection(
-                        String.format("Users %s has not permission to create issue", initiator),
+                        String.format("User %s has not permission to create issue", initiator),
                         ErrorCollection.Reason.FORBIDDEN)));
       }
     }
