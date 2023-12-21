@@ -1,7 +1,7 @@
 /* (C)2023 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons;
 
-import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -15,7 +15,10 @@ import org.jeasy.rules.annotation.Fact;
 import org.jeasy.rules.annotation.Rule;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.commons.dto.jira.UserDto;
+import ru.mail.jira.plugins.myteam.accessrequest.controller.dto.AccessRequestConfigurationDto;
 import ru.mail.jira.plugins.myteam.accessrequest.controller.dto.AccessRequestDto;
+import ru.mail.jira.plugins.myteam.accessrequest.controller.dto.UserFieldDto;
+import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestConfigurationRepository;
 import ru.mail.jira.plugins.myteam.accessrequest.service.AccessRequestService;
 import ru.mail.jira.plugins.myteam.bot.events.ButtonClickEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
@@ -74,7 +77,12 @@ public class ReplyRule extends BaseRule {
     if (accessRequestDto == null) return;
 
     try {
-      Issue issue = issueService.getIssue(Objects.requireNonNull(accessRequestDto.getIssueId()));
+      MutableIssue mutableIssue =
+          issueService.getMutableIssue(Objects.requireNonNull(accessRequestDto.getIssueId()));
+      AccessRequestConfigurationDto accessRequestConfigurationDto =
+          accessRequestService.getAccessRequestConfigurationDto(
+              Objects.requireNonNull(mutableIssue.getProjectId()));
+
       ApplicationUser requester =
           accessRequestService.getAccessUserByKey(
               Objects.requireNonNull(accessRequestDto.getRequesterKey()));
@@ -82,14 +90,19 @@ public class ReplyRule extends BaseRule {
       String message = "";
       if (accessRequestDto.getReplyStatus() == null) {
         updateAccessRequest(accessRequestDto, replyCommand, userKey, historyId);
-        message = messageFormatter.formatAccessReplyMessage(requester, issue, replyCommand);
+        if (replyCommand.equals(ReplyCommands.COMMAND_ALLOW))
+          Objects.requireNonNull(accessRequestConfigurationDto.getAccessPermissionFields())
+              .forEach(
+                  permissionField ->
+                      updateAccessIssueField(requester, permissionField, mutableIssue));
+        message = messageFormatter.formatAccessReplyMessage(requester, mutableIssue, replyCommand);
       } else {
         ApplicationUser responder =
             accessRequestService.getAccessUserByKey(
                 Objects.requireNonNull(accessRequestDto.getReplyAdmin()).getUserKey());
         message =
             messageFormatter.formatProcessedReplyMessage(
-                responder, requester, issue, accessRequestDto.getReplyStatus());
+                responder, requester, mutableIssue, accessRequestDto.getReplyStatus());
       }
       userChatService.editMessageText(event.getChatId(), event.getMsgId(), message, null);
     } catch (Exception e) {
@@ -115,5 +128,22 @@ public class ReplyRule extends BaseRule {
       accessRequestDto.setReplyStatus(replyCommand.equals(ReplyCommands.COMMAND_ALLOW));
     }
     accessRequestService.updateAccessHistory(historyId, accessRequestDto);
+  }
+
+  private void updateAccessIssueField(
+      ApplicationUser requester, UserFieldDto userFieldDto, MutableIssue mutableIssue) {
+    switch (userFieldDto.getId()) {
+      case AccessRequestConfigurationRepository.ASSIGNEE:
+        issueService.setAssigneeIssue(mutableIssue, requester);
+        break;
+      case AccessRequestConfigurationRepository.REPORTER:
+        issueService.setReporterIssue(mutableIssue, requester);
+        break;
+      case AccessRequestConfigurationRepository.WATCHERS:
+        issueService.watchIssue(mutableIssue, requester);
+        break;
+      default:
+        break;
+    }
   }
 }

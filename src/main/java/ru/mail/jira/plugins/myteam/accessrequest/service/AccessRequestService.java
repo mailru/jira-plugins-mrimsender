@@ -212,6 +212,17 @@ public class AccessRequestService {
     return accessRequestHistoryRepository.entityToDto(accessRequestHistory);
   }
 
+  public AccessRequestConfigurationDto getAccessRequestConfigurationDto(long projectId)
+      throws NullPointerException {
+    AccessRequestConfiguration accessRequestConfiguration =
+        accessRequestConfigurationRepository.getAccessRequestConfiguration(projectId);
+    if (accessRequestConfiguration == null) {
+      throw new NullPointerException(
+          String.format("AccessRequestConfiguration with projectId %s was not found", projectId));
+    }
+    return accessRequestConfigurationRepository.entityToDto(accessRequestConfiguration);
+  }
+
   public AccessRequestHistory updateAccessHistory(
       int historyId, AccessRequestDto accessRequestDto) {
     return accessRequestHistoryRepository.update(historyId, accessRequestDto);
@@ -241,9 +252,12 @@ public class AccessRequestService {
     return accessRequestConfigurationRepository.update(configurationId, configurationDto);
   }
 
-  @Nullable
-  public ApplicationUser getAccessUserByKey(String userKey) {
-    return userManager.getUserByKey(userKey);
+  @NotNull
+  public ApplicationUser getAccessUserByKey(String userKey) throws NullPointerException {
+    ApplicationUser applicationUser = userManager.getUserByKey(userKey);
+    if (applicationUser == null)
+      throw new NullPointerException("Access request error! Requester not found.");
+    return applicationUser;
   }
 
   public void deleteAccessRequestConfiguration(int configurationId) {

@@ -7,6 +7,7 @@ import com.atlassian.jira.bc.issue.search.SearchService;
 import com.atlassian.jira.config.IssueTypeManager;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
+import com.atlassian.jira.event.type.EventDispatchOption;
 import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.exception.ParseException;
@@ -127,6 +128,15 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
+  public void updateIssue(ApplicationUser logginedInUser, MutableIssue mutableIssue, boolean b) {
+    issueManager.updateIssue(
+        jiraAuthenticationContext.getLoggedInUser(),
+        mutableIssue,
+        EventDispatchOption.DO_NOT_DISPATCH,
+        b);
+  }
+
+  @Override
   public boolean isUserWatching(Issue issue, ApplicationUser user) {
     return watcherManager.isWatching(user, issue);
   }
@@ -185,6 +195,18 @@ public class IssueServiceImpl implements IssueService {
     if (!watcherManager.isWatching(user, issue)) {
       watcherManager.startWatching(user, issue);
     }
+  }
+
+  @Override
+  public void setAssigneeIssue(MutableIssue issue, ApplicationUser user) {
+    issue.setAssignee(user);
+    updateIssue(jiraAuthenticationContext.getLoggedInUser(), issue, false);
+  }
+
+  @Override
+  public void setReporterIssue(MutableIssue issue, ApplicationUser user) {
+    issue.setReporter(user);
+    updateIssue(jiraAuthenticationContext.getLoggedInUser(), issue, false);
   }
 
   @Override
@@ -346,8 +368,8 @@ public class IssueServiceImpl implements IssueService {
   }
 
   @Override
-  public Issue getIssue(Long issueId) throws IssueNotFoundException {
-    Issue issue = issueManager.getIssueObject(issueId);
+  public MutableIssue getMutableIssue(Long issueId) throws IssueNotFoundException {
+    MutableIssue issue = issueManager.getIssueObject(issueId);
     if (issue == null) {
       throw new IssueNotFoundException(String.format("Issue with id %s was not found", issueId));
     }
