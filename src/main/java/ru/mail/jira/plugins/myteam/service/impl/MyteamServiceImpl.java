@@ -2,7 +2,6 @@
 package ru.mail.jira.plugins.myteam.service.impl;
 
 import com.atlassian.crowd.embedded.api.Group;
-import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
@@ -158,10 +157,7 @@ public class MyteamServiceImpl implements MyteamService {
   }
 
   private void validateIssueKey(@NotNull String issueKeyLinkToChat) {
-    if (issueService.getIssue(issueKeyLinkToChat) == null) {
-      throw new IssueNotFoundException(
-          String.format("Issue not found by key %s", issueKeyLinkToChat));
-    }
+    issueService.getIssue(issueKeyLinkToChat);
 
     MyteamChatMetaDto alreadyLinkedIssueToChat = findChatByIssueKey(issueKeyLinkToChat);
     if (alreadyLinkedIssueToChat != null) {

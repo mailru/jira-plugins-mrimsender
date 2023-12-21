@@ -107,7 +107,7 @@ class MyteamServiceImplTest {
   void createChatWhenIssueNotFoundByKey() {
     // GIVEN
     String issueKey = "someIssueKey";
-    when(issueService.getIssue(eq(issueKey))).thenReturn(null);
+    when(issueService.getIssue(eq(issueKey))).thenThrow(new IssueNotFoundException());
 
     // WHEN // THEN
     assertThrows(
