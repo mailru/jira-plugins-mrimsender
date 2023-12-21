@@ -75,13 +75,13 @@ public class MyteamServiceImpl implements MyteamService {
       UserData userData,
       MyteamApiClient myteamApiClient,
       PluginData pluginData,
-      I18nResolver i18nResolver,
+      @ComponentImport I18nResolver i18nResolver,
       MyteamChatRepository myteamChatRepository,
-      ApplicationProperties applicationProperties,
-      UserManager userManager,
-      UserSearchService userSearchService,
-      AvatarService avatarService,
-      IssueManager issueManager) {
+      @ComponentImport  ApplicationProperties applicationProperties,
+      @ComponentImport UserManager userManager,
+      @ComponentImport UserSearchService userSearchService,
+      @ComponentImport AvatarService avatarService,
+      @ComponentImport IssueManager issueManager) {
     this.groupManager = groupManager;
     this.userData = userData;
     this.myteamEventsListener = myteamEventsListener;
@@ -235,7 +235,7 @@ public class MyteamServiceImpl implements MyteamService {
                   validatedIssueKey));
           return chatMetaDto;
         }
-        createChatResponse
+        chatInfoResponse
             .getParsingError()
             .ifPresent(
                 e ->
