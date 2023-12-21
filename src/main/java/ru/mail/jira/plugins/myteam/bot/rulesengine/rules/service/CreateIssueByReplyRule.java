@@ -10,6 +10,8 @@ import com.atlassian.jira.issue.IssueFieldConstants;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.util.ErrorCollection;
+import com.atlassian.jira.util.SimpleErrorCollection;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -30,6 +32,7 @@ import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.AdminRulesRequiredException;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueCreationValidationException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.ChatAdminRule;
@@ -38,6 +41,7 @@ import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.PermissionHelper;
 import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 import ru.mail.jira.plugins.myteam.myteam.dto.User;
@@ -62,6 +66,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
   private final IssueService issueService;
 
   private final EventMessagesTextConverter eventMessagesTextConverter;
+  private final PermissionHelper permissionHelper;
 
   public CreateIssueByReplyRule(
       UserChatService userChatService,
@@ -69,12 +74,14 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       IssueCreationSettingsService issueCreationSettingsService,
       IssueCreationService issueCreationService,
       IssueService issueService,
-      EventMessagesTextConverter eventMessagesTextConverter) {
+      EventMessagesTextConverter eventMessagesTextConverter,
+      PermissionHelper permissionHelper) {
     super(userChatService, rulesEngine);
     this.issueCreationSettingsService = issueCreationSettingsService;
     this.issueCreationService = issueCreationService;
     this.issueService = issueService;
     this.eventMessagesTextConverter = eventMessagesTextConverter;
+    this.permissionHelper = permissionHelper;
   }
 
   @Condition
@@ -103,7 +110,6 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
   @Action
   public void execute(@Fact("event") ChatMessageEvent event, @Fact("args") String tag)
       throws MyteamServerErrorException, IOException {
-    ApplicationUser initiator = null;
     try {
       IssueCreationSettingsDto settings =
           issueCreationSettingsService.getSettingsFromCache(event.getChatId(), tag);
@@ -116,11 +122,14 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
       User firstMessageReporter = reporters.size() > 0 ? reporters.get(0) : event.getFrom();
 
-      initiator = userChatService.getJiraUserFromUserChatId(event.getUserId());
+      ApplicationUser initiator = userChatService.getJiraUserFromUserChatId(event.getUserId());
 
       if (initiator == null || firstMessageReporter == null) {
         return;
       }
+
+      ApplicationUser reporterJiraUser =
+          resolveReporterJiraUser(firstMessageReporter, settings, initiator);
 
       HashMap<Field, String> fieldValues = new HashMap<>();
 
@@ -205,19 +214,9 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
             String.join(",", settings.getLabels()));
       }
 
-      ApplicationUser reporterJiraUser =
-          Optional.ofNullable(
-                  userChatService.getJiraUserFromUserChatId(firstMessageReporter.getUserId()))
-              .orElse(initiator);
-
       MutableIssue issue =
           issueCreationService.createIssue(
-              settings.getProjectKey(),
-              settings.getIssueTypeId(),
-              fieldValues,
-              settings.getReporter() == IssueReporter.MESSAGE_AUTHOR
-                  ? reporterJiraUser
-                  : initiator);
+              settings.getProjectKey(), settings.getIssueTypeId(), fieldValues, reporterJiraUser);
 
       if (Boolean.TRUE.equals(settings.getAllowedCreateChatLink())) {
         issueCreationService.addIssueChatLink(
@@ -264,6 +263,44 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
               String.format(
                   "Возникла ошибка при создании задачи.%n%n%s", e.getLocalizedMessage())));
     }
+  }
+
+  @NotNull
+  private ApplicationUser resolveReporterJiraUser(
+      @NotNull User firstMessageReporter,
+      @NotNull IssueCreationSettingsDto settings,
+      @NotNull ApplicationUser initiator)
+      throws IssueCreationValidationException {
+    final Optional<ApplicationUser> reporterJiraUserOptional =
+        Optional.ofNullable(
+            userChatService.getJiraUserFromUserChatId(firstMessageReporter.getUserId()));
+    ApplicationUser reporterJiraUser;
+    if (reporterJiraUserOptional.isPresent()
+        && settings.getReporter() == IssueReporter.MESSAGE_AUTHOR
+        && permissionHelper.checkCreateIssuePermission(
+            reporterJiraUserOptional.get(), settings.getProjectKey())) {
+      reporterJiraUser = reporterJiraUserOptional.get();
+    } else {
+      if (permissionHelper.checkCreateIssuePermission(initiator, settings.getProjectKey())) {
+        reporterJiraUser = initiator;
+      } else {
+        throw new IssueCreationValidationException(
+            String.format("Unable to create issue in project %s", settings.getProjectKey()),
+            reporterJiraUserOptional
+                .map(
+                    reporterUser ->
+                        new SimpleErrorCollection(
+                            String.format(
+                                "Users %s and %s have not permission to create issue",
+                                reporterUser, initiator),
+                            ErrorCollection.Reason.FORBIDDEN))
+                .orElse(
+                    new SimpleErrorCollection(
+                        String.format("Users %s has not permission to create issue", initiator),
+                        ErrorCollection.Reason.FORBIDDEN)));
+      }
+    }
+    return reporterJiraUser;
   }
 
   private String getCreationSuccessMessage(String template, Issue issue, String summary) {

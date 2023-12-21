@@ -1,6 +1,7 @@
 /* (C)2020 */
 package ru.mail.jira.plugins.myteam.component;
 
+import com.atlassian.jira.exception.NotFoundException;
 import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.permission.GlobalPermissionKey;
 import com.atlassian.jira.permission.ProjectPermissions;
@@ -11,6 +12,7 @@ import com.atlassian.jira.security.PermissionManager;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.RestFieldException;
@@ -143,5 +145,15 @@ public class PermissionHelper {
     if (!isJiraAdmin(user) && !filterSubscription.getUserKey().equals(user.getKey())) {
       throw new SecurityException();
     }
+  }
+
+  public boolean checkCreateIssuePermission(
+      @NotNull final ApplicationUser applicationUser, @NotNull final String projectKey) {
+    Project project = projectManager.getProjectObjByKey(projectKey);
+    if (project == null) {
+      throw new NotFoundException(String.format("Not found project by key %s", projectKey));
+    }
+    return permissionManager.hasPermission(
+        ProjectPermissions.CREATE_ISSUES, project, applicationUser);
   }
 }
