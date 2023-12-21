@@ -30,6 +30,8 @@ type Props = {
 
 export const FORM_ID = 'myteam-access-request-configuration-form'
 
+const emptyFieldDesc = I18n.getText('ru.mail.jira.plugins.myteam.accessRequest.configuration.page.error.validation.field.empty');
+
 type FormState = {
   users?: OptionType[]
   groups?: OptionType[]
@@ -202,6 +204,10 @@ function ConfigurationForm({
                     defaultValue={currentValue?.accessPermissionFields?.map(
                         createUserFieldOption
                     )}
+                    isRequired
+                    validate={(value) => {
+                      return value === null || !value?.length ? emptyFieldDesc : undefined
+                    }}
                 >
                   {({ fieldProps, error }) => (
                       <>
