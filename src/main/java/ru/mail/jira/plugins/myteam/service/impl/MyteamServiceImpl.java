@@ -77,7 +77,7 @@ public class MyteamServiceImpl implements MyteamService {
       PluginData pluginData,
       @ComponentImport I18nResolver i18nResolver,
       MyteamChatRepository myteamChatRepository,
-      @ComponentImport  ApplicationProperties applicationProperties,
+      @ComponentImport ApplicationProperties applicationProperties,
       @ComponentImport UserManager userManager,
       @ComponentImport UserSearchService userSearchService,
       @ComponentImport AvatarService avatarService,
