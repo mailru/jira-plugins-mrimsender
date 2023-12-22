@@ -182,6 +182,11 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
                 <div>{name}</div>
               </Recipient>
             ))}
+              <h2>
+                  {I18n.getText(
+                      'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.table.accessRequest'
+                  )}
+              </h2>
               {configuration.data.accessPermissionFields?.map(({ id, name }) => (
                   <Recipient
                       key={id}
