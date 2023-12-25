@@ -9,7 +9,6 @@ import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import org.jetbrains.annotations.Nullable;
-import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.LinkIssueWithChatException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
@@ -60,8 +59,6 @@ public interface UserChatService {
   HttpResponse<JsonNode> answerCallbackQuery(String queryId)
       throws UnirestException, MyteamServerErrorException;
 
-  void linkChat(String chatId, String issueKey) throws LinkIssueWithChatException;
-
   String getBotId();
 
   boolean isChatAdmin(String chatId, String userId);
@@ -69,7 +66,6 @@ public interface UserChatService {
   String getGroupChatName(String chatId);
 
   // State Manager
-
   @Nullable
   BotState getState(String chatId);
 
