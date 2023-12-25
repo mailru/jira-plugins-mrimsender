@@ -115,6 +115,7 @@ class MyteamServiceImplTest {
   }
 
   @Test
+  @SuppressWarnings("NullAway")
   void sendMessageWhenApplicationUserNull() {
     // GIVEN
     ApplicationUser applicationUser = null;
@@ -191,6 +192,7 @@ class MyteamServiceImplTest {
   }
 
   @Test
+  @SuppressWarnings("NullAway")
   void sendMessageToUserGroupWhenGroupNameIsNull() {
     // GIVEN
     String groupName = null;
