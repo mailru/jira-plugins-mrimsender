@@ -45,6 +45,7 @@ import ru.mail.jira.plugins.myteam.component.PermissionHelper;
 import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
+import ru.mail.jira.plugins.myteam.protocol.MyteamService;
 import ru.mail.jira.plugins.myteam.service.*;
 
 @Component
@@ -70,6 +71,8 @@ public class RulesEngineImpl
   private final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter;
   private final PermissionHelper permissionHelper;
 
+  private final MyteamService myteamService;
+
   public RulesEngineImpl(
       CommonButtonsService commonButtonsService,
       IssueCreationService issueCreationService,
@@ -81,6 +84,7 @@ public class RulesEngineImpl
       MyteamApiClient myteamApiClient,
       MyteamChatRepository myteamChatRepository,
       JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter,
+      MyteamService myteamService,
       PermissionHelper permissionHelper) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
@@ -92,6 +96,7 @@ public class RulesEngineImpl
     this.myteamApiClient = myteamApiClient;
     this.myteamChatRepository = myteamChatRepository;
     this.jiraMarkdownToChatMarkdownConverter = jiraMarkdownToChatMarkdownConverter;
+    this.myteamService = myteamService;
     this.permissionHelper = permissionHelper;
 
     RulesEngineParameters engineParams =
@@ -134,7 +139,8 @@ public class RulesEngineImpl
     commandsRuleEngine.registerRule(new WatchingIssuesCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new AssignedIssuesCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(new CreatedIssuesCommandRule(userChatService, this));
-    commandsRuleEngine.registerRule(new LinkIssueWithChatCommandRule(userChatService, this));
+    commandsRuleEngine.registerRule(
+        new LinkIssueWithChatCommandRule(userChatService, this, myteamService));
     commandsRuleEngine.registerRule(new AssignIssueCommandRule(userChatService, this));
     commandsRuleEngine.registerRule(
         new ViewIssueCommandRule(userChatService, this, commonButtonsService, issueService));

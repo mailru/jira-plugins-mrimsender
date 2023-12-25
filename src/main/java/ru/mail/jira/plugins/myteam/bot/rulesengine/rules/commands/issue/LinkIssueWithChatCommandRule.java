@@ -15,6 +15,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ErrorRuleTyp
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.BaseRule;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
+import ru.mail.jira.plugins.myteam.protocol.MyteamService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
@@ -24,8 +25,12 @@ public class LinkIssueWithChatCommandRule extends BaseRule {
 
   static final RuleType NAME = CommandRuleType.LinkIssueWithChat;
 
-  public LinkIssueWithChatCommandRule(UserChatService userChatService, RulesEngine rulesEngine) {
+  private final MyteamService myteamService;
+
+  public LinkIssueWithChatCommandRule(
+      UserChatService userChatService, RulesEngine rulesEngine, MyteamService myteamService) {
     super(userChatService, rulesEngine);
+    this.myteamService = myteamService;
   }
 
   @Condition
@@ -38,7 +43,7 @@ public class LinkIssueWithChatCommandRule extends BaseRule {
       throws MyteamServerErrorException, IOException {
     String chatId = event.getChatId();
     try {
-      userChatService.linkChat(chatId, issueKey);
+      myteamService.linkChat(chatId, issueKey);
       userChatService.sendMessageText(
           chatId,
           userChatService.getText(
