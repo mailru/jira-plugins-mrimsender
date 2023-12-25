@@ -14,10 +14,6 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import kong.unirest.HttpResponse;
 import kong.unirest.UnirestException;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +41,11 @@ import ru.mail.jira.plugins.myteam.myteam.dto.chats.CreateChatResponse;
 import ru.mail.jira.plugins.myteam.protocol.MyteamService;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 import ru.mail.jira.plugins.myteam.service.model.MyteamChatMetaDto;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 @Slf4j
@@ -209,7 +210,7 @@ public class MyteamServiceImpl implements MyteamService {
       final String about = buildChatAbout(StringUtils.EMPTY, validatedIssueKey);
       final HttpResponse<CreateChatResponse> createChatResponse =
           this.myteamApiClient.createChat(
-              pluginData.getToken(), chatName, about, chatMembers, false);
+              pluginData.getToken(), chatName, about, chatMembers, isPublic);
       if (createChatResponse.getStatus() == 200
           && createChatResponse.getBody() != null
           && createChatResponse.getBody().getSn() != null) {
