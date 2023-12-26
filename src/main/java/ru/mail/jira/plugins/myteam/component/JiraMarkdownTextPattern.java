@@ -17,8 +17,7 @@ public final class JiraMarkdownTextPattern {
       Pattern.compile("(^|\\s)-([^- \\n].*?[^- \\n])-($|\\s|\\.)");
   static final Pattern MULTILEVEL_NUMBERED_LIST_PATTERN =
       Pattern.compile("^((?:#|-|\\+|\\*)+) (.*)$", Pattern.MULTILINE);
-  static final Pattern BOLD_PATTERN =
-      Pattern.compile("(^|\\s)\\*([^* \\n].*?[^* \\n])\\*($|\\s|\\.)");
+  static final Pattern BOLD_PATTERN = Pattern.compile("(^|)\\*([^*].*?[^*])\\*($||\\.)");
   static final Pattern UNDERLINE_PATTERN =
       Pattern.compile("(^|\\s)\\+([^+ \\n].*?[^+ \\n])\\+($|\\s|\\.)");
   static final Pattern LINK_PATTERN = Pattern.compile("\\[([^~|?\n]+)\\|(.+?)]");
