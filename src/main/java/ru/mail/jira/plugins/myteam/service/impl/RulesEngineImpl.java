@@ -7,6 +7,7 @@ import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.RulesEngineParameters;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.core.RulesEngine;
@@ -82,7 +83,7 @@ public class RulesEngineImpl
       MyteamApiClient myteamApiClient,
       MyteamChatRepository myteamChatRepository,
       JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter,
-      MyteamService myteamService) {
+      @Lazy MyteamService myteamService) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
