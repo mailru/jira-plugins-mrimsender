@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
+// eslint-disable-next-line import/no-extraneous-dependencies
 import qs from 'qs'
 import contextPath from 'wrm/context-path'
 import urls from 'jira/util/urls'

@@ -8,6 +8,7 @@ import AppAccessIcon from '@atlaskit/icon/glyph/app-access'
 import UnlockFilledIcon from '@atlaskit/icon/glyph/unlock-filled'
 import Button from '@atlaskit/button'
 import Spinner from '@atlaskit/spinner'
+import EmptyPageContainer from '@shared/components/styled/EmptyPageContainer'
 import CreateConfigurationDialog from './CreateConfigurationDialog'
 import AccessRequestImage from '../../assets/access-request.png'
 import {
@@ -19,7 +20,7 @@ import EditConfigurationDialog from './EditConfigurationDialog'
 import ConfirmationDialog from '../../shared/components/dialogs/ConfirmationDialog'
 
 type Props = {
-  projectKey: string | null
+  projectKey: string
 }
 
 const Container = styled.div`
@@ -52,20 +53,6 @@ const Right = styled.div`
   }
 `
 
-const EmptyPageContainer = styled.div`
-  margin: 48px auto;
-  text-align: center;
-  width: 500px;
-
-  h4 {
-    margin-bottom: 16px;
-  }
-
-  p {
-    margin-bottom: 24px;
-  }
-`
-
 const PageDescription = styled.div`
   padding-block: 10px;
 `
@@ -89,17 +76,6 @@ const Notifications = styled.div`
 `
 
 function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
-  if (projectKey == null)
-    return (
-      <EmptyPageContainer>
-        <h2>
-          {I18n.getText(
-            'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.error.project'
-          )}
-        </h2>
-      </EmptyPageContainer>
-    )
-
   const [isOpenCreateConfigurationDialog, setIsOpenCreateConfigurationDialog] =
     useState<boolean>(false)
   const [isOpenEditConfigurationDialog, setIsOpenEditConfigurationDialog] =
@@ -132,6 +108,7 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
           </Right>
         )}
       </Header>
+      {/* eslint-disable-next-line no-nested-ternary */}
       {configuration.isLoading ? (
         <Spinner size="large" />
       ) : configuration.data ? (
@@ -182,22 +159,22 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
                 <div>{name}</div>
               </Recipient>
             ))}
-              <h2>
-                  {I18n.getText(
-                      'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.table.accessRequest'
-                  )}
-              </h2>
-              {configuration.data.accessPermissionFields?.map(({ id, name }) => (
-                  <Recipient
-                      key={id}
-                      title={I18n.getText(
-                          'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.userFields'
-                      )}
-                  >
-                      <UnlockFilledIcon size="small" label="" />
-                      <div>{name}</div>
-                  </Recipient>
-              ))}
+            <h2>
+              {I18n.getText(
+                'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.table.accessRequest'
+              )}
+            </h2>
+            {configuration.data.accessPermissionFields?.map(({ id, name }) => (
+              <Recipient
+                key={id}
+                title={I18n.getText(
+                  'ru.mail.jira.plugins.myteam.accessRequest.configuration.page.dialog.field.userFields'
+                )}
+              >
+                <UnlockFilledIcon size="small" label="" />
+                <div>{name}</div>
+              </Recipient>
+            ))}
           </Recipients>
           <Notifications>
             <h2>
@@ -222,7 +199,7 @@ function AccessRequestConfiguration({ projectKey }: Props): ReactElement {
           </Notifications>
         </div>
       ) : (
-        <EmptyPageContainer>
+        <EmptyPageContainer h4={16} p={24}>
           <img
             src={AccessRequestImage}
             alt=""

@@ -1,11 +1,10 @@
-import React, { ReactElement, useState } from 'react'
-import { AsyncSelect, OptionsType, OptionType } from '@atlaskit/select'
-import { I18n } from '@atlassian/wrm-react-i18n'
+import React, { ReactElement } from 'react'
+import { OptionType } from '@atlaskit/select'
 import { Field } from '../../shared/types'
 import { loadUserFields } from '../../shared/api/AccessRequestApiClient'
-import {BaseFieldsSelectProps, BaseFieldSelect} from "./BaseFieldSelect";
+import { BaseFieldsSelectProps, BaseFieldSelect } from './BaseFieldSelect'
 
-type Props = Omit<BaseFieldsSelectProps, "loadFields">
+type Props = Omit<BaseFieldsSelectProps, 'loadFields'>
 
 export const createUserFieldOption = (role: Field): OptionType => {
   return {
@@ -27,12 +26,8 @@ const loadFields = async (
   })
 }
 
-function UserFieldsSelect({
-  ...rest
-}: Props): ReactElement {
-  return (
-      <BaseFieldSelect {...rest} loadFields={loadFields}/>
-  )
+function UserFieldsSelect({ ...rest }: Props): ReactElement {
+  return <BaseFieldSelect {...rest} loadFields={loadFields} />
 }
 
 UserFieldsSelect.defaultProps = {

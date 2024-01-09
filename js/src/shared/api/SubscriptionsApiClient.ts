@@ -1,5 +1,6 @@
 import axios from 'axios'
 import contextPath from 'wrm/context-path'
+// eslint-disable-next-line import/no-extraneous-dependencies
 import qs from 'qs'
 import { FilterSubscription, FilterSubscriptionsPermissions } from '../types'
 

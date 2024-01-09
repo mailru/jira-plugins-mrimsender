@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom'
 import { CacheProvider } from '@emotion/core'
 import createCache from '@emotion/cache'
 import { QueryClient, QueryClientProvider } from 'react-query'
+import { I18n } from '@atlassian/wrm-react-i18n'
+import EmptyPageContainer from '@shared/components/styled/EmptyPageContainer'
 import AccessRequest from './components/AccessRequest'
 
 const PANEL_CONTAINER_ID_SELECTOR = 'myteam-access-request-container'
@@ -29,7 +31,17 @@ export default function init(): void {
   ReactDOM.render(
     <CacheProvider value={emotionCache}>
       <QueryClientProvider client={queryClient}>
-        <AccessRequest issueKey={issueKey} />
+        {issueKey === null ? (
+          <EmptyPageContainer>
+            <h2>
+              {I18n.getText(
+                'ru.mail.jira.plugins.myteam.accessRequest.page.error.issueKey'
+              )}
+            </h2>
+          </EmptyPageContainer>
+        ) : (
+          <AccessRequest issueKey={issueKey} />
+        )}
       </QueryClientProvider>
     </CacheProvider>,
     root
