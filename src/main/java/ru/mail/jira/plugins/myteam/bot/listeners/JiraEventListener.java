@@ -4,8 +4,10 @@ package ru.mail.jira.plugins.myteam.bot.listeners;
 import com.atlassian.event.api.EventListener;
 import com.atlassian.event.api.EventPublisher;
 import com.atlassian.jira.event.issue.IssueEvent;
-import com.atlassian.jira.event.issue.MentionIssueEvent;
+import com.atlassian.jira.event.type.EventType;
 import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.comments.Comment;
+import com.atlassian.jira.issue.comments.CommentManager;
 import com.atlassian.jira.notification.*;
 import com.atlassian.jira.permission.ProjectPermissions;
 import com.atlassian.jira.scheme.SchemeEntity;
@@ -19,9 +21,11 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.google.common.collect.Sets;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +36,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleTy
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.component.JiraEventToChatMessageConverter;
 import ru.mail.jira.plugins.myteam.component.UserData;
+import ru.mail.jira.plugins.myteam.component.UserMentionService;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 
 @Component
@@ -43,11 +48,15 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   private final NotificationSchemeManager notificationSchemeManager;
   private final PermissionManager permissionManager;
   private final ProjectRoleManager projectRoleManager;
+
   private final UserData userData;
+
   private final MyteamEventsListener myteamEventsListener;
   private final I18nResolver i18nResolver;
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final JiraEventToChatMessageConverter jiraEventToChatMessageConverter;
+
+  private final UserMentionService userMentionService;
 
   @Autowired
   public JiraEventListener(
@@ -61,7 +70,8 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
       UserData userData,
       MyteamEventsListener myteamEventsListener,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
-      JiraEventToChatMessageConverter jiraEventToChatMessageConverter) {
+      JiraEventToChatMessageConverter jiraEventToChatMessageConverter,
+      UserMentionService userMentionService) {
     this.eventPublisher = eventPublisher;
     this.groupManager = groupManager;
     this.notificationFilterManager = notificationFilterManager;
@@ -73,6 +83,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     this.i18nResolver = i18nResolver;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.jiraEventToChatMessageConverter = jiraEventToChatMessageConverter;
+    this.userMentionService = userMentionService;
   }
 
   @Override
@@ -90,6 +101,9 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
   public void onIssueEvent(IssueEvent issueEvent) {
     try {
       if (issueEvent.isSendMail()) {
+
+        Set<ApplicationUser> mentionedPossibleRecipients =
+            resolvePossibleRecipientsMentionedInIssueEvent(issueEvent);
 
         Set<NotificationRecipient> notificationRecipients = Sets.newHashSet();
         try {
@@ -131,37 +145,15 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
           notificationRecipients.addAll(recipientsFromScheme);
         }
 
-        Set<ApplicationUser> recipients =
-            notificationRecipients.stream()
-                .map(NotificationRecipient::getUser)
-                .filter(user -> canSendEventToUser(user, issueEvent))
-                .collect(Collectors.toSet());
+        Set<IssueEventRecipient> recipients =
+            getRecipientsFilteredByPermissionsAndMentions(
+                issueEvent, mentionedPossibleRecipients, notificationRecipients);
 
         sendMessage(recipients, issueEvent, issueEvent.getIssue().getKey());
       }
     } catch (Exception e) {
       SentryClient.capture(e, Map.of("issueKey", issueEvent.getIssue().getKey()));
       log.error("onIssueEvent({})", issueEvent, e);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  @EventListener
-  public void onMentionIssueEvent(MentionIssueEvent mentionIssueEvent) {
-    try {
-      List<ApplicationUser> recipients = new ArrayList<>();
-      for (ApplicationUser user : mentionIssueEvent.getToUsers()) {
-        if (mentionIssueEvent.getCurrentRecipients() != null
-            && !mentionIssueEvent
-                .getCurrentRecipients()
-                .contains(new NotificationRecipient(user))) {
-          recipients.add(user);
-        }
-      }
-      sendMessage(recipients, mentionIssueEvent, mentionIssueEvent.getIssue().getKey());
-    } catch (Exception e) {
-      SentryClient.capture(e);
-      log.error(e.getMessage(), e);
     }
   }
 
@@ -187,23 +179,18 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
         || projectRoleManager.isUserInProjectRole(user, projectRole, issue.getProjectObject());
   }
 
-  private void sendMessage(Collection<ApplicationUser> recipients, Object event, String issueKey) {
-    for (ApplicationUser recipient : recipients) {
+  private void sendMessage(
+      Collection<IssueEventRecipient> recipients, IssueEvent event, String issueKey) {
+    for (IssueEventRecipient issueEventRecipient : recipients) {
+      ApplicationUser recipient = issueEventRecipient.getRecipient();
       if (recipient.isActive() && userData.isEnabled(recipient)) {
         if (StringUtils.isNotBlank(recipient.getEmailAddress())) {
 
           ApplicationUser contextUser = jiraAuthenticationContext.getLoggedInUser();
           jiraAuthenticationContext.setLoggedInUser(recipient);
           try {
-            String message = null;
-            if (event instanceof IssueEvent)
-              message =
-                  jiraEventToChatMessageConverter.formatEventWithDiff(
-                      recipient, (IssueEvent) event);
-            if (event instanceof MentionIssueEvent)
-              message =
-                  jiraEventToChatMessageConverter.formatMentionEvent((MentionIssueEvent) event);
-
+            String message =
+                jiraEventToChatMessageConverter.formatEventWithDiff(issueEventRecipient, event);
             if (message != null) {
               myteamEventsListener.publishEvent(
                   new JiraNotifyEvent(
@@ -264,5 +251,61 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     buttons.add(quickViewAndMenuRow);
 
     return buttons;
+  }
+
+  @NotNull
+  private Set<ApplicationUser> resolvePossibleRecipientsMentionedInIssueEvent(
+      @NotNull final IssueEvent issueEvent) {
+    Long eventTypeId = issueEvent.getEventTypeId();
+    Set<ApplicationUser> mentionedUsers;
+    if (EventType.ISSUE_UPDATED_ID.equals(eventTypeId)) {
+      mentionedUsers =
+          userMentionService.getMentionedUsersInDescription(issueEvent.getIssue(), true);
+    } else if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)) {
+      mentionedUsers = userMentionService.getMentionedUserInComment(issueEvent.getComment());
+    } else if (EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
+      Object origCommentObject =
+          issueEvent.getParams().get(CommentManager.EVENT_ORIGINAL_COMMENT_PARAMETER);
+      if (origCommentObject instanceof Comment) {
+        mentionedUsers =
+            userMentionService.getMentionedUserInEditedComment(
+                issueEvent.getComment(), (Comment) origCommentObject);
+      } else {
+        mentionedUsers = Collections.emptySet();
+      }
+    } else {
+      mentionedUsers = Collections.emptySet();
+    }
+    return mentionedUsers;
+  }
+
+  @NotNull
+  private Set<IssueEventRecipient> getRecipientsFilteredByPermissionsAndMentions(
+      @NotNull final IssueEvent issueEvent,
+      @NotNull final Set<ApplicationUser> mentionedPossibleRecipients,
+      @NotNull final Set<NotificationRecipient> notificationRecipients) {
+    Map<String, ApplicationUser> mentionedPossibleRecipientsMap =
+        mentionedPossibleRecipients.stream()
+            .filter(mentionedUser -> canSendEventToUser(mentionedUser, issueEvent))
+            .collect(Collectors.toMap(ApplicationUser::getKey, Function.identity()));
+
+    Set<ApplicationUser> filteredRecipientsByPermissions =
+        notificationRecipients.stream()
+            .map(NotificationRecipient::getUser)
+            .filter(user -> canSendEventToUser(user, issueEvent))
+            .collect(Collectors.toSet());
+
+    Set<IssueEventRecipient> recipients = new HashSet<>();
+    for (ApplicationUser recipient : filteredRecipientsByPermissions) {
+      ApplicationUser mentionedUser = mentionedPossibleRecipientsMap.remove(recipient.getKey());
+      boolean mentioned = mentionedUser != null;
+      IssueEventRecipient.of(recipient, mentioned);
+    }
+
+    recipients.addAll(
+        mentionedPossibleRecipientsMap.values().stream()
+            .map(lostMentionRecipient -> IssueEventRecipient.of(lostMentionRecipient, true))
+            .collect(Collectors.toSet()));
+    return recipients;
   }
 }

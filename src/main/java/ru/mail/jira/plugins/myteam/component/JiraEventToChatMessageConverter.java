@@ -8,7 +8,6 @@ import static ru.mail.jira.plugins.myteam.commons.Utils.shieldText;
 import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.event.issue.IssueEvent;
-import com.atlassian.jira.event.issue.MentionIssueEvent;
 import com.atlassian.jira.event.type.EventType;
 import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;
@@ -36,6 +35,7 @@ import org.jetbrains.annotations.Nullable;
 import org.ofbiz.core.entity.GenericValue;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
+import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
 
 @Component
 @Slf4j
@@ -45,6 +45,12 @@ public class JiraEventToChatMessageConverter {
   private static final Map<Long, String> EVENT_TYPE_MAP = getEventTypeMap();
 
   private static final String I18N_PART_KEY = "ru.mail.jira.plugins.myteam.notification.";
+  private static final String MENTION_UPDATED_ISSUE_I18N_KEY =
+      "ru.mail.jira.plugins.myteam.notification.updated.and.mentioned";
+
+  private static final String DEFAULT_EVENT_I18N_KEY =
+      "ru.mail.jira.plugins.myteam.notification.updated";
+
   private final MessageFormatter messageFormatter;
   private final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter;
   private final DiffFieldChatMessageGenerator diffFieldChatMessageGenerator;
@@ -77,34 +83,14 @@ public class JiraEventToChatMessageConverter {
     this.userManager = userManager;
   }
 
-  public String formatMentionEvent(final MentionIssueEvent mentionIssueEvent) {
-    final Issue issue = mentionIssueEvent.getIssue();
-    final ApplicationUser user = mentionIssueEvent.getFromUser();
-    final String issueLink = messageFormatter.getIssueLink(issue.getKey());
-
-    final StringBuilder sb = new StringBuilder();
-    sb.append(
-        i18nResolver.getText(
-            "ru.mail.jira.plugins.myteam.notification.mentioned",
-            messageFormatter.formatUser(user, "common.words.anonymous", true),
-            issueLink));
-    sb.append("\n").append(shieldText(issue.getSummary()));
-
-    if (!isBlank(mentionIssueEvent.getMentionText()))
-      sb.append("\n\n")
-          .append(
-              jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
-                  mentionIssueEvent.getMentionText(), true));
-
-    return sb.toString();
-  }
-
   @Nullable
-  public String formatEventWithDiff(final ApplicationUser recipient, final IssueEvent issueEvent) {
+  public String formatEventWithDiff(
+      final IssueEventRecipient issueEventRecipient, final IssueEvent issueEvent) {
     final Issue issue = issueEvent.getIssue();
     final ApplicationUser user = issueEvent.getUser();
     final StringBuilder sb = new StringBuilder();
 
+    ApplicationUser recipient = issueEventRecipient.getRecipient();
     final boolean useMentionFormat = !recipient.equals(user);
 
     final Long eventTypeId = issueEvent.getEventTypeId();
@@ -120,17 +106,25 @@ public class JiraEventToChatMessageConverter {
         || EventType.ISSUE_COMMENT_EDITED_ID.equals(eventTypeId)) {
       sb.append(
           appendStringOnIssueCommentedOrCommentEditedEvent(
-              issueEvent, i18nKey, user, useMentionFormat));
+              issueEvent, i18nKey, user, useMentionFormat, issueEventRecipient));
       return sb.toString();
     } else {
       String issueLink =
           messageFormatter.markdownTextLink(
               issue.getKey(), messageFormatter.createIssueLink(issue.getKey()));
-      sb.append(
-          i18nResolver.getText(
-              i18nKey,
-              messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
-              issueLink));
+      if (DEFAULT_EVENT_I18N_KEY.equals(i18nKey) && issueEventRecipient.isMentioned()) {
+        sb.append(
+            i18nResolver.getText(
+                MENTION_UPDATED_ISSUE_I18N_KEY,
+                messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
+                issueLink));
+      } else {
+        sb.append(
+            i18nResolver.getText(
+                i18nKey,
+                messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
+                issueLink));
+      }
     }
     sb.append("\n").append(shieldText(issue.getSummary()));
 
@@ -139,7 +133,9 @@ public class JiraEventToChatMessageConverter {
     }
 
     if (EventType.ISSUE_CREATED_ID.equals(eventTypeId)) {
-      sb.append(messageFormatter.formatSystemFields(recipient, issue, useMentionFormat));
+      sb.append(
+          messageFormatter.formatSystemFields(
+              issueEventRecipient.getRecipient(), issue, useMentionFormat));
     }
 
     sb.append(
@@ -149,8 +145,11 @@ public class JiraEventToChatMessageConverter {
             useMentionFormat));
     if (issueEvent.getComment() != null && !isBlank(issueEvent.getComment().getBody())) {
       if (EventType.ISSUE_COMMENTED_ID.equals(eventTypeId)
-          && issueEvent.getComment().getBody().contains("[~" + recipient.getName() + "]")) {
-        // do not send message when recipient mentioned in comment
+          && issueEvent
+              .getComment()
+              .getBody()
+              .contains("[~" + issueEventRecipient.getRecipient().getName() + "]")) {
+        // do not send message when applicationUserWrapper mentioned in comment
         return null;
       }
 
@@ -203,7 +202,8 @@ public class JiraEventToChatMessageConverter {
       final IssueEvent issueEvent,
       final String i18nKey,
       final ApplicationUser user,
-      final boolean useMentionFormat) {
+      final boolean useMentionFormat,
+      final IssueEventRecipient issueEventRecipient) {
     String messageText;
     if (EventType.ISSUE_COMMENT_EDITED_ID.equals(issueEvent.getEventTypeId())) {
       messageText = appendEditedCommentWithDiff(issueEvent, useMentionFormat);
@@ -212,9 +212,17 @@ public class JiraEventToChatMessageConverter {
           jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
               issueEvent.getComment().getBody(), useMentionFormat);
     }
+    String definedI18nKeyOnMentionedCommented = i18nKey;
+
+    if (useMentionFormat && issueEventRecipient.isMentioned()) {
+      definedI18nKeyOnMentionedCommented =
+          Objects.equals(issueEvent.getEventTypeId(), EventType.ISSUE_COMMENTED_ID)
+              ? "ru.mail.jira.plugins.myteam.notification.commented.and.mentioned"
+              : "ru.mail.jira.plugins.myteam.notification.commented.edited.and.mentioned";
+    }
     final Issue issue = issueEvent.getIssue();
     return i18nResolver.getText(
-        i18nKey,
+        definedI18nKeyOnMentionedCommented,
         messageFormatter.getIssueLink(issue.getKey()),
         issue.getSummary(),
         messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
@@ -417,7 +425,7 @@ public class JiraEventToChatMessageConverter {
         messageFormatter.formatUser(
             userManager.getUserByKey(changeItem.getString("oldvalue")),
             "common.words.anonymous",
-            true),
+            false),
         messageFormatter.formatUser(
             userManager.getUserByKey(changeItem.getString("newvalue")),
             "common.words.anonymous",

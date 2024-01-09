@@ -7,6 +7,7 @@ import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
 import org.jeasy.rules.api.RulesEngineParameters;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.core.RulesEngine;
@@ -41,6 +42,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.EmptyState;
 import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
 import ru.mail.jira.plugins.myteam.component.JiraMarkdownToChatMarkdownConverter;
+import ru.mail.jira.plugins.myteam.component.PermissionHelper;
 import ru.mail.jira.plugins.myteam.component.PermissionHelper;
 import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
@@ -84,7 +86,7 @@ public class RulesEngineImpl
       MyteamApiClient myteamApiClient,
       MyteamChatRepository myteamChatRepository,
       JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter,
-      MyteamService myteamService,
+      @Lazy MyteamService myteamService,
       PermissionHelper permissionHelper) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
