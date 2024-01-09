@@ -483,20 +483,6 @@ public class MessageFormatter {
     } else return i18nHelper.getText(messageKey);
   }
 
-  public String formatUser(@Nullable ApplicationUser user, String messageKey) {
-    if (user != null) {
-      String formattedUserInfo = shieldText(user.getDisplayName());
-      if (formattedUserInfo != null) {
-        return formattedUserInfo;
-      }
-      formattedUserInfo = shieldText(user.getEmailAddress());
-      if (formattedUserInfo != null) {
-        return formattedUserInfo;
-      }
-    }
-    return i18nHelper.getText(messageKey);
-  }
-
   public String formatEmptyFilterSubscription(String filterName, Long filterId) {
     return i18nResolver.getText(
             "ru.mail.jira.plugins.myteam.subscriptions.page.subscription.message.header",
