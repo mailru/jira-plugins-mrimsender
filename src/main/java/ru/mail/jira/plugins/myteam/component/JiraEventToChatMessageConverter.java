@@ -415,8 +415,7 @@ public class JiraEventToChatMessageConverter {
         sb,
         title,
         messageFormatter.formatUser(
-            userManager.getUserByKey(changeItem.getString("oldvalue")),
-            "common.words.anonymous"),
+            userManager.getUserByKey(changeItem.getString("oldvalue")), "common.words.anonymous"),
         messageFormatter.formatUser(
             userManager.getUserByKey(changeItem.getString("newvalue")),
             "common.words.anonymous",
