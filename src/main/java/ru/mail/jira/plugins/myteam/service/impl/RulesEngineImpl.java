@@ -42,6 +42,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.EmptyState;
 import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
 import ru.mail.jira.plugins.myteam.component.JiraMarkdownToChatMarkdownConverter;
+import ru.mail.jira.plugins.myteam.component.PermissionHelper;
 import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;
@@ -69,6 +70,7 @@ public class RulesEngineImpl
 
   private final MyteamChatRepository myteamChatRepository;
   private final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter;
+  private final PermissionHelper permissionHelper;
 
   private final MyteamService myteamService;
 
@@ -83,7 +85,8 @@ public class RulesEngineImpl
       MyteamApiClient myteamApiClient,
       MyteamChatRepository myteamChatRepository,
       JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter,
-      @Lazy MyteamService myteamService) {
+      @Lazy MyteamService myteamService,
+      PermissionHelper permissionHelper) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
@@ -95,6 +98,7 @@ public class RulesEngineImpl
     this.myteamChatRepository = myteamChatRepository;
     this.jiraMarkdownToChatMarkdownConverter = jiraMarkdownToChatMarkdownConverter;
     this.myteamService = myteamService;
+    this.permissionHelper = permissionHelper;
 
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
@@ -174,7 +178,8 @@ public class RulesEngineImpl
             issueCreationSettingsService,
             issueCreationService,
             issueService,
-            eventMessagesTextConverter));
+            eventMessagesTextConverter,
+            permissionHelper));
 
     // States
     stateActionsRuleEngine.registerRule(new JqlInputRule(userChatService, this));
