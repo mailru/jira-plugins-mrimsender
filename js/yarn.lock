@@ -27,10 +27,10 @@
     react-router-dom "^6.13.0"
     react-table "^7.8.0"
 
-"@atlascommunity/eslint-config@^1.3.0":
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/@atlascommunity/eslint-config/-/eslint-config-1.3.0.tgz#f01aa026e594aec5f3498a9d0bc7b43b143220ac"
-  integrity sha512-R1lyjm5CbpBulNUDto6Jz2snLGskSjxkM3NkQK/nedlZAnFNwo+YNd8fIGEV2wgTMoebt0pBpyQqyeehy66cAA==
+"@atlascommunity/eslint-config@1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@atlascommunity/eslint-config/-/eslint-config-1.2.0.tgz#dd51940363db5f8f5e07a65f523cb02499f5a615"
+  integrity sha512-+yJjnqVzv7hhHEY0JZq44lNCTgcsZQowp1yNOtz8SWzSR9YEQntFgHDwpBvBStOyM2bbsx1ZjaVKKS9b0EP32Q==
   dependencies:
     "@typescript-eslint/eslint-plugin" "^5.39.0"
     "@typescript-eslint/parser" "^5.39.0"
