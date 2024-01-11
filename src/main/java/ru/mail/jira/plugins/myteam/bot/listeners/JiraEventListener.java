@@ -299,7 +299,7 @@ public class JiraEventListener implements InitializingBean, DisposableBean {
     for (ApplicationUser recipient : filteredRecipientsByPermissions) {
       ApplicationUser mentionedUser = mentionedPossibleRecipientsMap.remove(recipient.getKey());
       boolean mentioned = mentionedUser != null;
-      IssueEventRecipient.of(recipient, mentioned);
+      recipients.add(IssueEventRecipient.of(recipient, mentioned));
     }
 
     recipients.addAll(
