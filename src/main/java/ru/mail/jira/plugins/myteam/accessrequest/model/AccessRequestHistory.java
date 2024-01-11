@@ -38,7 +38,6 @@ public interface AccessRequestHistory extends Entity {
 
   void setReplyStatus(Boolean status);
 
-  @StringLength(StringLength.UNLIMITED)
   @Nullable
   String getReplyAdmin();
 

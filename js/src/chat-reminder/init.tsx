@@ -7,7 +7,7 @@ import {
   MessageProvider,
   ReminderCreateDialogProvider,
 } from './widgets'
-import { MenuItem } from './entity'
+import MenuItem from './entity/MenuItem'
 
 const MENU_ITEM_ID_SELECTOR = 'aui-item-link#myteam-chat-reminder-action'
 const BOARD_MENU_ITEM_ID_SELECTOR =
