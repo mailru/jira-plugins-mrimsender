@@ -27,7 +27,7 @@
     react-router-dom "^6.13.0"
     react-table "^7.8.0"
 
-"@atlascommunity/eslint-config@^1.2.0":
+"@atlascommunity/eslint-config@1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@atlascommunity/eslint-config/-/eslint-config-1.2.0.tgz#dd51940363db5f8f5e07a65f523cb02499f5a615"
   integrity sha512-+yJjnqVzv7hhHEY0JZq44lNCTgcsZQowp1yNOtz8SWzSR9YEQntFgHDwpBvBStOyM2bbsx1ZjaVKKS9b0EP32Q==
@@ -5957,6 +5957,13 @@ qs@6.7.0:
   version "6.7.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.7.0.tgz#41dc1a015e3d581f1621776be31afb2876a9b1bc"
   integrity sha512-VCdBRNFTX1fyE7Nb6FYoURo/SPe62QCaAyzJvUjwRaIsc+NePBEniHlvxFmmX56+HZphIGtV0XeCirBtpDrTyQ==
+
+qs@^6.11.2:
+  version "6.11.2"
+  resolved "https://registry.yarnpkg.com/qs/-/qs-6.11.2.tgz#64bea51f12c1f5da1bc01496f48ffcff7c69d7d9"
+  integrity sha512-tDNIz22aBzCDxLtVH++VnTfzxlfeK5CbqohpSqpJgj1Wg/cQbStNAz3NuqCs5vV+pjBsK4x4pN9HlVh7rcYRiA==
+  dependencies:
+    side-channel "^1.0.4"
 
 query-string@^8.1.0:
   version "8.1.0"

@@ -44,7 +44,10 @@ public class AccessRequestHistoryRepository
     dto.setSent(Boolean.TRUE);
     dto.setRequesterKey(entity.getRequesterKey());
     dto.setIssueId(entity.getIssueId());
-    return null;
+    dto.setReplyStatus(entity.getReplyStatus());
+    dto.setReplyAdmin(dtoUtils.buildUserDto(userManager.getUserByKey(entity.getReplyAdmin())));
+    dto.setReplyDate(entity.getReplyDate());
+    return dto;
   }
 
   @Override
@@ -56,6 +59,9 @@ public class AccessRequestHistoryRepository
     entity.setRequesterKey(Objects.requireNonNull(dto.getRequesterKey()));
     entity.setIssueId(Objects.requireNonNull(dto.getIssueId()));
     entity.setDate(Utils.convertToDate(LocalDateTime.now(ZoneId.systemDefault())));
+    entity.setReplyDate(dto.getReplyDate());
+    entity.setReplyAdmin(dto.getReplyAdmin() != null ? dto.getReplyAdmin().getUserKey() : null);
+    entity.setReplyStatus(dto.getReplyStatus());
   }
 
   @Override

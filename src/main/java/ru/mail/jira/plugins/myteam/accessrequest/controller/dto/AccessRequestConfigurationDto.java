@@ -41,4 +41,6 @@ public class AccessRequestConfigurationDto {
   @XmlElement private boolean sendEmail;
 
   @XmlElement private boolean sendMessage;
+
+  @NotNull @XmlElement private List<UserFieldDto> accessPermissionFields;
 }

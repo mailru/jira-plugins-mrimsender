@@ -7,6 +7,7 @@ import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.exception.ParseException;
 import com.atlassian.jira.exception.PermissionException;
 import com.atlassian.jira.issue.Issue;
+import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.comments.Comment;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.search.SearchException;
@@ -33,6 +34,10 @@ public interface IssueService {
   Issue getIssueByUser(String issueKey, @Nullable ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException;
 
+  void updateIssue(ApplicationUser logginedInUser, MutableIssue mutableIssue, boolean b);
+
+  MutableIssue getMutableIssue(Long issueId) throws IssueNotFoundException;
+
   Issue getIssue(String issueKey) throws IssueNotFoundException;
 
   boolean isUserWatching(Issue issue, ApplicationUser user);
@@ -49,6 +54,10 @@ public interface IssueService {
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;
 
   void watchIssue(Issue issue, ApplicationUser user);
+
+  void setAssigneeIssue(MutableIssue issue, ApplicationUser user);
+
+  void setReporterIssue(MutableIssue issue, ApplicationUser user);
 
   void unwatchIssue(String issueKey, @Nullable ApplicationUser user)
       throws IssuePermissionException, IssueNotFoundException, IssueWatchingException;

@@ -40,9 +40,13 @@ import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestConfiguratio
 import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestConfigurationRepository;
 import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestHistory;
 import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestHistoryRepository;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons.ReplyRule;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.MyteamAuditService;
+import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.service.UserChatService;
 
 @Component
@@ -178,6 +182,7 @@ public class AccessRequestService {
       AccessRequestConfiguration configuration =
           accessRequestConfigurationRepository.getAccessRequestConfiguration(issue.getProjectId());
       if (configuration != null) {
+        int historyId = history.getID();
         accessRequestDto.getUsers().stream()
             .map(dto -> userManager.getUserByKey(dto.getUserKey()))
             .filter(user -> user != null && user.isActive())
@@ -186,7 +191,8 @@ public class AccessRequestService {
                 user -> {
                   try {
                     if (configuration.isSendMessage())
-                      sendMessage(user, loggedInUser, issue, accessRequestDto.getMessage());
+                      sendMessage(
+                          user, loggedInUser, issue, accessRequestDto.getMessage(), historyId);
                     if (configuration.isSendEmail())
                       sendEmail(user, loggedInUser, issue, accessRequestDto.getMessage());
                   } catch (Exception e) {
@@ -201,6 +207,28 @@ public class AccessRequestService {
   }
 
   @Nullable
+  public AccessRequestDto getAccessRequestHistoryDto(int historyId) {
+    AccessRequestHistory accessRequestHistory = accessRequestHistoryRepository.get(historyId);
+    return accessRequestHistoryRepository.entityToDto(accessRequestHistory);
+  }
+
+  public AccessRequestConfigurationDto getAccessRequestConfigurationDto(long projectId)
+      throws NullPointerException {
+    AccessRequestConfiguration accessRequestConfiguration =
+        accessRequestConfigurationRepository.getAccessRequestConfiguration(projectId);
+    if (accessRequestConfiguration == null) {
+      throw new NullPointerException(
+          String.format("AccessRequestConfiguration with projectId %s was not found", projectId));
+    }
+    return accessRequestConfigurationRepository.entityToDto(accessRequestConfiguration);
+  }
+
+  public AccessRequestHistory updateAccessHistory(
+      int historyId, AccessRequestDto accessRequestDto) {
+    return accessRequestHistoryRepository.update(historyId, accessRequestDto);
+  }
+
+  @Nullable
   public AccessRequestConfigurationDto getAccessRequestConfiguration(@NotNull Project project) {
     AccessRequestConfiguration configuration =
         accessRequestConfigurationRepository.getAccessRequestConfiguration(project.getId());
@@ -211,12 +239,25 @@ public class AccessRequestService {
 
   public AccessRequestConfiguration createAccessRequestConfiguration(
       @Valid AccessRequestConfigurationDto configurationDto) {
-    return accessRequestConfigurationRepository.create(configurationDto);
+    try {
+      return accessRequestConfigurationRepository.create(configurationDto);
+    } catch (Exception err) {
+      System.out.println(err.getMessage());
+      return null;
+    }
   }
 
   public AccessRequestConfiguration updateAccessRequestConfiguration(
       int configurationId, @Valid AccessRequestConfigurationDto configurationDto) {
     return accessRequestConfigurationRepository.update(configurationId, configurationDto);
+  }
+
+  @NotNull
+  public ApplicationUser getAccessUserByKey(String userKey) throws NullPointerException {
+    ApplicationUser applicationUser = userManager.getUserByKey(userKey);
+    if (applicationUser == null)
+      throw new NullPointerException("Access request error! Requester not found.");
+    return applicationUser;
   }
 
   public void deleteAccessRequestConfiguration(int configurationId) {
@@ -259,16 +300,52 @@ public class AccessRequestService {
         .isBefore(LocalDateTime.now(ZoneId.systemDefault()));
   }
 
-  private void sendMessage(ApplicationUser to, ApplicationUser from, Issue issue, String message) {
+  private void sendMessage(
+      ApplicationUser to, ApplicationUser from, Issue issue, String message, int historyId) {
     try {
       userChatService.sendMessageText(
-          to.getEmailAddress(), messageFormatter.formatAccessRequestMessage(from, issue, message));
+          to.getEmailAddress(),
+          messageFormatter.formatAccessRequestMessage(from, issue, message),
+          getReplyButtons(historyId, to.getKey()));
     } catch (Exception e) {
       SentryClient.capture(
           e,
           Map.of(
               "to", to.getEmailAddress(), "from", from.getEmailAddress(), "issue", issue.getKey()));
     }
+  }
+
+  private List<List<InlineKeyboardMarkupButton>> getReplyButtons(int historyId, String userKey) {
+    List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
+    List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
+
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getText(
+                "ru.mail.jira.plugins.myteam.accessRequest.configuration.rule.type.allow"),
+            String.join(
+                "-",
+                ButtonRuleType.AccessReply.getName(),
+                RuleType.joinArgs(
+                    List.of(
+                        ReplyRule.ReplyCommands.COMMAND_ALLOW.toString(),
+                        Integer.toString(historyId),
+                        userKey)))));
+    buttonsRow.add(
+        InlineKeyboardMarkupButton.buildButtonWithoutUrl(
+            i18nResolver.getText(
+                "ru.mail.jira.plugins.myteam.accessRequest.configuration.rule.type.forbid"),
+            String.join(
+                "-",
+                ButtonRuleType.AccessReply.getName(),
+                RuleType.joinArgs(
+                    List.of(
+                        ReplyRule.ReplyCommands.COMMAND_FORBID.toString(),
+                        Integer.toString(historyId),
+                        userKey)))));
+    buttons.add(buttonsRow);
+
+    return buttons;
   }
 
   private void sendEmail(

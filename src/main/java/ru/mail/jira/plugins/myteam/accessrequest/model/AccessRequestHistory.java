@@ -6,6 +6,7 @@ import net.java.ao.Entity;
 import net.java.ao.schema.Indexed;
 import net.java.ao.schema.StringLength;
 import net.java.ao.schema.Table;
+import org.jetbrains.annotations.Nullable;
 
 @Table("ACCESS_REQUEST_HIST")
 public interface AccessRequestHistory extends Entity {
@@ -31,4 +32,19 @@ public interface AccessRequestHistory extends Entity {
   Date getDate();
 
   void setDate(Date date);
+
+  @Nullable
+  Boolean getReplyStatus();
+
+  void setReplyStatus(Boolean status);
+
+  @Nullable
+  String getReplyAdmin();
+
+  void setReplyAdmin(String userKey);
+
+  @Nullable
+  Date getReplyDate();
+
+  void setReplyDate(Date date);
 }

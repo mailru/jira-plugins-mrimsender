@@ -3,6 +3,7 @@ package ru.mail.jira.plugins.myteam.service;
 
 import com.atlassian.jira.user.ApplicationUser;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import kong.unirest.HttpResponse;
@@ -32,7 +33,7 @@ public interface UserChatService {
 
   String getText(Locale locale, String s, String data);
 
-  String getText(String s, @Nullable String data);
+  String getText(String s, @Nullable Serializable... data);
 
   MessageFormatter getMessageFormatter();
 
@@ -43,7 +44,8 @@ public interface UserChatService {
       String chatId, String message, @Nullable List<List<InlineKeyboardMarkupButton>> buttons)
       throws MyteamServerErrorException, IOException;
 
-  void sendMessageText(String chatId, @Nullable String message)
+  @Nullable
+  HttpResponse<MessageResponse> sendMessageText(String chatId, @Nullable String message)
       throws MyteamServerErrorException, IOException;
 
   boolean deleteMessages(String chatId, List<Long> messagesId)

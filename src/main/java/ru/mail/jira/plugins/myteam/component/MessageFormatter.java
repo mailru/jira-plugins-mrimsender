@@ -44,6 +44,7 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
+import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons.ReplyRule;
 import ru.mail.jira.plugins.myteam.component.url.dto.Link;
 import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -530,6 +531,34 @@ public class MessageFormatter {
             totalIssues,
             markdownTextLink(Integer.toString(totalIssues), createJqlLink(searchJql))));
     return sb.toString();
+  }
+
+  public String formatAccessReplyError(Exception e) {
+    return i18nResolver.getText(
+        "ru.mail.jira.plugins.myteam.accessRequest.page.message.reply.error", e.getMessage());
+  }
+
+  public String formatAccessReplyMessage(
+      @Nullable ApplicationUser requester, Issue issue, ReplyRule.ReplyCommands replyCommand) {
+    String command =
+        replyCommand.equals(ReplyRule.ReplyCommands.COMMAND_ALLOW) ? "allow" : "forbid";
+    return i18nResolver.getText(
+        String.format("ru.mail.jira.plugins.myteam.accessRequest.page.message.reply.%s", command),
+        requester != null ? formatUser(requester, "common.words.anonymous", true) : "[unknown]",
+        markdownTextLink(issue.getKey(), createIssueLink(issue.getKey())));
+  }
+
+  public String formatProcessedReplyMessage(
+      @Nullable ApplicationUser responder,
+      @Nullable ApplicationUser requester,
+      Issue issue,
+      boolean replyDtoStatus) {
+    String command = replyDtoStatus ? "allowed" : "forbade";
+    return i18nResolver.getText(
+        String.format("ru.mail.jira.plugins.myteam.accessRequest.page.message.reply.%s", command),
+        responder != null ? formatUser(responder, "common.words.anonymous", true) : "[unknown]",
+        requester != null ? formatUser(requester, "common.words.anonymous", true) : "[unknown]",
+        markdownTextLink(issue.getKey(), createIssueLink(issue.getKey())));
   }
 
   public String formatAccessRequestMessage(

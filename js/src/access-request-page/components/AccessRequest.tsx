@@ -8,13 +8,14 @@ import TextArea from '@atlaskit/textarea'
 import Button from '@atlaskit/button'
 import Avatar, { AvatarItem } from '@atlaskit/avatar'
 import SectionMessage from '@atlaskit/section-message'
+import EmptyPageContainer from '@shared/components/styled/EmptyPageContainer'
 import {
   useAccessRequestMutation,
   useGetAccessRequest,
 } from '../../shared/hooks'
 
 type Props = {
-  issueKey: string | null
+  issueKey: string
 }
 
 type FormState = {
@@ -46,24 +47,7 @@ const Head = styled.h1`
   }
 `
 
-const EmptyPageContainer = styled.div`
-  margin: 48px auto;
-  text-align: center;
-  width: 500px;
-`
-
 function AccessRequest({ issueKey }: Props): ReactElement {
-  if (issueKey == null)
-    return (
-      <EmptyPageContainer>
-        <h2>
-          {I18n.getText(
-            'ru.mail.jira.plugins.myteam.accessRequest.page.error.issueKey'
-          )}
-        </h2>
-      </EmptyPageContainer>
-    )
-
   const accessRequest = useGetAccessRequest(issueKey)
   const accessRequestMutation = useAccessRequestMutation()
 
@@ -93,11 +77,11 @@ function AccessRequest({ issueKey }: Props): ReactElement {
               const isRequestNeeded = issueKey && data
               if (!isRequestNeeded) return
 
-              const { users, sent } = data
+              const { users, sent: isSent } = data
               const { message } = formState
 
               accessRequestMutation.mutate(
-                { issueKey, accessRequest: { users, message, sent } },
+                { issueKey, accessRequest: { users, message, sent: isSent } },
                 { onSuccess: refetch }
               )
             }}

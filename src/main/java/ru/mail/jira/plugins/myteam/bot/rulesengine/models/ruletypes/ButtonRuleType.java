@@ -13,6 +13,7 @@ public enum ButtonRuleType implements RuleType {
   ViewComments("viewComments"),
   CommentIssue("commentIssue"),
   CreateIssue("createIssue"),
+  AccessReply("accessReply"),
 
   CommentIssueByCommand("commentIssueByCommand");
 

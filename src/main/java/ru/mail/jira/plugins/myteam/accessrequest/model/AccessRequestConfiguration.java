@@ -40,4 +40,9 @@ public interface AccessRequestConfiguration extends Entity {
   boolean isSendMessage();
 
   void setSendMessage(boolean sendMessage);
+
+  @StringLength(StringLength.UNLIMITED)
+  String getAccessPermissionFields();
+
+  void setAccessPermissionFields(String accessPermissionField);
 }
