@@ -61,10 +61,14 @@ public class FilterSubscriptionRepository
   }
 
   @Override
+  @Nullable
   public FilterSubscriptionDto entityToDto(@NotNull FilterSubscription entity) {
     ApplicationUser creator = userManager.getUserByKey(entity.getUserKey());
     SearchRequest searchRequest =
         searchRequestService.getFilter(new JiraServiceContextImpl(creator), entity.getFilterId());
+    if (searchRequest == null) {
+      return null;
+    }
     RecipientsType recipientsType = entity.getRecipientsType();
     String recipients = entity.getRecipients();
     Map<String, String[]> scheduleParams = getScheduleParams(entity);

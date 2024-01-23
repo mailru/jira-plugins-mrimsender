@@ -21,6 +21,7 @@ import com.atlassian.sal.api.message.I18nResolver;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -102,6 +103,7 @@ public class FilterSubscriptionsController {
               filterSubscriptionRepository.getSubscriptions(
                   subscribers, filterId, recipientsType, recipients))
           .map(filterSubscriptionRepository::entityToDto)
+          .filter(Objects::nonNull)
           .collect(Collectors.toList());
     } else {
       return Arrays.stream(
@@ -111,6 +113,7 @@ public class FilterSubscriptionsController {
                   recipientsType,
                   recipients))
           .map(filterSubscriptionRepository::entityToDto)
+          .filter(Objects::nonNull)
           .collect(Collectors.toList());
     }
   }
