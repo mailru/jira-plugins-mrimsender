@@ -69,6 +69,7 @@ public class FilterSubscriptionRepository
     if (searchRequest == null) {
       return null;
     }
+
     RecipientsType recipientsType = entity.getRecipientsType();
     String recipients = entity.getRecipients();
     Map<String, String[]> scheduleParams = getScheduleParams(entity);
