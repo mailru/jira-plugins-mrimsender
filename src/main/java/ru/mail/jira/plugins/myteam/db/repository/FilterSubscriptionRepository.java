@@ -66,17 +66,15 @@ public class FilterSubscriptionRepository
     ApplicationUser creator = userManager.getUserByKey(entity.getUserKey());
     SearchRequest searchRequest =
         searchRequestService.getFilter(new JiraServiceContextImpl(creator), entity.getFilterId());
-    if (searchRequest == null) {
-      return null;
-    }
-
     RecipientsType recipientsType = entity.getRecipientsType();
     String recipients = entity.getRecipients();
     Map<String, String[]> scheduleParams = getScheduleParams(entity);
 
     FilterSubscriptionDto dto = new FilterSubscriptionDto();
     dto.setId(entity.getID());
-    dto.setFilter(new JqlFilterDto(searchRequest, creator));
+    if (searchRequest != null) {
+      dto.setFilter(new JqlFilterDto(searchRequest, creator));
+    }
     dto.setCreator(buildUserDto(creator));
     dto.setRecipientsType(recipientsType);
     if (recipientsType.equals(RecipientsType.USER)) {

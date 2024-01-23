@@ -171,7 +171,7 @@ const buildRows = ({
         key: subscription.filter?.id,
         content: (
           <Cell>
-            <a
+            {subscription.filter !== undefined ? <a
               href={`${contextPath()}/issues/?filter=${
                 subscription.filter?.id
               }`}
@@ -179,7 +179,9 @@ const buildRows = ({
               rel="noreferrer"
             >
               {subscription.filter?.name}
-            </a>
+            </a> : I18n.getText(
+                'ru.mail.jira.plugins.myteam.subscriptions.page.table.filter.deleted'
+            )}
           </Cell>
         ),
       },
