@@ -289,7 +289,10 @@ public class AccessRequestService {
   }
 
   public void notifyAllAdminsReply(
-      AccessRequestDto dto, ApplicationUser responder, Issue issue, Supplier<String> messageSupplier) {
+      AccessRequestDto dto,
+      ApplicationUser responder,
+      Issue issue,
+      Supplier<String> messageSupplier) {
     ApplicationUser contextUser = jiraAuthenticationContext.getLoggedInUser();
     try {
       dto.getUsers().stream()
