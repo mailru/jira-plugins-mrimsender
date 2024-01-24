@@ -84,9 +84,12 @@ public class ReplyRule extends BaseRule {
       ApplicationUser requester =
           accessRequestService.getAccessUserByKey(
               Objects.requireNonNull(accessRequestDto.getRequesterKey()));
+      ApplicationUser responder = accessRequestService.getAccessUserByKey(userKey);
 
       String message = "";
-      if (accessRequestDto.getReplyStatus() == null) {
+      Boolean replyStatus = accessRequestDto.getReplyStatus();
+      if (replyStatus == null) {
+        // Access Request is not processed
         updateAccessRequest(accessRequestDto, replyCommand, userKey, historyId);
         if (replyCommand.equals(ReplyCommands.COMMAND_ALLOW))
           for (UserFieldDto permissionField :
@@ -94,14 +97,28 @@ public class ReplyRule extends BaseRule {
             updateAccessIssueField(requester, permissionField, mutableIssue);
         message = messageFormatter.formatAccessReplyMessage(requester, mutableIssue, replyCommand);
       } else {
-        ApplicationUser responder =
-            accessRequestService.getAccessUserByKey(
-                Objects.requireNonNull(accessRequestDto.getReplyAdmin()).getUserKey());
+        // Access Request already processed
         message =
             messageFormatter.formatProcessedReplyMessage(
-                responder, requester, mutableIssue, accessRequestDto.getReplyStatus());
+                responder, requester, mutableIssue, replyStatus);
       }
       userChatService.editMessageText(event.getChatId(), event.getMsgId(), message, null);
+
+      // Notify other admins and User who sent the request
+      if (replyStatus == null) {
+        String newsletterMessage =
+            messageFormatter.formatProcessedNewsletterMessage(
+                responder,
+                requester,
+                mutableIssue,
+                replyCommand.equals(ReplyCommands.COMMAND_ALLOW));
+        accessRequestService.notifyAllAdminsReply(
+            accessRequestDto, responder, mutableIssue, newsletterMessage);
+        userChatService.sendMessageText(
+            requester.getEmailAddress(),
+            messageFormatter.formatAccessReplyRequesterMessage(
+                requester, mutableIssue, replyCommand));
+      }
     } catch (Exception e) {
       userChatService.sendMessageText(
           event.getChatId(), messageFormatter.formatAccessReplyError(e));
