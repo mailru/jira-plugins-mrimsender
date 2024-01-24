@@ -61,6 +61,7 @@ public class FilterSubscriptionRepository
   }
 
   @Override
+  @Nullable
   public FilterSubscriptionDto entityToDto(@NotNull FilterSubscription entity) {
     ApplicationUser creator = userManager.getUserByKey(entity.getUserKey());
     SearchRequest searchRequest =
@@ -71,7 +72,9 @@ public class FilterSubscriptionRepository
 
     FilterSubscriptionDto dto = new FilterSubscriptionDto();
     dto.setId(entity.getID());
-    dto.setFilter(new JqlFilterDto(searchRequest, creator));
+    if (searchRequest != null) {
+      dto.setFilter(new JqlFilterDto(searchRequest, creator));
+    }
     dto.setCreator(buildUserDto(creator));
     dto.setRecipientsType(recipientsType);
     if (recipientsType.equals(RecipientsType.USER)) {
