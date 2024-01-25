@@ -31,7 +31,7 @@ public class Utils {
   }
 
   @NotNull
-  public static String shieldText( @NotNull String str) {
+  public static String shieldText(@NotNull String str) {
     StringBuilder result = new StringBuilder();
     char[] arrayFromInput = str.toCharArray();
     for (char c : arrayFromInput) {
