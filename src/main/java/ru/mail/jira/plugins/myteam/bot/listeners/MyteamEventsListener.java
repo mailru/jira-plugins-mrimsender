@@ -109,7 +109,7 @@ public class MyteamEventsListener {
   @Subscribe
   public void handleJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) throws Exception {
     myteamApiClient.sendMessageText(
-            jiraNotifyEvent.getChatId(), jiraNotifyEvent.getMessage(), jiraNotifyEvent.getButtons());
+        jiraNotifyEvent.getChatId(), jiraNotifyEvent.getMessage(), jiraNotifyEvent.getButtons());
   }
 
   @Subscribe
