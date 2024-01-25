@@ -108,11 +108,8 @@ public class MyteamEventsListener {
 
   @Subscribe
   public void handleJiraNotifyEvent(JiraNotifyEvent jiraNotifyEvent) throws Exception {
-    String message = jiraNotifyEvent.getMessage();
-    if (message != null) {
-      myteamApiClient.sendMessageText(
-          jiraNotifyEvent.getChatId(), message, jiraNotifyEvent.getButtons());
-    }
+    myteamApiClient.sendMessageText(
+            jiraNotifyEvent.getChatId(), jiraNotifyEvent.getMessage(), jiraNotifyEvent.getButtons());
   }
 
   @Subscribe
