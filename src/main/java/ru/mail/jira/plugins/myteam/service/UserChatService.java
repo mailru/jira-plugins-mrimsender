@@ -9,6 +9,7 @@ import java.util.Locale;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
@@ -45,7 +46,7 @@ public interface UserChatService {
       throws MyteamServerErrorException, IOException;
 
   @Nullable
-  HttpResponse<MessageResponse> sendMessageText(String chatId, @Nullable String message)
+  HttpResponse<MessageResponse> sendMessageText(String chatId, @NotNull String message)
       throws MyteamServerErrorException, IOException;
 
   boolean deleteMessages(String chatId, List<Long> messagesId)

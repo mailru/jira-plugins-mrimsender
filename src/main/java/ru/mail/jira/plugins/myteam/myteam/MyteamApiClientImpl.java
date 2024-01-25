@@ -17,6 +17,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.HttpContext;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.HttpClient;
@@ -103,7 +104,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   @Override
   public HttpResponse<MessageResponse> sendMessageText(
       String chatId,
-      @Nullable String text,
+      @NotNull String text,
       @Nullable List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException, MyteamServerErrorException {
 
@@ -120,7 +121,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
   }
 
   @Override
-  public HttpResponse<MessageResponse> sendMessageText(String chatId, @Nullable String text)
+  public HttpResponse<MessageResponse> sendMessageText(String chatId, @NotNull String text)
       throws IOException, UnirestException, MyteamServerErrorException {
     return sendMessageText(chatId, text, null);
   }
@@ -416,7 +417,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
 
   private HttpResponse<MessageResponse> sendMessage(
       String chatId,
-      @Nullable String text,
+      @NotNull String text,
       @Nullable List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup,
       boolean isMarkdown)
       throws IOException {
@@ -426,9 +427,7 @@ public class MyteamApiClientImpl implements MyteamApiClient {
             .header("Content-Type", ContentType.APPLICATION_FORM_URLENCODED.getMimeType())
             .field("token", apiToken)
             .field("chatId", chatId)
-            .field(
-                "text",
-                (text != null ? StringUtils.abbreviate(text, "...", 0, MAX_TEXT_LENGTH) : null));
+            .field("text", StringUtils.abbreviate(text, "...", 0, MAX_TEXT_LENGTH));
 
     if (isMarkdown) {
       req.field("parseMode", "MarkdownV2");

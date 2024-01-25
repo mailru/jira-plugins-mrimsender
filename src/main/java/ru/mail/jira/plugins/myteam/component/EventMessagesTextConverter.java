@@ -139,7 +139,6 @@ public class EventMessagesTextConverter {
     return mainMessageTextWithUrls;
   }
 
-  @Nullable
   public String getIssueCommentAsLink(final Issue issue, final Comment comment) {
     return messageFormatter.formatJiraIssueCommentToLink(issue, comment);
   }

@@ -126,7 +126,14 @@ public class MyteamServiceImpl implements MyteamService {
 
   @Override
   public void sendMessage(String chatId, String message) {
-    myteamEventsListener.publishEvent(new JiraNotifyEvent(chatId, Utils.shieldText(message), null));
+    if (message == null) {
+      throw new IllegalArgumentException("Message cannot be null");
+    }
+
+    String shieldedText = Utils.shieldText(message);
+    if (shieldedText != null) {
+      myteamEventsListener.publishEvent(new JiraNotifyEvent(chatId, shieldedText, null));
+    }
   }
 
   @Nullable

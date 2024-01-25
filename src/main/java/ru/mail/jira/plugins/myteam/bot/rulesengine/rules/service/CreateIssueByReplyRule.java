@@ -257,11 +257,14 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       log.error(e.getLocalizedMessage(), e);
       SentryClient.capture(e);
 
-      userChatService.sendMessageText(
-          event.getUserId(),
-          Utils.shieldText(
-              String.format(
-                  "Возникла ошибка при создании задачи.%n%n%s", e.getLocalizedMessage())));
+      String messageAboutError =
+          String.format("Возникла ошибка при создании задачи.%n%n%s", e.getLocalizedMessage());
+      String shieldedText = Utils.shieldText(messageAboutError);
+      if (shieldedText != null) {
+        userChatService.sendMessageText(event.getUserId(), shieldedText);
+      } else {
+        userChatService.sendMessageText(event.getUserId(), messageAboutError);
+      }
     }
   }
 

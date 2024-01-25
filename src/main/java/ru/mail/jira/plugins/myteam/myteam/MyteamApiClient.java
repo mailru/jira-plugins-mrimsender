@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
+import org.jetbrains.annotations.NotNull;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.BotMetaInfo;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -18,11 +19,11 @@ import ru.mail.jira.plugins.myteam.myteam.dto.response.*;
 public interface MyteamApiClient {
   HttpResponse<MessageResponse> sendMessageText(
       String chatId,
-      @Nullable String text,
+      @NotNull String text,
       @Nullable List<List<InlineKeyboardMarkupButton>> inlineKeyboardMarkup)
       throws UnirestException, IOException, MyteamServerErrorException;
 
-  HttpResponse<MessageResponse> sendMessageText(String chatId, @Nullable String text)
+  HttpResponse<MessageResponse> sendMessageText(String chatId, @NotNull String text)
       throws UnirestException, IOException, MyteamServerErrorException;
 
   HttpResponse<StatusResponse> deleteMessages(String chatId, List<Long> messagesId)

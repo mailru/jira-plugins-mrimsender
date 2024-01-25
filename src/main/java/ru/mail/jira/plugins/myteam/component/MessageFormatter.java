@@ -254,7 +254,6 @@ public class MessageFormatter {
         issueKey, applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
 
-  @Nullable
   public String formatJiraIssueCommentToLink(final Issue issue, final Comment comment) {
     return i18nResolver.getText(
         "ru.mail.jira.plugins.myteam.comment.issue.commentCreated",
