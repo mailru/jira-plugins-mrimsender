@@ -23,6 +23,8 @@ import com.atlassian.mail.queue.MailQueueItem;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import com.atlassian.velocity.VelocityManager;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -43,6 +45,7 @@ import ru.mail.jira.plugins.myteam.accessrequest.model.AccessRequestHistoryRepos
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons.ReplyRule;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.MyteamAuditService;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -120,7 +123,7 @@ public class AccessRequestService {
     AccessRequestHistory accessRequestHistory =
         accessRequestHistoryRepository.getAccessRequestHistory(
             loggedInUser.getKey(), issue.getId());
-    if (!isAccessRequestExpired()) {
+    if (!isAccessRequestExpired(accessRequestHistory)) {
       accessRequestDto.setUsers(
           CommonUtils.split(accessRequestHistory.getUserKeys()).stream()
               .map(userKey -> dtoUtils.buildUserDto(userManager.getUserByKey(userKey)))
@@ -289,7 +292,10 @@ public class AccessRequestService {
   }
 
   public void notifyAllAdminsReply(
-      AccessRequestDto dto, ApplicationUser responder, Issue issue, Supplier<String> messageSupplier) {
+      AccessRequestDto dto,
+      ApplicationUser responder,
+      Issue issue,
+      Supplier<String> messageSupplier) {
     ApplicationUser contextUser = jiraAuthenticationContext.getLoggedInUser();
     try {
       dto.getUsers().stream()
@@ -340,8 +346,11 @@ public class AccessRequestService {
     return Collections.emptyList();
   }
 
-  private boolean isAccessRequestExpired() {
-    return true;
+  private boolean isAccessRequestExpired(@Nullable AccessRequestHistory history) {
+    if (history == null) return true;
+    return Utils.convertToLocalDateTime(history.getDate())
+        .plusDays(1)
+        .isBefore(LocalDateTime.now(ZoneId.systemDefault()));
   }
 
   private void sendMessage(
