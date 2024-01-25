@@ -130,10 +130,7 @@ public class MyteamServiceImpl implements MyteamService {
       throw new IllegalArgumentException("Message cannot be null");
     }
 
-    String shieldedText = Utils.shieldText(message);
-    if (shieldedText != null) {
-      myteamEventsListener.publishEvent(new JiraNotifyEvent(chatId, shieldedText, null));
-    }
+    myteamEventsListener.publishEvent(new JiraNotifyEvent(chatId, Utils.shieldText(message), null));
   }
 
   @Nullable

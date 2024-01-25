@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.StringJoiner;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.bot.events.MyteamEvent;
@@ -24,19 +25,13 @@ public class Utils {
         .collect(joining("\n"));
   }
 
-  @Nullable
-  public static String unshieldText(@Nullable String s) {
-    if (s == null) {
-      return null;
-    }
+  @NotNull
+  public static String unshieldText(@NotNull String s) {
     return s.replaceAll("\\\\([*+#_~\\-`!.<>\\[\\]|(){}\\\\])", "$1");
   }
 
-  @Nullable
-  public static String shieldText(@Nullable String str) {
-    if (str == null) {
-      return null;
-    }
+  @NotNull
+  public static String shieldText( @NotNull String str) {
     StringBuilder result = new StringBuilder();
     char[] arrayFromInput = str.toCharArray();
     for (char c : arrayFromInput) {

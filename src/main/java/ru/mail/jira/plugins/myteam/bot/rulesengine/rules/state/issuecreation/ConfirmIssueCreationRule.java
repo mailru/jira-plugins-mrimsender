@@ -66,20 +66,15 @@ public class ConfirmIssueCreationRule extends BaseRule {
       userChatService.deleteState(event.getChatId());
     } catch (IssueCreationValidationException e) {
       log.error(e.getLocalizedMessage(), e);
-      String messageAboutError =
-          String.join(
-              "\n",
-              userChatService.getRawText(
-                  "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.validationError"),
-              Utils.stringifyMap(e.getErrors().getErrors()),
-              Utils.stringifyCollection(e.getErrors().getErrorMessages()));
-      String shieldedText = Utils.shieldText(messageAboutError);
-
-      if (shieldedText != null) {
-        userChatService.sendMessageText(event.getChatId(), shieldedText);
-      } else {
-        userChatService.sendMessageText(event.getChatId(), messageAboutError);
-      }
+      userChatService.sendMessageText(
+          event.getChatId(),
+          Utils.shieldText(
+              String.join(
+                  "\n",
+                  userChatService.getRawText(
+                      "ru.mail.jira.plugins.myteam.messageFormatter.createIssue.validationError"),
+                  Utils.stringifyMap(e.getErrors().getErrors()),
+                  Utils.stringifyCollection(e.getErrors().getErrorMessages()))));
     }
     userChatService.deleteState(event.getChatId());
   }
