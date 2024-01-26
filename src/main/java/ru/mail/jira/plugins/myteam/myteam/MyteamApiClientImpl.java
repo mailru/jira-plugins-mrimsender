@@ -113,7 +113,8 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     if (response.getBody() != null
         && !response.getBody().isOk()
         && response.getBody().getDescription().equals("Format error")) {
-      SentryClient.capture(StringUtils.isNotEmpty(text) ? text : "Empty string was sent to VK Teams");
+      SentryClient.capture(
+          StringUtils.isNotEmpty(text) ? text : "Empty string was sent to VK Teams");
       response = sendMessage(chatId, Utils.unshieldText(text), inlineKeyboardMarkup, false);
     }
 
