@@ -23,7 +23,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.LinkIssueWi
 
 public interface MyteamService {
     /**
-     * Send message to user in VK Teams.
+     * Send shielded message to user in VK Teams.
      *
      * @param user recipient of the message
      * @param message sent message
@@ -32,7 +32,16 @@ public interface MyteamService {
     boolean sendMessage(ApplicationUser user, String message);
 
     /**
-     * Send message to user in VK Teams.
+     * Send raw message to user in Mail.Ru Agent.
+     *
+     * @param user recipient of the message
+     * @param message sent message
+     * @return message sent or not
+     */
+    boolean sendRawMessage(ApplicationUser user, String message);
+
+    /**
+     * Send shielded message to user in VK Teams.
      *
      * @param groupName name of Jira group
      * @param message sent message
@@ -40,12 +49,28 @@ public interface MyteamService {
     void sendMessageToUserGroup(String groupName, String message);
 
     /**
-     * Send message to recipient with id in VK Teams.
+     * Send raw message to user in Mail.Ru Agent.
+     *
+     * @param groupName name of Jira group
+     * @param message sent message
+     */
+    void sendRawMessageToUserGroup(String groupName, String message);
+
+    /**
+     * Send shielded message to recipient with id in VK Teams.
      *
      * @param chatId recipient of the message
      * @param message sent message
      */
     void sendMessage(String chatId, String message);
+
+    /**
+     * Send raw message to recipient with id in Mail.Ru Agent.
+     *
+     * @param chatId recipient of the message
+     * @param message sent message
+     */
+    void sendRawMessage(String chatId, String message);
 
     /**
      * Find chat entity in database by issue key.

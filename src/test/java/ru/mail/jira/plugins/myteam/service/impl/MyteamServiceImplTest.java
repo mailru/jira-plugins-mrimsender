@@ -192,6 +192,49 @@ class MyteamServiceImplTest {
   }
 
   @Test
+  void sendMessageWhenUserCanReceiveMessageAndMessageHasShielding() {
+    // GIVEN
+    ApplicationUser applicationUser = mock(ApplicationUser.class);
+    when(applicationUser.isActive()).thenReturn(true);
+    when(applicationUser.getEmailAddress()).thenReturn("login");
+    String message = "some () message * with specical _ characters";
+
+    when(userData.isEnabled(eq(applicationUser))).thenReturn(true);
+
+    // WHEN
+    boolean sent = myteamService.sendMessage(applicationUser, message);
+
+    // THEN
+    assertTrue(sent);
+    verify(myteamEventsListener)
+        .publishEvent(
+            argThat(
+                argument ->
+                    "some \\(\\) message \\* with specical \\_ characters"
+                        .equals(((JiraNotifyEvent) argument).getMessage())));
+  }
+
+  @Test
+  void sendMessageWhenUserCanReceiveRawMessage() {
+    // GIVEN
+    ApplicationUser applicationUser = mock(ApplicationUser.class);
+    when(applicationUser.isActive()).thenReturn(true);
+    when(applicationUser.getEmailAddress()).thenReturn("login");
+    String message = "some () message * with specical _ characters";
+
+    when(userData.isEnabled(eq(applicationUser))).thenReturn(true);
+
+    // WHEN
+    boolean sent = myteamService.sendRawMessage(applicationUser, message);
+
+    // THEN
+    assertTrue(sent);
+    verify(myteamEventsListener)
+        .publishEvent(
+            argThat(argument -> message.equals(((JiraNotifyEvent) argument).getMessage())));
+  }
+
+  @Test
   @SuppressWarnings("NullAway")
   void sendMessageToUserGroupWhenGroupNameIsNull() {
     // GIVEN
@@ -269,11 +312,72 @@ class MyteamServiceImplTest {
     verify(user).isActive();
     verify(user).getEmailAddress();
     verify(userData).isEnabled(eq(user));
-    verify(myteamEventsListener).publishEvent(any(JiraNotifyEvent.class));
+    verify(myteamEventsListener)
+        .publishEvent(
+            argThat(argument -> message.equals(((JiraNotifyEvent) argument).getMessage())));
   }
 
   @Test
-  void testSendMessage() {
+  void sendMessageToUserGroupWhenGroupNotEmptyAndWhenMessageHasShielding() {
+    // GIVEN
+    String groupName = "someGroupName";
+    String message = "someMessage ** \n[]";
+
+    Group group = mock(Group.class);
+    when(groupManager.getGroup(eq(groupName))).thenReturn(group);
+    ApplicationUser user = mock(ApplicationUser.class);
+    when(user.isActive()).thenReturn(true);
+    when(user.getEmailAddress()).thenReturn("login");
+    when(userData.isEnabled(eq(user))).thenReturn(true);
+    when(groupManager.getUsersInGroup(eq(group))).thenReturn(Collections.singletonList(user));
+
+    // WHEN
+    myteamService.sendMessageToUserGroup(groupName, message);
+
+    // THEN
+    verify(groupManager).getGroup(eq(groupName));
+    verify(groupManager).getUsersInGroup(eq(group));
+    verify(user).isActive();
+    verify(user).getEmailAddress();
+    verify(userData).isEnabled(eq(user));
+    verify(myteamEventsListener)
+        .publishEvent(
+            argThat(
+                argument ->
+                    "someMessage \\*\\* \n\\[\\]"
+                        .equals(((JiraNotifyEvent) argument).getMessage())));
+  }
+
+  @ParameterizedTest
+  @MethodSource(value = "getSimpleAndComplexString")
+  void sendRawMessageToUserGroupWhenGroupNotEmpty(String message) {
+    // GIVEN
+    String groupName = "someGroupName";
+
+    Group group = mock(Group.class);
+    when(groupManager.getGroup(eq(groupName))).thenReturn(group);
+    ApplicationUser user = mock(ApplicationUser.class);
+    when(user.isActive()).thenReturn(true);
+    when(user.getEmailAddress()).thenReturn("login");
+    when(userData.isEnabled(eq(user))).thenReturn(true);
+    when(groupManager.getUsersInGroup(eq(group))).thenReturn(Collections.singletonList(user));
+
+    // WHEN
+    myteamService.sendRawMessageToUserGroup(groupName, message);
+
+    // THEN
+    verify(groupManager).getGroup(eq(groupName));
+    verify(groupManager).getUsersInGroup(eq(group));
+    verify(user).isActive();
+    verify(user).getEmailAddress();
+    verify(userData).isEnabled(eq(user));
+    verify(myteamEventsListener)
+        .publishEvent(
+            argThat(argument -> message.equals(((JiraNotifyEvent) argument).getMessage())));
+  }
+
+  @Test
+  void testSendSimpleMessage() {
     // GIVEN
     String chatId = "someChatId";
     String message = "someMessage";
@@ -282,7 +386,71 @@ class MyteamServiceImplTest {
     myteamService.sendMessage(chatId, message);
 
     // THEN
-    verify(myteamEventsListener).publishEvent(any(JiraNotifyEvent.class));
+    verify(myteamEventsListener)
+        .publishEvent(
+            argThat(argument -> message.equals(((JiraNotifyEvent) argument).getMessage())));
+  }
+
+  @Test
+  void testSendComplexString() {
+    // GIVEN
+    String chatId = "someChatId";
+    String complexString = "message \n\n *test* \n\nJIRATASK-123 [urlname](urllink)";
+
+    // WHEN
+    myteamService.sendMessage(chatId, complexString);
+
+    // THEN
+    verify(myteamEventsListener)
+        .publishEvent(
+            argThat(
+                argument ->
+                    "message \n\n \\*test\\* \n\nJIRATASK\\-123 \\[urlname\\]\\(urllink\\)"
+                        .equals(((JiraNotifyEvent) argument).getMessage())));
+  }
+
+  @ParameterizedTest
+  @MethodSource(value = "getSimpleAndComplexString")
+  void testSendRawSimpleMessage() {
+    // GIVEN
+    String chatId = "someChatId";
+    String message = "someMessage";
+
+    // WHEN
+    myteamService.sendRawMessage(chatId, message);
+
+    // THEN
+    verify(myteamEventsListener)
+        .publishEvent(
+            argThat(argument -> message.equals(((JiraNotifyEvent) argument).getMessage())));
+  }
+
+  @ParameterizedTest
+  @EmptySource
+  void testSendEmptyMessage(String message) {
+    // GIVEN
+    String chatId = "someChatId";
+
+    // WHEN // THEN
+    assertThrows(
+        IllegalArgumentException.class, () -> myteamService.sendRawMessage(chatId, message));
+  }
+
+  @ParameterizedTest
+  @EmptySource
+  void testSendEmptyChatId(String chatId) {
+    // GIVEN
+    String message = "message";
+
+    // WHEN // THEN
+    assertThrows(
+        IllegalArgumentException.class, () -> myteamService.sendRawMessage(chatId, message));
+  }
+
+  private static Stream<Arguments> getSimpleAndComplexString() {
+    String simpleString = "someMessage";
+    String complexString = "message \n\n *test* \n\nJIRATASK-123 [urlname](urllink)";
+    return Stream.of(Arguments.of(simpleString), Arguments.of(complexString));
   }
 
   @ParameterizedTest

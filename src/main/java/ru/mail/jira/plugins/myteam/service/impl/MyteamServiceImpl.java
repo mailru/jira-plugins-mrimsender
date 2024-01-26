@@ -190,8 +190,10 @@ public class MyteamServiceImpl implements MyteamService {
         isPublic);
   }
 
-
-  private boolean sendToApplicationUser(final  ApplicationUser user, final  String message, final BiConsumer<String, String> messageSender) {
+  private boolean sendToApplicationUser(
+      final ApplicationUser user,
+      final String message,
+      final BiConsumer<String, String> messageSender) {
     if (user == null || StringUtils.isEmpty(message))
       throw new IllegalArgumentException("User and message must be specified");
 
@@ -204,22 +206,26 @@ public class MyteamServiceImpl implements MyteamService {
     return false;
   }
 
-  private void sendMessageToUserGroup(final String groupName, final String message, final BiConsumer<ApplicationUser, String> messageSender) {
+  private void sendMessageToUserGroup(
+      final String groupName,
+      final String message,
+      final BiConsumer<ApplicationUser, String> messageSender) {
     if (groupName == null || StringUtils.isEmpty(message))
       throw new IllegalArgumentException("Group name and message must be specified");
 
     Group group = groupManager.getGroup(groupName);
     if (group == null)
       throw new IllegalArgumentException(
-              String.format("Group with name %s does not exist", groupName));
+          String.format("Group with name %s does not exist", groupName));
 
     for (ApplicationUser user : groupManager.getUsersInGroup(group)) {
       messageSender.accept(user, message);
     }
   }
 
-  private void sendRawOrShieldedMessage(final String chatId, final  String message, final boolean rawMessage) {
-    if (StringUtils.isBlank(message)) {
+  private void sendRawOrShieldedMessage(
+      final String chatId, final String message, final boolean rawMessage) {
+    if (StringUtils.isBlank(chatId)) {
       throw new IllegalArgumentException("Chat id cannot be empty string");
     }
 
@@ -227,7 +233,8 @@ public class MyteamServiceImpl implements MyteamService {
       throw new IllegalArgumentException("Message cannot be empty string");
     }
 
-    myteamEventsListener.publishEvent(new JiraNotifyEvent(chatId, rawMessage ? message : Utils.shieldText(message), null));
+    myteamEventsListener.publishEvent(
+        new JiraNotifyEvent(chatId, rawMessage ? message : Utils.shieldText(message), null));
   }
 
   @Nullable

@@ -11,7 +11,7 @@ import ru.mail.jira.plugins.myteam.service.model.MyteamChatMetaDto;
 
 public interface MyteamService {
   /**
-   * Send message to user in Mail.Ru Agent.
+   * Send shielded message to user in Mail.Ru Agent.
    *
    * @param user recipient of the message
    * @param message sent message
@@ -19,16 +19,29 @@ public interface MyteamService {
    */
   boolean sendMessage(ApplicationUser user, String message);
 
+  /**
+   * Send raw message to user in Mail.Ru Agent.
+   *
+   * @param user recipient of the message
+   * @param message sent message
+   * @return message sent or not
+   */
   boolean sendRawMessage(ApplicationUser user, String message);
 
   /**
-   * Send message to user in Mail.Ru Agent.
+   * Send shieled message to user in Mail.Ru Agent.
    *
    * @param groupName name of Jira group
    * @param message sent message
    */
   void sendMessageToUserGroup(String groupName, String message);
 
+  /**
+   * Send raw message to user in Mail.Ru Agent.
+   *
+   * @param groupName name of Jira group
+   * @param message sent message
+   */
   void sendRawMessageToUserGroup(String groupName, String message);
 
   /**
