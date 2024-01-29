@@ -264,6 +264,23 @@ public class AccessRequestService {
     accessRequestConfigurationRepository.deleteById(configurationId);
   }
 
+  public void notifyAllAdminsReply(
+      AccessRequestDto dto, ApplicationUser responder, Issue issue, String message) {
+    dto.getUsers().stream()
+        .map(userDto -> userManager.getUserByKey(userDto.getUserKey()))
+        .filter(user -> user != null && user.isActive() && !user.equals(responder))
+        .limit(AccessRequestService.SEND_ACCESS_REQUEST_NAX_USER_COUNT)
+        .forEach(
+            user -> {
+              try {
+                userChatService.sendMessageText(user.getEmailAddress(), message);
+              } catch (Exception e) {
+                SentryClient.capture(
+                    e, Map.of("to", user.getEmailAddress(), "issue", issue.getKey()));
+              }
+            });
+  }
+
   private Set<ApplicationUser> getUsersFromProjectRole(@NotNull Project project, Long roleId) {
     ProjectRole projectRole = projectRoleManager.getProjectRole(roleId);
     return projectRoleManager.getProjectRoleActors(projectRole, project).getApplicationUsers();

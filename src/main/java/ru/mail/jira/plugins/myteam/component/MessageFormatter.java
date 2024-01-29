@@ -547,6 +547,17 @@ public class MessageFormatter {
         "ru.mail.jira.plugins.myteam.accessRequest.page.message.reply.error", e.getMessage());
   }
 
+  public String formatAccessReplyRequesterMessage(
+      @Nullable ApplicationUser responder, Issue issue, ReplyRule.ReplyCommands replyCommand) {
+    String command =
+        replyCommand.equals(ReplyRule.ReplyCommands.COMMAND_ALLOW) ? "allow" : "forbid";
+    return i18nResolver.getText(
+        String.format(
+            "ru.mail.jira.plugins.myteam.accessRequest.page.message.reply.requester.%s", command),
+        markdownTextLink(issue.getKey(), createIssueLink(issue.getKey())),
+        responder != null ? formatUser(responder, "common.words.anonymous", true) : "[unknown]");
+  }
+
   public String formatAccessReplyMessage(
       @Nullable ApplicationUser requester, Issue issue, ReplyRule.ReplyCommands replyCommand) {
     String command =
@@ -558,6 +569,18 @@ public class MessageFormatter {
   }
 
   public String formatProcessedReplyMessage(
+      @Nullable ApplicationUser responder,
+      @Nullable ApplicationUser requester,
+      Issue issue,
+      boolean replyDtoStatus) {
+    return String.join(
+        "\n",
+        i18nResolver.getText(
+            "ru.mail.jira.plugins.myteam.accessRequest.page.message.reply.processed"),
+        formatProcessedNewsletterMessage(responder, requester, issue, replyDtoStatus));
+  }
+
+  public String formatProcessedNewsletterMessage(
       @Nullable ApplicationUser responder,
       @Nullable ApplicationUser requester,
       Issue issue,
