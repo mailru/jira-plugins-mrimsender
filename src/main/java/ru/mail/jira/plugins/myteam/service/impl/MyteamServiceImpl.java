@@ -16,6 +16,7 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import kong.unirest.HttpResponse;
@@ -98,35 +99,32 @@ public class MyteamServiceImpl implements MyteamService {
 
   @Override
   public boolean sendMessage(ApplicationUser user, String message) {
-    if (user == null || StringUtils.isEmpty(message))
-      throw new IllegalArgumentException("User and message must be specified");
+    return sendToApplicationUser(user, message, this::sendMessage);
+  }
 
-    String mrimLogin = user.getEmailAddress();
-    if (user.isActive() && !StringUtils.isBlank(mrimLogin) && userData.isEnabled(user)) {
-      sendMessage(mrimLogin, message);
-      return true;
-    }
-    return false;
+  @Override
+  public boolean sendRawMessage(ApplicationUser user, String message) {
+    return sendToApplicationUser(user, message, this::sendRawMessage);
   }
 
   @Override
   public void sendMessageToUserGroup(String groupName, String message) {
-    if (groupName == null || StringUtils.isEmpty(message))
-      throw new IllegalArgumentException("Group name and message must be specified");
+    sendMessageToUserGroup(groupName, message, this::sendMessage);
+  }
 
-    Group group = groupManager.getGroup(groupName);
-    if (group == null)
-      throw new IllegalArgumentException(
-          String.format("Group with name %s does not exist", groupName));
-
-    for (ApplicationUser user : groupManager.getUsersInGroup(group)) {
-      sendMessage(user, message);
-    }
+  @Override
+  public void sendRawMessageToUserGroup(String groupName, String message) {
+    sendMessageToUserGroup(groupName, message, this::sendRawMessage);
   }
 
   @Override
   public void sendMessage(String chatId, String message) {
-    myteamEventsListener.publishEvent(new JiraNotifyEvent(chatId, Utils.shieldText(message), null));
+    sendRawOrShieldedMessage(chatId, message, false);
+  }
+
+  @Override
+  public void sendRawMessage(String chatId, String message) {
+    sendRawOrShieldedMessage(chatId, message, true);
   }
 
   @Nullable
@@ -190,6 +188,53 @@ public class MyteamServiceImpl implements MyteamService {
         mapJiraUserIdToChatMemberId(memberIds),
         loggedInUser,
         isPublic);
+  }
+
+  private boolean sendToApplicationUser(
+      final ApplicationUser user,
+      final String message,
+      final BiConsumer<String, String> messageSender) {
+    if (user == null || StringUtils.isEmpty(message))
+      throw new IllegalArgumentException("User and message must be specified");
+
+    String mrimLogin = user.getEmailAddress();
+    if (user.isActive() && !StringUtils.isBlank(mrimLogin) && userData.isEnabled(user)) {
+      messageSender.accept(mrimLogin, message);
+      return true;
+    }
+
+    return false;
+  }
+
+  private void sendMessageToUserGroup(
+      final String groupName,
+      final String message,
+      final BiConsumer<ApplicationUser, String> messageSender) {
+    if (groupName == null || StringUtils.isEmpty(message))
+      throw new IllegalArgumentException("Group name and message must be specified");
+
+    Group group = groupManager.getGroup(groupName);
+    if (group == null)
+      throw new IllegalArgumentException(
+          String.format("Group with name %s does not exist", groupName));
+
+    for (ApplicationUser user : groupManager.getUsersInGroup(group)) {
+      messageSender.accept(user, message);
+    }
+  }
+
+  private void sendRawOrShieldedMessage(
+      final String chatId, final String message, final boolean rawMessage) {
+    if (StringUtils.isBlank(chatId)) {
+      throw new IllegalArgumentException("Chat id cannot be empty string");
+    }
+
+    if (StringUtils.isBlank(message)) {
+      throw new IllegalArgumentException("Message cannot be empty string");
+    }
+
+    myteamEventsListener.publishEvent(
+        new JiraNotifyEvent(chatId, rawMessage ? message : Utils.shieldText(message), null));
   }
 
   @Nullable
