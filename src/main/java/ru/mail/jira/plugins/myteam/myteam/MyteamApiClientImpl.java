@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.HttpClient;
 import ru.mail.jira.plugins.commons.JacksonObjectMapper;
+import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.myteam.dto.BotMetaInfo;
@@ -113,6 +114,8 @@ public class MyteamApiClientImpl implements MyteamApiClient {
     if (response.getBody() != null
         && !response.getBody().isOk()
         && response.getBody().getDescription().equals("Format error")) {
+      SentryClient.capture(
+          StringUtils.isNotEmpty(text) ? text : "Empty string was sent to VK Teams");
       response = sendMessage(chatId, Utils.unshieldText(text), inlineKeyboardMarkup, false);
     }
 
