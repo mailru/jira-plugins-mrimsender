@@ -70,7 +70,6 @@ public class ReplyRule extends BaseRule {
     ReplyCommands replyCommand =
         ReplyCommands.valueOf(parsedArgs.get(ReplyArgs.COMMAND_ARG.ordinal()));
     int historyId = Integer.parseInt(parsedArgs.get(ReplyArgs.HISTORY_ARG.ordinal()));
-    String userKey = parsedArgs.get(ReplyArgs.USERKEY_ARG.ordinal());
 
     AccessRequestDto accessRequestDto = accessRequestService.getAccessRequestHistoryDto(historyId);
     if (accessRequestDto == null) return;
@@ -81,16 +80,17 @@ public class ReplyRule extends BaseRule {
       AccessRequestConfigurationDto accessRequestConfigurationDto =
           accessRequestService.getAccessRequestConfigurationDto(
               Objects.requireNonNull(mutableIssue.getProjectId()));
+      final ApplicationUser responder;
       ApplicationUser requester =
           accessRequestService.getAccessUserByKey(
               Objects.requireNonNull(accessRequestDto.getRequesterKey()));
-      ApplicationUser responder = accessRequestService.getAccessUserByKey(userKey);
 
       String message = "";
       Boolean replyStatus = accessRequestDto.getReplyStatus();
       if (replyStatus == null) {
         // Access Request is not processed
-        updateAccessRequest(accessRequestDto, replyCommand, userKey, historyId);
+        responder = accessRequestService.getLoggedInUser();
+        updateAccessRequest(accessRequestDto, replyCommand, requester.getKey(), historyId);
         if (replyCommand.equals(ReplyCommands.COMMAND_ALLOW))
           for (UserFieldDto permissionField :
               Objects.requireNonNull(accessRequestConfigurationDto.getAccessPermissionFields()))
@@ -98,6 +98,9 @@ public class ReplyRule extends BaseRule {
         message = messageFormatter.formatAccessReplyMessage(requester, mutableIssue, replyCommand);
       } else {
         // Access Request already processed
+        responder =
+            accessRequestService.getAccessUserByKey(
+                Objects.requireNonNull(accessRequestDto.getReplyAdmin()).getUserKey());
         message =
             messageFormatter.formatProcessedReplyMessage(
                 responder, requester, mutableIssue, replyStatus);
@@ -106,18 +109,22 @@ public class ReplyRule extends BaseRule {
 
       // Notify other admins and User who sent the request
       if (replyStatus == null) {
-        String newsletterMessage =
-            messageFormatter.formatProcessedNewsletterMessage(
-                responder,
-                requester,
-                mutableIssue,
-                replyCommand.equals(ReplyCommands.COMMAND_ALLOW));
         accessRequestService.notifyAllAdminsReply(
-            accessRequestDto, responder, mutableIssue, newsletterMessage);
-        userChatService.sendMessageText(
-            requester.getEmailAddress(),
-            messageFormatter.formatAccessReplyRequesterMessage(
-                requester, mutableIssue, replyCommand));
+            accessRequestDto,
+            responder,
+            mutableIssue,
+            () ->
+                messageFormatter.formatProcessedNewsletterMessage(
+                    responder,
+                    requester,
+                    mutableIssue,
+                    replyCommand.equals(ReplyCommands.COMMAND_ALLOW)));
+
+        accessRequestService.sendContextMessage(
+            requester,
+            () ->
+                messageFormatter.formatAccessReplyRequesterMessage(
+                    responder, mutableIssue, replyCommand));
       }
     } catch (Exception e) {
       userChatService.sendMessageText(

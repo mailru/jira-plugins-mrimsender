@@ -12,6 +12,7 @@ import com.atlassian.jira.issue.watchers.WatcherManager;
 import com.atlassian.jira.mail.Email;
 import com.atlassian.jira.mail.builder.EmailBuilder;
 import com.atlassian.jira.project.Project;
+import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.security.groups.GroupManager;
 import com.atlassian.jira.security.roles.ProjectRole;
 import com.atlassian.jira.security.roles.ProjectRoleManager;
@@ -25,6 +26,7 @@ import com.atlassian.velocity.VelocityManager;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.jetbrains.annotations.NotNull;
@@ -71,6 +73,7 @@ public class AccessRequestService {
   private final UserManager userManager;
   private final VelocityManager velocityManager;
   private final WatcherManager watcherManager;
+  private final JiraAuthenticationContext jiraAuthenticationContext;
 
   public AccessRequestService(
       AccessRequestConfigurationRepository accessRequestConfigurationRepository,
@@ -88,7 +91,8 @@ public class AccessRequestService {
       @ComponentImport ProjectRoleManager projectRoleManager,
       @ComponentImport UserManager userManager,
       @ComponentImport VelocityManager velocityManager,
-      @ComponentImport WatcherManager watcherManager) {
+      @ComponentImport WatcherManager watcherManager,
+      @ComponentImport JiraAuthenticationContext jiraAuthenticationContext) {
     this.accessRequestConfigurationRepository = accessRequestConfigurationRepository;
     this.accessRequestHistoryRepository = accessRequestHistoryRepository;
     this.dtoUtils = dtoUtils;
@@ -105,6 +109,7 @@ public class AccessRequestService {
     this.velocityManager = velocityManager;
     this.watcherManager = watcherManager;
     this.userChatService = userChatService;
+    this.jiraAuthenticationContext = jiraAuthenticationContext;
   }
 
   @Nullable
@@ -183,22 +188,28 @@ public class AccessRequestService {
           accessRequestConfigurationRepository.getAccessRequestConfiguration(issue.getProjectId());
       if (configuration != null) {
         int historyId = history.getID();
-        accessRequestDto.getUsers().stream()
-            .map(dto -> userManager.getUserByKey(dto.getUserKey()))
-            .filter(user -> user != null && user.isActive())
-            .limit(SEND_ACCESS_REQUEST_NAX_USER_COUNT)
-            .forEach(
-                user -> {
-                  try {
-                    if (configuration.isSendMessage())
-                      sendMessage(
-                          user, loggedInUser, issue, accessRequestDto.getMessage(), historyId);
-                    if (configuration.isSendEmail())
-                      sendEmail(user, loggedInUser, issue, accessRequestDto.getMessage());
-                  } catch (Exception e) {
-                    SentryClient.capture(e, Map.of("user", user.getKey()));
-                  }
-                });
+        ApplicationUser contextUser = jiraAuthenticationContext.getLoggedInUser();
+        try {
+          accessRequestDto.getUsers().stream()
+              .map(dto -> userManager.getUserByKey(dto.getUserKey()))
+              .filter(user -> user != null && user.isActive())
+              .limit(SEND_ACCESS_REQUEST_NAX_USER_COUNT)
+              .forEach(
+                  user -> {
+                    try {
+                      jiraAuthenticationContext.setLoggedInUser(user);
+                      if (configuration.isSendMessage())
+                        sendMessage(
+                            user, loggedInUser, issue, accessRequestDto.getMessage(), historyId);
+                      if (configuration.isSendEmail())
+                        sendEmail(user, loggedInUser, issue, accessRequestDto.getMessage());
+                    } catch (Exception e) {
+                      SentryClient.capture(e, Map.of("user", user.getKey()));
+                    }
+                  });
+        } finally {
+          jiraAuthenticationContext.setLoggedInUser(contextUser);
+        }
       }
     }
 
@@ -264,21 +275,46 @@ public class AccessRequestService {
     accessRequestConfigurationRepository.deleteById(configurationId);
   }
 
+  public ApplicationUser getLoggedInUser() {
+    return jiraAuthenticationContext.getLoggedInUser();
+  }
+
+  public void sendContextMessage(ApplicationUser user, Supplier<String> messageSupplier) {
+    ApplicationUser contextUser = jiraAuthenticationContext.getLoggedInUser();
+    try {
+      jiraAuthenticationContext.setLoggedInUser(user);
+      userChatService.sendMessageText(user.getEmailAddress(), messageSupplier.get());
+    } catch (Exception e) {
+      SentryClient.capture(e, Map.of("user", user.getEmailAddress()));
+    } finally {
+      jiraAuthenticationContext.setLoggedInUser(contextUser);
+    }
+  }
+
   public void notifyAllAdminsReply(
-      AccessRequestDto dto, ApplicationUser responder, Issue issue, String message) {
-    dto.getUsers().stream()
-        .map(userDto -> userManager.getUserByKey(userDto.getUserKey()))
-        .filter(user -> user != null && user.isActive() && !user.equals(responder))
-        .limit(AccessRequestService.SEND_ACCESS_REQUEST_NAX_USER_COUNT)
-        .forEach(
-            user -> {
-              try {
-                userChatService.sendMessageText(user.getEmailAddress(), message);
-              } catch (Exception e) {
-                SentryClient.capture(
-                    e, Map.of("to", user.getEmailAddress(), "issue", issue.getKey()));
-              }
-            });
+      AccessRequestDto dto,
+      ApplicationUser responder,
+      Issue issue,
+      Supplier<String> messageSupplier) {
+    ApplicationUser contextUser = jiraAuthenticationContext.getLoggedInUser();
+    try {
+      dto.getUsers().stream()
+          .map(userDto -> userManager.getUserByKey(userDto.getUserKey()))
+          .filter(user -> user != null && user.isActive() && !user.equals(responder))
+          .limit(AccessRequestService.SEND_ACCESS_REQUEST_NAX_USER_COUNT)
+          .forEach(
+              user -> {
+                try {
+                  jiraAuthenticationContext.setLoggedInUser(user);
+                  userChatService.sendMessageText(user.getEmailAddress(), messageSupplier.get());
+                } catch (Exception e) {
+                  SentryClient.capture(
+                      e, Map.of("to", user.getEmailAddress(), "issue", issue.getKey()));
+                }
+              });
+    } finally {
+      jiraAuthenticationContext.setLoggedInUser(contextUser);
+    }
   }
 
   private Set<ApplicationUser> getUsersFromProjectRole(@NotNull Project project, Long roleId) {
@@ -323,7 +359,7 @@ public class AccessRequestService {
       userChatService.sendMessageText(
           to.getEmailAddress(),
           messageFormatter.formatAccessRequestMessage(from, issue, message),
-          getReplyButtons(historyId, to.getKey()));
+          getReplyButtons(historyId));
     } catch (Exception e) {
       SentryClient.capture(
           e,
@@ -332,7 +368,7 @@ public class AccessRequestService {
     }
   }
 
-  private List<List<InlineKeyboardMarkupButton>> getReplyButtons(int historyId, String userKey) {
+  private List<List<InlineKeyboardMarkupButton>> getReplyButtons(int historyId) {
     List<List<InlineKeyboardMarkupButton>> buttons = new ArrayList<>();
     List<InlineKeyboardMarkupButton> buttonsRow = new ArrayList<>();
 
@@ -346,8 +382,7 @@ public class AccessRequestService {
                 RuleType.joinArgs(
                     List.of(
                         ReplyRule.ReplyCommands.COMMAND_ALLOW.toString(),
-                        Integer.toString(historyId),
-                        userKey)))));
+                        Integer.toString(historyId))))));
     buttonsRow.add(
         InlineKeyboardMarkupButton.buildButtonWithoutUrl(
             i18nResolver.getText(
@@ -358,8 +393,7 @@ public class AccessRequestService {
                 RuleType.joinArgs(
                     List.of(
                         ReplyRule.ReplyCommands.COMMAND_FORBID.toString(),
-                        Integer.toString(historyId),
-                        userKey)))));
+                        Integer.toString(historyId))))));
     buttons.add(buttonsRow);
 
     return buttons;
