@@ -256,7 +256,6 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
     } catch (Exception e) {
       log.error(e.getLocalizedMessage(), e);
       SentryClient.capture(e);
-
       userChatService.sendMessageText(
           event.getUserId(),
           Utils.shieldText(

@@ -196,18 +196,24 @@ public class MessageFormatter {
               .format(issue.getDueDate()),
           false);
 
-    appendField(
-        sb,
-        i18nResolver.getRawText("issue.field.environment"),
-        shieldText(issue.getEnvironment()),
-        false);
+    String environment = issue.getEnvironment();
+    if (environment != null) {
+      appendField(
+          sb, i18nResolver.getRawText("issue.field.environment"), shieldText(environment), false);
+    }
+
     appendField(sb, i18nResolver.getRawText("issue.field.fixversions"), issue.getFixVersions());
     appendField(sb, i18nResolver.getRawText("issue.field.labels"), issue.getLabels());
-    appendField(
-        sb,
-        i18nResolver.getRawText("issue.field.priority"),
-        shieldText(formatPriority(issue.getPriority())),
-        false);
+
+    Priority priority = issue.getPriority();
+    if (priority != null) {
+      String formatPriority = formatPriority(priority);
+      if (formatPriority != null) {
+        appendField(
+            sb, i18nResolver.getRawText("issue.field.priority"), shieldText(formatPriority), false);
+      }
+    }
+
     appendField(
         sb,
         i18nResolver.getRawText("issue.field.reporter"),
@@ -254,7 +260,6 @@ public class MessageFormatter {
         issueKey, applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
 
-  @Nullable
   public String formatJiraIssueCommentToLink(final Issue issue, final Comment comment) {
     return i18nResolver.getText(
         "ru.mail.jira.plugins.myteam.comment.issue.commentCreated",
@@ -294,12 +299,16 @@ public class MessageFormatter {
                           if (fieldManager.isCustomField(field)
                               && !fieldManager.isFieldHidden(user, field)) {
                             CustomField customField = (CustomField) field;
-                            if (customField.isShown(issue))
-                              appendField(
-                                  sb,
-                                  shieldText(customField.getFieldName()),
-                                  shieldText(customField.getValueFromIssue(issue)),
-                                  false);
+                            if (customField.isShown(issue)) {
+                              String valueFromIssue = customField.getValueFromIssue(issue);
+                              if (valueFromIssue != null) {
+                                appendField(
+                                    sb,
+                                    shieldText(customField.getFieldName()),
+                                    shieldText(valueFromIssue),
+                                    false);
+                              }
+                            }
                           }
                         }));
 

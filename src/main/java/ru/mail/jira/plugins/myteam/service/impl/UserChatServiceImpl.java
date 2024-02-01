@@ -16,6 +16,7 @@ import kong.unirest.UnirestException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.commons.SentryClient;
@@ -134,7 +135,7 @@ public class UserChatServiceImpl implements UserChatService {
 
   @Override
   @Nullable
-  public HttpResponse<MessageResponse> sendMessageText(String chatId, @Nullable String message)
+  public HttpResponse<MessageResponse> sendMessageText(String chatId, @NotNull String message)
       throws MyteamServerErrorException, IOException {
     return myteamClient.sendMessageText(chatId, message);
   }
