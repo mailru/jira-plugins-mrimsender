@@ -356,4 +356,18 @@ class JiraMarkdownToChatMarkdownConverterTest {
     // THEN
     assertEquals(testedContent, result);
   }
+
+  @Test
+  void testWhenLinkJiraMarkdownHasSpecialCharacterInMaskLink() {
+    // GIVEN
+    String inputString = "[url [NAME]|https://someurl.org]";
+    String testedContent = "[url \\[NAME\\]](https://someurl.org)";
+
+    // WHEN
+    String result =
+        jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(inputString, true);
+
+    // THEN
+    assertEquals(testedContent, result);
+  }
 }

@@ -598,7 +598,7 @@ public class MessageFormatter {
             "ru.mail.jira.plugins.myteam.accessRequest.page.message.title",
             formatUser(user, "common.words.anonymous", true),
             markdownTextLink(issue.getKey(), createIssueLink(issue.getKey())),
-            issue.getSummary()));
+            shieldText(issue.getSummary())));
     if (StringUtils.isNotBlank(message)) {
       sb.append("\n");
       sb.append(

@@ -221,10 +221,11 @@ public class JiraEventToChatMessageConverter {
               : "ru.mail.jira.plugins.myteam.notification.commented.edited.and.mentioned";
     }
     final Issue issue = issueEvent.getIssue();
+
     return i18nResolver.getText(
         definedI18nKeyOnMentionedCommented,
         messageFormatter.getIssueLink(issue.getKey()),
-        issue.getSummary(),
+        shieldText(issue.getSummary()),
         messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
         messageFormatter.getShieldCommentLink(issue, issueEvent.getComment()),
         messageText);
