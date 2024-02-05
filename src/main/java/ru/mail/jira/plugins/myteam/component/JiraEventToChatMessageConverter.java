@@ -221,17 +221,19 @@ public class JiraEventToChatMessageConverter {
               : "ru.mail.jira.plugins.myteam.notification.commented.edited.and.mentioned";
     }
     final Issue issue = issueEvent.getIssue();
+
     return i18nResolver.getText(
         definedI18nKeyOnMentionedCommented,
         messageFormatter.getIssueLink(issue.getKey()),
-        issue.getSummary(),
+        shieldText(issue.getSummary()),
         messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
-        format(
-            "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
-            applicationProperties.getString(APKeys.JIRA_BASEURL),
-            issue.getKey(),
-            issueEvent.getComment().getId(),
-            issueEvent.getComment().getId()),
+        shieldText(
+            format(
+                "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
+                applicationProperties.getString(APKeys.JIRA_BASEURL),
+                issue.getKey(),
+                issueEvent.getComment().getId(),
+                issueEvent.getComment().getId())),
         messageText);
   }
 

@@ -7,9 +7,11 @@ import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.user.util.UserManager;
 import com.atlassian.jira.util.I18nHelper;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.service.PluginData;
@@ -94,7 +96,7 @@ public class JiraMarkdownToChatMarkdownConverter {
         convertToMarkdown(
             inputText,
             JiraMarkdownTextPattern.LINK_PATTERN,
-            input -> "±[" + input.group(1) + "±]±(" + input.group(2) + "±)");
+            input -> "±[" + shieldText(input.group(1)) + "±]±(" + input.group(2) + "±)");
     // Italic
     inputText =
         convertToMarkdown(
@@ -102,11 +104,7 @@ public class JiraMarkdownToChatMarkdownConverter {
             JiraMarkdownTextPattern.ITALIC_PATTERN,
             input -> input.group(1) + "±_" + input.group(2) + "±_" + input.group(3));
     // Single characters
-    inputText =
-        convertToMarkdown(
-            inputText,
-            JiraMarkdownTextPattern.SINGLE_CHARACHTERS_PATTERN,
-            input -> "\\" + input.group(1));
+    inputText = addShieldToNonShieldSingleChars(inputText);
     // Marked characters
     inputText =
         convertToMarkdown(
@@ -144,5 +142,33 @@ public class JiraMarkdownToChatMarkdownConverter {
       output.append(inputText, lastIndex, inputText.length());
     }
     return output.toString();
+  }
+
+  @NotNull
+  private static String addShieldToNonShieldSingleChars(@NotNull String inputText) {
+    AtomicReference<@NotNull String> ref = new AtomicReference<>();
+    ref.set(inputText);
+    inputText =
+        convertToMarkdown(
+            inputText,
+            JiraMarkdownTextPattern.SINGLE_CHARACHTERS_PATTERN,
+            input -> {
+              // for compiler
+              String sourceText = ref.get();
+              if (sourceText == null) {
+                return "";
+              }
+              if (input.start() != 0) {
+                char c = sourceText.charAt(input.start() - 1);
+                if (c != '\\') {
+                  return '\\' + input.group(1);
+                } else {
+                  return input.group(1);
+                }
+              } else {
+                return shieldText(input.group(1));
+              }
+            });
+    return inputText;
   }
 }
