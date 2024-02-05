@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import com.atlassian.jira.config.properties.APKeys;
 import com.atlassian.jira.config.properties.ApplicationProperties;
 import com.atlassian.jira.event.issue.IssueEvent;
 import com.atlassian.jira.event.type.EventType;
@@ -76,10 +75,8 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     Issue issue = mock(Issue.class);
     when(issue.getKey()).thenReturn("someKey");
     when(issue.getSummary()).thenReturn("someSummary");
-    when(applicationProperties.getString(eq(APKeys.JIRA_BASEURL)))
-        .thenReturn("http://localhost:8080");
     Comment comment = mock(Comment.class);
-    when(comment.getId()).thenReturn(1L);
+
     when(messageFormatter.getIssueLink(eq("someKey")))
         .thenReturn("http://localhost:8080/browse/someKey");
 
@@ -107,6 +104,9 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
 
     when(messageFormatter.formatUser(eq(eventCreator), eq("common.words.anonymous"), eq(true)))
         .thenReturn("±@\\±[eventCreator@example\\.org\\±]");
+    when(messageFormatter.getShieldCommentLink(eq(issue), eq(comment)))
+        .thenReturn(
+            "[комментарии](http://localhost:8080/browse/someKey?focusedCommentId=1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1)");
 
     String expectedResult =
         "±@\\±[eventCreator@example\\.org\\±] упомянул в вас [комментарии](http://localhost:8080/browse/someKey?focusedCommentId=1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1)\n\n"
@@ -129,7 +129,6 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     verify(jiraMarkdownToChatMarkdownConverter)
         .makeMyteamMarkdownFromJira(eq(createdCommentBody), eq(true));
     verify(messageFormatter).getIssueLink(eq("someKey"));
-    verify(applicationProperties).getString(eq(APKeys.JIRA_BASEURL));
   }
 
   @Test
@@ -138,10 +137,8 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     Issue issue = mock(Issue.class);
     when(issue.getKey()).thenReturn("someKey");
     when(issue.getSummary()).thenReturn("someSummary");
-    when(applicationProperties.getString(eq(APKeys.JIRA_BASEURL)))
-        .thenReturn("http://localhost:8080");
+
     Comment comment = mock(Comment.class);
-    when(comment.getId()).thenReturn(1L);
     when(messageFormatter.getIssueLink(eq("someKey")))
         .thenReturn("http://localhost:8080/browse/someKey");
 
@@ -169,6 +166,9 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
 
     when(messageFormatter.formatUser(eq(eventCreator), eq("common.words.anonymous"), eq(true)))
         .thenReturn("±@\\±[eventCreator@example\\.org\\±]");
+    when(messageFormatter.getShieldCommentLink(eq(issue), eq(comment)))
+        .thenReturn(
+            "[комментарии](http://localhost:8080/browse/someKey?focusedCommentId=1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1)");
 
     String expectedResult =
         "±@\\±[eventCreator@example\\.org\\±] упомянул в вас [комментарии](http://localhost:8080/browse/someKey?focusedCommentId=1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1)\n\n"
@@ -191,7 +191,6 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     verify(jiraMarkdownToChatMarkdownConverter)
         .makeMyteamMarkdownFromJira(eq(createdCommentBody), eq(true));
     verify(messageFormatter).getIssueLink(eq("someKey"));
-    verify(applicationProperties).getString(eq(APKeys.JIRA_BASEURL));
   }
 
   @Test
@@ -200,10 +199,8 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     Issue issue = mock(Issue.class);
     when(issue.getKey()).thenReturn("someKey");
     when(issue.getSummary()).thenReturn("someSummary");
-    when(applicationProperties.getString(eq(APKeys.JIRA_BASEURL)))
-        .thenReturn("http://localhost:8080");
     Comment comment = mock(Comment.class);
-    when(comment.getId()).thenReturn(1L);
+
     when(messageFormatter.getIssueLink(eq("someKey")))
         .thenReturn("http://localhost:8080/browse/someKey");
 
@@ -231,6 +228,9 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
 
     when(messageFormatter.formatUser(eq(eventCreator), eq("common.words.anonymous"), eq(true)))
         .thenReturn("±@\\±[eventCreator@example\\.org\\±]");
+    when(messageFormatter.getShieldCommentLink(eq(issue), eq(comment)))
+        .thenReturn(
+            "[комментарии](http://localhost:8080/browse/someKey?focusedCommentId=1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1)");
 
     String expectedResult =
         "±@\\±[eventCreator@example\\.org\\±] упомянул в вас [комментарии](http://localhost:8080/browse/someKey?focusedCommentId=1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1)\n\n"
@@ -253,7 +253,6 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     verify(jiraMarkdownToChatMarkdownConverter)
         .makeMyteamMarkdownFromJira(eq(createdCommentBody), eq(true));
     verify(messageFormatter).getIssueLink(eq("someKey"));
-    verify(applicationProperties).getString(eq(APKeys.JIRA_BASEURL));
   }
 
   @Test
@@ -262,10 +261,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     Issue issue = mock(Issue.class);
     when(issue.getKey()).thenReturn("someKey");
     when(issue.getSummary()).thenReturn("someSummary");
-    when(applicationProperties.getString(eq(APKeys.JIRA_BASEURL)))
-        .thenReturn("http://localhost:8080");
     Comment comment = mock(Comment.class);
-    when(comment.getId()).thenReturn(1L);
     when(messageFormatter.getIssueLink(eq("someKey")))
         .thenReturn("http://localhost:8080/browse/someKey");
 
@@ -294,6 +290,9 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
 
     when(messageFormatter.formatUser(eq(eventCreator), eq("common.words.anonymous"), eq(true)))
         .thenReturn("±@\\±[eventCreator@example\\.org\\±]");
+    when(messageFormatter.getShieldCommentLink(eq(issue), eq(comment)))
+        .thenReturn(
+            "[комментарии](http://localhost:8080/browse/someKey?focusedCommentId=1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1)");
 
     String expectedResult =
         "±@\\±[eventCreator@example\\.org\\±] упомянул в вас [комментарии](http://localhost:8080/browse/someKey?focusedCommentId=1&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1)\n\n"
@@ -316,6 +315,5 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
     verify(jiraMarkdownToChatMarkdownConverter)
         .makeMyteamMarkdownFromJira(eq(createdCommentBody), eq(true));
     verify(messageFormatter).getIssueLink(eq("someKey"));
-    verify(applicationProperties).getString(eq(APKeys.JIRA_BASEURL));
   }
 }
