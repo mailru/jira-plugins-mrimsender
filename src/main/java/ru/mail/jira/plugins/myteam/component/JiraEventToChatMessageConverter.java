@@ -227,13 +227,7 @@ public class JiraEventToChatMessageConverter {
         messageFormatter.getIssueLink(issue.getKey()),
         shieldText(issue.getSummary()),
         messageFormatter.formatUser(user, "common.words.anonymous", useMentionFormat),
-        shieldText(
-            format(
-                "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
-                applicationProperties.getString(APKeys.JIRA_BASEURL),
-                issue.getKey(),
-                issueEvent.getComment().getId(),
-                issueEvent.getComment().getId())),
+        messageFormatter.getShieldCommentLink(issue, issueEvent.getComment()),
         messageText);
   }
 
