@@ -370,6 +370,4 @@ class JiraMarkdownToChatMarkdownConverterTest {
     // THEN
     assertEquals(testedContent, result);
   }
-
-
 }
