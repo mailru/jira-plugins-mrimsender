@@ -13,7 +13,11 @@ const mapProjectsToOptions = (
   projects: ReadonlyArray<ProjectData>
 ): Array<OptionType> => {
   return projects.map((project) => {
-    return { label: `${project.name} (${project.key})`, value: project.key }
+    return {
+      label: `${project.name} (${project.key})`,
+      value: project.key,
+      id: project.id,
+    }
   })
 }
 
@@ -68,15 +72,19 @@ function ProjectSelect({
   }, [defaultProjectKey])
 
   return (
-    <AsyncSelect
-      className={className}
-      onChange={updateValue}
-      inputId={id}
-      value={value}
-      cacheOptions
-      defaultOptions={projects}
-      loadOptions={filterOptions(projects)}
-    />
+    <>
+      <AsyncSelect
+        className={className}
+        onChange={updateValue}
+        inputId={id}
+        value={value}
+        cacheOptions
+        defaultOptions={projects}
+        loadOptions={filterOptions(projects)}
+      />
+      {/* support Insight fields */}
+      <input value={value?.id} name="pid" type="hidden" />
+    </>
   )
 }
 

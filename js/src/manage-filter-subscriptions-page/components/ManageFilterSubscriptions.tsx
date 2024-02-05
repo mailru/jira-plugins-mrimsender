@@ -172,13 +172,13 @@ const buildRows = ({
         content: (
           <Cell>
             {subscription.filter !== undefined ? <a
-              href={`${contextPath()}/issues/?filter=${
-                subscription.filter?.id
-              }`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {subscription.filter?.name}
+                href={`${contextPath()}/issues/?filter=${
+                  subscription.filter?.id
+                }`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {subscription.filter?.name}
             </a> : I18n.getText(
                 'ru.mail.jira.plugins.myteam.subscriptions.page.table.filter.deleted'
             )}
