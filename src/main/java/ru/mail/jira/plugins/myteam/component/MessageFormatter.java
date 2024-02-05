@@ -262,10 +262,7 @@ public class MessageFormatter {
 
   public String formatJiraIssueCommentToLink(final Issue issue, final Comment comment) {
     return i18nResolver.getText(
-        "ru.mail.jira.plugins.myteam.comment.issue.commentCreated",
-        format(
-            "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
-            jiraBaseUrl, issue.getKey(), comment.getId(), comment.getId()));
+        "ru.mail.jira.plugins.myteam.comment.issue.commentCreated", getCommentLink(issue, comment));
   }
 
   public String createIssueSummary(Issue issue, ApplicationUser user) {
@@ -701,5 +698,15 @@ public class MessageFormatter {
     }
 
     return formattedMesssageBody;
+  }
+
+  public String getCommentLink(Issue issue, Comment comment) {
+    return format(
+        "%s/browse/%s?focusedCommentId=%s&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-%s",
+        jiraBaseUrl, issue.getKey(), comment.getId(), comment.getId());
+  }
+
+  public String getShieldCommentLink(Issue issue, Comment comment) {
+    return shieldText(getCommentLink(issue, comment));
   }
 }

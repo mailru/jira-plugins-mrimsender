@@ -121,12 +121,14 @@ public class ViewingIssueCommentsState extends BotState implements PageableState
                 comment ->
                     String.join(
                         "",
-                        "\\[",
-                        dateFormatter.format(comment.getCreated()),
-                        "\\] ",
-                        "\\[",
-                        comment.getAuthorFullName(),
-                        "\\] ",
+                        messageFormatter.markdownTextLink(
+                            dateFormatter.format(comment.getCreated()),
+                            messageFormatter.getCommentLink(comment.getIssue(), comment)),
+                        "\n",
+                        messageFormatter.formatUser(
+                            comment.getAuthorApplicationUser(), "common.words.anonymous", false),
+                        ":",
+                        " ",
                         StringUtils.defaultString(
                             jiraMarkdownToChatMarkdownConverter.makeMyteamMarkdownFromJira(
                                 comment.getBody(), false)),
