@@ -9,7 +9,7 @@ import { IUser } from './types'
 
 export type IssueTypeData = { name: string; id: string }
 
-export type ProjectData = { name: string; key: string }
+export type ProjectData = { id: number; name: string; key: string }
 
 export const loadProjects = (): Promise<
   AxiosResponse<ReadonlyArray<ProjectData>>
