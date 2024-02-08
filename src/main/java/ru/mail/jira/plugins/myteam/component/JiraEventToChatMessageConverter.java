@@ -470,7 +470,7 @@ public class JiraEventToChatMessageConverter {
 
   private void appendFieldOldAndNewValue(
       final StringBuilder sb,
-      @Nullable final String title,
+      @NotNull final String title,
       @Nullable String oldValue,
       @Nullable String value,
       boolean appendEmpty) {
@@ -484,7 +484,7 @@ public class JiraEventToChatMessageConverter {
       if (value == null) {
         value = "";
       }
-      sb.append("\n").append(title).append(": ");
+      sb.append("\n").append(shieldText(title)).append(": ");
       if (oldValue.isEmpty()) {
         sb.append(diffFieldChatMessageGenerator.markNewValue(value));
       } else if (value.isEmpty()) {
