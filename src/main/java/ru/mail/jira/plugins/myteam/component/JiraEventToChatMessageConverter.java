@@ -364,7 +364,7 @@ public class JiraEventToChatMessageConverter {
     } else {
       return i18nResolver.getText(
           "ru.mail.jira.plugins.myteam.notification.attachmentDeleted",
-          changeItem.getString("oldstring"));
+          shieldText(changeItem.getString("oldstring")));
     }
   }
 
