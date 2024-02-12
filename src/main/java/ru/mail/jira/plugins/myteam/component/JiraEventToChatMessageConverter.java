@@ -530,6 +530,8 @@ public class JiraEventToChatMessageConverter {
     patterns.add(JiraMarkdownTextPattern.BOLD_PATTERN);
     // ordered/unordered lists
     patterns.add(JiraMarkdownTextPattern.MULTILEVEL_NUMBERED_LIST_PATTERN);
+    // macro panel
+    patterns.add(JiraMarkdownTextPattern.PANEL_PATTERN);
 
     return Collections.unmodifiableList(patterns);
   }
