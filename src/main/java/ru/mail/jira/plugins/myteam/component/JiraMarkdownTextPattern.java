@@ -26,6 +26,7 @@ public final class JiraMarkdownTextPattern {
   static final Pattern SINGLE_CHARACHTERS_PATTERN =
       Pattern.compile("(?<!±)([`{}+|@\\[\\]()~\\-*_])");
   static final Pattern MARKED_CHARACHTERS_PATTERN = Pattern.compile("±([`{}+|@\\[\\]()~\\-*_])");
+  static final Pattern PANEL_PATTERN = Pattern.compile("\\{panel:title=([^}]*)}([^+]*?)\\{panel}");
 
   private JiraMarkdownTextPattern() throws IllegalAccessException {
     throw new IllegalAccessException();
