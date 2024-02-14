@@ -12,10 +12,13 @@ import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.exception.ParseException;
 import com.atlassian.jira.exception.PermissionException;
+import com.atlassian.jira.issue.CustomFieldManager;
 import com.atlassian.jira.issue.Issue;
 import com.atlassian.jira.issue.IssueManager;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.issue.comments.Comment;
+import com.atlassian.jira.issue.customfields.CustomFieldType;
+import com.atlassian.jira.issue.fields.CustomField;
 import com.atlassian.jira.issue.fields.config.manager.IssueTypeSchemeManager;
 import com.atlassian.jira.issue.issuetype.IssueType;
 import com.atlassian.jira.issue.search.SearchException;
@@ -35,9 +38,7 @@ import com.atlassian.jira.workflow.WorkflowActionsBean;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.query.Query;
 import com.opensymphony.workflow.loader.ActionDescriptor;
-import java.util.Collection;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.naming.NoPermissionException;
 import org.apache.commons.lang3.StringUtils;
@@ -71,6 +72,7 @@ public class IssueServiceImpl implements IssueService {
   private final JiraAuthenticationContext jiraAuthenticationContext;
   private final IssueTextConverter issueTextConverter;
   private final IssueWorkflowManager issueWorkflowManager;
+  private final CustomFieldManager customFieldManager;
   private final UserData userData;
   private final PluginData pluginData;
   private final String JIRA_BASE_URL;
@@ -87,6 +89,7 @@ public class IssueServiceImpl implements IssueService {
       @ComponentImport IssueTypeManager issueTypeManager,
       @ComponentImport JiraAuthenticationContext jiraAuthenticationContext,
       @ComponentImport IssueWorkflowManager issueWorkflowManager,
+      @ComponentImport CustomFieldManager customFieldManager,
       @ComponentImport ApplicationProperties applicationProperties,
       UserData userData,
       IssueTextConverter issueTextConverter,
@@ -102,6 +105,7 @@ public class IssueServiceImpl implements IssueService {
     this.issueTypeManager = issueTypeManager;
     this.jiraAuthenticationContext = jiraAuthenticationContext;
     this.issueWorkflowManager = issueWorkflowManager;
+    this.customFieldManager = customFieldManager;
     this.userData = userData;
     this.issueTextConverter = issueTextConverter;
     this.pluginData = pluginData;
@@ -194,6 +198,27 @@ public class IssueServiceImpl implements IssueService {
   public void watchIssue(Issue issue, ApplicationUser user) {
     if (!watcherManager.isWatching(user, issue)) {
       watcherManager.startWatching(user, issue);
+    }
+  }
+
+  @Override
+  public void setCustomFieldValue(MutableIssue issue, String userFieldId, ApplicationUser user) {
+    CustomField customField = customFieldManager.getCustomFieldObject(userFieldId);
+    if (customField != null) {
+      CustomFieldType customFieldType = customField.getCustomFieldType();
+      if (customFieldType instanceof com.atlassian.jira.issue.customfields.impl.UserCFType) {
+        issue.setCustomFieldValue(customField, user);
+        updateIssue(jiraAuthenticationContext.getLoggedInUser(), issue, false);
+      }
+      if (customFieldType instanceof com.atlassian.jira.issue.customfields.impl.MultiUserCFType) {
+        List<ApplicationUser> users =
+            (List<ApplicationUser>) issue.getCustomFieldValue(customField);
+        if (!users.contains(user)) {
+          users.add(user);
+          issue.setCustomFieldValue(customField, users);
+          updateIssue(jiraAuthenticationContext.getLoggedInUser(), issue, false);
+        }
+      }
     }
   }
 

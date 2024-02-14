@@ -55,6 +55,8 @@ public interface IssueService {
 
   void watchIssue(Issue issue, ApplicationUser user);
 
+  void setCustomFieldValue(MutableIssue issue, String userFieldId, ApplicationUser user);
+
   void setAssigneeIssue(MutableIssue issue, ApplicationUser user);
 
   void setReporterIssue(MutableIssue issue, ApplicationUser user);
