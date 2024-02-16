@@ -167,7 +167,7 @@ public class ReplyRule extends BaseRule {
         issueService.watchIssue(mutableIssue, requester);
         break;
       default:
-        throw new Exception("User field not recognized");
+        issueService.setCustomFieldValue(mutableIssue, userFieldDto.getId(), requester);
     }
   }
 }
