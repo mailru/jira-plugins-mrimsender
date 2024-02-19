@@ -92,7 +92,7 @@ public class AddWatchersToIssueCommandRule extends BaseRule {
               usersToWatchIssues.stream()
                   .map(user -> messageFormatter.formatUser(user, "common.words.anonymous", false))
                   .collect(Collectors.joining(",")),
-                  Utils.shieldText(issueKeysFromString.toString())));
+              Utils.shieldText(issueKeysFromString.toString())));
     } catch (AddWatcherCommandIllegalArgumentException e) {
       userChatService.sendMessageText(
           event.getChatId(),
