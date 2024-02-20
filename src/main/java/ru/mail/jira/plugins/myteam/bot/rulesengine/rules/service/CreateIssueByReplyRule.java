@@ -261,9 +261,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
           getCreationSuccessMessage(
               settings.getCreationSuccessTemplate(), issue, summary.summary, watchers));
 
-      if (userChatService.isChatAdmin(event.getChatId(), userChatService.getBotId())) {
-        userChatService.deleteMessages(event.getChatId(), List.of(event.getMessageId()));
-      }
+      tryDeleteMessageWithCreateIssueCommand(event);
     } catch (Exception e) {
       log.error(e.getLocalizedMessage(), e);
       SentryClient.capture(e);
@@ -272,6 +270,14 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
           Utils.shieldText(
               String.format(
                   "Возникла ошибка при создании задачи.%n%n%s", e.getLocalizedMessage())));
+    }
+  }
+
+  private void tryDeleteMessageWithCreateIssueCommand(ChatMessageEvent event) {
+    try {
+      userChatService.deleteMessages(event.getChatId(), List.of(event.getMessageId()));
+    } catch (Exception e) {
+      SentryClient.capture(e);
     }
   }
 
@@ -330,7 +336,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
         "users",
         users.stream()
             .map(messageFormatter::formatUserToVKTeamsUserMention)
-            .collect(Collectors.joining(",")));
+            .collect(Collectors.joining(", ")));
 
     for (Map.Entry<String, String> entry : keyMap.entrySet()) {
       result = result.replaceAll(String.format("\\{\\{%s\\}\\}", entry.getKey()), entry.getValue());
