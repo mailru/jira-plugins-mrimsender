@@ -275,7 +275,9 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
 
   private void tryDeleteMessageWithCreateIssueCommand(ChatMessageEvent event) {
     try {
-      userChatService.deleteMessages(event.getChatId(), List.of(event.getMessageId()));
+      if (userChatService.isChatAdmin(event, userChatService.getBotId())) {
+        userChatService.deleteMessages(event.getChatId(), List.of(event.getMessageId()));
+      }
     } catch (Exception e) {
       SentryClient.capture(e);
     }

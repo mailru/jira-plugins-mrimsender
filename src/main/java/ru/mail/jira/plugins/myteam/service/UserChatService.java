@@ -11,6 +11,7 @@ import kong.unirest.JsonNode;
 import kong.unirest.UnirestException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
@@ -82,4 +83,6 @@ public interface UserChatService {
   void setState(String chatId, BotState state, boolean deletePrevious);
 
   void revertState(String chatId);
+
+  boolean isChatAdmin(ChatMessageEvent event, String userId);
 }
