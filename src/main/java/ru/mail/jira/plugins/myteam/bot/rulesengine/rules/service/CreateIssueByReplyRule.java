@@ -243,12 +243,12 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
             issue, Collections.singletonList(linksInMessageInMainMessage), initiator);
       }
 
-      List<ApplicationUser> watchers =
+      Set<ApplicationUser> watchers =
           reporters.stream()
               .map(User::getUserId)
               .map(userChatService::getJiraUserFromUserChatId)
               .filter(Objects::nonNull)
-              .collect(Collectors.toList());
+              .collect(Collectors.toSet());
       // add watchers
       if (settings.getAddReporterInWatchers()) {
         watchers.forEach(user -> issueService.watchIssue(issue, user));
@@ -315,7 +315,7 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
   }
 
   private String getCreationSuccessMessage(
-      String template, Issue issue, String summary, List<ApplicationUser> users) {
+      String template, Issue issue, String summary, Set<ApplicationUser> users) {
     String result = template;
     boolean isDefaultTemplate = false;
     if (result == null) {
