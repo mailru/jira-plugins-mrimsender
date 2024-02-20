@@ -23,7 +23,10 @@ public enum CommandRuleType implements RuleType {
 
   CommentIssueByMentionBot("comment"),
 
-  PinMessage("pin");
+  PinMessage("pin"),
+
+  AddWatchers("addWatchers"),
+  ;
 
   @Getter(onMethod_ = {@Override})
   private final String name;

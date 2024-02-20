@@ -1,7 +1,9 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.service.impl;
 
+import com.atlassian.jira.bc.user.search.UserSearchService;
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
+import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import org.jeasy.rules.api.Fact;
 import org.jeasy.rules.api.Facts;
@@ -75,6 +77,8 @@ public class RulesEngineImpl
 
   private final MyteamService myteamService;
 
+  private final UserSearchService userSearchService;
+
   public RulesEngineImpl(
       CommonButtonsService commonButtonsService,
       IssueCreationService issueCreationService,
@@ -88,7 +92,8 @@ public class RulesEngineImpl
       MyteamChatRepository myteamChatRepository,
       JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter,
       @Lazy MyteamService myteamService,
-      PermissionHelper permissionHelper) {
+      PermissionHelper permissionHelper,
+      @ComponentImport UserSearchService userSearchService) {
     this.commonButtonsService = commonButtonsService;
     this.issueCreationService = issueCreationService;
     this.userChatService = userChatService;
@@ -102,6 +107,7 @@ public class RulesEngineImpl
     this.jiraMarkdownToChatMarkdownConverter = jiraMarkdownToChatMarkdownConverter;
     this.myteamService = myteamService;
     this.permissionHelper = permissionHelper;
+    this.userSearchService = userSearchService;
 
     RulesEngineParameters engineParams =
         new RulesEngineParameters(
@@ -171,6 +177,9 @@ public class RulesEngineImpl
             new CommentIssueButtonsService(userChatService)));
     commandsRuleEngine.registerRule(
         new PinMessageCommandRule(userChatService, this, myteamApiClient));
+    commandsRuleEngine.registerRule(
+        new AddWatchersToIssueCommandRule(
+            userChatService, this, issueService, myteamApiClient, userSearchService));
 
     // Service
     commandsRuleEngine.registerRule(new SearchByJqlIssuesRule(userChatService, this, issueService));
