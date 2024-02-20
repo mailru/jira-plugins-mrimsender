@@ -45,6 +45,7 @@ import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons.ReplyRule;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.url.dto.Link;
 import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -245,6 +246,11 @@ public class MessageFormatter {
 
   public String createIssueLink(String issueKey) {
     return format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
+  }
+
+  public String createShieldedUnmaskedIssueLink(String issueKey) {
+    return Utils.shieldText(
+        format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey));
   }
 
   public String createJqlLink(String jql) {

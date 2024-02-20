@@ -339,7 +339,6 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       result = DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
     }
 
-
     List<Pair<Pattern, Function<Matcher, String>>> funcList = new ArrayList<>();
     funcList.add(
         Pair.of(
@@ -355,8 +354,8 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
     funcList.add(
         Pair.of(
             ISSUE_LINK_LABEL_PATTERN,
-            (matcher) -> messageFormatter.createIssueLink(issue.getKey())));
-    funcList.add(Pair.of(SUMMARY_LABEL_PATTERN, (matcher) -> summary));
+            (matcher) -> messageFormatter.createShieldedUnmaskedIssueLink(issue.getKey())));
+    funcList.add(Pair.of(SUMMARY_LABEL_PATTERN, (matcher) -> Utils.shieldText(summary)));
 
     for (Pair<Pattern, Function<Matcher, String>> patternFunctionPair : funcList) {
       result =
