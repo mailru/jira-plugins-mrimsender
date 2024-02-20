@@ -317,10 +317,8 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
   private String getCreationSuccessMessage(
       String template, Issue issue, String summary, Set<ApplicationUser> users) {
     String result = template;
-    boolean isDefaultTemplate = false;
     if (result == null) {
       result = DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
-      isDefaultTemplate = true;
     }
 
     Map<String, String> keyMap = new HashMap<>();
@@ -328,14 +326,11 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
     keyMap.put("issueKey", messageFormatter.createMarkdownIssueShortLink(issue.getKey()));
     keyMap.put("issueLink", messageFormatter.createIssueLink(issue.getKey()));
     keyMap.put("summary", summary);
-
-    if (isDefaultTemplate) {
-      keyMap.put(
-          "users",
-          users.stream()
-              .map(messageFormatter::formatUserToVKTeamsUserMention)
-              .collect(Collectors.joining(",")));
-    }
+    keyMap.put(
+        "users",
+        users.stream()
+            .map(messageFormatter::formatUserToVKTeamsUserMention)
+            .collect(Collectors.joining(",")));
 
     for (Map.Entry<String, String> entry : keyMap.entrySet()) {
       result = result.replaceAll(String.format("\\{\\{%s\\}\\}", entry.getKey()), entry.getValue());
