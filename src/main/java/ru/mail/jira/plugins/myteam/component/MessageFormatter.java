@@ -261,6 +261,13 @@ public class MessageFormatter {
         issueKey, applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
 
+  public String createMarkdownIssueLink(String issueKey) {
+    return markdownTextLink(
+        issueKey,
+        String.format(
+            "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey));
+  }
+
   public String formatJiraIssueCommentToLink(final Issue issue, final Comment comment) {
     return i18nResolver.getText(
         "ru.mail.jira.plugins.myteam.comment.issue.commentCreated", getCommentLink(issue, comment));

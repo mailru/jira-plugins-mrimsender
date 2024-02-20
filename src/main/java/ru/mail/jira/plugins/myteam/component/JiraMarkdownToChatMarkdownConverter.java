@@ -129,7 +129,7 @@ public class JiraMarkdownToChatMarkdownConverter {
     }
   }
 
-  private static String convertToMarkdown(
+  public static String convertToMarkdown(
       final String inputText, final Pattern pattern, final Function<Matcher, String> converter) {
     int lastIndex = 0;
     final StringBuilder output = new StringBuilder();
