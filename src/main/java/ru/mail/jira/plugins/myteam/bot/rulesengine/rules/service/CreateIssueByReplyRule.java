@@ -339,7 +339,6 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
       result = DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
     }
 
-
     List<Pair<Pattern, Function<Matcher, String>>> funcList = new ArrayList<>();
     funcList.add(
         Pair.of(
