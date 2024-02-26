@@ -45,6 +45,7 @@ import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons.ReplyRule;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.url.dto.Link;
 import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
@@ -57,6 +58,7 @@ public class MessageFormatter {
   public static final int LIST_PAGE_SIZE = 15;
   public static final int MAX_MESSAGE_COUNT = 50;
   public static final String DELIMITER_STR = "----------";
+  public static final String COMMON_USER_MESSAGE_KEY = "common.words.anonymous";
   private static final int DISPLAY_FIELD_CHARS_LIMIT = 5000;
 
   @SuppressWarnings("InlineFormatString")
@@ -246,6 +248,11 @@ public class MessageFormatter {
     return format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
   }
 
+  public String createShieldedUnmaskedIssueLink(String issueKey) {
+    return Utils.shieldText(
+        format("%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey));
+  }
+
   public String createJqlLink(String jql) {
     return format("%s/issues/?jql=%s", applicationProperties.getString(APKeys.JIRA_BASEURL), jql);
   }
@@ -258,6 +265,13 @@ public class MessageFormatter {
     return format(
         "[%s](%s/browse/%s)",
         issueKey, applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey);
+  }
+
+  public String createMarkdownIssueLink(String issueKey) {
+    return markdownTextLink(
+        issueKey,
+        String.format(
+            "%s/browse/%s", applicationProperties.getString(APKeys.JIRA_BASEURL), issueKey));
   }
 
   public String formatJiraIssueCommentToLink(final Issue issue, final Comment comment) {
@@ -488,6 +502,14 @@ public class MessageFormatter {
           + shieldText(pluginData.getProfileLink() + user.getEmailAddress())
           + ")";
     } else return i18nHelper.getText(messageKey);
+  }
+
+  public String formatUserToVKTeamsUserMention(ApplicationUser user) {
+    return formatUser(user, COMMON_USER_MESSAGE_KEY, true);
+  }
+
+  public String formatUserToVKTeamsSysProfile(ApplicationUser user) {
+    return formatUser(user, COMMON_USER_MESSAGE_KEY, false);
   }
 
   public String formatEmptyFilterSubscription(String filterName, Long filterId) {

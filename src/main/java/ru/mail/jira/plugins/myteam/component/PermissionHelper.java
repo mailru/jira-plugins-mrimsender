@@ -58,11 +58,14 @@ public class PermissionHelper {
     if (isJiraAdmin(user)) {
       return true;
     }
+    return isChatAdmin(chatId, user.getEmailAddress());
+  }
+
+  public boolean isChatAdmin(String chatId, String userId) {
     try {
       AdminsResponse response = myteamClient.getAdmins(chatId).getBody();
       return response.getAdmins() != null
-          && response.getAdmins().stream()
-              .anyMatch(admin -> user.getEmailAddress().equals(admin.getUserId()));
+          && response.getAdmins().stream().anyMatch(admin -> userId.equals(admin.getUserId()));
     } catch (MyteamServerErrorException e) {
       log.error("Unable to get chat admins", e);
       return false;

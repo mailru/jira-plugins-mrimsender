@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import ru.mail.jira.plugins.commons.SentryClient;
+import ru.mail.jira.plugins.myteam.bot.events.ChatMessageEvent;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
@@ -174,6 +175,11 @@ public class UserChatServiceImpl implements UserChatService {
   @Override
   public void revertState(String chatId) {
     stateManager.revertState(chatId);
+  }
+
+  @Override
+  public boolean isChatAdmin(ChatMessageEvent event, String userId) {
+    return permissionHelper.isChatAdmin(event.getChatId(), userId);
   }
 
   @Override

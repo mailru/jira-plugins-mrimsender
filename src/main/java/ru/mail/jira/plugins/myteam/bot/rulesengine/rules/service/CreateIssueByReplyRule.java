@@ -12,16 +12,20 @@ import com.atlassian.jira.issue.fields.Field;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.jira.util.ErrorCollection;
 import com.atlassian.jira.util.SimpleErrorCollection;
+import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jeasy.rules.annotation.Action;
 import org.jeasy.rules.annotation.Condition;
 import org.jeasy.rules.annotation.Fact;
@@ -40,6 +44,7 @@ import ru.mail.jira.plugins.myteam.commons.IssueReporter;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
+import ru.mail.jira.plugins.myteam.component.JiraMarkdownToChatMarkdownConverter;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.PermissionHelper;
 import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
@@ -60,6 +65,11 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
   public static final DateTimeFormatter DATE_TIME_FORMATTER =
       DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
   private static final Splitter NEW_LINE_SPLITTER = Splitter.on("\n");
+
+  private static final Pattern USERS_LABEL_PATTERN = Pattern.compile("\\{\\{users\\}\\}");
+  private static final Pattern ISSUE_KEY_LABEL_PATTERN = Pattern.compile("\\{\\{issueKey\\}\\}");
+  private static final Pattern ISSUE_LINK_LABEL_PATTERN = Pattern.compile("\\{\\{issueLink\\}\\}");
+  private static final Pattern SUMMARY_LABEL_PATTERN = Pattern.compile("\\{\\{summary\\}\\}");
 
   private final IssueCreationSettingsService issueCreationSettingsService;
   private final IssueCreationService issueCreationService;
@@ -243,16 +253,25 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
             issue, Collections.singletonList(linksInMessageInMainMessage), initiator);
       }
 
+      Set<ApplicationUser> watchers =
+          reporters.stream()
+              .map(User::getUserId)
+              .map(userChatService::getJiraUserFromUserChatId)
+              .filter(Objects::nonNull)
+              .collect(Collectors.toSet());
+      // add watchers
       if (settings.getAddReporterInWatchers()) {
-        reporters.stream() // add watchers
-            .map(u -> userChatService.getJiraUserFromUserChatId(u.getUserId()))
-            .filter(Objects::nonNull)
-            .forEach(user -> issueService.watchIssue(issue, user));
+        watchers.forEach(user -> issueService.watchIssue(issue, user));
       }
+
+      watchers.add(reporterJiraUser);
 
       userChatService.sendMessageText(
           event.getChatId(),
-          getCreationSuccessMessage(settings.getCreationSuccessTemplate(), issue, summary.summary));
+          getCreationSuccessMessage(
+              settings.getCreationSuccessTemplate(), issue, summary.summary, watchers));
+
+      tryDeleteMessageWithCreateIssueCommand(event);
     } catch (Exception e) {
       log.error(e.getLocalizedMessage(), e);
       SentryClient.capture(e);
@@ -261,6 +280,16 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
           Utils.shieldText(
               String.format(
                   "Возникла ошибка при создании задачи.%n%n%s", e.getLocalizedMessage())));
+    }
+  }
+
+  private void tryDeleteMessageWithCreateIssueCommand(ChatMessageEvent event) {
+    try {
+      if (userChatService.isChatAdmin(event, userChatService.getBotId())) {
+        userChatService.deleteMessages(event.getChatId(), List.of(event.getMessageId()));
+      }
+    } catch (Exception e) {
+      SentryClient.capture(e);
     }
   }
 
@@ -303,20 +332,35 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
     return reporterJiraUser;
   }
 
-  private String getCreationSuccessMessage(String template, Issue issue, String summary) {
+  private String getCreationSuccessMessage(
+      String template, Issue issue, String summary, Set<ApplicationUser> users) {
     String result = template;
     if (result == null) {
       result = DEFAULT_ISSUE_CREATION_SUCCESS_TEMPLATE;
     }
 
-    Map<String, String> keyMap = new HashMap<>();
+    List<Pair<Pattern, Function<Matcher, String>>> funcList = new ArrayList<>();
+    funcList.add(
+        Pair.of(
+            USERS_LABEL_PATTERN,
+            (matcher) ->
+                users.stream()
+                    .map(messageFormatter::formatUserToVKTeamsUserMention)
+                    .collect(Collectors.joining(", "))));
+    funcList.add(
+        Pair.of(
+            ISSUE_KEY_LABEL_PATTERN,
+            (matcher) -> messageFormatter.createMarkdownIssueLink(issue.getKey())));
+    funcList.add(
+        Pair.of(
+            ISSUE_LINK_LABEL_PATTERN,
+            (matcher) -> messageFormatter.createShieldedUnmaskedIssueLink(issue.getKey())));
+    funcList.add(Pair.of(SUMMARY_LABEL_PATTERN, (matcher) -> Utils.shieldText(summary)));
 
-    keyMap.put("issueKey", messageFormatter.createMarkdownIssueShortLink(issue.getKey()));
-    keyMap.put("issueLink", messageFormatter.createIssueLink(issue.getKey()));
-    keyMap.put("summary", summary);
-
-    for (Map.Entry<String, String> entry : keyMap.entrySet()) {
-      result = result.replaceAll(String.format("\\{\\{%s\\}\\}", entry.getKey()), entry.getValue());
+    for (Pair<Pattern, Function<Matcher, String>> patternFunctionPair : funcList) {
+      result =
+          JiraMarkdownToChatMarkdownConverter.convertToMarkdown(
+              result, patternFunctionPair.getLeft(), patternFunctionPair.getRight());
     }
 
     return result;
