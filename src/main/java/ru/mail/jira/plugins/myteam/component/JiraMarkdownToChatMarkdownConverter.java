@@ -76,9 +76,10 @@ public class JiraMarkdownToChatMarkdownConverter {
     // multi level numbered list
     inputText =
         convertToMarkdown(
-            inputText,
-            JiraMarkdownTextPattern.MULTILEVEL_NUMBERED_LIST_PATTERN,
-            input -> "±- " + input.group(2));
+                inputText,
+                JiraMarkdownTextPattern.MULTILEVEL_NUMBERED_LIST_PATTERN,
+                JiraListToVKTeamsListConverter.of())
+            .replaceAll("\r", "");
     // bold Pattern
     inputText =
         convertToMarkdown(
