@@ -38,17 +38,20 @@ public class JiraMarkdownToChatMarkdownConverter {
     if (inputText == null) {
       return null;
     }
+    // remove carriage return
+    inputText = inputText.replaceAll("\r", "");
+
     // codeBlockPattern
     inputText =
         convertToMarkdown(
             inputText,
             JiraMarkdownTextPattern.CODE_BLOCK_PATTERN_1,
-            input -> "\n±`±`±`" + input.group(1) + " " + input.group(2) + "±`±`±`");
+            input -> "\n±`±`±`" + shieldText(input.group(1) + " " + input.group(2)) + "±`±`±`");
     inputText =
         convertToMarkdown(
             inputText,
             JiraMarkdownTextPattern.CODE_BLOCK_PATTERN_2,
-            input -> "\n±`±`±`" + input.group(1) + "±`±`±`");
+            input -> "\n±`±`±`" + shieldText(input.group(1)) + "±`±`±`");
     // inlineCodePattern
     inputText =
         convertToMarkdown(
@@ -76,10 +79,9 @@ public class JiraMarkdownToChatMarkdownConverter {
     // multi level numbered list
     inputText =
         convertToMarkdown(
-                inputText,
-                JiraMarkdownTextPattern.MULTILEVEL_NUMBERED_LIST_PATTERN,
-                JiraListToVKTeamsListConverter.of())
-            .replaceAll("\r", "");
+            inputText,
+            JiraMarkdownTextPattern.MULTILEVEL_NUMBERED_LIST_PATTERN,
+            input -> "±- " + input.group(2));
     // bold Pattern
     inputText =
         convertToMarkdown(

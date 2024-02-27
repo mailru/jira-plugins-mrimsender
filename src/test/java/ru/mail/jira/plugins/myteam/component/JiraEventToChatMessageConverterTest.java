@@ -385,8 +385,8 @@ class JiraEventToChatMessageConverterTest {
     String expectedResult =
         testedHeader
             + "\\+Lorem ipsum dolor sit amet\\+,\n"
-            + "1. bullet\n"
-            + "2. indented\n"
+            + "- bullet\n"
+            + "- indented\n"
             + "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco ex ea commodo  consequat. Duis aute irure dolor in _reprehe_ in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 
     // WHEN
