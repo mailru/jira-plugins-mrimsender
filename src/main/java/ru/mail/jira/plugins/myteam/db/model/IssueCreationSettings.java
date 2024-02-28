@@ -88,5 +88,6 @@ public interface IssueCreationSettings extends Entity {
   boolean isAllowedCreateChatLink();
 
   void setAllowedDeleteReplyMessage(boolean aTrue);
+
   boolean isAllowedDeleteReplyMessage();
 }
