@@ -27,6 +27,7 @@ public interface IssueCreationSettings extends Entity {
 
   void setTag(String tag);
 
+  @Indexed
   @Nullable
   String getProjectKey();
 
@@ -85,4 +86,8 @@ public interface IssueCreationSettings extends Entity {
   void setAllowedCreateChatLink(boolean allowedCreateChatLink);
 
   boolean isAllowedCreateChatLink();
+
+  void setAllowedDeleteReplyMessage(boolean aTrue);
+
+  boolean isAllowedDeleteReplyMessage();
 }

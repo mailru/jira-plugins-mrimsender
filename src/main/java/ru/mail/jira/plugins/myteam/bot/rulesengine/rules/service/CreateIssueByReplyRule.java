@@ -271,7 +271,9 @@ public class CreateIssueByReplyRule extends ChatAdminRule {
           getCreationSuccessMessage(
               settings.getCreationSuccessTemplate(), issue, summary.summary, watchers));
 
-      tryDeleteMessageWithCreateIssueCommand(event);
+      if (Boolean.TRUE.equals(settings.getAllowedDeleteReplyMessage())) {
+        tryDeleteMessageWithCreateIssueCommand(event);
+      }
     } catch (Exception e) {
       log.error(e.getLocalizedMessage(), e);
       SentryClient.capture(e);

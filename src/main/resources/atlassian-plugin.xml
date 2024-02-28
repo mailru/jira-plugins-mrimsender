@@ -25,5 +25,6 @@
         <upgradeTask>ru.mail.jira.plugins.myteam.upgrades.Version3UpgradeTask</upgradeTask>
         <upgradeTask>ru.mail.jira.plugins.myteam.upgrades.Version4UpgradeTask</upgradeTask>
         <upgradeTask>ru.mail.jira.plugins.myteam.upgrades.Version5UpgradeTask</upgradeTask>
+        <upgradeTask>ru.mail.jira.plugins.myteam.upgrades.Version6UpgradeTask</upgradeTask>
     </ao>
 </atlassian-plugin>
