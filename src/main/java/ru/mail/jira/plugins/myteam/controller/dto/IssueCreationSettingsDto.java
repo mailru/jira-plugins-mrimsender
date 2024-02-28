@@ -44,6 +44,7 @@ public class IssueCreationSettingsDto {
   @XmlElement private List<String> labels;
   @XmlElement private List<AdditionalIssueFieldDto> additionalFields;
   @XmlElement private Boolean allowedCreateChatLink;
+  @XmlElement private Boolean allowedDeleteReplyMessage;
 
   public IssueCreationSettingsDto(IssueCreationSettings entity) {
     this.id = entity.getID();
@@ -68,6 +69,7 @@ public class IssueCreationSettingsDto {
             .map(AdditionalIssueFieldDto::new)
             .collect(Collectors.toList());
     this.allowedCreateChatLink = entity.isAllowedCreateChatLink();
+    this.allowedDeleteReplyMessage = entity.isAllowedDeleteReplyMessage();
   }
 
   public IssueCreationSettingsDto(IssueCreationSettings entity, @Nullable String chatLink) {
@@ -95,5 +97,6 @@ public class IssueCreationSettingsDto {
             .collect(Collectors.toList());
     this.chatLink = chatLink;
     this.allowedCreateChatLink = entity.isAllowedCreateChatLink();
+    this.allowedDeleteReplyMessage = entity.isAllowedDeleteReplyMessage();
   }
 }
