@@ -26,7 +26,7 @@ public class Version6UpgradeTask implements ActiveObjectsUpgradeTask {
           (TransactionCallback<Void>)
               () -> {
                 for (IssueCreationSettings settings : ao.find(IssueCreationSettings.class)) {
-                  settings.setAllowedDeleteReplyMessage(Boolean.TRUE);
+                  settings.setAllowedDeleteReplyMessage(Boolean.FALSE);
                   settings.save();
                 }
                 return null;

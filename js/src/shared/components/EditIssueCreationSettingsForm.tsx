@@ -274,19 +274,18 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
     },
   ] as IUserPickerItem[]
   const assingeeValue = settings.assignee === '-1' ? auto : settings.assignee
-    const allowedDeleteReplyMessageChecked: boolean = settings.allowedDeleteReplyMessage !== undefined && settings.allowedDeleteReplyMessage !== null ? settings.allowedDeleteReplyMessage : true;
     return (
     <>
       <h3>Дополнительные настройки</h3>
       <CheckboxField
         name="allowedDeleteReplyMessage"
-        defaultIsChecked={allowedDeleteReplyMessageChecked}
+        defaultIsChecked={settings.allowedDeleteReplyMessage}
       >
         {({ fieldProps }) => (
            <Checkbox
              label="Разрешить удалять сообщение с reply"
              size="large"
-             defaultChecked={allowedDeleteReplyMessageChecked}
+             defaultChecked={settings.allowedDeleteReplyMessage}
              // eslint-disable-next-line react/jsx-props-no-spreading
              {...fieldProps}
            />
