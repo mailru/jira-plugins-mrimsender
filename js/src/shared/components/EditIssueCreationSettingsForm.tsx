@@ -277,20 +277,20 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
   return (
     <>
       <h3>Дополнительные настройки</h3>
-        <CheckboxField
-            name="allowedCreateChatLink"
-            defaultIsChecked={settings.allowedDeleteReplyMessage}
-        >
-            {({ fieldProps }) => (
-                <Checkbox
-                    label="Разрешить удалять сообщение с reply"
-                    size="large"
-                    defaultChecked={settings.allowedDeleteReplyMessage}
-                    // eslint-disable-next-line react/jsx-props-no-spreading
-                    {...fieldProps}
-                />
-            )}
-        </CheckboxField>
+      <CheckboxField
+        name="allowedDeleteReplyMessage"
+        defaultIsChecked={settings.allowedDeleteReplyMessage}
+      >
+        {({ fieldProps }) => (
+           <Checkbox
+             label="Разрешить удалять сообщение с reply"
+             size="large"
+             defaultChecked={settings.allowedDeleteReplyMessage}
+             // eslint-disable-next-line react/jsx-props-no-spreading
+             {...fieldProps}
+           />
+        )}
+      </CheckboxField>
       <CheckboxField
         name="allowedCreateChatLink"
         defaultIsChecked={settings.allowedCreateChatLink}
@@ -570,7 +570,7 @@ function EditIssueCreationSettingsForm({
           tag,
           labels,
           allowedCreateChatLink,
-            allowedDeleteReplyMessage,
+          allowedDeleteReplyMessage,
           creationByAllMembers,
           reporter,
           assignee,
@@ -583,7 +583,7 @@ function EditIssueCreationSettingsForm({
             enabled,
             tag,
             allowedCreateChatLink,
-              allowedDeleteReplyMessage,
+            allowedDeleteReplyMessage,
             creationByAllMembers,
             reporter,
             assignee,
