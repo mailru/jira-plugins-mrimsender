@@ -2,19 +2,19 @@
 package ru.mail.jira.plugins.myteam.service.subscription;
 
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import com.atlassian.scheduler.SchedulerService;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.service.ExtendedJobRunner;
 
 @Component
-public class JobRunnerRegistrar implements InitializingBean, DisposableBean {
+public class JobRunnerRegistrar implements LifecycleAware, DisposableBean {
   private final SchedulerService schedulerService;
   private final List<ExtendedJobRunner> extendedJobRunners;
 
@@ -27,12 +27,15 @@ public class JobRunnerRegistrar implements InitializingBean, DisposableBean {
   }
 
   @Override
+  public void onStop() {}
+
+  @Override
   public void destroy() throws Exception {
     extendedJobRunners.forEach(this::tryUnregisterJobRunner);
   }
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void onStart() {
     extendedJobRunners.forEach(this::tryRegisterAndScheduleJobRunner);
   }
 
