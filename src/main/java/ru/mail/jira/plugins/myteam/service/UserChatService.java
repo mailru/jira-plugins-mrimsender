@@ -85,4 +85,6 @@ public interface UserChatService {
   void revertState(String chatId);
 
   boolean isChatAdmin(ChatMessageEvent event, String userId);
+
+  void getChatInfo(final String chat) throws MyteamServerErrorException;
 }
