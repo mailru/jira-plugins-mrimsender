@@ -3,8 +3,6 @@ package ru.mail.jira.plugins.myteam.service.subscription;
 
 import com.atlassian.scheduler.JobRunnerRequest;
 import com.atlassian.scheduler.JobRunnerResponse;
-import com.atlassian.scheduler.config.JobConfig;
-import com.atlassian.scheduler.config.JobId;
 import com.atlassian.scheduler.config.JobRunnerKey;
 import java.io.Serializable;
 import java.util.Map;
@@ -51,22 +49,5 @@ public class SendMyteamSubscriptionNotificationsJobRunner implements ExtendedJob
   @Override
   public JobRunnerKey getJobRunnerKey() {
     return FilterSubscriptionService.JOB_RUNNER_KEY;
-  }
-
-  @Override
-  public boolean isNeedScheduleOnStartPlugin() {
-    return false;
-  }
-
-  @Override
-  @Nullable
-  public JobConfig getJobConfig() {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public JobId getJobId() {
-    return null;
   }
 }

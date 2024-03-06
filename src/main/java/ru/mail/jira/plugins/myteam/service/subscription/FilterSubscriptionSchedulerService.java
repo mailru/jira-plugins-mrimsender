@@ -66,10 +66,10 @@ public class FilterSubscriptionSchedulerService {
     }
   }
 
-  private JobConfig getJobConfig(final int scheduleId, final Schedule schedule) {
+  public static JobConfig getJobConfig(final int subscriptionId, final Schedule schedule) {
     return JobConfig.forJobRunnerKey(FilterSubscriptionService.JOB_RUNNER_KEY)
         .withSchedule(schedule)
-        .withParameters(Map.of(Const.SCHEDULE_ID, scheduleId));
+        .withParameters(Map.of(Const.SCHEDULE_ID, subscriptionId));
   }
 
   public static JobId getJobId(final int subscriptionId) {

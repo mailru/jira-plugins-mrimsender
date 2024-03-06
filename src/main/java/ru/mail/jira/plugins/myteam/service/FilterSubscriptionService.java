@@ -3,8 +3,12 @@ package ru.mail.jira.plugins.myteam.service;
 
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.util.lang.Pair;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.scheduler.config.JobConfig;
+import com.atlassian.scheduler.config.JobId;
 import com.atlassian.scheduler.config.JobRunnerKey;
+import com.atlassian.scheduler.config.Schedule;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
@@ -138,5 +142,17 @@ public class FilterSubscriptionService {
       throw new SecurityException();
     }
     return loggedInUser;
+  }
+
+  public List<Pair<JobId, JobConfig>> getAllFilterSubscriptionJobIds() {
+    return filterSubscriptionRepository.findAll().stream()
+        .map(
+            filterSubscription ->
+                Pair.of(
+                    FilterSubscriptionSchedulerService.getJobId(filterSubscription.getID()),
+                    FilterSubscriptionSchedulerService.getJobConfig(
+                        filterSubscription.getID(),
+                        Schedule.forCronExpression(filterSubscription.getCronExpression()))))
+        .collect(Collectors.toUnmodifiableList());
   }
 }
