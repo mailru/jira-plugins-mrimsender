@@ -2,10 +2,12 @@
 package ru.mail.jira.plugins.myteam.service.impl;
 
 import com.atlassian.jira.bc.issue.IssueService;
+import com.atlassian.jira.exception.IssueNotFoundException;
 import com.atlassian.jira.exception.IssuePermissionException;
 import com.atlassian.jira.issue.MutableIssue;
 import com.atlassian.jira.timezone.TimeZoneManager;
 import com.atlassian.jira.user.ApplicationUser;
+import com.atlassian.jira.util.ErrorCollection;
 import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.ReminderGenerator;
 import ru.mail.jira.plugins.myteam.controller.dto.ReminderDto;
@@ -70,13 +73,37 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
 
   @Override
   public int addReminder(ReminderDto reminder, @Nullable ApplicationUser user) {
-    IssueService.IssueResult res = issueService.getIssue(user, reminder.getIssueKey());
-    if (!res.isValid() || user == null) {
-      throw new IssuePermissionException();
+    if (user == null) {
+      throw new SecurityException(
+          "Add reminder action was triggered by not logged in user for issue key "
+              + reminder.getIssueKey());
     }
 
+    validateReminderData(reminder, user);
     reminder.setUserEmail(user.getEmailAddress());
     return reminderRepository.create(reminder).getID();
+  }
+
+  private void validateReminderData(
+      final ReminderDto reminder, @Nullable final ApplicationUser user) {
+    final IssueService.IssueResult res = issueService.getIssue(user, reminder.getIssueKey());
+    if (!res.isValid()) {
+      final Set<ErrorCollection.Reason> reasons = res.getErrorCollection().getReasons();
+      ;
+
+      if (reasons.contains(ErrorCollection.Reason.FORBIDDEN)) {
+        throw new IssuePermissionException(
+            "Current user doesn't have permission to work with issue " + reminder.getIssueKey());
+      }
+
+      if (reasons.contains(ErrorCollection.Reason.NOT_FOUND)) {
+        throw new IssueNotFoundException(
+            String.format("Issue with %s not found", reminder.getIssueKey()));
+      }
+
+      throw new IllegalArgumentException(
+          String.join("\n", res.getErrorCollection().getErrorMessages()));
+    }
   }
 
   @Override
@@ -161,10 +188,10 @@ public class ReminderServiceImpl implements LifecycleAware, DisposableBean, Remi
         userChatService.sendMessageText(
             chatId,
             ReminderGenerator.generateRandomReminder(
-                issue.getSummary(),
+                Utils.shieldText(issue.getSummary()),
                 issueKey,
-                messageFormatter.createMarkdownIssueShortLink(issueKey),
-                r.getDescription()),
+                messageFormatter.createMarkdownIssueLink(issueKey),
+                Optional.ofNullable(r.getDescription()).map(Utils::shieldText).orElse(null)),
             getMsgButtons(issueKey, r));
       }
     } catch (Exception e) {
