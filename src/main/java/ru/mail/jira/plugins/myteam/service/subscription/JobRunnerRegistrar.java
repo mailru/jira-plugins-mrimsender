@@ -1,6 +1,7 @@
 /* (C)2024 */
 package ru.mail.jira.plugins.myteam.service.subscription;
 
+import com.atlassian.plugin.spring.scanner.annotation.export.ExportAsService;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.lifecycle.LifecycleAware;
 import com.atlassian.scheduler.SchedulerService;
@@ -14,6 +15,7 @@ import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.service.ExtendedJobRunner;
 
 @Component
+@ExportAsService
 public class JobRunnerRegistrar implements LifecycleAware, DisposableBean {
   private final SchedulerService schedulerService;
   private final List<ExtendedJobRunner> extendedJobRunners;

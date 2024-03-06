@@ -37,7 +37,7 @@ public class SendMyteamSubscriptionNotificationsJobRunner implements ExtendedJob
     }
 
     try {
-      filterSubscriptionService.runFilterSubscriptionIfUserHasPermission(subscriptionId);
+      filterSubscriptionService.runFilterSubscription(subscriptionId);
       return JobRunnerResponse.success();
     } catch (Exception e) {
       SentryClient.capture(e);
