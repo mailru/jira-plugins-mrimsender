@@ -38,17 +38,20 @@ public class JiraMarkdownToChatMarkdownConverter {
     if (inputText == null) {
       return null;
     }
+    // remove carriage return
+    inputText = inputText.replaceAll("\r", "");
+
     // codeBlockPattern
     inputText =
         convertToMarkdown(
             inputText,
             JiraMarkdownTextPattern.CODE_BLOCK_PATTERN_1,
-            input -> "\n±`±`±`" + input.group(1) + " " + input.group(2) + "±`±`±`");
+            input -> "\n±`±`±`" + shieldText(input.group(1) + " " + input.group(2)) + "±`±`±`");
     inputText =
         convertToMarkdown(
             inputText,
             JiraMarkdownTextPattern.CODE_BLOCK_PATTERN_2,
-            input -> "\n±`±`±`" + input.group(1) + "±`±`±`");
+            input -> "\n±`±`±`" + shieldText(input.group(1)) + "±`±`±`");
     // inlineCodePattern
     inputText =
         convertToMarkdown(
@@ -129,7 +132,7 @@ public class JiraMarkdownToChatMarkdownConverter {
     }
   }
 
-  private static String convertToMarkdown(
+  public static String convertToMarkdown(
       final String inputText, final Pattern pattern, final Function<Matcher, String> converter) {
     int lastIndex = 0;
     final StringBuilder output = new StringBuilder();

@@ -104,6 +104,7 @@ const getFormValues = (): Array<FieldParam> => {
           'addReporterInWatchers',
           'creationByAllMembers',
           'allowedCreateChatLink',
+          'allowedDeleteReplyMessage',
         ].includes(f.field)
     )
 }
@@ -273,9 +274,23 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
     },
   ] as IUserPickerItem[]
   const assingeeValue = settings.assignee === '-1' ? auto : settings.assignee
-  return (
+    return (
     <>
       <h3>Дополнительные настройки</h3>
+      <CheckboxField
+        name="allowedDeleteReplyMessage"
+        defaultIsChecked={settings.allowedDeleteReplyMessage}
+      >
+        {({ fieldProps }) => (
+           <Checkbox
+             label="Разрешить удалять сообщение с reply"
+             size="large"
+             defaultChecked={settings.allowedDeleteReplyMessage}
+             // eslint-disable-next-line react/jsx-props-no-spreading
+             {...fieldProps}
+           />
+        )}
+      </CheckboxField>
       <CheckboxField
         name="allowedCreateChatLink"
         defaultIsChecked={settings.allowedCreateChatLink}
@@ -426,7 +441,8 @@ const renderAdditionalSettings = (settings: EditableSettings): ReactElement => {
             <TextArea {...(fieldProps as any)} resize="auto" />
             <LineHelperMessage>{`issueKey - ключ задачи со ссылкой;
             issueLink - полная ссылка на задачу;
-            summary - тема задачи.`}</LineHelperMessage>
+            summary - тема задачи;
+            users - упоминание пользователей из reply сообщений.`}</LineHelperMessage>
             {error && <ErrorMessage>{error}</ErrorMessage>}
           </>
         )}
@@ -554,6 +570,7 @@ function EditIssueCreationSettingsForm({
           tag,
           labels,
           allowedCreateChatLink,
+          allowedDeleteReplyMessage,
           creationByAllMembers,
           reporter,
           assignee,
@@ -566,6 +583,7 @@ function EditIssueCreationSettingsForm({
             enabled,
             tag,
             allowedCreateChatLink,
+            allowedDeleteReplyMessage,
             creationByAllMembers,
             reporter,
             assignee,
