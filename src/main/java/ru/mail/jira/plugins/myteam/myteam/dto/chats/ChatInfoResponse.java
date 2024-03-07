@@ -1,6 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.myteam.dto.chats;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonSubTypes;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
 
@@ -15,4 +16,5 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
   @JsonSubTypes.Type(value = GroupChatInfo.class, name = "group"),
   @JsonSubTypes.Type(value = ChannelChatInfo.class, name = "channel")
 })
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ChatInfoResponse {}
