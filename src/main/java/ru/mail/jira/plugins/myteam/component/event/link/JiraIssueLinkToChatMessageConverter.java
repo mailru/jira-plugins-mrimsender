@@ -5,6 +5,7 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.message.I18nResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.event.JiraEventToChatMessageConverter;
 import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter;
 
@@ -45,7 +46,7 @@ public class JiraIssueLinkToChatMessageConverter
     return i18nResolver.getText(
         i18keyForEventType,
         changesAuthor,
-        issueLinkEventToChatMessageData.getLinkTypeName(),
+        Utils.shieldText(issueLinkEventToChatMessageData.getLinkTypeName()),
         sourceIssue,
         destinationIssue);
   }
