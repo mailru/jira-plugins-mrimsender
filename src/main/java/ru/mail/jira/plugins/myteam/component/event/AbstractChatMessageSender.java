@@ -46,12 +46,13 @@ public abstract class AbstractChatMessageSender<T, R extends EventRecipient>
 
         final ApplicationUser contextUser = jiraAuthenticationContext.getLoggedInUser();
         jiraAuthenticationContext.setLoggedInUser(recipient);
-        final String message = messageProvider.apply(eventRecipient);
-        if (StringUtils.isBlank(message)) {
-          continue;
-        }
 
         try {
+          final String message = messageProvider.apply(eventRecipient);
+          if (StringUtils.isBlank(message)) {
+            continue;
+          }
+
           myteamEventsListener.publishEvent(
               new JiraNotifyEvent(
                   recipient.getEmailAddress(),
