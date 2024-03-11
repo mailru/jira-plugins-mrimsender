@@ -1,7 +1,7 @@
 /* (C)2021 */
 package ru.mail.jira.plugins.myteam.bot.rulesengine.states;
 
-import static ru.mail.jira.plugins.myteam.component.MessageFormatter.LIST_PAGE_SIZE;
+import static ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter.LIST_PAGE_SIZE;
 
 import com.atlassian.jira.exception.ParseException;
 import com.atlassian.jira.issue.Issue;

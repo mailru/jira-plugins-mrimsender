@@ -1,5 +1,5 @@
 /* (C)2023 */
-package ru.mail.jira.plugins.myteam.component;
+package ru.mail.jira.plugins.myteam.component.markdown.teamstojira;
 
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;

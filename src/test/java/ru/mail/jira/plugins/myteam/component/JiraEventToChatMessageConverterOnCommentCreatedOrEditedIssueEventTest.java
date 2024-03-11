@@ -23,12 +23,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
-import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
+import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventRecipient;
+import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventToChatMessageData;
+import ru.mail.jira.plugins.myteam.component.event.issue.JiraIssueEventToChatMessageConverter;
+import ru.mail.jira.plugins.myteam.component.markdown.jiratoteams.JiraMarkdownToChatMarkdownConverter;
+import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter;
 
 @SuppressWarnings({"MockNotUsedInProduction", "UnusedVariable"})
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings
-class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
+class JiraEventToChatMessageConverterOnCommentCreatedOrEditedIssueEventTest {
   @Mock
   @SuppressWarnings("NullAway")
   private MessageFormatter messageFormatter;
@@ -67,7 +71,7 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
 
   @InjectMocks
   @SuppressWarnings("NullAway")
-  private JiraEventToChatMessageConverter jiraEventToChatMessageConverter;
+  private JiraIssueEventToChatMessageConverter jiraIssueEventToChatMessageConverter;
 
   @Test
   void onCommentCreatedEventIfUserIsMentioned() {
@@ -117,8 +121,10 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
 
     // WHEN
     String messageText =
-        jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, true), commentCreatedEventWithMentionInCommentBody);
+        jiraIssueEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, true),
+                commentCreatedEventWithMentionInCommentBody));
 
     // THEN
     assertNotNull(messageText);
@@ -179,8 +185,10 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
 
     // WHEN
     String messageText =
-        jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), commentCreatedEventWithMentionInCommentBody);
+        jiraIssueEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false),
+                commentCreatedEventWithMentionInCommentBody));
 
     // THEN
     assertNotNull(messageText);
@@ -241,8 +249,10 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
 
     // WHEN
     String messageText =
-        jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, true), commentCreatedEventWithMentionInCommentBody);
+        jiraIssueEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, true),
+                commentCreatedEventWithMentionInCommentBody));
 
     // THEN
     assertNotNull(messageText);
@@ -303,8 +313,10 @@ class JiraEventToChatMessageConverterOnCommentCreatedOrEditedEventTest {
 
     // WHEN
     String messageText =
-        jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), commentCreatedEventWithMentionInCommentBody);
+        jiraIssueEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false),
+                commentCreatedEventWithMentionInCommentBody));
 
     // THEN
     assertNotNull(messageText);

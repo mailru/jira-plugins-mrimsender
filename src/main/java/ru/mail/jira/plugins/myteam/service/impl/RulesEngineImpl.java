@@ -43,9 +43,9 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.issuesearch.Issue
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.state.jqlsearch.JqlInputRule;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.EmptyState;
-import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
-import ru.mail.jira.plugins.myteam.component.JiraMarkdownToChatMarkdownConverter;
 import ru.mail.jira.plugins.myteam.component.PermissionHelper;
+import ru.mail.jira.plugins.myteam.component.markdown.jiratoteams.JiraMarkdownToChatMarkdownConverter;
+import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.EventMessagesTextConverter;
 import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;
 import ru.mail.jira.plugins.myteam.myteam.dto.ChatType;

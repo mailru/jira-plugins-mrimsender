@@ -43,7 +43,7 @@ import ru.mail.jira.plugins.commons.CommonUtils;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.commands.service.CommonButtonsService;
 import ru.mail.jira.plugins.myteam.commons.Const;
-import ru.mail.jira.plugins.myteam.component.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter;
 import ru.mail.jira.plugins.myteam.controller.dto.FilterSubscriptionDto;
 import ru.mail.jira.plugins.myteam.db.model.FilterSubscription;
 import ru.mail.jira.plugins.myteam.db.model.FilterSubscriptionType;

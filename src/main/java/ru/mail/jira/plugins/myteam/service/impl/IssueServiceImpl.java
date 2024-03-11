@@ -51,9 +51,9 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueTransi
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.IssueWatchingException;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBannedException;
 import ru.mail.jira.plugins.myteam.commons.exceptions.ValidationException;
-import ru.mail.jira.plugins.myteam.component.IssueTextConverter;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.component.comment.create.CommentCreateArg;
+import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.IssueTextConverter;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
