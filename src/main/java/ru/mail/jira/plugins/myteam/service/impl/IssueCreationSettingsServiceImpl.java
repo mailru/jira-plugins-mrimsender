@@ -99,9 +99,22 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     }
 
     List<IssueCreationSettings> set =
-        issueCreationSettingsRepository.getSettingsByProjectId(project.getKey());
+        issueCreationSettingsRepository.getSettingsByProjectKey(project.getKey());
 
     return mapAdditionalSettingsInfos(set);
+  }
+
+  @Override
+  public List<IssueCreationSettingsDto> getSettingsByProjectId(final long projectId) {
+    Project project = projectService.getProjectById(projectId).getProject();
+    if (project == null) {
+      return new ArrayList<>();
+    }
+
+    List<IssueCreationSettings> settings =
+            issueCreationSettingsRepository.getSettingsByProjectId(projectId);
+
+    return mapAdditionalSettingsInfos(settings);
   }
 
   @Override

@@ -139,10 +139,18 @@ public class IssueCreationSettingsRepository
         });
   }
 
-  public List<IssueCreationSettings> getSettingsByProjectId(String projectKey) {
+  @Deprecated
+  public List<IssueCreationSettings> getSettingsByProjectKey(String projectKey) {
     IssueCreationSettings[] settings =
         ao.find(IssueCreationSettings.class, Query.select().where("PROJECT_KEY = ?", projectKey));
 
     return Arrays.asList(settings);
   }
+
+public List<IssueCreationSettings> getSettingsByProjectId(final long projectId) {
+    IssueCreationSettings[] settings =
+            ao.find(IssueCreationSettings.class, Query.select().where("PROJECT_ID = ?", projectId));
+
+    return Arrays.asList(settings);
+}
 }

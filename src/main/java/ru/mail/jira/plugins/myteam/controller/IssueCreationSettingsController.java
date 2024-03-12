@@ -74,6 +74,17 @@ public class IssueCreationSettingsController {
         .collect(Collectors.toList());
   }
 
+  @GET
+  @Path("/settings/projects/id/{projectId}")
+  public List<IssueCreationSettingsDto> getProjectChatSettings(
+          @PathParam("projectId") final long projectId) throws PermissionException {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+    permissionHelper.checkProjectPermissions(user, projectId);
+    return issueCreationSettingsService.getSettingsByProjectId(projectId).stream()
+            .peek(s -> s.setCanEdit(permissionHelper.isChatAdminOrJiraAdmin(s.getChatId(), user)))
+            .collect(Collectors.toList());
+  }
+
   @POST
   @RequiresXsrfCheck
   @Path("/settings")

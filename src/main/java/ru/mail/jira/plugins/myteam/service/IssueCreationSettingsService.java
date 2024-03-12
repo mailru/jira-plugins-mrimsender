@@ -16,7 +16,9 @@ public interface IssueCreationSettingsService {
   @Nullable
   IssueCreationSettingsDto getSettingsFromCache(String chatId, String tag);
 
+  @Deprecated
   List<IssueCreationSettingsDto> getSettingsByProjectKey(String projectKey);
+  List<IssueCreationSettingsDto> getSettingsByProjectId(final long projectId);
 
   List<IssueCreationSettingsDto> getSettingsByChatId(String chatId);
 

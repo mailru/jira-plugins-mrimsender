@@ -4,6 +4,7 @@ package ru.mail.jira.plugins.myteam.db.model;
 import net.java.ao.Entity;
 import net.java.ao.OneToMany;
 import net.java.ao.schema.*;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.mail.jira.plugins.myteam.commons.IssueReporter;
 
@@ -90,4 +91,9 @@ public interface IssueCreationSettings extends Entity {
   void setAllowedDeleteReplyMessage(boolean aTrue);
 
   boolean isAllowedDeleteReplyMessage();
+
+  @Indexed
+  void setProjectId(long projectId);
+
+  Long getProjectId();
 }
