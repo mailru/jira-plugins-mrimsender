@@ -16,8 +16,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.mail.jira.plugins.myteam.component.event.EventRecipient;
 import ru.mail.jira.plugins.myteam.component.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.event.EventRecipient;
 
 @ExtendWith(MockitoExtension.class)
 class RemoteIssueLinkToChatMessageConverterTest {

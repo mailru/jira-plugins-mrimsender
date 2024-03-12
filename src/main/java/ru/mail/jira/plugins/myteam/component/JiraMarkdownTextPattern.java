@@ -25,8 +25,7 @@ public final class JiraMarkdownTextPattern {
       Pattern.compile("(^|\\s)_([^_ \\n].*?[^_ \\n])_($|\\s|\\.)");
   static final Pattern SINGLE_CHARACHTERS_PATTERN =
       Pattern.compile("(?<!±)([`{}+|@\\[\\]()~\\-*_])");
-  static final Pattern MARKED_CHARACHTERS_PATTERN =
-      Pattern.compile("±([`{}+|@\\[\\]()~\\-*_])");
+  static final Pattern MARKED_CHARACHTERS_PATTERN = Pattern.compile("±([`{}+|@\\[\\]()~\\-*_])");
   static final Pattern PANEL_PATTERN =
       Pattern.compile("\\{[Pp]anel([^}]*)}([^+]*?)\\{[Pp]anel}", Pattern.MULTILINE);
 
