@@ -10,7 +10,7 @@ import ru.mail.jira.plugins.myteam.component.event.EventRecipient;
 public class IssueEventRecipient extends EventRecipient {
   private final boolean mentioned;
 
-  private IssueEventRecipient(final ApplicationUser recipient, final boolean mentioned) {
+  public IssueEventRecipient(final ApplicationUser recipient, final boolean mentioned) {
     super(recipient);
     this.mentioned = mentioned;
   }
