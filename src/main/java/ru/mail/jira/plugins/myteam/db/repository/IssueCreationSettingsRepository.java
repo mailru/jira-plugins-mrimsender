@@ -37,6 +37,7 @@ public class IssueCreationSettingsRepository
           entity.setTag(dto.getTag());
           entity.setIssueTypeId(dto.getIssueTypeId());
           entity.setProjectKey(dto.getProjectKey());
+          entity.setProjectId(dto.getProjectId());
           entity.setEnabled(dto.getEnabled());
           entity.setCreationByAllMembers(dto.getCreationByAllMembers());
           entity.setReporter(dto.getReporter());
@@ -147,10 +148,10 @@ public class IssueCreationSettingsRepository
     return Arrays.asList(settings);
   }
 
-public List<IssueCreationSettings> getSettingsByProjectId(final long projectId) {
-    IssueCreationSettings[] settings =
+    public List<IssueCreationSettings> getSettingsByProjectId(final long projectId) {
+      IssueCreationSettings[] settings =
             ao.find(IssueCreationSettings.class, Query.select().where("PROJECT_ID = ?", projectId));
 
-    return Arrays.asList(settings);
-}
+      return Arrays.asList(settings);
+    }
 }

@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class IssueCreationSettingsProjectKeyToIdMigrationService {
     private static final int BATCH_SIZE = 50;
-
     private final ActiveObjects activeObjects;
     private final ProjectManager projectManager;
     private final JiraAuthenticationContext jiraAuthenticationContext;
@@ -47,7 +46,6 @@ public class IssueCreationSettingsProjectKeyToIdMigrationService {
         this.globalPermissionManager = globalPermissionManager;
     }
 
-
     public IssueCreationSettingsProjectKeyToIdMigrationResultDto migrateAll() {
         validateLoggedInUser();
 
@@ -57,7 +55,7 @@ public class IssueCreationSettingsProjectKeyToIdMigrationService {
         final List<IssueCreationSettingsProjectKeyToIdMigrationResultDto.IssueCreationSettingsMigratedInfoDto> settingsNotMigrated = new ArrayList<>();
         final List<IssueCreationSettingsProjectKeyToIdMigrationResultDto.IssueCreationSettingsMigratedInfoDto> settingsMigrated = new ArrayList<>();
 
-        while ((issueCreationSettings = findSettingsByOffset(page)) != null) {
+        while ((issueCreationSettings = findSettingsByOffset(page)).length != 0) {
             page++;
             for (final IssueCreationSettings settings : issueCreationSettings) {
                 final String projectKey = settings.getProjectKey();
@@ -72,6 +70,7 @@ public class IssueCreationSettingsProjectKeyToIdMigrationService {
                     migrate(settings, project.getKey(), project.getId());
                     settingsMigrated.add(IssueCreationSettingsProjectKeyToIdMigrationResultDto.of(settings.getID(), projectKey));
                 } catch (Exception e) {
+                    log.error("error happened during migrating issue creation settings entity {}", settings.getID(), e);
                     settingsNotMigrated.add(IssueCreationSettingsProjectKeyToIdMigrationResultDto.of(settings.getID(), projectKey, StringUtils.defaultString(e.getMessage())));
                 }
             }
@@ -84,11 +83,13 @@ public class IssueCreationSettingsProjectKeyToIdMigrationService {
 
         final IssueCreationSettings[] issueCreationSettings = activeObjects.find(IssueCreationSettings.class, Query.select().where("PROJECT_KEY = ?", projectKey));
         if (issueCreationSettings.length == 0) {
+            log.warn("Settings by project key {} not found", projectKey);
             throw new NotFoundException(String.format("Settings by project key %s not found", projectKey));
         }
 
         final Project projectObjByKey = projectManager.getProjectObjByKey(projectKey);
         if (projectObjByKey == null) {
+            log.warn("Project by key {} not found in JIRA", projectKey);
             return IssueCreationSettingsProjectKeyToIdMigrationResultDto.of(Arrays.stream(issueCreationSettings).map(settings -> IssueCreationSettingsProjectKeyToIdMigrationResultDto.of(settings.getID(), settings.getProjectKey(), "Project not found by key in JIRA")).collect(Collectors.toList()), Collections.emptyList());
         }
 
@@ -100,9 +101,9 @@ public class IssueCreationSettingsProjectKeyToIdMigrationService {
             try {
                 migrate(settings, project.getKey(), project.getId());
                 migratedSettings.add(IssueCreationSettingsProjectKeyToIdMigrationResultDto.of(settings.getID(), projectKey));
-            } catch (Exception e) {
+            } catch (final Exception e) {
+                log.error("error happened during migrating issue creation settings entity {}", settings.getID(), e);
                 notMigratedSettings.add(IssueCreationSettingsProjectKeyToIdMigrationResultDto.of(settings.getID(), projectKey, StringUtils.defaultString(e.getMessage())));
-
             }
         }
 
@@ -111,12 +112,14 @@ public class IssueCreationSettingsProjectKeyToIdMigrationService {
 
     private void validateLoggedInUser() {
         if (!jiraAuthenticationContext.isLoggedInUser()) {
+            log.error("unknown user");
             throw new SecurityException();
         }
 
         final ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
-        if (!globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, loggedInUser)) {
-            throw new SecurityException(String.format("User %s has not permission to execute migration", loggedInUser.getEmailAddress()));
+        if (!globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, loggedInUser) || !globalPermissionManager.hasPermission(GlobalPermissionKey.SYSTEM_ADMIN, loggedInUser)) {
+            log.error("User {} has not admin permission to execute migration", loggedInUser.getEmailAddress());
+            throw new SecurityException(String.format("User %s has not admin permission to execute migration", loggedInUser.getEmailAddress()));
         }
     }
 

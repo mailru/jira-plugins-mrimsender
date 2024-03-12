@@ -133,8 +133,14 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   @Override
   public IssueCreationSettingsDto createSettings(IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException {
+    Project projectByKey = projectService.getProjectByKey(settings.getProjectKey()).getProject();
+    if (projectByKey == null) {
+      throw new NotFoundException(String.format("Project by key %s not found", settings.getProjectKey()));
+    }
     checkAlreadyHasTag(settings);
     applyDefaultTemplateIfEmpty(settings);
+    settings.setProjectId(projectByKey.getId());
+
     issueCreationSettingsRepository.create(settings);
     return getSettingsFromCache(settings.getChatId(), settings.getTag());
   }
@@ -143,8 +149,14 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   @Override
   public IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException {
+    Project projectByKey = projectService.getProjectByKey(settings.getProjectKey()).getProject();
+    if (projectByKey == null) {
+      throw new NotFoundException(String.format("Project by key %s not found", settings.getProjectKey()));
+    }
+
     checkAlreadyHasTag(settings);
     applyDefaultTemplateIfEmpty(settings);
+    settings.setProjectId(projectByKey.getId());
     issueCreationSettingsRepository.update(id, settings);
     issueSettingsCache.remove(combineKey(settings.getChatId(), settings.getTag()));
 
