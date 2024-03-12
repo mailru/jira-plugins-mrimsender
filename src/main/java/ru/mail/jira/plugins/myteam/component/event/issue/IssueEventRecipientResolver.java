@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.component.UserMentionService;
@@ -25,6 +26,7 @@ public class IssueEventRecipientResolver
     extends AbstractRecipientResolver<IssueEvent, Set<IssueEventRecipient>> {
   private final UserMentionService userMentionService;
 
+  @Autowired
   public IssueEventRecipientResolver(
       @ComponentImport final NotificationFilterManager notificationFilterManager,
       @ComponentImport final NotificationSchemeManager notificationSchemeManager,

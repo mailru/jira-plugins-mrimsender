@@ -4,6 +4,7 @@ package ru.mail.jira.plugins.myteam.component.event.link;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.myteam.bot.listeners.MyteamEventsListener;
 import ru.mail.jira.plugins.myteam.component.UserData;
@@ -16,7 +17,8 @@ public class IssueLinkEventToVKTeamSender
     extends AbstractChatMessageSender<IssueLinkEventRecipientsData, EventRecipient> {
   private final JiraIssueLinkToChatMessageConverter jiraIssueLinkToChatMessageConverter;
 
-  protected IssueLinkEventToVKTeamSender(
+  @Autowired
+  public IssueLinkEventToVKTeamSender(
       @ComponentImport final JiraAuthenticationContext jiraAuthenticationContext,
       final MyteamEventsListener myteamEventsListener,
       final UserData userData,

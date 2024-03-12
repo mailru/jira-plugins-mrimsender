@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.ofbiz.core.entity.GenericValue;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.component.DiffFieldChatMessageGenerator;
@@ -66,6 +67,7 @@ public class JiraIssueEventToChatMessageConverter
   private final FieldManager fieldManager;
   private final UserManager userManager;
 
+  @Autowired
   public JiraIssueEventToChatMessageConverter(
       final MessageFormatter messageFormatter,
       final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter,

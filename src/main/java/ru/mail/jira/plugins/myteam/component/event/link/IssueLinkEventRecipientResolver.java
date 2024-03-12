@@ -42,7 +42,7 @@ public class IssueLinkEventRecipientResolver
   public IssueLinkEventRecipientsData resolve(final IssueLinkEventData issueLinkEventData) {
     final IssueEvent issueEventForSourceIssue =
         new IssueEvent(
-            issueLinkEventData.getIssueLink().getDestinationObject(),
+            issueLinkEventData.getIssueLink().getSourceObject(),
             Map.of(),
             issueLinkEventData.getIssueLinkCreatorOrRemover(),
             EventType.ISSUE_UPDATED_ID);
@@ -87,10 +87,6 @@ public class IssueLinkEventRecipientResolver
   private static void resolveDuplicatedUserForLinkedIssues(
       final Set<EventRecipient> notificationRecipientsForSourceIssue,
       final Set<EventRecipient> notificationRecipientsForDestinationIssue) {
-    if (notificationRecipientsForSourceIssue.containsAll(notificationRecipientsForDestinationIssue)
-        || notificationRecipientsForDestinationIssue.containsAll(
-            notificationRecipientsForSourceIssue)) {
-      notificationRecipientsForDestinationIssue.removeAll(notificationRecipientsForSourceIssue);
-    }
+    notificationRecipientsForDestinationIssue.removeAll(notificationRecipientsForSourceIssue);
   }
 }
