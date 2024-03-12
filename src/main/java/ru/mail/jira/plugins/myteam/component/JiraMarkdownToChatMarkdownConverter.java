@@ -1,5 +1,5 @@
 /* (C)2023 */
-package ru.mail.jira.plugins.myteam.component.markdown.jiratoteams;
+package ru.mail.jira.plugins.myteam.component;
 
 import static ru.mail.jira.plugins.myteam.commons.Utils.shieldText;
 

@@ -23,7 +23,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.Creatin
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.issue.creation.FillingIssueFieldState;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;

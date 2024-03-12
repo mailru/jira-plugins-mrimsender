@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 
 @ExtendWith(MockitoExtension.class)
 class JiraIssueLinkToChatMessageConverterTest {

@@ -23,11 +23,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
-import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventRecipient;
+import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
 import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventToChatMessageData;
-import ru.mail.jira.plugins.myteam.component.event.issue.JiraIssueEventToChatMessageConverter;
-import ru.mail.jira.plugins.myteam.component.markdown.jiratoteams.JiraMarkdownToChatMarkdownConverter;
-import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter;
 
 @SuppressWarnings({"MockNotUsedInProduction", "UnusedVariable"})
 @ExtendWith(MockitoExtension.class)

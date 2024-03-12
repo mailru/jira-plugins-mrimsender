@@ -33,7 +33,7 @@ import ru.mail.jira.plugins.myteam.commons.Const;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
 import ru.mail.jira.plugins.myteam.commons.exceptions.ValidationException;
 import ru.mail.jira.plugins.myteam.component.comment.create.CommentCreateArg;
-import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.EventMessagesTextConverter;
+import ru.mail.jira.plugins.myteam.component.EventMessagesTextConverter;
 import ru.mail.jira.plugins.myteam.db.model.MyteamChatMeta;
 import ru.mail.jira.plugins.myteam.db.repository.MyteamChatRepository;
 import ru.mail.jira.plugins.myteam.myteam.MyteamApiClient;

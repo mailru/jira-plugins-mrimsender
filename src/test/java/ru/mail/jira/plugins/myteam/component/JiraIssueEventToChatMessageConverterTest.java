@@ -26,11 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
-import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventRecipient;
+import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
 import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventToChatMessageData;
-import ru.mail.jira.plugins.myteam.component.event.issue.JiraIssueEventToChatMessageConverter;
-import ru.mail.jira.plugins.myteam.component.markdown.jiratoteams.JiraMarkdownToChatMarkdownConverter;
-import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @SuppressWarnings({"MockNotUsedInProduction", "UnusedVariable"})

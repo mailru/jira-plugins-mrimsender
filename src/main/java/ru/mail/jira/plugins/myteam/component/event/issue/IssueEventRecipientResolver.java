@@ -18,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
+import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
 import ru.mail.jira.plugins.myteam.component.UserMentionService;
 import ru.mail.jira.plugins.myteam.component.event.AbstractRecipientResolver;
 

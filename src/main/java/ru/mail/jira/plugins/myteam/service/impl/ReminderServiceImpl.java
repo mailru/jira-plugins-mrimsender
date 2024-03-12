@@ -30,7 +30,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleT
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.RuleType;
 import ru.mail.jira.plugins.myteam.commons.Utils;
 import ru.mail.jira.plugins.myteam.component.ReminderGenerator;
-import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.controller.dto.ReminderDto;
 import ru.mail.jira.plugins.myteam.db.model.Reminder;
 import ru.mail.jira.plugins.myteam.db.repository.ReminderRepository;

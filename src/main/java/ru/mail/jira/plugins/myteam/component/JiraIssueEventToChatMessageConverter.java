@@ -1,5 +1,5 @@
 /* (C)2023 */
-package ru.mail.jira.plugins.myteam.component.event.issue;
+package ru.mail.jira.plugins.myteam.component;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -36,11 +36,9 @@ import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
-import ru.mail.jira.plugins.myteam.component.DiffFieldChatMessageGenerator;
 import ru.mail.jira.plugins.myteam.component.event.JiraEventToChatMessageConverter;
-import ru.mail.jira.plugins.myteam.component.markdown.jiratoteams.JiraMarkdownTextPattern;
-import ru.mail.jira.plugins.myteam.component.markdown.jiratoteams.JiraMarkdownToChatMarkdownConverter;
-import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter;
+import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
+import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventToChatMessageData;
 
 @Component
 @Slf4j
@@ -166,6 +164,12 @@ public class JiraIssueEventToChatMessageConverter
                   issueEvent.getComment().getBody(), useMentionFormat));
     }
     return sb.toString();
+  }
+
+
+  @Nullable
+  public String formatEventWithDiff(final IssueEventRecipient issueEventRecipient, final IssueEvent issueEvent) {
+    return convert(IssueEventToChatMessageData.of(issueEventRecipient, issueEvent));
   }
 
   @NotNull

@@ -1,5 +1,5 @@
 /* (C)2021 */
-package ru.mail.jira.plugins.myteam.component.markdown.teamstojira;
+package ru.mail.jira.plugins.myteam.component;
 
 import com.atlassian.jira.issue.AttachmentManager;
 import com.atlassian.jira.issue.Issue;

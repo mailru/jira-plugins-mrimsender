@@ -1,7 +1,6 @@
 /* (C)2024 */
 package ru.mail.jira.plugins.myteam.component.event.issue;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.atlassian.jira.event.issue.IssueEvent;
@@ -17,7 +16,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.mail.jira.plugins.myteam.bot.events.JiraNotifyEvent;
+import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
 import ru.mail.jira.plugins.myteam.bot.listeners.MyteamEventsListener;
+import ru.mail.jira.plugins.myteam.component.JiraIssueEventToChatMessageConverter;
 import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.component.event.IssueEventChatMessageButtonBuilder;
 

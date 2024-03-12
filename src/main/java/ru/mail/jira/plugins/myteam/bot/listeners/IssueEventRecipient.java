@@ -1,5 +1,5 @@
 /* (C)2023 */
-package ru.mail.jira.plugins.myteam.component.event.issue;
+package ru.mail.jira.plugins.myteam.bot.listeners;
 
 import com.atlassian.jira.user.ApplicationUser;
 import com.google.common.base.Objects;

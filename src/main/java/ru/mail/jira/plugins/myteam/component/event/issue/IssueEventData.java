@@ -4,6 +4,7 @@ package ru.mail.jira.plugins.myteam.component.event.issue;
 import com.atlassian.jira.event.issue.IssueEvent;
 import java.util.Set;
 import lombok.Getter;
+import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
 
 @Getter
 public class IssueEventData {

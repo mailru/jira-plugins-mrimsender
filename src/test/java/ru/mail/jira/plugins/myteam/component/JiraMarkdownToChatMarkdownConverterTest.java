@@ -15,7 +15,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.mail.jira.plugins.myteam.component.markdown.jiratoteams.JiraMarkdownToChatMarkdownConverter;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @SuppressWarnings({"MockNotUsedInProduction", "NullAway", "UnusedVariable"})

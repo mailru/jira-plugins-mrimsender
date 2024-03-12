@@ -46,7 +46,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.ProjectBann
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.UnsupportedCustomFieldsException;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.component.UserData;
-import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 

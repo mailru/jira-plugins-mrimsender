@@ -1,5 +1,5 @@
 /* (C)2020 */
-package ru.mail.jira.plugins.myteam.component.markdown.teamstojira;
+package ru.mail.jira.plugins.myteam.component;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -46,7 +46,6 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ButtonRuleTy
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.CommandRuleType;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.rules.buttons.ReplyRule;
 import ru.mail.jira.plugins.myteam.commons.Utils;
-import ru.mail.jira.plugins.myteam.component.markdown.jiratoteams.JiraMarkdownToChatMarkdownConverter;
 import ru.mail.jira.plugins.myteam.component.url.dto.Link;
 import ru.mail.jira.plugins.myteam.component.url.dto.LinksInMessage;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;

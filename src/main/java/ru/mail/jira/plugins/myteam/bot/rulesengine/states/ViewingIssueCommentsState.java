@@ -20,8 +20,8 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.models.ruletypes.ErrorRuleTyp
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.BotState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.PageableState;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.component.markdown.jiratoteams.JiraMarkdownToChatMarkdownConverter;
-import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.JiraMarkdownToChatMarkdownConverter;
+import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.service.IssueService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;

@@ -20,7 +20,7 @@ import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.CancelableState;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.states.base.PageableState;
 import ru.mail.jira.plugins.myteam.commons.IssueFieldsFilter;
 import ru.mail.jira.plugins.myteam.commons.exceptions.MyteamServerErrorException;
-import ru.mail.jira.plugins.myteam.component.markdown.teamstojira.MessageFormatter;
+import ru.mail.jira.plugins.myteam.component.MessageFormatter;
 import ru.mail.jira.plugins.myteam.myteam.dto.InlineKeyboardMarkupButton;
 import ru.mail.jira.plugins.myteam.service.IssueCreationService;
 import ru.mail.jira.plugins.myteam.service.RulesEngine;

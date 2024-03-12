@@ -1,5 +1,5 @@
 /* (C)2020 */
-package ru.mail.jira.plugins.myteam.bot.listeners.issue;
+package ru.mail.jira.plugins.myteam.bot.listeners;
 
 import com.atlassian.event.api.EventListener;
 import com.atlassian.jira.event.issue.IssueEvent;
@@ -8,9 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
-import ru.mail.jira.plugins.myteam.bot.listeners.IEventListener;
 import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventData;
-import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventRecipient;
 import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventRecipientResolver;
 import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventToVKTeamsSender;
 
@@ -30,7 +28,7 @@ public class JiraEventListener implements IEventListener {
 
   @SuppressWarnings("unused")
   @EventListener
-  public void onEvent(final IssueEvent issueEvent) {
+  public void onIssueEvent(final IssueEvent issueEvent) {
     if (!issueEvent.isSendMail()) {
       return;
     }
