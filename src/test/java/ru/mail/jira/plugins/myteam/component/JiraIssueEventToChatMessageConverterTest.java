@@ -27,12 +27,13 @@ import org.mockito.Mockito;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.ofbiz.core.entity.GenericValue;
 import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
+import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventToChatMessageData;
 import ru.mail.jira.plugins.myteam.service.PluginData;
 
 @SuppressWarnings({"MockNotUsedInProduction", "UnusedVariable"})
-class JiraEventToChatMessageConverterTest {
+class JiraIssueEventToChatMessageConverterTest {
 
-  private JiraEventToChatMessageConverter jiraEventToChatMessageConverter;
+  private JiraIssueEventToChatMessageConverter jiraEventToChatMessageConverter;
   private IssueEvent mockedIssueEvent;
   private ApplicationUser recipient;
 
@@ -59,7 +60,7 @@ class JiraEventToChatMessageConverterTest {
     AttachmentManager attachmentManager = Mockito.mock(AttachmentManager.class);
     PluginData pluginData = Mockito.mock(PluginData.class);
     this.jiraEventToChatMessageConverter =
-        new JiraEventToChatMessageConverter(
+        new JiraIssueEventToChatMessageConverter(
             new MessageFormatter(
                 applicationProperties,
                 dateTimeFormatter,
@@ -130,8 +131,9 @@ class JiraEventToChatMessageConverterTest {
 
     // WHEN
     String result =
-        this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false), this.mockedIssueEvent));
 
     // THEN
     assertEquals(testedHeader + testedContent, result);
@@ -154,8 +156,9 @@ class JiraEventToChatMessageConverterTest {
 
     // WHEN
     String result =
-        this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false), this.mockedIssueEvent));
 
     // THEN
     assertEquals(testedHeader + testedContent, result);
@@ -178,15 +181,16 @@ class JiraEventToChatMessageConverterTest {
 
     // WHEN
     String result =
-        this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false), this.mockedIssueEvent));
 
     // THEN
     assertEquals(testedHeader + testedContent, result);
   }
 
   @Test
-  void formatEventWithDiffTest() throws GenericEntityException {
+  void convertTest() throws GenericEntityException {
     // GIVEN
     String prevDescriptionFieldMarkup =
         "+Lorem ipsum dolor sit amet+, consectetur adipiscing elit, "
@@ -219,15 +223,16 @@ class JiraEventToChatMessageConverterTest {
 
     // WHEN
     String actualResult =
-        this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false), this.mockedIssueEvent));
 
     // THEN
     assertEquals(expectedResult, actualResult);
   }
 
   @Test
-  void formatEventWithDiffTestWhenOldOrNewDescHasQuotes() throws GenericEntityException {
+  void convertTestWhenOldOrNewDescHasQuotes() throws GenericEntityException {
     // GIVEN
     String prevDescriptionFieldMarkup =
         "+Lorem ipsum dolor sit amet+, {quote}\nlorem\nlorem\n{quote} consectetur adipiscing elit, "
@@ -258,15 +263,16 @@ class JiraEventToChatMessageConverterTest {
 
     // WHEN
     String actualResult =
-        this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false), this.mockedIssueEvent));
 
     // THEN
     assertEquals(expectedResult, actualResult);
   }
 
   @Test
-  void formatEventWithDiffTestWhenOldOrNewDescHasCodeBlock() throws GenericEntityException {
+  void convertTestWhenOldOrNewDescHasCodeBlock() throws GenericEntityException {
     // GIVEN
     String prevDescriptionFieldMarkup =
         "+Lorem ipsum dolor sit amet+, {code:xml}\n"
@@ -301,15 +307,16 @@ class JiraEventToChatMessageConverterTest {
 
     // WHEN
     String actualResult =
-        this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false), this.mockedIssueEvent));
 
     // THEN
     assertEquals(expectedResult, actualResult);
   }
 
   @Test
-  void formatEventWithDiffTestWhenOldOrNewDescHasUnorderedList() throws GenericEntityException {
+  void convertTestWhenOldOrNewDescHasUnorderedList() throws GenericEntityException {
     // GIVEN
     String prevDescriptionFieldMarkup =
         "+Lorem ipsum dolor sit amet+,  consectetur adipiscing elit, "
@@ -346,15 +353,16 @@ class JiraEventToChatMessageConverterTest {
 
     // WHEN
     String actualResult =
-        this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false), this.mockedIssueEvent));
 
     // THEN
     assertEquals(expectedResult, actualResult);
   }
 
   @Test
-  void formatEventWithDiffTestWhenOldOrNewDescHasOrderedList() throws GenericEntityException {
+  void convertTestWhenOldOrNewDescHasOrderedList() throws GenericEntityException {
     // GIVEN
     String prevDescriptionFieldMarkup =
         "+Lorem ipsum dolor sit amet+,  consectetur adipiscing elit, "
@@ -391,15 +399,16 @@ class JiraEventToChatMessageConverterTest {
 
     // WHEN
     String actualResult =
-        this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false), this.mockedIssueEvent));
 
     // THEN
     assertEquals(expectedResult, actualResult);
   }
 
   @Test
-  void formatEventWithDiffTestWhenOldOrNewDescHasBoldText() throws GenericEntityException {
+  void convertTestWhenOldOrNewDescHasBoldText() throws GenericEntityException {
     // GIVEN
     String prevDescriptionFieldMarkup =
         "+Lorem ipsum dolor sit amet+, consectetur adipiscing elit, "
@@ -432,15 +441,16 @@ class JiraEventToChatMessageConverterTest {
 
     // WHEN
     String actualResult =
-        this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false), this.mockedIssueEvent));
 
     // THEN
     assertEquals(expectedResult, actualResult);
   }
 
   @Test
-  void formatEventWithDiffTestWhenOldOrNewDescHasStrikeThrough() throws GenericEntityException {
+  void convertTestWhenOldOrNewDescHasStrikeThrough() throws GenericEntityException {
     // GIVEN
     String prevDescriptionFieldMarkup =
         "+Lorem ipsum dolor sit amet+, consectetur adipiscing elit, "
@@ -473,15 +483,16 @@ class JiraEventToChatMessageConverterTest {
 
     // WHEN
     String actualResult =
-        this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false), this.mockedIssueEvent));
 
     // THEN
     assertEquals(expectedResult, actualResult);
   }
 
   @Test
-  void formatEventWithDiffTestWhenOldOrNewDescHasStrikeThroughAndSomeFieldHasNewAndOldValue()
+  void convertTestWhenOldOrNewDescHasStrikeThroughAndSomeFieldHasNewAndOldValue()
       throws GenericEntityException {
     // GIVEN
     String prevDescriptionFieldMarkup =
@@ -530,8 +541,9 @@ class JiraEventToChatMessageConverterTest {
 
     // WHEN
     String actualResult =
-        this.jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, false), this.mockedIssueEvent);
+        this.jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, false), this.mockedIssueEvent));
 
     // THEN
     assertEquals(expectedResult, actualResult);
@@ -566,8 +578,9 @@ class JiraEventToChatMessageConverterTest {
             + "@\\[kucher\\@mail\\.ru\\]";
     // WHEN
     String result =
-        jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, true), mockedIssueEvent);
+        jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, true), mockedIssueEvent));
 
     // THEN
     assertEquals(expected, result);
@@ -600,8 +613,9 @@ class JiraEventToChatMessageConverterTest {
 
     // WHEN
     String result =
-        jiraEventToChatMessageConverter.formatEventWithDiff(
-            IssueEventRecipient.of(recipient, true), mockedIssueEvent);
+        jiraEventToChatMessageConverter.convert(
+            IssueEventToChatMessageData.of(
+                IssueEventRecipient.of(recipient, true), mockedIssueEvent));
 
     // THEN
     assertEquals(expected, result);

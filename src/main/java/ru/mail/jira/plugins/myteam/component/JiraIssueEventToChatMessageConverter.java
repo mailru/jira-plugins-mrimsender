@@ -33,13 +33,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.ofbiz.core.entity.GenericValue;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
 import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
+import ru.mail.jira.plugins.myteam.component.event.JiraEventToChatMessageConverter;
+import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventToChatMessageData;
 
 @Component
 @Slf4j
-public class JiraEventToChatMessageConverter {
+public class JiraIssueEventToChatMessageConverter
+    implements JiraEventToChatMessageConverter<IssueEventToChatMessageData> {
   private static final List<Pattern> PATTERNS_TO_EXCLUDE_DESCRIPTION_FOR_DIFF =
       initPatternsToExcludeDescriptionForDiff();
   private static final Map<Long, String> EVENT_TYPE_MAP = getEventTypeMap();
@@ -55,14 +59,14 @@ public class JiraEventToChatMessageConverter {
   private final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter;
   private final DiffFieldChatMessageGenerator diffFieldChatMessageGenerator;
   private final AttachmentManager attachmentManager;
-
   private final ApplicationProperties applicationProperties;
   private final I18nResolver i18nResolver;
   private final I18nHelper i18nHelper;
   private final FieldManager fieldManager;
   private final UserManager userManager;
 
-  public JiraEventToChatMessageConverter(
+  @Autowired
+  public JiraIssueEventToChatMessageConverter(
       final MessageFormatter messageFormatter,
       final JiraMarkdownToChatMarkdownConverter jiraMarkdownToChatMarkdownConverter,
       final DiffFieldChatMessageGenerator diffFieldChatMessageGenerator,
@@ -83,13 +87,14 @@ public class JiraEventToChatMessageConverter {
     this.userManager = userManager;
   }
 
-  @Nullable
-  public String formatEventWithDiff(
-      final IssueEventRecipient issueEventRecipient, final IssueEvent issueEvent) {
+  @Override
+  public String convert(final IssueEventToChatMessageData issueEventToChatMessageData) {
+    final IssueEvent issueEvent = issueEventToChatMessageData.getIssueEvent();
     final Issue issue = issueEvent.getIssue();
     final ApplicationUser user = issueEvent.getUser();
     final StringBuilder sb = new StringBuilder();
 
+    IssueEventRecipient issueEventRecipient = issueEventToChatMessageData.getIssueEventRecipient();
     ApplicationUser recipient = issueEventRecipient.getRecipient();
     final boolean useMentionFormat = !recipient.equals(user);
 
@@ -150,7 +155,7 @@ public class JiraEventToChatMessageConverter {
               .getBody()
               .contains("[~" + issueEventRecipient.getRecipient().getName() + "]")) {
         // do not send message when applicationUserWrapper mentioned in comment
-        return null;
+        return "";
       }
 
       sb.append("\n\n")
@@ -159,6 +164,12 @@ public class JiraEventToChatMessageConverter {
                   issueEvent.getComment().getBody(), useMentionFormat));
     }
     return sb.toString();
+  }
+
+  @Nullable
+  public String formatEventWithDiff(
+      final IssueEventRecipient issueEventRecipient, final IssueEvent issueEvent) {
+    return convert(IssueEventToChatMessageData.of(issueEventRecipient, issueEvent));
   }
 
   @NotNull
