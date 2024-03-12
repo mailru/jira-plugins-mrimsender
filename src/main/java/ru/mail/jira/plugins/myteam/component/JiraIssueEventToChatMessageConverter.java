@@ -36,8 +36,8 @@ import org.ofbiz.core.entity.GenericValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
-import ru.mail.jira.plugins.myteam.component.event.JiraEventToChatMessageConverter;
 import ru.mail.jira.plugins.myteam.bot.listeners.IssueEventRecipient;
+import ru.mail.jira.plugins.myteam.component.event.JiraEventToChatMessageConverter;
 import ru.mail.jira.plugins.myteam.component.event.issue.IssueEventToChatMessageData;
 
 @Component
@@ -166,9 +166,9 @@ public class JiraIssueEventToChatMessageConverter
     return sb.toString();
   }
 
-
   @Nullable
-  public String formatEventWithDiff(final IssueEventRecipient issueEventRecipient, final IssueEvent issueEvent) {
+  public String formatEventWithDiff(
+      final IssueEventRecipient issueEventRecipient, final IssueEvent issueEvent) {
     return convert(IssueEventToChatMessageData.of(issueEventRecipient, issueEvent));
   }
 
