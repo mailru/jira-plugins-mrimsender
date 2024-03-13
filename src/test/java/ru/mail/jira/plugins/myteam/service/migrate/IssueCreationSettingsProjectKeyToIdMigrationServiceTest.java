@@ -79,6 +79,48 @@ class IssueCreationSettingsProjectKeyToIdMigrationServiceTest {
   }
 
   @Test
+  void migrateAllWhenUserIsSysAdmin() {
+    // GIVEN
+    when(jiraAuthenticationContext.isLoggedInUser()).thenReturn(true);
+    ApplicationUser loggedInUser = mock(ApplicationUser.class);
+    when(jiraAuthenticationContext.getLoggedInUser()).thenReturn(loggedInUser);
+
+    when(globalPermissionManager.hasPermission(
+            same(GlobalPermissionKey.ADMINISTER), same(loggedInUser)))
+        .thenReturn(false);
+    when(globalPermissionManager.hasPermission(
+            same(GlobalPermissionKey.SYSTEM_ADMIN), same(loggedInUser)))
+        .thenReturn(true);
+
+    when(activeObjects.find(same(IssueCreationSettings.class), any(Query.class)))
+        .thenReturn(new IssueCreationSettings[0]);
+
+    // WHEN // THEN
+    assertDoesNotThrow(issueCreationSettingsProjectKeyToIdMigrationService::migrateAll);
+  }
+
+  @Test
+  void migrateAllWhenUserNotSysAdmin() {
+    // GIVEN
+    when(jiraAuthenticationContext.isLoggedInUser()).thenReturn(true);
+    ApplicationUser loggedInUser = mock(ApplicationUser.class);
+    when(jiraAuthenticationContext.getLoggedInUser()).thenReturn(loggedInUser);
+
+    when(globalPermissionManager.hasPermission(
+            same(GlobalPermissionKey.ADMINISTER), same(loggedInUser)))
+        .thenReturn(true);
+    when(globalPermissionManager.hasPermission(
+            same(GlobalPermissionKey.SYSTEM_ADMIN), same(loggedInUser)))
+        .thenReturn(false);
+
+    when(activeObjects.find(same(IssueCreationSettings.class), any(Query.class)))
+        .thenReturn(new IssueCreationSettings[0]);
+
+    // WHEN // THEN
+    assertDoesNotThrow(issueCreationSettingsProjectKeyToIdMigrationService::migrateAll);
+  }
+
+  @Test
   void migrateAllWhenSettingsTableIsEmpty() {
     // GIVEN
     when(jiraAuthenticationContext.isLoggedInUser()).thenReturn(true);

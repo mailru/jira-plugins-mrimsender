@@ -104,8 +104,8 @@ public class IssueCreationSettingsProjectKeyToIdMigrationService {
     }
 
     final ApplicationUser loggedInUser = jiraAuthenticationContext.getLoggedInUser();
-    if (!globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, loggedInUser)
-        && !globalPermissionManager.hasPermission(GlobalPermissionKey.SYSTEM_ADMIN, loggedInUser)) {
+    if (!(globalPermissionManager.hasPermission(GlobalPermissionKey.ADMINISTER, loggedInUser)
+        || globalPermissionManager.hasPermission(GlobalPermissionKey.SYSTEM_ADMIN, loggedInUser))) {
       log.error(
           "User {} has not admin permission to execute migration", loggedInUser.getEmailAddress());
       throw new SecurityException(
