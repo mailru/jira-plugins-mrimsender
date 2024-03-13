@@ -11,12 +11,12 @@ import ru.mail.jira.plugins.myteam.service.migrate.IssueCreationSettingsProjectK
 
 @Path("/migrate/issueCreationSettings")
 @Produces(MediaType.APPLICATION_JSON)
-public class MigrationController {
+public class IssueCreationSettingsMigrationController {
   private final IssueCreationSettingsProjectKeyToIdMigrationService
       issueCreationSettingsProjectKeyToIdMigrationService;
 
   @Autowired
-  public MigrationController(
+  public IssueCreationSettingsMigrationController(
       final IssueCreationSettingsProjectKeyToIdMigrationService
           issueCreationSettingsProjectKeyToIdMigrationService) {
     this.issueCreationSettingsProjectKeyToIdMigrationService =
