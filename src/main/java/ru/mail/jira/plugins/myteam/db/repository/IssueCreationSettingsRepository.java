@@ -36,7 +36,6 @@ public class IssueCreationSettingsRepository
           entity.setChatId(dto.getChatId());
           entity.setTag(dto.getTag());
           entity.setIssueTypeId(dto.getIssueTypeId());
-          entity.setProjectKey(dto.getProjectKey());
           entity.setProjectId(dto.getProjectId());
           entity.setEnabled(dto.getEnabled());
           entity.setCreationByAllMembers(dto.getCreationByAllMembers());
@@ -140,18 +139,10 @@ public class IssueCreationSettingsRepository
         });
   }
 
-  @Deprecated
-  public List<IssueCreationSettings> getSettingsByProjectKey(String projectKey) {
+  public List<IssueCreationSettings> getSettingsByProjectId(final long projectId) {
     IssueCreationSettings[] settings =
-        ao.find(IssueCreationSettings.class, Query.select().where("PROJECT_KEY = ?", projectKey));
+        ao.find(IssueCreationSettings.class, Query.select().where("PROJECT_ID = ?", projectId));
 
     return Arrays.asList(settings);
   }
-
-    public List<IssueCreationSettings> getSettingsByProjectId(final long projectId) {
-      IssueCreationSettings[] settings =
-            ao.find(IssueCreationSettings.class, Query.select().where("PROJECT_ID = ?", projectId));
-
-      return Arrays.asList(settings);
-    }
 }

@@ -73,11 +73,6 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   }
 
   @Override
-  public List<IssueCreationSettingsDto> getAllSettings() {
-    return mapAdditionalSettingsInfos(issueCreationSettingsRepository.findAll());
-  }
-
-  @Override
   public IssueCreationSettingsDto getSettings(int id) throws NotFoundException {
     IssueCreationSettingsDto settings =
         new IssueCreationSettingsDto(issueCreationSettingsRepository.get(id));
@@ -99,7 +94,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     }
 
     List<IssueCreationSettings> set =
-        issueCreationSettingsRepository.getSettingsByProjectKey(project.getKey());
+        issueCreationSettingsRepository.getSettingsByProjectId(project.getId());
 
     return mapAdditionalSettingsInfos(set);
   }
@@ -112,7 +107,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     }
 
     List<IssueCreationSettings> settings =
-            issueCreationSettingsRepository.getSettingsByProjectId(projectId);
+        issueCreationSettingsRepository.getSettingsByProjectId(projectId);
 
     return mapAdditionalSettingsInfos(settings);
   }
@@ -133,14 +128,9 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   @Override
   public IssueCreationSettingsDto createSettings(IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException {
-    Project projectByKey = projectService.getProjectByKey(settings.getProjectKey()).getProject();
-    if (projectByKey == null) {
-      throw new NotFoundException(String.format("Project by key %s not found", settings.getProjectKey()));
-    }
+    checkProjectKeyAndId(settings);
     checkAlreadyHasTag(settings);
     applyDefaultTemplateIfEmpty(settings);
-    settings.setProjectId(projectByKey.getId());
-
     issueCreationSettingsRepository.create(settings);
     return getSettingsFromCache(settings.getChatId(), settings.getTag());
   }
@@ -149,14 +139,9 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
   @Override
   public IssueCreationSettingsDto updateSettings(int id, IssueCreationSettingsDto settings)
       throws SettingsTagAlreadyExistsException {
-    Project projectByKey = projectService.getProjectByKey(settings.getProjectKey()).getProject();
-    if (projectByKey == null) {
-      throw new NotFoundException(String.format("Project by key %s not found", settings.getProjectKey()));
-    }
-
+    checkProjectKeyAndId(settings);
     checkAlreadyHasTag(settings);
     applyDefaultTemplateIfEmpty(settings);
-    settings.setProjectId(projectByKey.getId());
     issueCreationSettingsRepository.update(id, settings);
     issueSettingsCache.remove(combineKey(settings.getChatId(), settings.getTag()));
 
@@ -182,6 +167,7 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     IssueCreationSettingsDto settingsDto =
         new IssueCreationSettingsDto(
             settings, messageFormatter.getMyteamLink(settings.getChatId()));
+    checkProjectKeyAndId(settingsDto);
     applyDefaultTemplateIfEmpty(settingsDto);
     return settingsDto;
   }
@@ -191,6 +177,27 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     IssueCreationSettings settings = issueCreationSettingsRepository.get(id);
     issueCreationSettingsRepository.deleteById(id);
     issueSettingsCache.remove(combineKey(settings.getChatId(), settings.getTag()));
+  }
+
+  private void checkProjectKeyAndId(final IssueCreationSettingsDto settings) {
+    if (settings.getProjectId() == null && settings.getProjectKey() == null) {
+      throw new IllegalArgumentException("Project id and key cannot be null");
+    } else if (settings.getProjectId() != null) {
+      Project project = projectService.getProjectById(settings.getProjectId()).getProject();
+      if (project == null) {
+        throw new NotFoundException(
+            String.format("Project by id %s not found", settings.getProjectId()));
+      }
+      settings.setProjectKey(project.getKey());
+    } else {
+      final Project project = projectService.getProjectByKey(settings.getProjectKey()).getProject();
+      if (project == null) {
+        throw new NotFoundException(
+            String.format("Project by key %s not found", settings.getProjectKey()));
+      }
+      settings.setProjectKey(project.getKey());
+      settings.setProjectId(project.getId());
+    }
   }
 
   private void applyDefaultTemplateIfEmpty(IssueCreationSettingsDto settings) {
@@ -237,6 +244,13 @@ public class IssueCreationSettingsServiceImpl implements IssueCreationSettingsSe
     IssueCreationSettingsDto settingsDto =
         new IssueCreationSettingsDto(
             settings, messageFormatter.getMyteamLink(settings.getChatId()));
+    Long projectId = settings.getProjectId();
+    if (projectId != null) {
+      Project project = projectService.getProjectById(projectId).getProject();
+      if (project != null) {
+        settingsDto.setProjectKey(project.getKey());
+      }
+    }
 
     try {
       ChatInfoResponse chatInfo = myteamApiClient.getChatInfo(settings.getChatId()).getBody();

@@ -144,7 +144,7 @@ public class PermissionHelper {
   }
 
   public ApplicationUser checkProjectPermissions(ApplicationUser user, long projectId)
-          throws PermissionException {
+      throws PermissionException {
 
     if (isProjectAdmin(user, getExistingProject(projectId))) {
       return user;

@@ -56,7 +56,7 @@ public class IssueCreationSettingsDto {
     this.reporter = entity.getReporter();
     this.assignee = entity.getAssignee();
     this.addReporterInWatchers = entity.isAddReporterInWatchers();
-    this.projectKey = entity.getProjectKey();
+    this.projectId = entity.getProjectId();
     this.issueTypeId = entity.getIssueTypeId();
     this.creationSuccessTemplate = entity.getCreationSuccessTemplate();
     this.issueSummaryTemplate = entity.getIssueSummaryTemplate();
@@ -83,7 +83,6 @@ public class IssueCreationSettingsDto {
     this.reporter = entity.getReporter();
     this.assignee = entity.getAssignee();
     this.addReporterInWatchers = entity.isAddReporterInWatchers();
-    this.projectKey = entity.getProjectKey();
     this.projectId = entity.getProjectId();
     this.issueTypeId = entity.getIssueTypeId();
     this.creationSuccessTemplate = entity.getCreationSuccessTemplate();
