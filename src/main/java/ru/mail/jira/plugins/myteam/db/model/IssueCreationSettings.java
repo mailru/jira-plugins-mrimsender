@@ -27,7 +27,6 @@ public interface IssueCreationSettings extends Entity {
 
   void setTag(String tag);
 
-  @Indexed
   @Nullable
   String getProjectKey();
 
