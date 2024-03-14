@@ -183,6 +183,11 @@ public class UserChatServiceImpl implements UserChatService {
   }
 
   @Override
+  public void getChatInfo(final String chat) throws MyteamServerErrorException {
+    myteamClient.getChatInfo(chat);
+  }
+
+  @Override
   public HttpResponse<MessageResponse> editMessageText(
       String chatId,
       long messageId,

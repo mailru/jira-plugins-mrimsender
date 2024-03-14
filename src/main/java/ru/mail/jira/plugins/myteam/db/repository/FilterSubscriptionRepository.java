@@ -36,7 +36,7 @@ import ru.mail.jira.plugins.myteam.controller.dto.FilterSubscriptionDto;
 import ru.mail.jira.plugins.myteam.controller.dto.JqlFilterDto;
 import ru.mail.jira.plugins.myteam.db.model.FilterSubscription;
 import ru.mail.jira.plugins.myteam.db.model.RecipientsType;
-import ru.mail.jira.plugins.myteam.service.FilterSubscriptionService;
+import ru.mail.jira.plugins.myteam.service.subscription.FilterSubscriptionSchedulerService;
 
 @Component
 @SuppressWarnings("NullAway")
@@ -308,7 +308,7 @@ public class FilterSubscriptionRepository
   private String getNextRun(@NotNull FilterSubscription subscription) {
     JobDetails jobDetails =
         this.schedulerService.getJobDetails(
-            FilterSubscriptionService.getJobId(subscription.getID()));
+            FilterSubscriptionSchedulerService.getJobId(subscription.getID()));
     return jobDetails == null ? null : CalendarUtils.formatDate(jobDetails.getNextRunTime());
   }
 }
