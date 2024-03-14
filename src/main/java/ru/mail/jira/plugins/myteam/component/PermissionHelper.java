@@ -143,6 +143,15 @@ public class PermissionHelper {
     throw new PermissionException();
   }
 
+  public ApplicationUser checkProjectPermissions(ApplicationUser user, long projectId)
+      throws PermissionException {
+
+    if (isProjectAdmin(user, getExistingProject(projectId))) {
+      return user;
+    }
+    throw new PermissionException();
+  }
+
   public void checkSubscriptionPermission(
       ApplicationUser user, FilterSubscription filterSubscription) {
     if (!isJiraAdmin(user) && !filterSubscription.getUserKey().equals(user.getKey())) {

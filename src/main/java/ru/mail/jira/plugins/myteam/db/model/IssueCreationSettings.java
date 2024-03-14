@@ -27,7 +27,6 @@ public interface IssueCreationSettings extends Entity {
 
   void setTag(String tag);
 
-  @Indexed
   @Nullable
   String getProjectKey();
 
@@ -90,4 +89,9 @@ public interface IssueCreationSettings extends Entity {
   void setAllowedDeleteReplyMessage(boolean aTrue);
 
   boolean isAllowedDeleteReplyMessage();
+
+  void setProjectId(long projectId);
+
+  @Indexed
+  Long getProjectId();
 }

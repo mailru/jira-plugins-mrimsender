@@ -28,6 +28,7 @@ public class IssueCreationSettingsDto {
   @XmlElement private String chatId;
   @XmlElement private Boolean enabled;
   @XmlElement private String projectKey;
+  @XmlElement private Long projectId;
   @XmlElement private String issueTypeId;
   @XmlElement private String tag;
   @XmlElement private String creationSuccessTemplate;
@@ -55,7 +56,7 @@ public class IssueCreationSettingsDto {
     this.reporter = entity.getReporter();
     this.assignee = entity.getAssignee();
     this.addReporterInWatchers = entity.isAddReporterInWatchers();
-    this.projectKey = entity.getProjectKey();
+    this.projectId = entity.getProjectId();
     this.issueTypeId = entity.getIssueTypeId();
     this.creationSuccessTemplate = entity.getCreationSuccessTemplate();
     this.issueSummaryTemplate = entity.getIssueSummaryTemplate();
@@ -82,7 +83,7 @@ public class IssueCreationSettingsDto {
     this.reporter = entity.getReporter();
     this.assignee = entity.getAssignee();
     this.addReporterInWatchers = entity.isAddReporterInWatchers();
-    this.projectKey = entity.getProjectKey();
+    this.projectId = entity.getProjectId();
     this.issueTypeId = entity.getIssueTypeId();
     this.creationSuccessTemplate = entity.getCreationSuccessTemplate();
     this.issueSummaryTemplate = entity.getIssueSummaryTemplate();

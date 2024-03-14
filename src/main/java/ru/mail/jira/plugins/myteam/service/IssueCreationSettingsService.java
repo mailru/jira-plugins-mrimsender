@@ -8,8 +8,6 @@ import ru.mail.jira.plugins.myteam.controller.dto.IssueCreationSettingsDto;
 
 public interface IssueCreationSettingsService {
 
-  List<IssueCreationSettingsDto> getAllSettings();
-
   @Nullable
   IssueCreationSettingsDto getSettings(int id);
 
@@ -17,6 +15,8 @@ public interface IssueCreationSettingsService {
   IssueCreationSettingsDto getSettingsFromCache(String chatId, String tag);
 
   List<IssueCreationSettingsDto> getSettingsByProjectKey(String projectKey);
+
+  List<IssueCreationSettingsDto> getSettingsByProjectId(final long projectId);
 
   List<IssueCreationSettingsDto> getSettingsByChatId(String chatId);
 

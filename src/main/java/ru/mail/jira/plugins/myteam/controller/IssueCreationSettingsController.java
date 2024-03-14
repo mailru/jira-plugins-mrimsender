@@ -10,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Controller;
 import ru.mail.jira.plugins.myteam.bot.rulesengine.models.exceptions.SettingsTagAlreadyExistsException;
@@ -35,15 +36,8 @@ public class IssueCreationSettingsController {
   }
 
   @GET
-  @Path("/settings/all")
-  public List<IssueCreationSettingsDto> getAllChatsSettings() throws PermissionException {
-    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-    permissionHelper.checkChatAdminPermissions(user);
-    return issueCreationSettingsService.getAllSettings();
-  }
-
-  @GET
   @Path("/settings/{id}")
+  @Produces(MediaType.APPLICATION_JSON)
   @Nullable
   public IssueCreationSettingsDto getChatSettingsById(@PathParam("id") final Integer id)
       throws PermissionException {
@@ -51,11 +45,12 @@ public class IssueCreationSettingsController {
     IssueCreationSettingsDto settings = issueCreationSettingsService.getSettingsById(id);
     permissionHelper.checkChatAdminPermissions(
         user, settings != null ? settings.getChatId() : null);
-    return issueCreationSettingsService.getSettingsById(id);
+    return settings;
   }
 
   @GET
   @Path("/settings/chats/{id}")
+  @Produces(MediaType.APPLICATION_JSON)
   public List<IssueCreationSettingsDto> getChatSettings(@PathParam("id") final String id)
       throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
@@ -65,11 +60,24 @@ public class IssueCreationSettingsController {
 
   @GET
   @Path("/settings/projects/{projectKey}")
+  @Produces(MediaType.APPLICATION_JSON)
   public List<IssueCreationSettingsDto> getProjectChatSettings(
       @PathParam("projectKey") final String projectKey) throws PermissionException {
     ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
     permissionHelper.checkProjectPermissions(user, projectKey);
     return issueCreationSettingsService.getSettingsByProjectKey(projectKey).stream()
+        .peek(s -> s.setCanEdit(permissionHelper.isChatAdminOrJiraAdmin(s.getChatId(), user)))
+        .collect(Collectors.toList());
+  }
+
+  @GET
+  @Path("/settings/projects/id/{projectId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<IssueCreationSettingsDto> getProjectChatSettings(
+      @PathParam("projectId") final long projectId) throws PermissionException {
+    ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+    permissionHelper.checkProjectPermissions(user, projectId);
+    return issueCreationSettingsService.getSettingsByProjectId(projectId).stream()
         .peek(s -> s.setCanEdit(permissionHelper.isChatAdminOrJiraAdmin(s.getChatId(), user)))
         .collect(Collectors.toList());
   }
@@ -90,6 +98,7 @@ public class IssueCreationSettingsController {
   @PUT
   @RequiresXsrfCheck
   @Path("/settings/{id}")
+  @Produces(MediaType.APPLICATION_JSON)
   @Nullable
   public IssueCreationSettingsDto updateChatSettings(
       @PathParam("id") final int id, final IssueCreationSettingsDto settings)
