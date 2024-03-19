@@ -625,7 +625,7 @@ public class MessageFormatter {
       sb.append("\n");
       sb.append(
           i18nResolver.getText(
-              "ru.mail.jira.plugins.myteam.accessRequest.page.message.text", message));
+              "ru.mail.jira.plugins.myteam.accessRequest.page.message.text", Utils.shieldText(message)));
     }
     return sb.toString();
   }
