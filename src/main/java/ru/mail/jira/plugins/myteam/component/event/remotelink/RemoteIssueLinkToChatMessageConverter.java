@@ -40,13 +40,15 @@ public class RemoteIssueLinkToChatMessageConverter
           messageFormatter.markdownTextLink(
               remoteIssueLinkRecipientsData.getLinkTitle(),
               remoteIssueLinkRecipientsData.getLinkUrl()),
-          markdownIssueLink);
+          markdownIssueLink,
+          Utils.shieldText(remoteIssueLinkRecipientsData.getIssueSummary()));
     } else {
       return i18nResolver.getText(
           I18N_CREATED_REMOTE_ISSUE_LINK_KEY,
           linkCreator,
           Utils.shieldText(remoteIssueLinkRecipientsData.getLinkUrl()),
-          markdownIssueLink);
+          markdownIssueLink,
+          Utils.shieldText(remoteIssueLinkRecipientsData.getIssueSummary()));
     }
   }
 }

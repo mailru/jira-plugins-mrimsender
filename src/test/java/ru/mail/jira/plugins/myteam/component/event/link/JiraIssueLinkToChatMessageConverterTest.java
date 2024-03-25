@@ -36,7 +36,13 @@ class JiraIssueLinkToChatMessageConverterTest {
     ApplicationUser eventCreator = mock(ApplicationUser.class);
     IssueLinkEventToChatMessageData issueLinkEventToChatMessageData =
         new IssueLinkEventToChatMessageData(
-            "SOURCE-123", "DESTINATION-123", eventCreator, "blocks", true);
+            "SOURCE-123",
+            "DESTINATION-123",
+            "sourceIssueSummary",
+            "destinationIssueSummary",
+            eventCreator,
+            "blocks",
+            true);
     when(messageFormatter.formatUserToVKTeamsSysProfile(eventCreator)).thenReturn("some user");
     when(messageFormatter.createMarkdownIssueLink(eq("SOURCE-123")))
         .thenReturn("some link on SOURCE-123");
@@ -48,7 +54,9 @@ class JiraIssueLinkToChatMessageConverterTest {
             eq("some user"),
             eq("blocks"),
             eq("some link on SOURCE-123"),
-            eq("some link on DESTINATION-123")))
+            eq("sourceIssueSummary"),
+            eq("some link on DESTINATION-123"),
+            eq("destinationIssueSummary")))
         .thenReturn("some message on created link");
 
     // WHEN
@@ -65,7 +73,13 @@ class JiraIssueLinkToChatMessageConverterTest {
     ApplicationUser eventCreator = mock(ApplicationUser.class);
     IssueLinkEventToChatMessageData issueLinkEventToChatMessageData =
         new IssueLinkEventToChatMessageData(
-            "SOURCE-123", "DESTINATION-123", eventCreator, "blocks", false);
+            "SOURCE-123",
+            "DESTINATION-123",
+            "sourceIssueSummary",
+            "destinationIssueSummary",
+            eventCreator,
+            "blocks",
+            false);
     when(messageFormatter.formatUserToVKTeamsSysProfile(eventCreator)).thenReturn("some user");
     when(messageFormatter.createMarkdownIssueLink(eq("SOURCE-123")))
         .thenReturn("some link on SOURCE-123");
@@ -77,7 +91,9 @@ class JiraIssueLinkToChatMessageConverterTest {
             eq("some user"),
             eq("blocks"),
             eq("some link on SOURCE-123"),
-            eq("some link on DESTINATION-123")))
+            eq("sourceIssueSummary"),
+            eq("some link on DESTINATION-123"),
+            eq("destinationIssueSummary")))
         .thenReturn("some message on deleted link");
 
     // WHEN

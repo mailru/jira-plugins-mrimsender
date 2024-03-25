@@ -48,6 +48,8 @@ public class IssueLinkEventToVKTeamSender
               IssueLinkEventToChatMessageData.of(
                   sourceIssueKey,
                   destinationIssueKey,
+                  issueLinkEventRecipientsData.getSourceIssueSummary(),
+                  issueLinkEventRecipientsData.getDestinationIssueSummary(),
                   issueLinkEventRecipientsData.getIssueLinkCreatorOrRemover(),
                   issueLinkEventRecipientsData.getLinkTypeName(),
                   issueLinkEventRecipientsData.isLinkCreated());
@@ -65,6 +67,8 @@ public class IssueLinkEventToVKTeamSender
               IssueLinkEventToChatMessageData.of(
                   destinationIssueKey,
                   sourceIssueKey,
+                  issueLinkEventRecipientsData.getSourceIssueSummary(),
+                  issueLinkEventRecipientsData.getDestinationIssueSummary(),
                   issueLinkEventRecipientsData.getIssueLinkCreatorOrRemover(),
                   issueLinkEventRecipientsData.getLinkTypeName(),
                   issueLinkEventRecipientsData.isLinkCreated());

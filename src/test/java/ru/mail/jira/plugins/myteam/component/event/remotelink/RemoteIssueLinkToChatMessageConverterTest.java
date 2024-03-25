@@ -41,7 +41,12 @@ class RemoteIssueLinkToChatMessageConverterTest {
     ApplicationUser linkCreator = mock(ApplicationUser.class);
     RemoteIssueLinkRecipientsData data =
         RemoteIssueLinkRecipientsData.of(
-            linkTitle, "someUrl", "KEY-123", linkCreator, Set.of(EventRecipient.of(linkCreator)));
+            linkTitle,
+            "someUrl",
+            "KEY-123",
+            "issueSummary",
+            linkCreator,
+            Set.of(EventRecipient.of(linkCreator)));
     when(messageFormatter.createMarkdownIssueLink(eq("KEY-123"))).thenReturn("some url on KEY-123");
     when(messageFormatter.formatUserToVKTeamsSysProfile(same(linkCreator)))
         .thenReturn("some url on link creator");
@@ -49,14 +54,18 @@ class RemoteIssueLinkToChatMessageConverterTest {
             eq("ru.mail.jira.plugins.myteam.notification.remote.issue.link.created"),
             eq("some url on link creator"),
             eq("someUrl"),
-            eq("some url on KEY-123")))
-        .thenReturn("link creator create remote link someUrl in [KEY-123|someUrlOnKey-123]");
+            eq("some url on KEY-123"),
+            eq("issueSummary")))
+        .thenReturn(
+            "link creator create remote link someUrl in [KEY-123|someUrlOnKey-123] issueSummary");
 
     // WHEN
     String result = remoteIssueLinkToChatMessageConverter.convert(data);
 
     // THEN
-    assertEquals("link creator create remote link someUrl in [KEY-123|someUrlOnKey-123]", result);
+    assertEquals(
+        "link creator create remote link someUrl in [KEY-123|someUrlOnKey-123] issueSummary",
+        result);
   }
 
   void convertWhenTitleNotEmptyString() {
@@ -64,7 +73,12 @@ class RemoteIssueLinkToChatMessageConverterTest {
     ApplicationUser linkCreator = mock(ApplicationUser.class);
     RemoteIssueLinkRecipientsData data =
         RemoteIssueLinkRecipientsData.of(
-            "someTitle", "someUrl", "KEY-123", linkCreator, Set.of(EventRecipient.of(linkCreator)));
+            "someTitle",
+            "someUrl",
+            "KEY-123",
+            "issueSummary",
+            linkCreator,
+            Set.of(EventRecipient.of(linkCreator)));
     when(messageFormatter.createMarkdownIssueLink(eq("KEY-123"))).thenReturn("some url on KEY-123");
     when(messageFormatter.formatUserToVKTeamsSysProfile(same(linkCreator)))
         .thenReturn("some url on link creator");
@@ -75,14 +89,17 @@ class RemoteIssueLinkToChatMessageConverterTest {
             eq("ru.mail.jira.plugins.myteam.notification.remote.issue.link.created"),
             eq("some url on link creator"),
             eq("[someTitle|someUrl]"),
-            eq("some url on KEY-123")))
+            eq("some url on KEY-123"),
+            eq("issueSummary")))
         .thenReturn(
-            "link creator create remote link [someTitle|someUrl] in [KEY-123|someUrlOnKey-123]");
+            "link creator create remote link [someTitle|someUrl] in [KEY-123|someUrlOnKey-123] issueSummary");
 
     // WHEN
     String result = remoteIssueLinkToChatMessageConverter.convert(data);
 
     // THEN
-    assertEquals("link creator create remote link someUrl in [KEY-123|someUrlOnKey-123]", result);
+    assertEquals(
+        "link creator create remote link someUrl in [KEY-123|someUrlOnKey-123] issueSummary",
+        result);
   }
 }

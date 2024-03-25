@@ -64,8 +64,10 @@ public class IssueLinkEventRecipientResolver
     return IssueLinkEventRecipientsData.of(
         notificationRecipientsForSourceIssue,
         issueLinkEventData.getIssueLink().getSourceObject().getKey(),
+        issueLinkEventData.getIssueLink().getSourceObject().getSummary(),
         notificationRecipientsForDestinationIssue,
         issueLinkEventData.getIssueLink().getDestinationObject().getKey(),
+        issueLinkEventData.getIssueLink().getDestinationObject().getSummary(),
         issueLinkEventData.getIssueLinkCreatorOrRemover(),
         issueLinkEventData.getIssueLink().getIssueLinkType().getName(),
         issueLinkEventData.isLinkCreated());

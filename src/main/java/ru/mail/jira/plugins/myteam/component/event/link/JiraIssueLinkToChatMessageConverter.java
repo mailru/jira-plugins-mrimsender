@@ -48,6 +48,8 @@ public class JiraIssueLinkToChatMessageConverter
         changesAuthor,
         Utils.shieldText(issueLinkEventToChatMessageData.getLinkTypeName()),
         sourceIssue,
-        destinationIssue);
+        Utils.shieldText(issueLinkEventToChatMessageData.getSourceIssueSummary()),
+        destinationIssue,
+        Utils.shieldText(issueLinkEventToChatMessageData.getDestinationIssueSummary()));
   }
 }

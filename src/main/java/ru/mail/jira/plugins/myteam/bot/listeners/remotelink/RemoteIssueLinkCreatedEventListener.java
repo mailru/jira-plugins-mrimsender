@@ -74,6 +74,7 @@ public class RemoteIssueLinkCreatedEventListener implements IEventListener {
             StringUtils.defaultString(remoteIssueLink.getTitle()),
             remoteIssueLink.getUrl(),
             issue.getKey(),
+            issue.getSummary(),
             jiraAuthenticationContext.getLoggedInUser(),
             recipients);
 

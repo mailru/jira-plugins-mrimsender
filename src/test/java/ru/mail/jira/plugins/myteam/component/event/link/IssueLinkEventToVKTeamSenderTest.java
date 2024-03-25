@@ -51,7 +51,15 @@ class IssueLinkEventToVKTeamSenderTest {
     ApplicationUser issueLinkCreator = mock(ApplicationUser.class);
     IssueLinkEventRecipientsData issueLinkEventRecipientsData =
         IssueLinkEventRecipientsData.of(
-            Set.of(), "SOURCE-123", Set.of(), "DESTINATION-123", issueLinkCreator, "blocks", true);
+            Set.of(),
+            "SOURCE-123",
+            "sourceIssueSummary",
+            Set.of(),
+            "DESTINATION-123",
+            "destinationIssueSummary",
+            issueLinkCreator,
+            "blocks",
+            true);
 
     // WHEN
     issueLinkEventToVKTeamSender.send(issueLinkEventRecipientsData);
@@ -81,8 +89,10 @@ class IssueLinkEventToVKTeamSenderTest {
         IssueLinkEventRecipientsData.of(
             Set.of(EventRecipient.of(recipientOfSourceIssueLink)),
             "SOURCE-123",
+            "sourceIssueSummary",
             Set.of(EventRecipient.of(recipientOfDestinationIssueLink)),
             "DESTINATION-123",
+            "destinationIssueSummary",
             issueLinkCreator,
             "blocks",
             true);
