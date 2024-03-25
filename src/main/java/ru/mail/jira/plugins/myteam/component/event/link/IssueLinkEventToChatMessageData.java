@@ -8,6 +8,8 @@ import lombok.Getter;
 public class IssueLinkEventToChatMessageData {
   private final String issueKeySource;
   private final String issueKeyDestination;
+  private final String sourceIssueSummary;
+  private final String destinationIssueSummary;
   private final ApplicationUser eventCreator;
   private final String linkTypeName;
   private final boolean linkCreated;
@@ -15,11 +17,15 @@ public class IssueLinkEventToChatMessageData {
   public IssueLinkEventToChatMessageData(
       final String issueKeySource,
       final String issueKeyDestination,
+      final String sourceIssueSummary,
+      final String destinationIssueSummary,
       final ApplicationUser eventCreator,
       final String linkTypeName,
       final boolean linkCreated) {
     this.issueKeySource = issueKeySource;
     this.issueKeyDestination = issueKeyDestination;
+    this.sourceIssueSummary = sourceIssueSummary;
+    this.destinationIssueSummary = destinationIssueSummary;
     this.eventCreator = eventCreator;
     this.linkTypeName = linkTypeName;
     this.linkCreated = linkCreated;
@@ -28,10 +34,18 @@ public class IssueLinkEventToChatMessageData {
   public static IssueLinkEventToChatMessageData of(
       final String issueKeySource,
       final String issueKeyDestination,
+      final String sourceIssueSummary,
+      final String destinationIssueSummary,
       final ApplicationUser eventCreator,
       final String linkTypeName,
       final boolean linkCreated) {
     return new IssueLinkEventToChatMessageData(
-        issueKeySource, issueKeyDestination, eventCreator, linkTypeName, linkCreated);
+        issueKeySource,
+        issueKeyDestination,
+        sourceIssueSummary,
+        destinationIssueSummary,
+        eventCreator,
+        linkTypeName,
+        linkCreated);
   }
 }

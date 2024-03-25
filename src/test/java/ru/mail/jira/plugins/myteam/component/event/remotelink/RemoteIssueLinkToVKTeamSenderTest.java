@@ -50,7 +50,8 @@ class RemoteIssueLinkToVKTeamSenderTest {
     // GIVEN
     ApplicationUser linkCreator = mock(ApplicationUser.class);
     RemoteIssueLinkRecipientsData data =
-        RemoteIssueLinkRecipientsData.of("linkTitle", "someUrl", "KEY-123", linkCreator, Set.of());
+        RemoteIssueLinkRecipientsData.of(
+            "linkTitle", "someUrl", "KEY-123", "issueSummary", linkCreator, Set.of());
 
     // WHEN
     remoteIssueLinkToVKTeamSender.send(data);
@@ -73,7 +74,12 @@ class RemoteIssueLinkToVKTeamSenderTest {
     when(linkCreator.getEmailAddress()).thenReturn("admin@example.org");
     RemoteIssueLinkRecipientsData data =
         RemoteIssueLinkRecipientsData.of(
-            "linkTitle", "someUrl", "KEY-123", linkCreator, Set.of(EventRecipient.of(linkCreator)));
+            "linkTitle",
+            "someUrl",
+            "KEY-123",
+            "issueSummary",
+            linkCreator,
+            Set.of(EventRecipient.of(linkCreator)));
 
     when(userData.isEnabled(same(linkCreator))).thenReturn(true);
     when(jiraAuthenticationContext.getLoggedInUser()).thenReturn(linkCreator);

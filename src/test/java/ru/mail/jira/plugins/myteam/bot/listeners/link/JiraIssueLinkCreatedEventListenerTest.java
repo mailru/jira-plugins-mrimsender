@@ -70,8 +70,10 @@ class JiraIssueLinkCreatedEventListenerTest {
         IssueLinkEventRecipientsData.of(
             Set.of(EventRecipient.of(loggedInUser)),
             "key1",
+            "sourceIssueSummary",
             Collections.emptySet(),
             "key2",
+            "destinationIssueSummary",
             loggedInUser,
             "blocks",
             true);
@@ -113,8 +115,10 @@ class JiraIssueLinkCreatedEventListenerTest {
         IssueLinkEventRecipientsData.of(
             Set.of(EventRecipient.of(loggedInUser)),
             "key1",
+            "sourceIssueSummary",
             Collections.emptySet(),
             "key2",
+            "destinationIssueSummary",
             loggedInUser,
             "blocks",
             true);

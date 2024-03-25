@@ -11,6 +11,7 @@ public class RemoteIssueLinkRecipientsData {
   private final String linkTitle;
   private final String linkUrl;
   private final String issueKey;
+  private final String issueSummary;
   private final ApplicationUser linkCreator;
   private final Set<EventRecipient> eventRecipients;
 
@@ -18,11 +19,13 @@ public class RemoteIssueLinkRecipientsData {
       final String linkTitle,
       final String linkUrl,
       final String issueKey,
+      final String issueSummary,
       final ApplicationUser linkCreator,
       final Set<EventRecipient> eventRecipients) {
     this.linkTitle = linkTitle;
     this.linkUrl = linkUrl;
     this.issueKey = issueKey;
+    this.issueSummary = issueSummary;
     this.linkCreator = linkCreator;
     this.eventRecipients = eventRecipients;
   }
@@ -31,9 +34,10 @@ public class RemoteIssueLinkRecipientsData {
       final String linkTitle,
       final String linkUrl,
       final String issueKey,
+      final String issueSummary,
       final ApplicationUser linkCreator,
       final Set<EventRecipient> eventRecipients) {
     return new RemoteIssueLinkRecipientsData(
-        linkTitle, linkUrl, issueKey, linkCreator, eventRecipients);
+        linkTitle, linkUrl, issueKey, issueSummary, linkCreator, eventRecipients);
   }
 }
