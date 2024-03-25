@@ -18,6 +18,8 @@ import ru.mail.jira.plugins.myteam.service.PluginData;
 public class UserData {
   private static final String MRIM_LOGIN_USER_PROPERTY = "USER_MYTEAM_LOGIN";
   private static final String IS_ENABLED_USER_PROPERTY = "USER_MYTEAM_STATUS";
+  private static final String IS_LINK_NOTIFICATION_ENABLED_USER_PROPERTY =
+      "USER_MYTEAM_LINK_NOTIFICATION_STATUS";
   private static final String IS_CREATE_CHATS_WITH_USER_ALLOWED = "USER_MYTEAM_CHATSCREATION";
 
   private final PluginData pluginData;
@@ -86,5 +88,25 @@ public class UserData {
             StreamSupport.stream(userSearchService.findUsersByEmail(login).spliterator(), false)
                 .findFirst()
                 .orElse(null));
+  }
+
+  public boolean isLinkNotificationEnable(final ApplicationUser user) {
+    try {
+      final String enabled =
+          userPropertyManager
+              .getPropertySet(user)
+              .getString(IS_LINK_NOTIFICATION_ENABLED_USER_PROPERTY);
+      if (enabled == null) return true;
+      return Boolean.parseBoolean(enabled);
+    } catch (final Exception e) {
+      return true;
+    }
+  }
+
+  public void setLinkNotificationEnabled(
+      final ApplicationUser user, final boolean linkNotifyEnabled) {
+    userPropertyManager
+        .getPropertySet(user)
+        .setString(IS_LINK_NOTIFICATION_ENABLED_USER_PROPERTY, Boolean.toString(linkNotifyEnabled));
   }
 }

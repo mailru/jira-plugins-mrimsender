@@ -17,25 +17,29 @@ import java.util.stream.Collectors;
 import org.ofbiz.core.entity.GenericEntityException;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
+import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.component.event.AbstractRecipientResolver;
 import ru.mail.jira.plugins.myteam.component.event.EventRecipient;
 
 @Component
 public class IssueLinkEventRecipientResolver
     extends AbstractRecipientResolver<IssueLinkEventData, IssueLinkEventRecipientsData> {
+  private final UserData userData;
 
   public IssueLinkEventRecipientResolver(
       @ComponentImport final NotificationFilterManager notificationFilterManager,
       @ComponentImport final NotificationSchemeManager notificationSchemeManager,
       @ComponentImport final PermissionManager permissionManager,
       @ComponentImport final ProjectRoleManager projectRoleManager,
-      @ComponentImport final GroupManager groupManager) {
+      @ComponentImport final GroupManager groupManager,
+      final UserData userData) {
     super(
         notificationFilterManager,
         notificationSchemeManager,
         permissionManager,
         projectRoleManager,
         groupManager);
+    this.userData = userData;
   }
 
   @Override
@@ -77,7 +81,10 @@ public class IssueLinkEventRecipientResolver
     try {
       return super.resolveRecipientByNotificationScheme(issueEventForSourceIssue).stream()
           .map(NotificationRecipient::getUser)
-          .filter(user -> super.canSendEventToUser(user, issueEventForSourceIssue.getIssue()))
+          .filter(
+              user ->
+                  userData.isLinkNotificationEnable(user)
+                      && super.canSendEventToUser(user, issueEventForSourceIssue.getIssue()))
           .map(EventRecipient::of)
           .collect(Collectors.toSet());
     } catch (GenericEntityException e) {

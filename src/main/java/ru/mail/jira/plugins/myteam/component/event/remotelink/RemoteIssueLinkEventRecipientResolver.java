@@ -19,6 +19,7 @@ import org.ofbiz.core.entity.GenericEntityException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.mail.jira.plugins.commons.SentryClient;
+import ru.mail.jira.plugins.myteam.component.UserData;
 import ru.mail.jira.plugins.myteam.component.event.AbstractRecipientResolver;
 import ru.mail.jira.plugins.myteam.component.event.EventRecipient;
 import ru.mail.jira.plugins.myteam.component.event.RecipientResolver;
@@ -28,19 +29,23 @@ public class RemoteIssueLinkEventRecipientResolver
     extends AbstractRecipientResolver<RemoteIssueLinkData, Set<EventRecipient>>
     implements RecipientResolver<RemoteIssueLinkData, Set<EventRecipient>> {
 
+  private final UserData userData;
+
   @Autowired
   public RemoteIssueLinkEventRecipientResolver(
       @ComponentImport final NotificationFilterManager notificationFilterManager,
       @ComponentImport final NotificationSchemeManager notificationSchemeManager,
       @ComponentImport final PermissionManager permissionManager,
       @ComponentImport final ProjectRoleManager projectRoleManager,
-      @ComponentImport final GroupManager groupManager) {
+      @ComponentImport final GroupManager groupManager,
+      final UserData userData) {
     super(
         notificationFilterManager,
         notificationSchemeManager,
         permissionManager,
         projectRoleManager,
         groupManager);
+    this.userData = userData;
   }
 
   @Override
@@ -61,7 +66,9 @@ public class RemoteIssueLinkEventRecipientResolver
           super.resolveRecipientByNotificationScheme(syntheticEventOnCreatedRemoteLink);
       return notificationRecipients.stream()
           .map(NotificationRecipient::getUser)
-          .filter(user -> super.canSendEventToUser(user, issue))
+          .filter(
+              user ->
+                  userData.isLinkNotificationEnable(user) && super.canSendEventToUser(user, issue))
           .map(EventRecipient::of)
           .collect(Collectors.toSet());
     } catch (GenericEntityException e) {
