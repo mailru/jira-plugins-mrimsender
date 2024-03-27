@@ -710,18 +710,19 @@ public class MessageFormatter {
       if (link.isMasked()) {
         try {
           formattedMesssageBody =
-                  formattedMesssageBody.replaceFirst(
-                          Pattern.quote(link.getMask()),
-                          format(DESCRIPTION_MARKDOWN_MASKED_LINK_TEMPLATE, link.getMask(), link.getLink()));
+              formattedMesssageBody.replaceFirst(
+                  Pattern.quote(link.getMask()),
+                  format(
+                      DESCRIPTION_MARKDOWN_MASKED_LINK_TEMPLATE, link.getMask(), link.getLink()));
         } catch (Exception e) {
           SentryClient.capture(e, null, Map.of("messageBody", messageBody));
         }
       } else {
         try {
           formattedMesssageBody =
-                  formattedMesssageBody.replaceFirst(
-                          Pattern.quote(link.getLink()),
-                          format(DESCRIPTION_MARKDOWN_UNMASKED_LINK_TEMPLATE, link.getLink()));
+              formattedMesssageBody.replaceFirst(
+                  Pattern.quote(link.getLink()),
+                  format(DESCRIPTION_MARKDOWN_UNMASKED_LINK_TEMPLATE, link.getLink()));
         } catch (Exception e) {
           SentryClient.capture(e, null, Map.of("messageBody", messageBody));
         }
